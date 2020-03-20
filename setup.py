@@ -8,5 +8,6 @@ setup(name='amesgcm',
       author_email='alexandre.m.kling@nasa.gov',
       license='TBD',
       scripts=['bin/MarsPull.py'],
+      install_requires=['requests',],
       packages=['amesgcm'],
       zip_safe=False)
