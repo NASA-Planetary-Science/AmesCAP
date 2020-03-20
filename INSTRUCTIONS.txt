@@ -3,3 +3,4 @@ python3.7 -m venv envPython3.7
 
 git clone https://github.com/alex-kling/amesgcm.git
 pip install git+https://github.com/alex-kling/amesgcm.git
+The dependencies to 'requests' is for MarsPull.py 
