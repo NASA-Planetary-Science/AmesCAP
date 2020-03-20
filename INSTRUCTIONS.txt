@@ -1,2 +1,5 @@
 # In a directory of your choice, run:
 python3.7 -m venv envPython3.7
+
+git clone https://github.com/alex-kling/amesgcm.git
+pip install git+https://github.com/alex-kling/amesgcm.git
