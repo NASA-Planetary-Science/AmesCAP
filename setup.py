@@ -7,6 +7,6 @@ setup(name='amesgcm',
       author='Mars Climate Modeling Center',
       author_email='alexandre.m.kling@nasa.gov',
       license='TBD',
-      scripts=['bin/MarsPull'],
+      scripts=['bin/MarsPull.py'],
       packages=['amesgcm'],
       zip_safe=False)
