@@ -8,6 +8,6 @@ setup(name='amesgcm',
       author_email='alexandre.m.kling@nasa.gov',
       license='TBD',
       scripts=['bin/MarsPull.py','bin/MarsDocumentation.sh','bin/MarsPlot.py','bin/MarsVars.py'],
-      install_requires=['requests',],
+      install_requires=['requests','netCDF4','numpy','matplotlib'],
       packages=['amesgcm'],
       zip_safe=False)
