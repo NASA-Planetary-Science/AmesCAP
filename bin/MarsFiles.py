@@ -12,9 +12,8 @@ import shutil
 import subprocess
 import numpy as np
 from netCDF4 import Dataset
-import amesgcm
 #from amesgcm.lib.FV3_utils import find_n
-from amesgcm.lib.Script_utils import prYellow,prCyan
+from amesgcm.Script_utils import prYellow,prCyan
 sys.path.append(os.getcwd())
 
 #======================================================
