@@ -2,7 +2,8 @@
 
 #
 #Assumes the companion scripts are in the same directory
-#============Import modules==============
+#Load generic Python Modules
+import argparse #parse arguments
 import sys
 import getopt
 import os
@@ -11,10 +12,29 @@ import shutil
 import subprocess
 import numpy as np
 from netCDF4 import Dataset
-from ..bin.FV3_utils import find_n
+#from amesgcm.lib.FV3_utils import find_n
 sys.path.append(os.getcwd())
 
+#======================================================
+#                  ARGUMENTS PARSER
+#======================================================
+parser = argparse.ArgumentParser(description="""\033[93m MarsFiles files manager. Used to convert Legacy GCM to FV3 format \n \033[00m""",
+								formatter_class=argparse.RawTextHelpFormatter)
 
+parser.add_argument('input_file', nargs='+', 
+								help='***.nc file or list of ***.nc files ')
+								
+parser.add_argument('-fv3','--fv3', nargs='+',default=[],
+					help="""Produce FV3's diurn, average and daily files from Legacy outputs  \n"""
+						"""> Usage: MarsFiles LegacyGCM*.nc -fv3 \n"""
+						"""\033[00m""")
+
+parser.add_argument('-c','--combine', nargs='+',default=['p'],
+					help="""Combine a sequence of similar files as one file\n"""
+						"""> Usage: MarsVars *.atmos_average.nc --combine \n"""
+						""" \n""")
+
+parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
 
 def main(argv):
@@ -28,29 +48,23 @@ def main(argv):
 		#exit()
 
 
-
-
 	print("====== Running postprocess_legacy.py =======")
+	
+	file_list=parser.parse_args().input_file
+
 #argument definitions:
 	cwd=os.getcwd()
-	path2data=cwd
+	path2data=os.getcwd()
 	do_multi= False
-	do_1year= False
+	do_1year= False #Used with LegacyGCM_1year.nc'
 	
-	try:
-		opts, args = getopt.getopt(argv,"p:",["path2data="])
-	except getopt.GetoptError:
-		print( 'postprocess_legacy.py -p <path2data>')
-		sys.exit(2)
-	for opt, arg in opts:
-		if opt in ("-p","--path2data"):
-			path2data = arg
-
-#Get files to process
-	histlist = glob.glob(path2data+'/LegacyGCM_Ls*.nc')
+	#Get files to process
+	histlist=[]
+	for filei in file_list:
+		histlist.append(path2data+'/'+filei)
+	prCyan(histlist)
 	fnum = len(histlist)
-	if fnum >= 0:
-		do_multi = True
+	if fnum >= 0:do_multi = True #TODO why not 1? 
 	
 	try:
 		hist1year= path2data+'/LegacyGCM_1year.nc'
@@ -318,104 +332,104 @@ def replace_at_index(tup, ix, val):
 	else:
 		return tup[:ix] + (val,) + tup[ix+1:]
 
-class Ncdf(object):
-	'''
-	Alex K.
-	NetCdf wrapper for quick archiving of data into netcdf format
-
-	USAGE:
-
-	from netcdf_wrapper import Ncdf
-
-	Fgeo= 0.03 #W/m2, a constant
-	TG=np.ones((24,8)) #ground temperature
-
-	#---create file---
-	filename="/lou/s2n/mkahre/MCMC/analysis/working/myfile.nc"
-	description="results from new simulation, Alex 01-01-19"
-	Log=Ncdf(filename,description)
-
-	#---Save the constant to the file---
-	Log.add_constant('Fgeo',Fgeo,"geothermal flux","W/m2")
-
-	#---Save the TG array to the file---
-	Log.add_dimension('Nx',8)
-	Log.add_dimension('time',24)
-
-	Log.log_variable('TG',TG,('time','Nx'),'soil temperature','K')
-
-	Log.close()
-
-
-	'''
-	def __init__(self,filename=None,description_txt="",action='w'):
-		if filename:
-			if filename[-3:]!=".nc":
-			#assume that only path is provided so make a name for the file
+	class Ncdf(object):
+		'''
+		Alex K.
+		NetCdf wrapper for quick archiving of data into netcdf format
+	
+		USAGE:
+	
+		from netcdf_wrapper import Ncdf
+	
+		Fgeo= 0.03 #W/m2, a constant
+		TG=np.ones((24,8)) #ground temperature
+	
+		#---create file---
+		filename="/lou/s2n/mkahre/MCMC/analysis/working/myfile.nc"
+		description="results from new simulation, Alex 01-01-19"
+		Log=Ncdf(filename,description)
+	
+		#---Save the constant to the file---
+		Log.add_constant('Fgeo',Fgeo,"geothermal flux","W/m2")
+	
+		#---Save the TG array to the file---
+		Log.add_dimension('Nx',8)
+		Log.add_dimension('time',24)
+	
+		Log.log_variable('TG',TG,('time','Nx'),'soil temperature','K')
+	
+		Log.close()
+	
+	
+		'''
+		def __init__(self,filename=None,description_txt="",action='w'):
+			if filename:
+				if filename[-3:]!=".nc":
+				#assume that only path is provided so make a name for the file
+					import datetime;now = datetime.datetime.now()
+					filename=filename+\
+					'/run_%02d-%02d-%04d_%i-%i-%i.nc'%(now.day,now.month,now.year,now.hour,now.minute,now.second)
+			else:	#create a default file name	 if path and filename are not provided
+				import os #use a default path if not provided
+				pathname=os.getcwd()+'/'
 				import datetime;now = datetime.datetime.now()
-				filename=filename+\
-				'/run_%02d-%02d-%04d_%i-%i-%i.nc'%(now.day,now.month,now.year,now.hour,now.minute,now.second)
-		else:	#create a default file name	 if path and filename are not provided
-			import os #use a default path if not provided
-			pathname=os.getcwd()+'/'
-			import datetime;now = datetime.datetime.now()
-			filename=pathname+\
-			'run_%02d-%02d-%04d_%i-%i-%i.nc'%(now.day,now.month,now.year,now.hour,now.minute,now.second)
-		self.filename=filename
-		from netCDF4 import Dataset
-		if action=='w':
-			self.f_Ncdf = Dataset(filename, 'w', format='NETCDF4_CLASSIC')
-			self.f_Ncdf.description = description_txt
-		elif action=='a': #append to file
-			self.f_Ncdf = Dataset(filename, 'a', format='NETCDF4_CLASSIC')
-		#create dictionaries to hold dimensions and variables
-		self.dim_dict=dict()
-		self.var_dict=dict()
-		print(filename+ " was created")
-
-	def close(self):
-		self.f_Ncdf.close()
-		print(self.filename+" was closed")
-
-	def add_dimension(self,dimension_name,length):
-		self.dim_dict[dimension_name]= self.f_Ncdf.createDimension(dimension_name,length)
-
-	def print_dimension(self):
-		print(self.dim_dict.items())
-	def print_variable(self):
-		print(self.var_dict.keys())
-
-	def add_constant(self,variable_name,value,longname_txt="",unit_txt=""):
-		if not any('constant' in s for s in self.dim_dict.keys()):
-			self.add_dimension('constant',1)
-		longname_txt =longname_txt+' (%g)'%(value)	 #add the value to the longname
-		self.def_variable(variable_name,('constant'),longname_txt,unit_txt)
-		self.var_dict[variable_name][:]=value
-
-	def def_variable(self,variable_name,dim_array,longname_txt="",unit_txt=""):
-		self.var_dict[variable_name]= self.f_Ncdf.createVariable(variable_name,'f4',dim_array)
-		self.var_dict[variable_name].units=unit_txt
-		self.var_dict[variable_name].long_name=longname_txt
-#		self.var_dict[variable_name].checksum=chk_txt
-	def log_variable(self,variable_name,DATAin,dim_array,longname_txt="",unit_txt="",):
-		if not any(variable_name == s for s in self.var_dict.keys()):
-			self.def_variable(variable_name,dim_array,longname_txt,unit_txt)
-		self.var_dict[variable_name].long_name=longname_txt
-		self.var_dict[variable_name].units=unit_txt
-		self.var_dict[variable_name][:]=DATAin
-
-	def def_var1d(self,variable_name,dim_array,longname_txt="",unit_txt="",cart_txt=""):
-		self.var_dict[variable_name]= self.f_Ncdf.createVariable(variable_name,'f8',dim_array)
-		self.var_dict[variable_name].units=unit_txt
-		self.var_dict[variable_name].long_name=longname_txt
-		self.var_dict[variable_name].cartesian_axis=cart_txt
-	def log_var1d(self,variable_name,DATAin,dim_array,longname_txt="",unit_txt="",cart_txt="",):
-		if not any(variable_name == s for s in self.var_dict.keys()):
-			self.def_var1d(variable_name,dim_array,longname_txt,unit_txt,cart_txt)
-		self.var_dict[variable_name].long_name=longname_txt
-		self.var_dict[variable_name].units=unit_txt
-		self.var_dict[variable_name].cartesian_axis=cart_txt
-		self.var_dict[variable_name][:]=DATAin
+				filename=pathname+\
+				'run_%02d-%02d-%04d_%i-%i-%i.nc'%(now.day,now.month,now.year,now.hour,now.minute,now.second)
+			self.filename=filename
+			from netCDF4 import Dataset
+			if action=='w':
+				self.f_Ncdf = Dataset(filename, 'w', format='NETCDF4_CLASSIC')
+				self.f_Ncdf.description = description_txt
+			elif action=='a': #append to file
+				self.f_Ncdf = Dataset(filename, 'a', format='NETCDF4_CLASSIC')
+			#create dictionaries to hold dimensions and variables
+			self.dim_dict=dict()
+			self.var_dict=dict()
+			print(filename+ " was created")
+	
+		def close(self):
+			self.f_Ncdf.close()
+			print(self.filename+" was closed")
+	
+		def add_dimension(self,dimension_name,length):
+			self.dim_dict[dimension_name]= self.f_Ncdf.createDimension(dimension_name,length)
+	
+		def print_dimension(self):
+			print(self.dim_dict.items())
+		def print_variable(self):
+			print(self.var_dict.keys())
+	
+		def add_constant(self,variable_name,value,longname_txt="",unit_txt=""):
+			if not any('constant' in s for s in self.dim_dict.keys()):
+				self.add_dimension('constant',1)
+			longname_txt =longname_txt+' (%g)'%(value)	 #add the value to the longname
+			self.def_variable(variable_name,('constant'),longname_txt,unit_txt)
+			self.var_dict[variable_name][:]=value
+	
+		def def_variable(self,variable_name,dim_array,longname_txt="",unit_txt=""):
+			self.var_dict[variable_name]= self.f_Ncdf.createVariable(variable_name,'f4',dim_array)
+			self.var_dict[variable_name].units=unit_txt
+			self.var_dict[variable_name].long_name=longname_txt
+	#		self.var_dict[variable_name].checksum=chk_txt
+		def log_variable(self,variable_name,DATAin,dim_array,longname_txt="",unit_txt="",):
+			if not any(variable_name == s for s in self.var_dict.keys()):
+				self.def_variable(variable_name,dim_array,longname_txt,unit_txt)
+			self.var_dict[variable_name].long_name=longname_txt
+			self.var_dict[variable_name].units=unit_txt
+			self.var_dict[variable_name][:]=DATAin
+	
+		def def_var1d(self,variable_name,dim_array,longname_txt="",unit_txt="",cart_txt=""):
+			self.var_dict[variable_name]= self.f_Ncdf.createVariable(variable_name,'f8',dim_array)
+			self.var_dict[variable_name].units=unit_txt
+			self.var_dict[variable_name].long_name=longname_txt
+			self.var_dict[variable_name].cartesian_axis=cart_txt
+		def log_var1d(self,variable_name,DATAin,dim_array,longname_txt="",unit_txt="",cart_txt="",):
+			if not any(variable_name == s for s in self.var_dict.keys()):
+				self.def_var1d(variable_name,dim_array,longname_txt,unit_txt,cart_txt)
+			self.var_dict[variable_name].long_name=longname_txt
+			self.var_dict[variable_name].units=unit_txt
+			self.var_dict[variable_name].cartesian_axis=cart_txt
+			self.var_dict[variable_name][:]=DATAin
 
 #AK : Function for output
 def prCyan(skk): print("\033[96m{}\033[00m" .format(skk))
