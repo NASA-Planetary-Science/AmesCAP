@@ -10,4 +10,5 @@ setup(name='amesgcm',
       scripts=['bin/MarsPull.py','bin/MarsDocumentation.sh','bin/MarsPlot.py','bin/MarsVars.py','bin/MarsFiles.py'],
       install_requires=['requests','netCDF4','numpy','matplotlib'],
       packages=['lib'],
+      package_dir={'': 'lib',},
       zip_safe=False)
