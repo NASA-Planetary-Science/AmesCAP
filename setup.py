@@ -9,6 +9,6 @@ setup(name='amesgcm',
       license='TBD',
       scripts=['bin/MarsPull.py','bin/MarsDocumentation.sh','bin/MarsPlot.py','bin/MarsVars.py','bin/MarsFiles.py'],
       install_requires=['requests','netCDF4','numpy','matplotlib'],
-      packages=find_packages(where='lib'),
+      packages=['amesgcm.lib'],
       package_dir={'': 'lib'},
       zip_safe=False)
