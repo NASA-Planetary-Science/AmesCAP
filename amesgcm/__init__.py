@@ -1,2 +1,1 @@
-def testFunc():
-   print('Ames GCM')
+# This file simply indicates the directory is a python package

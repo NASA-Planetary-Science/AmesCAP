@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(name='amesgcm',
       version='0.1',
@@ -8,6 +8,6 @@ setup(name='amesgcm',
       author_email='alexandre.m.kling@nasa.gov',
       license='TBD',
       scripts=['bin/MarsPull.py','bin/MarsDocumentation.sh','bin/MarsPlot.py','bin/MarsVars.py'],
-      install_requires=['requests','netCDF4','numpy','matplotlib','nco'],
-      packages=['amesgcm'],
+      install_requires=['requests','netCDF4','numpy','matplotlib'],
+      packages=['amesgcm',find_packages()],
       zip_safe=False)

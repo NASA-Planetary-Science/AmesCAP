@@ -1,6 +1,8 @@
 #Download:
 
-
+Install netcdf operators
+conda config --add channels conda-forge
+conda install nco
 
 #INSTALL FROM Github:
 # In a directory of your choice, run:
