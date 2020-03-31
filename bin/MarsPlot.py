@@ -28,10 +28,8 @@ try:
 
 except ImportError as error_msg:
     prYellow("Error while importing modules")
-    prYellow('Your are using python '+str(sys.version_info[0:3])+', recommend versions are (2, 7, 12) and (3.7.0)' )
-    prYellow('Please load recommended version with:')
-    prCyan('        module load python/2.7.12\n')
-    prYellow('OR, source your virtual environment');prCyan('    source envPython3.7/bin/activate.csh \n')
+    prYellow('Your are using python '+str(sys.version_info[0:3]))
+    prYellow('Please, source your virtual environment');prCyan('    source envPython3.7/bin/activate.csh \n')
     print("Error was: "+ error_msg.message)
     exit()
 except Exception as exception:
@@ -1252,9 +1250,9 @@ def get_figure_header(line_txt):
 #======================================================
 def check_file_tape(fileNcdf,abort=False):
     '''
+    Relevant for use on the NASA Advanced Supercomputing (NAS) environnment only
     Check if a file is present on the disk by running the NAS dmls -l data migration command.
-    This avoid the program to stall if the files need to be migrated from the disk to the tape with dmget *.nc
-
+    This avoid the program to stall if the files need to be migrated from the disk to the tape
     Args:
         fileNcdf: full path to netcdf file
         exit: boolean. If True, exit the program (avoid stalling the program if file is not on disk)
@@ -1268,29 +1266,25 @@ def check_file_tape(fileNcdf,abort=False):
         exit()
     #== Then check if the file actually exists on the system,  exit otherwise.
 
-    try:
-        subprocess.check_call(['ls '+fileNcdf],shell=True,stdout=open(os.devnull, "w"))
-        #== NAS system only: file exists, check if it is active on disk or needs to be migrated from Lou
-        try:
-            subprocess.check_call(["dmls"],shell=True,stdout=open(os.devnull, "w")) #check if dmls command is available (NAS systems only)
-            cmd_txt='dmls -l '+fileNcdf+"""| awk '{print $8,$9}'""" #get the last columns of the ls command with filename and status
-            dmls_out=subprocess.check_output(cmd_txt,shell=True).decode('utf-8')  # get 3 letter identifier from dmls -l command, convert byte to string for Python 3
-            if dmls_out[1:4] not in ['DUL','REG']: #file is OFFLINE, UNMIGRATING etc...
-                if abort :
-                    prRed('*** Error ***')
-                    print(dmls_out)
-                    prRed(dmls_out[6:-1]+ ' is not available on disk, status is: '+dmls_out[0:5])
-                    prRed('CHECK file status with  dmls -l *.nc and run  dmget *.nc to migrate the files')
-                    prRed('Exiting now... \n')
-                    exit()
-                else:
-                    prYellow('*** Warning ***')
-                    prYellow(dmls_out[6:-1]+ ' is not available on disk, status is: '+dmls_out[0:5])
-                    prYellow('Consider checking file status with  dmls -l *.nc and run  dmget *.nc to migrate the files')
-                    prYellow('Waiting for file to be migrated to disk, this may take a while...')
-        except subprocess.CalledProcessError: #subprocess.check_call return an erro message
-            prYellow('Warning: NAS Data migration command dmls is not available. Assume file is present on disk')
 
+    try:
+        #== NAS system only: file exists, check if it is active on disk or needs to be migrated from Lou
+        subprocess.check_call(["dmls"],shell=True,stdout=open(os.devnull, "w")) #check if dmls command is available (NAS systems only)
+        cmd_txt='dmls -l '+fileNcdf+"""| awk '{print $8,$9}'""" #get the last columns of the ls command with filename and status
+        dmls_out=subprocess.check_output(cmd_txt,shell=True).decode('utf-8')  # get 3 letter identifier from dmls -l command, convert byte to string for Python 3
+        if dmls_out[1:4] not in ['DUL','REG']: #file is OFFLINE, UNMIGRATING etc...
+            if abort :
+                prRed('*** Error ***')
+                print(dmls_out)
+                prRed(dmls_out[6:-1]+ ' is not available on disk, status is: '+dmls_out[0:5])
+                prRed('CHECK file status with  dmls -l *.nc and run  dmget *.nc to migrate the files')
+                prRed('Exiting now... \n')
+                exit()
+            else:
+                prYellow('*** Warning ***')
+                prYellow(dmls_out[6:-1]+ ' is not available on disk, status is: '+dmls_out[0:5])
+                prYellow('Consider checking file status with  dmls -l *.nc and run  dmget *.nc to migrate the files')
+                prYellow('Waiting for file to be migrated to disk, this may take a while...')
     except subprocess.CalledProcessError: #subprocess.check_call return an eror message
         if abort :
              exit()
