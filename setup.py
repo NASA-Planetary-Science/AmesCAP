@@ -10,5 +10,5 @@ setup(name='amesgcm',
       scripts=['bin/MarsPull.py','bin/MarsDocumentation.sh','bin/MarsPlot.py','bin/MarsVars.py','bin/MarsFiles.py'],
       install_requires=['requests','netCDF4','numpy','matplotlib'],
       packages=['amesgcm'],
-      data_files = [ ('data', ['Legacy.fixed.nc']) ],
+      include_package_data=True,
       zip_safe=False)
