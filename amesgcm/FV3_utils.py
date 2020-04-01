@@ -742,10 +742,10 @@ class Ncdf(object):
         self.filename=filename
         from netCDF4 import Dataset 
         if action=='w':
-            self.f_Ncdf = Dataset(filename, 'w', format='NETCDF4')
+            self.f_Ncdf = Dataset(filename, 'w', format='NETCDF4_CLASSIC')
             self.f_Ncdf.description = description_txt
         elif action=='a': #append to file
-            self.f_Ncdf = Dataset(filename, 'a', format='NETCDF4')
+            self.f_Ncdf = Dataset(filename, 'a', format='NETCDF4_CLASSIC')
         #create dictionaries to hold dimensions and variables
         self.dim_dict=dict()
         self.var_dict=dict()

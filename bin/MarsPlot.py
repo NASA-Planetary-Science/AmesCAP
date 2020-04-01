@@ -6,13 +6,9 @@ import os       #access operating systems function
 import subprocess #run command
 import sys       #system command
 
+from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
 # The functions below allow to print in different color
-def prRed(skk):         print("\033[91m{}\033[00m".format(skk))
-def prGreen(skk):       print("\033[92m{}\033[00m".format(skk))
-def prCyan(skk):        print("\033[96m{}\033[00m".format(skk))
-def prYellow(skk):      print("\033[93m{}\033[00m".format(skk))
-def prPurple(skk):      print("\033[95m{}\033[00m".format(skk))
-def prLightPurple(skk): print("\033[94m{}\033[00m".format(skk))
+
 
 
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
@@ -1292,58 +1288,6 @@ def check_file_tape(fileNcdf,abort=False):
             pass
 
 
-
-def print_fileContent(fileNcdf):
-    '''
-    Print the content of a Netcdf file in a compact format. Variables are sorted by dimensions.
-    This test is based on the existence of a least one  00XXX.fixed.nc in the current directory.
-    Args:
-        fileNcdf: full path to netcdf file
-    Returns:
-        None (print in the terminal)
-    '''
-    #Define Colors for printing
-    def Red(skk):   return"\033[91m{}\033[00m".format(skk)
-    def Green(skk): return"\033[92m{}\033[00m".format(skk)
-    def Cyan(skk): return "\033[96m{}\033[00m".format(skk)
-    def Yellow(skk):return"\033[93m{}\033[00m".format(skk)
-    def Purple(skk):return"\033[95m{}\033[00m".format(skk)
-    def LightPurple(skk):return"\033[94m{}\033[00m".format(skk)
-
-    if not os.path.isfile(fileNcdf):
-        print(fileNcdf+' not found')
-    else:
-        f=Dataset(fileNcdf, 'r')
-        print("====================CONTENT==========================")
-        all_var=f.variables.keys() #get all variables
-        all_dims=list() #initialize empty list
-        for ivar in all_var:
-            all_dims.append(f.variables[ivar].dimensions) #get all the variables dimensions
-        all_dims=set(all_dims) #filter duplicates (an object of type set() is an unordered collections of distinct objects
-        all_dims=sorted(all_dims,key=len) #sort dimensions by lenght, e.g ('lat') will come before ('lat','lon')
-        var_done=list()
-        for idim in all_dims:
-            for ivar in all_var:
-                if f.variables[ivar].dimensions==idim :
-                    print(Green(ivar.ljust(15))+': '+Purple(str(f.variables[ivar].dimensions))+'= '+\
-                    Cyan(str(f.variables[ivar].shape))+', '+Yellow(f.variables[ivar].long_name)+\
-                    '  ['+f.variables[ivar].units+']')
-
-
-        if fileNcdf[-8:-3]=='fixed':
-            pass #no time dimension
-        else:
-            try: #Skip this part in case the netcdf file does not contains a 'time' variable
-                tini=f.variables['time'][0];tend=f.variables['time'][-1]
-                Ls_ini=aerols_cum(tini,True);Ls_end=aerols_cum(tend,True)
-                MY_ini=MY_func(Ls_ini);MY_end=MY_func(Ls_end)
-                print('')
-                print('Ls ranging from %6.2f to %6.2f: %.2f days'%(np.mod(Ls_ini,360.),np.mod(Ls_end,360.),tend-tini))
-                print('               (MY %02i)   (MY %02i)'%(MY_ini,MY_end))
-            except:
-                pass
-        f.close()
-        print("=====================================================")
 
 def get_Ncdf_num():
     '''

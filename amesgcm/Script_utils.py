@@ -24,13 +24,6 @@ def print_fileContent(fileNcdf):
     Returns: 
         None (print in the terminal)
     '''    
-    #Define Colors for printing
-    def Red(skk):   return"\033[91m{}\033[00m".format(skk) 
-    def Green(skk): return"\033[92m{}\033[00m".format(skk) 
-    def Cyan(skk): return "\033[96m{}\033[00m".format(skk)
-    def Yellow(skk):return"\033[93m{}\033[00m".format(skk) 
-    def Purple(skk):return"\033[95m{}\033[00m".format(skk) 
-    def LightPurple(skk):return"\033[94m{}\033[00m".format(skk)
     
     if not os.path.isfile(fileNcdf):
         print(fileNcdf+' not found')
@@ -47,10 +40,24 @@ def print_fileContent(fileNcdf):
         for idim in all_dims:
             for ivar in all_var:
                 if f.variables[ivar].dimensions==idim :
-                    txt_dim=getattr(f.variables[ivar],'dimensions','') #this returns the dimenions or an empty string if theattribute
-                    txt_shape=getattr(f.variables[ivar],'shape','')   #does not exist
-                    txt_long_name=getattr(f.variables[ivar],'long_name','')
-                    txt_units=getattr(f.variables[ivar],'units','')
+                    #Initialize to empty strings and pass if the dimensions does not exist
+                    txt_dim='';txt_shape='';txt_long_name='';txt_units=''
+                    try:
+                        txt_dim=getattr(f.variables[ivar],'dimensions','') #this returns the dimenions or an empty string if theattribute
+                    except:
+                        pass  
+                    try:
+                        txt_shape=getattr(f.variables[ivar],'shape','')   #does not exist
+                    except:
+                        pass  
+                    try:
+                        txt_long_name=getattr(f.variables[ivar],'long_name','')
+                    except:
+                        pass  
+                    try:
+                        txt_units=getattr(f.variables[ivar],'units','')
+                    except:
+                        pass    
                     print(Green(ivar.ljust(15))+': '+Purple(txt_dim)+'= '+Cyan(txt_shape)+', '+Yellow(txt_long_name)+\
                     '  ['+txt_units+']')
 
@@ -90,52 +97,47 @@ def give_permission(filename):
 
 def check_file_tape(fileNcdf,abort=False):
     '''
-    Check if a file is present on the disk by running the NAS dmls -l data migration command. 
-    This avoid the program to stall if the files need to be migrated from the disk to the tape with dmget *.nc
-    This test is based on the existence of a least one  00XXX.fixed.nc in the current directory.
+    Relevant for use on the NASA Advanced Supercomputing (NAS) environnment only
+    Check if a file is present on the disk by running the NAS dmls -l data migration command.
+    This avoid the program to stall if the files need to be migrated from the disk to the tape
     Args:
         fileNcdf: full path to netcdf file
         exit: boolean. If True, exit the program (avoid stalling the program if file is not on disk)
-    Returns: 
+    Returns:
         None (print status and abort program)
-    '''  
-    import subprocess 
-    import os
+    '''
     # If the filename provided is not a netcdf file, exit program right away
     if fileNcdf[-3:]!='.nc':
         prRed('*** Error ***')
         prRed(fileNcdf + ' is not a netcdf file \n' )
         exit()
-    #== Then check if the file actually exists on the system,  exit otherwise. 
-    
+    #== Then check if the file actually exists on the system,  exit otherwise.
+
+
     try:
-        subprocess.check_call(['ls '+fileNcdf],shell=True,stdout=open(os.devnull, "w"))  
-        #== NAS system only: file exists, check if it is active on disk or needs to be migrated from Lou  
-        try:
-            subprocess.check_call(["dmls"],shell=True,stdout=open(os.devnull, "w")) #check if dmls command is available (NAS systems only)
-            cmd_txt='dmls -l '+fileNcdf+"""| awk '{print $8, $9}'""" #get the last columns of the ls command
-            dmls_out=subprocess.check_output(cmd_txt,shell=True)  # get 3 letter identifier from dmls -l command 
-            if dmls_out[1:4] not in ['DUL','REG','MIG']: #file is OFFLINE, UNMIGRATING etc...
-                if abort :
-                    prRed('*** Error ***')
-                    prRed(dmls_out[6:-1]+ ' is not available on disk, status is: '+dmls_out[0:5])
-                    prRed('CHECK file status with  dmls -l *.nc and run  dmget *.nc to migrate the files')
-                    prRed('Exiting now... \n')
-                    exit()
-                else: 
-                    print(dmls_out)   
-                    prYellow('*** Warning ***')
-                    prYellow(dmls_out[6:-1]+ ' is not available on disk, status is: '+dmls_out[0:5])
-                    prYellow('Consider checking file status with  dmls -l *.nc and run  dmget *.nc to migrate the files')
-                    prYellow('Waiting for file to be migrated to disk, this may take a while...')
-        except subprocess.CalledProcessError: #subprocess.check_call return an erro message
-            prYellow('Warning: NAS Data migration command dmls is not available. Assume file is present on disk')
-        
+        #== NAS system only: file exists, check if it is active on disk or needs to be migrated from Lou
+        subprocess.check_call(["dmls"],shell=True,stdout=open(os.devnull, "w")) #check if dmls command is available (NAS systems only)
+        cmd_txt='dmls -l '+fileNcdf+"""| awk '{print $8,$9}'""" #get the last columns of the ls command with filename and status
+        dmls_out=subprocess.check_output(cmd_txt,shell=True).decode('utf-8')  # get 3 letter identifier from dmls -l command, convert byte to string for Python 3
+        if dmls_out[1:4] not in ['DUL','REG']: #file is OFFLINE, UNMIGRATING etc...
+            if abort :
+                prRed('*** Error ***')
+                print(dmls_out)
+                prRed(dmls_out[6:-1]+ ' is not available on disk, status is: '+dmls_out[0:5])
+                prRed('CHECK file status with  dmls -l *.nc and run  dmget *.nc to migrate the files')
+                prRed('Exiting now... \n')
+                exit()
+            else:
+                prYellow('*** Warning ***')
+                prYellow(dmls_out[6:-1]+ ' is not available on disk, status is: '+dmls_out[0:5])
+                prYellow('Consider checking file status with  dmls -l *.nc and run  dmget *.nc to migrate the files')
+                prYellow('Waiting for file to be migrated to disk, this may take a while...')
     except subprocess.CalledProcessError: #subprocess.check_call return an eror message
         if abort :
              exit()
         else:
-            pass 
+            pass
+
             
 def progress(k,Nmax):
     """
