@@ -283,7 +283,7 @@ def akbk_loader(NLAY,data_dir='/u/mkahre/MCMC/data_files'):
         
     from netCDF4 import Dataset
     NLAY=int(NLAY)
-    file=Dataset(data_dir+'/akbk_L%i.nc'%(NLAY), 'r', format='NETCDF4')
+    file=Dataset(data_dir+'/akbk_L%i.nc'%(NLAY), 'r', format='NETCDF4_CLASSIC')
     ak=file.variables['pk'][:]
     bk=file.variables['bk'][:]
     file.close()
