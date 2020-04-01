@@ -12,9 +12,18 @@ import shutil
 import subprocess
 import numpy as np
 from netCDF4 import Dataset
-#from amesgcm.lib.FV3_utils import find_n
-from amesgcm.Script_utils import prYellow,prCyan
-sys.path.append(os.getcwd())
+
+
+#TODO remove this block to use package instead
+#==============
+sys.path.append('/Users/akling/amesgcm/amesgcm/')
+from FV3_utils import Ncdf
+from Script_utils import prYellow,prCyan
+#===========
+#from amesgcm.FV3_utils import Ncdf
+#from amesgcm.Script_utils import prYellow,prCyan
+#---
+
 
 #======================================================
 #                  ARGUMENTS PARSER
@@ -25,34 +34,35 @@ parser = argparse.ArgumentParser(description="""\033[93m MarsFiles files manager
 parser.add_argument('input_file', nargs='+', 
 								help='***.nc file or list of ***.nc files ')
 								
-parser.add_argument('-fv3','--fv3', nargs='+',default=[],
+parser.add_argument('-fv3','--fv3', action='store_true',
 					help="""Produce FV3's diurn, average and daily files from Legacy outputs  \n"""
 						"""> Usage: MarsFiles LegacyGCM*.nc -fv3 \n"""
 						"""\033[00m""")
 
-parser.add_argument('-c','--combine', nargs='+',default=['p'],
+parser.add_argument('-c','--combine', action='store_true',
 					help="""Combine a sequence of similar files as one file\n"""
 						"""> Usage: MarsVars *.atmos_average.nc --combine \n"""
 						""" \n""")
 
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
+#TODO needed?
+sys.path.append(os.getcwd())
 
-def main(argv):
+def main():
 
 	#Test if ncks is available , make recommendation and  exit otherwise--	    
 	try:
-        	subprocess.check_call('ncks --version',shell=True,stdout=open(os.devnull, "w"), stderr=open(os.devnull, "w"))
+		subprocess.check_call('ncks --version',shell=True,stdout=open(os.devnull, "w"), stderr=open(os.devnull, "w"))
 	except subprocess.CalledProcessError:
 		prYellow("ncks dependency is needed to concatenate files. On NAS, use:")
 		prCyan('    module load nco')
 		#exit()
 
-
 	print("====== Running postprocess_legacy.py =======")
 	
 	file_list=parser.parse_args().input_file
-
+	
 #argument definitions:
 	cwd=os.getcwd()
 	path2data=os.getcwd()
@@ -92,27 +102,29 @@ def main(argv):
 			else:
 				lsmax = str(max(int(lsmax),int(ls_r))).zfill(3)
 			a=make_atmos_avg(f,cwd)
-
-	#now cat together the files
-	newfavg="Ls"+lsmin+"_Ls"+lsmax+".atmos_average.nc"
-	newfdai="Ls"+lsmin+"_Ls"+lsmax+".atmos_daily.nc"
-	newfdiu="Ls"+lsmin+"_Ls"+lsmax+".atmos_diurn.nc"
-	tempdir=os.path.join(cwd,'temp')
-	os.makedirs(tempdir, exist_ok=True)
-	os.chdir(tempdir)
-	catavg = "ncrcat ../*.atmos_average.nc "+"00000.atmos_average.nc"
-	catdai = "ncrcat ../*.atmos_daily.nc "+"00000.atmos_daily.nc"
-	catdiu = "ncrcat ../*.atmos_diurn.nc "+"00000.atmos_diurn.nc"
-	p = subprocess.Popen(catavg, universal_newlines=True, shell=True)
-	p.wait()
-	p = subprocess.Popen(catdai, universal_newlines=True, shell=True)
-	p.wait()
-	p = subprocess.Popen(catdiu, universal_newlines=True, shell=True)
-	p.wait()
-	os.chdir(cwd)
-	p = subprocess.run('rm -f Ls*.nc', universal_newlines=True, shell=True)
-	p = subprocess.run('mv temp/*.nc .', universal_newlines=True, shell=True)
-	p = subprocess.run('rm -rf temp/', universal_newlines=True, shell=True)
+			
+	if parser.parse_args().combine:
+		#now cat together the files
+		newfavg="Ls"+lsmin+"_Ls"+lsmax+".atmos_average.nc"
+		newfdai="Ls"+lsmin+"_Ls"+lsmax+".atmos_daily.nc"
+		newfdiu="Ls"+lsmin+"_Ls"+lsmax+".atmos_diurn.nc"
+		tempdir=os.path.join(cwd,'temp')
+		os.makedirs(tempdir, exist_ok=True)
+		os.chdir(tempdir)
+		
+		catavg = "ncrcat ../*.atmos_average.nc "+"00000.atmos_average.nc"
+		catdai = "ncrcat ../*.atmos_daily.nc "+"00000.atmos_daily.nc"
+		catdiu = "ncrcat ../*.atmos_diurn.nc "+"00000.atmos_diurn.nc"
+		p = subprocess.Popen(catavg, universal_newlines=True, shell=True)
+		p.wait()
+		p = subprocess.Popen(catdai, universal_newlines=True, shell=True)
+		p.wait()
+		p = subprocess.Popen(catdiu, universal_newlines=True, shell=True)
+		p.wait()
+		os.chdir(cwd)
+		p = subprocess.run('rm -f Ls*.nc', universal_newlines=True, shell=True)
+		p = subprocess.run('mv temp/*.nc .', universal_newlines=True, shell=True)
+		p = subprocess.run('rm -rf temp/', universal_newlines=True, shell=True)
 	#TODO
 	#MarsVars.beta 00000.atmos_average.nc -colint vap_mass_micro ice_mass_micro dst_mass_micro	
 	#runpinterp -l 24
@@ -333,108 +345,7 @@ def replace_at_index(tup, ix, val):
 	else:
 		return tup[:ix] + (val,) + tup[ix+1:]
 
-	class Ncdf(object):
-		'''
-		Alex K.
-		NetCdf wrapper for quick archiving of data into netcdf format
-	
-		USAGE:
-	
-		from netcdf_wrapper import Ncdf
-	
-		Fgeo= 0.03 #W/m2, a constant
-		TG=np.ones((24,8)) #ground temperature
-	
-		#---create file---
-		filename="/lou/s2n/mkahre/MCMC/analysis/working/myfile.nc"
-		description="results from new simulation, Alex 01-01-19"
-		Log=Ncdf(filename,description)
-	
-		#---Save the constant to the file---
-		Log.add_constant('Fgeo',Fgeo,"geothermal flux","W/m2")
-	
-		#---Save the TG array to the file---
-		Log.add_dimension('Nx',8)
-		Log.add_dimension('time',24)
-	
-		Log.log_variable('TG',TG,('time','Nx'),'soil temperature','K')
-	
-		Log.close()
-	
-	
-		'''
-		def __init__(self,filename=None,description_txt="",action='w'):
-			if filename:
-				if filename[-3:]!=".nc":
-				#assume that only path is provided so make a name for the file
-					import datetime;now = datetime.datetime.now()
-					filename=filename+\
-					'/run_%02d-%02d-%04d_%i-%i-%i.nc'%(now.day,now.month,now.year,now.hour,now.minute,now.second)
-			else:	#create a default file name	 if path and filename are not provided
-				import os #use a default path if not provided
-				pathname=os.getcwd()+'/'
-				import datetime;now = datetime.datetime.now()
-				filename=pathname+\
-				'run_%02d-%02d-%04d_%i-%i-%i.nc'%(now.day,now.month,now.year,now.hour,now.minute,now.second)
-			self.filename=filename
-			from netCDF4 import Dataset
-			if action=='w':
-				self.f_Ncdf = Dataset(filename, 'w', format='NETCDF4_CLASSIC')
-				self.f_Ncdf.description = description_txt
-			elif action=='a': #append to file
-				self.f_Ncdf = Dataset(filename, 'a', format='NETCDF4_CLASSIC')
-			#create dictionaries to hold dimensions and variables
-			self.dim_dict=dict()
-			self.var_dict=dict()
-			print(filename+ " was created")
-	
-		def close(self):
-			self.f_Ncdf.close()
-			print(self.filename+" was closed")
-	
-		def add_dimension(self,dimension_name,length):
-			self.dim_dict[dimension_name]= self.f_Ncdf.createDimension(dimension_name,length)
-	
-		def print_dimension(self):
-			print(self.dim_dict.items())
-		def print_variable(self):
-			print(self.var_dict.keys())
-	
-		def add_constant(self,variable_name,value,longname_txt="",unit_txt=""):
-			if not any('constant' in s for s in self.dim_dict.keys()):
-				self.add_dimension('constant',1)
-			longname_txt =longname_txt+' (%g)'%(value)	 #add the value to the longname
-			self.def_variable(variable_name,('constant'),longname_txt,unit_txt)
-			self.var_dict[variable_name][:]=value
-	
-		def def_variable(self,variable_name,dim_array,longname_txt="",unit_txt=""):
-			self.var_dict[variable_name]= self.f_Ncdf.createVariable(variable_name,'f4',dim_array)
-			self.var_dict[variable_name].units=unit_txt
-			self.var_dict[variable_name].long_name=longname_txt
-	#		self.var_dict[variable_name].checksum=chk_txt
-		def log_variable(self,variable_name,DATAin,dim_array,longname_txt="",unit_txt="",):
-			if not any(variable_name == s for s in self.var_dict.keys()):
-				self.def_variable(variable_name,dim_array,longname_txt,unit_txt)
-			self.var_dict[variable_name].long_name=longname_txt
-			self.var_dict[variable_name].units=unit_txt
-			self.var_dict[variable_name][:]=DATAin
-	
-		def def_var1d(self,variable_name,dim_array,longname_txt="",unit_txt="",cart_txt=""):
-			self.var_dict[variable_name]= self.f_Ncdf.createVariable(variable_name,'f8',dim_array)
-			self.var_dict[variable_name].units=unit_txt
-			self.var_dict[variable_name].long_name=longname_txt
-			self.var_dict[variable_name].cartesian_axis=cart_txt
-		def log_var1d(self,variable_name,DATAin,dim_array,longname_txt="",unit_txt="",cart_txt="",):
-			if not any(variable_name == s for s in self.var_dict.keys()):
-				self.def_var1d(variable_name,dim_array,longname_txt,unit_txt,cart_txt)
-			self.var_dict[variable_name].long_name=longname_txt
-			self.var_dict[variable_name].units=unit_txt
-			self.var_dict[variable_name].cartesian_axis=cart_txt
-			self.var_dict[variable_name][:]=DATAin
 
-#AK : Function for output
-#def prCyan(skk): print("\033[96m{}\033[00m" .format(skk))
-#def prYellow(skk): print("\033[93m{}\033[00m" .format(skk))
 
 if __name__ == "__main__":
-	main(sys.argv[1:])
+	main()

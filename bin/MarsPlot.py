@@ -123,7 +123,7 @@ def main():
 
     # ----- Option 1 :Inspect content of a Netcdf file ----
     if parser.parse_args().inspect_file:
-        check_file_tape(parser.parse_args().inspect_file,abort=True) #NAS-specific, check if the file is on tape
+        check_file_tape(parser.parse_args().inspect_file,abort=False) #NAS-specific, check if the file is on tape
         print_fileContent(parser.parse_args().inspect_file)
 
         # ----- Option 2: Generate a template file ----

@@ -783,7 +783,20 @@ class Ncdf(object):
         self.var_dict[variable_name].dim_name=dim_array   
         self.var_dict[variable_name].units=unit_txt
         self.var_dict[variable_name][:]=DATAin 
- 
+        
+    def def_var1d(self,variable_name,dim_array,longname_txt="",unit_txt="",cart_txt=""):
+        self.var_dict[variable_name]= self.f_Ncdf.createVariable(variable_name,'f8',dim_array)
+        self.var_dict[variable_name].units=unit_txt
+        self.var_dict[variable_name].long_name=longname_txt
+        self.var_dict[variable_name].cartesian_axis=cart_txt
+        
+    def log_var1d(self,variable_name,DATAin,dim_array,longname_txt="",unit_txt="",cart_txt="",):
+        if not any(variable_name == s for s in self.var_dict.keys()):
+            self.def_var1d(variable_name,dim_array,longname_txt,unit_txt,cart_txt)
+        self.var_dict[variable_name].long_name=longname_txt
+        self.var_dict[variable_name].units=unit_txt
+        self.var_dict[variable_name].cartesian_axis=cart_txt
+        self.var_dict[variable_name][:]=DATAin
 #========================================================================= 
 #=======================vertical grid utilities===========================
 #=========================================================================
