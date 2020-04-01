@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 
+#       include_package_data=True,
 setup(name='amesgcm',
       version='0.1',
       description='Analysis pipeline for the NASA Ames MGCM',
@@ -10,5 +11,5 @@ setup(name='amesgcm',
       scripts=['bin/MarsPull.py','bin/MarsDocumentation.sh','bin/MarsPlot.py','bin/MarsVars.py','bin/MarsFiles.py'],
       install_requires=['requests','netCDF4','numpy','matplotlib'],
       packages=['amesgcm'],
-      include_package_data=True,
+      data_files = [('', ['mars_data/Legacy.fixed.nc'])],
       zip_safe=False)
