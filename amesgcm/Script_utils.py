@@ -24,7 +24,11 @@ def print_fileContent(fileNcdf):
     Returns: 
         None (print in the terminal)
     '''    
-    
+    #Define Colors for printing
+    def Green(skk): return"\033[92m{}\033[00m".format(skk)
+    def Cyan(skk): return "\033[96m{}\033[00m".format(skk)
+    def Yellow(skk):return"\033[93m{}\033[00m".format(skk)
+    def Purple(skk):return"\033[95m{}\033[00m".format(skk)
     if not os.path.isfile(fileNcdf):
         print(fileNcdf+' not found')
     else:    
@@ -61,19 +65,15 @@ def print_fileContent(fileNcdf):
                     print(Green(ivar.ljust(15))+': '+Purple(txt_dim)+'= '+Cyan(txt_shape)+', '+Yellow(txt_long_name)+\
                     '  ['+txt_units+']')
 
-        
-        if fileNcdf[-8:-3]=='fixed':
-            pass #no time dimension 
-        else:    
-            try: #Skip this part in case the netcdf file does not contains a 'time' variable
-                tini=f.variables['time'][0];tend=f.variables['time'][-1]
-                Ls_ini=aerols_cum(tini,True);Ls_end=aerols_cum(tend,True)
-                MY_ini=MY_func(Ls_ini);MY_end=MY_func(Ls_end)
-                print('')
-                print('Ls ranging from %6.2f to %6.2f: %.2f days'%(np.mod(Ls_ini,360.),np.mod(Ls_end,360.),tend-tini))
-                print('               (MY %02i)   (MY %02i)'%(MY_ini,MY_end))
-            except:
-                pass
+        try: #This part will be skipped if  the netcdf file does not contains a 'time' variable
+            tini=f.variables['time'][0];tend=f.variables['time'][-1]
+            Ls_ini=aerols_cum(tini,True);Ls_end=aerols_cum(tend,True)
+            MY_ini=MY_func(Ls_ini);MY_end=MY_func(Ls_end)
+            print('')
+            print('Ls ranging from %6.2f to %6.2f: %.2f days'%(np.mod(Ls_ini,360.),np.mod(Ls_end,360.),tend-tini))
+            print('               (MY %02i)   (MY %02i)'%(MY_ini,MY_end))
+        except:
+            pass
         f.close()
         print("=====================================================") 
 

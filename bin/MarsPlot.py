@@ -6,8 +6,13 @@ import os       #access operating systems function
 import subprocess #run command
 import sys       #system command
 
-from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-# The functions below allow to print in different color
+
+#TODO remove this block to use package instead
+#==============
+sys.path.append('/Users/akling/amesgcm/amesgcm/')
+from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+#from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+
 
 
 

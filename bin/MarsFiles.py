@@ -17,12 +17,12 @@ from netCDF4 import Dataset
 
 #TODO remove this block to use package instead
 #==============
-#sys.path.append('/Users/akling/amesgcm/amesgcm/')
-#from FV3_utils import Ncdf
-#from Script_utils import prYellow,prCyan
+sys.path.append('/Users/akling/amesgcm/amesgcm/')
+from FV3_utils import Ncdf
+from Script_utils import prYellow,prCyan
 #===========
-from amesgcm.FV3_utils import Ncdf
-from amesgcm.Script_utils import prYellow,prCyan
+#from amesgcm.FV3_utils import Ncdf
+#from amesgcm.Script_utils import prYellow,prCyan
 #---
 
 
@@ -373,13 +373,13 @@ def replace_at_index(tup, ix, val):
         return tup[:ix] + (val,) + tup[ix+1:]
 
 
-def ls2sol_1year(Ls_deg,offset=True):
+def ls2sol_1year(Ls_deg,offset=True,round10=True):
     '''
     Returns a sol number from the solar longitude.
     Args:
         Ls_deg: solar longitude in degree
         offset : if True, make year starts at Ls 0
-
+        round10 : if True, round to the nearest 10 sols
     Returns:
         Ds :sol number
     ***NOTE***
@@ -403,6 +403,7 @@ def ls2sol_1year(Ls_deg,offset=True):
         else:
             Ds-=Ns
             Ds[Ds<0]=Ds[Ds<0]+Ns
+    if round: Ds=np.round(Ds,-1)  #-1 means round to the nearest 10      
     return Ds
 
 if __name__ == "__main__":

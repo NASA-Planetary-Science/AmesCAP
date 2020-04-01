@@ -774,13 +774,13 @@ class Ncdf(object):
         self.var_dict[variable_name]= self.f_Ncdf.createVariable(variable_name,'f4',dim_array)    
         self.var_dict[variable_name].units=unit_txt
         self.var_dict[variable_name].long_name=longname_txt
-        self.var_dict[variable_name].dim_name=dim_array    
+        self.var_dict[variable_name].dim_name=str(dim_array)  
         
     def log_variable(self,variable_name,DATAin,dim_array,longname_txt="",unit_txt=""):
         if not any(variable_name in s for s in self.var_dict.keys()):
             self.def_variable(variable_name,dim_array,longname_txt,unit_txt)
         self.var_dict[variable_name].long_name=longname_txt
-        self.var_dict[variable_name].dim_name=dim_array   
+        self.var_dict[variable_name].dim_name=str(dim_array)  
         self.var_dict[variable_name].units=unit_txt
         self.var_dict[variable_name][:]=DATAin 
         
