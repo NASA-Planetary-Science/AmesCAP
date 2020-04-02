@@ -109,7 +109,7 @@ def check_file_tape(fileNcdf,abort=False):
         subprocess.check_call(["dmls"],shell=True,stdout=open(os.devnull, "w"),stderr=open(os.devnull, "w")) #check if dmls command is available (NAS systems only)
         cmd_txt='dmls -l '+fileNcdf+"""| awk '{print $8,$9}'""" #get the last columns of the ls command with filename and status
         dmls_out=subprocess.check_output(cmd_txt,shell=True).decode('utf-8')  # get 3 letter identifier from dmls -l command, convert byte to string for Python 3
-        if dmls_out[1:4] not in ['DUL','REG']: #file is OFFLINE, UNMIGRATING etc...
+        if dmls_out[1:4] not in ['DUL','REG','MIG']: #file is OFFLINE, UNMIGRATING etc...
             if abort :
                 prRed('*** Error ***')
                 print(dmls_out)

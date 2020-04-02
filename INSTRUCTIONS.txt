@@ -18,12 +18,17 @@ pip install -r requirements.txt
 #Remove package:
 pip uninstall amesgcm
 
+(module purge)
+(module load python3/3.7.0)
+
 python3.7 -m venv --system-site-packages envPython3.7
 source ~/anaconda3.7/envPython3.7/bin/activate
 pip install git+https://github.com/alex-kling/amesgcm.git
-MarsPull.py -ls 0 9
-MarsFiles.py LegacyGCM_Ls000_Ls004.nc LegacyGCM_Ls005_Ls009.nc -fv3
+MarsPull.py -ls 0 15
+MarsFiles.py LegacyGCM_Ls*.nc -fv3
 MarsVars.py *atmos_average.nc -colint vap_mass_micro ice_mass_micro dst_mass_micro
 MarsVars.py *atmos_average.nc
 MarsInterp.py *.atmos_average.nc
-MarsPlot.py -i 00010.atmos_average.nc
+MarsPlot.py -i 00010.atmos_average_plevs.nc
+MarsPlot.py -do legacy -d 0 10
+open legacy.
