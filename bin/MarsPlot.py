@@ -9,9 +9,9 @@ import sys       #system command
 
 #TODO remove this block to use package instead
 #==============
-sys.path.append('/Users/akling/amesgcm/amesgcm/')
-from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-#from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+#sys.path.append('/Users/akling/amesgcm/amesgcm/')
+#from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
 
 
 
@@ -67,7 +67,7 @@ parser.add_argument('--template','-template', action='store_true',
 parser.add_argument('-temp','--temp', action='store_true',help=argparse.SUPPRESS) #same as --template but without the instructions
 
 parser.add_argument('-do','--do', nargs=1,type=str,default=None, #sys.stdin
-                             help='(Re)-use a template file my_custom.in. First search in ~/FV3/templates/,\n'
+                             help='(Re)-use a template file my_custom.in. First search in ~/env/mars_templates/,\n'
                                  '                                                then in /u/mkahre/MCMC/analysis/working/templates/ \n'
                                   '> Usage: MarsPlot -do my_custom [other options]')
 
@@ -1270,7 +1270,8 @@ def path_to_template(custom_name):
          If file not found,try:/lou/s2n/mkahre/MCMC/analysis/working/templates/my_custom.in
     '''
 
-    local_dir=os.path.expanduser("~") +'/FV3/templates'
+    #local_dir=os.path.expanduser("~") +'/FV3/templates'
+    local_dir=sys.prefix+'/mars_templates'
     shared_dir='/lou/s2n/mkahre/MCMC/analysis/working/templates'
 
     #---

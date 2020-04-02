@@ -7,12 +7,12 @@ import subprocess #run command
 import sys       #system command
 
 #TODO delete when done testing
-sys.path.append('/Users/akling/amesgcm/amesgcm/')
-from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-from FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh
+#sys.path.append('/Users/akling/amesgcm/amesgcm/')
+#from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+#from FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh
 
-#from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh
-#from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh
+from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
 
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:

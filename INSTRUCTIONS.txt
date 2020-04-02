@@ -17,3 +17,6 @@ pip install -r requirements.txt
 
 #Remove package:
 pip uninstall amesgcm
+
+MarsPull -ls 0 9
+MarsFiles.py LegacyGCM_Ls000_Ls004.nc LegacyGCM_Ls005_Ls009.nc -fv3

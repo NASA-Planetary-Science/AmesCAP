@@ -34,6 +34,9 @@ def print_fileContent(fileNcdf):
         print(fileNcdf+' not found')
     else:    
         f=Dataset(fileNcdf, 'r')
+        print("===================DIMENSIONS==========================")
+        print(list(f.dimensions.keys()))
+        print(str(f.dimensions))
         print("====================CONTENT==========================")
         all_var=f.variables.keys() #get all variables
         all_dims=list() #initialize empty list
@@ -45,24 +48,10 @@ def print_fileContent(fileNcdf):
         for idim in all_dims:
             for ivar in all_var:
                 if f.variables[ivar].dimensions==idim :
-                    #Initialize to empty strings and pass if the dimensions does not exist
-                    txt_dim='';txt_shape='';txt_long_name='';txt_units=''
-                    try:
-                        txt_dim=getattr(f.variables[ivar],'dimensions','') #this returns the dimenions or an empty string if theattribute
-                    except:
-                        pass  
-                    try:
-                        txt_shape=getattr(f.variables[ivar],'shape','')   #does not exist
-                    except:
-                        pass  
-                    try:
-                        txt_long_name=getattr(f.variables[ivar],'long_name','')
-                    except:
-                        pass  
-                    try:
-                        txt_units=getattr(f.variables[ivar],'units','')
-                    except:
-                        pass    
+                    txt_dim=getattr(f.variables[ivar],'dimensions','') 
+                    txt_shape=getattr(f.variables[ivar],'shape','')
+                    txt_long_name=getattr(f.variables[ivar],'long_name','')
+                    txt_units=getattr(f.variables[ivar],'units','')
                     print(Green(ivar.ljust(15))+': '+Purple(txt_dim)+'= '+Cyan(txt_shape)+', '+Yellow(txt_long_name)+\
                     '  ['+txt_units+']')
 

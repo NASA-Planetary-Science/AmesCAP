@@ -7,12 +7,12 @@ import subprocess #run command
 import sys       #system command
 
 #TODO delete when done testing
-sys.path.append('/Users/akling/amesgcm/amesgcm/')
-from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-from FV3_utils import fms_press_calc,fms_Z_calc,Ncdf
+#sys.path.append('/Users/akling/amesgcm/amesgcm/')
+#from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+#from FV3_utils import fms_press_calc,fms_Z_calc,Ncdf,pinterp
 
-#from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh
-#from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,Ncdf,pinterp
+from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
 
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
@@ -67,6 +67,14 @@ M_co2 =0.044 # kg/mol
 #===========================
 filepath=os.getcwd()
 
+#Default levels
+level=np.array([1.0e+03, 9.5e+02, 9.0e+02, 8.5e+02, 8.0e+02, 7.5e+02, 7.0e+02,
+       6.5e+02, 6.0e+02, 5.5e+02, 5.0e+02, 4.5e+02, 4.0e+02, 3.5e+02,
+       3.0e+02, 2.5e+02, 2.0e+02, 1.5e+02, 1.0e+02, 7.0e+01, 5.0e+01,
+       3.0e+01, 2.0e+01, 1.0e+01, 7.0e+00, 5.0e+00, 3.0e+00, 2.0e+00,
+       1.0e+00, 5.0e-01, 3.0e-01, 2.0e-01, 1.0e-01, 5.0e-02, 3.0e-02,
+       1.0e-02])
+       
 def compute_p_3D(ps,ak,bk,temp):
     dim_out=temp.shape
     p_3D= fms_press_calc(ps,ak,bk,lev_type='full')
@@ -74,25 +82,6 @@ def compute_p_3D(ps,ak,bk,temp):
     if len(p_3D.shape)==3:p_3D=p_3D.transpose([2,0,1]) #p_3D [lat,lon,lev] ->    [lev, lat, lon]
     return p_3D.reshape(dim_out)
 
-def compute_rho(ps,ak,bk,temp):
-    """
-    Return the density in kg/m3
-    """
-    return compute_p_3D(ps,ak,bk,temp)/(rgas*temp)
-
-def compute_theta(ps,ak,bk,temp):
-    """
-    Return the potential temperature in K
-    """
-
-    theta_exp= R/(M_co2*Cp)
-    p_3D= compute_p_3D(ps,ak,bk,temp)
-
-    ps_shape=ps.shape #(time,lat,lon) is transformed into (time,1,lat,lon) in the next line with np.reshape
-    return temp*(np.reshape(ps,(ps_shape[0],1,ps_shape[1],ps_shape[2]))/p_3D)**(theta_exp) #potential temperature
-
-def compute_w(rho,omega):
-    return -omega/(rho*g)
 
 def compute_zfull(ps,ak,bk,temp):
     """
@@ -135,23 +124,44 @@ def main():
         if ifile==file_list[0]:
             ak=np.array(fNcdf.variables['pk'])
             bk=np.array(fNcdf.variables['bk'])
+            ps=np.array(fNcdf.variables['ps'])
+            p_3D= fms_press_calc(ps,ak,bk,lev_type='full').transpose([3,0,1,2])# p_3D [tim,lat,lon,lev] ->[lev,tim,lat, lon]
+            prGreen(p_3D.max())
             
         var_list=fNcdf.variables.keys()
         fnew = Ncdf(newname,'Pressure interpolation using MarsInterp.py')
         #===========      Replicate existing dimensions  =================
-        var=histfile.variables['longitude']
-        npvar=var[:]
-        a=add_dim(histfile,newfavg,'lon',npvar.size,npvar,getattr(var,'units'))
-        var=histfile.variables['latitude']
-        npvar=var[:]
-        a=add_dim(histfile,newfavg,'lat',npvar.size,npvar,getattr(var,'units'))
-        newfavg.add_dimension('time',None)
+        
+        fnew.copy_Ncdim_with_content(fNcdf.variables['lon'])
+        fnew.copy_Ncdim_with_content(fNcdf.variables['lat'])
+        fnew.add_dim_with_content('level',level/100.,longname_txt="interpolated pressure",unit_txt="hPa")
+        #---Time deserve special treatment:
+        #fnew.copy_Ncdim_with_content(fNcdf.variables['time'])
+        fnew.add_dimension('time',None)
+        t=fNcdf.variables['time'][:]
 
+        fnew.log_axis1D('time',t,('time'),longname_txt='sol number',unit_txt='',cart_txt='')
+
+        
             #----Check if the variable is currently supported---
         for ivar in var_list: 
-            print('Processing: %s...'%(ivar))
+            
+            if fNcdf.variables[ivar].dimensions==('time','pfull', 'lat', 'lon'):
+                print('Interpolating: %s...'%(ivar))  
+                varIN=fNcdf.variables[ivar][:]
+                #prCyan(varIN.transpose([1,0,2,3]).shape)
+                varOUT=pinterp(varIN.transpose([1,0,2,3]),p_3D ,level,True).transpose([1,0,2,3])
+                fnew.log_variable(ivar,varOUT,('time','level', 'lat', 'lon'),fNcdf.variables[ivar].long_name,fNcdf.variables[ivar].units)
+            else:
+                
+                if  ivar not in ['time','pfull', 'lat', 'lon','level','phalf','pk','bk']:
+                    print('Copying: %s...'%(ivar))
+                    fnew.copy_Ncvar(fNcdf.variables[ivar]) 
+                    
+             
             '''
             try:
+                
                 fileNC=Dataset(ifile, 'a', format='NETCDF4')
                 #---temp and ps are always needed---
                 dim_out=fileNC.variables['temp'].dimensions #get dimension
