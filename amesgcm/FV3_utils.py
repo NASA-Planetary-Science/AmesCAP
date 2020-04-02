@@ -797,6 +797,15 @@ class Ncdf(object):
         self.var_dict[variable_name].units=unit_txt
         self.var_dict[variable_name].cartesian_axis=cart_txt
         self.var_dict[variable_name][:]=DATAin
+        
+    #Function to add and define dimension
+    def add_dim_content(self,dimension_name,DATAin,longname_txt="",unit_txt=""):
+        self.add_dimension(dimension_name,len(DATAin))
+        #---If no longname is provided, use dimension_name as default---
+        if longname_txt=="":longname_txt=dimension_name
+        self.log_var1d(dimension_name,DATAin,(dimension_name),longname_txt,unit_txt)  
+       
+    
 #========================================================================= 
 #=======================vertical grid utilities===========================
 #=========================================================================

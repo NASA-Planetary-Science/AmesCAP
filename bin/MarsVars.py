@@ -276,8 +276,7 @@ def main():
                         N=compute_N(theta,zfull)
                         OUT=compute_scorer(N,ucomp,zfull)
                
-
-                    #filter nana    
+                    #filter nan  
                     OUT[np.isnan(OUT)]=fill_value
                     #Log the variable
                     var_Ncdf = fileNC.createVariable(ivar,'f4',dim_out) 

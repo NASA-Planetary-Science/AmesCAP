@@ -309,75 +309,6 @@ def lon_360_to_180(lon):
     return lon
 
 
-def aerols_cum(jld,continueous=False):
-    """
-    Return the solar longitude Ls as a function of the sol number. Sol 0 is perihelion.
-    By default, Ls is increasing, i.e Ls= 252. 359. 360 361 ... 720 etc...
-    Based on Tanguys' aerols.py
-
-    Args:
-        jld: sol number after perihelion
-        module: bool, if True, result is modulo 360
-
-    Returns:
-        areols: The corresponding solar longitude Ls
-    """
-    jld=np.array(jld).reshape(len(np.atleast_1d(jld))) #if jld is a scalar, reshape as a 1-element array
-    pi=np.math.pi
-
-    # constants
-    year= 668.0              #  This is in martian days  ie sols
-    zero_date  =  0.0          #  time of perihelion passage
-    equinox = 180.0            #  day of northern equinox:   (for 668 sol year)
-    small_value=  1.0e-7
-    degrad= pi/180.0
-    #---
- # Specify orbit eccentricity and angle of planets's inclination
-
-    ec = .093    #  orbit eccentricity
-    er = ( (1.0+ec)/(1.0-ec) )**0.5
-
-    #Initialize working arrays
-    w,rad,als,areols,MY=[np.zeros_like(jld) for _ in range(0,5)]
-
- # date= days since last perihelion passage
-    date = jld - zero_date
- #Year count, start at the equinox
-    MY=(date-equinox)//(668.)+1
-
- # determine true anomaly at equinox:  eq
-
-    qq = 2.0 * pi * equinox / year   # qq is the mean anomaly
-    e = 1.0
-    diff= 1.0
-    while (diff > small_value):
-        ep = e - (e-ec*np.math.sin(e)-qq) / (1.0-ec*np.cos(e))
-        diff= abs( ep-e )
-        e = ep
-
-    eq1 = 2.0 * np.math.atan( er * np.math.tan(0.5*e) )
-
-# determine true anomaly at current date:  w
-
-
-    for i in range(0,len(jld)):
-        e= 1.0
-        diff= 1.0
-        em = 2. * pi * date[i] / year
-        while (diff > small_value):
-            ep = e - (e - ec * np.sin(e) - em) / (1.0 - ec * np.cos(e))
-            diff= abs( ep-e)
-            e = ep
-        w[i] = 2.0 * np.math.atan( er * np.math.tan(0.5*e))
-
-    als= w - eq1            #    Aerocentric Longitude
-    areols= als/degrad
-
-    areols[areols< 0.]+= 360.
-    if continueous: areols+=MY*360.
-
-    return areols
-
 def MY_func(Ls_cont):
     '''
     This function return the Mars Year
@@ -388,36 +319,6 @@ def MY_func(Ls_cont):
     '''
     return (Ls_cont)//(360.)+1
 
-
-def filter_areols(Ls_array):
-    """
-    Remove outlier in an array of increasing solar longitudes. In areols, Ls [0-360] is obtained through a numerical solver,
-    and a contineous solar longitude Ls_c =0-359- 361.. 720 is obtained by adding +360 to that value at every equinox based on the sol number.
-    Since areol(Equinox) may return either 359.999 or 0.001, +360 should only be added in the later case.
-
-    Args:
-        Ls_array: an array of inceasing solar longitudes (degrees)
-    Returns:
-        Ls_array: Filter longitude Ls
-
-    ***Note***: Reproduce error with
-    import numpy as np;import matplotlib.pyplot as plt
-    days=np.linspace(0.,668*3.,668*3+1)
-    aerols_cum=np.vectorize(aerols_cum)
-    Ls=aerols_cum(days,False)
-    Ls_c=aerols_cum(days,True)
-
-    plt.plot(days,Ls,'b',label='Modulo 360')
-    plt.plot(days,Ls_c,'.-r',label='contineous')
-    plt.plot(days,filter_areols(Ls_c.copy()),'k',label='filtered')
-    plt.xlabel('Sols');plt.ylabel('Ls');plt.grid();plt.legend();plt.show()
-
-    """
-    Ls_array=np.array(Ls_array).reshape(len(np.atleast_1d(Ls_array))).astype(np.float)
-    diff=Ls_array[1:]-Ls_array[0:-1] #difference between two consecutive Ls
-    id=np.where(diff>300.)[0] #if the difference is more than a big number, say 300 degree
-    Ls_array[id+1]-=360.
-    return Ls_array
 
 
 def get_topo_2D(simuID,sol_array):
@@ -434,7 +335,7 @@ def get_topo_2D(simuID,sol_array):
     else : #no sol requested, use default as provided by MarsPlot Custom.in -d sol
         Sol_num_current =Ncdf_num
     file_list = input_paths[simuID]+'/%05d.'%( Sol_num_current[0])+'fixed.nc' #TODO file list multiple simulations
-    f=Dataset(file_list, 'r', format='NETCDF4')
+    f=Dataset(file_list, 'r', format='NETCDF4_classic')
     zsurf=f.variables['zsurf'][:]
     f.close()
     return zsurf
@@ -1249,48 +1150,48 @@ def get_figure_header(line_txt):
 #======================================================
 #                  FILE SYSTEM UTILITIES
 #======================================================
-def check_file_tape(fileNcdf,abort=False):
-    '''
-    Relevant for use on the NASA Advanced Supercomputing (NAS) environnment only
-    Check if a file is present on the disk by running the NAS dmls -l data migration command.
-    This avoid the program to stall if the files need to be migrated from the disk to the tape
-    Args:
-        fileNcdf: full path to netcdf file
-        exit: boolean. If True, exit the program (avoid stalling the program if file is not on disk)
-    Returns:
-        None (print status and abort program)
-    '''
-    # If the filename provided is not a netcdf file, exit program right away
-    if fileNcdf[-3:]!='.nc':
-        prRed('*** Error ***')
-        prRed(fileNcdf + ' is not a netcdf file \n' )
-        exit()
-    #== Then check if the file actually exists on the system,  exit otherwise.
-
-
-    try:
-        #== NAS system only: file exists, check if it is active on disk or needs to be migrated from Lou
-        subprocess.check_call(["dmls"],shell=True,stdout=open(os.devnull, "w")) #check if dmls command is available (NAS systems only)
-        cmd_txt='dmls -l '+fileNcdf+"""| awk '{print $8,$9}'""" #get the last columns of the ls command with filename and status
-        dmls_out=subprocess.check_output(cmd_txt,shell=True).decode('utf-8')  # get 3 letter identifier from dmls -l command, convert byte to string for Python 3
-        if dmls_out[1:4] not in ['DUL','REG']: #file is OFFLINE, UNMIGRATING etc...
-            if abort :
-                prRed('*** Error ***')
-                print(dmls_out)
-                prRed(dmls_out[6:-1]+ ' is not available on disk, status is: '+dmls_out[0:5])
-                prRed('CHECK file status with  dmls -l *.nc and run  dmget *.nc to migrate the files')
-                prRed('Exiting now... \n')
-                exit()
-            else:
-                prYellow('*** Warning ***')
-                prYellow(dmls_out[6:-1]+ ' is not available on disk, status is: '+dmls_out[0:5])
-                prYellow('Consider checking file status with  dmls -l *.nc and run  dmget *.nc to migrate the files')
-                prYellow('Waiting for file to be migrated to disk, this may take a while...')
-    except subprocess.CalledProcessError: #subprocess.check_call return an eror message
-        if abort :
-             exit()
-        else:
-            pass
+# def check_file_tape(fileNcdf,abort=False):
+#     '''
+#     Relevant for use on the NASA Advanced Supercomputing (NAS) environnment only
+#     Check if a file is present on the disk by running the NAS dmls -l data migration command.
+#     This avoid the program to stall if the files need to be migrated from the disk to the tape
+#     Args:
+#         fileNcdf: full path to netcdf file
+#         exit: boolean. If True, exit the program (avoid stalling the program if file is not on disk)
+#     Returns:
+#         None (print status and abort program)
+#     '''
+#     # If the filename provided is not a netcdf file, exit program right away
+#     if fileNcdf[-3:]!='.nc':
+#         prRed('*** Error ***')
+#         prRed(fileNcdf + ' is not a netcdf file \n' )
+#         exit()
+#     #== Then check if the file actually exists on the system,  exit otherwise.
+# 
+# 
+#     try:
+#         #== NAS system only: file exists, check if it is active on disk or needs to be migrated from Lou
+#         subprocess.check_call(["dmls"],shell=True,stdout=open(os.devnull, "w")) #check if dmls command is available (NAS systems only)
+#         cmd_txt='dmls -l '+fileNcdf+"""| awk '{print $8,$9}'""" #get the last columns of the ls command with filename and status
+#         dmls_out=subprocess.check_output(cmd_txt,shell=True).decode('utf-8')  # get 3 letter identifier from dmls -l command, convert byte to string for Python 3
+#         if dmls_out[1:4] not in ['DUL','REG']: #file is OFFLINE, UNMIGRATING etc...
+#             if abort :
+#                 prRed('*** Error ***')
+#                 print(dmls_out)
+#                 prRed(dmls_out[6:-1]+ ' is not available on disk, status is: '+dmls_out[0:5])
+#                 prRed('CHECK file status with  dmls -l *.nc and run  dmget *.nc to migrate the files')
+#                 prRed('Exiting now... \n')
+#                 exit()
+#             else:
+#                 prYellow('*** Warning ***')
+#                 prYellow(dmls_out[6:-1]+ ' is not available on disk, status is: '+dmls_out[0:5])
+#                 prYellow('Consider checking file status with  dmls -l *.nc and run  dmget *.nc to migrate the files')
+#                 prYellow('Waiting for file to be migrated to disk, this may take a while...')
+#     except subprocess.CalledProcessError: #subprocess.check_call return an eror message
+#         if abort :
+#              exit()
+#         else:
+#             pass
 
 
 
@@ -1576,7 +1477,7 @@ class Fig_2D(object):
         #======time,lat,lon=======
         if f.variables[var_name].dimensions==(u'time', u'lat', u'lon'):
         #Initialize dimension
-            t=f.variables['time'][:];Ls=filter_areols(aerols_cum(t,True));ti=np.arange(0,len(t))
+            t=f.variables['time'][:];Ls=f.variables['areo'][:];ti=np.arange(0,len(t))
             t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
 
             if plot_type=='2D_lon_lat': ti,temp_txt =get_time_index(fdim1,Ls)
@@ -1603,7 +1504,7 @@ class Fig_2D(object):
             if dim_info[1]=='level': levs=100.*f.variables[dim_info[1]][:] #mBar to Pa
             if dim_info[1]=='zgrid': levs=     f.variables[dim_info[1]][:] # meters
             zi=np.arange(0,len(levs))
-            t=f.variables['time'][:];Ls=filter_areols(aerols_cum(t,True));ti=np.arange(0,len(t))
+            t=f.variables['time'][:];Ls=f.variables['areo'][:];ti=np.arange(0,len(t))
             t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
 
             if plot_type=='2D_lon_lat':
@@ -1802,7 +1703,7 @@ class Fig_2D_time_lat(Fig_2D):
 
             #Axis formatting
             if self.Xlim:
-                plt.xlim(aerols_cum(self.Xlim,True))
+                plt.xlim(self.Xlim)
             if self.Ylim:plt.ylim(self.Ylim)
 
 
@@ -1941,7 +1842,7 @@ class Fig_2D_time_press(Fig_2D):
 
 
             #Axis formatting
-            if self.Xlim:plt.xlim(aerols_cum(self.Xlim,True))
+            if self.Xlim:plt.xlim(self.Xlim)
             if self.Ylim:plt.ylim(self.Ylim)
 
             Ls_ticks = [item for item in ax.get_xticks()]
@@ -1992,7 +1893,7 @@ class Fig_2D_lon_time(Fig_2D):
 
             #Axis formatting
             if self.Xlim:plt.xlim(self.Xlim)
-            if self.Ylim:plt.ylim(aerols_cum(self.Ylim,True))
+            if self.Ylim:plt.ylim(self.Ylim)
 
 
             Ls_ticks = [item for item in ax.get_yticks()]
@@ -2203,7 +2104,7 @@ class Fig_1D(object):
         #======time,lat,lon=======
         if f.variables[var_name].dimensions==(u'time', u'lat', u'lon'):
         #Initialize dimension
-            t=f.variables['time'][:];Ls=filter_areols(aerols_cum(t,True));ti=np.arange(0,len(t))
+            t=f.variables['time'][:];Ls=f.variables['areo'][:];ti=np.arange(0,len(t))
             t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
 
             if plot_type=='1D_lat':
@@ -2241,7 +2142,7 @@ class Fig_1D(object):
             if dim_info[1]=='level': levs=100.*f.variables[dim_info[1]][:] #mBar to Pa
             if dim_info[1]=='zgrid': levs=     f.variables[dim_info[1]][:] # meters
             zi=np.arange(0,len(levs))
-            t=f.variables['time'][:];Ls=filter_areols(aerols_cum(t,True));ti=np.arange(0,len(t))
+            t=f.variables['time'][:];Ls=f.variables['areo'][:];ti=np.arange(0,len(t))
             t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
 
             if plot_type=='1D_lat':
@@ -2384,7 +2285,7 @@ class Fig_1D(object):
                 if self.Vlim:plt.ylim(self.Vlim)
 
                 if self.Dlim:
-                    plt.xlim(aerols_cum(self.Dlim,True))
+                    plt.xlim(self.Dlim) #TODO
 
                 Ls_ticks = [item for item in ax.get_xticks()]
                 labels = [item for item in ax.get_xticklabels()]

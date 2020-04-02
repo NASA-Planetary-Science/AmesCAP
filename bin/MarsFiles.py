@@ -77,7 +77,6 @@ def main():
     histlist=[]
     for filei in file_list:
         histlist.append(path2data+'/'+filei)
-    prCyan(histlist)
     fnum = len(histlist)
     if fnum >= 0:do_multi = True #TODO why not 1?
 
@@ -164,7 +163,6 @@ def make_FV3_files(fpath,renameFV3=True,cwd=None):
     else:
         histdir = cwd
     result   = re.search('LegacyGCM_(.*).nc',histname)
-    prYellow(result)
     fdate    = result.group(1)
     prCyan(fdate)
     histfile = Dataset(fpath,'r',format='NETCDF4_CLASSIC')
@@ -189,15 +187,15 @@ def make_FV3_files(fpath,renameFV3=True,cwd=None):
         if dname == 'nlon':
             var=histfile.variables['longitude']
             npvar=var[:]
-            a=add_dim(histfile,newfavg,'lon',npvar.size,npvar,getattr(var,'units'))
-            a=add_dim(histfile,newfdaily,'lon',npvar.size,npvar,getattr(var,'units'))
-            a=add_dim(histfile,newfdiurn,'lon',npvar.size,npvar,getattr(var,'units'))
+            newfavg.add_dim_content('lon',npvar,'longitudes',getattr(var,'units'))
+            newfdaily.add_dim_content('lon',npvar,'longitudes',getattr(var,'units'))
+            newfdiurn.add_dim_content('lon',npvar,'longitudes',getattr(var,'units'))
         if dname == 'nlat':
             var=histfile.variables['latitude']
             npvar=var[:]
-            a=add_dim(histfile,newfavg,'lat',npvar.size,npvar,getattr(var,'units'))
-            a=add_dim(histfile,newfdaily,'lat',npvar.size,npvar,getattr(var,'units'))
-            a=add_dim(histfile,newfdiurn,'lat',npvar.size,npvar,getattr(var,'units'))
+            newfavg.add_dim_content('lat',npvar,'latitudes',getattr(var,'units'))
+            newfdaily.add_dim_content('lat',npvar,'latitudes',getattr(var,'units'))
+            newfdiurn.add_dim_content('lat',npvar,'latitudes',getattr(var,'units'))
         if dname == 'time':
             newfavg.add_dimension('time',None)
             newfdaily.add_dimension('time',None)
@@ -209,7 +207,7 @@ def make_FV3_files(fpath,renameFV3=True,cwd=None):
             nlay=histfile.dimensions[dname]
             num =nlay.size
             nump=num+1
-            pref=7.01 * 100  #AK changed this to Pa
+            pref=7.01 #TODO  * 100  change this to Pa
             pk=np.zeros(nump)
             bk=np.zeros(nump)
             pfull=np.zeros(num)
@@ -219,18 +217,22 @@ def make_FV3_files(fpath,renameFV3=True,cwd=None):
             pk[0]=.08
             for z in range(num):
                 bk[z+1] = sgm[2*z+2]
-            phalf[:]=pk[:]+pref*bk[:] #AK changed this to Pa
+            phalf[:]=pk[:]/100.+pref*bk[:] #TODO remove /100 to output in to Pa
             pfull[:] = (phalf[1:]-phalf[:num])/(np.log(phalf[1:])-np.log(phalf[:num]))
-            a=add_dim(histfile,newfavg,'pfull',num,pfull,'Pa')
-            a=add_dim(histfile,newfavg,'phalf',nump,phalf,'Pa')
+            #
+
+            newfavg.add_dim_content('pfull',pfull,'ref full pressure level','mb')
+            newfavg.add_dim_content('phalf',phalf,'ref half pressure level','mb')
             newfavg.log_var1d('pk',pk,('phalf'),longname_txt='pressure part of the hybrid coordinate',unit_txt='Pa',cart_txt='')
             newfavg.log_var1d('bk',bk,('phalf'),longname_txt='sigma part of the hybrid coordinate',unit_txt='Pa',cart_txt='')
-            a=add_dim(histfile,newfdaily,'pfull',num,pfull,'Pa')
-            a=add_dim(histfile,newfdaily,'phalf',nump,phalf,'Pa')
+            #
+            newfdaily.add_dim_content('pfull',pfull,'ref full pressure level','mb')
+            newfdaily.add_dim_content('phalf',phalf,'ref half pressure level','mb')
             newfdaily.log_var1d('pk',pk,('phalf'),longname_txt='pressure part of the hybrid coordinate',unit_txt='Pascal',cart_txt='')
             newfdaily.log_var1d('bk',bk,('phalf'),longname_txt='sigma part of the hybrid coordinate',unit_txt='',cart_txt='')
-            a=add_dim(histfile,newfdiurn,'pfull',num,pfull,'Pa')
-            a=add_dim(histfile,newfdiurn,'phalf',nump,phalf,'Pa')
+            #
+            newfdiurn.add_dim_content('pfull',pfull,'ref full pressure level','mb')
+            newfdiurn.add_dim_content('phalf',phalf,'ref half pressure level','mb')
             newfdiurn.log_var1d('pk',pk,('phalf'),longname_txt='pressure part of the hybrid coordinate',unit_txt='Pascal',cart_txt='')
             newfdiurn.log_var1d('bk',bk,('phalf'),longname_txt='sigma part of the hybrid coordinate',unit_txt='',cart_txt='')
 
@@ -326,14 +328,6 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
                 newf.log_variable(vname,npvar,newdims,longname_txt=vname,unit_txt='')
     return 0
 
-
-
-#Function to add and define dimension
-def add_dim(ncfile,newf,dname,dsize,dvals,varunit):
-    newf.add_dimension(dname,dsize)
-    dims=(dname)
-    newf.log_var1d(dname,dvals,dims,longname_txt=dname,unit_txt=varunit)
-    return 0
 
 def change_vname(vname):
     vname2=vname
