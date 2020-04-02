@@ -113,7 +113,7 @@ def main():
         #First check if file is present on the disk (Lou only)
         check_file_tape(ifile)
         newname=filepath+'/'+ifile[:-3]+'_'+interp_type+'.nc'
-        prCyan(newname)
+
         
         #=================================================================
         #=======================Interpolate action========================
@@ -124,9 +124,9 @@ def main():
         if ifile==file_list[0]:
             ak=np.array(fNcdf.variables['pk'])
             bk=np.array(fNcdf.variables['bk'])
-            ps=np.array(fNcdf.variables['ps'])
-            p_3D= fms_press_calc(ps,ak,bk,lev_type='full').transpose([3,0,1,2])# p_3D [tim,lat,lon,lev] ->[lev,tim,lat, lon]
-            prGreen(p_3D.max())
+            
+        ps=np.array(fNcdf.variables['ps'])
+        p_3D= fms_press_calc(ps,ak,bk,lev_type='full').transpose([3,0,1,2])# p_3D [tim,lat,lon,lev] ->[lev,tim,lat, lon]
             
         var_list=fNcdf.variables.keys()
         fnew = Ncdf(newname,'Pressure interpolation using MarsInterp.py')
