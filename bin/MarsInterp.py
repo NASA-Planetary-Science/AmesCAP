@@ -1,17 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #Load generic Python Modules 
 import argparse #parse arguments
 import os       #access operating systems function
 import subprocess #run command
 import sys       #system command
+import time
 
 #TODO delete when done testing
 #sys.path.append('/Users/akling/amesgcm/amesgcm/')
 #from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
 #from FV3_utils import fms_press_calc,fms_Z_calc,Ncdf,pinterp
 
-from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,Ncdf,pinterp
+from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,Ncdf,pinterp,find_n
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
 
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
@@ -99,13 +100,19 @@ def compute_zfull(ps,ak,bk,temp):
 
 
 def main():
+    start_time = time.time()
     debug =parser.parse_args().debug
     #load all the .nc files
     file_list=parser.parse_args().input_file
     interp_type=parser.parse_args().type
-    print(type(interp_type))
+    
+    
     if interp_type not in ['plevs','zlevs','zagl']: 
         prRed("Interpolation type '%s' is not supported, choose 'plevs','zlevs' or 'zagl'"%(interp_type))
+        exit()
+    #TODO delete the following when  zagl and zlevs  are supported
+    if interp_type not in ['plevs']: 
+        prRed("Interpolation type '%s' is not yet supported"%(interp_type))
         exit()
     
     #For all the files
@@ -143,19 +150,23 @@ def main():
         fnew.log_axis1D('time',t,('time'),longname_txt='sol number',unit_txt='',cart_txt='')
 
         
-            #----Check if the variable is currently supported---
+        #We will re-use the indices for each files, this speeds-up the calculation
+        compute_indices=True    
         for ivar in var_list: 
             
             if fNcdf.variables[ivar].dimensions==('time','pfull', 'lat', 'lon'):
-                print('Interpolating: %s...'%(ivar))  
+                if compute_indices:
+                    index=find_n(p_3D,level)
+                    compute_indices=False
+                    
+                print("\r Interpolating: %s ..."%(ivar), end='')
                 varIN=fNcdf.variables[ivar][:]
-                #prCyan(varIN.transpose([1,0,2,3]).shape)
-                varOUT=pinterp(varIN.transpose([1,0,2,3]),p_3D ,level,True).transpose([1,0,2,3])
+                varOUT=pinterp(varIN.transpose([1,0,2,3]),p_3D ,level,True,index).transpose([1,0,2,3])
                 fnew.log_variable(ivar,varOUT,('time','level', 'lat', 'lon'),fNcdf.variables[ivar].long_name,fNcdf.variables[ivar].units)
             else:
                 
                 if  ivar not in ['time','pfull', 'lat', 'lon','level','phalf','pk','bk']:
-                    print('Copying: %s...'%(ivar))
+                    print("\r Copying over: %s..."%(ivar), end='')
                     fnew.copy_Ncvar(fNcdf.variables[ivar]) 
                     
              
@@ -187,7 +198,9 @@ def main():
                     prCyan("""Delete existing var %s with 'MarsVars %s -rm %s'"""%(ivar,ifile,ivar))
 
             '''
+        print('\r ', end='')    
         fNcdf.close()
         fnew.close()
+        print("Completed in %.3f sec" % (time.time() - start_time))  
 if __name__ == '__main__':
     main()

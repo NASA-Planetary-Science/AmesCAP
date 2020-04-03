@@ -749,7 +749,7 @@ class Ncdf(object):
         #create dictionaries to hold dimensions and variables
         self.dim_dict=dict()
         self.var_dict=dict()
-        print(filename+ " was created")
+        #print(filename+ " was created")
         
     def close(self):
         self.f_Ncdf.close()
