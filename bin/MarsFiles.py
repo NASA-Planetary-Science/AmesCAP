@@ -22,7 +22,7 @@ from netCDF4 import Dataset
 #from Script_utils import prYellow,prCyan,prRed
 #===========
 from amesgcm.FV3_utils import Ncdf
-from amesgcm.Script_utils import prYellow,prCyan
+from amesgcm.Script_utils import prYellow,prCyan,prRed
 #---
 
 
