@@ -13,7 +13,7 @@ from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple,
 from FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh
 from Ncdf_wrapper import Ncdf
 '''
-from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,Ncdf
+from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
 from amesgcm.Ncdf_wrapper import Ncdf
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
