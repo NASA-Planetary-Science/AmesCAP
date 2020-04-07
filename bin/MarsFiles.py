@@ -75,7 +75,9 @@ def main():
         exit()
     #=======Convert to FV3================
     if parser.parse_args().fv3:
-
+        for irequest in parser.parse_args().fv3:
+            if irequest not in ['fixed','average','daily','diurn'] :
+                prRed(irequest +""" is not available, select 'fixed', 'average', 'daily', or 'diurn'""")
     #argument definitions:
         
         do_multi= False
@@ -341,9 +343,7 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
                 if avgtime:
                     varnew = np.mean(npvar.reshape(-1,5),axis=1)
                     time0 =  np.mean(time0.reshape(-1,5),axis=1)
-                    if varnew.min()<5:
-                        print(histfile.filepath())
-                        print(varnew)
+
                 if not avgtime and not avgtod: #i.e daily file
                     ls_start = npvar[0]
                     ls_end   = npvar[-1]
