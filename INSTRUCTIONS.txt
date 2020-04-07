@@ -26,8 +26,12 @@ source ~/anaconda3.7/envPython3.7/bin/activate
 pip install git+https://github.com/alex-kling/amesgcm.git
 MarsPull.py -ls 0 15
 MarsFiles.py LegacyGCM_Ls*.nc -fv3
-MarsVars.py *atmos_average.nc -colint vap_mass_micro ice_mass_micro dst_mass_micro
-MarsVars.py *atmos_average.nc
+#Let's clean-up the directory
+MarsFiles.py *fixed.nc --combine
+MarsFiles.py *atmos_average.nc --combine
+MarsFiles.py *atmos_diurn.nc --combine
+MarsFiles.py *atmos_daily.nc --combine
+MarsVars.py *atmos_average.nc -colint vap_mass ice_mass dst_mass
 MarsInterp.py *.atmos_average.nc
 MarsPlot.py -i 00010.atmos_average_plevs.nc
 MarsPlot.py -do legacy -d 0 10

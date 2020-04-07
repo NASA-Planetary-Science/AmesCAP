@@ -7,13 +7,15 @@ import subprocess #run command
 import sys       #system command
 
 #TODO delete when done testing
-#sys.path.append('/Users/akling/amesgcm/amesgcm/')
-#from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-#from FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh
-
-from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh
+'''
+sys.path.append('/Users/akling/amesgcm/amesgcm/')
+from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+from FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh
+from Ncdf_wrapper import Ncdf
+'''
+from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,Ncdf
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-
+from amesgcm.Ncdf_wrapper import Ncdf
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
     import matplotlib
@@ -38,7 +40,7 @@ except Exception as exception:
 #======================================================
 #                  ARGUMENTS PARSER
 #======================================================
-parser = argparse.ArgumentParser(description="""\033[93m MarsVars, variable manager, use to add or remove variables to the diagnostic files\n \033[00m""",
+parser = argparse.ArgumentParser(description="""\033[93m MarsVars, variable manager,  utility to add or remove variables to the diagnostic files\n Use MarsFiles ****.atmos.average.nc to view file content \033[00m""",
                                 formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('input_file', nargs='+', #sys.stdin
@@ -65,7 +67,7 @@ parser.add_argument('-zdiff','--zdiff', nargs='+',default=[],
 parser.add_argument('-colint','--colint', nargs='+',default=[],
                  help="""Integrate a mixing ratio of a  variable 'var' through the column\n"""
                       """A new a variable  colint_var in [kg/m2] will be added o the file\n"""
-                      """> Usage: MarsVars ****.atmos.average.nc -colint ice_mass_micro\n"""
+                      """> Usage: MarsVars ****.atmos.average.nc -colint ice_mass\n"""
                       """ \n""")                      
 
 parser.add_argument('-rm','--remove', nargs='+',default=[],
@@ -106,21 +108,17 @@ def compute_p_3D(ps,ak,bk,shape_out):
     if len(p_3D.shape)==3:p_3D=p_3D.transpose([2,0,1]) #p_3D [lat,lon,lev] ->    [lev, lat, lon]
     return p_3D.reshape(shape_out)
     
-def compute_rho(ps,ak,bk,temp):
+def compute_rho(p_3D,temp):
     """
     Return the density in kg/m3
     """
-    shape_out=temp.shape
-    return compute_p_3D(ps,ak,bk,shape_out)/(rgas*temp)
+    return p_3D/(rgas*temp)
     
-def compute_theta(ps,ak,bk,temp):
+def compute_theta(p_3D,ps,temp):
     """
     Return the potential temperature in K
     """
-    shape_out=temp.shape
     theta_exp= R/(M_co2*Cp)
-    p_3D= compute_p_3D(ps,ak,bk,shape_out)
-   
     ps_shape=ps.shape #(time,lat,lon) is transformed into (time,1,lat,lon) in the next line with np.reshape
     return temp*(np.reshape(ps,(ps_shape[0],1,ps_shape[1],ps_shape[2]))/p_3D)**(theta_exp) #potential temperature
     
@@ -150,10 +148,8 @@ def compute_N(theta,zfull):
     return np.sqrt(g/theta*dtheta_dz)
 
 
-def compute_Tco2(ps,ak,bk,temp):
+def compute_Tco2(p_3D,temp):
     #From [Fannale 1982]i Mars: The regolit-atmosphere cap system and climate change. Icarus 
-    shape_out=temp.shape
-    P_3D=compute_p_3D(ps,ak,bk,shape_out)
     return np.where(P_3D<518000,-3167.8/(np.log(0.01*P_3D)-23.23),684.2-92.3*np.log(P_3D)+4.32*np.log(P_3D)**2)
 
 def compute_scorer(N,ucomp,zfull):
@@ -183,7 +179,7 @@ def main():
     #Check if an operation is requested, otherwise print file content.
     if not (add_list or zdiff_list or remove_list or colint_list): 
         print_fileContent(file_list[0])
-        prYellow(''' ***Notice***  No operation requested, use '-add var',  '-zdiff var', '-colint var' ''')
+        prYellow(''' ***Notice***  No operation requested, use '-add var',  '-zdiff var', '-colint var', '-rm var' ''')
         exit() #Exit cleanly
         
     #For all the files    
@@ -198,26 +194,27 @@ def main():
         if remove_list: 
             cmd_txt='ncks --version'
             try:
-                #Test if ncks is available, make recommendation and  exit otherwise--
+                #If ncks is available, use it:--
                 subprocess.check_call(cmd_txt,shell=True,stdout=open(os.devnull, "w"), stderr=open(os.devnull, "w")) 
+                for ivar in remove_list:
+                    print('Creating new file %s without %s:'%(ifile,ivar))
+                    cmd_txt='ncks -C -O -x -v %s %s %s'%(ivar,ifile,ifile)
+                    try:
+                        subprocess.check_call(cmd_txt,shell=True,stdout=open(os.devnull, "w"), stderr=open(os.devnull, "w")) 
+                    except Exception as exception:
+                        print(exception.__class__.__name__ + ": " + exception.message)
+            #ncks is not available, we use internal method.            
             except subprocess.CalledProcessError:
-                prYellow("Enable the -rm option by loading the ncks dependencies:")
-                prCyan('    module load comp-intel/2018.0.128')
-                prCyan('    module load hdf5/1.8.18_serial')
-                prCyan('    module load hdf4/4.2.12')
-                prCyan('    module load netcdf/4.4.1.1_serial')
-                prCyan('    module load nco')
-                exit()
-                
-        
-            for ivar in remove_list:
-                print('Creating new file %s without %s:'%(ifile,ivar))
-                cmd_txt='ncks -C -O -x -v %s %s %s'%(ivar,ifile,ifile)
-                try:
-                    subprocess.check_call(cmd_txt,shell=True,stdout=open(os.devnull, "w"), stderr=open(os.devnull, "w")) 
-                except Exception as exception:
-                    print(exception.__class__.__name__ + ": " + exception.message)
-                
+                f_IN=Dataset(ifile, 'r', format='NETCDF4_CLASSIC')
+                ifile_tmp=ifile[:-3]+'_tmp'+'.nc'
+                Log=Ncdf(ifile_tmp,'Edited in postprocessing')
+                Log.copy_all_dims_from_Ncfile(f_IN)
+                Log.copy_all_vars_from_Ncfile(f_IN,remove_list)
+                f_IN.close()
+                Log.close()
+                cmd_txt='mv '+ifile_tmp+' '+ifile
+                p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
+                prCyan(ifile+' was updated')
  
         #=================================================================
         #=======================Add action================================
@@ -226,7 +223,7 @@ def main():
         #If the list is not empty, load ak and bk for pressure calculation, those are always needed.
         if add_list: 
             name_fixed=ifile[0:5]+'.fixed.nc'
-            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4')
+            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=np.array(f_fixed.variables['pk'])
             bk=np.array(f_fixed.variables['bk'])
@@ -239,27 +236,31 @@ def main():
             else:
                 print('Processing: %s...'%(ivar))                
                 try:
-                    fileNC=Dataset(ifile, 'a', format='NETCDF4')
+                    fileNC=Dataset(ifile, 'a', format='NETCDF4_CLASSIC')
                     #---temp and ps are always needed---
                     dim_out=fileNC.variables['temp'].dimensions #get dimension
                     temp=fileNC.variables['temp'][:,:,:,:]
+                    shape_out=temp.shape
                     ps=fileNC.variables['ps'][:,:,:]
+                    p_3D=compute_p_3D(ps,ak,bk,shape_out)
                     #----
                     
-                    if ivar=='rho':OUT=compute_rho(ps,ak,bk,temp)    
-                    if ivar=='theta':OUT=compute_theta(ps,ak,bk,temp)
+                    if ivar=='rho':
+                        OUT=compute_rho(p_3D,temp)    
+                    if ivar=='theta':
+                        OUT=compute_theta(p_3D,ps,temp)
                     if ivar=='w':
                         omega=fileNC.variables['omega'][:,:,:,:]     
-                        rho  = compute_rho(ps,ak,bk,temp)        
+                        rho=compute_rho(p_3D,temp)         
                         OUT=compute_w(rho,omega)
-                    if ivar=='zfull': OUT=compute_zfull(ps,ak,bk,temp)
+                    if ivar=='zfull': OUT=compute_zfull(ps,ak,bk,temp) #TODO not with _pstd
                     if ivar=='N':
-                        theta=compute_theta(ps,ak,bk,temp)    
-                        zfull=compute_zfull(ps,ak,bk,temp)
+                        theta=compute_theta(p_3D,ps,temp)    
+                        zfull=compute_zfull(ps,ak,bk,temp)  #TODO not with _pstd
                         OUT=compute_N(theta,zfull)
                     if ivar=='Ri':
-                        theta=compute_theta(ps,ak,bk,temp)    
-                        zfull=compute_zfull(ps,ak,bk,temp)
+                        theta=compute_theta(p_3D,ps,temp)   
+                        zfull=compute_zfull(ps,ak,bk,temp) #TODO not with _pstd
                         N=compute_N(theta,zfull)  
                         
                         ucomp=fileNC.variables['ucomp'][:,:,:,:] 
@@ -268,11 +269,11 @@ def main():
                         dv_dz=dvar_dh(vcomp.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])
                         OUT=N**2/(du_dz**2+dv_dz**2)
 
-                    if ivar=='Tco2':OUT=compute_Tco2(ps,ak,bk,temp)
+                    if ivar=='Tco2':OUT=compute_Tco2(p_3D,temp)
                     if ivar=='scorer_wl':
                         ucomp=fileNC.variables['ucomp'][:,:,:,:]
+                        theta=compute_theta(p_3D,temp)   
                         zfull=compute_zfull(ps,ak,bk,temp)
-                        theta=compute_theta(ps,ak,bk,temp)
                         N=compute_N(theta,zfull)
                         OUT=compute_scorer(N,ucomp,zfull)
                
@@ -288,9 +289,9 @@ def main():
                     print('%s: \033[92mDone\033[00m'%(ivar))
                 except Exception as exception:
                     if debug:raise
-                    print(exception.__class__.__name__ + ": " + exception.message)
-                    if exception.message=='NetCDF: String match to name in use':
-                        prCyan("""Delete existing var %s with 'MarsVars %s -rm %s'"""%(ivar,ifile,ivar))
+                    if str(exception)=='NetCDF: String match to name in use':
+                        prYellow("""***Error*** Variable already exists""")
+                        prYellow("""Delete existing variables %s with 'MarsVars %s -rm %s'"""%(ivar,ifile,ivar))
                     
         #=================================================================
         #=============Vertical Differentiation action=====================
@@ -299,14 +300,14 @@ def main():
         #ak and bk are needed to derive the distance between layer pfull
         if zdiff_list: 
             name_fixed=ifile[0:5]+'.fixed.nc'
-            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4')
+            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=np.array(f_fixed.variables['pk'])
             bk=np.array(f_fixed.variables['bk'])
             f_fixed.close()
         
         for idiff in zdiff_list:
-            fileNC=Dataset(ifile, 'a', format='NETCDF4')
+            fileNC=Dataset(ifile, 'a', format='NETCDF4_CLASSIC')
 
             if idiff not in fileNC.variables.keys():
                 prRed("zdiff error: variable '%s' is not present in %s"%(idiff, ifile))
@@ -338,9 +339,9 @@ def main():
                     print('%s: \033[92mDone\033[00m'%('d_dz_'+idiff))
                 except Exception as exception:
                     if debug:raise
-                    print(exception.__class__.__name__ + ": " + exception.message)
-                    if exception.message=='NetCDF: String match to name in use':
-                        prCyan("""Delete existing var %s with 'MarsVars %s -rm %s'"""%(ivar,ifile,ivar))
+                    if str(exception)=='NetCDF: String match to name in use':
+                        prYellow("""***Error*** Variable already exists""")
+                        prYellow("""Delete existing variable %s with 'MarsVars %s -rm %s'"""%('d_dz_'+idiff,ifile,'d_dz_'+idiff))
                          
         #=================================================================
         #=============  Column  integration   ============================
@@ -349,14 +350,14 @@ def main():
         #ak and bk are needed to derive the distance between layer pfull
         if colint_list:
             name_fixed=ifile[0:5]+'.fixed.nc'
-            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4')
+            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=np.array(f_fixed.variables['pk'])
             bk=np.array(f_fixed.variables['bk'])
             f_fixed.close()
 
         for icol in colint_list:
-            fileNC=Dataset(ifile, 'a', format='NETCDF4')
+            fileNC=Dataset(ifile, 'a') #, format='NETCDF4_CLASSIC
 
             if icol not in fileNC.variables.keys():
                 prRed("colint error: variable '%s' is not present in %s"%(icol, ifile))
@@ -366,7 +367,8 @@ def main():
 
                 try:
                     var=fileNC.variables[icol][:,:,:,:]
-                    newUnits=fileNC.variables[icol].units[:-2]+'/m2]' #remove the last ']' to update units, e.g turn '[kg]' to '[kg/m]'
+                    #prRed(fileNC.variables[icol].units+'|')
+                    newUnits=fileNC.variables[icol].units[:-3]+'/m2' # turn 'kg/kg'> to 'kg/m2'
                     newLong_name='column integration of '+fileNC.variables[icol].long_name
 
                     #---temp and ps are always needed---
@@ -389,9 +391,9 @@ def main():
                     print('%s: \033[92mDone\033[00m'%('colint_'+icol))
                 except Exception as exception:
                     if debug:raise
-                    print(exception.__class__.__name__ + ": " + exception.message)
-                    if exception.message=='NetCDF: String match to name in use':
-                        prCyan("""Delete existing var %s with 'MarsVars %s -rm %s'"""%(ivar,ifile,ivar))               
+                    if str(exception)=='NetCDF: String match to name in use':
+                        prYellow("""***Error*** Variable already exists""")
+                        prYellow("""Delete existing variable %s with 'MarsVars %s -rm %s'"""%('colint_'+icol,ifile,'colint_'+icol))            
 
              
 if __name__ == '__main__':

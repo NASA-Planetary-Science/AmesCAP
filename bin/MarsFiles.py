@@ -17,11 +17,13 @@ from netCDF4 import Dataset
 
 #TODO remove this block to use package instead
 #==============
-#sys.path.append('/Users/akling/amesgcm/amesgcm/')
-#from FV3_utils import Ncdf
-#from Script_utils import prYellow,prCyan,prRed
+'''
+sys.path.append('/Users/akling/amesgcm/amesgcm/')
+from Ncdf_wrapper import Ncdf
+from Script_utils import prYellow,prCyan,prRed
+'''
 #===========
-from amesgcm.FV3_utils import Ncdf
+from amesgcm.Ncdf_wrapper import Ncdf
 from amesgcm.Script_utils import prYellow,prCyan,prRed
 #---
 
@@ -35,16 +37,20 @@ parser = argparse.ArgumentParser(description="""\033[93m MarsFiles files manager
 parser.add_argument('input_file', nargs='+',
                                 help='***.nc file or list of ***.nc files ')
 
-parser.add_argument('-fv3','--fv3', action='store_true',
+parser.add_argument('-fv3','--fv3', nargs='+',
                     help="""Produce FV3's diurn, average and daily files from Legacy outputs  \n"""
-                        """> Usage: MarsFiles LegacyGCM*.nc -fv3 \n"""
+                        """> Usage: MarsFiles.py LegacyGCM*.nc -fv3 fixed average  \n"""
+                        """> Available options are: 'fixed'  : static fields (e.g topography) \n"""
+                        """                         'average': 5 sol averages  \n"""
+                        """                         'daily'  : 5 sol contineuous  \n"""
+                        """                         'diurn'  : 5 sol average for each time of the day \n"""
                         """\033[00m""")
 
 parser.add_argument('-c','--combine', action='store_true',
-                    help="""Combine a sequence of similar files as one file\n"""
-                        """> Usage: MarsVars *.atmos_average.nc --combine \n"""
+                    help="""Combine a sequence of similar files as a single file\n"""
+                        """> Usage: MarsFiles.py *.atmos_average.nc --combine \n"""
+                        """> Works with Legacy, fixed, average, daily and dirun files\n"""
                         """ \n""")
-
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
 
@@ -54,16 +60,24 @@ parser.add_argument('--debug',  action='store_true', help='Debug flag: release t
 #TODO needed?
 #sys.path.append(os.getcwd())
 
+#Use ncks or internal method to concatenate files
+#cat_method='ncks'
+cat_method='internal'
 def main():
 
         #exit()
     file_list=parser.parse_args().input_file
+    cwd=os.getcwd()
+    path2data=os.getcwd()
+    
+    if parser.parse_args().fv3 and parser.parse_args().combine:
+        prRed('Use --fv3 and --combine sequentially to avoid ambiguity ')
+        exit()
     #=======Convert to FV3================
     if parser.parse_args().fv3:
 
     #argument definitions:
-        cwd=os.getcwd()
-        path2data=os.getcwd()
+        
         do_multi= False
         do_1year= False #Used with LegacyGCM_1year.nc'
     
@@ -98,59 +112,97 @@ def main():
                     lsmax=ls_r
                 else:
                     lsmax = str(max(int(lsmax),int(ls_r))).zfill(3)
-                a=make_FV3_files(f,True,cwd)
-                
+                a=make_FV3_files(f,parser.parse_args().fv3,True,cwd)
+                   
     
         #TODO is using sys.prefix reliable outside a virtual environment ?
 
 
     elif parser.parse_args().combine:
-        #Test if ncks is available , make recommendation and  exit otherwise--
-        try:
+        #TODO Use ncks if it is available (not tested yet)
+        if cat_method=='ncks':
             subprocess.check_call('ncks --version',shell=True,stdout=open(os.devnull, "w"), stderr=open(os.devnull, "w"))
-        except subprocess.CalledProcessError:
-            prYellow("***Error*** ncks dependency is  required to concatenate files")
-            exit()
-        #now cat together the files
-        newfavg="Ls"+lsmin+"_Ls"+lsmax+".atmos_average.nc"
-        newfdai="Ls"+lsmin+"_Ls"+lsmax+".atmos_daily.nc"
-        newfdiu="Ls"+lsmin+"_Ls"+lsmax+".atmos_diurn.nc"
-        tempdir=os.path.join(cwd,'temp')
-        os.makedirs(tempdir, exist_ok=True)
-        os.chdir(tempdir)
-
-        catavg = "ncrcat ../*.atmos_average.nc "+"00000.atmos_average.nc"
-        catdai = "ncrcat ../*.atmos_daily.nc "+"00000.atmos_daily.nc"
-        catdiu = "ncrcat ../*.atmos_diurn.nc "+"00000.atmos_diurn.nc"
-        p = subprocess.Popen(catavg, universal_newlines=True, shell=True)
-        p.wait()
-        p = subprocess.Popen(catdai, universal_newlines=True, shell=True)
-        p.wait()
-        p = subprocess.Popen(catdiu, universal_newlines=True, shell=True)
-        p.wait()
-        os.chdir(cwd)
-        p = subprocess.run('rm -f Ls*.nc', universal_newlines=True, shell=True)
-        p = subprocess.run('mv temp/*.nc .', universal_newlines=True, shell=True)
-        p = subprocess.run('rm -rf temp/', universal_newlines=True, shell=True)
-        #TODO
-        #MarsVars.beta 00000.atmos_average.nc -colint vap_mass_micro ice_mass_micro dst_mass_micro
-        #runpinterp -l 24
-        # TO DO MarsVars.beta 00000.atmos_average_plevs.nc -add mass_stream
-        #MarsPlot --do legacy
-        if do_1year:
-            a=make_FV3_files(hist1year,cwd)
+            #now cat together the files
+            newfavg="Ls"+lsmin+"_Ls"+lsmax+".atmos_average.nc"
+            newfdai="Ls"+lsmin+"_Ls"+lsmax+".atmos_daily.nc"
+            newfdiu="Ls"+lsmin+"_Ls"+lsmax+".atmos_diurn.nc"
+            tempdir=os.path.join(cwd,'temp')
+            os.makedirs(tempdir, exist_ok=True)
+            os.chdir(tempdir)
+    
+            catavg = "ncrcat ../*.atmos_average.nc "+"00000.atmos_average.nc"
+            catdai = "ncrcat ../*.atmos_daily.nc "+"00000.atmos_daily.nc"
+            catdiu = "ncrcat ../*.atmos_diurn.nc "+"00000.atmos_diurn.nc"
+            p = subprocess.Popen(catavg, universal_newlines=True, shell=True)
+            p.wait()
+            p = subprocess.Popen(catdai, universal_newlines=True, shell=True)
+            p.wait()
+            p = subprocess.Popen(catdiu, universal_newlines=True, shell=True)
+            p.wait()
+            os.chdir(cwd)
+            p = subprocess.run('rm -f Ls*.nc', universal_newlines=True, shell=True)
+            p = subprocess.run('mv temp/*.nc .', universal_newlines=True, shell=True)
+            p = subprocess.run('rm -rf temp/', universal_newlines=True, shell=True)
+            if do_1year:
+                a=make_FV3_files(hist1year,cwd)
+        #=================================        
+        elif cat_method=='internal':
+            #Get files to process
+            histlist=[]
+            for filei in file_list:
+                histlist.append(path2data+'/'+filei)
+                
+            fnum = len(histlist)
+            #Easy case: merging *****.fixed.nc means delete all but the first file:
+            if file_list[0][5:]=='.fixed.nc' and fnum>=2:
+                rm_cmd='rm -f '
+                for i in range(1,fnum):
+                    rm_cmd+=' '+histlist[i]   
+                p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
+                prCyan('Cleaned all but '+file_list[0])
+                exit()
+            #=========    
+            fnum = len(histlist)
+            prCyan('Merging %i files, starting with %s ...'%(fnum,file_list[0]))
+     
+            #this is a temporaty file ***_tmp.nc
+            file_tmp=histlist[0][:-3]+'_tmp'+'.nc'
+            Log=Ncdf(file_tmp,'Merged file')
+            Log.merge_files_from_list(histlist)
+            Log.close()
             
+            #=====Delete files that have been combined====
+            
+            #Rename merged file  LegacyGCM_LsINI_LsEND.nc or first files of the list (e.g 00010.atmos_average.nc)
+            if file_list[0][:12]=='LegacyGCM_Ls':
+                ls_ini=file_list[0][12:15]
+                ls_end=file_list[-1][18:21]
+                fileout='LegacyGCM_Ls%s_Ls%s.nc'%(ls_ini,ls_end)
+                
+            else:
+                fileout=histlist[0]
+            
+            #---Assemble 'remove' and 'move' commands to execute-----    
+            rm_cmd='rm -f '
+            for ifile in histlist:
+                rm_cmd+=' '+ifile    
+            cmd_txt='mv '+file_tmp+' '+fileout 
+            p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
+            p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
+            prCyan(fileout +' was merged')
+                 
     else:
-        prRed("""Error: no action requested: use 'MarsFiles *nc --fv3' or 'MarsFiles *nc --fv3 --combine '""")    
+        prRed("""Error: no action requested: use 'MarsFiles *nc --fv3' or 'MarsFiles *nc --combine '""")    
         
         
 
 
-def make_FV3_files(fpath,renameFV3=True,cwd=None):
+def make_FV3_files(fpath,typelistfv3,renameFV3=True,cwd=None):
     '''
     Make FV3-type atmos_average,atmos_daily,atmos_diurn
     Args:
         fpath     : full path to Legacy .nc files
+        typelistfv3: e.g['average', 'daily', 'diurn']
         renameFV3 : rename files from Legacy_Lsxxx_Lsyyy.nc to XXXXX.atmos_average.nc folllowing FV3's convention
         cwd       : output path
     Returns:
@@ -170,87 +222,78 @@ def make_FV3_files(fpath,renameFV3=True,cwd=None):
     
     #Convert the first Ls in file to a sol number
     if renameFV3:fdate= '%05i'%(ls2sol_1year(histfile.variables['ls'][0]))
+
+    def proccess_file(newf,typefv3):
+        for dname in histdims:
+            if dname == 'nlon':
+                var=histfile.variables['longitude']
+                npvar=var[:]
+                newf.add_dim_with_content('lon',npvar,'longitude',getattr(var,'units'),'X')
+            if dname == 'nlat':
+                var=histfile.variables['latitude']
+                npvar=var[:]
+                newf.add_dim_with_content('lat',npvar,'latitude',getattr(var,'units'),'Y')
+
+            if dname == 'time':
+                newf.add_dimension('time',None)
+            if dname == 'ntod' and typefv3=='diurn':
+                dim=histfile.dimensions[dname]
+                newf.add_dimension('time_of_day_16',dim.size)
+            if dname == 'nlay':
+                nlay=histfile.dimensions[dname]
+                num =nlay.size
+                nump=num+1
+                pref=7.01*100  # in Pa
+                pk=np.zeros(nump)
+                bk=np.zeros(nump)
+                pfull=np.zeros(num)
+                phalf=np.zeros(nump)
+                dsgm=histfile.variables['dsgm']
+                sgm =histfile.variables['sgm']
+                pk[0]=.08
+                for z in range(num):
+                    bk[z+1] = sgm[2*z+2]
+                phalf[:]=pk[:]+pref*bk[:] # output in  Pa
+                pfull[:] = (phalf[1:]-phalf[:num])/(np.log(phalf[1:])-np.log(phalf[:num]))
+                #
+                newf.add_dim_with_content('pfull',pfull,'ref full pressure level','Pa')
+                newf.add_dim_with_content('phalf',phalf,'ref half pressure level','Pa')
+                newf.log_axis1D('pk',pk,('phalf'),longname_txt='pressure part of the hybrid coordinate',units_txt='Pa',cart_txt='')
+                newf.log_axis1D('bk',bk,('phalf'),longname_txt='sigma part of the hybrid coordinate',units_txt='Pa',cart_txt='')
+
+        #===========END function========
+
     
-    newfname_avg = fdate+'.atmos_average.nc'  #5 sol averages over tod and time
-    newfname_daily = fdate+'.atmos_daily.nc'  #daily snapshot output...this is exactly the current output?
-    newfname_diurn = fdate+'.atmos_diurn.nc'  #5 sol averages over time only
-    newfpath_avg = os.path.join(histdir,newfname_avg)
-    newfpath_daily = os.path.join(histdir,newfname_daily)
-    newfpath_diurn = os.path.join(histdir,newfname_diurn)
-    newfavg = Ncdf(newfpath_avg)
-    newfdaily = Ncdf(newfpath_daily)
-    newfdiurn = Ncdf(newfpath_diurn)
-
-
-    for dname in histdims:
-        if dname == 'nlon':
-            var=histfile.variables['longitude']
-            npvar=var[:]
-            newfavg.add_dim_with_content('lon',npvar,'longitudes',getattr(var,'units'))
-            newfdaily.add_dim_with_content('lon',npvar,'longitudes',getattr(var,'units'))
-            newfdiurn.add_dim_with_content('lon',npvar,'longitudes',getattr(var,'units'))
-        if dname == 'nlat':
-            var=histfile.variables['latitude']
-            npvar=var[:]
-            newfavg.add_dim_with_content('lat',npvar,'latitudes',getattr(var,'units'))
-            newfdaily.add_dim_with_content('lat',npvar,'latitudes',getattr(var,'units'))
-            newfdiurn.add_dim_with_content('lat',npvar,'latitudes',getattr(var,'units'))
-        if dname == 'time':
-            newfavg.add_dimension('time',None)
-            newfdaily.add_dimension('time',None)
-            newfdiurn.add_dimension('time',None)
-        if dname == 'ntod':
-            dim=histfile.dimensions[dname]
-            newfdiurn.add_dimension('time_of_day_16',dim.size)
-        if dname == 'nlay':
-            nlay=histfile.dimensions[dname]
-            num =nlay.size
-            nump=num+1
-            pref=7.01 #TODO  * 100  change this to Pa
-            pk=np.zeros(nump)
-            bk=np.zeros(nump)
-            pfull=np.zeros(num)
-            phalf=np.zeros(nump)
-            dsgm=histfile.variables['dsgm']
-            sgm =histfile.variables['sgm']
-            pk[0]=.08
-            for z in range(num):
-                bk[z+1] = sgm[2*z+2]
-            phalf[:]=pk[:]/100.+pref*bk[:] #TODO remove /100 to output in to Pa
-            pfull[:] = (phalf[1:]-phalf[:num])/(np.log(phalf[1:])-np.log(phalf[:num]))
-            #
-
-            newfavg.add_dim_with_content('pfull',pfull,'ref full pressure level','mb')
-            newfavg.add_dim_with_content('phalf',phalf,'ref half pressure level','mb')
-            newfavg.log_axis1D('pk',pk,('phalf'),longname_txt='pressure part of the hybrid coordinate',unit_txt='Pa',cart_txt='')
-            newfavg.log_axis1D('bk',bk,('phalf'),longname_txt='sigma part of the hybrid coordinate',unit_txt='Pa',cart_txt='')
-            #
-            newfdaily.add_dim_with_content('pfull',pfull,'ref full pressure level','mb')
-            newfdaily.add_dim_with_content('phalf',phalf,'ref half pressure level','mb')
-            newfdaily.log_axis1D('pk',pk,('phalf'),longname_txt='pressure part of the hybrid coordinate',unit_txt='Pascal',cart_txt='')
-            newfdaily.log_axis1D('bk',bk,('phalf'),longname_txt='sigma part of the hybrid coordinate',unit_txt='',cart_txt='')
-            #
-            newfdiurn.add_dim_with_content('pfull',pfull,'ref full pressure level','mb')
-            newfdiurn.add_dim_with_content('phalf',phalf,'ref half pressure level','mb')
-            newfdiurn.log_axis1D('pk',pk,('phalf'),longname_txt='pressure part of the hybrid coordinate',unit_txt='Pascal',cart_txt='')
-            newfdiurn.log_axis1D('bk',bk,('phalf'),longname_txt='sigma part of the hybrid coordinate',unit_txt='',cart_txt='')
-
-#perform various averages
-    a=do_avg_vars(histfile,newfavg,True,True)
-    a=do_avg_vars(histfile,newfdaily,False,False)
-    a=do_avg_vars(histfile,newfdiurn,True,False)
-
+    if 'average' in typelistfv3:
+        newfname_avg = fdate+'.atmos_average.nc'  #5 sol averages over tod and time
+        newfpath_avg = os.path.join(histdir,newfname_avg)
+        newfavg = Ncdf(newfpath_avg)
+        proccess_file(newfavg,'average')
+        do_avg_vars(histfile,newfavg,True,True)
+        newfavg.close()
+        
+    if 'daily' in typelistfv3:
+        newfname_daily = fdate+'.atmos_daily.nc'  #daily snapshot output...this is exactly the current output?
+        newfpath_daily = os.path.join(histdir,newfname_daily)
+        newfdaily = Ncdf(newfpath_daily)
+        proccess_file(newfdaily,'daily')
+        do_avg_vars(histfile,newfdaily,False,False)
+        newfdaily.close()
+        
+    if 'diurn' in typelistfv3:
+        newfname_diurn = fdate+'.atmos_diurn.nc'  #5 sol averages over time only
+        newfpath_diurn = os.path.join(histdir,newfname_diurn)
+        newfdiurn = Ncdf(newfpath_diurn)
+        proccess_file(newfdiurn,'diurn')
+        do_avg_vars(histfile,newfdiurn,True,False)
+        newfdiurn.close()
+        
+    if 'fixed' in typelistfv3:
     #Copy Legacy.fixed to current directory 
-    cmd_txt='cp '+sys.prefix+'/mars_data/Legacy.fixed.nc '+fdate+'.fixed.nc'
-    p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
- 
-    newfavg.close()
-    newfdaily.close()
-    newfdiurn.close()
-    print(cwd+'/'+fdate+'.fixed.nc was copied locally')
-
-
-    return 0
+        cmd_txt='cp '+sys.prefix+'/mars_data/Legacy.fixed.nc '+fdate+'.fixed.nc'
+        p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
+        print(cwd+'/'+fdate+'.fixed.nc was copied locally')
+    
 
 
 #Function to perform time averages over all fields
@@ -263,6 +306,10 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
         ndims = npvar.ndim
         vshape= npvar.shape
         ntod  = histfile.dimensions['ntod']
+        
+        longname_txt=getattr(histfile.variables[vname],'longname','')
+        units_txt=getattr(histfile.variables[vname],'units','')
+        
         if avgtod:
             newdims  = replace_dims(dims,True)
         elif avgtime:
@@ -280,24 +327,32 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
         if ndims == 1:
             if vname == 'ls':
                 #first check if spans new year
+                
                 if not np.all(npvar[1:] >= npvar[:-1]):
                     year = 0.
                     for x in range(1,npvar.size):
                         if 350. < npvar[x-1] < 360. and npvar[x] < 10.:
                             year += 1.
                         npvar[x] += 360.*year
+                      
+                #Create a time array        
+                time0=ls2sol_1year(npvar[0])+np.linspace(0,10.,len(npvar))   
+                 
                 if avgtime:
                     varnew = np.mean(npvar.reshape(-1,5),axis=1)
-                if not avgtime and not avgtod:
+                    time0 =  np.mean(time0.reshape(-1,5),axis=1)
+                    if varnew.min()<5:
+                        print(histfile.filepath())
+                        print(varnew)
+                if not avgtime and not avgtod: #i.e daily file
                     ls_start = npvar[0]
                     ls_end   = npvar[-1]
                     step     = (ls_end-ls_start)/np.float32(((numt-1)*ntod.size))
                     varnew = np.arange(0,numt*ntod.size,dtype=np.float32)
                     varnew[:] = varnew[:]*step+ls_start
-#                print(npvar,varnew)
-                newf.log_axis1D('areo',varnew,dims,longname_txt='time',unit_txt='',cart_txt='')
-                time0=np.arange(0,len(varnew))
-                newf.log_axis1D('time',varnew,dims,longname_txt='sol number',unit_txt='',cart_txt='')#added AK
+                 
+                newf.log_axis1D('areo',varnew,dims,longname_txt='solar longitude',units_txt='degree',cart_txt='T')
+                newf.log_axis1D('time',time0,dims,longname_txt='sol number',units_txt='days since 0000-00-00 00:00:00',cart_txt='T')#added AK
             else:
                 continue
         elif ndims == 4:
@@ -308,10 +363,11 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
                 varnew = varnew.mean(axis=1)
             if not avgtime and not avgtod:
                 varnew = npvar.reshape(-1,vshape[2],vshape[3])
-            vname2=change_vname(vname)
+            #Rename variable    
+            vname2,longname_txt2,units_txt2=change_vname_longname_unit(vname,longname_txt,units_txt)
             #AK convert surface pressure from mbar to Pa
             if vname2=='ps':varnew*=100.
-            newf.log_variable(vname2,varnew,newdims,longname_txt=vname,unit_txt='')
+            newf.log_variable(vname2,varnew,newdims,longname_txt2,units_txt2)
         elif ndims == 5:
             varnew = npvar
             if avgtime:
@@ -320,29 +376,68 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
                 varnew = varnew.mean(axis=1)
             if not avgtime and not avgtod:
                 varnew = npvar.reshape(-1,vshape[2],vshape[3],vshape[4])
-            vname2=change_vname(vname)
-            newf.log_variable(vname2,varnew,newdims,longname_txt=vname,unit_txt='')
+            #Rename variables   
+            vname2,longname_txt2,units_txt2=change_vname_longname_unit(vname,longname_txt,units_txt)
+            newf.log_variable(vname2,varnew,newdims,longname_txt2,units_txt2)
         elif vname == 'tloc':
             if avgtime and not avgtod:
-                newf.log_variable(vname,npvar,newdims,longname_txt=vname,unit_txt='')
+                newf.log_variable(vname,npvar,newdims,longname_txt=vname,units_txt='')
     return 0
 
 
-def change_vname(vname):
-    vname2=vname
+def change_vname_longname_unit(vname,longname_txt,units_txt):
+    
     if vname == 'psurf':
-        vname2 = 'ps'
-    if vname == 'tsurf':
-        vname2 = 'ts'
-    if vname.endswith('_mass'):
-        if 'core' in vname:
-            vname2 = 'cor_mass_micro'
-        else:
-            vname2 = vname[-8:-5]+'_mass_micro'
-    if vname.endswith('_numb'):
-        vname2 = vname[-8:-5]+'_num_micro'
-    return vname2
+        vname = 'ps'
+        longname_txt='surface pressure'
+        units_txt='Pa'
+    elif vname == 'tsurf':
+        vname = 'ts'
+        longname_txt='surface temperature'
+        units_txt='K'
+    elif vname=='dst_core_mass':    
+        vname = 'cor_mass'
+        longname_txt='dust core mass for the water ice aerosol'
+        units_txt='kg/kg'
+            
+    elif vname=='h2o_vap_mass':    
+        vname = 'vap_mass'
+        longname_txt='water vapor mixing ratio'
+        units_txt='kg/kg' 
+            
+    elif vname=='h2o_ice_mass':    
+        vname = 'ice_mass'
+        longname_txt='water ice aerosol mass mixing ratio'
+        units_txt='kg/kg' 
 
+    elif vname=='dst_mass':    
+        vname = 'dst_mass'
+        longname_txt='dust aerosol mass mixing ratio'
+        units_txt='kg/kg' 
+
+    elif vname=='dst_numb':    
+        vname = 'dst_num'
+        longname_txt='dust aerosol number'
+        units_txt='number/kg' 
+            
+    elif vname=='h2o_ice_numb':    
+        vname = 'ice_num'
+        longname_txt='water ice aerosol number'
+        units_txt='number/kg'           
+    elif vname=='temp':    
+        longname_txt='temperature'
+        units_txt='K'     
+    elif vname=='ucomp':    
+        longname_txt='zonal wind'
+        units_txt='m/s'
+    elif vname=='vcomp':    
+        longname_txt='meridional wind'
+        units_txt='m/s'                        
+    else: 
+        #Return original values
+        pass
+    return vname,longname_txt,units_txt
+    
 #Function to replace dimensions with fv3 names and remove tod
 def replace_dims(dims,todflag):
     newdims = dims

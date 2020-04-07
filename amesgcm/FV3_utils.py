@@ -1,4 +1,5 @@
 import numpy as np
+from netCDF4 import Dataset
 
 def fms_press_calc(psfc,ak,bk,lev_type='full'):
     """
@@ -27,6 +28,7 @@ def fms_press_calc(psfc,ak,bk,lev_type='full'):
         
          
     """
+    #Ignore division by zero warning for the Legacy GCM
     
     Nk=len(ak)
     # If psfc is a float (e.g. psfc=7.) make it a one element array (e.g. psfc=[7.])
@@ -45,17 +47,16 @@ def fms_press_calc(psfc,ak,bk,lev_type='full'):
     
     #Pressure at full levels = centers of the levels. The size of z axis is Nk-1
     PRESS_f=np.zeros((len(psfc_flat),Nk-1))
-    
     #Top layer (1st element is i=0 in Python)
     if ak[0]==0 and bk[0]==0: 
         PRESS_f[:,0]= 0.5*(PRESS_h[:,0]+PRESS_h[:,1])
     else:
         PRESS_f[:,0] = (PRESS_h[:,1]-PRESS_h[:,0])/np.log(PRESS_h[:,1]/PRESS_h[:,0])
-    
+
     #Rest of the column (i=1..Nk).
     #[2:] goes from the 3rd element to Nk and [1:-1] goes from the 2nd element to Nk-1
     PRESS_f[:,1:]= (PRESS_h[:,2:]-PRESS_h[:,1:-1])/np.log(PRESS_h[:,2:]/PRESS_h[:,1:-1])
-    
+
     # Reshape PRESS(:,Nk) to the original pressure shape PRESS(:,:,Nk) (resp. Nk-1)
                        
     if lev_type=="full":
@@ -692,161 +693,7 @@ def dvar_dh(arr, h=None):
     
     return d_arr
 
-#========================================================================= 
-#=============Wrapper for creation of netcdf files========================
-#=========================================================================
 
-class Ncdf(object):
-    '''
-    Alex K.
-    NetCdf wrapper for quick archiving of data into netcdf format 
-    
-    USAGE: 
-    
-    from netcdf_wrapper import Ncdf
-
-    Fgeo= 0.03 #W/m2, a constant
-    TG=np.ones((24,8)) #ground temperature
-
-    #---create file---
-    filename="/lou/s2n/mkahre/MCMC/analysis/working/myfile.nc"
-    description="results from new simulation, Alex 01-01-19"
-    Log=Ncdf(filename,description)
-    
-    #---Save the constant to the file---
-    Log.add_constant('Fgeo',Fgeo,"geothermal flux","W/m2")
-    
-    #---Save the TG array to the file---
-    Log.add_dimension('Nx',8)
-    Log.add_dimension('time',24)
-    
-    Log.log_variable('TG',TG,('time','Nx'),'soil temperature','K')
-    
-    Log.close()
-    
-    
-    '''
-    def __init__(self,filename=None,description_txt="",action='w'):
-        if filename: 
-            if filename[-3:]!=".nc":
-            #assume that only path is provided so make a name for the file
-                import datetime;now = datetime.datetime.now()
-                filename=filename+\
-                '/run_%02d-%02d-%04d_%i-%i-%i.nc'%(now.day,now.month,now.year,now.hour,now.minute,now.second)
-        else:   #create a default file name  if path and filename are not provided
-            import os #use a default path if not provided
-            pathname=os.getcwd()+'/'
-            import datetime;now = datetime.datetime.now()
-            filename=pathname+\
-            'run_%02d-%02d-%04d_%i-%i-%i.nc'%(now.day,now.month,now.year,now.hour,now.minute,now.second)
-        self.filename=filename
-        from netCDF4 import Dataset 
-        if action=='w':
-            self.f_Ncdf = Dataset(filename, 'w', format='NETCDF4_CLASSIC')
-            self.f_Ncdf.description = description_txt
-        elif action=='a': #append to file
-            self.f_Ncdf = Dataset(filename, 'a', format='NETCDF4_CLASSIC')
-        #create dictionaries to hold dimensions and variables
-        self.dim_dict=dict()
-        self.var_dict=dict()
-        #print(filename+ " was created")
-        
-    def close(self):
-        self.f_Ncdf.close()
-        print(self.filename+" was closed")
-        
-    def add_dimension(self,dimension_name,length):
-        self.dim_dict[dimension_name]= self.f_Ncdf.createDimension(dimension_name,length)
-        
-    def print_dimension(self):
-        print(self.dim_dict.items())
-    def print_variable(self):
-        print(self.var_dict.keys())    
-        
-    def add_constant(self,variable_name,value,longname_txt="",unit_txt=""):
-        if not any('constant' in s for s in self.dim_dict.keys()):
-            self.add_dimension('constant',1)
-        longname_txt =longname_txt+' (%g)'%(value)   #add the value to the longname
-        self._def_variable(variable_name,('constant'),longname_txt,unit_txt)
-        self.var_dict[variable_name][:]=value
-    #=====Private definitions=====   
-    def _def_variable(self,variable_name,dim_array,longname_txt="",unit_txt=""):
-        self.var_dict[variable_name]= self.f_Ncdf.createVariable(variable_name,'f4',dim_array)    
-        self.var_dict[variable_name].units=unit_txt
-        self.var_dict[variable_name].long_name=longname_txt
-        self.var_dict[variable_name].dim_name=str(dim_array)  
-
-    def _def_axis1D(self,variable_name,dim_array,longname_txt="",unit_txt="",cart_txt=""):
-        self.var_dict[variable_name]= self.f_Ncdf.createVariable(variable_name,'f8',dim_array)
-        self.var_dict[variable_name].units=unit_txt
-        self.var_dict[variable_name].long_name=longname_txt
-        self.var_dict[variable_name].cartesian_axis=cart_txt
-    #================================    
-    def log_variable(self,variable_name,DATAin,dim_array,longname_txt="",unit_txt=""):
-        if not any(variable_name in s for s in self.var_dict.keys()):
-            self._def_variable(variable_name,dim_array,longname_txt,unit_txt)
-        self.var_dict[variable_name].long_name=longname_txt
-        self.var_dict[variable_name].dim_name=str(dim_array)  
-        self.var_dict[variable_name].units=unit_txt
-        self.var_dict[variable_name][:]=DATAin 
-        
-    def log_axis1D(self,variable_name,DATAin,dim_array,longname_txt="",unit_txt="",cart_txt="",):
-        if not any(variable_name == s for s in self.var_dict.keys()):
-            self._def_axis1D(variable_name,dim_array,longname_txt,unit_txt,cart_txt)
-        self.var_dict[variable_name].long_name=longname_txt
-        self.var_dict[variable_name].units=unit_txt
-        self.var_dict[variable_name].cartesian_axis=cart_txt
-        self.var_dict[variable_name][:]=DATAin
-        
-    #Function to define a dimension and add a variable with at the same time
-    #lon_array=np.linspace(0,360)
-    #Log.add_dim_with_content('lon',lon_array,'longitudes','degree')
-    def add_dim_with_content(self,dimension_name,DATAin,longname_txt="",unit_txt=""):
-        self.add_dimension(dimension_name,len(DATAin))
-        #---If no longname is provided, use dimension_name as default---
-        if longname_txt=="":longname_txt=dimension_name
-        self.log_axis1D(dimension_name,DATAin,(dimension_name),longname_txt,unit_txt) 
-         
-    #Copy a netcdf DIMENSION variable e.g Ncdim is:  f.variables['lon']
-    # if the dimension for that variable does not exist, it will be created
-    def copy_Ncdim_with_content(self,Ncdim_var):
-        longname_txt=getattr(Ncdim_var,'long_name',Ncdim_var.name)
-        unit_txt=    getattr(Ncdim_var,'units','')
-        self.add_dim_with_content(Ncdim_var.name,Ncdim_var[:],longname_txt,unit_txt)
-               
-    #Copy a netcdf variable from another file, e.g Ncvar is: f.variables['ucomp']
-    def copy_Ncvar(self,Ncvar):
-        dim_array=Ncvar.dimensions
-        longname_txt=getattr(Ncvar,'long_name',Ncvar.name)
-        unit_txt=    getattr(Ncvar,'units','')
-        self._def_variable(Ncvar.name,Ncvar.dimensions,longname_txt,unit_txt)
-        self.log_variable(Ncvar.name,Ncvar[:],Ncvar.dimensions,longname_txt,unit_txt)
-    
-#=====TEST ONLY=======
-'''       
-fname='/Users/akling/test/00030.atmos_average.nc'
-
-f=Dataset(fname,'r')
-varnames=f.variables.keys()
-lat=f.variables['lat']
-lon=f.variables['lon'][:]  
-ucomp=f.variables['ucomp']  
-
-
-Log=Ncdf('/Users/akling/mytest2.nc')
-Fgeo= 0.03 #W/m2, a constant
-
-#Log.add_dimension('Nx',8)
-Log.add_dim_with_content('lon',lon,'longitudes','degree')
-Log.copy_Ncdim_with_content(f.variables['lat'])
-Log.copy_Ncdim_with_content(f.variables['pfull'])
-Log.copy_Ncdim_with_content(f.variables['time'])
-Log.copy_Ncvar(f.variables['ucomp']  )
-Log.close()  
-'''
-  
-  
-    
 #========================================================================= 
 #=======================vertical grid utilities===========================
 #=========================================================================

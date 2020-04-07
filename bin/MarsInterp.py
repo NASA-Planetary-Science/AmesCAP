@@ -8,12 +8,15 @@ import sys       #system command
 import time
 
 #TODO delete when done testing
-#sys.path.append('/Users/akling/amesgcm/amesgcm/')
-#from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-#from FV3_utils import fms_press_calc,fms_Z_calc,Ncdf,pinterp
-
-from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,Ncdf,pinterp,find_n
+'''
+sys.path.append('/Users/akling/amesgcm/amesgcm/')
+from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+from FV3_utils import fms_press_calc,fms_Z_calc,pinterp, find_n
+from Ncdf_wrapper import Ncdf
+'''
+from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,pinterp,find_n
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+from amesgcm.Ncdf_wrapper import Ncdf
 
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
@@ -44,9 +47,9 @@ parser = argparse.ArgumentParser(description="""\033[93m MarsInterp, pressure in
 
 parser.add_argument('input_file', nargs='+', #sys.stdin
                              help='***.nc file or list of ***.nc files ')
-parser.add_argument('-t','--type',type=str,default='plevs',
-                 help="""> Usage: MarsInterp ****.atmos.average.nc -t plevs \n"""
-                      """Available type are  'plevs', 'zlevs', 'zagl'\n"""
+parser.add_argument('-t','--type',type=str,default='pstd',
+                 help="""> Usage: MarsInterp ****.atmos.average.nc -t pstd \n"""
+                      """Available type are  'pstd', 'zstd', 'zagl'\n"""
                       """ \n""")      
 
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
@@ -69,7 +72,7 @@ M_co2 =0.044 # kg/mol
 filepath=os.getcwd()
 
 #Default levels
-level=np.array([1.0e+03, 9.5e+02, 9.0e+02, 8.5e+02, 8.0e+02, 7.5e+02, 7.0e+02,
+pstd_in=np.array([1.0e+03, 9.5e+02, 9.0e+02, 8.5e+02, 8.0e+02, 7.5e+02, 7.0e+02,
        6.5e+02, 6.0e+02, 5.5e+02, 5.0e+02, 4.5e+02, 4.0e+02, 3.5e+02,
        3.0e+02, 2.5e+02, 2.0e+02, 1.5e+02, 1.0e+02, 7.0e+01, 5.0e+01,
        3.0e+01, 2.0e+01, 1.0e+01, 7.0e+00, 5.0e+00, 3.0e+00, 2.0e+00,
@@ -107,11 +110,11 @@ def main():
     interp_type=parser.parse_args().type
     
     
-    if interp_type not in ['plevs','zlevs','zagl']: 
-        prRed("Interpolation type '%s' is not supported, choose 'plevs','zlevs' or 'zagl'"%(interp_type))
+    if interp_type not in ['pstd','zstd ','zagl']: 
+        prRed("Interpolation type '%s' is not supported, use  'pstd','zstd' or 'zagl'"%(interp_type))
         exit()
-    #TODO delete the following when  zagl and zlevs  are supported
-    if interp_type not in ['plevs']: 
+    #TODO delete the following when  zagl and zstd  are supported
+    if interp_type not in ['pstd']: 
         prRed("Interpolation type '%s' is not yet supported"%(interp_type))
         exit()
     
@@ -120,6 +123,10 @@ def main():
         #First check if file is present on the disk (Lou only)
         check_file_tape(ifile)
         newname=filepath+'/'+ifile[:-3]+'_'+interp_type+'.nc'
+        
+        if interp_type=='pstd':
+            longname_txt= 'standard pressure'
+            units_txt= 'Pa'
 
         
         #=================================================================
@@ -133,21 +140,33 @@ def main():
             bk=np.array(fNcdf.variables['bk'])
             
         ps=np.array(fNcdf.variables['ps'])
-        p_3D= fms_press_calc(ps,ak,bk,lev_type='full').transpose([3,0,1,2])# p_3D [tim,lat,lon,lev] ->[lev,tim,lat, lon]
+        
+        if len(ps.shape)==3:
+            transposeP=[3,0,1,2] #p_3D [tim,lat,lon,lev] ->[lev,tim,lat, lon]
+        elif len(ps.shape)==4:    
+            prRed('Interpolation of atmos_diurn not yet supported')
+            exit()
+        #==This with loop suppresses divided by zero error for the Legacy GCM==
+        with np.errstate(divide='ignore', invalid='ignore'):    
+            p_3D= fms_press_calc(ps,ak,bk,lev_type='full').transpose(transposeP)
             
         var_list=fNcdf.variables.keys()
         fnew = Ncdf(newname,'Pressure interpolation using MarsInterp.py')
-        #===========      Replicate existing dimensions  =================
+        #===========      Replicate existing DIMENSIONS but pfull  =================
+        fnew.copy_all_dims_from_Ncfile(fNcdf,exclude_dim=['pfull'])
         
-        fnew.copy_Ncdim_with_content(fNcdf.variables['lon'])
-        fnew.copy_Ncdim_with_content(fNcdf.variables['lat'])
-        fnew.add_dim_with_content('level',level/100.,longname_txt="interpolated pressure",unit_txt="hPa")
+        fnew.add_dim_with_content('pstd',pstd_in,longname_txt,units_txt) #Add new dimensions
+        fnew.copy_Ncaxis_with_content(fNcdf.variables['lon'])
+        fnew.copy_Ncaxis_with_content(fNcdf.variables['lat'])
+        fnew.copy_Ncaxis_with_content(fNcdf.variables['time'])
+        
         #---Time deserve special treatment:
         #fnew.copy_Ncdim_with_content(fNcdf.variables['time'])
+        '''
         fnew.add_dimension('time',None)
         t=fNcdf.variables['time'][:]
-
         fnew.log_axis1D('time',t,('time'),longname_txt='sol number',unit_txt='',cart_txt='')
+        '''
 
         
         #We will re-use the indices for each files, this speeds-up the calculation
@@ -156,17 +175,22 @@ def main():
             
             if fNcdf.variables[ivar].dimensions==('time','pfull', 'lat', 'lon'):
                 if compute_indices:
-                    index=find_n(p_3D,level)
+                    prCyan("Computing indices ...")
+                    index=find_n(p_3D,pstd_in)
                     compute_indices=False
                     
-                print("\r Interpolating: %s ..."%(ivar), end='')
+                #print("\r Interpolating: %s ..."%(ivar), end='')
+                prCyan("Interpolating: %s ..."%(ivar))
                 varIN=fNcdf.variables[ivar][:]
-                varOUT=pinterp(varIN.transpose([1,0,2,3]),p_3D ,level,True,index).transpose([1,0,2,3])
-                fnew.log_variable(ivar,varOUT,('time','level', 'lat', 'lon'),fNcdf.variables[ivar].long_name,fNcdf.variables[ivar].units)
+                #==This with loop suppresses divided by zero error for the Legacy GCM==
+                with np.errstate(divide='ignore', invalid='ignore'):
+                    varOUT=pinterp(varIN.transpose([1,0,2,3]),p_3D ,pstd_in,True,index).transpose([1,0,2,3])
+                fnew.log_variable(ivar,varOUT,('time','pstd', 'lat', 'lon'),fNcdf.variables[ivar].long_name,fNcdf.variables[ivar].units)
             else:
                 
-                if  ivar not in ['time','pfull', 'lat', 'lon','level','phalf','pk','bk']:
-                    print("\r Copying over: %s..."%(ivar), end='')
+                if  ivar not in ['time','pfull', 'lat', 'lon','pstd','phalf','pk','bk']:
+                    #print("\r Copying over: %s..."%(ivar), end='')
+                    prCyan("Copying over: %s..."%(ivar))
                     fnew.copy_Ncvar(fNcdf.variables[ivar]) 
                     
              

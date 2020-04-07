@@ -9,8 +9,10 @@ import sys       #system command
 
 #TODO remove this block to use package instead
 #==============
-#sys.path.append('/Users/akling/amesgcm/amesgcm/')
-#from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+'''
+sys.path.append('/Users/akling/amesgcm/amesgcm/')
+from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+'''
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
 
 
@@ -110,8 +112,8 @@ def main():
     objectList=[Fig_2D_lon_lat('fixed.zsurf',True),\
                 Fig_2D_lat_press('atmos_average.ucomp',True),\
                 Fig_2D_time_lat('atmos_average.taudust_IR',False),\
-                Fig_2D_lon_press('atmos_average_plevs.temp',False),\
-                Fig_2D_time_press('atmos_average_plevs.temp',False),\
+                Fig_2D_lon_press('atmos_average_pstd.temp',False),\
+                Fig_2D_time_press('atmos_average_pstd.temp',False),\
                 Fig_2D_lon_time('atmos_average.temp',False),\
                 Fig_1D('atmos_average.temp',False)]
         #=============================
@@ -523,6 +525,7 @@ def get_time_index(Ls_query_360,Ls):
 
         Lsi_bounds=np.array([ti_beg,ti_last])
         ti=np.arange(Lsi_bounds[0],Lsi_bounds[1]+1)
+        
         Ls_bounds=[Ls[ti[0]],Ls[ti[-1]]] #this is for display
         txt_time=', Ls= avg [(MY%2i) %.2f <-> (MY%2i) %.2f]'%(MY_beg,np.mod(Ls_bounds[0],360.),MY_last,np.mod(Ls_bounds[1],360.))
 
@@ -890,7 +893,7 @@ def make_template():
         customFileIN.write(lh+"""> Use 'Dimension = -55.,55.' to get the average between -55. and 55. \n""")
         customFileIN.write(lh+"""> 'None' refers to the default setting for that Dimension: \n""")
         customFileIN.write(lh+"""    -A) time  = instant time step at Nt (i.e last timestep) \n""")
-        customFileIN.write(lh+"""    -B) lev = sfc (i.e, Nz for *.nc files and 0 for *_plevs.nc files) \n""")
+        customFileIN.write(lh+"""    -B) lev = sfc (i.e, Nz for *.nc files and 0 for *_pstd.nc files) \n""")
         customFileIN.write(lh+"""    -C) lat   = equator slice \n""")
         customFileIN.write(lh+"""    -D) lon   = 'all', i.e zonal average over all longitudes\n""")
         customFileIN.write(lh+"""> Overwrite the dimension using atmos_average.temp{time = 100 ; lev= 5.; lon= all ; lat=45} Use brackets '{}' and SEMI-COLONS ';'\n""")
@@ -1497,12 +1500,12 @@ class Fig_2D(object):
 
         #======time,level,lat,lon=======
         if (dim_info==(u'time', u'pfull', u'lat', u'lon')
-           or dim_info==(u'time', u'level', u'lat', u'lon')
+           or dim_info==(u'time', u'pstd', u'lat', u'lon')
            or dim_info==(u'time', u'zgrid', u'lat', u'lon')):
 
             #Initialize dimensions
-            if dim_info[1]=='pfull': levs=100.*f.variables[dim_info[1]][:] #mBar to Pa
-            if dim_info[1]=='level': levs=100.*f.variables[dim_info[1]][:] #mBar to Pa
+            if dim_info[1]=='pfull': levs=f.variables[dim_info[1]][:] 
+            if dim_info[1]=='pstd': levs=f.variables[dim_info[1]][:] 
             if dim_info[1]=='zgrid': levs=     f.variables[dim_info[1]][:] # meters
             zi=np.arange(0,len(levs))
             t=f.variables['time'][:];Ls=f.variables['areo'][:];ti=np.arange(0,len(t))
@@ -1589,7 +1592,7 @@ class Fig_2D(object):
         out=fig_layout(self.subID,self.nPan)
         if self.subID==1:
             fig= plt.figure(facecolor='white',figsize=(pixel_width/my_dpi, pixel_width/1.4/my_dpi)) #create figure if 1st pannel, 1.4 is ratio (16:9 screen would be 1.77)
-            plt.suptitle(simulation_name)
+            #plt.suptitle(simulation_name)
 
         ax = plt.subplot(out[0],out[1],out[2]) #nrow,ncol,subID
         ax.patch.set_color('.1') #Nan are grey
@@ -2135,12 +2138,12 @@ class Fig_1D(object):
 
         #======time,level,lat,lon=======
         if (dim_info==(u'time', u'pfull', u'lat', u'lon')
-           or dim_info==(u'time', u'level', u'lat', u'lon')
+           or dim_info==(u'time', u'pstd', u'lat', u'lon')
            or dim_info==(u'time', u'zgrid', u'lat', u'lon')):
 
             #Initialize dimensions
-            if dim_info[1]=='pfull': levs=100.*f.variables[dim_info[1]][:] #mBar to Pa
-            if dim_info[1]=='level': levs=100.*f.variables[dim_info[1]][:] #mBar to Pa
+            if dim_info[1]=='pfull': levs=f.variables[dim_info[1]][:] 
+            if dim_info[1]=='pstd': levs=f.variables[dim_info[1]][:] 
             if dim_info[1]=='zgrid': levs=     f.variables[dim_info[1]][:] # meters
             zi=np.arange(0,len(levs))
             t=f.variables['time'][:];Ls=f.variables['areo'][:];ti=np.arange(0,len(t))
@@ -2205,7 +2208,7 @@ class Fig_1D(object):
         out=fig_layout(self.subID,self.nPan)
         if self.subID==1 and not self.addLine:
             fig= plt.figure(facecolor='white',figsize=(pixel_width/my_dpi, pixel_width/1.4/my_dpi)) #create figure if 1st pannel
-            plt.suptitle(simulation_name)
+            #plt.suptitle(simulation_name) #TODO remove 
         if not self.addLine:
             ax = plt.subplot(out[0],out[1],out[2]) #nrow,ncol,subID
         else:
