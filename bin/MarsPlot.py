@@ -9,15 +9,11 @@ import sys       #system command
 
 #TODO remove this block to use package instead
 #==============
-'''
-sys.path.append('/Users/akling/amesgcm/amesgcm/')
-from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-'''
-from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
 
-
-
-
+#sys.path.append('/Users/akling/amesgcm/amesgcm/')
+#from Script_utils import          check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+#from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+from amesgcm.FV3_utils import lon360_to_180,lon180_to_360
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
     import matplotlib
@@ -253,8 +249,6 @@ def main():
 
 
 
-
-
 #======================================================
 #                  DATA OPERATION UTILITIES
 #======================================================
@@ -284,32 +278,6 @@ def shift_data(lon,data):
         data=np.squeeze(data)
     return lon_180,data
 
-def lon_180_to_360(lon):
-    '''
-    This function shift the longitude from a -180/+180 grid to a 0->360 grid
-    Args:
-        lon: 1D array of longitude -180/+180
-    Returns:
-        lon: 1D array of longitude 0->360
-    '''
-    lon=np.array(lon).astype(np.float)
-    lon[lon<0.]+=360.
-    lon=np.append(lon[lon<180],lon[lon>=180])
-    return lon
-
-def lon_360_to_180(lon):
-    '''
-    This function shift the longitude from a 0->360 grid to a -180/+180 grid
-    Args:
-        lon: 1D array of longitude 0->360
-    Returns:
-        lon: 1D array of longitude  -180/+180
-    '''
-    lon=np.array(lon).astype(np.float)
-    lon[lon>180]-=360.
-    lon=np.append(lon[lon<0],lon[lon>=0])
-    return lon
-
 
 def MY_func(Ls_cont):
     '''
@@ -320,7 +288,6 @@ def MY_func(Ls_cont):
         MY : int the Mars year
     '''
     return (Ls_cont)//(360.)+1
-
 
 
 def get_topo_2D(simuID,sol_array):
@@ -367,16 +334,16 @@ def get_lon_index(lon_query_180,lons):
             txt_lon=', zonal avg'
         else:
             #get closet value
-            lon_query_360=lon_180_to_360(lon_query_180)
+            lon_query_360=lon180_to_360(lon_query_180)
             loni=np.argmin(np.abs(lon_query_360-lons))
-            txt_lon=', lon=%.1f'%(lon_360_to_180(lons[loni]))
+            txt_lon=', lon=%.1f'%(lon360_to_180(lons[loni]))
     # a range is requested
     elif lon_query_180.size==2:
-        lon_query_360=lon_180_to_360(lon_query_180)
+        lon_query_360=lon180_to_360(lon_query_180)
         loni_bounds=np.array([np.argmin(np.abs(lon_query_360[0]-lons)),np.argmin(np.abs(lon_query_360[1]-lons))])
         #if loni_bounds[0]>loni_bounds[1]:loni_bounds=np.flipud(loni_bounds) #lon should be increasing for extraction #TODO
         loni=np.arange(loni_bounds[0],loni_bounds[1])
-        lon_bounds_180=lon_360_to_180([lons[loni[0]],lons[loni[-1]]])
+        lon_bounds_180=lon360_to_180([lons[loni[0]],lons[loni[-1]]])
         if lon_bounds_180[0]>lon_bounds_180[1]:lon_bounds_180=np.flipud(lon_bounds_180) #lon should be also increasing for display
         txt_lon=', lon=avg[%.1f<->%.1f]'%(lon_bounds_180[0],lon_bounds_180[1])
     return loni,txt_lon
@@ -458,7 +425,7 @@ def get_level_index(level_query,levs):
 
     return levi,txt_level
 
-def get_time_index(Ls_query_360,Ls):
+def get_time_index(Ls_query_360,Ls,t_day):
     '''
     Given a range of requested solar longitude [0-360], return the indexes to extract data from the netcdf file.
     First try the Mars year of the last timestep, then try the year before then picks whichever Ls period is closest to the requested date.
@@ -466,11 +433,13 @@ def get_time_index(Ls_query_360,Ls):
     Args:
         Ls_query_360: requested  solar longitudes
         Ls_c:         1D array of continueous solar longitudes
+        t_day:        time array in days
     Returns:
         ti: 1D array of file indexes
         txt_time: text descriptor for the extracted solar longitudes
     *** Note that the keyword 'all' is passed as -99999 by the rT() functions
     '''
+    #TODO t_day is not used at the moment
     Nt=len(Ls)
     Ls_query_360=np.array(Ls_query_360)
 
@@ -487,10 +456,13 @@ def get_time_index(Ls_query_360,Ls):
         else:
             #get the Mars year of the last timestep in the file
             MY_end=MY_func(Ls[-1]) #number of Mars year at the end of the file.
+            if MY_end >=1:
             #check if the desired Ls is available for this Mars Year
-            Ls_query=Ls_query_360+(MY_end-1)*360. #(MY starts at 1, not zero)
+                Ls_query=Ls_query_360+(MY_end-1)*360. #(MY starts at 1, not zero)
+            else: 
+                Ls_query=Ls_query_360    
             #If this time is greater that the last Ls, look one year back
-            if Ls_query>Ls[-1]:
+            if Ls_query>Ls[-1] and MY_end>1:
                 MY_end-=1 #one year back
                 Ls_query=Ls_query_360+(MY_end-1)*360.
             ti=np.argmin(np.abs(Ls_query-Ls))
@@ -501,13 +473,14 @@ def get_time_index(Ls_query_360,Ls):
 
         #get the Mars year of the last timestep in the file
         MY_last=MY_func(Ls[-1]) #number of Mars year at the end of the file.
-
+        if MY_last >=1:
         #try the mars year of the last time step
-        Ls_query_last=Ls_query_360[1]+(MY_last-1)*360.
-
+            Ls_query_last=Ls_query_360[1]+(MY_last-1)*360.
+        else:
+            Ls_query_last=Ls_query_360[1]
         #First consider the further end of the desired range
         #This time is greater that the last Ls, look one year back
-        if Ls_query_last>Ls[-1]:
+        if Ls_query_last>Ls[-1] and  MY_last>1:
             MY_last-=1
             Ls_query_last=Ls_query_360[1]+(MY_last-1)*360. #(MY starts at 1, not zero)
         ti_last=np.argmin(np.abs(Ls_query_last-Ls))
@@ -522,9 +495,9 @@ def get_time_index(Ls_query_360,Ls):
             MY_beg-=1
             Ls_query_beg=Ls_query_360[0]+(MY_beg-1)*360.
             ti_beg=np.argmin(np.abs(Ls_query_beg-Ls))
-
-        Lsi_bounds=np.array([ti_beg,ti_last])
-        ti=np.arange(Lsi_bounds[0],Lsi_bounds[1]+1)
+            
+   
+        ti=np.arange(ti_beg,ti_last+1)
         
         Ls_bounds=[Ls[ti[0]],Ls[ti[-1]]] #this is for display
         txt_time=', Ls= avg [(MY%2i) %.2f <-> (MY%2i) %.2f]'%(MY_beg,np.mod(Ls_bounds[0],360.),MY_last,np.mod(Ls_bounds[1],360.))
@@ -1153,48 +1126,6 @@ def get_figure_header(line_txt):
 #======================================================
 #                  FILE SYSTEM UTILITIES
 #======================================================
-# def check_file_tape(fileNcdf,abort=False):
-#     '''
-#     Relevant for use on the NASA Advanced Supercomputing (NAS) environnment only
-#     Check if a file is present on the disk by running the NAS dmls -l data migration command.
-#     This avoid the program to stall if the files need to be migrated from the disk to the tape
-#     Args:
-#         fileNcdf: full path to netcdf file
-#         exit: boolean. If True, exit the program (avoid stalling the program if file is not on disk)
-#     Returns:
-#         None (print status and abort program)
-#     '''
-#     # If the filename provided is not a netcdf file, exit program right away
-#     if fileNcdf[-3:]!='.nc':
-#         prRed('*** Error ***')
-#         prRed(fileNcdf + ' is not a netcdf file \n' )
-#         exit()
-#     #== Then check if the file actually exists on the system,  exit otherwise.
-# 
-# 
-#     try:
-#         #== NAS system only: file exists, check if it is active on disk or needs to be migrated from Lou
-#         subprocess.check_call(["dmls"],shell=True,stdout=open(os.devnull, "w")) #check if dmls command is available (NAS systems only)
-#         cmd_txt='dmls -l '+fileNcdf+"""| awk '{print $8,$9}'""" #get the last columns of the ls command with filename and status
-#         dmls_out=subprocess.check_output(cmd_txt,shell=True).decode('utf-8')  # get 3 letter identifier from dmls -l command, convert byte to string for Python 3
-#         if dmls_out[1:4] not in ['DUL','REG']: #file is OFFLINE, UNMIGRATING etc...
-#             if abort :
-#                 prRed('*** Error ***')
-#                 print(dmls_out)
-#                 prRed(dmls_out[6:-1]+ ' is not available on disk, status is: '+dmls_out[0:5])
-#                 prRed('CHECK file status with  dmls -l *.nc and run  dmget *.nc to migrate the files')
-#                 prRed('Exiting now... \n')
-#                 exit()
-#             else:
-#                 prYellow('*** Warning ***')
-#                 prYellow(dmls_out[6:-1]+ ' is not available on disk, status is: '+dmls_out[0:5])
-#                 prYellow('Consider checking file status with  dmls -l *.nc and run  dmget *.nc to migrate the files')
-#                 prYellow('Waiting for file to be migrated to disk, this may take a while...')
-#     except subprocess.CalledProcessError: #subprocess.check_call return an eror message
-#         if abort :
-#              exit()
-#         else:
-#             pass
 
 
 
@@ -1481,10 +1412,10 @@ class Fig_2D(object):
         #======time,lat,lon=======
         if f.variables[var_name].dimensions==(u'time', u'lat', u'lon'):
         #Initialize dimension
-            t=f.variables['time'][:];Ls=f.variables['areo'][:];ti=np.arange(0,len(t))
+            t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
             t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
 
-            if plot_type=='2D_lon_lat': ti,temp_txt =get_time_index(fdim1,Ls)
+            if plot_type=='2D_lon_lat': ti,temp_txt =get_time_index(fdim1,Ls,t)
             if plot_type=='2D_time_lat':loni,temp_txt =get_lon_index(fdim1,lon)
             if plot_type=='2D_lon_time':lati,temp_txt =get_lat_index(fdim1,lat)
 
@@ -1508,11 +1439,11 @@ class Fig_2D(object):
             if dim_info[1]=='pstd': levs=f.variables[dim_info[1]][:] 
             if dim_info[1]=='zgrid': levs=     f.variables[dim_info[1]][:] # meters
             zi=np.arange(0,len(levs))
-            t=f.variables['time'][:];Ls=f.variables['areo'][:];ti=np.arange(0,len(t))
+            t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
             t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
 
             if plot_type=='2D_lon_lat':
-                ti,temp_txt =get_time_index(fdim1,Ls)
+                ti,temp_txt =get_time_index(fdim1,Ls,t)
                 if add_fdim:self.fdim_txt+=temp_txt
                 zi,temp_txt =get_level_index(fdim2,levs)
                 if add_fdim:self.fdim_txt+=temp_txt
@@ -1524,13 +1455,13 @@ class Fig_2D(object):
                 if add_fdim:self.fdim_txt+=temp_txt
 
             if plot_type=='2D_lat_press':
-                ti,temp_txt =get_time_index(fdim1,Ls)
+                ti,temp_txt =get_time_index(fdim1,Ls,t)
                 if add_fdim:self.fdim_txt+=temp_txt
                 loni,temp_txt =get_lon_index(fdim2,lon)
                 if add_fdim:self.fdim_txt+=temp_txt
 
             if plot_type=='2D_lon_press':
-                ti,temp_txt =get_time_index(fdim1,Ls)
+                ti,temp_txt =get_time_index(fdim1,Ls,t)
                 if add_fdim:self.fdim_txt+=temp_txt
                 lati,temp_txt =get_lat_index(fdim2,lat)
                 if add_fdim:self.fdim_txt+=temp_txt
@@ -1991,7 +1922,7 @@ class Fig_1D(object):
         if ncheck>1:
             prYellow('''*** Warning *** In 1D plot, %s: 'AXIS' keyword may only be used once '''%(self.varfull))
         return graph_type
-        #if get_time_index(self.fdim1,Ls)
+
 
     def prep_file(self,var_name,file_type,simuID,sol_array):
         global input_paths
@@ -2108,18 +2039,18 @@ class Fig_1D(object):
         #======time,lat,lon=======
         if f.variables[var_name].dimensions==(u'time', u'lat', u'lon'):
         #Initialize dimension
-            t=f.variables['time'][:];Ls=f.variables['areo'][:];ti=np.arange(0,len(t))
+            t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
             t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
 
             if plot_type=='1D_lat':
-                ti,temp_txt =get_time_index(t_req,Ls)
+                ti,temp_txt =get_time_index(t_req,Ls,t)
                 if add_fdim:self.fdim_txt+=temp_txt
                 loni,temp_txt =get_lon_index(lon_req,lon)
                 if add_fdim:self.fdim_txt+=temp_txt
             if plot_type=='1D_lon':
                 lati,temp_txt =get_lat_index(lat_req,lat)
                 if add_fdim:self.fdim_txt+=temp_txt
-                ti,temp_txt =get_time_index(t_req,Ls)
+                ti,temp_txt =get_time_index(t_req,Ls,t)
                 if add_fdim:self.fdim_txt+=temp_txt
             if plot_type=='1D_time':
                 loni,temp_txt =get_lon_index(lon_req,lon)
@@ -2146,11 +2077,11 @@ class Fig_1D(object):
             if dim_info[1]=='pstd': levs=f.variables[dim_info[1]][:] 
             if dim_info[1]=='zgrid': levs=     f.variables[dim_info[1]][:] # meters
             zi=np.arange(0,len(levs))
-            t=f.variables['time'][:];Ls=f.variables['areo'][:];ti=np.arange(0,len(t))
+            t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
             t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
 
             if plot_type=='1D_lat':
-                ti,temp_txt =get_time_index(t_req,Ls)
+                ti,temp_txt =get_time_index(t_req,Ls,t)
                 if add_fdim:self.fdim_txt+=temp_txt
                 loni,temp_txt =get_lon_index(lon_req,lon)
                 if add_fdim:self.fdim_txt+=temp_txt
@@ -2160,7 +2091,7 @@ class Fig_1D(object):
             if plot_type=='1D_lon':
                 lati,temp_txt =get_lat_index(lat_req,lat)
                 if add_fdim:self.fdim_txt+=temp_txt
-                ti,temp_txt =get_time_index(t_req,Ls)
+                ti,temp_txt =get_time_index(t_req,Ls,t)
                 if add_fdim:self.fdim_txt+=temp_txt
                 zi,temp_txt =get_level_index(lev_req,levs)
                 if add_fdim:self.fdim_txt+=temp_txt
@@ -2174,7 +2105,7 @@ class Fig_1D(object):
                 if add_fdim:self.fdim_txt+=temp_txt
 
             if plot_type=='1D_lev':
-                ti,temp_txt =get_time_index(t_req,Ls)
+                ti,temp_txt =get_time_index(t_req,Ls,t)
                 if add_fdim:self.fdim_txt+=temp_txt
                 lati,temp_txt =get_lat_index(lat_req,lat)
                 if add_fdim:self.fdim_txt+=temp_txt
