@@ -25,11 +25,11 @@ try:
                    
 except ImportError as error_msg:
     prYellow("Error while importing modules")
-    prYellow('Your are using python '+str(sys.version_info[0:3])+', recommend version is (2, 7, 12) ' )
-    prYellow('Please load recommended version with:') 
-    prCyan('        module load python/2.7.12\n')
+    prYellow('Your are using python '+str(sys.version_info[0:3]))
+    prYellow('Please, source your virtual environment');prCyan('    source envPython3.7/bin/activate.csh \n')
     print("Error was: "+ error_msg.message)
     exit()
+    
 except Exception as exception:
     # Output unexpected Exceptions.
     print(exception, False)

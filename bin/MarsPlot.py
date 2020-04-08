@@ -12,7 +12,7 @@ import sys       #system command
 
 #sys.path.append('/Users/akling/amesgcm/amesgcm/')
 #from Script_utils import          check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-#from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
 from amesgcm.FV3_utils import lon360_to_180,lon180_to_360
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
