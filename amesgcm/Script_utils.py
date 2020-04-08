@@ -65,15 +65,15 @@ def print_fileContent(fileNcdf):
                     print(Green(ivar.ljust(15))+': '+Purple(txt_dim)+'= '+Cyan(txt_shape)+', '+Yellow(txt_long_name)+\
                     '  ['+txt_units+']')
 
-        #try: #This part will be skipped if  the netcdf file does not contains a 'time' variable
-        t_ini=f.variables['time'][0];t_end=f.variables['time'][-1]
-        Ls_ini=np.squeeze(f.variables['areo'])[0];Ls_end=np.squeeze(f.variables['areo'])[-1]
-        MY_ini=MY_func(Ls_ini);MY_end=MY_func(Ls_end)
-        print('')
-        print('Ls ranging from %6.2f to %6.2f: %.2f days'%(np.mod(Ls_ini,360.),np.mod(Ls_end,360.),t_end-t_ini))
-        print('               (MY %02i)   (MY %02i)'%(MY_ini,MY_end))
-        #except:
-        #    pass
+        try: #This part will be skipped if  the netcdf file does not contains a 'time' variable
+            t_ini=f.variables['time'][0];t_end=f.variables['time'][-1]
+            Ls_ini=np.squeeze(f.variables['areo'])[0];Ls_end=np.squeeze(f.variables['areo'])[-1]
+            MY_ini=MY_func(Ls_ini);MY_end=MY_func(Ls_end)
+            print('')
+            print('Ls ranging from %6.2f to %6.2f: %.2f days'%(np.mod(Ls_ini,360.),np.mod(Ls_end,360.),t_end-t_ini))
+            print('               (MY %02i)   (MY %02i)'%(MY_ini,MY_end))
+        except:
+            pass
         f.close()
         print("=====================================================") 
 
