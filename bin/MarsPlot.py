@@ -135,7 +135,7 @@ def main():
         # --- Option 2, case A:   Use Custom.in  for everything ----
         if parser.parse_args().custom_file:
            print('Reading '+parser.parse_args().custom_file.name)
-           namelist_parser(output_path+'/'+parser.parse_args().custom_file.name)
+           namelist_parser(parser.parse_args().custom_file.name)
 
 
         # --- Option 2, case B:   Use Custom.in in ~/FV3/templates for everything ----
