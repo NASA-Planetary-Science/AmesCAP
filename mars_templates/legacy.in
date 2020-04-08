@@ -124,7 +124,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 355,5
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ucomp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = jet
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = jet
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = Mass stream function [TO DO]
@@ -133,7 +133,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 355,5
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ucomp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = rainbow
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = rainbow
 
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
@@ -143,7 +143,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 355,5
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.temp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = nipy_spectral
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = nipy_spectral
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = None
@@ -152,7 +152,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 355,5
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.vap_mass
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = Blues
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Blues
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = None
@@ -161,7 +161,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 355,5
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ice_mass
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = Purples
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Purples
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = None
@@ -170,7 +170,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 355,5
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.dst_mass
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = Wistia
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Wistia
 
 HOLD OFF
 #======================LS 90============================
@@ -182,7 +182,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 85,95
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ucomp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = jet
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = jet
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = Mass stream function [TO DO]
@@ -191,7 +191,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 85,95
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ucomp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = rainbow
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = rainbow
 
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
@@ -201,7 +201,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 85,95
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.temp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = nipy_spectral
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = nipy_spectral
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = None
@@ -210,7 +210,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 85,95
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.vap_mass
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = Blues
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Blues
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = None
@@ -219,7 +219,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 85,95
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ice_mass
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = Purples
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Purples
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = None
@@ -228,7 +228,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 85,95
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.dst_mass
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = Wistia
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Wistia
 
 HOLD OFF
 #======================LS 180============================
@@ -240,7 +240,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 175,185
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ucomp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = jet
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = jet
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = Mass stream function [TO DO]
@@ -249,7 +249,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 175,185
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ucomp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = rainbow
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = rainbow
 
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
@@ -259,7 +259,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 175,185
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.temp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = nipy_spectral
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = nipy_spectral
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = None
@@ -268,7 +268,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 175,185
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.vap_mass
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = Blues
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Blues
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = None
@@ -277,7 +277,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 175,185
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ice_mass
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = Purples
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Purples
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = None
@@ -286,7 +286,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 175,185
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.dst_mass
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = Wistia
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Wistia
 
 HOLD OFF
 
@@ -299,7 +299,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 265,275
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ucomp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = jet
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = jet
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = Mass stream function [TO DO]
@@ -308,7 +308,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 265,275
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ucomp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = rainbow
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = rainbow
 
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
@@ -318,7 +318,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 265,275
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.temp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = nipy_spectral
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = nipy_spectral
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = None
@@ -327,7 +327,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 265,275
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.vap_mass
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = Blues
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Blues
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = None
@@ -336,7 +336,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 265,275
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ice_mass
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = Purples
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Purples
 
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
 Title          = None
@@ -345,7 +345,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 265,275
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.dst_mass
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = Wistia
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Wistia
 
 HOLD OFF
 
