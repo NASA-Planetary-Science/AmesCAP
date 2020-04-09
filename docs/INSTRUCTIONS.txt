@@ -1,0 +1,37 @@
+
+#==================================================
+#=========  INSTALLATION STEPS on NAS =============
+#==================================================
+module purge
+module load python3/3.7.0
+#---This block is required for netcdf4 python-----
+module load comp-intel/2018.0.128
+module load hdf5/1.8.18_serial
+module load hdf4/4.2.12
+module load netcdf/4.4.1.1_serial
+setenv HDF5_DIR /nasa/hdf5/1.8.18_serial
+#--------------------------------------------------
+python3.7 -m venv --system-site-packages amesGCM3.7
+source amesGCM3.7/bin/activate.csh
+pip install cftime==1.0.3.4
+pip install netCDF4==1.5.1.2
+pip install git+https://github.com/alex-kling/amesgcm.git
+deactivate
+
+
+#==================================================
+#======= Steps to perform 1 YR analysis ===========
+#==================================================
+
+
+source amesGCM3.7/bin/activate.csh
+MarsPull.py -ls 0 360
+MarsFiles.py LegacyGCM_Ls*.nc -fv3 average fixed
+MarsFiles.py *fixed.nc --combine
+MarsFiles.py *atmos_average.nc --combine
+MarsFiles.py *atmos_diurn.nc --combine
+MarsFiles.py *atmos_daily.nc --combine
+MarsVars.py *atmos_average.nc -colint vap_mass ice_mass dst_mass
+MarsInterp.py *.atmos_average.nc -t pstd
+MarsPlot.py -i 00010.atmos_average_pstd.nc
+MarsPlot.py -do legacy
