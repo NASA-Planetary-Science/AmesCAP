@@ -148,7 +148,7 @@ def compute_N(theta,zfull):
     return np.sqrt(g/theta*dtheta_dz)
 
 
-def compute_Tco2(p_3D,temp):
+def compute_Tco2(P_3D,temp):
     #From [Fannale 1982]i Mars: The regolit-atmosphere cap system and climate change. Icarus 
     return np.where(P_3D<518000,-3167.8/(np.log(0.01*P_3D)-23.23),684.2-92.3*np.log(P_3D)+4.32*np.log(P_3D)**2)
 
