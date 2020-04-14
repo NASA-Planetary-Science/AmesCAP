@@ -114,8 +114,8 @@ def main():
                 Fig_1D('atmos_average.temp',False)]
         #=============================
     #----------Group together the 1st two figures----
-    objectList[0].subID=1;objectList[0].nPan=2 #1st object of a 2 pannel figure
-    objectList[1].subID=2;objectList[1].nPan=2 #2nd object of a 2 pannel figure
+    objectList[0].subID=1;objectList[0].nPan=2 #1st object of a 2 panel figure
+    objectList[1].subID=2;objectList[1].nPan=2 #2nd object of a 2 panel figure
 
     # Begin main loop:
 
@@ -187,7 +187,7 @@ def main():
             status=objectList[i_list].plot_type+' :'+objectList[i_list].varfull+objectList[i_list].fdim_txt
             progress(i_list,len(objectList),status,objectList[i_list].success)
             # Add the figure to the list of figures
-            if objectList[i_list].subID==objectList[i_list].nPan: #only for the last pannel of a subplot
+            if objectList[i_list].subID==objectList[i_list].nPan: #only for the last panel of a subplot
                 if i_list< len(objectList)-1 and not objectList[i_list+1].addLine:
                     fig_list.append(objectList[i_list].fig_name)
                 #Last subplot
@@ -819,7 +819,7 @@ def fig_layout(subID,nPan):
     Return figure layout
     Args:
         subID:    integer, current subplot number
-        nPan : integer, number of pannels desired on the figure up 36 (6x6 pannel)
+        nPan : integer, number of panels desired on the figure up 36 (6x6 panel)
     Returns:
         out: tuple with approriate layout: plt.subplot(nrows=out[0],ncols=out[1],plot_number=out[2])
     '''
@@ -879,7 +879,7 @@ def make_template():
         customFileIN.write(lh+"""> 'cmap' changes the colormap: 'jet' (winds), 'spectral' (temperature), 'bwr' (diff plot)\n""")
         customFileIN.write(lh+"""> 'line' sets the line style:  '-r' (solid red), '--g' (dashed green), '-ob' (solid & blue markers)\n""")
         customFileIN.write(lh+"""KEYWORDS:\n""")
-        customFileIN.write(lh+"""> 'HOLD ON' [blocks of figures] 'HOLD OFF' groups the figures as a multi-pannel page\n""")
+        customFileIN.write(lh+"""> 'HOLD ON' [blocks of figures] 'HOLD OFF' groups the figures as a multi-panel page\n""")
         customFileIN.write(lh+"""> [line plot 1] 'ADD LINE' [line plot 2] adds similar 1D-plots on the same figure)\n""")
         customFileIN.write(lh+"""> 'START' and (optionally) 'STOP' can be used to conveniently skip plots below. Use '#' to add comments. \n""")
         customFileIN.write(lh+"""ALGEBRA AND CROSS-SIMULATIONS PLOTS:\n""")
@@ -948,11 +948,11 @@ def namelist_parser(Custom_file):
     #---
     objectList=[] #all individual plots
 
-    pannelList=[] #list of pannels
+    panelList=[] #list of panels
     subplotList=[] #layout of figures
     addLineList=[] #add several line plot on the same graphs
-    nobj=0        #number for the object: e.g 1,[2,3],4... with 2 & 3 plotted as a two pannels plot
-    nPannel=1        #number of pannels ploted along this object, e.g: '1' for object #1 and '2' for the objects #2 and #3
+    nobj=0        #number for the object: e.g 1,[2,3],4... with 2 & 3 plotted as a two panels plot
+    npanel=1        #number of panels ploted along this object, e.g: '1' for object #1 and '2' for the objects #2 and #3
     subplotID=1  #subplot ID per object: e.g '1' for object #1, '1' for object #2 and '2' for object #3
     holding=False
     addLine=False
@@ -1030,22 +1030,22 @@ def namelist_parser(Custom_file):
                 #===================
                 if holding and not addLine:
                     subplotList.append(subplotID)
-                    pannelList.append(subplotID)
+                    panelList.append(subplotID)
                     subplotID+=1
-                    #Add +1 pannel to all plot in current page
+                    #Add +1 panel to all plot in current page
                     for iobj in range(npage,nobj-1):
-                        pannelList[iobj]+=1
+                        panelList[iobj]+=1
 
                 elif holding and addLine:
                     #Do not update  subplotID if we are adding lines
                     subplotList.append(subplotID-1)
-                    pannelList.append(subplotID-1)
+                    panelList.append(subplotID-1)
 
 
 
                 else :
-                    #We are not holding: there is a single pannel per page and we reset the page counter
-                    pannelList.append(1)
+                    #We are not holding: there is a single panel per page and we reset the page counter
+                    panelList.append(1)
                     subplotList.append(1)
                     npage=nobj
 
@@ -1060,23 +1060,23 @@ def namelist_parser(Custom_file):
 
                 #====debug only====
                 #for ii in range(0,len(   subplotList)):
-                #    prCyan('[X,%i,%i,%i]'%(subplotList[ii],pannelList[ii],addLineList[ii]))
+                #    prCyan('[X,%i,%i,%i]'%(subplotList[ii],panelList[ii],addLineList[ii]))
                 #=================
 
 
                 #============Depreciated=(old way to attribute the plot numbers without using npage)=============
                 # if holding:
                 #     subplotList.append(subplotID-addedLines)
-                #     pannelList.append(subplotID-addedLines)
+                #     panelList.append(subplotID-addedLines)
                 #     if not addLine:
-                #         # add +1 to the number of pannels for the previous plots
+                #         # add +1 to the number of panels for the previous plots
                 #         n=1
                 #         while n<=subplotID-1:
-                #             pannelList[nobj-n-1]+=1 #print('editing %i pannels, now %i'%(subplotID-1,nobj-n-1))
+                #             panelList[nobj-n-1]+=1 #print('editing %i panels, now %i'%(subplotID-1,nobj-n-1))
                 #             n+=1
                 #     subplotID+=1
                 # else :
-                #     pannelList.append(1)
+                #     panelList.append(1)
                 #     subplotList.append(1)
                 #========================================================
 
@@ -1098,11 +1098,11 @@ def namelist_parser(Custom_file):
         prRed('*** Error ***')
         prRed("""Cannot have 'ADD LINE' after the last figure in """+Custom_file)
         exit()
-    #Finished reading the file, attribute the right number of figure and pannels for each plot
+    #Finished reading the file, attribute the right number of figure and panels for each plot
     #print('=======Summary=========')
     for i in range(0,nobj):
         objectList[i].subID=subplotList[i]
-        objectList[i].nPan=pannelList[i]
+        objectList[i].nPan=panelList[i]
         objectList[i].addLine=addLineList[i]
         #==debug only====
         #prPurple('%i:[%i,%i,%i]'%(i,objectList[i].subID,objectList[i].nPan,objectList[i].addLine))
@@ -1275,7 +1275,7 @@ class Fig_2D(object):
         self.sol_array,self.filetype,self.var,self.simuID=split_varfull(self.varfull)
         if self.varfull2: self.sol_array2,self.filetype2,self.var2,self.simuID2=split_varfull(self.varfull2)
 
-        #Multi pannel
+        #Multi panel
         self.nPan=1
         self.subID=1
         #Annotation for free dimensions
@@ -1522,7 +1522,7 @@ class Fig_2D(object):
         #create figure
         out=fig_layout(self.subID,self.nPan)
         if self.subID==1:
-            fig= plt.figure(facecolor='white',figsize=(pixel_width/my_dpi, pixel_width/1.4/my_dpi)) #create figure if 1st pannel, 1.4 is ratio (16:9 screen would be 1.77)
+            fig= plt.figure(facecolor='white',figsize=(pixel_width/my_dpi, pixel_width/1.4/my_dpi)) #create figure if 1st panel, 1.4 is ratio (16:9 screen would be 1.77)
             #plt.suptitle(simulation_name)
 
         ax = plt.subplot(out[0],out[1],out[2]) #nrow,ncol,subID
@@ -1538,8 +1538,8 @@ class Fig_2D(object):
                     # varfull is a complex expression
                 else:
                     sensitive_name='expression_'+get_list_varfull(self.varfull)[0].split('{')[0].strip()
-            else: #multi pannel
-                sensitive_name='multi_pannel'
+            else: #multi panel
+                sensitive_name='multi_panel'
             plt.tight_layout()
             self.fig_name=output_path+'/plots/'+sensitive_name+'.'+out_format
             self.fig_name=create_name(self.fig_name)
@@ -1870,7 +1870,7 @@ class Fig_1D(object):
         #Extract filetype, variable, and simulation ID (initialization only)
         self.sol_array,self.filetype,self.var,self.simuID=split_varfull(self.varfull)
 
-        #Multi pannel
+        #Multi panel
         self.nPan=1
         self.subID=1
         self.addLine=False
@@ -2138,7 +2138,7 @@ class Fig_1D(object):
         #create figure
         out=fig_layout(self.subID,self.nPan)
         if self.subID==1 and not self.addLine:
-            fig= plt.figure(facecolor='white',figsize=(pixel_width/my_dpi, pixel_width/1.4/my_dpi)) #create figure if 1st pannel
+            fig= plt.figure(facecolor='white',figsize=(pixel_width/my_dpi, pixel_width/1.4/my_dpi)) #create figure if 1st panel
             #plt.suptitle(simulation_name) #TODO remove 
         if not self.addLine:
             ax = plt.subplot(out[0],out[1],out[2]) #nrow,ncol,subID
@@ -2157,8 +2157,8 @@ class Fig_1D(object):
                     sensitive_name=self.varfull.split('{')[0].strip()  #add split '{' in case varfull contains layer, does not do anything otherwise
                 else:
                     sensitive_name='expression_'+get_list_varfull(self.varfull)[0].split('{')[0].strip()
-            else: #multi pannel
-                sensitive_name='multi_pannel'
+            else: #multi panel
+                sensitive_name='multi_panel'
 
             self.fig_name=output_path+'/plots/'+sensitive_name+'.'+out_format
             self.fig_name=create_name(self.fig_name)
