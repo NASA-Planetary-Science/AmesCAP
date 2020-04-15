@@ -272,7 +272,7 @@ def main():
                     if ivar=='Tco2':OUT=compute_Tco2(p_3D,temp)
                     if ivar=='scorer_wl':
                         ucomp=fileNC.variables['ucomp'][:,:,:,:]
-                        theta=compute_theta(p_3D,temp)   
+                        theta=compute_theta(p_3D,ps,temp)   
                         zfull=compute_zfull(ps,ak,bk,temp)
                         N=compute_N(theta,zfull)
                         OUT=compute_scorer(N,ucomp,zfull)
