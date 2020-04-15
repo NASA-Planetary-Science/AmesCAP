@@ -80,16 +80,22 @@ You may notice that your prompt change from _username>_ to _**(amesGCM3)**userna
 
 After entering the virtual environment, we can verify that ```which python ``` and ```which pip ``` unambiguously point to _amesGCM3/bin/python3_ and _amesGCM3/bin/pip_ so there is no need use the full paths.
 
-## Installing the pipeline:
+## Installing the pipeline
+##### Directly from Github:
+
 From **inside** the virtual environment, run:
 
 `pip install git+https://github.com/alex-kling/amesgcm.git`
 
+##### From a .zip archive:
+Download an untar the '_amesgcm-master.zip_' archive anywhere (e.g. in our _Downloads_ directory). From **inside** the virtual environment, run:
 
-_Note that is is also possible to install the packages from the 'amesgcm-master.zip' archive:_
-_Download an untar the archive anywhere (e.g. in our Downloads directory), run_
-`cd amesgcm-master` _and then_ `pip install .`
-
+```
+cd amesgcm-master
+pip install .
+```
+It is safe to move (or remove) both the '_amesgcm-master_' source code, and the '.zip' archive from your _Downloads_ directory since _pip_ installed the pipeline inside your _~/amesGCM3_ virtual environment.
+***
 To make sure the paths to the executables are correctly set in your terminal, exit the virtual environment with
 
 `deactivate`
