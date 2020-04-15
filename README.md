@@ -128,21 +128,23 @@ Every time you want to use the analysis pipeline from a new terminal session, si
 
 `source amesGCM3/bin/activate`    (`source amesGCM3/bin/activate.csh` in **csh/tcsh**)
 
-You can check that the tools are installed properly by typing `Mars` and hit the **TAB** key.
+You can check that the tools are installed properly by typing `Mars` and hit the **TAB** key. No matter where you are on your system, you should see the following:
+```
+(amesGCM3) username$ Mars
+MarsFiles.py   MarsInterp.py  MarsPlot.py    MarsPull.py    MarsVars.py
+```
+If no executable show up, the paths have not not been set-up in the virtual environment. You can use the full paths to the executable e.g. `~/amesGCM3/bin/MarsPlot.py`, and it that works for you, also consider setting-up your own aliases, for example:
 
-If no executable show up, consider using full paths, e.g. `~/amesGCM3/bin/MarsPlot.py`
+Add `alias MarsPlot.py='/username/amesGCM3/bin/MarsPlot.py'` to your _~/.bash_profile_  and run
+`source ~/.bash_profile` (in **bash**)
 
-**Quick Tip**: If the executables are not readily available, consider setting-up your own aliases:
-
-Add `alias MarsPlot.py='/username/amesGCM3/bin/MarsPlot.py'` to your _~/.bash_profile_ (in **bash**)
-
-Add `alias MarsPlot.py /username/amesGCM3/bin/MarsPlot.py` to your _~/.cshrc_ (in **csh**)  
-
+Add `alias MarsPlot.py /username/amesGCM3/bin/MarsPlot.py` to your _~/.cshrc_  and run
+`source ~/.cshrc` (in **csh**)  
 ***
 
-Check the documentation for any of the executables with the `--help` option:
+Check the documentation for any of the executables above with the `--help` option:
 
-`Mars***.py --help` (e.g. `MarsPlot.py -h` for short)
+`MarsPlot.py --help` (`MarsPlot.py -h` for short)
 
 
 After you are done with your work, you can exit the analysis pipeline with:
@@ -242,10 +244,13 @@ While you may use the software of your choice to visualize the results (e.g. Mat
 MarsPlot.py -h
 MarsPlot.py --template
 ```
-and open the file _Custom.in_ with a text editor  (you can rename the file to _something.in_ if you want).
-
+and open the file _Custom.in_ with a text editor  (you can rename the file to _something.in_ if you want). As an introduction  to _MarsPlot_, you can skip the commented  instructions at the top and go directly to the section:
+```
+=======================================================
+START
+```
 ***
-**Quick Tip:** _MarsPlot_ uses text files with a '_.in_' extension as input files. Select "Python"  as the language (in place of "plain text") then editing the file from text editor (gedit, atom ...) to enable syntax-highlighting of key words. If you are using the **vim** editor, add the following lines to your **~/.vimrc**:_ to recognize "Custom.in' as using Python' syntax.
+**Quick Tip:** _MarsPlot_ uses text files with a '_.in_' extension as input files. Select "Python"  as the language (in place of "Plain text") when editing the file from text editor (gedit, atom ...) to enable syntax-highlighting of key words. If you are using the **vim** editor, add the following lines to your **~/.vimrc**:_ to recognize "Custom.in' as using Python' syntax.
 ```
 syntax on
 colorscheme default
@@ -254,13 +259,13 @@ au BufReadPost *.in  set syntax=python
 Close the file and run: `source ~/.vimrc`
 ***
 
-In order to access data in a specific file  _MarsPlot_ uses the `XXXXX.fileN.var` syntax, `XXXXX` being the sol number (e.g "03335", optional), `file` being the file type (e.g "`atmos_average_pstd`"), `N`  being the simulation number (e.g "2" if comparing two different simulations, optional), and `var`the requested variable (e.g "`ucomp`" for the zonal winds).
+In order to access data in a specific file  _MarsPlot_ uses the syntax ` Main Variable  = XXXXX.fileN.var`,  `XXXXX` being the sol number (e.g "03335", optional), `file` being the file type (e.g "`atmos_average_pstd`"), `N`  being the simulation number (e.g "2" if comparing two different simulations, optional), and `var` the requested variable (e.g "`ucomp`" for the zonal winds).
 
-When dimensions are omitted with `None`, _MarsPlot_ makes educated guesses for data selection (e.g, if no layer is requested, use the surface layer etc...) and will tell you exactly how the data is being processed both in the default title for the figures, and in the terminal output.  Instructions for additional features are listed at the beginning of _Custom.in_ :  Note the use of the brackets "**[ ]**" for variable operations,  "**{ }**" to overwrite the default dimensions, and  the possibility of adding another simulation to the **<<<<< Simulations >>>>>** block for comparison purposes.
+When dimensions are omitted with `None`, _MarsPlot_ makes educated guesses for data selection (e.g, if no layer is requested, use the surface layer etc...) and will tell you exactly how the data is being processed both in the default title for the figures, and in the terminal output.  This behavior is detailed in the commented instructions at the top of _Custom.in_, as well as additional features:  For example, note the use of the brackets "**[ ]**" for variable operations,  "**{ }**" to overwrite the default dimensions, and  the possibility of adding another simulation to the **<<<<< Simulations >>>>>** block for comparison purposes.
 
-After inspecting the file, feed the template back to _MarsPlot_ with:
+After inspecting the file, you can verify once again that pdf-ghostscript is available on your system with `gs -version` (see the _Requirements_ section) and feed the template back to _MarsPlot_ with:
 
-`MarsPlot.py Custom.in`        (`MarsPlot.py Custom.in -o png` if you are not using ghostscript)  
+`MarsPlot.py Custom.in`      (`MarsPlot.py Custom.in -o png` if you are not using ghostscript)  
 
 ```
 [----------]  0 % (2D_lon_lat :fixed.zsurf)
@@ -276,17 +281,19 @@ You can try to add a new figure by making a copy/paste of any of the entire `<<<
 
 ```
 <<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.dst_mass
+Title          = This is the dust field converted to [g/kg]
+Main Variable  = [atmos_average_pstd.dst_mass]*1000.
 Cmin, Cmax     = None
 Ls 0-360       = 0.,10
 Lon +/-180     = all
 2nd Variable   = None
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.1] | cmap = Wistia
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Wistia
 ```
-Note that we also decided to change the color map and adjust the axis with the `Axis Options` By default `MarsPlot.py Custom.in` runs the requested analysis on the **last** set of output files present in the directory (identified by **XXXXX.fixed.nc**) but to run the analysis over a single specific data file or a range of files, use the **--date**  options:
+Note that we decided to use the "**[ ]**" syntax around the variable to plot the dust field in [g/kg] instead of the default unit of [kg/kg], and changed the default title accordingly. We also decided to change the colormap to _Wistia_ and adjusted the `Axis Options`. You can now feed the modified template back to _MarsPlot_. By default `MarsPlot.py Custom.in` runs the requested analysis on the **last** set of output files present in the directory (identified by **XXXXX.fixed.nc**) To run the analysis over a single specific data file or a range of files, use the **--date**  options:
 
 `MarsPlot.py Custom.in -d 0`
+
+Close and open the pdf again, you should see a new figure with the updated dust field. You can use  _Custom.in_  jointly with the `MarsPlot.py --inspect` option discussed above to add new figures, and also explore the other types of plots presented at the end of _Custom.in_  (these are set to `= False`  by default but you can enabled them with  `= True`).
 
 # Moving forward with your own analysis
 
