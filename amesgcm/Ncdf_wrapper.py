@@ -152,14 +152,18 @@ class Ncdf(object):
         self.add_dim_with_content(Ncdim_var._name,Ncdim_var[:],longname_txt,units_txt,cart_txt)
                
     #Copy a netcdf variable from another file, e.g Ncvar is: f.variables['ucomp']
-    #All dimensions must already exist.
-    def copy_Ncvar(self,Ncvar):
+    #All dimensions must already exist. If swap_array is provided, the original values will be 
+    #swapped with this array.
+    def copy_Ncvar(self,Ncvar,swap_array=None):
         if Ncvar._name not in self.var_dict.keys():
             dim_array=Ncvar.dimensions
             longname_txt=getattr(Ncvar,'long_name',Ncvar._name)
             units_txt=    getattr(Ncvar,'units','')
             self._def_variable(Ncvar._name,Ncvar.dimensions,longname_txt,units_txt)
-            self.log_variable(Ncvar._name,Ncvar[:],Ncvar.dimensions,longname_txt,units_txt)
+            if np.any(swap_array):
+                self.log_variable(Ncvar._name,swap_array[:],Ncvar.dimensions,longname_txt,units_txt)
+            else:   
+                self.log_variable(Ncvar._name,Ncvar[:],Ncvar.dimensions,longname_txt,units_txt) 
         else:    
             print("""***Warning***, '"""+Ncvar._name+"""' is already defined, skipping it"""  )
         
