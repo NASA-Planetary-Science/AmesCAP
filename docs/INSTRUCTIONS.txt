@@ -29,8 +29,6 @@ MarsPull.py -ls 0 360
 MarsFiles.py LegacyGCM_Ls*.nc -fv3 average fixed
 MarsFiles.py *fixed.nc --combine
 MarsFiles.py *atmos_average.nc --combine
-MarsFiles.py *atmos_diurn.nc --combine
-MarsFiles.py *atmos_daily.nc --combine
 MarsVars.py *atmos_average.nc -colint vap_mass ice_mass dst_mass
 MarsInterp.py *.atmos_average.nc -t pstd
 MarsPlot.py -i 00010.atmos_average_pstd.nc
