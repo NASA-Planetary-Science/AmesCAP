@@ -64,10 +64,10 @@ parser.add_argument('-zdiff','--zdiff', nargs='+',default=[],
                       """A new a variable dvar_dz in [Unit/m] will be added o the file\n"""
                       """> Usage: MarsVars ****.atmos.average.nc -zdiff temp\n"""  
                       """ \n""")    
-parser.add_argument('-colint','--colint', nargs='+',default=[],
+parser.add_argument('-col','--col', nargs='+',default=[],
                  help="""Integrate a mixing ratio of a  variable 'var' through the column\n"""
-                      """A new a variable  colint_var in [kg/m2] will be added o the file\n"""
-                      """> Usage: MarsVars ****.atmos.average.nc -colint ice_mass\n"""
+                      """A new a variable  var_col in [kg/m2] will be added o the file\n"""
+                      """> Usage: MarsVars ****.atmos.average.nc -col ice_mass\n"""
                       """ \n""")                      
 
 parser.add_argument('-rm','--remove', nargs='+',default=[],
@@ -172,14 +172,14 @@ def main():
     file_list=parser.parse_args().input_file
     add_list=parser.parse_args().add
     zdiff_list=parser.parse_args().zdiff
-    colint_list=parser.parse_args().colint
+    col_list=parser.parse_args().col
     remove_list=parser.parse_args().remove
     debug =parser.parse_args().debug
     
     #Check if an operation is requested, otherwise print file content.
-    if not (add_list or zdiff_list or remove_list or colint_list): 
+    if not (add_list or zdiff_list or remove_list or col_list): 
         print_fileContent(file_list[0])
-        prYellow(''' ***Notice***  No operation requested, use '-add var',  '-zdiff var', '-colint var', '-rm var' ''')
+        prYellow(''' ***Notice***  No operation requested, use '-add var',  '-zdiff var', '-col var', '-rm var' ''')
         exit() #Exit cleanly
         
     #For all the files    
@@ -348,7 +348,7 @@ def main():
         #=================================================================
 
         #ak and bk are needed to derive the distance between layer pfull
-        if colint_list:
+        if col_list:
             name_fixed=ifile[0:5]+'.fixed.nc'
             f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
@@ -356,11 +356,11 @@ def main():
             bk=np.array(f_fixed.variables['bk'])
             f_fixed.close()
 
-        for icol in colint_list:
+        for icol in col_list:
             fileNC=Dataset(ifile, 'a') #, format='NETCDF4_CLASSIC
 
             if icol not in fileNC.variables.keys():
-                prRed("colint error: variable '%s' is not present in %s"%(icol, ifile))
+                prRed("column integration error: variable '%s' is not present in %s"%(icol, ifile))
                 fileNC.close()
             else:
                 print('Performing colum integration: %s...'%(icol))
@@ -381,19 +381,19 @@ def main():
                     out=np.sum(var*DP/g,axis=1)
                     
                     #Log the variable
-                    var_Ncdf = fileNC.createVariable('colint_'+icol,'f4',dim_out)
+                    var_Ncdf = fileNC.createVariable(icol+'_col','f4',dim_out)
                     var_Ncdf.long_name=newLong_name
                     var_Ncdf.units=   newUnits
                     var_Ncdf[:]=  out
                     
                     fileNC.close()
 
-                    print('%s: \033[92mDone\033[00m'%('colint_'+icol))
+                    print('%s: \033[92mDone\033[00m'%(icol+'_col'))
                 except Exception as exception:
                     if debug:raise
                     if str(exception)=='NetCDF: String match to name in use':
                         prYellow("""***Error*** Variable already exists""")
-                        prYellow("""Delete existing variable %s with 'MarsVars %s -rm %s'"""%('colint_'+icol,ifile,'colint_'+icol))            
+                        prYellow("""Delete existing variable %s with 'MarsVars %s -rm %s'"""%(icol+'_col',ifile,icol+'_col'))            
 
              
 if __name__ == '__main__':
