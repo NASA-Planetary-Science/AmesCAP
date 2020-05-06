@@ -76,7 +76,7 @@ Now activate the virtual environment with:
 Note that in Cygwin/Windows, the  _bin_ directory may be named **_Scripts_**
 
 
-You may notice that your prompt change from _username>_ to _**(amesGCM3)**username>_ which indicates that you are INSIDE the virtual environment, even when navigating to different directory on your machine.  
+You may notice that your prompt change from _username>_ to _(amesGCM3)username>_ which indicates that you are INSIDE the virtual environment, even when navigating to different directory on your machine.  
 
 After entering the virtual environment, we can verify that ```which python ``` and ```which pip ``` unambiguously point to _amesGCM3/bin/python3_ and _amesGCM3/bin/pip_ so there is no need use the full paths.
 
