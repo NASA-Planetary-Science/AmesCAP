@@ -20,10 +20,12 @@ from netCDF4 import Dataset
 '''
 sys.path.append('/Users/akling/amesgcm/amesgcm/')
 from Ncdf_wrapper import Ncdf
+from FV3_utils import tshift
 from Script_utils import prYellow,prCyan,prRed
 '''
 #===========
 from amesgcm.Ncdf_wrapper import Ncdf
+from amesgcm.FV3_utils import tshift
 from amesgcm.Script_utils import prYellow,prCyan,prRed
 #---
 
@@ -51,14 +53,20 @@ parser.add_argument('-c','--combine', action='store_true',
                         """> Usage: MarsFiles.py *.atmos_average.nc --combine \n"""
                         """> Works with Legacy, fixed, average, daily and dirun files\n"""
                         """ \n""")
+                        
+parser.add_argument('-t','--tshift', action='store_true',
+        help="""Apply timeshift of atmos_diurn files\n"""
+            """> Usage: MarsFiles.py *.atmos_diurn.nc --tshift \n"""
+            """> Works with diurn files only, \n"""
+            """> Can also process vertically interpolated diurn files \n"""
+            """>      e.g. ***_diurn_P.nc \n"""
+            """ \n""")                        
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
 
 #======================================================
 #======================================================
 #======================================================
-#TODO needed?
-#sys.path.append(os.getcwd())
 
 #Use ncks or internal method to concatenate files
 #cat_method='ncks'
@@ -192,9 +200,85 @@ def main():
             p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
             p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
             prCyan(fileout +' was merged')
-                 
+    
+#=========== Tshift implemation by Victoria!! ===========================
+
+    if parser.parse_args().tshift:
+        #Get files to process
+        histlist=[]
+        for filei in file_list:
+            fullnameIN = path2data + '/' + filei
+            fullnameOUT = fullnameIN[:-3]+'_T'+'.nc'
+
+            fdiurn = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
+            #Copy some dimensions from the old file to the new file
+            fnew.copy_all_dims_from_Ncfile(fdiurn)
+
+            #find time of day variable name
+            regex=re.compile('time_of_day.')
+            varset=fdiurn.variables.keys()
+            tod_name=[string for string in varset if re.match(regex, string)]
+            print(tod_name)
+            # find vertical dimension variable name
+            if filei[:-3].endswith('_pstd'):
+                zaxis = 'pstd'
+            elif filei[:3].endswith('_zagl'):
+                zaxis = 'zagl'
+            elif filei[:3].endswith('_zstd'):
+                zaxis = 'zstd'
+            else:
+                zaxis = 'pfull'
+
+            # Copy some variables from the old file to the new file
+            fnew.copy_Ncaxis_with_content(fdiurn.variables['lon'])
+            fnew.copy_Ncaxis_with_content(fdiurn.variables['lat'])
+
+            #Only create a vertical axis if the original file contains 3D fields
+            if zaxis in fdiurn.dimensions.keys():
+                fnew.copy_Ncaxis_with_content(fdiurn.variables[zaxis])
+
+            fnew.copy_Ncaxis_with_content(fdiurn.variables['time'])
+            fnew.copy_Ncaxis_with_content(fdiurn.variables[tod_name[0]])
+            #Only copy areo if existing in the original file:
+            if 'areo' in  fdiurn.variables.keys():
+                fnew.copy_Ncvar(fdiurn.variables['areo'])
+
+            # read 4D field and do time shift
+            tod_in=np.array(fdiurn.variables[tod_name[0]])
+            longitude = np.array(fdiurn.variables['lon'])
+            var_list = fdiurn.variables.keys() # get all variables from old file
+
+            for ivar in var_list:
+                varIN = fdiurn.variables[ivar][:]
+                vkeys = fdiurn.variables[ivar].dimensions
+                if (len(vkeys) == 4):
+                    print(ivar)
+                    ilat = vkeys.index('lat')
+                    ilon = vkeys.index('lon')
+                    itime = vkeys.index('time')
+                    itod = vkeys.index(tod_name[0])
+                    newvar = np.transpose(varIN,(ilon,ilat,itime,itod))
+                    newvarOUT = tshift(newvar,lon=longitude,timex=tod_in)
+                    varOUT = np.transpose(newvarOUT, (2,3,1,0))
+                        
+                    fnew.log_variable(ivar,varOUT,['time',tod_name[0],'lat','lon'],fdiurn.variables[ivar].long_name,fdiurn.variables[ivar].units)
+                if (len(vkeys) == 5):
+                    print(ivar)
+                    ilat = vkeys.index('lat')
+                    ilon = vkeys.index('lon')
+                    iz  = vkeys.index(zaxis)
+                    itime = vkeys.index('time')
+                    itod = vkeys.index(tod_name[0])
+                    newvar = np.transpose(varIN,(ilon,ilat,iz,itime,itod))
+                    newvarOUT = tshift(newvar,lon=longitude,timex=tod_in)
+                    varOUT = np.transpose(newvarOUT,(3,4,2,1,0))
+                    fnew.log_variable(ivar,varOUT,['time',tod_name[0],zaxis,'lat','lon'],fdiurn.variables[ivar].long_name,fdiurn.variables[ivar].units)
+            fnew.close()
+            fdiurn.close()    
+    
     else:
-        prRed("""Error: no action requested: use 'MarsFiles *nc --fv3' or 'MarsFiles *nc --combine '""")    
+        prRed("""Error: no action requested: use 'MarsFiles *nc --fv3 --combine, or --tshift'""")    
         
         
 
@@ -381,7 +465,17 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
             newf.log_variable(vname2,varnew,newdims,longname_txt2,units_txt2)
         elif vname == 'tloc':
             if avgtime and not avgtod:
-                newf.log_variable(vname,npvar,newdims,longname_txt=vname,units_txt='')
+
+                vname='time_of_day_16'
+                longname_txt='time of day'
+                units_txt='hours since 0000-00-00 00:00:00' 
+                newf.log_variable(vname2,npvar,newdims,longname_txt2,units_txt2)
+                
+                vname='time_of_day_16'
+                longname_txt='time of day'
+                units_txt='hours since 0000-00-00 00:00:00' 
+                newf.log_variable(vname2,npvar,newdims,longname_txt2,units_txt2)
+                
     return 0
 
 
@@ -432,7 +526,7 @@ def change_vname_longname_unit(vname,longname_txt,units_txt):
         units_txt='m/s'
     elif vname=='vcomp':    
         longname_txt='meridional wind'
-        units_txt='m/s'                        
+        units_txt='m/s'                 
     else: 
         #Return original values
         pass

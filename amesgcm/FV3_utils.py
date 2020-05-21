@@ -456,13 +456,12 @@ def shiftgrid_180_to_360(lon,data): #longitude is LAST
     data=np.concatenate((data[...,lon<180],data[...,lon>=180]),axis=-1) #stack data
     return data
         
-def second_hhmmss(seconds,lon_180=0.,show_mmss=True):
+def second_hhmmss(seconds,lon_180=0.):
     """
     Given the time seconds return Local true Solar Time at a certain longitude
     Args:
         seconds: a float, the time in seconds
-        lon_180: a float, the longitude in a -/+180 coordinate
-        show_mmss: returns min and second if true
+        lon_180: a float, the longitude in -/+180 coordinate
     Returns:
         hours: float, the local time or  (hours,minutes, seconds)
    
@@ -474,24 +473,49 @@ def second_hhmmss(seconds,lon_180=0.,show_mmss=True):
     #Add timezone offset (1hr/15 degree)
     hours=np.mod(hours+lon_180/15.,24)
     
-    if show_mmss:
-        return np.int(hours), np.int(minutes), np.int(seconds)
-    else:
-        return np.int(hours)   
+    return np.int(hours), np.int(minutes), np.int(seconds)
 
-
-def sol2LTST(time_sol,lon_180=0.,show_minute=False):
+def sol_hhmmss(time_sol,lon_180=0.):
     """
     Given the time in days, return the Local true Solar Time at a certain longitude
     Args:
         time_sol: a float, the time, eg. sols 2350.24
         lon_180: a float, the longitude in a -/+180 coordinate
-        show_minute: show minutes if true, otherwise show whole hours
     Returns:
         hours: float, the local time or  (hours,minutes, seconds)
    
     """ 
-    return second_hhmmss(time_sol*86400.,lon_180,show_minute)
+    return second_hhmmss(time_sol*86400.,lon_180)
+
+
+def UT_LTtxt(UT_sol,lon_180=0.,roundmin=None):
+    '''
+    Returns the time in HH:MM:SS format at a certain longitude. 
+    Args:
+        time_sol: a float, the time, eg. sols 2350.24
+        lon_180: a float, the center longitude in  -/+180 coordinate. Increment by 1hr every 15 deg
+        roundmin: round to the nearest X minute  Typical values are roundmin=1,15,60
+    ***Note***
+    If roundmin is requested, seconds are not shown  
+    '''
+    def round2num(number,interval):
+        # Internal function to round a number to the closest  range.
+        # e.g. round2num(26,5)=25 ,round2num(28,5)=30
+        return round(number / interval) * interval
+    
+    
+    hh,mm,ss=sol_hhmmss(UT_sol,lon_180)
+
+    if roundmin:
+        sec=hh*3600+mm*60+ss
+        # Round to the nearest increment (in seconds) and run a second pass
+        rounded_sec=round2num(sec,roundmin*60)
+        hh,mm,ss=second_hhmmss(rounded_sec,lon_180)
+        return '%02d:%02d'%(hh,mm)
+    else:
+        return '%02d:%02d:%02d'%(hh,mm,ss)
+            
+     
 
 def space_time(lon,timex, varIN,kmx,tmx):
     """
@@ -806,6 +830,7 @@ def swinbank(plev, psfc, ptrans=1.):
     return  aknew, bknew,ks
    
 
+
 def polar_warming(T,lat,outside_range=np.NaN):
     """
     Return the polar warming, following  [McDunn et al. 2013]: Characterization of middle-atmosphere polar warming at Mars, JGR
@@ -877,3 +902,122 @@ def polar_warming(T,lat,outside_range=np.NaN):
     lat_NH=lat[len(lat)//2:]
 
     return np.concatenate((PW_half_hemisphere(T_SH,lat_SH,outside_range),PW_half_hemisphere(T_NH,lat_NH,outside_range)),axis=0) 
+
+
+def tshift(array, lon=None, timex=None, nsteps_out=None):
+    '''
+    Conversion to uniform local time, original implementation from Richard (Minor modification to the DEFAULT object by Alex)
+    
+    
+    Interpolate onto a new time grid with nsteps_out samples per sol  
+    New time:   [ 0 ... nn-1/nsteps_out ]*24 
+    Args:
+        array: variable to be shifted. Assume longitude is the first dimension and time in the last dimension
+        lon: longitude
+        timex should be in units of hours  (only timex(1) is actually relevant)
+        nsteps_out
+    Returns:
+        tshift: array shifted to uniform local time.
+
+    '''
+    if np.shape(array) == len(array):
+        print('Need longitude and time dimensions')
+        return
+          
+    dims=np.shape(array)  #get dimensions of array
+    end=len(dims)-1
+    id=dims[0]   #number of longitudes in file
+    if lon is None:
+        lon = np.linspace(0.,360.,num=id,endpoint=False)
+    if timex is None:
+        nsteps=dims[end]
+        timex = np.linspace(0.,24.,num=nsteps,endpoint=False)
+    else:
+        nsteps=len(timex)
+
+
+    nsf = np.float_(nsteps)
+
+    timex = np.squeeze(timex)
+
+    if timex.max() <= 1.:   #if timex is in fractions of day
+        timex = 24.*timex
+        
+    if nsteps_out is None:
+        nsteps_out = nsteps
+
+    #Assuming time is last dimension, check if it is local time timex
+    #If not, reshape the array into (stuff, days, local time)
+    if dims[end] != nsteps:
+        ndays = dims[end] / nsteps
+        if ndays*nsteps != dims[end]:
+            print('Time dimensions do not conform')
+            return
+        array = np.reshape(array,(dims[0,end-1], nsteps, ndays))
+        newdims=np.linspace(len(dims+1),dtype=np.int32)
+        newdims[len(dims)-1]=len(dims)
+        newdims[len(dims)]=len(dims)-1
+        array = np.transpose(array,newdims)
+    
+    dims=np.shape(array) #get new dims of array if reshaped
+
+    
+    if len(dims) > 2:
+        recl = np.prod(dims[1:len(dims)-1])
+    else:
+        recl=1
+            
+
+    array=np.reshape(array,(id,recl,nsteps))
+    #create output array
+    narray=np.zeros((id,recl,nsteps_out))
+    
+    dt_samp = 24.0/nsteps      #   Time increment of input data (in hours)
+    dt_save = 24.0/nsteps_out  #   Time increment of output data (in hours)
+    
+    #             calculate interpolation indices
+    # convert east longitude to equivalent hours 
+    xshif = 24.0*lon/360.
+    kk=np.where(xshif < 0)
+    xshif[kk]=xshif[kk]+24.
+
+    fraction = np.zeros((id,nsteps_out))
+    imm = np.zeros((id,nsteps_out))
+    ipp = np.zeros((id,nsteps_out))
+
+    for nd in range(nsteps_out):
+        dtt = nd*dt_save - xshif - timex[0] + dt_samp
+        #      insure that data local time is bounded by [0,24] hours
+        kk = np.where(dtt < 0.)
+        dtt[kk] = dtt[kk] + 24.
+        
+        im = np.floor(dtt/dt_samp)    #  this is index into the data aray
+        fraction[:,nd] = dtt-im*dt_samp
+        kk = np.where(im < 0.)
+        im[kk] = im[kk] + nsf
+        
+        ipa = im + 1.
+        kk = np.where(ipa >= nsf)
+        ipa[kk] = ipa[kk] - nsf
+        
+        imm[:,nd] = im[:]
+        ipp[:,nd] = ipa[:]
+
+    fraction = fraction / dt_samp # assume uniform tinc between input data samples
+    
+    #           Now carry out the interpolation
+    for nd in range(nsteps_out):    #   Number of output time levels
+        for i in range(id):         #   Number of longitudes
+            im = np.int(imm[i,nd])%24
+            ipa= np.int(ipp[i,nd])
+            frac = fraction[i,nd]
+            narray[i,:,nd] = (1.-frac)*array[i,:,im] + frac*array[i,:,ipa]
+
+    narray = np.squeeze(narray)
+    ndimsfinal=np.zeros(len(dims),dtype=int)
+    for nd in range(end):
+        ndimsfinal[nd]=dims[nd]
+    ndimsfinal[end]=nsteps_out
+    narray = np.reshape(narray,ndimsfinal)
+
+    return narray
