@@ -168,7 +168,7 @@ def __page_count(pdf_path, userpw=None):
 
         out, err = proc.communicate()
     except:
-        raise Exception('Unable to get page count. Is poppler installed and in PATH?')
+        raise Exception('Unable to get page count. If not on a Linux system, please install the Poppler PDF rendering library')
 
     try:
         # This will throw if we are unable to get page count

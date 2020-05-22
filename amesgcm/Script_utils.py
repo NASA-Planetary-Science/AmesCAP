@@ -168,7 +168,45 @@ def progress(k,Nmax):
     text = "\rRunning... [{0}] {1} {2}%".format( "#"*block + "-"*(barLength-block), ceil(progress*100*100)/100, status)
     sys.stdout.write(text)
     sys.stdout.flush()
-    
+
+
+def section_content_amesgcm_profile(section_ID):
+    '''
+    Execude code section in /home/user/.amesgcm_profile
+    Args:
+        section_ID: string defining the section to loa, e.g 'Pressure definitions for pstd'
+    Returns
+        return line in that section as python code
+    '''
+    import os
+    import numpy as np
+    input_file=os.environ['HOME']+'/.amesgcm_profile'
+    try:
+        f=open(input_file, "r")
+        contents='' 
+        rec=False
+        while True:
+            line = f.readline()
+            if not line :break #End of File
+            if line[0]== '<':
+                rec=False
+                if line.split('|')[1].strip() ==section_ID:
+                    rec=True
+                    line = f.readline()
+            if rec : contents+=line                
+        f.close()     
+        if contents=='':
+            prRed("No content found for <<< %s >>> block"%(section_ID))     
+        return contents
+
+    except FileNotFoundError:
+        prRed("Error: %s config file not found "%(input_file)) 
+        prYellow("To use this feature, create a hidden config file in your home directory with:") 
+        prCyan("    cp amesGCM3/mars_templates/amesgcm_profile  ~/.amesgcm_profile")      
+        
+    except Exception as exception: #Return the error
+        prRed('Error')
+        print(exception)    
 #=========================================================================   
 #=========================================================================
 #=========================================================================
