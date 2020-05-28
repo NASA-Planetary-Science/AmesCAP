@@ -29,7 +29,6 @@ def MY_func(Ls_cont):
 def print_fileContent(fileNcdf):
     '''
     Print the content of a Netcdf file in a compact format. Variables are sorted by dimensions.
-    This test is based on the existence of a least one  00XXX.fixed.nc in the current directory.
     Args:
         fileNcdf: full path to netcdf file
     Returns: 
@@ -77,7 +76,27 @@ def print_fileContent(fileNcdf):
         f.close()
         print("=====================================================") 
 
-
+def print_varContent(fileNcdf,varname):
+    '''
+    Print the content of a variable inside a Netcdf file
+    This test is based on the existence of a least one  00XXX.fixed.nc in the current directory.
+    Args:
+        fileNcdf: full path to netcdf file
+        varname:  variable name inside the netcdf file
+    Returns: 
+        None (print in the terminal)
+    '''    
+    #Define Colors for printing
+    def Purple(skk):return"\033[95m{}\033[00m".format(skk)
+    if not os.path.isfile(fileNcdf):
+        print(fileNcdf+' not found')
+    else:    
+        f=Dataset(fileNcdf, 'r')
+        var=f.variables[varname][:]
+        f.close()
+        print(Purple(varname+'= '))
+        print(Purple(var))
+        print("=====================================================") 
 
 
 

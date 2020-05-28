@@ -7,12 +7,8 @@ import subprocess #run command
 import sys       #system command
 
 
-#TODO remove this block to use package instead
 #==============
-
-#sys.path.append('/Users/akling/amesgcm/amesgcm/')
-#from Script_utils import          check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,print_varContent
 from amesgcm.FV3_utils import lon360_to_180,lon180_to_360
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
@@ -84,6 +80,11 @@ parser.add_argument('-dir', '--directory', default=os.getcwd(),
                  help='Target directory if input files are not present in current directory \n'
                       '> Usage: MarsPlot Custom.in [other options] -dir /u/akling/FV3/verona/c192L28_dliftA/history')
 
+
+parser.add_argument('--dump','-dump', nargs='+',default=None,
+                 help='Equivalent of ncdump, use jointly with --inspect \n'
+                      '> Usage: MarsPlot -i 00000.atmos_davg.nc -dump pfull')
+
 parser.add_argument('--debug',  action='store_true', help='Debug flag: do not by-pass errors on a particular figure')
 #======================================================
 #                  MAIN PROGRAM
@@ -123,7 +124,14 @@ def main():
     # ----- Option 1 :Inspect content of a Netcdf file ----
     if parser.parse_args().inspect_file:
         check_file_tape(parser.parse_args().inspect_file,abort=False) #NAS-specific, check if the file is on tape
-        print_fileContent(parser.parse_args().inspect_file)
+        
+        if parser.parse_args().dump:
+            #Dumping content of one variable
+            print_varContent(parser.parse_args().inspect_file,parser.parse_args().dump[0])
+        else:
+            # Show information on all the variables 
+            print_fileContent(parser.parse_args().inspect_file)
+                
 
         # ----- Option 2: Generate a template file ----
     elif parser.parse_args().template or parser.parse_args().temp:
@@ -1111,9 +1119,9 @@ def namelist_parser(Custom_file):
 
 def get_figure_header(line_txt):
     '''
-    This function return the type of a figure and tells us
+    This function return the type of a figure and tells us if wanted
     Args:
-        line_txt: string, gigure header from Custom.in, i.e '<<<<<<<<<<<<<<| Plot 2D lon X lat = True |>>>>>>>>>>>>>'
+        line_txt: string, figure header from Custom.in, i.e '<<<<<<<<<<<<<<| Plot 2D lon X lat = True |>>>>>>>>>>>>>'
     Returns:
         figtype : string, figure type, i.e:  Plot 2D lon X lat
         boolPlot: boolean, is the plot wanted?
