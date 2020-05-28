@@ -48,8 +48,17 @@ parser.add_argument('custom_file', nargs='?',type=argparse.FileType('r'),default
 
 parser.add_argument('-i', '--inspect_file', default=None,
                  help='Inspect Netcdf file content. Variables are sorted by dimensions \n'
-                      '> Usage: MarsPlot -i 00000.atmos_davg.nc')
-
+                      '> Usage: MarsPlot -i 00000.atmos_daily.nc\n'
+                      'Options: use --dump (variable content) and --stat (min, mean,max) jointly with --inspect \n'
+                      '>  MarsPlot -i 00000.atmos_daily.nc -dump pfull temp[6,:,30,10] \n'
+                      '>  MarsPlot -i 00000.atmos_daily.nc -stat ucomp[5,:,:,:] vcomp[5,:,:,:]\n')
+#These two options are to be used jointly with --inspect 
+parser.add_argument('--dump','-dump', nargs='+',default=None,
+                    help=argparse.SUPPRESS)
+parser.add_argument('--stat','-stat', nargs='+',default=None,
+                    help=argparse.SUPPRESS)                      
+                      
+help=argparse.SUPPRESS
 parser.add_argument('-d','--date', nargs='+',default=None,
                  help='Specify the range of files to use, default is the last file  \n'
                       '> Usage: MarsPlot Custom.in -d 700     (one file) \n'
@@ -81,9 +90,7 @@ parser.add_argument('-dir', '--directory', default=os.getcwd(),
                       '> Usage: MarsPlot Custom.in [other options] -dir /u/akling/FV3/verona/c192L28_dliftA/history')
 
 
-parser.add_argument('--dump','-dump', nargs='+',default=None,
-                 help='Equivalent of ncdump, use jointly with --inspect \n'
-                      '> Usage: MarsPlot -i 00000.atmos_davg.nc -dump pfull')
+
 
 parser.add_argument('--debug',  action='store_true', help='Debug flag: do not by-pass errors on a particular figure')
 #======================================================
@@ -126,8 +133,11 @@ def main():
         check_file_tape(parser.parse_args().inspect_file,abort=False) #NAS-specific, check if the file is on tape
         
         if parser.parse_args().dump:
-            #Dumping content of one variable
-            print_varContent(parser.parse_args().inspect_file,parser.parse_args().dump[0])
+            #Dumping variable content
+            print_varContent(parser.parse_args().inspect_file,parser.parse_args().dump,False)
+        elif parser.parse_args().stat:
+            #Printing variable stats
+            print_varContent(parser.parse_args().inspect_file,parser.parse_args().stat,True)    
         else:
             # Show information on all the variables 
             print_fileContent(parser.parse_args().inspect_file)

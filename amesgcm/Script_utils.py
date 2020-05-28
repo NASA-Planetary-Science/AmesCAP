@@ -76,27 +76,59 @@ def print_fileContent(fileNcdf):
         f.close()
         print("=====================================================") 
 
-def print_varContent(fileNcdf,varname):
+def print_varContent(fileNcdf,list_varfull,print_stat=False):
     '''
     Print the content of a variable inside a Netcdf file
     This test is based on the existence of a least one  00XXX.fixed.nc in the current directory.
     Args:
-        fileNcdf: full path to netcdf file
-        varname:  variable name inside the netcdf file
+        fileNcdf:      full path to netcdf file
+        list_varfull:  list of variable names and optional slices, e.g ['lon' ,'ps[:,10,20]']
+        print_stat:  if true, print min, mean and max instead of values
     Returns: 
         None (print in the terminal)
     '''    
     #Define Colors for printing
-    def Purple(skk):return"\033[95m{}\033[00m".format(skk)
+    def Cyan(skk): return "\033[96m{}\033[00m".format(skk)
+    def Red(skk):  return "\033[91m{}\033[00m".format(skk)
     if not os.path.isfile(fileNcdf):
         print(fileNcdf+' not found')
-    else:    
-        f=Dataset(fileNcdf, 'r')
-        var=f.variables[varname][:]
+    else: 
+    
+        if print_stat:
+            print(Cyan('__________________________________________________________________________'))
+            print(Cyan('           VAR            |      MIN      |      MEAN     |      MAX      |'))
+            print(Cyan('__________________________|_______________|_______________|_______________|'))
+        for varfull in list_varfull:
+            try:
+                slice='[:]'
+                if '[' in varfull:
+                    varname,slice=varfull.strip().split('[');slice='['+slice
+                else:
+                    varname=varfull.strip()
+                cmd_txt="""f.variables['"""+varname+"""']"""+slice
+                f=Dataset(fileNcdf, 'r')
+                var=eval(cmd_txt)
+                
+                if print_stat:
+                    Min=np.nanmin(var)   
+                    Mean=np.nanmean(var)
+                    Max=np.nanmax(var)
+                    print(Cyan('%26s|%15g|%15g|%15g|'%(varfull,Min,Mean,Max)))
+                else:
+                    print(Cyan(varfull+'= '))
+                    print(Cyan(var))
+                    print(Cyan('______________________________________________________________________')) 
+            except: 
+                if print_stat:
+                    print(Red('%26s|%15s|%15s|%15s|'%(varfull,'','','')))   
+                else:
+                    print(Red(varfull))
+        #Last line for the table
+        if print_stat:
+            print(Cyan('__________________________|_______________|_______________|_______________|'))           
         f.close()
-        print(Purple(varname+'= '))
-        print(Purple(var))
-        print("=====================================================") 
+        
+         
 
 
 
