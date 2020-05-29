@@ -9,12 +9,12 @@ import numpy as np
 
 
 # The functions below allow to print in different color
-def prRed(skk): print("\033[91m{}\033[00m" .format(skk)) 
-def prGreen(skk): print("\033[92m{}\033[00m" .format(skk)) 
-def prCyan(skk): print("\033[96m{}\033[00m" .format(skk)) 
-def prYellow(skk): print("\033[93m{}\033[00m" .format(skk)) 
-def prPurple(skk): print("\033[95m{}\033[00m" .format(skk)) 
-def prLightPurple(skk): print("\033[94m{}\033[00m" .format(skk)) 
+def prRed(skk): print("\033[91m{}\033[00m".format(skk)) 
+def prGreen(skk): print("\033[92m{}\033[00m".format(skk)) 
+def prCyan(skk): print("\033[96m{}\033[00m".format(skk)) 
+def prYellow(skk): print("\033[93m{}\033[00m".format(skk)) 
+def prPurple(skk): print("\033[95m{}\033[00m".format(skk)) 
+def prLightPurple(skk): print("\033[94m{}\033[00m".format(skk)) 
 
 def MY_func(Ls_cont):
     '''
@@ -252,9 +252,9 @@ def section_content_amesgcm_profile(section_ID):
 
     except FileNotFoundError:
         prRed("Error: %s config file not found "%(input_file)) 
-        prYellow("To use this feature, create a hidden config file in your home directory with:") 
+        prYellow("To use this feature, create a hidden config file from the template in your home directory with:") 
         prCyan("    cp amesGCM3/mars_templates/amesgcm_profile  ~/.amesgcm_profile")      
-        
+        exit()
     except Exception as exception: #Return the error
         prRed('Error')
         print(exception)    

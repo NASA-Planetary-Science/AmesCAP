@@ -12,7 +12,7 @@ def fms_press_calc(psfc,ak,bk,lev_type='full'):
         lev_type: "full" (centers of the levels) or "half" (layer interfaces)
                   Default is "full"
     Returns:
-        The 3D pressure field at the full PRESS_f(:,:,Nk-1) or half levels PRESS_h(:,:,Nk) in [Pa]
+        The 3D pressure field at the full PRESS_f(Nk-1:,:,:) or half levels PRESS_h(Nk,:,:,) in [Pa]
     --- 0 --- TOP        ========  p_half
     --- 1 ---                    
                          --------  p_full
@@ -57,31 +57,33 @@ def fms_press_calc(psfc,ak,bk,lev_type='full'):
     #[2:] goes from the 3rd element to Nk and [1:-1] goes from the 2nd element to Nk-1
     PRESS_f[:,1:]= (PRESS_h[:,2:]-PRESS_h[:,1:-1])/np.log(PRESS_h[:,2:]/PRESS_h[:,1:-1])
 
-    # Reshape PRESS(:,Nk) to the original pressure shape PRESS(:,:,Nk) (resp. Nk-1)
+    # First transpose PRESS(:,Nk) to PRESS(Nk,:), then reshape PRESS(Nk,:) 
+    # to the original pressure shape PRESS(Nk,:,:,:) (resp. Nk-1)
                        
     if lev_type=="full":
-        new_dim_f=np.append(psfc.shape,Nk-1)
-        return np.squeeze(PRESS_f.reshape(new_dim_f))
+        new_dim_f=np.append(Nk-1,psfc.shape)
+        return np.squeeze(PRESS_f.T.reshape(new_dim_f)) 
     elif lev_type=="half" :  
-        new_dim_h=np.append(psfc.shape,Nk)
-        return np.squeeze(PRESS_h.reshape(new_dim_h))
+        new_dim_h=np.append(Nk,psfc.shape)
+        return np.squeeze(PRESS_h.T.reshape(new_dim_h))
     else: 
         raise Exception("""Pressure levels type not recognized in press_lev(): use 'full' or 'half' """)
 
 def fms_Z_calc(psfc,ak,bk,T,topo=0.,lev_type='full'):
     """
-    Return the 3d altitude field in [m]
+    Return the 3d altitude field in [m] above ground level or above aeroid.
 
     Args:
-        psfc: the surface pressure in [Pa] or array of surface pressures 1D or 2D, or 3D (if time dimension)
+        psfc: the surface pressure in [Pa] or array of surface pressures 1D or 2D, or 3D 
         ak: 1st vertical coordinate parameter
         bk: 2nd vertical coordinate parameter
-        T : the air temperature profile, 1D array (for a single grid point) or 2D, 3D 4D 
-        topo: the surface elevation, same dimension as psfc
+        T : the air temperature profile, 1D array (for a single grid point) N-dimensional array with VERTICAL AXIS FIRST
+        topo: the surface elevation, same dimension as psfc. If none is provided, the height above ground level (agl) is returned
         lev_type: "full" (centers of the levels) or "half" (layer interfaces)
                   Default is "full"
     Returns:
         The layers' altitude  at the full Z_f(:,:,Nk-1) or half levels Z_h(:,:,Nk) in [m]
+        Z_f and Z_h are AGL if topo is None, and above aeroid if topo is provided 
     
     --- 0 --- TOP        ========  z_half
     --- 1 ---                    
@@ -94,9 +96,11 @@ def fms_Z_calc(psfc,ak,bk,T,topo=0.,lev_type='full'):
     
     
     *NOTE* 
+        Expends tp the time dimension using topo=np.repeat(zsurf[np.newaxis,:],ps.shape[0],axis=0)
+    
         Calculation is derived from ./atmos_cubed_sphere_mars/Mars_phys.F90:
         We have dp/dz = -rho g => dz= dp/(-rho g) and rho= p/(r T)  => dz=rT/g *(-dp/p) 
-        Let's definethe log-pressure u as u = ln(p). We have du = du/dp *dp = (1/p)*dp =dp/p
+        Let's define the log-pressure u as u = ln(p). We have du = du/dp *dp = (1/p)*dp =dp/p
         
         Finally , we have dz for the half layers:  dz=rT/g *-(du) => dz=rT/g *(+dp/p)   with N the layers defined from top to bottom.
     """
@@ -105,8 +109,8 @@ def fms_Z_calc(psfc,ak,bk,T,topo=0.,lev_type='full'):
     Nk=len(ak)
     #===get the half and full pressure levels from fms_press_calc==
     
-    PRESS_f=fms_press_calc(psfc,ak,bk,'full') 
-    PRESS_h=fms_press_calc(psfc,ak,bk,'half')
+    PRESS_f=fms_press_calc(psfc,ak,bk,'full') #Z axis is first
+    PRESS_h=fms_press_calc(psfc,ak,bk,'half') #Z axis is first
     
     # If psfc is a float, turn it into a one-element array:
     if len(np.atleast_1d(psfc))==1: 
@@ -119,60 +123,64 @@ def fms_Z_calc(psfc,ak,bk,T,topo=0.,lev_type='full'):
     
     #  reshape arrays for vector calculations and compute the log pressure====
     
-    PRESS_h=PRESS_h.reshape((len(psfc_flat),Nk))
-    PRESS_f=PRESS_f.reshape((len(psfc_flat),Nk-1))
-    T=T.reshape((len(psfc_flat),Nk-1))
+    PRESS_h=PRESS_h.reshape((Nk  ,len(psfc_flat)))
+    PRESS_f=PRESS_f.reshape((Nk-1,len(psfc_flat)))
+    T=T.reshape((Nk-1,len(psfc_flat)))
     
     logPPRESS_h=np.log(PRESS_h)
     
     #===Initialize the output arrays===
-    Z_f=np.zeros((len(psfc_flat),Nk-1))
-    Z_h=np.zeros((len(psfc_flat),Nk))
+    Z_f=np.zeros((Nk-1,len(psfc_flat)))
+    Z_h=np.zeros((Nk  ,len(psfc_flat)))
 
     #First half layer is equal to the surface elevation
     
-    Z_h[:,-1] = topo_flat
+    Z_h[-1,:] = topo_flat
     
     # Other layes, from the bottom-ip:
     for k in range(Nk-2,-1,-1):
-        Z_h[:,k] = Z_h[:,k+1]+(r_co2*T[:,k]/g)*(logPPRESS_h[:,k+1]-logPPRESS_h[:,k])
-        Z_f[:,k] = Z_h[:,k+1]+(r_co2*T[:,k]/g)*(1-PRESS_h[:,k]/PRESS_f[:,k])
+        Z_h[k,:] = Z_h[k+1,:]+(r_co2*T[k,:]/g)*(logPPRESS_h[k+1,:]-logPPRESS_h[k,:])
+        Z_f[k,:] = Z_h[k+1,:]+(r_co2*T[k,:]/g)*(1-PRESS_h[k,:]/PRESS_f[k,:])
         
     #return the arrays
     if lev_type=="full":
-        new_dim_f=np.append(psfc.shape,Nk-1)
+        new_dim_f=np.append(Nk-1,psfc.shape)
         return Z_f.reshape(new_dim_f)
     elif lev_type=="half" : 
-        new_dim_h=np.append(psfc.shape,Nk)
+        new_dim_h=np.append(Nk,psfc.shape)
         return  Z_h.reshape(new_dim_h)
     #=====return the levels in Z coordinates [m]====
     else: 
         raise Exception("""Altitudes levels type not recognized: use 'full' or 'half' """)
         
-
-def find_n(Lfull,Llev):
+def find_n(Lfull,Llev,reverse_input=False):
     '''
     Return the index for the level(s) just below Llev.
+    This assumes Lfull increases with increasing e.g p(0)=0Pa, p(N)=1000Pa
+    
     Args:
-        Lfull (array)         : input pressure [pa] or altitude [m] at full levels, level dimension is FIRST 
+        Lfull (array)            : input pressure [pa] or altitude [m] at full levels, level dimension is FIRST 
         Llev (float or 1D array) : desired level for interpolation [Pa] or [m]
+        reverse_input (boolean)  : reverse array, e.g if z(0)=120 km, z(N)=0km (which is typical) or if your input data is p(0)=1000Pa, p(N)=0Pa
     Returns:
         n:    index for the level(s) where the pressure is just below plev.
-        alpha: alpha coefficients for the interpolation
     ***NOTE***
         - if Lfull is 1D array and  Llev is a float        > n is a float 
         - if Lfull is ND [lev,time,lat,lon] and Llev is a 1D array of size klev > n is an array of size[klev,Ndim]
           with Ndim =time x lat x lon
     '''
                    #number of original layers
-                   
+    Lfull=np.array(Lfull)               
     Nlev=len(np.atleast_1d(Llev))
     if Nlev==1:Llev=np.array([Llev])
     dimsIN=Lfull.shape                         #get input variable dimensions
     Nfull=dimsIN[0]  
     dimsOUT=tuple(np.append(Nlev,dimsIN[1:]))
     Ndim= np.int(np.prod(dimsIN[1:]))           #Ndim is the product  of all dimensions but the vertical axis
-    Lfull= np.reshape(Lfull, (Nfull, Ndim) )               
+    Lfull= np.reshape(Lfull, (Nfull, Ndim) )  
+    
+    if reverse_input:Lfull=Lfull[::-1,:]          
+       
     ncol=Lfull.shape[-1]
     n=np.zeros((Nlev,ncol),dtype=int)
     
@@ -181,68 +189,81 @@ def find_n(Lfull,Llev):
             n[i,j]=np.argmin(np.abs(Lfull[:,j]-Llev[i]))
             if Lfull[n[i,j],j]>Llev[i]:n[i,j]=n[i,j]-1
     return n
-    
-       
-def pinterp(varIN,pfull,plev,masktop=True,index=None):
+
+
+
+def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=None):
     '''
-    Logarithmic interpolation pressure interpolation.   Alex Kling 3-26-20
+    Vertical linear or logarithmic interpolation for pressure or altitude.   Alex Kling 5-27-20
     Args:
-        varIN: variable to interpolate (N-dimensional array with vertical axis first)
-        pfull: pressure at full layers same dimensions as varIN
-        plev : desired level for interpolation as a 1D array 
+        varIN: variable to interpolate (N-dimensional array with VERTICAL AXIS FIRST)
+        Lfull: pressure [Pa] or atitude [m] at full layers same dimensions as varIN
+        Llev : desired level for interpolation as a 1D array in [Pa] or [m] May be either increasing or decreasing as the output levels are processed one at the time.
+        reverse_input (boolean) : reverse input arrays, e.g if zfull(0)=120 km, zLfull(N)=0km (which is typical) or if your input data is pfull(0)=1000Pa, pfull(N)=0Pa
+        type : 'log' for logarithmic (typically pressure), 'lin' for linear (typically altitude)
         masktop: set to NaN values if above the model top
         index: indices for the interpolation, already procesed as [klev,Ndim] 
                Indices will be recalculated in not provided.
     Returns:
-        varOUT: variable interpolated on the plev pressure levels
-    
-        ---  0  --- TOP    [e.g]   |    X_OUT= Xn*A + (1-A)*Xn+1
-        ---  1  ---                |          
-                                   |    with A = log(plev/pn)/log(pn+1/pn)
-        ---  n  ---  pn   [30 Pa]  |Xn
-                                   |
-    >>> ---  k  ---  plev [100 Pa] |X_OUT       
-        --- n+1 ---  pn+1 [200 Pa] |Xn+1
+        varOUT: variable interpolated on the Llev pressure or altitude levels
+        
+    *** IMPORTANT NOTE***
+    This interpolation assumes pressure are increasing downward, i.e:   
+     
+        ---  0  --- TOP   [0 Pa]   : [120 km]|    X_OUT= Xn*A + (1-A)*Xn+1
+        ---  1  ---                :         |      
+                                   :         |         
+        ---  n  ---  pn   [30 Pa]  : [800 m] | Xn
+                                   :         |
+    >>> ---  k  ---  Llev [100 Pa] : [500 m] | X_OUT       
+        --- n+1 ---  pn+1 [200 Pa] : [200 m] | Xn+1
     
         --- SFC ---      
         / / / / / /
         
+    with A = log(Llev/pn+1)/log(pn/pn+1) in 'log' mode     
+         A =    (zlev-zn+1)/(zn-zn+1)    in 'lin' mode
+         
+         
     '''
     #Special case where only 1 layer is requested
-    Nlev=len(np.atleast_1d(plev))
-    if Nlev==1:Llev=np.array([plev])
+    Nlev=len(np.atleast_1d(Llev))
+    if Nlev==1:Llev=np.array([Llev])
  
     dimsIN=varIN.shape               #get input variable dimensions
     Nfull=dimsIN[0]
     
-    #Special case where varIN and pfull are a single profile            
+    #Special case where varIN and Lfull are a single profile            
     if len(varIN.shape )==1:varIN=varIN.reshape([Nfull,1])
-    if len(pfull.shape )==1:pfull=pfull.reshape([Nfull,1])
+    if len(Lfull.shape )==1:Lfull=Lfull.reshape([Nfull,1])
        
-    dimsIN=varIN.shape       #repeat in case varIN and pfull were reshaped
+    dimsIN=varIN.shape       #repeat in case varIN and Lfull were reshaped
                
     dimsOUT=tuple(np.append(Nlev,dimsIN[1:]))
     Ndim= np.int(np.prod(dimsIN[1:]))          #Ndim is the product  of all dimensions but the vertical axis
     varIN= np.reshape(varIN, (Nfull, Ndim))    #flatten the other dimensions to (Nfull, Ndim)
-    pfull= np.reshape(pfull, (Nfull, Ndim) )   #flatten the other dimensions to (Nfull, Ndim)
+    Lfull= np.reshape(Lfull, (Nfull, Ndim) )   #flatten the other dimensions to (Nfull, Ndim)
     varOUT=np.zeros((Nlev, Ndim))
-
     Ndimall=np.arange(0,Ndim)                   #all indices (does not change)
     
+    #
+    if reverse_input:
+        Lfull=Lfull[::-1,:] 
+        varIN=varIN[::-1,:]
+    
     for k in range(0,Nlev):
-        #progress(k,Nlev)   #Display progress bar
-        #Find nearest layer to plev[k]
+        #Find nearest layer to Llev[k]
         if np.any(index):
             #index have been pre-computed:  
             n= index[k,:]
         else:
-            #Compute index on the fly for that layer
-            n= np.squeeze(find_n(pfull,plev[k]))
-                
+            # Compute index on the fly for that layer. 
+            # Note that inverse_input is always set to False as if desired, Lfull was reversed earlier
+            n= np.squeeze(find_n(Lfull,Llev[k],False))
         #==Slower method (but explains what is done below): loop over Ndim======
         # for ii in range(Ndim):
         #     if n[ii]<Nfull-1:
-        #         alpha=np.log(plev[k]/pfull[n[ii]+1,ii])/np.log(pfull[n[ii],ii]/pfull[n[ii]+1,ii])
+        #         alpha=np.log(Llev[k]/Lfull[n[ii]+1,ii])/np.log(Lfull[n[ii],ii]/Lfull[n[ii]+1,ii])
         #         varOUT[k,ii]=varIN[n[ii],ii]*alpha+(1-alpha)*varIN[n[ii]+1,ii]
         
         #=================    Fast method  no loop  =======================
@@ -254,41 +275,46 @@ def pinterp(varIN,pfull,plev,masktop=True,index=None):
         alpha=np.NaN*Ndimall
         #Only calculate alpha  where the indices are <Nfull
         Ndo=Ndimall[nindexp1<Nfull*Ndim]
-        alpha[Ndo]=np.log(plev[k]/pfull.flatten()[nindexp1[Ndo]])/np.log(pfull.flatten()[nindex[Ndo]]/pfull.flatten()[nindexp1[Ndo]])
-        
-        #Mask if plev[k]<model top
-        if masktop: alpha[plev[k]<pfull.flatten()[nindex]]=np.NaN
-        #Here, we need to make sure n+1 is never> Nfull by setting n+1=Nfull, if it it the case.
+        if type=='log':
+            alpha[Ndo]=np.log(Llev[k]/Lfull.flatten()[nindexp1[Ndo]])/np.log(Lfull.flatten()[nindex[Ndo]]/Lfull.flatten()[nindexp1[Ndo]])
+        elif type=='lin':
+            alpha[Ndo]=(Llev[k]-Lfull.flatten()[nindexp1[Ndo]])/(Lfull.flatten()[nindex[Ndo]]- Lfull.flatten()[nindexp1[Ndo]])
+            
+        #Mask if Llev[k]<model top for the pressure interpolation
+        if masktop : alpha[Llev[k]<Lfull.flatten()[nindex]]=np.NaN
+       
+       
+        #Here, we need to make sure n+1 is never> Nfull by setting n+1=Nfull, if it is the case.
         #This does not affect the calculation as alpha is set to NaN for those values. 
         nindexp1[nindexp1>=Nfull*Ndim]=nindex[nindexp1>=Nfull*Ndim]
-
+        
         varOUT[k,:]=varIN.flatten()[nindex]*alpha+(1-alpha)*varIN.flatten()[nindexp1]
         
     return np.reshape(varOUT,dimsOUT)
 
 
+
         
-def akbk_loader(NLAY,data_dir='/u/mkahre/MCMC/data_files'):
+def pkbk_loader(NLAY,data_dir='/u/mkahre/MCMC/data_files'):
     """
     Return the ak and bk values given a number of layers for standards resolutions 
     Default directory is /lou/s2n/mkahre/MCMC/data_files/ 
     Args:
         NLAY: the number of layers (float or integer)
     Returns:
-        ak: 1st vertical coordinate parameter [Pa]
+        pk: 1st vertical coordinate parameter [Pa]
         bk: 2nd vertical coordinate parameter [none]
     
-    *NOTE*    ak,bk have a size NLAY+1 since they define the position of the layer interfaces (half layers):
-              p_half = ak + bk*p_sfc 
+    *NOTE*    pk,bk have a size NLAY+1 since they define the position of the layer interfaces (half layers):
+              p_half = pk + bk*p_sfc 
     """  
-        
     from netCDF4 import Dataset
     NLAY=int(NLAY)
     file=Dataset(data_dir+'/akbk_L%i.nc'%(NLAY), 'r', format='NETCDF4_CLASSIC')
-    ak=file.variables['pk'][:]
+    pk=file.variables['pk'][:]
     bk=file.variables['bk'][:]
     file.close()
-    return ak,bk 
+    return pk,bk 
     
     
 def zonal_avg_P_lat(Ls,var,Ls_target,Ls_angle,symmetric=True):

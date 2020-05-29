@@ -7,8 +7,7 @@ The analysis pipeline is entirely written in pure Python, which is an intuitive 
 * B. You have experience with Python but not with managing packages, or are new to Python: To ensure that there is no conflict with other Python versions that may be on your system, we will install a fresh Python distribution **locally** (this does not require admin permission). Additionally, we will install the analysis pipeline in a self-contained _virtual environment_  which is basically a standalone copy of your entire distribution, minus the 'core' code that is shared with the main python distribution.  This will allow you to use your fresh Python installation for other projects (including installing or upgrading packages) without the risk of altering the analysis pipeline. It will also be safe to alter (or even completely delete) that virtual environment without breaking the main distribution.
 ##  Requirements
 
-
-**Python 3**: It you are already a Python user, you can install the Ames analysis pipeline on top of you current installation. For new users, we recommend to use the latest version of the Anaconda Python distribution available [here](https://www.anaconda.com/distribution/#download-section), as it already ships with pre-compiled math and plotting packages (e.g. _numpy_, _matplotlib_), and pre-compiled libraries (e.g. hdf5 headers to read netcdf files).
+**Python 3**: It you are already a Python user, you can install the Ames analysis pipeline on top of you current installation. For new users, we recommend to use the latest version of the Anaconda Python distribution as it already ships with pre-compiled math and plotting packages (e.g. _numpy_, _matplotlib_), and pre-compiled libraries (e.g. hdf5 headers to read netcdf files). You can download either the command-line installer or the graphical interface [here](https://www.anaconda.com/distribution/#download-section). If you are the owner of the system you can choose to install Python at the system level, but you can install it in your home directory if you don't have permission on your system.
 
 * In MacOS and Linux, you can install a fresh Python3  **locally** from a terminal with:
 
@@ -228,11 +227,10 @@ Check that a new variable was added to the file by running again _MarsVars_ with
 
 `MarsVars.py 00000.atmos_average.nc`
 
-Similarly, we will perform a column integration for the water vapor (vap_mass) with **-colint**. At the same time, we will  remove the dust (dst_num) and water ice (ice_num) **particles numbers** variables, which we are not planning to use in this analysis (this will free some memory).
+Similarly, we will perform a column integration for the water vapor (vap_mass) with **-col**. At the same time, we will  remove the dust (dst_num) and water ice (ice_num) **particles numbers** variables, which we are not planning to use in this analysis (this will free some memory).
 
-`MarsVars.py 00000.atmos_average.nc -colint vap_mass -rm ice_num dst_num`
+`MarsVars.py 00000.atmos_average.nc -col vap_mass -rm ice_num dst_num`
 
-Similarly, we observed that a new variable "colint_vap_mass" was added to the file, while "ice_num" and "dst_num" have disappeared.
 
 ## Pressure interpolation
 The Ames GCM uses a pressure coordinate in the vertical, which means that a single atmospheric layer will be located at different geometric heights (and pressure levels) between the atmospheric columns. Before we do any zonal averaging, it is therefore necessary to interpolate the data in all the columns to a same standard pressure. This operation is done with the _MarsInterp_ utility using the **--type pstd** option:

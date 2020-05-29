@@ -15,14 +15,6 @@ import numpy as np
 from netCDF4 import Dataset
 
 
-#TODO remove this block to use package instead
-#==============
-'''
-sys.path.append('/Users/akling/amesgcm/amesgcm/')
-from Ncdf_wrapper import Ncdf
-from FV3_utils import tshift
-from Script_utils import prYellow,prCyan,prRed
-'''
 #===========
 from amesgcm.Ncdf_wrapper import Ncdf
 from amesgcm.FV3_utils import tshift
@@ -203,7 +195,7 @@ def main():
     
 #=========== Tshift implemation by Victoria!! ===========================
 
-    if parser.parse_args().tshift:
+    elif parser.parse_args().tshift:
         #Get files to process
         histlist=[]
         for filei in file_list:

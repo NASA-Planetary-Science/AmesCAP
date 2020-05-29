@@ -877,7 +877,7 @@ def make_template():
         customFileIN.write(lh+"""> Duplicate/remove any of the <<<< blocks>>>>, skip by setting <<<< block = False >>>> \n""")
         customFileIN.write(lh+"""> 'True', 'False' and 'None' are capitalized. Do not use quotes '' anywhere in this file \n""")
         customFileIN.write(lh+"""> Cmin, Cmax define the colorbar range. Scientific notation (e.g. 1e-6, 2e3) is supported \n""")
-        customFileIN.write(lh+"""> 'Level' refers to 'level'[Pa], 'pfull'[Pa] or 'zgrid' [m] depending on the type of *.nc file \n""")
+        customFileIN.write(lh+"""> 'Level' refers to either 'level','pfull', 'pstd' in [Pa], 'zstd' or 'zagl' [m] or 'zgrid' [m], depending on the type of *.nc file\n""")
         customFileIN.write(lh+"""FREE DIMENSIONS:\n""")
         customFileIN.write(lh+"""> Use 'Dimension = 55.' to set to the closest value\n""")
         customFileIN.write(lh+"""> Use 'Dimension = all' to average over all values\n""")
@@ -1300,6 +1300,7 @@ class Fig_2D(object):
         self.fdim_txt=''
         self.success=False
         self.addLine=False
+        self.vert_unit='' #m or Pa 
         #Axis options
 
         self.Xlim=None
@@ -1449,13 +1450,17 @@ class Fig_2D(object):
 
         #======time,level,lat,lon=======
         if (dim_info==(u'time', u'pfull', u'lat', u'lon')
+           or dim_info==(u'time', u'level', u'lat', u'lon')
            or dim_info==(u'time', u'pstd', u'lat', u'lon')
+           or dim_info==(u'time', u'zstd', u'lat', u'lon')
+           or dim_info==(u'time', u'zagl', u'lat', u'lon')
            or dim_info==(u'time', u'zgrid', u'lat', u'lon')):
-
+               
+            if dim_info[1] in ['pfull','level','pstd']:  self.vert_unit='Pa'
+            if dim_info[1] in ['zagl','zstd']:  self.vert_unit='m'
+            
             #Initialize dimensions
-            if dim_info[1]=='pfull': levs=f.variables[dim_info[1]][:] 
-            if dim_info[1]=='pstd': levs=f.variables[dim_info[1]][:] 
-            if dim_info[1]=='zgrid': levs=     f.variables[dim_info[1]][:] # meters
+            levs=f.variables[dim_info[1]][:] #dim_info[1] is either pfull, level, pstd, zstd,zagl or zgrid
             zi=np.arange(0,len(levs))
             t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
             t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
@@ -1587,7 +1592,7 @@ class Fig_2D_lon_lat(Fig_2D):
 
     #make_template is calling method from the parent class
     def make_template(self):
-        super(Fig_2D_lon_lat, self).make_template('Plot 2D lon X lat','Ls 0-360','Level [Pa]','lon','lat')
+        super(Fig_2D_lon_lat, self).make_template('Plot 2D lon X lat','Ls 0-360','Level [Pa/m]','lon','lat')
 
     def do_plot(self):
         #create figure
@@ -1635,7 +1640,7 @@ class Fig_2D_time_lat(Fig_2D):
 
     def make_template(self):
         #make_template is calling method from the parent class
-        super(Fig_2D_time_lat, self).make_template('Plot 2D time X lat','Lon +/-180','Level [Pa]','sols','lat')
+        super(Fig_2D_time_lat, self).make_template('Plot 2D time X lat','Lon +/-180','Level [Pa/m]','sols','lat')
                                                                         #self.fdim1,  self.fdim2, self.Xlim,self.Ylim
 
     def do_plot(self):
@@ -1688,7 +1693,7 @@ class Fig_2D_lat_press(Fig_2D):
 
     def make_template(self):
         #make_template is calling method from the parent class
-        super(Fig_2D_lat_press, self).make_template('Plot 2D lat X press','Ls 0-360 ','Lon +/-180','Lat','level[Pa]')
+        super(Fig_2D_lat_press, self).make_template('Plot 2D lat X press','Ls 0-360 ','Lon +/-180','Lat','level[Pa/m]')
                                                                           #self.fdim1,  self.fdim2, self.Xlim,self.Ylim
     def do_plot(self):
         #create figure
@@ -1703,14 +1708,18 @@ class Fig_2D_lat_press(Fig_2D):
                 super(Fig_2D_lat_press, self).solid_contour(lat, pfull,var2)
                 var_info+=" (& "+var_info2+")"
 
-
-            ax.set_yscale("log")
-            ax.invert_yaxis()
+            if self.vert_unit=='Pa':
+                ax.set_yscale("log")
+                ax.invert_yaxis()
+                ylabel_txt='Pressure [Pa]'
+            else:
+                ylabel_txt='Altitude [m]'
+                    
 
             if self.Xlim:plt.xlim(self.Xlim)
             if self.Ylim:plt.ylim(self.Ylim)
 
-            super(Fig_2D_lat_press, self).make_title(var_info,'Latitude','Pressure [Pa]')
+            super(Fig_2D_lat_press, self).make_title(var_info,'Latitude',ylabel_txt)
 
 
             ax.xaxis.set_major_locator(MultipleLocator(15))
@@ -1736,7 +1745,7 @@ class Fig_2D_lon_press(Fig_2D):
 
     def make_template(self):
         #make_template is calling method from the parent class
-        super(Fig_2D_lon_press, self).make_template('Plot 2D lon X press','Ls 0-360 ','Latitude','Lon +/-180','level[Pa]')
+        super(Fig_2D_lon_press, self).make_template('Plot 2D lon X press','Ls 0-360 ','Latitude','Lon +/-180','level[Pa/m]')
 
     def do_plot(self):
         #create figure
@@ -1755,13 +1764,17 @@ class Fig_2D_lon_press(Fig_2D):
                 var_info+=" (& "+var_info2+")"
 
 
-            ax.set_yscale("log")
-            ax.invert_yaxis()
+            if self.vert_unit=='Pa':
+                ax.set_yscale("log")
+                ax.invert_yaxis()
+                ylabel_txt='Pressure [Pa]'
+            else:
+                ylabel_txt='Altitude [m]'
 
             if self.Xlim:plt.xlim(self.Xlim)
             if self.Ylim:plt.ylim(self.Ylim)
 
-            super(Fig_2D_lon_press, self).make_title(var_info,'Longitude','Pressure [Pa]')
+            super(Fig_2D_lon_press, self).make_title(var_info,'Longitude',ylabel_txt)
 
             ax.xaxis.set_major_locator(MultipleLocator(30))
             ax.xaxis.set_minor_locator(MultipleLocator(10))
@@ -1777,7 +1790,7 @@ class Fig_2D_time_press(Fig_2D):
 
     def make_template(self):
         #make_template is calling method from the parent class
-        super(Fig_2D_time_press, self).make_template('Plot 2D time X press','Latitude','Lon +/-180','sols','level[Pa]')
+        super(Fig_2D_time_press, self).make_template('Plot 2D time X press','Latitude','Lon +/-180','sols','level[Pa/m]')
 
     def do_plot(self):
         #create figure
@@ -1811,10 +1824,14 @@ class Fig_2D_time_press(Fig_2D):
             plt.xticks(fontsize=label_size-self.nPan//2, rotation=0)
             plt.yticks(fontsize=label_size-self.nPan//2, rotation=0)
 
-            ax.set_yscale("log")
-            ax.invert_yaxis()
+            if self.vert_unit=='Pa':
+                ax.set_yscale("log")
+                ax.invert_yaxis()
+                ylabel_txt='Pressure [Pa]'
+            else:
+                ylabel_txt='Altitude [m]'
 
-            super(Fig_2D_time_press, self).make_title(var_info,'','Pressure [Pa]')
+            super(Fig_2D_time_press, self).make_title(var_info,'',ylabel_txt)
 
             self.success=True
         except Exception as e: #Return the error
@@ -1825,7 +1842,7 @@ class Fig_2D_lon_time(Fig_2D):
 
     def make_template(self):
         #make_template is calling method from the parent class
-        super(Fig_2D_lon_time, self).make_template('Plot 2D lon X time','Latitude','Level [Pa]','Lon +/-180','sols')
+        super(Fig_2D_lon_time, self).make_template('Plot 2D lon X time','Latitude','Level [Pa/m]','Lon +/-180','sols')
 
     def do_plot(self):
         #create figure
@@ -1895,6 +1912,7 @@ class Fig_1D(object):
         #Annotation for free dimensions
         self.fdim_txt=''
         self.success=False
+        self.vert_unit='' #m or Pa
         #Axis options
 
         self.Dlim=None #Dimension limit
@@ -1910,8 +1928,8 @@ class Fig_1D(object):
         customFileIN.write("Ls 0-360       = {0}\n".format(self.t))           #3
         customFileIN.write("Latitude       = {0}\n".format(self.lat))         #4
         customFileIN.write("Lon +/-180     = {0}\n".format(self.lon))         #5
-        customFileIN.write("Level [Pa]     = {0}\n".format(self.lev))         #6
-        customFileIN.write("Axis Options  : lat,lon+/-180,[Pa],sols = [None,None] | var = [None,None] | linestyle = - \n")#7
+        customFileIN.write("Level [Pa/m]     = {0}\n".format(self.lev))         #6
+        customFileIN.write("Axis Options  : lat,lon+/-180,[Pa/m],sols = [None,None] | var = [None,None] | linestyle = - \n")#7
 
     def read_template(self):
         self.legend= rT('char')             #1
@@ -2020,7 +2038,7 @@ class Fig_1D(object):
             file_type: 'fixed' or 'atmos_average'
             sol_array: sol if different from default e.g '02400'
             plot_type: e.g '1D_lon', '1D_lat'
-            t_req,lat_req,lon_req,lev_req: the Ls, lat, lon and level [Pa] requested
+            t_req,lat_req,lon_req,lev_req: the Ls, lat, lon and level [Pa/m] requested
         Returns:
             dim_array: the axis, e.g one array of longitudes
             var_array: the variable extracted
@@ -2087,13 +2105,17 @@ class Fig_1D(object):
 
         #======time,level,lat,lon=======
         if (dim_info==(u'time', u'pfull', u'lat', u'lon')
+           or dim_info==(u'time', u'level', u'lat', u'lon')
            or dim_info==(u'time', u'pstd', u'lat', u'lon')
+           or dim_info==(u'time', u'zstd', u'lat', u'lon')
+           or dim_info==(u'time', u'zagl', u'lat', u'lon')
            or dim_info==(u'time', u'zgrid', u'lat', u'lon')):
-
+           
+            if dim_info[1] in ['pfull','level','pstd']:  self.vert_unit='Pa'
+            if dim_info[1] in ['zagl','zstd']:  self.vert_unit='m'
+            
             #Initialize dimensions
-            if dim_info[1]=='pfull': levs=f.variables[dim_info[1]][:] 
-            if dim_info[1]=='pstd': levs=f.variables[dim_info[1]][:] 
-            if dim_info[1]=='zgrid': levs=     f.variables[dim_info[1]][:] # meters
+            levs=f.variables[dim_info[1]][:] 
             zi=np.arange(0,len(levs))
             t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
             t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
@@ -2253,11 +2275,17 @@ class Fig_1D(object):
 
                 plt.plot(var,xdata,self.axis_opts,lw=2,label=txt_label)
                 plt.xlabel(var_info)
-                plt.ylabel('Pressure [Pa]')
+                
 
-                ax.set_yscale("log")
-                ax.invert_yaxis()
-
+                if self.vert_unit=='Pa':
+                    ax.set_yscale("log")
+                    ax.invert_yaxis()
+                    ylabel_txt='Pressure [Pa]'
+                else:
+                    ylabel_txt='Altitude [m]'
+                
+                plt.ylabel(ylabel_txt)
+                 
                 if self.Dlim:plt.ylim(self.Dlim)
                 if self.Vlim:plt.xlim(self.Vlim)
 
