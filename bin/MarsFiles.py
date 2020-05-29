@@ -457,16 +457,12 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
             newf.log_variable(vname2,varnew,newdims,longname_txt2,units_txt2)
         elif vname == 'tloc':
             if avgtime and not avgtod:
-
-                vname='time_of_day_16'
-                longname_txt='time of day'
-                units_txt='hours since 0000-00-00 00:00:00' 
+                vname2='time_of_day_16'
+                longname_txt2='time of day'
+                units_txt2='hours since 0000-00-00 00:00:00' 
                 newf.log_variable(vname2,npvar,newdims,longname_txt2,units_txt2)
                 
-                vname='time_of_day_16'
-                longname_txt='time of day'
-                units_txt='hours since 0000-00-00 00:00:00' 
-                newf.log_variable(vname2,npvar,newdims,longname_txt2,units_txt2)
+
                 
     return 0
 
