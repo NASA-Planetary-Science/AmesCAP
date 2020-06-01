@@ -64,8 +64,6 @@ parser.add_argument('--debug',  action='store_true', help='Debug flag: release t
 #cat_method='ncks'
 cat_method='internal'
 def main():
-
-        #exit()
     file_list=parser.parse_args().input_file
     cwd=os.getcwd()
     path2data=os.getcwd()
@@ -86,7 +84,10 @@ def main():
         #Get files to process
         histlist=[]
         for filei in file_list:
-            histlist.append(path2data+'/'+filei)
+            if not ('/' in filei):
+                histlist.append(path2data+'/'+filei)
+            else:
+                histlist.append(filei)
         fnum = len(histlist)
         if fnum >= 0:do_multi = True #TODO why not 1?
     
@@ -116,9 +117,6 @@ def main():
                     lsmax = str(max(int(lsmax),int(ls_r))).zfill(3)
                 a=make_FV3_files(f,parser.parse_args().fv3,True,cwd)
                    
-    
-        #TODO is using sys.prefix reliable outside a virtual environment ?
-
 
     elif parser.parse_args().combine:
         #TODO Use ncks if it is available (not tested yet)
@@ -152,8 +150,12 @@ def main():
             #Get files to process
             histlist=[]
             for filei in file_list:
-                histlist.append(path2data+'/'+filei)
-                
+                #Add path unless full path is provided
+                if not ('/' in filei):
+                    histlist.append(path2data+'/'+filei)
+                else:
+                    histlist.append(filei)
+                    
             fnum = len(histlist)
             #Easy case: merging *****.fixed.nc means delete all but the first file:
             if file_list[0][5:]=='.fixed.nc' and fnum>=2:
@@ -199,7 +201,13 @@ def main():
         #Get files to process
         histlist=[]
         for filei in file_list:
-            fullnameIN = path2data + '/' + filei
+            #Add path unless full path is provided
+            if not ('/' in filei):
+                fullnameIN = path2data + '/' + filei
+            else:
+                fullnameIN=filei
+                
+            
             fullnameOUT = fullnameIN[:-3]+'_T'+'.nc'
 
             fdiurn = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
@@ -414,19 +422,25 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
                         npvar[x] += 360.*year
                       
                 #Create a time array        
-                time0=ls2sol_1year(npvar[0])+np.linspace(0,10.,len(npvar))   
+                time0=ls2sol_1year(npvar[0])+np.linspace(0,10.,len(npvar)) 
                  
                 if avgtime:
                     varnew = np.mean(npvar.reshape(-1,5),axis=1)
                     time0 =  np.mean(time0.reshape(-1,5),axis=1)
 
                 if not avgtime and not avgtod: #i.e daily file
+                    # Solar longitude
                     ls_start = npvar[0]
                     ls_end   = npvar[-1]
                     step     = (ls_end-ls_start)/np.float32(((numt-1)*ntod.size))
                     varnew = np.arange(0,numt*ntod.size,dtype=np.float32)
                     varnew[:] = varnew[:]*step+ls_start
-                 
+                    
+                    #Time
+                    step = (ls2sol_1year(ls_end)-ls2sol_1year(ls_start))/np.float32((numt*ntod.size))
+                    time0 = np.arange(0,numt*ntod.size,dtype=np.float32)
+                    time0[:] = time0[:]*step+ls2sol_1year(ls_start)
+                    
                 newf.log_axis1D('areo',varnew,dims,longname_txt='solar longitude',units_txt='degree',cart_txt='T')
                 newf.log_axis1D('time',time0,dims,longname_txt='sol number',units_txt='days since 0000-00-00 00:00:00',cart_txt='T')#added AK
             else:
@@ -451,7 +465,7 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
             if avgtod:
                 varnew = varnew.mean(axis=1)
             if not avgtime and not avgtod:
-                varnew = npvar.reshape(-1,vshape[2],vshape[3],vshape[4])
+                varnew = npvar.reshape(-1,vshape[2],vshape[3],vshape[4]) 
             #Rename variables   
             vname2,longname_txt2,units_txt2=change_vname_longname_unit(vname,longname_txt,units_txt)
             newf.log_variable(vname2,varnew,newdims,longname_txt2,units_txt2)
@@ -460,12 +474,14 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
                 vname2='time_of_day_16'
                 longname_txt2='time of day'
                 units_txt2='hours since 0000-00-00 00:00:00' 
+                # Overwrite tod from ('time_of_day_16', 'lon') to time_of_day_16
+                newdims=('time_of_day_16')
+                npvar=np.arange(0.75,24,1.5)  # every 1.5 hours, centered at half timestep ? AK
                 newf.log_variable(vname2,npvar,newdims,longname_txt2,units_txt2)
                 
 
                 
     return 0
-
 
 def change_vname_longname_unit(vname,longname_txt,units_txt):
     
