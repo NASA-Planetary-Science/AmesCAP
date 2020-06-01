@@ -127,7 +127,7 @@ amesGCM3/
     └── legacy.in
 ```
 
-## Use, upgrade, and remove the pipeline
+## Routine use of the pipeline
 
 Every time you want to use the analysis pipeline from a new terminal session, simply run:
 
@@ -145,7 +145,6 @@ Add `alias MarsPlot.py='/username/amesGCM3/bin/MarsPlot.py'` to your _~/.bash_pr
 
 Add `alias MarsPlot.py /username/amesGCM3/bin/MarsPlot.py` to your _~/.cshrc_  and run
 `source ~/.cshrc` (in **csh**)  
-***
 
 Check the documentation for any of the executables above with the `--help` option:
 
@@ -156,7 +155,12 @@ After you are done with your work, you can exit the analysis pipeline with:
 
  `deactivate`
 
-To upgrade the pipeline, activate the virtual environment as shown above and run :
+## Upgrade, or remove the pipeline
+To upgrade the pipeline, activate the virtual environment:
+
+`source amesGCM3/bin/activate`    (`source amesGCM3/bin/activate.csh` in **csh/tcsh**)
+
+And run:
 
 `pip install git+https://github.com/alex-kling/amesgcm.git --upgrade`
 
@@ -200,17 +204,24 @@ MarsFiles.py LegacyGCM_Ls* -fv3 fixed average
 ```
 And check the new content for one of the files with:
 ```
-MarsPlot.py -i 00000.atmos_average.nc
 MarsPlot.py -i 00000.fixed.nc
+MarsPlot.py -i 00000.atmos_average.nc
 ```
+
 Moving forward with the postprocessing pipeline, it is the user's choice to proceed with individual sets of files (00000, 00010, and 00020 files in our example), or merge those files together into one.
 All the utilities from the analysis pipeline (including the plotting routine) accept a **list** of files as input, and keeping separate files can be strategic when computer memory is limited (the **daily** files remain 280MB each and there are 67 of those in one Mars year).
 
 Since working with 5 days average involve relatively small files, we can use the **--combine** option of _MarsFiles_ to merge them together along the '_time_' dimension:
 
 ```
-MarsFiles.py *atmos_average.nc -c
 MarsFiles.py *fixed.nc -c
+MarsFiles.py *atmos_average.nc -c
+```
+We can use the **--dump** (or **--stat**) option of MarsPlot to inspect the changes made to the time dimension:
+
+```
+MarsPlot.py -i 00000.atmos_average.nc
+MarsPlot.py -i 00000.atmos_average.nc -dump time areo
 ```
 ## Variable operations
 When provided with no arguments, the variable utility _MarsVars.py_ has the same functionality as _MarsPlot.py -i_ and displays the content for the file:
@@ -239,6 +250,7 @@ The Ames GCM uses a pressure coordinate in the vertical, which means that a sing
 MarsInterp.py -h
 MarsInterp.py  00000.atmos_average.nc -t pstd
 ```
+
 We observe with `MarsPlot.py -i 00000.atmos_average_pstd.nc` that the pressure level axis "pfull" (formerly 24 layers) has disappeared and was replaced by a standard pressure "pstd". Also, the shape for the 3-dimensional variables are different and reflect the new shape of "pstd"
 
 ## Plotting the results with MarsPlot:
