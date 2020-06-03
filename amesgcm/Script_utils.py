@@ -25,6 +25,22 @@ def MY_func(Ls_cont):
         MY : int the Mars year
     '''
     return (Ls_cont)//(360.)+1
+ 
+def find_tod_in_diurn(fNcdf): 
+    '''
+    Return the variable for the local time axis in diurn files. 
+    Original implementation by Victoria H.
+    Args:
+        fNcdf: an (open) Netcdf file object 
+    Return:
+        tod (string): 'time_of_day_16'or 'time_of_day_24'
+    '''
+    from re import compile,match
+    regex=compile('time_of_day.')
+    varset=fNcdf.variables.keys()
+    return [string for string in varset if match(regex, string)][0] #Exctract the 1st element of the list 
+ 
+ 
     
 def print_fileContent(fileNcdf):
     '''

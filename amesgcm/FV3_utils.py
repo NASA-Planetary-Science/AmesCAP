@@ -293,7 +293,21 @@ def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=N
     return np.reshape(varOUT,dimsOUT)
 
 
-
+def cart_to_azimut_TR(u,v,mode='from'):
+    '''
+    Convert cartesian coordinates or wind vectors to radian,using azimut angle.
+    
+    Args:
+        x,y: 1D arrays for the cartesian coordinate
+        mode='to' direction towards the vector is pointing, 'from': direction from the vector is coming
+    Returns:
+        Theta [deg], R the polar coordinates
+    '''
+    print('here')
+    if mode=='from':cst=180
+    if mode=='to':cst=0.    
+    return np.mod(np.arctan2(u,v)*180/np.pi+cst,360),np.sqrt(u**2+v**2)
+    
         
 def pkbk_loader(NLAY,data_dir='/u/mkahre/MCMC/data_files'):
     """

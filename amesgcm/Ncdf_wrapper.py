@@ -66,9 +66,9 @@ class Ncdf(object):
     def add_dimension(self,dimension_name,length):
         self.dim_dict[dimension_name]= self.f_Ncdf.createDimension(dimension_name,length)
         
-    def print_dimension(self):
+    def print_dimensions(self):
         print(self.dim_dict.items())
-    def print_variable(self):
+    def print_variables(self):
         print(self.var_dict.keys())    
         
     def add_constant(self,variable_name,value,longname_txt="",units_txt=""):
