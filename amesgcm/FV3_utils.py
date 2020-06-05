@@ -304,7 +304,6 @@ def cart_to_azimut_TR(u,v,mode='from'):
     Returns:
         Theta [deg], R the polar coordinates
     '''
-    print('here')
     if mode=='from':cst=180
     if mode=='to':cst=0.    
     return np.mod(np.arctan2(u,v)*180/np.pi+cst,360),np.sqrt(u**2+v**2)
