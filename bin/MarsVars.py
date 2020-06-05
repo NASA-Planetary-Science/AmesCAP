@@ -6,14 +6,7 @@ import os       #access operating systems function
 import subprocess #run command
 import sys       #system command
 
-#TODO delete when done testing
-'''
-sys.path.append('/Users/akling/amesgcm/amesgcm/')
-from Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-from FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh
-from Ncdf_wrapper import Ncdf
-'''
-from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh
+from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
 from amesgcm.Ncdf_wrapper import Ncdf
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
@@ -26,7 +19,7 @@ try:
 except ImportError as error_msg:
     prYellow("Error while importing modules")
     prYellow('Your are using python '+str(sys.version_info[0:3]))
-    prYellow('Please, source your virtual environment');prCyan('    source envPython3.7/bin/activate.csh \n')
+    prYellow('Please, source your virtual environment');prCyan('    source amesGCM3/bin/activate \n')
     print("Error was: "+ error_msg.message)
     exit()
     
@@ -48,15 +41,22 @@ parser.add_argument('input_file', nargs='+', #sys.stdin
 parser.add_argument('-add','--add', nargs='+',default=[],
                  help='Add a new variable to file  \n'
                       '> Usage: MarsVars ****.atmos.average.nc -add rho\n'
-                      'SUPPORTED:\n\033[96m'
+                      '\033[96mON NATIVE FILES:\n'
                       'rho        (density)                         Req. [ps,temp] \n'
                       'theta      (pot. temperature)                Req. [ps,temp] \n'
+                      'pfull3D    (pressure at layer midpoint)      Req. [ps,temp] \n' 
+                      'zfull      (altitude AGL)                    Req. [ps,temp] \n'                      
                       'w          (vertical winds)                  Req. [ps,temp,omega] \n'
-                      'zfull      (altitude AGL)                    Req. [ps,temp] \n'
+                      'wdir       (wind direction)                  Req. [ucomp,vcomp] \n'
+                      'wspeed     (wind magnitude)                  Req. [ucomp,vcomp] \n'
                       'N          (Brunt Vaisala freq)              Req. [ps,temp] \n'
                       'Ri         (Richardson number)               Req. [ps,temp] \n'
                       'Tco2       (CO2 condensation temperature)    Req. [ps,temp] \n'
                       'scorer_wl  (Scorer horizontal wavelength)    Req. [ps,temp,ucomp] \n'
+                      '\033[00m\n' 
+                      '\033[93mON INTERPOLATED FILES (in progress):                                     \n'
+                      'ax         (wave-mean flow forcing)          Req. [ps,temp] \n'
+                      'msf        (mass stream function)            Req. [ps,temp] \n'
                        '\033[00m')  
 
 parser.add_argument('-zdiff','--zdiff', nargs='+',default=[],
@@ -82,7 +82,10 @@ parser.add_argument('--debug',  action='store_true', help='Debug flag: release t
 VAR= {'rho'       :['density (added postprocessing)','kg/m3'],
       'theta'     :['potential temperature (added postprocessing)','K'],
       'w'         :['vertical wind (added postprocessing)','m/s'],    
-      'zfull'     :['layer midpoint AGL (added postprocessing)','m'],     
+      'pfull3D'   :['pressure at layer midpoint (added postprocessing)','Pa'],  
+      'zfull'     :['altitude  AGL atlayer midpoint (added postprocessing)','m'],     
+      'wdir'      :['wind direction (added postprocessing)','deg'],
+      'wspeed'    :['wind speed (added postprocessing)','m/s'],
       'N'         :['Brunt Vaisala frequency (added postprocessing)','rad/s'],   
       'Ri'        :['Richardson number (added postprocessing)','none'], 
       'Tco2'      :['Condensation temerature of CO2  (added postprocessing)','K'],
@@ -103,10 +106,15 @@ M_co2 =0.044 # kg/mol
 #===========================
 
 def compute_p_3D(ps,ak,bk,shape_out):
+    """
+    Retunr the 3D pressure field at the layer midpoint. 
+    *** NOTE***
+    The shape_out argument ensures that, when time=1 (one timestep) results are returned as (1,lev,lat,lon), not (lev,lat,lon)
+    """
     p_3D= fms_press_calc(ps,ak,bk,lev_type='full')
-    if len(p_3D.shape)==4:p_3D=p_3D.transpose([0,3,1,2])# p_3D [tim,lat,lon,lev] ->[tim, lev, lat, lon]
-    if len(p_3D.shape)==3:p_3D=p_3D.transpose([2,0,1]) #p_3D [lat,lon,lev] ->    [lev, lat, lon]
-    return p_3D.reshape(shape_out)
+    if len(p_3D.shape)==4:p_3D=p_3D.transpose([1,0,2,3])# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
+                                    # TODO add dirun
+    return p_3D.reshape(shape_out)  
     
 def compute_rho(p_3D,temp):
     """
@@ -130,21 +138,16 @@ def compute_zfull(ps,ak,bk,temp):
     Compute the altitude AGL in m
     """
     dim_out=temp.shape
-    zfull=fms_Z_calc(ps,ak,bk,temp.transpose([0,2,3,1]),topo=0.,lev_type='full') #transpose temp like PRESS_h
-    if len(zfull.shape)==4:
-        zfull=fms_Z_calc(ps,ak,bk,temp.transpose([0,2,3,1]),topo=0.,lev_type='full') #transpose temp like PRESS_h
-        zfull=zfull.transpose([0,3,1,2])# p_3D [tim,lat,lon,lev] ->[tim, lev, lat, lon]
-    if len(zfull.shape)==3:
-        zfull=fms_Z_calc(ps,ak,bk,temp.transpose([1,2,0]),topo=0.,lev_type='full') #transpose temp like PRESS_h
-        zfull=zfulltranspose([2,0,1]) #p_3D [lat,lon,lev] ->    [lev, lat, lon]
-    return zfull.reshape(dim_out)
+    if len(dim_out)==4:
+        zfull=fms_Z_calc(ps,ak,bk,temp.transpose([1,0,2,3]),topo=0.,lev_type='full') # temp: [tim,lev,lat,lon,lev] ->[lev,time, lat, lon]
+        zfull=zfull.transpose([1,0,2,3])# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
+    return zfull
     
 def compute_N(theta,zfull):
     """
     Compute the Brunt Vaisala freqency in rad/s
     """
     dtheta_dz  = dvar_dh(theta.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])        
-
     return np.sqrt(g/theta*dtheta_dz)
 
 
@@ -161,8 +164,8 @@ def compute_scorer(N,ucomp,zfull):
 def compute_DP_3D(ps,ak,bk,shape_out):
     #Compute the thickness of a layer
     p_half3D= fms_press_calc(ps,ak,bk,lev_type='half')
-    DP_3D=p_half3D[...,1:]- p_half3D[...,0:-1]
-    if len(DP_3D.shape)==4:DP_3D=DP_3D.transpose([0,3,1,2])# p_3D [tim,lat,lon,lev] ->[tim, lev, lat, lon]
+    DP_3D=p_half3D[1:,...,]- p_half3D[0:-1,...]
+    if len(DP_3D.shape)==4:DP_3D=DP_3D.transpose([1,0,2,3])# p_3D [tim,lat,lon,lev] ->[tim, lev, lat, lon]
     if len(DP_3D.shape)==3:DP_3D=DP_3D.transpose([2,0,1]) #p_3D [lat,lon,lev] ->    [lev, lat, lon]
     out=DP_3D.reshape(shape_out)
     return out
@@ -239,21 +242,30 @@ def main():
                     fileNC=Dataset(ifile, 'a', format='NETCDF4_CLASSIC')
                     #---temp and ps are always needed---
                     dim_out=fileNC.variables['temp'].dimensions #get dimension
-                    temp=fileNC.variables['temp'][:,:,:,:]
+                    temp=fileNC.variables['temp'][:]
                     shape_out=temp.shape
-                    ps=fileNC.variables['ps'][:,:,:]
+                    ps=fileNC.variables['ps'][:]
                     p_3D=compute_p_3D(ps,ak,bk,shape_out)
                     #----
-                    
+                    if ivar=='pfull3D': OUT=p_3D
                     if ivar=='rho':
                         OUT=compute_rho(p_3D,temp)    
                     if ivar=='theta':
                         OUT=compute_theta(p_3D,ps,temp)
                     if ivar=='w':
-                        omega=fileNC.variables['omega'][:,:,:,:]     
+                        omega=fileNC.variables['omega'][:]     
                         rho=compute_rho(p_3D,temp)         
                         OUT=compute_w(rho,omega)
+                         
                     if ivar=='zfull': OUT=compute_zfull(ps,ak,bk,temp) #TODO not with _pstd
+                    
+                    if ivar=='wspeed' or ivar=='wdir': 
+                        ucomp=fileNC.variables['ucomp'][:] 
+                        vcomp=fileNC.variables['vcomp'][:] 
+                        theta,mag=cart_to_azimut_TR(ucomp,vcomp,mode='from')
+                        if ivar=='wdir':OUT=theta
+                        if ivar=='wspeed':OUT=mag
+                            
                     if ivar=='N':
                         theta=compute_theta(p_3D,ps,temp)    
                         zfull=compute_zfull(ps,ak,bk,temp)  #TODO not with _pstd
@@ -263,15 +275,15 @@ def main():
                         zfull=compute_zfull(ps,ak,bk,temp) #TODO not with _pstd
                         N=compute_N(theta,zfull)  
                         
-                        ucomp=fileNC.variables['ucomp'][:,:,:,:] 
-                        vcomp=fileNC.variables['vcomp'][:,:,:,:]    
+                        ucomp=fileNC.variables['ucomp'][:] 
+                        vcomp=fileNC.variables['vcomp'][:]    
                         du_dz=dvar_dh(ucomp.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])
                         dv_dz=dvar_dh(vcomp.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])
                         OUT=N**2/(du_dz**2+dv_dz**2)
 
                     if ivar=='Tco2':OUT=compute_Tco2(p_3D,temp)
                     if ivar=='scorer_wl':
-                        ucomp=fileNC.variables['ucomp'][:,:,:,:]
+                        ucomp=fileNC.variables['ucomp'][:]
                         theta=compute_theta(p_3D,ps,temp)   
                         zfull=compute_zfull(ps,ak,bk,temp)
                         N=compute_N(theta,zfull)
@@ -291,7 +303,7 @@ def main():
                     if debug:raise
                     if str(exception)=='NetCDF: String match to name in use':
                         prYellow("""***Error*** Variable already exists""")
-                        prYellow("""Delete existing variables %s with 'MarsVars %s -rm %s'"""%(ivar,ifile,ivar))
+                        prYellow("""Delete existing variables %s with 'MarsVars.py %s -rm %s'"""%(ivar,ifile,ivar))
                     
         #=================================================================
         #=============Vertical Differentiation action=====================
@@ -322,9 +334,9 @@ def main():
                     
                     #---temp and ps are always needed---
                     dim_out=fileNC.variables['temp'].dimensions #get dimension
-                    temp=fileNC.variables['temp'][:,:,:,:]
-                    ps=fileNC.variables['ps'][:,:,:]
-                    zfull=fms_Z_calc(ps,ak,bk,temp,topo=0.,lev_type='full').transpose([3,0,1,2]) #z is first axis
+                    temp=fileNC.variables['temp'][:]
+                    ps=fileNC.variables['ps'][:]
+                    zfull=fms_Z_calc(ps,ak,bk,temp.transpose([1,0,2,3]),topo=0.,lev_type='full') #z is first axis
 
                     #differentiate the variable zith respect to z:
                     darr_dz=dvar_dh(var.transpose([1,0,2,3]),zfull).transpose([1,0,2,3]) 
@@ -366,7 +378,7 @@ def main():
                 print('Performing colum integration: %s...'%(icol))
 
                 try:
-                    var=fileNC.variables[icol][:,:,:,:]
+                    var=fileNC.variables[icol][:]
                     #prRed(fileNC.variables[icol].units+'|')
                     newUnits=fileNC.variables[icol].units[:-3]+'/m2' # turn 'kg/kg'> to 'kg/m2'
                     newLong_name='column integration of '+fileNC.variables[icol].long_name
