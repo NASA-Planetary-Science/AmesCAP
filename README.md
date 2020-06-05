@@ -126,6 +126,7 @@ amesGCM3/
 ├── mars_data
 │   └── Legacy.fixed.nc
 └── mars_templates
+    ├──amesgcm_profile 
     └── legacy.in
 ```
 
