@@ -1,8 +1,9 @@
 import os
 import sys
 import subprocess
-from netCDF4 import Dataset
+from netCDF4 import Dataset, MFDataset
 import numpy as np
+import re
 #=========================================================================   
 #=========================Scripts utilities===============================
 #=========================================================================
@@ -35,10 +36,9 @@ def find_tod_in_diurn(fNcdf):
     Return:
         tod (string): 'time_of_day_16'or 'time_of_day_24'
     '''
-    from re import compile,match
-    regex=compile('time_of_day.')
+    regex=re.compile('time_of_day.')
     varset=fNcdf.variables.keys()
-    return [string for string in varset if match(regex, string)][0] #Exctract the 1st element of the list 
+    return [string for string in varset if re.match(regex, string)][0] #Exctract the 1st element of the list 
  
  
     
@@ -204,6 +204,138 @@ def check_file_tape(fileNcdf,abort=False):
              exit()
         else:
             pass
+
+
+def get_Ncdf_path(fNcdf):
+    '''
+    Return the full path of a Netcdf object.
+    Note that 'Dataset' and multi-files dataset (i.e. 'MFDataset') have different
+    attributes for the path, hence the need for this function.
+    Args:
+        fNcdf : Dataset or  MFDataset object          
+    Returns :
+        Path: string (list) for Dataset (MFDataset) 
+    '''
+    fname_out=getattr(fNcdf,'_files',False) #Only MFDataset has the_files attribute
+    if not fname_out: fname_out=getattr(fNcdf,'filepath')() #Regular Dataset
+    return fname_out
+
+
+def alt_FV3path(fullpaths,alt,test_exist=True):
+    '''
+    Internal function. given an interpolated daily, diurn or average file
+    return the raw or fixed file. Accept string or list as input
+    Args:
+        fullpaths : e.g '/u/path/00010.atmos_average_pstd.nc' or LIST
+            alt: alternative type 'raw' or 'fixed' 
+            test_exist=True test file existence on disk          
+    Returns :
+        Alternative path to raw or fixed file, e.g.
+                    '/u/path/00010.atmos_average.nc'
+                    '/u/path/00010.fixed.nc' 
+    '''
+    out_list=[] 
+    one_element=False
+    #Convert as list for generality
+    if type(fullpaths)==str:
+        one_element=True
+        fullpaths=[fullpaths]
+        
+    for fullpath in fullpaths:    
+        path, filename = os.path.split(fullpath)
+        DDDDD=filename.split('.')[0] #Get the date
+        ext=filename[-8:] #Get the extension
+        #This is an interpolated file
+        if alt=='raw':
+            if ext in ['_pstd.nc','_zstd.nc','_zagl.nc','plevs.nc']:
+                if ext =='plevs.nc':
+                    file_raw=filename[0:-9]+'.nc'
+                else:   
+                    file_raw=filename[0:-8]+'.nc'
+            else:
+                raise ValueError('In alt_FV3path(), FV3 file %s not recognized'%(filename))
+            new_full_path=path+'/'+file_raw
+        if alt=='fixed':
+            new_full_path=path+'/'+DDDDD+'.fixed.nc'
+        if test_exist and not (os.path.exists(new_full_path)):
+            raise ValueError('In alt_FV3path() %s does not exist '%(new_full_path))
+               
+        out_list.append(new_full_path)  
+    if one_element:out_list=out_list[0]  
+    return  out_list
+    
+def smart_reader(fNcdf,var_list,suppress_warning=False):
+    """
+    Smarter alternative to using var=fNcdf.variables['var'][:] when handling PROCESSED files that also check 
+    matching XXXXX.atmos_average.nc (or daily...) and XXXXX.fixed.nc files
+    
+    Args:
+        fNcdf: Netcdf file object (i.e. already opened with Dataset or MFDataset)
+        var_list: variable or list of variables, e.g 'areo' or ['pk','bk','areo']
+        suppress_warning: Suppress debug statement, useful if variable is not expected to be found in the file anyway  
+    Returns:
+        out_list: variables content as singleton or values to unpack
+        
+    -------    
+    Example: 
+    
+    from netCDF4 import Dataset
+    
+    fNcdf=Dataset('/u/akling/FV3/00668.atmos_average_pstd.nc','r') 
+     
+    ucomp= fNcdf.variables['ucomp'][:]   # << this is the regular way
+    vcomp= smart_reader(fNcdf,'vcomp')   # << this is exacly equivalent  
+    pk,bk,areo= smart_reader(fNcdf,['pk','bk','areo'])  # this will get 'areo' from 00668.atmos_average.nc is not available in the original _pstd.nc file
+                                                        # if pk and bk are absent from 0668.atmos_average.nc, it will also check 00668.fixed.n
+    *** NOTE ***
+        -Only the variables' content is returned, not the attributes
+    """  
+    
+    #This out_list is for the variable
+    out_list=[]
+    one_element=False
+    file_is_MF=False
+    
+    Ncdf_path= get_Ncdf_path(fNcdf) #Return string (Dataset) or list (MFDataset)
+    if type(Ncdf_path)==list:file_is_MF=True
+    
+    #For generality convert to list if only one variable is provided, e.g 'areo'>['areo']
+    if type(var_list)==str:
+        one_element=True
+        var_list=[var_list]
+
+    for ivar in var_list:
+    #First try to read in the original file
+        if ivar in fNcdf.variables.keys():
+            out_list.append(fNcdf.variables[ivar][:])
+        else:
+            full_path_try=alt_FV3path(Ncdf_path,alt='raw',test_exist=True) 
+            if file_is_MF:
+                f_tmp=MFDataset(full_path_try,'r')
+            else:    
+                f_tmp=Dataset(full_path_try,'r')
+                
+            if ivar in f_tmp.variables.keys():
+                out_list.append(f_tmp.variables[ivar][:])
+                if not suppress_warning: print('**Warning*** Using variable %s in %s instead of original file(s)'%(ivar,full_path_try))
+                f_tmp.close()
+            else:    
+                f_tmp.close()
+                full_path_try=alt_FV3path(Ncdf_path,alt='fixed',test_exist=True) 
+                if file_is_MF:full_path_try=full_path_try[0]
+                
+                f_tmp=Dataset(full_path_try,'r')
+                if ivar in f_tmp.variables.keys():
+                    out_list.append(f_tmp.variables[ivar][:])
+                    f_tmp.close()
+                    if not suppress_warning: print('**Warning*** Using variable %s in %s instead of original file(s)'%(ivar,full_path_try))
+                else: 
+                    print('***ERROR*** Variable %s not found in %s, NOR in raw output or fixed file'%(ivar,full_path_try))
+                    print('            >>> Assigning  %s  to NaN'%(ivar))
+                    f_tmp.close()
+                    out_list.append(np.NaN)
+    if one_element:out_list=out_list[0]
+    return out_list
 
             
 def progress(k,Nmax):

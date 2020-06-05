@@ -1,5 +1,6 @@
 import numpy as np
 from netCDF4 import Dataset
+import os
 
 def fms_press_calc(psfc,ak,bk,lev_type='full'):
     """
@@ -330,6 +331,9 @@ def pkbk_loader(NLAY,data_dir='/u/mkahre/MCMC/data_files'):
     file.close()
     return pk,bk 
     
+
+
+
     
 def zonal_avg_P_lat(Ls,var,Ls_target,Ls_angle,symmetric=True):
     """

@@ -1,37 +1,37 @@
 
 #==================================================
-#=========  INSTALLATION STEPS on NAS =============
+#  amesgcm and plotFV3 INSTALLATION STEPS on NAS
 #==================================================
 module purge
 module load python3/3.7.0
-#---This block is required for netcdf4 python-----
+
 module load comp-intel/2018.0.128
 module load hdf5/1.8.18_serial
 module load hdf4/4.2.12
 module load netcdf/4.4.1.1_serial
-#                  Use export in BASH !!
-setenv HDF5_DIR /nasa/hdf5/1.8.18_serial
-#--------------------------------------------------
+
+wget https://download.osgeo.org/proj/proj-7.0.0.tar.gz
+tar -zxvf proj-7.0.0.tar.gz
+
+#______________________________________________________________________________________________
+#               CSH/TSCH                         |               BASH
+#________________________________________________|_____________________________________________
+setenv HDF5_DIR /nasa/hdf5/1.8.18_serial         |  export HDF5_DIR=/nasa/hdf5/1.8.18_serial
+setenv PROJ_DIR /u/$USER/proj-7.0.0              |  export PROJ_DIR=/u/$USER/proj-7.0.0
+setenv GEOS_DIR /nasa/pkgsrc/sles12/2018Q3       |  export GEOS_DIR=/nasa/pkgsrc/sles12/2018Q3
+#----------------------------------------------------------------------------------------------
+
 python3.7 -m venv --system-site-packages amesGCM3
-#           source amesGCM3/bin/activate in BASH !!!!
-source amesGCM3/bin/activate.csh
+
+#______________________________________________________________________________________________
+#               CSH/TSCH                         |               BASH
+#________________________________________________|_____________________________________________
+source amesGCM3/bin/activate.csh                 |     source amesGCM3/bin/activate
+#----------------------------------------------------------------------------------------------
+
+pip install pyshp
+pip install pyproj==1.9.6
 pip install cftime==1.0.3.4
 pip install netCDF4==1.5.1.2
 pip install git+https://github.com/alex-kling/amesgcm.git
 deactivate
-
-
-#==================================================
-#======= Steps to perform 1 YR analysis ===========
-#==================================================
-
-
-source amesGCM3/bin/activate.csh
-MarsPull.py -ls 0 360
-MarsFiles.py LegacyGCM_Ls*.nc -fv3 average fixed
-MarsFiles.py *fixed.nc --combine
-MarsFiles.py *atmos_average.nc --combine
-MarsVars.py *atmos_average.nc -colint vap_mass ice_mass dst_mass
-MarsInterp.py *.atmos_average.nc -t pstd
-MarsPlot.py -i 00010.atmos_average_pstd.nc
-MarsPlot.py -do legacy

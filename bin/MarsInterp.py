@@ -10,7 +10,7 @@ import re         # string matching module to handle time_of_day_XX
 
 from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,vinterp,find_n
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-from amesgcm.Script_utils import section_content_amesgcm_profile
+from amesgcm.Script_utils import section_content_amesgcm_profile,find_tod_in_diurn
 from amesgcm.Ncdf_wrapper import Ncdf
 
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
@@ -181,14 +181,13 @@ def main():
 
         if len(ps.shape)==3:    
             do_diurn=False
+            tod_name='not_used'
             permut=[1,0,2,3] # Put vertical axis first for 4D variable, e.g (time,lev,lat,lon) >>> (lev,time,lat,lon)
                              #                              ( 0    1   2   3 ) >>> ( 1   0    2   3 )
         elif len(ps.shape)==4: 
             do_diurn=True
             #find time of day variable name
-            regex=re.compile('time_of_day.')
-            varset=fNcdf.variables.keys()
-            tod_name=[string for string in varset if re.match(regex, string)][0] #Exctract the 1st elemnt of the list
+            tod_name=find_tod_in_diurn(fNcdf)
             permut=[2,1,0,3,4]  #Same for diun files, e.g (time,time_of_day_XX,lev,lat,lon) >>> (lev,time_of_day_XX,time,lat,lon)
                                 #                         (  0        1         2   3   4)  >>> ( 2       1          0    3   4 )
         #== Compute levels in the file, these are permutted arrays
@@ -199,11 +198,11 @@ def main():
                 L_3D_P= fms_press_calc(ps,pk,bk,lev_type='full') #permuted by default, e.g lev is first
                 
             elif interp_type=='zagl':
-                temp=np.array(fNcdf.variables['temp'])
+                temp=fNcdf.variables['temp'][:]
                 L_3D_P= fms_Z_calc(ps,pk,bk,temp.transpose(permut),topo=0.,lev_type='full')
                 
             elif interp_type=='zstd': 
-                temp=np.array(fNcdf.variables['temp'])
+                temp=fNcdf.variables['temp'][:]
                 #Expend the zsurf array to the time dimension
                 zflat=np.repeat(zsurf[np.newaxis,:],ps.shape[0],axis=0)     
                 if do_diurn:
@@ -224,13 +223,8 @@ def main():
         fnew.copy_Ncaxis_with_content(fNcdf.variables['lon'])
         fnew.copy_Ncaxis_with_content(fNcdf.variables['lat'])
         fnew.copy_Ncaxis_with_content(fNcdf.variables['time'])
-        
-        
-        if do_diurn:
-            #find time_of_day variable name
-            regex=re.compile('time_of_day.')
-            tod_name=[string for string in var_list if re.match(regex, string)][0]
-            fnew.copy_Ncaxis_with_content(fNcdf.variables[tod_name])
+    
+        if do_diurn:fnew.copy_Ncaxis_with_content(fNcdf.variables[tod_name])
         
         #We will re-use the indices for each files, this speeds-up the calculation
         compute_indices=True    
@@ -242,10 +236,9 @@ def main():
                     index=find_n(L_3D_P,lev_in,reverse_input=need_to_reverse)
                     compute_indices=False
                     
-                #print("\r Interpolating: %s ..."%(ivar), end='')
                 prCyan("Interpolating: %s ..."%(ivar))
                 varIN=fNcdf.variables[ivar][:]
-                #==This with loop suppresses divided by zero error for the Legacy GCM==
+                #==This with loop suppresses divided by zero errors==
                 with np.errstate(divide='ignore', invalid='ignore'):
                     varOUT=vinterp(varIN.transpose(permut),L_3D_P,     
                                    lev_in,type=interp_technic,reverse_input=need_to_reverse,

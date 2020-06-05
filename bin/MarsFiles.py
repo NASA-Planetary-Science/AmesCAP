@@ -18,7 +18,7 @@ from netCDF4 import Dataset
 #===========
 from amesgcm.Ncdf_wrapper import Ncdf
 from amesgcm.FV3_utils import tshift
-from amesgcm.Script_utils import prYellow,prCyan,prRed
+from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn
 #---
 
 
@@ -216,10 +216,8 @@ def main():
             fnew.copy_all_dims_from_Ncfile(fdiurn)
 
             #find time of day variable name
-            regex=re.compile('time_of_day.')
-            varset=fdiurn.variables.keys()
-            tod_name=[string for string in varset if re.match(regex, string)]
-            print(tod_name)
+            tod_name=find_tod_in_diurn(fdiurn)
+            
             # find vertical dimension variable name
             if filei[:-3].endswith('_pstd'):
                 zaxis = 'pstd'
@@ -239,13 +237,13 @@ def main():
                 fnew.copy_Ncaxis_with_content(fdiurn.variables[zaxis])
 
             fnew.copy_Ncaxis_with_content(fdiurn.variables['time'])
-            fnew.copy_Ncaxis_with_content(fdiurn.variables[tod_name[0]])
+            fnew.copy_Ncaxis_with_content(fdiurn.variables[tod_name])
             #Only copy areo if existing in the original file:
             if 'areo' in  fdiurn.variables.keys():
                 fnew.copy_Ncvar(fdiurn.variables['areo'])
 
             # read 4D field and do time shift
-            tod_in=np.array(fdiurn.variables[tod_name[0]])
+            tod_in=np.array(fdiurn.variables[tod_name])
             longitude = np.array(fdiurn.variables['lon'])
             var_list = fdiurn.variables.keys() # get all variables from old file
 
@@ -257,23 +255,23 @@ def main():
                     ilat = vkeys.index('lat')
                     ilon = vkeys.index('lon')
                     itime = vkeys.index('time')
-                    itod = vkeys.index(tod_name[0])
+                    itod = vkeys.index(tod_name)
                     newvar = np.transpose(varIN,(ilon,ilat,itime,itod))
                     newvarOUT = tshift(newvar,lon=longitude,timex=tod_in)
                     varOUT = np.transpose(newvarOUT, (2,3,1,0))
                         
-                    fnew.log_variable(ivar,varOUT,['time',tod_name[0],'lat','lon'],fdiurn.variables[ivar].long_name,fdiurn.variables[ivar].units)
+                    fnew.log_variable(ivar,varOUT,['time',tod_name,'lat','lon'],fdiurn.variables[ivar].long_name,fdiurn.variables[ivar].units)
                 if (len(vkeys) == 5):
                     print(ivar)
                     ilat = vkeys.index('lat')
                     ilon = vkeys.index('lon')
                     iz  = vkeys.index(zaxis)
                     itime = vkeys.index('time')
-                    itod = vkeys.index(tod_name[0])
+                    itod = vkeys.index(tod_name)
                     newvar = np.transpose(varIN,(ilon,ilat,iz,itime,itod))
                     newvarOUT = tshift(newvar,lon=longitude,timex=tod_in)
                     varOUT = np.transpose(newvarOUT,(3,4,2,1,0))
-                    fnew.log_variable(ivar,varOUT,['time',tod_name[0],zaxis,'lat','lon'],fdiurn.variables[ivar].long_name,fdiurn.variables[ivar].units)
+                    fnew.log_variable(ivar,varOUT,['time',tod_name,zaxis,'lat','lon'],fdiurn.variables[ivar].long_name,fdiurn.variables[ivar].units)
             fnew.close()
             fdiurn.close()    
     

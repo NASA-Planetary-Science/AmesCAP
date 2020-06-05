@@ -50,7 +50,7 @@ parser.add_argument('-i', '--inspect_file', default=None,
                  help="""Inspect Netcdf file content. Variables are sorted by dimensions \n"""
                       """> Usage: MarsPlot -i 00000.atmos_daily.nc\n"""
                       """Options: use --dump (variable content) and --stat (min, mean,max) jointly with --inspect \n"""
-                      """>  MarsPlot -i 00000.atmos_daily.nc -dump pfull 'temp[6,:,30,10]'  ('quotes are needed in csh)\n"""
+                      """>  MarsPlot -i 00000.atmos_daily.nc -dump pfull 'temp[6,:,30,10]'  (quotes '' are needed when browsing dimensions)\n"""
                       """>  MarsPlot -i 00000.atmos_daily.nc -stat 'ucomp[5,:,:,:]' 'vcomp[5,:,:,:]'\n""")
 #These two options are to be used jointly with --inspect 
 parser.add_argument('--dump','-dump', nargs='+',default=None,
