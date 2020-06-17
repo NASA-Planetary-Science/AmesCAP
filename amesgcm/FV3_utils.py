@@ -309,29 +309,100 @@ def cart_to_azimut_TR(u,v,mode='from'):
     return np.mod(np.arctan2(u,v)*180/np.pi+cst,360),np.sqrt(u**2+v**2)
     
         
-def pkbk_loader(NLAY,data_dir='/u/mkahre/MCMC/data_files'):
-    """
-    Return the ak and bk values given a number of layers for standards resolutions 
-    Default directory is /lou/s2n/mkahre/MCMC/data_files/ 
-    Args:
-        NLAY: the number of layers (float or integer)
+def sfc_area_deg(lon1,lon2,lat1,lat2,R=3390000.):
+    '''
+    Return the surface between two set of latitudes/longitudes
+    S= Int[R**2 dlon cos(lat) dlat]     _____lat2
+    Args:                               \    \
+        lon1,lon2: in [degree]           \____\lat1
+        lat1,lat2: in [degree]        lon1    lon2
+        R: planetary radius in [m]
+    *** NOTE***
+    Lon and Lat define the corners of the area, not the grid cells' centers
+    
+    '''
+    lat1*=np.pi/180;lat2*=np.pi/180;lon1*=np.pi/180;lon2*=np.pi/180
+    return (R**2)*np.abs(lon1-lon2)*np.abs(np.sin(lat1)-np.sin(lat2))
+
+
+def area_meridional_cells_deg(lat_c,dlon,dlat,normalize=False,R=3390000.):
+    '''
+    Return area of invidual cells for a medidional band of thickness dlon
+    S= Int[R**2 dlon cos(lat) dlat]
+    with  sin(a)-sin(b)=2 cos((a+b)/2)sin((a+b)/2)   
+    >>> S= 2 R**2 dlon 2 cos(lat)sin(dlat/2)         _________lat+dlat/2
+    Args:                                            \    lat \             ^
+        lat_c: latitude of cell center in [degree]    \lon +   \            | dlat
+        dlon : cell angular width  in [degree]         \________\lat-dlat/2 v
+        dlat : cell angular height in [degree]   lon-dlon/2      lon+dlon/2         
+        R: planetary radius in [m]                       <------> 
+        normalize: if True, sum of output elements is 1.   dlon
     Returns:
-        pk: 1st vertical coordinate parameter [Pa]
-        bk: 2nd vertical coordinate parameter [none]
-    
-    *NOTE*    pk,bk have a size NLAY+1 since they define the position of the layer interfaces (half layers):
-              p_half = pk + bk*p_sfc 
-    """  
-    from netCDF4 import Dataset
-    NLAY=int(NLAY)
-    file=Dataset(data_dir+'/akbk_L%i.nc'%(NLAY), 'r', format='NETCDF4_CLASSIC')
-    pk=file.variables['pk'][:]
-    bk=file.variables['bk'][:]
-    file.close()
-    return pk,bk 
-    
+        S: areas of the cells, same size as lat_c in [m2] or normalized by the total area
+    '''  
+    #Initialize
+    area_tot=1.
+    #Compute total area in a longitude band extending from lat[0]-dlat/2 to lat_c[-1]+dlat/2
+    if normalize:
+        area_tot= sfc_area_deg(-dlon/2,dlon/2,lat_c[0]-dlat/2,lat_c[-1]+dlat/2,R)
+    #Now convert to radians    
+    lat_c=lat_c*np.pi/180
+    dlon*=np.pi/180
+    dlat*=np.pi/180    
+    return 2.*R**2*dlon*np.cos(lat_c)*np.sin(dlat/2.)/area_tot
 
+def area_weights_deg(VAR_shape,lat_c):
+    '''
+    Return weights for averaging of the variable VAR. 
+    For 2D and higher-dimensional arrays, latitude must be the SECOND TO LAST dimension, e.g:   
+    Args:              
+        VAR_shape: Variable's shape, e.g. [133,36,48,46] typically obtained with 'VAR.shape' 
+        Expected dimensions are:                      (lat)
+                                                 (lat, lon)
+                                           (time, lat, lon)
+                                      (time, lev, lat, lon)
+                           (time, time_of_day_24, lat, lon)    
+                      (time, time_of_day_24, lev, lat, lon) 
+                                               
+        lat_c: latitude of cell centers in [degree] 
+           >>> Because dlat is computed as lat_c[1]-lat_c[0] lat_c may be truncated on either end (e.g. lat= [-20 ...,0... +50]) but must be contineous. 
+    Returns:
+        W: weights for VAR, ready for standard averaging as np.mean(VAR*W) [condensed form] or np.average(VAR,weights=W) [expended form]
 
+    ***NOTE***
+    Given a variable VAR: 
+        VAR= [v1,v2,...vn]    
+    Regular average is:    
+        AVG = (v1+v2+... vn)/N   
+    Weighted average is:     
+        AVG_W= (v1*w1+v2*w2+... vn*wn)/(w1+w2+...wn)   
+        
+    This function returns: 
+        W= [w1,w2,... ,wn]*N/(w1+w2+...wn)
+        
+    >>> Therfore taking a regular average of (VAR*W) with np.mean(VAR*W) or np.average(VAR,weights=W) returns the weighted-average of VAR
+    Use np.average(VAR,weights=W,axis=X) to average over specific axis
+        
+    ''' 
+    
+    #VAR or lat is a scalar, do nothing
+    if len(np.atleast_1d(lat_c))==1 or len(np.atleast_1d(VAR_shape))==1:
+        return 1.
+    else:
+        ndim_others=np.prod(VAR_shape)/len(lat_c)
+        #Then, lat has at least 2 elements
+        dlat=lat_c[1]-lat_c[0]   
+        #Calculate cell areas. Since it is normalized, we can use dlon= 1 and R=1 without changing the result
+        A=area_meridional_cells_deg(lat_c,1,dlat,normalize=True,R=1) #Note that sum(A)=(A1+A2+...An)=1  
+        #VAR is a 1D array. of size (lat). Easiest case since (w1+w2+...wn)=sum(A)=1 and N=len(lat)
+        if len(VAR_shape)==1:    
+            W= A*len(lat_c)
+        else: 
+            # Generate the appropriate shape for the area A, e.g  (time, lev, lat, lon) > (1, 1, lat, 1)
+            # In this case, N=time*lev*lat*lon and  (w1+w2+...wn) =time*lev*lon*sum(A) , therefore N/(w1+w2+...wn)=lat
+            reshape_shape=np.append([1 for i in range(0,len(VAR_shape)-2)],[VAR_shape[-2],1]).astype(int) 
+            W= A.reshape(reshape_shape)*len(lat_c)
+        return W*np.ones(VAR_shape)
 
     
 def zonal_avg_P_lat(Ls,var,Ls_target,Ls_angle,symmetric=True):
@@ -526,7 +597,6 @@ def sol_hhmmss(time_sol,lon_180=0.):
         lon_180: a float, the longitude in a -/+180 coordinate
     Returns:
         hours: float, the local time or  (hours,minutes, seconds)
-   
     """ 
     return second_hhmmss(time_sol*86400.,lon_180)
 
