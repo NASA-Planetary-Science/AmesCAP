@@ -40,6 +40,8 @@ def find_tod_in_diurn(fNcdf):
     varset=fNcdf.variables.keys()
     return [string for string in varset if re.match(regex, string)][0] #Exctract the 1st element of the list 
  
+
+
  
     
 def print_fileContent(fileNcdf):
@@ -219,6 +221,41 @@ def get_Ncdf_path(fNcdf):
     fname_out=getattr(fNcdf,'_files',False) #Only MFDataset has the_files attribute
     if not fname_out: fname_out=getattr(fNcdf,'filepath')() #Regular Dataset
     return fname_out
+
+
+def FV3_file_type(fNcdf): 
+    '''
+    Return the type of output files:
+    Args:
+        fNcdf: an (open) Netcdf file object 
+    Return:
+       f_type (string): 'fixed', 'average', 'daily', or 'diurn'
+       interp_type (string): 'pfull','pstd','zstd','zagl'
+    '''
+    #Get the full path from the file
+    fullpath=get_Ncdf_path(fNcdf)
+    #If MFDataset, get the 1st file in the list
+    if type(fullpath)==list:fullpath=fullpath[0]
+    
+    #Get the filename without the path
+    _,filename=os.path.split(fullpath)
+    
+    #Initialize
+    f_type='other'
+    interp_type='unknown'
+    
+    if 'fixed'         in filename:f_type='fixed'
+    if 'atmos_average' in filename:f_type='average'
+    if 'atmos_daily'   in filename:f_type='daily'
+    if 'atmos_diurn'   in filename:f_type='diurn'
+    
+    dims=fNcdf.dimensions.keys()
+    if 'pfull' in dims: interp_type='pfull'
+    if 'pstd'  in dims: interp_type='pstd'
+    if 'zstd'  in dims: interp_type='zstd'
+    if 'zagl'  in dims: interp_type='zagl'
+    return f_type,interp_type
+
 
 
 def alt_FV3path(fullpaths,alt,test_exist=True):

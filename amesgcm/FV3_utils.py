@@ -351,20 +351,20 @@ def area_meridional_cells_deg(lat_c,dlon,dlat,normalize=False,R=3390000.):
     dlat*=np.pi/180    
     return 2.*R**2*dlon*np.cos(lat_c)*np.sin(dlat/2.)/area_tot
 
-def area_weights_deg(VAR_shape,lat_c):
+def area_weights_deg(VAR_shape,lat_c,axis=-2):
     '''
-    Return weights for averaging of the variable VAR. 
-    For 2D and higher-dimensional arrays, latitude must be the SECOND TO LAST dimension, e.g:   
+    Return weights for averaging of the variable VAR.   
     Args:              
         VAR_shape: Variable's shape, e.g. [133,36,48,46] typically obtained with 'VAR.shape' 
-        Expected dimensions are:                      (lat)
-                                                 (lat, lon)
-                                           (time, lat, lon)
-                                      (time, lev, lat, lon)
-                           (time, time_of_day_24, lat, lon)    
-                      (time, time_of_day_24, lev, lat, lon) 
+        Expected dimensions are:                      (lat) [axis not need]
+                                                 (lat, lon) [axis=-2 or axis=0]
+                                           (time, lat, lon) [axis=-2 or axis=1]
+                                      (time, lev, lat, lon) [axis=-2 or axis=2]
+                           (time, time_of_day_24, lat, lon) [axis=-2 or axis=2]  
+                      (time, time_of_day_24, lev, lat, lon) [axis=-2 or axis=3]
                                                
         lat_c: latitude of cell centers in [degree] 
+        axis: Position of the latitude axis for 2D and higher-dimensional arrays. The default is the SECOND TO LAST dimension, e.g: axis=-2 
            >>> Because dlat is computed as lat_c[1]-lat_c[0] lat_c may be truncated on either end (e.g. lat= [-20 ...,0... +50]) but must be contineous. 
     Returns:
         W: weights for VAR, ready for standard averaging as np.mean(VAR*W) [condensed form] or np.average(VAR,weights=W) [expended form]
@@ -381,15 +381,14 @@ def area_weights_deg(VAR_shape,lat_c):
         W= [w1,w2,... ,wn]*N/(w1+w2+...wn)
         
     >>> Therfore taking a regular average of (VAR*W) with np.mean(VAR*W) or np.average(VAR,weights=W) returns the weighted-average of VAR
-    Use np.average(VAR,weights=W,axis=X) to average over specific axis
+    Use np.average(VAR,weights=W,axis=X) to average over a specific axis
         
     ''' 
     
     #VAR or lat is a scalar, do nothing
     if len(np.atleast_1d(lat_c))==1 or len(np.atleast_1d(VAR_shape))==1:
-        return 1.
+        return np.ones(VAR_shape)
     else:
-        ndim_others=np.prod(VAR_shape)/len(lat_c)
         #Then, lat has at least 2 elements
         dlat=lat_c[1]-lat_c[0]   
         #Calculate cell areas. Since it is normalized, we can use dlon= 1 and R=1 without changing the result
@@ -400,7 +399,8 @@ def area_weights_deg(VAR_shape,lat_c):
         else: 
             # Generate the appropriate shape for the area A, e.g  (time, lev, lat, lon) > (1, 1, lat, 1)
             # In this case, N=time*lev*lat*lon and  (w1+w2+...wn) =time*lev*lon*sum(A) , therefore N/(w1+w2+...wn)=lat
-            reshape_shape=np.append([1 for i in range(0,len(VAR_shape)-2)],[VAR_shape[-2],1]).astype(int) 
+            reshape_shape=[1 for i in range(0,len(VAR_shape))]
+            reshape_shape[axis]=len(lat_c)
             W= A.reshape(reshape_shape)*len(lat_c)
         return W*np.ones(VAR_shape)
 
