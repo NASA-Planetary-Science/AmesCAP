@@ -313,17 +313,17 @@ def make_FV3_files(fpath,typelistfv3,renameFV3=True,cwd=None):
                 var=histfile.variables['longitude']
                 npvar=var[:]
                 newf.add_dim_with_content('lon',npvar,'longitude',getattr(var,'units'),'X')
-            if dname == 'nlat':
+            elif dname == 'nlat':
                 var=histfile.variables['latitude']
                 npvar=var[:]
                 newf.add_dim_with_content('lat',npvar,'latitude',getattr(var,'units'),'Y')
 
-            if dname == 'time':
+            elif dname == 'time':
                 newf.add_dimension('time',None)
-            if dname == 'ntod' and typefv3=='diurn':
+            elif dname == 'ntod' and typefv3=='diurn':
                 dim=histfile.dimensions[dname]
                 newf.add_dimension('time_of_day_16',dim.size)
-            if dname == 'nlay':
+            elif dname == 'nlay':
                 nlay=histfile.dimensions[dname]
                 num =nlay.size
                 nump=num+1
@@ -344,6 +344,9 @@ def make_FV3_files(fpath,typelistfv3,renameFV3=True,cwd=None):
                 newf.add_dim_with_content('phalf',phalf,'ref half pressure level','Pa')
                 newf.log_axis1D('pk',pk,('phalf'),longname_txt='pressure part of the hybrid coordinate',units_txt='Pa',cart_txt='')
                 newf.log_axis1D('bk',bk,('phalf'),longname_txt='sigma part of the hybrid coordinate',units_txt='Pa',cart_txt='')
+            else:
+                dim=histfile.dimensions[dname]
+                newf.add_dimension(dname,dim.size)
 
         #===========END function========
 
