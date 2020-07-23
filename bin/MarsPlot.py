@@ -125,9 +125,7 @@ def main():
     else:
         width_inch=pixel_width/my_dpi;height_inch=pixel_width/1.4/my_dpi
             
-                
-
-
+            
     objectList=[Fig_2D_lon_lat('fixed.zsurf',True),\
                 Fig_2D_lat_lev('atmos_average.ucomp',True),\
                 Fig_2D_time_lat('atmos_average.taudust_IR',False),\
@@ -780,23 +778,23 @@ def get_overwrite_dim_2D(varfull_bracket,plot_type,fdim1,fdim2,ftod):
     '''
     Given a single varfull object with '{}' return the new dimensions to overwrite the default dimensions
     Args:
-        varfull_bracket: a  varfull object with any of the following atmos_average.temp{lev=10;time=350;lon=155;lat=25} (brackets and semi-colons separated)
+        varfull_bracket: a  varfull object with any of the following atmos_average.temp{lev=10;ls=350;lon=155;lat=25} (brackets and semi-colons separated)
         plot_type: the type of plot
 
     Returns:
         varfull: the varfull without brackets: e.g 'atmos_average.temp'
         fdim_out1,fdim_out1,ftod_out: the dimensions to update
     NOTE:
-    2D_lon_lat:   fdim1=time
+    2D_lon_lat:   fdim1=ls
                   fdim2=lev
 
-    2D_lat_lev: fdim1=time
+    2D_lat_lev: fdim1=ls
                   fdim2=lon
 
     2D_time_lat: fdim1=lon
                   fdim2=lev
 
-    2D_lon_lev: fdim1=time
+    2D_lon_lev: fdim1=ls
                   fdim2=lat
 
     2D_time_lev:fdim1=lat
@@ -814,20 +812,20 @@ def get_overwrite_dim_2D(varfull_bracket,plot_type,fdim1,fdim2,ftod):
     if overwrite_txt.count(';')<overwrite_txt.count('=')-1: prYellow("""*** Error:, use semicolon ';' to separate dimensions '{}'""")
     for i in range(0,ndim_update):
         #Check if the requested dimension exists:
-        if split_dim[i].split('=')[0] not in ['time','lev','lon','lat','tod']:
-            prYellow("""*** Warning***, ignoring dimension: '"""+split_dim[i].split('=')[0]+"""' not recognized: must be 'time','lev','lon', 'lat' or 'tod'""")
+        if split_dim[i].split('=')[0] not in ['ls','lev','lon','lat','tod']:
+            prYellow("""*** Warning***, ignoring dimension: '"""+split_dim[i].split('=')[0]+"""' not recognized: must be 'ls','lev','lon', 'lat' or 'tod'""")
 
         if plot_type=='2D_lon_lat':
-            if split_dim[i].split('=')[0]=='time':fdim_out1=filter_input(split_dim[i].split('=')[1],'float')
+            if split_dim[i].split('=')[0]=='ls' :fdim_out1=filter_input(split_dim[i].split('=')[1],'float')
             if split_dim[i].split('=')[0]=='lev': fdim_out2=filter_input(split_dim[i].split('=')[1],'float')
         if plot_type=='2D_lat_lev':
-            if split_dim[i].split('=')[0]=='time':fdim_out1=filter_input(split_dim[i].split('=')[1],'float')
+            if split_dim[i].split('=')[0]=='ls':fdim_out1=filter_input(split_dim[i].split('=')[1],'float')
             if split_dim[i].split('=')[0]=='lon': fdim_out2=filter_input(split_dim[i].split('=')[1],'float')
         if plot_type=='2D_time_lat':
             if split_dim[i].split('=')[0]=='lon': fdim_out1=filter_input(split_dim[i].split('=')[1],'float')
             if split_dim[i].split('=')[0]=='lev': fdim_out2=filter_input(split_dim[i].split('=')[1],'float')
         if plot_type=='2D_lon_lev':
-            if split_dim[i].split('=')[0]=='time':fdim_out1=filter_input(split_dim[i].split('=')[1],'float')
+            if split_dim[i].split('=')[0]=='ls':fdim_out1=filter_input(split_dim[i].split('=')[1],'float')
             if split_dim[i].split('=')[0]=='lat': fdim_out2=filter_input(split_dim[i].split('=')[1],'float')
         if plot_type=='2D_time_lev':
             if split_dim[i].split('=')[0]=='lat': fdim_out1=filter_input(split_dim[i].split('=')[1],'float')
@@ -846,7 +844,7 @@ def get_overwrite_dim_1D(varfull_bracket,t_in,lat_in,lon_in,lev_in):
     '''
     Given a single varfull object with '{}' return the new dimensions to overwrite the default dimensions
     Args:
-        varfull_bracket: a  varfull object with any of the following atmos_average.temp{lev=10;time=350;lon=155;lat=25}
+        varfull_bracket: a  varfull object with any of the following atmos_average.temp{lev=10;ls=350;lon=155;lat=25}
         t_in,lat_in,lon_in,lev_in: the variables as defined by self.t ,self.lat,self.lon,self.lev
 
     Returns:
@@ -867,7 +865,7 @@ def get_overwrite_dim_1D(varfull_bracket,t_in,lat_in,lon_in,lev_in):
             prYellow("""*** Warning***, ignoring dimension: '"""+split_dim[i].split('=')[0]+"""' not recognized: must be 'time','lev','lon', 'lat' or 'tod'""")
 
 
-        if split_dim[i].split('=')[0]=='time':t_out=  filter_input(split_dim[i].split('=')[1],'float')
+        if split_dim[i].split('=')[0]=='ls':t_out=  filter_input(split_dim[i].split('=')[1],'float')
         if split_dim[i].split('=')[0]=='lat': lat_out=filter_input(split_dim[i].split('=')[1],'float')
         if split_dim[i].split('=')[0]=='lon': lon_out=filter_input(split_dim[i].split('=')[1],'float')
         if split_dim[i].split('=')[0]=='lev': lev_out=filter_input(split_dim[i].split('=')[1],'float')
@@ -948,7 +946,7 @@ def make_template():
         customFileIN.write(lh+"""    -C) lat   = equator slice \n""")
         customFileIN.write(lh+"""    -D) lon   = 'all', i.e zonal average over all longitudes\n""")
         customFileIN.write(lh+"""    -E) tod   = '15', i.e. 3pm UT \n""")
-        customFileIN.write(lh+"""> Overwrite the dimension using atmos_average.temp{time = 100 ; lev= 5.,10; lon= all ; lat=45} Use brackets '{}' and SEMI-COLONS ';'\n""")
+        customFileIN.write(lh+"""> Overwrite the dimension using atmos_average.temp{ls = 90 ; lev= 5.,10; lon= all ; lat=45} Use brackets '{}' and SEMI-COLONS ';'\n""")
         customFileIN.write(lh+"""     Specific Time Of Day (tod) in diurn files are accessed with brackets, '{}', e.g. atmos_diurn.ps{tod = 20} \n""")
         customFileIN.write(lh+""">    Units must be the same as the free dimension block, i.e time [Ls], lev [Pa/m], lon [+/-180 deg], and lat [deg]   \n""")
         customFileIN.write(lh+"""TIME SERIES AND 1D PLOTS:\n""")
@@ -1106,7 +1104,6 @@ def namelist_parser(Custom_file):
                 #====debug only===========
                 #print('------nobj=',nobj,' npage=',npage,'-------------------')
 
-
                 #===================
                 if holding and not addLine:
                     subplotList.append(subplotID)
@@ -1120,8 +1117,6 @@ def namelist_parser(Custom_file):
                     #Do not update  subplotID if we are adding lines
                     subplotList.append(subplotID-1)
                     panelList.append(subplotID-1)
-
-
 
                 else :
                     #We are not holding: there is a single panel per page and we reset the page counter
@@ -1613,13 +1608,21 @@ class Fig_2D(object):
                 if add_fdim:self.fdim_txt+=temp_txt
 
 
-            var=f.variables[var_name][ti,zi,lati,loni].reshape(len(np.atleast_1d(ti)),\
-                                                               len(np.atleast_1d(zi)),\
-                                                               len(np.atleast_1d(lati)),\
-                                                               len(np.atleast_1d(loni)))
+
+            #If diurn, we will do the tod averaging first.
+            if f_type=='diurn':
+                var=f.variables[var_name][ti,todi,zi,lati,loni].reshape(len(np.atleast_1d(ti)),len(np.atleast_1d(todi)),\
+                     len(np.atleast_1d(zi)),len(np.atleast_1d(lati)),len(np.atleast_1d(loni)))
+                var=np.mean(var,axis=1)
+            else:
+                var=f.variables[var_name][ti,zi,lati,loni].reshape(len(np.atleast_1d(ti)),\
+                                                                len(np.atleast_1d(zi)),\
+                                                                len(np.atleast_1d(lati)),\
+                                                                len(np.atleast_1d(loni)))
             f.close()
             w=area_weights_deg(var.shape,lat[lati])
             if no_area :w[:]=1.;prCyan('Setting w=1')
+
             
             #(u'time', u'pfull', u'lat', u'lon')
             if plot_type=='2D_lon_lat': return  lon,   lat,  np.mean(np.mean(var,axis=1),axis=0),var_info
