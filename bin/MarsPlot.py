@@ -840,16 +840,16 @@ def get_overwrite_dim_2D(varfull_bracket,plot_type,fdim1,fdim2,ftod):
     # NOTE: filter_input() convert the text '3' or '4,5' to real variable, e.g numpy.array([3.]) numpy.array([4.,5.])
     return varfull_no_bracket, fdim_out1, fdim_out2,ftod_out
 
-def get_overwrite_dim_1D(varfull_bracket,t_in,lat_in,lon_in,lev_in):
+def get_overwrite_dim_1D(varfull_bracket,t_in,lat_in,lon_in,lev_in,ftod_in):
     '''
     Given a single varfull object with '{}' return the new dimensions to overwrite the default dimensions
     Args:
-        varfull_bracket: a  varfull object with any of the following atmos_average.temp{lev=10;ls=350;lon=155;lat=25}
-        t_in,lat_in,lon_in,lev_in: the variables as defined by self.t ,self.lat,self.lon,self.lev
+        varfull_bracket: a  varfull object with any of the following atmos_average.temp{lev=10;ls=350;lon=155;lat=25;tod=15}
+        t_in,lat_in,lon_in,lev_in,ftod_in: the variables as defined by self.t ,self.lat,self.lon,self.lev,self.ftod
 
     Returns:
         varfull the varfull without brackets: e.g 'atmos_average.temp'
-        t_out,lat_out,lon_out,lev_out: the dimensions to update
+        t_out,lat_out,lon_out,lev_out,ftod_out: the dimensions to update
     NOTE:
 
     '''
@@ -870,8 +870,12 @@ def get_overwrite_dim_1D(varfull_bracket,t_in,lat_in,lon_in,lev_in):
         if split_dim[i].split('=')[0]=='lon': lon_out=filter_input(split_dim[i].split('=')[1],'float')
         if split_dim[i].split('=')[0]=='lev': lev_out=filter_input(split_dim[i].split('=')[1],'float')
 
+        #Always get tod    
+        ftod_out=None
+        if split_dim[i].split('=')[0]=='tod': ftod_out=filter_input(split_dim[i].split('=')[1],'float')
     # NOTE: filter_input() convert the text '3' or '4,5' to real variable, e.g numpy.array([3.]) numpy.array([4.,5.])
-    return varfull_no_bracket, t_out,lat_out,lon_out,lev_out
+
+    return varfull_no_bracket, t_out,lat_out,lon_out,lev_out,ftod_out
 
 
 def create_exec(raw_input,varfull_list):
@@ -1066,7 +1070,7 @@ def namelist_parser(Custom_file):
                     if line.split('>')[1].strip(): #line exist and is not blank
                         input_paths.append(line.split('>')[1].strip())
 
-    #===========skip lines until the kweywor 'START' is found================
+    #===========skip lines until the kweyword 'START' is found================
     nsafe=0 #initialize counter for safety
     while True and nsafe<1000:
         line=customFileIN.readline()
@@ -1507,8 +1511,6 @@ class Fig_2D(object):
         if f_type=='diurn' and dim_info[1][:11]=='time_of_day':
             tod=f.variables[dim_info[1]][:]
             todi,temp_txt =get_tod_index(ftod,tod)
-            var=np.mean(f.variables[var_name][:,todi,:])
-            
             #Update dim_info from ('time','time_of_day_XX, 'lat', 'lon') to  ('time', 'lat', 'lon')
             # OR ('time','time_of_day_XX, 'pfull','lat', 'lon') to  ('time', 'pfull','lat', 'lon') etc...
             dim_info=(dim_info[0],)+dim_info[2:]
@@ -2013,6 +2015,7 @@ class Fig_1D(object):
         self.lat=None
         self.lon=None
         self.lev=None
+        self.ftod=None  #Time of day
         # Logic
         self.doPlot=doPlot
         self.plot_type='1D_time'
@@ -2110,12 +2113,12 @@ class Fig_1D(object):
 
         if not '[' in varfull:
             if '{' in varfull :
-                varfull,t_req,lat_req,lon_req,lev_req=get_overwrite_dim_1D(varfull,self.t,self.lat,self.lon,self.lev)
+                varfull,t_req,lat_req,lon_req,lev_req,ftod_req=get_overwrite_dim_1D(varfull,self.t,self.lat,self.lon,self.lev,self.ftod)
                 # t_req,lat_req,lon_req,lev_req constain the dimensions to overwrite is '{}' are provided of the defaultself.t,self.lat,self.lon,self.lev otherwise
             else: # no '{ }' use to overwrite the dimensions, copy the plots' defaults
-                t_req,lat_req,lon_req,lev_req= self.t,self.lat,self.lon,self.lev
+                t_req,lat_req,lon_req,lev_req,ftod_req= self.t,self.lat,self.lon,self.lev,self.ftod
             sol_array,filetype,var,simuID=split_varfull(varfull)
-            xdata,var,var_info=self.read_NCDF_1D(var,filetype,simuID,sol_array,plot_type,t_req,lat_req,lon_req,lev_req)
+            xdata,var,var_info=self.read_NCDF_1D(var,filetype,simuID,sol_array,plot_type,t_req,lat_req,lon_req,lev_req,ftod_req)
 
         else:
             VAR=[]
@@ -2129,23 +2132,24 @@ class Fig_1D(object):
             lat_list=[None]*len(varfull_list)
             lon_list=[None]*len(varfull_list)
             lev_list=[None]*len(varfull_list)
+            ftod_list=[None]*len(varfull_list)
             expression_exec=create_exec(varfull,varfull_list)
 
             for i in range(0,len(varfull_list)):
                 #---If overwriting dimensions, get the new dimensions and trim varfull from the '{lev=5.}' part
                 if '{' in varfull_list[i] :
-                    varfull_list[i],t_list[i],lat_list[i],lon_list[i],lev_list[i]=get_overwrite_dim_1D(varfull_list[i],self.t,self.lat,self.lon,self.lev)
+                    varfull_list[i],t_list[i],lat_list[i],lon_list[i],lev_list[i],ftod_list[i]=get_overwrite_dim_1D(varfull_list[i],self.t,self.lat,self.lon,self.lev,self.ftod)
                 else: # no '{ }' use to overwrite the dimensions, copy the plots' defaults
-                    t_list[i],lat_list[i],lon_list[i],lev_list[i]=self.t,self.lat,self.lon,self.lev
+                    t_list[i],lat_list[i],lon_list[i],lev_list[i],ftod_list[i]=self.t,self.lat,self.lon,self.lev,self.ftod
                 sol_array,filetype,var,simuID=split_varfull(varfull_list[i])
-                xdata,temp,var_info=self.read_NCDF_1D(var,filetype,simuID,sol_array,plot_type,t_list[i],lat_list[i],lon_list[i],lev_list[i])
+                xdata,temp,var_info=self.read_NCDF_1D(var,filetype,simuID,sol_array,plot_type,t_list[i],lat_list[i],lon_list[i],lev_list[i],ftod_list[i])
                 VAR.append(temp)
             var_info=varfull
             var=eval(expression_exec)
 
         return xdata,var,var_info
 
-    def read_NCDF_1D(self,var_name,file_type,simuID,sol_array,plot_type,t_req,lat_req,lon_req,lev_req):
+    def read_NCDF_1D(self,var_name,file_type,simuID,sol_array,plot_type,t_req,lat_req,lon_req,lev_req,ftod_req):
         '''
         Given an expression object with '[]' return the different variable needed
         Args:
@@ -2153,7 +2157,7 @@ class Fig_1D(object):
             file_type: 'fixed' or 'atmos_average'
             sol_array: sol if different from default e.g '02400'
             plot_type: e.g '1D_lon', '1D_lat'
-            t_req,lat_req,lon_req,lev_req: the Ls, lat, lon and level [Pa/m] requested
+            t_req,lat_req,lon_req,lev_req,ftod_req: the Ls, lat, lon, level [Pa/m] and time of day requested
         Returns:
             dim_array: the axis, e.g one array of longitudes
             var_array: the variable extracted
@@ -2162,6 +2166,10 @@ class Fig_1D(object):
 
         f, var_info,dim_info, dims=self.prep_file(var_name,file_type,simuID,sol_array)
 
+
+        #Get the file type ('fixed','diurn', 'average', 'daily') and interpolation type (pfull, zstd etc...)
+        f_type,interp_type=FV3_file_type(f)
+        
         #If self.fdim is empty, add the variable (do only once)
         add_fdim=False
         if not self.fdim_txt.strip():add_fdim=True
@@ -2171,8 +2179,23 @@ class Fig_1D(object):
         lat=f.variables['lat'][:];lati=np.arange(0,len(lat))
         lon=f.variables['lon'][:];loni=np.arange(0,len(lon))
 
-        #Load variable depending on the requested free dimensions
 
+        
+        #------------------------Time of Day ----------------------------
+        # For diurn files, select data on the time of day axis and update dimensions
+        # so the resulting variable is the same as atmos_average and atmos_daily file.
+        # Time of day is always the 2nd dimension, i.e. dim_info[1]
+      
+        if f_type=='diurn' and dim_info[1][:11]=='time_of_day':
+            tod=f.variables[dim_info[1]][:]
+            todi,temp_txt =get_tod_index(ftod_req,tod)
+            var=np.mean(f.variables[var_name][:,todi,:])
+            
+            #Update dim_info from ('time','time_of_day_XX, 'lat', 'lon') to  ('time', 'lat', 'lon')
+            # OR ('time','time_of_day_XX, 'pfull','lat', 'lon') to  ('time', 'pfull','lat', 'lon') etc...
+            dim_info=(dim_info[0],)+dim_info[2:]
+            
+            if add_fdim:self.fdim_txt+=temp_txt
         #======static======= , ignore level and time dimension
         if dim_info==(u'lat', u'lon'):
             if plot_type=='1D_lat':
@@ -2210,10 +2233,17 @@ class Fig_1D(object):
                 if add_fdim:self.fdim_txt+=temp_txt
                 lati,temp_txt =get_lat_index(lat_req,lat)
                 if add_fdim:self.fdim_txt+=temp_txt
-
-            #Extract data and close file
-            var=f.variables[var_name][ti,lati,loni].reshape(len(np.atleast_1d(ti)),len(np.atleast_1d(lati)),len(np.atleast_1d(loni)))
+            
+            if f_type=='diurn':
+                var=f.variables[var_name][ti,todi,lati,loni].reshape(len(np.atleast_1d(ti)),len(np.atleast_1d(todi)),\
+                     len(np.atleast_1d(lati)),len(np.atleast_1d(loni)))
+                var=np.mean(var,axis=1)
+            else:
+                var=f.variables[var_name][ti,lati,loni].reshape(len(np.atleast_1d(ti)),len(np.atleast_1d(lati)),len(np.atleast_1d(loni)))
             f.close()
+            
+            
+            
             w=area_weights_deg(var.shape,lat[lati])
             if no_area :w[:]=1.;prCyan('Setting w=1')
             
@@ -2275,11 +2305,19 @@ class Fig_1D(object):
                 if add_fdim:self.fdim_txt+=temp_txt
 
 
-            var=f.variables[var_name][ti,zi,lati,loni].reshape(len(np.atleast_1d(ti)),\
-                                                               len(np.atleast_1d(zi)),\
-                                                               len(np.atleast_1d(lati)),\
-                                                               len(np.atleast_1d(loni)))
+            
+            #If diurn, we will do the tod averaging first.
+            if f_type=='diurn':
+                var=f.variables[var_name][ti,todi,zi,lati,loni].reshape(len(np.atleast_1d(ti)),len(np.atleast_1d(todi)),\
+                     len(np.atleast_1d(zi)),len(np.atleast_1d(lati)),len(np.atleast_1d(loni)))
+                var=np.mean(var,axis=1)
+            else:
+                var=f.variables[var_name][ti,zi,lati,loni].reshape(len(np.atleast_1d(ti)),\
+                                                                len(np.atleast_1d(zi)),\
+                                                                len(np.atleast_1d(lati)),\
+                                                                len(np.atleast_1d(loni)))
             f.close()
+            
             w=area_weights_deg(var.shape,lat[lati])
             if no_area :w[:]=1.;prCyan('Setting w=1')
             
