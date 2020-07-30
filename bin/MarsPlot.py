@@ -8,7 +8,8 @@ import sys       #system command
 
 
 #==============
-from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,print_varContent,FV3_file_type
+from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple
+from amesgcm.Script_utils import print_fileContent,print_varContent,FV3_file_type,wbr_cmap,rjw_cmap
 from amesgcm.FV3_utils import lon360_to_180,lon180_to_360,UT_LTtxt,area_weights_deg
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
@@ -16,7 +17,6 @@ try:
     matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
     import matplotlib.pyplot as plt
     import numpy as np
-    from matplotlib.cm import get_cmap
     from matplotlib.ticker import MultipleLocator, FuncFormatter  #format ticks
     from netCDF4 import Dataset, MFDataset
     from numpy import sqrt, exp, max, mean, min, log, log10,sin,cos
@@ -25,12 +25,11 @@ except ImportError as error_msg:
     prYellow("Error while importing modules")
     prYellow('Your are using python '+str(sys.version_info[0:3]))
     prYellow('Please, source your virtual environment');prCyan('    source envPython3.7/bin/activate.csh \n')
-    print("Error was: "+ error_msg.message)
+    print("Error was: ", error_msg)
     exit()
 except Exception as exception:
     # Output unexpected Exceptions.
-    print(exception, False)
-    print(exception.__class__.__name__ + ": " + exception.message)
+    print(exception.__class__.__name__ + ": ", exception)
     exit()
 
 
@@ -38,7 +37,7 @@ except Exception as exception:
 #                  ARGUMENTS PARSER
 #======================================================
 
-global current_version;current_version=2.0
+global current_version;current_version=2.1
 parser = argparse.ArgumentParser(description="""\033[93mAnalysis Toolkit for the Ames GCM, V%s\033[00m """%(current_version),
                                 formatter_class=argparse.RawTextHelpFormatter)
 
@@ -1683,10 +1682,14 @@ class Fig_2D(object):
 
 
     def filled_contour(self,xdata,ydata,var):
+        cmap=self.axis_opts
+        #Personnalized colormaps
+        if cmap=='wbr':cmap=wbr_cmap()
+        if cmap=='rjw':cmap=rjw_cmap()
         if self.range:
-            plt.contourf(xdata, ydata,var,np.linspace(self.range[0],self.range[1],levels),extend='both',cmap=self.axis_opts)
+            plt.contourf(xdata, ydata,var,np.linspace(self.range[0],self.range[1],levels),extend='both',cmap=cmap)
         else:
-            plt.contourf(xdata, ydata,var,levels,cmap=self.axis_opts)
+            plt.contourf(xdata, ydata,var,levels,cmap=cmap)
         cbar=plt.colorbar(orientation='horizontal',aspect=50)
         cbar.ax.tick_params(labelsize=label_size-self.nPan//2) #shrink the colorbar label as the number of subplot increase
 
@@ -1712,20 +1715,28 @@ class Fig_2D_lon_lat(Fig_2D):
         super(Fig_2D_lon_lat, self).make_template('Plot 2D lon X lat','Ls 0-360','Level [Pa/m]','lon','lat')
 
     def do_plot(self):
+        
+        proj='ortho'
+        basemap_avail=False
+        
         #create figure
         ax=super(Fig_2D_lon_lat, self).fig_init()
         try:    #try to do the figure, will return the error otherwise
             lon,lat,var,var_info=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull,self.plot_type)
             lon180,var=shift_data(lon,var)
-
-            super(Fig_2D_lon_lat, self).filled_contour(lon180, lat,var)
-
-            #---Add topo contour---
-            zsurf=get_topo_2D(self.simuID,self.sol_array) #get topo
-
-            lon180,zsurf=shift_data(lon,zsurf)
-            plt.contour(lon180, lat,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
-            #----
+            
+            if basemap_avail:
+                m = Basemap(projection='cyl',resolution = 'c')
+                m.contourf(lon180,lat,var)
+            else:    
+                super(Fig_2D_lon_lat, self).filled_contour(lon180, lat,var)
+    
+                #---Add topo contour---
+                zsurf=get_topo_2D(self.simuID,self.sol_array) #get topo
+    
+                lon180,zsurf=shift_data(lon,zsurf)
+                plt.contour(lon180, lat,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
+                #----
 
             if self.varfull2:
                 _,_,var2,var_info2=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull2,self.plot_type)
@@ -2046,7 +2057,7 @@ class Fig_1D(object):
         customFileIN.write("Ls 0-360       = {0}\n".format(self.t))           #3
         customFileIN.write("Latitude       = {0}\n".format(self.lat))         #4
         customFileIN.write("Lon +/-180     = {0}\n".format(self.lon))         #5
-        customFileIN.write("Level [Pa/m]     = {0}\n".format(self.lev))         #6
+        customFileIN.write("Level [Pa/m]   = {0}\n".format(self.lev))         #6
         customFileIN.write("Axis Options  : lat,lon+/-180,[Pa/m],sols = [None,None] | var = [None,None] | linestyle = - \n")#7
 
     def read_template(self):
@@ -2305,7 +2316,7 @@ class Fig_1D(object):
                 if add_fdim:self.fdim_txt+=temp_txt
 
 
-            
+    
             #If diurn, we will do the tod averaging first.
             if f_type=='diurn':
                 var=f.variables[var_name][ti,todi,zi,lati,loni].reshape(len(np.atleast_1d(ti)),len(np.atleast_1d(todi)),\
