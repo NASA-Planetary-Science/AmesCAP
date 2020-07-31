@@ -1245,10 +1245,17 @@ def mollweide2cart(LAT,LON):
         X,Y: cartesian coordinates for the latitudes and longitudes
     '''
     
-    LAT=LAT*np.pi/180
-    LON=LON*np.pi/180
+    LAT=np.array(LAT)*np.pi/180
+    LON=np.array(LON)*np.pi/180
     lon0=0
     
+    #Float or 1D array
+    if len(np.atleast_1d(LAT).shape)==1:
+        nlat=len(np.atleast_1d(LAT))
+        LAT=LAT.reshape((1,nlat))
+        LON=LON.reshape((1,nlat))
+        
+    # 2D array    
     nlat=LAT.shape[0]
     nlon=LAT.shape[1]
     theta=np.zeros((nlat))
@@ -1265,41 +1272,48 @@ def mollweide2cart(LAT,LON):
             theta0=theta1    
         if sum==100: print("Warning,in mollweide2cart():  Reached Max iterations")   
         theta[i]=theta1
-    THETA=np.repeat(theta[:,np.newaxis],nlon,axis=1)    
+    THETA=np.repeat(theta[:,np.newaxis],nlon,axis=1)   
+     
     X = 2*np.sqrt(2)/np.pi*(LON-lon0)*np.cos(THETA)
     Y =  np.sqrt(2)*np.sin(THETA)
-    return X, Y
+    return np.squeeze(X), np.squeeze(Y)
 
 
 def robin2cart(LAT,LON):
     '''
     Robinson projection, convert from lat/lon to cartesian coordinates
     Args:
-        LAT,LON: 1D or 2D array of latitudes, longitudes in degree
+        LAT,LON: floats, 1D or 2D array (nalt,nlon) of latitudes, longitudes in degree
     Returns:
         X,Y: cartesian coordinates for the latitudes and longitudes
     '''
     lon0=0.
-    LAT=LAT*np.pi/180
-    LON=LON*np.pi/180
     
+    LAT=np.array(LAT)*np.pi/180
+    LON=np.array(LON)*np.pi/180
+        
     lat_ref=np.array([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90.])*np.pi/180
     x_ref=np.array([1.0000,0.9986,0.9954,0.9900,0.9822,0.9730,0.9600,0.9427,0.9216,0.8962,0.8679,0.8350,0.7986,0.7597,0.7186,0.6732,0.6213,0.5722,0.5322])
     y_ref=np.array([0.0000,0.0620,0.1240,0.1860,0.2480,0.3100,0.3720,0.4340,0.4958,0.5571,0.6176,0.6769,0.7346,0.7903,0.8435,0.8936,0.9394,0.9761,1.0000])
     
-    nlat=LAT.shape[0]
-    nlon=LAT.shape[1]
-
-    lat=LAT[:,0]
-    x1=lin_interp(np.abs(lat),lat_ref,x_ref)
-    y1=np.sign(lat)*lin_interp(np.abs(lat),lat_ref,y_ref)
-        
-    X1=np.repeat(x1[:,np.newaxis],nlon,axis=1) 
-    Y1=np.repeat(y1[:,np.newaxis],nlon,axis=1) 
+    #Float or 1D array
+    if len(np.atleast_1d(LAT).shape)==1:
+        X1=lin_interp(np.abs(LAT),lat_ref,x_ref)
+        Y1=np.sign(LAT)*lin_interp(np.abs(LAT),lat_ref,y_ref)
+    else:    
+        # 2D array
+        nlat=LAT.shape[0]
+        nlon=LAT.shape[1]
+        lat=LAT[:,0]
+        x1=lin_interp(np.abs(lat),lat_ref,x_ref)
+        y1=np.sign(lat)*lin_interp(np.abs(lat),lat_ref,y_ref)
+            
+        X1=np.repeat(x1[:,np.newaxis],nlon,axis=1) 
+        Y1=np.repeat(y1[:,np.newaxis],nlon,axis=1) 
     
     X = 0.8487*X1*(LON-lon0)
     Y =  1.3523*Y1
     
     return X,Y
-
+    
 #===================== (End projections section) ================================             
