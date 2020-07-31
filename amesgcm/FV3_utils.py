@@ -1134,3 +1134,172 @@ def tshift(array, lon=None, timex=None, nsteps_out=None):
     narray = np.reshape(narray,ndimsfinal)
 
     return narray
+
+def lin_interp(X_in,X_ref,Y_ref):
+    '''
+    Simple linear interpolation with no dependance on scipy 
+    Args:
+        X_in (float or array): input values
+        X_ref (array): x values
+        Y_ref (array): y values
+    Returns:
+        Y_out: y value linearly interpolated at X_in
+    '''
+    X_ref=np.array(X_ref);Y_ref=np.array(Y_ref)
+    #===Definition of the interpolating function=====
+    def lin_oneElement(x,X_ref,Y_ref):
+        if x<X_ref.min() or x>X_ref.max():
+            return np.NaN
+        #Find closest left-hand size index
+        n=np.argmin(np.abs(x-X_ref))
+        if X_ref[n]>x:n-=1
+        a=(Y_ref[n+1]-Y_ref[n])/(X_ref[n+1]-X_ref[n]) 
+        b=Y_ref[n]-a*X_ref[n]
+        return a*x+b 
+         
+    # ======Wrapper to the function above=====    
+    if len(np.atleast_1d(X_in))==1: 
+        Y_out= lin_oneElement(X_in,X_ref,Y_ref)     
+    else :
+        X_in=np.array(X_in)
+        Y_out=np.zeros_like(X_in)
+        for i,x_in in enumerate(X_in):
+         Y_out[i]=lin_oneElement(x_in,X_ref,Y_ref)
+    return Y_out    
+
+def add_cyclic(data,lon):
+    """
+    Add an additional cyclic (overlapping) point to a 2D array, useful for azimuth and orthographic projections
+    Args:
+        data: 2D array of size (nlat,nlon)
+        lon: 1D array of longitudes
+    Returns:
+        data_c: 2D array of size (nlat,nlon+1), with last column identical to the 1st
+        lon_c: 1D array of longitudes size nlon+1 where the last element is lon[-1]+dlon
+        
+    """
+    #Compute increment
+    dlon=lon[1]-lon[0]
+    #Create new array, size [nlon+1] 
+    data_c=np.zeros((data.shape[0],data.shape[1]+1),np.float)  
+    data_c[:,0:-1] = data[:,:];data_c[:,-1] = data[:,0]
+    return data_c,np.append(lon,lon[-1]+dlon)
+        
+#==================================Projections==================================
+'''
+The projections below were implemented by Alex Kling, following:
+An Album of Map Projections,
+USGS  Professional Paper 1453, (1994)
+>> https://pubs.usgs.gov/pp/1453/report.pdf  
+'''
+#===============================================================================
+
+def azimuth2cart(LAT,LON,lat0,lon0=0):
+    '''
+    Azimuthal equidistant projection, convert from lat/lon to cartesian coordinates
+    Args:
+        LAT,LON: 1D or 2D array of latitudes, longitudes in degree, size [nlat,nlon]
+        lat0,lon0:(floats) coordinates of the pole
+    Returns:
+        X,Y: cartesian coordinates for the latitudes and longitudes    
+    '''
+    
+    LAT=LAT*np.pi/180;lat0=lat0*np.pi/180
+    LON=LON*np.pi/180;lon0=lon0*np.pi/180
+    
+    c = np.arccos(np.sin(lat0) * np.sin(LAT) + np.cos(lat0) * np.cos(LAT) * np.cos(LON-lon0))
+    k = c / np.sin(c)
+    X = k * np.cos(LAT) * np.sin(LON-lon0)
+    Y = k * (np.cos(lat0)*np.sin(LAT) - np.sin(lat0)*np.cos(LAT)*np.cos(LON-lon0))
+    return X, Y
+
+def ortho2cart(LAT,LON,lat0,lon0=0):
+    '''
+    Orthographic projection, convert from lat/lon to cartesian coordinates
+    Args:
+        LAT,LON: 1D or 2D array of latitudes, longitudes in degree, size [nlat,nlon]
+        lat0,lon0:(floats) coordinates of the pole
+    Returns:
+        X,Y: cartesian coordinates for the latitudes and longitudes
+        MASK: NaN array that is used to hide the back side of the planet
+    '''
+    
+    LAT=LAT*np.pi/180;lat0=lat0*np.pi/180
+    LON=LON*np.pi/180;lon0=lon0*np.pi/180
+    MASK=np.ones_like(LON)
+    
+    X =  np.cos(LAT) * np.sin(LON-lon0)
+    Y =  np.cos(lat0)*np.sin(LAT) -np.sin(lat0)*np.cos(LAT)*np.cos(LON-lon0)
+    
+    #Filter values on the other side of the globe, i.e cos(c)<0
+    cosc = np.sin(lat0) * np.sin(LAT) + np.cos(lat0) * np.cos(LAT) * np.cos(LON-lon0)
+    MASK[cosc<0]=np.NaN
+    return X, Y,MASK
+
+def mollweide2cart(LAT,LON):
+    '''
+    Mollweide projection, convert from lat/lon to cartesian coordinates
+    Args:
+        LAT,LON: 1D or 2D array of latitudes, longitudes in degree, size [nlat,nlon]
+    Returns:
+        X,Y: cartesian coordinates for the latitudes and longitudes
+    '''
+    
+    LAT=LAT*np.pi/180
+    LON=LON*np.pi/180
+    lon0=0
+    
+    nlat=LAT.shape[0]
+    nlon=LAT.shape[1]
+    theta=np.zeros((nlat))
+    for i in range(0,nlat):
+        lat=LAT[i,0]
+        theta0=lat
+        sum=0
+        running=True
+        #Solve for theta using Newton–Raphson
+        while running and sum<=100:
+            theta1=theta0-(2*theta0+np.sin(2*theta0)-np.pi*np.sin(lat))/(2+2*np.cos(2*theta0))
+            sum+=1;
+            if np.abs((theta1-theta0))<10**-3:running=False
+            theta0=theta1    
+        if sum==100: print("Warning,in mollweide2cart():  Reached Max iterations")   
+        theta[i]=theta1
+    THETA=np.repeat(theta[:,np.newaxis],nlon,axis=1)    
+    X = 2*np.sqrt(2)/np.pi*(LON-lon0)*np.cos(THETA)
+    Y =  np.sqrt(2)*np.sin(THETA)
+    return X, Y
+
+
+def robin2cart(LAT,LON):
+    '''
+    Robinson projection, convert from lat/lon to cartesian coordinates
+    Args:
+        LAT,LON: 1D or 2D array of latitudes, longitudes in degree
+    Returns:
+        X,Y: cartesian coordinates for the latitudes and longitudes
+    '''
+    lon0=0.
+    LAT=LAT*np.pi/180
+    LON=LON*np.pi/180
+    
+    lat_ref=np.array([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90.])*np.pi/180
+    x_ref=np.array([1.0000,0.9986,0.9954,0.9900,0.9822,0.9730,0.9600,0.9427,0.9216,0.8962,0.8679,0.8350,0.7986,0.7597,0.7186,0.6732,0.6213,0.5722,0.5322])
+    y_ref=np.array([0.0000,0.0620,0.1240,0.1860,0.2480,0.3100,0.3720,0.4340,0.4958,0.5571,0.6176,0.6769,0.7346,0.7903,0.8435,0.8936,0.9394,0.9761,1.0000])
+    
+    nlat=LAT.shape[0]
+    nlon=LAT.shape[1]
+
+    lat=LAT[:,0]
+    x1=lin_interp(np.abs(lat),lat_ref,x_ref)
+    y1=np.sign(lat)*lin_interp(np.abs(lat),lat_ref,y_ref)
+        
+    X1=np.repeat(x1[:,np.newaxis],nlon,axis=1) 
+    Y1=np.repeat(y1[:,np.newaxis],nlon,axis=1) 
+    
+    X = 0.8487*X1*(LON-lon0)
+    Y =  1.3523*Y1
+    
+    return X,Y
+
+#===================== (End projections section) ================================             
