@@ -11,6 +11,7 @@ import sys       #system command
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple
 from amesgcm.Script_utils import print_fileContent,print_varContent,FV3_file_type,wbr_cmap,rjw_cmap
 from amesgcm.FV3_utils import lon360_to_180,lon180_to_360,UT_LTtxt,area_weights_deg
+from amesgcm.FV3_utils import add_cyclic,azimuth2cart,mollweide2cart,robin2cart,ortho2cart
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
     import matplotlib
@@ -651,11 +652,12 @@ def read_axis_options(axis_options_txt):
     '''
     Return axis customization options
     Args:
-        axis_options_txt: One liner string: 'Axis Options  : lon = [5,8] | lat = [None,None] | cmap = jet'
+        axis_options_txt: One liner string: 'Axis Options  : lon = [5,8] | lat = [None,None] | cmap = jet |proj = cart'
     Returns:
         Xaxis: X-axis bounds as a numpy array or None if undedefined
         Yaxis: Y-axis bounds as a numpy array or None if undedefined
-        custom_line: string, i.e colormap ('jet', 'spectral') or line options, e.g '--r' for dashed red
+        custom_line1: string, i.e colormap ('jet', 'spectral') or line options, e.g '--r' for dashed red
+        custom_line2: None of string for projections, e.g 'ortho -125,45'
 
     '''
     list_txt=axis_options_txt.split(':')[1].split('|')
@@ -678,8 +680,13 @@ def read_axis_options(axis_options_txt):
         else:
             Yaxis.append(np.float(txt.split(',')[i].strip()))
     #Line or colormap
-    custom_line=list_txt[2].split('=')[1].strip()
-    return Xaxis, Yaxis,custom_line
+    custom_line1=list_txt[2].split('=')[1].strip()
+    #Projection information, if any:
+    if len(list_txt)==3:
+        custom_line2=None
+    elif len(list_txt)==4:
+        custom_line2=list_txt[3].split('=')[1].strip()   
+    return Xaxis, Yaxis,custom_line1,custom_line2
 
 def split_varfull(varfull):
     '''
@@ -955,10 +962,13 @@ def make_template():
         customFileIN.write(lh+"""TIME SERIES AND 1D PLOTS:\n""")
         customFileIN.write(lh+"""> Use 'Dimension = AXIS' to set the varying axis\n""")
         customFileIN.write(lh+"""> The other free dimensions accept value, 'all' or valmin,valmax as above\n""")
-        customFileIN.write(lh+"""AXIS OPTIONS:\n""")
+        customFileIN.write(lh+"""AXIS OPTIONS AND PROJECTIONS:\n""")
         customFileIN.write(lh+"""Set the x-axis and y-axis limits in the figure units. All Matplolib styles are supported:\n""")
         customFileIN.write(lh+"""> 'cmap' changes the colormap: 'jet' (winds), 'spectral' (temperature), 'bwr' (diff plot)\n""")
         customFileIN.write(lh+"""> 'line' sets the line style:  '-r' (solid red), '--g' (dashed green), '-ob' (solid & blue markers)\n""")
+        customFileIN.write(lh+"""> 'proj' sets the projection: Cylindrical options are 'cart' (cartesian), 'robin'  (Robinson), 'moll' (Mollweide) \n""")
+        customFileIN.write(lh+""">                              Azimutal   options are 'Npole' (north pole), 'Spole' (south pole), 'ortho' (Orthographic)  \n""")
+        customFileIN.write(lh+""">  Azimutal projections accept customization arguments: 'Npole lat_max', 'Spole lat_min' , 'ortho lon_center, lat_center' \n""")        
         customFileIN.write(lh+"""KEYWORDS:\n""")
         customFileIN.write(lh+"""> 'HOLD ON' [blocks of figures] 'HOLD OFF' groups the figures as a multi-panel page\n""")
         customFileIN.write(lh+"""> [line plot 1] 'ADD LINE' [line plot 2] adds similar 1D-plots on the same figure)\n""")
@@ -1367,7 +1377,8 @@ class Fig_2D(object):
 
         self.Xlim=None
         self.Ylim=None
-        self.axis_opts='jet'
+        self.axis_opt1='jet'
+        self.axis_opt2=None #place holder for projections
 
     def make_template(self,plot_txt,fdim1_txt,fdim2_txt,Xaxis_txt,Yaxis_txt):
         customFileIN.write("<<<<<<<<<<<<<<| {0:<15} = {1} |>>>>>>>>>>>>>\n".format(plot_txt,self.doPlot))
@@ -1378,7 +1389,12 @@ class Fig_2D(object):
         customFileIN.write("{0:<15}= {1}\n".format(fdim2_txt,self.fdim2))    #4
         customFileIN.write("2nd Variable   = %s\n"%(self.varfull2))          #6
         customFileIN.write("Contours Var 2 = %s\n"%(self.contour2))          #7
-        customFileIN.write("Axis Options  : {0} = [None,None] | {1} = [None,None] | cmap = jet \n".format(Xaxis_txt,Yaxis_txt))
+        
+        #Write colormap AND projection if plot is of the type 2D_lon_lat
+        if self.plot_type=='2D_lon_lat':
+            customFileIN.write("Axis Options  : {0} = [None,None] | {1} = [None,None] | cmap = jet | proj = cart \n".format(Xaxis_txt,Yaxis_txt)) #8
+        else: 
+            customFileIN.write("Axis Options  : {0} = [None,None] | {1} = [None,None] | cmap = jet \n".format(Xaxis_txt,Yaxis_txt))    #8
 
     def read_template(self):
         self.title= rT('char')                   #1
@@ -1388,7 +1404,7 @@ class Fig_2D(object):
         self.fdim2=rT('float')                   #5
         self.varfull2=rT('char')                 #6
         self.contour2=rT('float')                #7
-        self.Xlim,self.Ylim,self.axis_opts=read_axis_options(customFileIN.readline())     #7
+        self.Xlim,self.Ylim,self.axis_opt1,self.axis_opt2=read_axis_options(customFileIN.readline())     #8
 
         #Various sanity checks
         if self.range and len(np.atleast_1d(self.range))==1:
@@ -1680,20 +1696,18 @@ class Fig_2D(object):
             plt.savefig(self.fig_name,dpi=my_dpi )
             if out_format!="pdf":print("Saved:" +self.fig_name)
 
-
     def filled_contour(self,xdata,ydata,var):
-        cmap=self.axis_opts
-        #Personnalized colormaps
+        cmap=self.axis_opt1
+        #Personalized colormaps
         if cmap=='wbr':cmap=wbr_cmap()
         if cmap=='rjw':cmap=rjw_cmap()
         if self.range:
             plt.contourf(xdata, ydata,var,np.linspace(self.range[0],self.range[1],levels),extend='both',cmap=cmap)
         else:
             plt.contourf(xdata, ydata,var,levels,cmap=cmap)
+            
         cbar=plt.colorbar(orientation='horizontal',aspect=50)
         cbar.ax.tick_params(labelsize=label_size-self.nPan//2) #shrink the colorbar label as the number of subplot increase
-
-        #self.nPan
 
     def solid_contour(self,xdata,ydata,var,contours):
        np.seterr(divide='ignore', invalid='ignore') #prevent error message when making contour
@@ -1715,49 +1729,155 @@ class Fig_2D_lon_lat(Fig_2D):
         super(Fig_2D_lon_lat, self).make_template('Plot 2D lon X lat','Ls 0-360','Level [Pa/m]','lon','lat')
 
     def do_plot(self):
-        
-        proj='ortho'
-        basemap_avail=False
-        
+    
         #create figure
         ax=super(Fig_2D_lon_lat, self).fig_init()
         try:    #try to do the figure, will return the error otherwise
             lon,lat,var,var_info=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull,self.plot_type)
             lon180,var=shift_data(lon,var)
+            #get topo
+            zsurf=get_topo_2D(self.simuID,self.sol_array) 
+            _,zsurf=shift_data(lon,zsurf)
             
-            if basemap_avail:
-                m = Basemap(projection='cyl',resolution = 'c')
-                m.contourf(lon180,lat,var)
-            else:    
+            projfull=self.axis_opt2
+            #------------------------------------------------------------------------
+            #If proj = cart, use the generic contours utility from the Fig_2D() class
+            #------------------------------------------------------------------------
+            if projfull=='cart':
+                
                 super(Fig_2D_lon_lat, self).filled_contour(lon180, lat,var)
-    
                 #---Add topo contour---
-                zsurf=get_topo_2D(self.simuID,self.sol_array) #get topo
-    
-                lon180,zsurf=shift_data(lon,zsurf)
                 plt.contour(lon180, lat,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
-                #----
 
-            if self.varfull2:
-                _,_,var2,var_info2=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull2,self.plot_type)
-                lon180,var2=shift_data(lon,var2)
-                super(Fig_2D_lon_lat, self).solid_contour(lon180, lat,var2,self.contour2)
-                var_info+=" (& "+var_info2+")"
+                if self.varfull2:
+                    _,_,var2,var_info2=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull2,self.plot_type)
+                    lon180,var2=shift_data(lon,var2)
+                    super(Fig_2D_lon_lat, self).solid_contour(lon180, lat,var2,self.contour2)
+                    var_info+=" (& "+var_info2+")"
+    
+                if self.Xlim:plt.xlim(self.Xlim)
+                if self.Ylim:plt.ylim(self.Ylim)
 
-
-            if self.Xlim:plt.xlim(self.Xlim)
-            if self.Ylim:plt.ylim(self.Ylim)
-
-            super(Fig_2D_lon_lat, self).make_title(var_info,'Longitude','Latitude')
+                super(Fig_2D_lon_lat, self).make_title(var_info,'Longitude','Latitude')
              #--- Annotation---
+                ax.xaxis.set_major_locator(MultipleLocator(30))
+                ax.xaxis.set_minor_locator(MultipleLocator(10))
+                ax.yaxis.set_major_locator(MultipleLocator(15))
+                ax.yaxis.set_minor_locator(MultipleLocator(5))
+                plt.xticks(fontsize=label_size-self.nPan//2, rotation=0)
+                plt.yticks(fontsize=label_size-self.nPan//2, rotation=0)
+            #-------------------------------------------------------------------
+            #                      Special projections
+            #--------------------------------------------------------------------    
+            else:
+                #Personalized colormaps
+                cmap=self.axis_opt1
+                if cmap=='wbr':cmap=wbr_cmap()
+                if cmap=='rjw':cmap=rjw_cmap()
+                
+                ax.axis('off') 
+                ax.patch.set_color('1') #Nan are reverse to white for projections
+                
+                LON,LAT=np.meshgrid(lon180,lat)
+                
+                #Add meridans and parallel
+                meridians=np.arange(-180,180,30)
+                parallels=np.arange(-60,90,30)
+                #---------------------------------------------------------------
+                if projfull=='robin':
+                    LON,LAT=np.meshgrid(lon180,lat)
+                    X,Y=robin2cart(LAT,LON)
+                    
+                    #Add meridans and parallel
+                    for mer in meridians:
+                        xg,yg=robin2cart(lat,lat*0+mer)
+                        xl,yl=robin2cart(90,mer)
+                        plt.plot(xg,yg,':k',lw=0.5)
+                        plt.text(xl,yl,'  %i'%(mer), fontsize=6)
+                    
+                    for par in parallels:
+                        xg,yg=robin2cart(lon180*0+par,lon180)
+                        xl,yl=robin2cart(par,180)
+                        plt.plot(xg,yg,':k',lw=0.5)    
+                        plt.text(xl,yl,'%i S'%(par), fontsize=6)
+                        
+                #---------------------------------------------------------------
+                if projfull=='moll':
+                    LON,LAT=np.meshgrid(lon180,lat)
+                    X,Y=mollweide2cart(LAT,LON)
+                    
 
-            ax.xaxis.set_major_locator(MultipleLocator(30))
-            ax.xaxis.set_minor_locator(MultipleLocator(10))
-            ax.yaxis.set_major_locator(MultipleLocator(15))
-            ax.yaxis.set_minor_locator(MultipleLocator(5))
-            plt.xticks(fontsize=label_size-self.nPan//2, rotation=0)
-            plt.yticks(fontsize=label_size-self.nPan//2, rotation=0)
+                    
+                
+                if projfull[0:5] in ['Npole','Spole','ortho']:
+                    #Common to all azimutal projections
+                    var,_=add_cyclic(var,lon180)
+                    zsurf,lon180=add_cyclic(zsurf,lon180)
+                    LON,LAT=np.meshgrid(lon180,lat)
+                    lon_lat_custom=None #Initialization
+                    lat_b=None
+                    
+                    #Get custom lat/lon, if any
+                    if len(projfull)>5:lon_lat_custom=filter_input(projfull[5:],'float')
+                        
+                if projfull[0:5]=='Npole':
+                    X,Y=azimuth2cart(LAT,LON,90,0)   
+                    lat_b=45
+                    if not(lon_lat_custom is None):lat_b=lon_lat_custom #bounding lat
+                    
 
+                        
+                if projfull[0:5]=='Spole':
+                    X,Y=azimuth2cart(LAT,LON,-90,0)   
+                    lat_b=-45
+                    if not( lon_lat_custom is None):lat_b=lon_lat_custom #bounding lat
+                if projfull[0:5]=='ortho':
+                    #Initialization
+                    lon_p,lat_p=-120,20
+                    if not( lon_lat_custom is None):lon_p=lon_lat_custom[0];lat_p=lon_lat_custom[1] #bounding lat
+                    X,Y,MASK=ortho2cart(LAT,LON,lat_p,lon_p)
+                    #Mask opposite side of the planet
+                    var=var*MASK
+                    zsurf=zsurf*MASK
+                    
+                    
+                
+                if self.range:
+                    plt.contourf(X, Y,var,np.linspace(self.range[0],self.range[1],levels),extend='both',cmap=cmap)
+                else:
+                    plt.contourf(X, Y,var,levels,cmap=cmap)
+                
+                
+                        
+                
+                cbar=plt.colorbar(orientation='horizontal',aspect=50)
+                cbar.ax.tick_params(labelsize=label_size-self.nPan//2) #shrink the colorbar label as the number of subplot increase
+                
+                #---Add topo contour---
+                plt.contour(X, Y,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
+                
+                if self.varfull2:
+                    lon,lat,var2,var_info2=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull2,self.plot_type)
+                    lon180,var2=shift_data(lon,var2)
+                    LON,LAT=np.meshgrid(lon180,lat)
+                    if projfull=='robin':X,Y=robin2cart(LAT,LON)
+                    if projfull=='moll':X,Y=mollweide2cart(LAT,LON)
+                    
+                    
+                    np.seterr(divide='ignore', invalid='ignore') #prevent error message when making contour
+   
+                
+                    if self.contour2 is None:
+                        CS=plt.contour(X, Y,var2,11,colors='k',linewidths=3)
+                    else:
+                        #If one contour is provided (as float), convert to array
+                        if type(self.contours2)==float:self.contour2=[self.contour2]
+                        CS=plt.contour(X, Y,var2,self.contour2,colors='k',linewidths=3)
+                    plt.clabel(CS, inline=1, fontsize=14,fmt='%g')
+                    
+                    var_info+=" (& "+var_info2+")"
+                
+                
             self.success=True
 
         except Exception as e: #Return the error
@@ -2046,7 +2166,7 @@ class Fig_1D(object):
 
         self.Dlim=None #Dimension limit
         self.Vlim=None #variable limits
-        self.axis_opts='-'
+        self.axis_opt1='-'
 
 
 
@@ -2067,7 +2187,7 @@ class Fig_1D(object):
         self.lat=rT('float')                #4
         self.lon=rT('float')                #5
         self.lev=rT('float')                #6
-        self.Dlim,self.Vlim,self.axis_opts=read_axis_options(customFileIN.readline())     #7
+        self.Dlim,self.Vlim,self.axis_opt1,_=read_axis_options(customFileIN.readline())     #7
 
         self.plot_type=self.get_plot_type()
 
@@ -2402,7 +2522,7 @@ class Fig_1D(object):
 
             if self.plot_type=='1D_lat':
 
-                plt.plot(var,xdata,self.axis_opts,lw=2,label=txt_label)
+                plt.plot(var,xdata,self.axis_opt1,lw=2,label=txt_label)
                 plt.xlabel(var_info,fontsize=label_size-self.nPan//2)
                 plt.ylabel('Latitude',fontsize=label_size-self.nPan//2)
 
@@ -2414,7 +2534,7 @@ class Fig_1D(object):
             if self.plot_type=='1D_lon':
                 lon180,var=shift_data(xdata,var)
 
-                plt.plot(lon180,var,self.axis_opts,lw=2,label=txt_label)
+                plt.plot(lon180,var,self.axis_opt1,lw=2,label=txt_label)
                 plt.xlabel('Longitude',fontsize=label_size-self.nPan//2)
                 plt.ylabel(var_info,fontsize=label_size-self.nPan//2)
 
@@ -2427,7 +2547,7 @@ class Fig_1D(object):
             if self.plot_type=='1D_time':
                 tim=xdata[0,:];Ls=xdata[1,:]
 
-                plt.plot(Ls,var,self.axis_opts,lw=2,label=txt_label)
+                plt.plot(Ls,var,self.axis_opt1,lw=2,label=txt_label)
                 plt.ylabel(var_info,fontsize=label_size-self.nPan//2)
                 #Axis formatting
                 if self.Vlim:plt.ylim(self.Vlim)
@@ -2446,7 +2566,7 @@ class Fig_1D(object):
 
             if self.plot_type=='1D_lev':
 
-                plt.plot(var,xdata,self.axis_opts,lw=2,label=txt_label)
+                plt.plot(var,xdata,self.axis_opt1,lw=2,label=txt_label)
                 plt.xlabel(var_info,fontsize=label_size-self.nPan//2)
                 
 
