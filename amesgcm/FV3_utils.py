@@ -1152,7 +1152,7 @@ def lin_interp(X_in,X_ref,Y_ref):
             return np.NaN
         #Find closest left-hand size index
         n=np.argmin(np.abs(x-X_ref))
-        if X_ref[n]>x:n-=1
+        if X_ref[n]<x:n-=1
         a=(Y_ref[n+1]-Y_ref[n])/(X_ref[n+1]-X_ref[n]) 
         b=Y_ref[n]-a*X_ref[n]
         return a*x+b 
