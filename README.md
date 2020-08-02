@@ -126,7 +126,7 @@ amesGCM3/
 ├── mars_data
 │   └── Legacy.fixed.nc
 └── mars_templates
-    ├──amesgcm_profile 
+    ├──amesgcm_profile
     └── legacy.in
 ```
 
@@ -178,7 +178,7 @@ It is also safe to delete the entire _amesGCM3_ virtual environment directory as
 The following steps will be used to access the data, reduce it, compute additional diagnostics, interpolate the diagnostics to standard pressures levels, and visualize the results.
 ![](./docs/cheat_sheet.png)
 ## Download raw Legacy GCM outputs
-The data from the Legacy GCM is archived every 1.5 hours (i.e 16 times a day) and packaged in chunks of 10 sols (1 sol = 1 martian days). Files are available for download on the MCMC Data portal at : [https://data.nas.nasa.gov/legacygcm/data_legacygcm.php](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php), and referenced by their solar longitude or "_Ls_", which  is 0° at the vernal equinox (beginning of Northern spring), 90° during the summer solstice, 180° at the autumnal equinox, and 270° during winter solstice. To download a 30-sols chunk starting at the beginning at the the martian year (Ls =0 to Ls=15), navigate to a place you would like to store the data and run :
+The data from the Legacy GCM is archived every 1.5 hours (i.e. 16 times a day) and packaged in chunks of 10 sols (1 sol = 1 martian day). Files are available for download on the MCMC Data portal at : [https://data.nas.nasa.gov/legacygcm/data_legacygcm.php](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php), and referenced by their solar longitude or "_Ls_", which  is 0° at the vernal equinox (beginning of Northern spring), 90° during the summer solstice, 180° at the autumnal equinox, and 270° during winter solstice. To download a 30-sols chunk starting at the beginning at the the martian year (Ls =0 to Ls=15), navigate to a place you would like to store the data and run :
 ```
 MarsPull.py --help
 MarsPull.py --ls 0 15
@@ -214,7 +214,7 @@ MarsPlot.py -i 00000.atmos_average.nc
 Moving forward with the postprocessing pipeline, it is the user's choice to proceed with individual sets of files (00000, 00010, and 00020 files in our example), or merge those files together into one.
 All the utilities from the analysis pipeline (including the plotting routine) accept a **list** of files as input, and keeping separate files can be strategic when computer memory is limited (the **daily** files remain 280MB each and there are 67 of those in one Mars year).
 
-Since working with 5 days average involve relatively small files, we can use the **--combine** option of _MarsFiles_ to merge them together along the '_time_' dimension:
+Since working with 5 days average involves relatively small files, we can use the **--combine** option of _MarsFiles_ to merge them together along the '_time_' dimension:
 
 ```
 MarsFiles.py *fixed.nc -c
@@ -278,7 +278,7 @@ au BufReadPost *.in  set syntax=python
 Close the file and run: `source ~/.vimrc`
 ***
 
-In order to access data in a specific file  _MarsPlot_ uses the syntax ` Main Variable  = XXXXX.fileN.var`,  `XXXXX` being the sol number (e.g "03335", optional), `file` being the file type (e.g "`atmos_average_pstd`"), `N`  being the simulation number (e.g "2" if comparing two different simulations, optional), and `var` the requested variable (e.g "`ucomp`" for the zonal winds).
+In order to access data in a specific file,  _MarsPlot_ uses the syntax ` Main Variable  = XXXXX.fileN.var`,  `XXXXX` being the sol number (e.g. "03335", optional), `file` being the file type (e.g. "`atmos_average_pstd`"), `N`  being the simulation number (e.g. "2" if comparing two different simulations, optional), and `var` the requested variable (e.g. "`ucomp`" for the zonal winds).
 
 When dimensions are omitted with `None`, _MarsPlot_ makes educated guesses for data selection (e.g, if no layer is requested, use the surface layer etc...) and will tell you exactly how the data is being processed both in the default title for the figures, and in the terminal output.  This behavior is detailed in the commented instructions at the top of _Custom.in_, as well as additional features:  For example, note the use of the brackets "**[ ]**" for variable operations,  "**{ }**" to overwrite the default dimensions, and  the possibility of adding another simulation to the **<<<<< Simulations >>>>>** block for comparison purposes.
 
@@ -292,7 +292,7 @@ After inspecting the file, you can verify once again that pdf-ghostscript is ava
 [##########]100 % (Done)
 ```
 
-By default MarsPlot will handle errors by itself (e.g missing data) and reports them after completion both in  the terminal and overlayed in the figures. To by-pass this behavior (when debugging), use the  **--debug** option.
+By default MarsPlot will handle errors by itself (e.g. missing data) and reports them after completion both in  the terminal and overlayed in the figures. To by-pass this behavior (when debugging), use the  **--debug** option.
 
 A file _Diagnostic.pdf_ will be generated in the current directory with the requested plots which can be opened with a pdf viewer (`open Diagnostic.pdf` on MacOS, `evince Diagnostic.pdf` on Linux). If you have used the `--output png` formatting option, the images will be located in _plots/_ in the current directory.
 
@@ -306,6 +306,7 @@ Cmin, Cmax     = None
 Ls 0-360       = 0.,10
 Lon +/-180     = all
 2nd Variable   = None
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Wistia
 ```
 Note that we decided to use the "**[ ]**" syntax around the variable to plot the dust field in [g/kg] instead of the default unit of [kg/kg], and changed the default title accordingly. We also decided to change the colormap to _Wistia_ and adjusted the `Axis Options`. You can now feed the modified template back to _MarsPlot_. By default `MarsPlot.py Custom.in` runs the requested analysis on the **last** set of output files present in the directory (identified by **XXXXX.fixed.nc**) To run the analysis over a single specific data file or a range of files, use the **--date**  options:
