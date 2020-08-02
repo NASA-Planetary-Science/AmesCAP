@@ -8,15 +8,16 @@ import sys       #system command
 
 
 #==============
-from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,print_varContent,FV3_file_type
+from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple
+from amesgcm.Script_utils import print_fileContent,print_varContent,FV3_file_type,wbr_cmap,rjw_cmap
 from amesgcm.FV3_utils import lon360_to_180,lon180_to_360,UT_LTtxt,area_weights_deg
+from amesgcm.FV3_utils import add_cyclic,azimuth2cart,mollweide2cart,robin2cart,ortho2cart
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
     import matplotlib
     matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
     import matplotlib.pyplot as plt
     import numpy as np
-    from matplotlib.cm import get_cmap
     from matplotlib.ticker import MultipleLocator, FuncFormatter  #format ticks
     from netCDF4 import Dataset, MFDataset
     from numpy import sqrt, exp, max, mean, min, log, log10,sin,cos
@@ -25,12 +26,11 @@ except ImportError as error_msg:
     prYellow("Error while importing modules")
     prYellow('Your are using python '+str(sys.version_info[0:3]))
     prYellow('Please, source your virtual environment');prCyan('    source envPython3.7/bin/activate.csh \n')
-    print("Error was: "+ error_msg.message)
+    print("Error was: ", error_msg)
     exit()
 except Exception as exception:
     # Output unexpected Exceptions.
-    print(exception, False)
-    print(exception.__class__.__name__ + ": " + exception.message)
+    print(exception.__class__.__name__ + ": ", exception)
     exit()
 
 
@@ -38,7 +38,7 @@ except Exception as exception:
 #                  ARGUMENTS PARSER
 #======================================================
 
-global current_version;current_version=2.0
+global current_version;current_version=2.1
 parser = argparse.ArgumentParser(description="""\033[93mAnalysis Toolkit for the Ames GCM, V%s\033[00m """%(current_version),
                                 formatter_class=argparse.RawTextHelpFormatter)
 
@@ -52,12 +52,12 @@ parser.add_argument('-i', '--inspect_file', default=None,
                       """Options: use --dump (variable content) and --stat (min, mean,max) jointly with --inspect \n"""
                       """>  MarsPlot -i 00000.atmos_daily.nc -dump pfull 'temp[6,:,30,10]'  (quotes '' are needed when browsing dimensions)\n"""
                       """>  MarsPlot -i 00000.atmos_daily.nc -stat 'ucomp[5,:,:,:]' 'vcomp[5,:,:,:]'\n""")
-#These two options are to be used jointly with --inspect
+#These two options are to be used jointly with --inspect 
 parser.add_argument('--dump','-dump', nargs='+',default=None,
                     help=argparse.SUPPRESS)
 parser.add_argument('--stat','-stat', nargs='+',default=None,
-                    help=argparse.SUPPRESS)
-
+                    help=argparse.SUPPRESS)                      
+                      
 help=argparse.SUPPRESS
 parser.add_argument('-d','--date', nargs='+',default=None,
                  help='Specify the range of files to use, default is the last file  \n'
@@ -124,8 +124,8 @@ def main():
         width_inch=pixel_width/1.4/my_dpi;height_inch=pixel_width/my_dpi
     else:
         width_inch=pixel_width/my_dpi;height_inch=pixel_width/1.4/my_dpi
-
-
+            
+            
     objectList=[Fig_2D_lon_lat('fixed.zsurf',True),\
                 Fig_2D_lat_lev('atmos_average.ucomp',True),\
                 Fig_2D_time_lat('atmos_average.taudust_IR',False),\
@@ -144,17 +144,17 @@ def main():
     # ----- Option 1 :Inspect content of a Netcdf file ----
     if parser.parse_args().inspect_file:
         check_file_tape(parser.parse_args().inspect_file,abort=False) #NAS-specific, check if the file is on tape
-
+        
         if parser.parse_args().dump:
             #Dumping variable content
             print_varContent(parser.parse_args().inspect_file,parser.parse_args().dump,False)
         elif parser.parse_args().stat:
             #Printing variable stats
-            print_varContent(parser.parse_args().inspect_file,parser.parse_args().stat,True)
+            print_varContent(parser.parse_args().inspect_file,parser.parse_args().stat,True)    
         else:
-            # Show information on all the variables
+            # Show information on all the variables 
             print_fileContent(parser.parse_args().inspect_file)
-
+                
 
         # ----- Option 2: Generate a template file ----
     elif parser.parse_args().template or parser.parse_args().temp:
@@ -523,8 +523,8 @@ def get_time_index(Ls_query_360,Ls):
             if MY_end >=1:
             #check if the desired Ls is available for this Mars Year
                 Ls_query=Ls_query_360+(MY_end-1)*360. #(MY starts at 1, not zero)
-            else:
-                Ls_query=Ls_query_360
+            else: 
+                Ls_query=Ls_query_360    
             #If this time is greater that the last Ls, look one year back
             if Ls_query>Ls[-1] and MY_end>1:
                 MY_end-=1 #one year back
@@ -559,10 +559,10 @@ def get_time_index(Ls_query_360,Ls):
             MY_beg-=1
             Ls_query_beg=Ls_query_360[0]+(MY_beg-1)*360.
             ti_beg=np.argmin(np.abs(Ls_query_beg-Ls))
-
-
+            
+   
         ti=np.arange(ti_beg,ti_last+1)
-
+        
         Ls_bounds=[Ls[ti[0]],Ls[ti[-1]]] #this is for display
         txt_time=', Ls= avg [(MY%2i) %.2f <-> (MY%2i) %.2f]'%(MY_beg,np.mod(Ls_bounds[0],360.),MY_last,np.mod(Ls_bounds[1],360.))
 
@@ -652,11 +652,12 @@ def read_axis_options(axis_options_txt):
     '''
     Return axis customization options
     Args:
-        axis_options_txt: One liner string: 'Axis Options  : lon = [5,8] | lat = [None,None] | cmap = jet'
+        axis_options_txt: One liner string: 'Axis Options  : lon = [5,8] | lat = [None,None] | cmap = jet |proj = cart'
     Returns:
         Xaxis: X-axis bounds as a numpy array or None if undedefined
         Yaxis: Y-axis bounds as a numpy array or None if undedefined
-        custom_line: string, i.e colormap ('jet', 'spectral') or line options, e.g '--r' for dashed red
+        custom_line1: string, i.e colormap ('jet', 'spectral') or line options, e.g '--r' for dashed red
+        custom_line2: None of string for projections, e.g 'ortho -125,45'
 
     '''
     list_txt=axis_options_txt.split(':')[1].split('|')
@@ -679,8 +680,13 @@ def read_axis_options(axis_options_txt):
         else:
             Yaxis.append(np.float(txt.split(',')[i].strip()))
     #Line or colormap
-    custom_line=list_txt[2].split('=')[1].strip()
-    return Xaxis, Yaxis,custom_line
+    custom_line1=list_txt[2].split('=')[1].strip()
+    #Projection information, if any:
+    if len(list_txt)==3:
+        custom_line2=None
+    elif len(list_txt)==4:
+        custom_line2=list_txt[3].split('=')[1].strip()   
+    return Xaxis, Yaxis,custom_line1,custom_line2
 
 def split_varfull(varfull):
     '''
@@ -833,8 +839,8 @@ def get_overwrite_dim_2D(varfull_bracket,plot_type,fdim1,fdim2,ftod):
         if plot_type=='2D_lon_time':
             if split_dim[i].split('=')[0]=='lat': fdim_out1=filter_input(split_dim[i].split('=')[1],'float')
             if split_dim[i].split('=')[0]=='lev': fdim_out2=filter_input(split_dim[i].split('=')[1],'float')
-
-        #Always get tod
+            
+        #Always get tod    
         ftod_out=None
         if split_dim[i].split('=')[0]=='tod': ftod_out=filter_input(split_dim[i].split('=')[1],'float')
     # NOTE: filter_input() convert the text '3' or '4,5' to real variable, e.g numpy.array([3.]) numpy.array([4.,5.])
@@ -870,7 +876,7 @@ def get_overwrite_dim_1D(varfull_bracket,t_in,lat_in,lon_in,lev_in,ftod_in):
         if split_dim[i].split('=')[0]=='lon': lon_out=filter_input(split_dim[i].split('=')[1],'float')
         if split_dim[i].split('=')[0]=='lev': lev_out=filter_input(split_dim[i].split('=')[1],'float')
 
-        #Always get tod
+        #Always get tod    
         ftod_out=None
         if split_dim[i].split('=')[0]=='tod': ftod_out=filter_input(split_dim[i].split('=')[1],'float')
     # NOTE: filter_input() convert the text '3' or '4,5' to real variable, e.g numpy.array([3.]) numpy.array([4.,5.])
@@ -914,10 +920,10 @@ def fig_layout(subID,nPan,vertical_page=False):
     if 49<=nPan<=56:layout=(8,7)
     if 56<=nPan<=64:layout=(8,8)
     if vertical_page:layout=layout[::-1]
-
+    
     #finally the current plot
     out[0:2]=layout
-    out[2]=subID
+    out[2]=subID 
 
     return out
 
@@ -956,10 +962,13 @@ def make_template():
         customFileIN.write(lh+"""TIME SERIES AND 1D PLOTS:\n""")
         customFileIN.write(lh+"""> Use 'Dimension = AXIS' to set the varying axis\n""")
         customFileIN.write(lh+"""> The other free dimensions accept value, 'all' or valmin,valmax as above\n""")
-        customFileIN.write(lh+"""AXIS OPTIONS:\n""")
+        customFileIN.write(lh+"""AXIS OPTIONS AND PROJECTIONS:\n""")
         customFileIN.write(lh+"""Set the x-axis and y-axis limits in the figure units. All Matplolib styles are supported:\n""")
         customFileIN.write(lh+"""> 'cmap' changes the colormap: 'jet' (winds), 'spectral' (temperature), 'bwr' (diff plot)\n""")
         customFileIN.write(lh+"""> 'line' sets the line style:  '-r' (solid red), '--g' (dashed green), '-ob' (solid & blue markers)\n""")
+        customFileIN.write(lh+"""> 'proj' sets the projection: Cylindrical options are 'cart' (cartesian), 'robin'  (Robinson), 'moll' (Mollweide) \n""")
+        customFileIN.write(lh+""">                              Azimutal   options are 'Npole' (north pole), 'Spole' (south pole), 'ortho' (Orthographic)  \n""")
+        customFileIN.write(lh+""">  Azimutal projections accept customization arguments: 'Npole lat_max', 'Spole lat_min' , 'ortho lon_center, lat_center' \n""")        
         customFileIN.write(lh+"""KEYWORDS:\n""")
         customFileIN.write(lh+"""> 'HOLD ON' [blocks of figures] 'HOLD OFF' groups the figures as a multi-panel page\n""")
         customFileIN.write(lh+"""> [line plot 1] 'ADD LINE' [line plot 2] adds similar 1D-plots on the same figure)\n""")
@@ -1363,12 +1372,13 @@ class Fig_2D(object):
         self.fdim_txt=''
         self.success=False
         self.addLine=False
-        self.vert_unit='' #m or Pa
+        self.vert_unit='' #m or Pa 
         #Axis options
 
         self.Xlim=None
         self.Ylim=None
-        self.axis_opts='jet'
+        self.axis_opt1='jet'
+        self.axis_opt2=None #place holder for projections
 
     def make_template(self,plot_txt,fdim1_txt,fdim2_txt,Xaxis_txt,Yaxis_txt):
         customFileIN.write("<<<<<<<<<<<<<<| {0:<15} = {1} |>>>>>>>>>>>>>\n".format(plot_txt,self.doPlot))
@@ -1379,7 +1389,12 @@ class Fig_2D(object):
         customFileIN.write("{0:<15}= {1}\n".format(fdim2_txt,self.fdim2))    #4
         customFileIN.write("2nd Variable   = %s\n"%(self.varfull2))          #6
         customFileIN.write("Contours Var 2 = %s\n"%(self.contour2))          #7
-        customFileIN.write("Axis Options  : {0} = [None,None] | {1} = [None,None] | cmap = jet \n".format(Xaxis_txt,Yaxis_txt))
+        
+        #Write colormap AND projection if plot is of the type 2D_lon_lat
+        if self.plot_type=='2D_lon_lat':
+            customFileIN.write("Axis Options  : {0} = [None,None] | {1} = [None,None] | cmap = jet | proj = cart \n".format(Xaxis_txt,Yaxis_txt)) #8
+        else: 
+            customFileIN.write("Axis Options  : {0} = [None,None] | {1} = [None,None] | cmap = jet \n".format(Xaxis_txt,Yaxis_txt))    #8
 
     def read_template(self):
         self.title= rT('char')                   #1
@@ -1389,7 +1404,7 @@ class Fig_2D(object):
         self.fdim2=rT('float')                   #5
         self.varfull2=rT('char')                 #6
         self.contour2=rT('float')                #7
-        self.Xlim,self.Ylim,self.axis_opts=read_axis_options(customFileIN.readline())     #7
+        self.Xlim,self.Ylim,self.axis_opt1,self.axis_opt2=read_axis_options(customFileIN.readline())     #8
 
         #Various sanity checks
         if self.range and len(np.atleast_1d(self.range))==1:
@@ -1411,7 +1426,7 @@ class Fig_2D(object):
             file_type: 'fixed', atmos_average_pstd
             simuID:    e.g 2 for 2nd simulation
             sol_array: e.g [3340,4008]
-
+        
         Returns:
             f: Dataset or MFDataset object
             var_info: longname and units
@@ -1456,7 +1471,7 @@ class Fig_2D(object):
                 # fdim1_extract,fdim2_extract constains the dimensions to overwrite is '{}' are provided of the default self.fdim1, self.fdim2  otherwise
             else: # no '{ }' use to overwrite the dimensions, copy the plots' defaults
                 fdim1_extract,fdim2_extract,ftod_extract=self.fdim1, self.fdim2,self.ftod
-
+                
             sol_array,filetype,var,simuID=split_varfull(varfull)
             xdata,ydata,var,var_info=self.read_NCDF_2D(var,filetype,simuID,sol_array,plot_type,fdim1_extract,fdim2_extract,ftod_extract)
         #Realize a operation on the variables
@@ -1490,10 +1505,10 @@ class Fig_2D(object):
 
     def read_NCDF_2D(self,var_name,file_type,simuID,sol_array,plot_type,fdim1,fdim2,ftod):
         f, var_info,dim_info, dims=self.prep_file(var_name,file_type,simuID,sol_array)
-
+        
         #Get the file type ('fixed','diurn', 'average', 'daily') and interpolation type (pfull, zstd etc...)
         f_type,interp_type=FV3_file_type(f)
-
+    
         #Initialize dimensions (These are in all the .nc files)
 
         lat=f.variables['lat'][:];lati=np.arange(0,len(lat))
@@ -1502,21 +1517,21 @@ class Fig_2D(object):
         #If self.fdim is empty, add the variable name (do only once)
         add_fdim=False
         if not self.fdim_txt.strip():add_fdim=True
-
+        
         #------------------------Time of Day ----------------------------
         # For diurn files, select data on the time of day axis and update dimensions
         # so the resulting variable is the same as atmos_average and atmos_daily file.
         # Time of day is always the 2nd dimension, i.e. dim_info[1]
-
+      
         if f_type=='diurn' and dim_info[1][:11]=='time_of_day':
             tod=f.variables[dim_info[1]][:]
             todi,temp_txt =get_tod_index(ftod,tod)
             #Update dim_info from ('time','time_of_day_XX, 'lat', 'lon') to  ('time', 'lat', 'lon')
             # OR ('time','time_of_day_XX, 'pfull','lat', 'lon') to  ('time', 'pfull','lat', 'lon') etc...
             dim_info=(dim_info[0],)+dim_info[2:]
-
+            
             if add_fdim:self.fdim_txt+=temp_txt
-        #-----------------------------------------------------------------------
+        #-----------------------------------------------------------------------    
         #Load variable depending on the requested free dimensions
 
         #======static======= , ignore level and time dimension
@@ -1529,7 +1544,6 @@ class Fig_2D(object):
         if dim_info==('time', 'lat', 'lon'):
         #Initialize dimension
             t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
-            if f_type=='diurn'and len(Ls.shape)>1:Ls=np.squeeze(Ls[:,0])
             t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
 
             if plot_type=='2D_lon_lat': ti,temp_txt =get_time_index(fdim1,Ls)
@@ -1537,7 +1551,7 @@ class Fig_2D(object):
             if plot_type=='2D_lon_time':lati,temp_txt =get_lat_index(fdim1,lat)
 
             if add_fdim:self.fdim_txt+=temp_txt
-
+            
             #Extract data and close file
             #If diurn, we will do the tod averaging first.
             if f_type=='diurn':
@@ -1549,13 +1563,13 @@ class Fig_2D(object):
             f.close()
             w=area_weights_deg(var.shape,lat[lati])
             if no_area :w[:]=1.;prCyan('Setting w=1')
-
+            
             #Return data
             if plot_type=='2D_lon_lat': return lon,lat,np.mean(var,axis=0),var_info #time average
             if plot_type=='2D_time_lat':return t_stack,lat,np.mean(var,axis=2).T,var_info #transpose, Xdim must be in last column of var
             if plot_type=='2D_lon_time':return lon,t_stack,np.average(var,weights=w,axis=1),var_info
-
-
+                
+        
         #======time,level,lat,lon=======
         if (dim_info==('time', 'pfull', 'lat', 'lon')
            or dim_info==('time', 'level', 'lat', 'lon')
@@ -1563,15 +1577,14 @@ class Fig_2D(object):
            or dim_info==('time', 'zstd', 'lat', 'lon')
            or dim_info==('time', 'zagl', 'lat', 'lon')
            or dim_info==('time', 'zgrid', 'lat', 'lon')):
-
+               
             if dim_info[1] in ['pfull','level','pstd']:  self.vert_unit='Pa'
             if dim_info[1] in ['zagl','zstd']:  self.vert_unit='m'
-
+            
             #Initialize dimensions
             levs=f.variables[dim_info[1]][:] #dim_info[1] is either pfull, level, pstd, zstd,zagl or zgrid
             zi=np.arange(0,len(levs))
             t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
-            if f_type=='diurn'and len(Ls.shape)>1:Ls=np.squeeze(Ls[:,0])
             t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
 
             if plot_type=='2D_lon_lat':
@@ -1627,7 +1640,7 @@ class Fig_2D(object):
             w=area_weights_deg(var.shape,lat[lati])
             if no_area :w[:]=1.;prCyan('Setting w=1')
 
-
+            
             #(u'time', u'pfull', u'lat', u'lon')
             if plot_type=='2D_lon_lat': return  lon,   lat,  np.mean(np.mean(var,axis=1),axis=0),var_info
             if plot_type=='2D_time_lat':return t_stack,lat,  np.mean(np.mean(var,axis=1),axis=2).T,var_info #transpose
@@ -1683,16 +1696,18 @@ class Fig_2D(object):
             plt.savefig(self.fig_name,dpi=my_dpi )
             if out_format!="pdf":print("Saved:" +self.fig_name)
 
-
     def filled_contour(self,xdata,ydata,var):
+        cmap=self.axis_opt1
+        #Personalized colormaps
+        if cmap=='wbr':cmap=wbr_cmap()
+        if cmap=='rjw':cmap=rjw_cmap()
         if self.range:
-            plt.contourf(xdata, ydata,var,np.linspace(self.range[0],self.range[1],levels),extend='both',cmap=self.axis_opts)
+            plt.contourf(xdata, ydata,var,np.linspace(self.range[0],self.range[1],levels),extend='both',cmap=cmap)
         else:
-            plt.contourf(xdata, ydata,var,levels,cmap=self.axis_opts)
+            plt.contourf(xdata, ydata,var,levels,cmap=cmap)
+            
         cbar=plt.colorbar(orientation='horizontal',aspect=50)
         cbar.ax.tick_params(labelsize=label_size-self.nPan//2) #shrink the colorbar label as the number of subplot increase
-
-        #self.nPan
 
     def solid_contour(self,xdata,ydata,var,contours):
        np.seterr(divide='ignore', invalid='ignore') #prevent error message when making contour
@@ -1714,41 +1729,155 @@ class Fig_2D_lon_lat(Fig_2D):
         super(Fig_2D_lon_lat, self).make_template('Plot 2D lon X lat','Ls 0-360','Level [Pa/m]','lon','lat')
 
     def do_plot(self):
+    
         #create figure
         ax=super(Fig_2D_lon_lat, self).fig_init()
         try:    #try to do the figure, will return the error otherwise
             lon,lat,var,var_info=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull,self.plot_type)
             lon180,var=shift_data(lon,var)
+            #get topo
+            zsurf=get_topo_2D(self.simuID,self.sol_array) 
+            _,zsurf=shift_data(lon,zsurf)
+            
+            projfull=self.axis_opt2
+            #------------------------------------------------------------------------
+            #If proj = cart, use the generic contours utility from the Fig_2D() class
+            #------------------------------------------------------------------------
+            if projfull=='cart':
+                
+                super(Fig_2D_lon_lat, self).filled_contour(lon180, lat,var)
+                #---Add topo contour---
+                plt.contour(lon180, lat,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
 
-            super(Fig_2D_lon_lat, self).filled_contour(lon180, lat,var)
+                if self.varfull2:
+                    _,_,var2,var_info2=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull2,self.plot_type)
+                    lon180,var2=shift_data(lon,var2)
+                    super(Fig_2D_lon_lat, self).solid_contour(lon180, lat,var2,self.contour2)
+                    var_info+=" (& "+var_info2+")"
+    
+                if self.Xlim:plt.xlim(self.Xlim)
+                if self.Ylim:plt.ylim(self.Ylim)
 
-            #---Add topo contour---
-            zsurf=get_topo_2D(self.simuID,self.sol_array) #get topo
-
-            lon180,zsurf=shift_data(lon,zsurf)
-            plt.contour(lon180, lat,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
-            #----
-
-            if self.varfull2:
-                _,_,var2,var_info2=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull2,self.plot_type)
-                lon180,var2=shift_data(lon,var2)
-                super(Fig_2D_lon_lat, self).solid_contour(lon180, lat,var2,self.contour2)
-                var_info+=" (& "+var_info2+")"
-
-
-            if self.Xlim:plt.xlim(self.Xlim)
-            if self.Ylim:plt.ylim(self.Ylim)
-
-            super(Fig_2D_lon_lat, self).make_title(var_info,'Longitude','Latitude')
+                super(Fig_2D_lon_lat, self).make_title(var_info,'Longitude','Latitude')
              #--- Annotation---
+                ax.xaxis.set_major_locator(MultipleLocator(30))
+                ax.xaxis.set_minor_locator(MultipleLocator(10))
+                ax.yaxis.set_major_locator(MultipleLocator(15))
+                ax.yaxis.set_minor_locator(MultipleLocator(5))
+                plt.xticks(fontsize=label_size-self.nPan//2, rotation=0)
+                plt.yticks(fontsize=label_size-self.nPan//2, rotation=0)
+            #-------------------------------------------------------------------
+            #                      Special projections
+            #--------------------------------------------------------------------    
+            else:
+                #Personalized colormaps
+                cmap=self.axis_opt1
+                if cmap=='wbr':cmap=wbr_cmap()
+                if cmap=='rjw':cmap=rjw_cmap()
+                
+                ax.axis('off') 
+                ax.patch.set_color('1') #Nan are reverse to white for projections
+                
+                LON,LAT=np.meshgrid(lon180,lat)
+                
+                #Add meridans and parallel
+                meridians=np.arange(-180,180,30)
+                parallels=np.arange(-60,90,30)
+                #---------------------------------------------------------------
+                if projfull=='robin':
+                    LON,LAT=np.meshgrid(lon180,lat)
+                    X,Y=robin2cart(LAT,LON)
+                    
+                    #Add meridans and parallel
+                    for mer in meridians:
+                        xg,yg=robin2cart(lat,lat*0+mer)
+                        xl,yl=robin2cart(90,mer)
+                        plt.plot(xg,yg,':k',lw=0.5)
+                        plt.text(xl,yl,'  %i'%(mer), fontsize=6)
+                    
+                    for par in parallels:
+                        xg,yg=robin2cart(lon180*0+par,lon180)
+                        xl,yl=robin2cart(par,180)
+                        plt.plot(xg,yg,':k',lw=0.5)    
+                        plt.text(xl,yl,'%i S'%(par), fontsize=6)
+                        
+                #---------------------------------------------------------------
+                if projfull=='moll':
+                    LON,LAT=np.meshgrid(lon180,lat)
+                    X,Y=mollweide2cart(LAT,LON)
+                    
 
-            ax.xaxis.set_major_locator(MultipleLocator(30))
-            ax.xaxis.set_minor_locator(MultipleLocator(10))
-            ax.yaxis.set_major_locator(MultipleLocator(15))
-            ax.yaxis.set_minor_locator(MultipleLocator(5))
-            plt.xticks(fontsize=label_size-self.nPan//2, rotation=0)
-            plt.yticks(fontsize=label_size-self.nPan//2, rotation=0)
+                    
+                
+                if projfull[0:5] in ['Npole','Spole','ortho']:
+                    #Common to all azimutal projections
+                    var,_=add_cyclic(var,lon180)
+                    zsurf,lon180=add_cyclic(zsurf,lon180)
+                    LON,LAT=np.meshgrid(lon180,lat)
+                    lon_lat_custom=None #Initialization
+                    lat_b=None
+                    
+                    #Get custom lat/lon, if any
+                    if len(projfull)>5:lon_lat_custom=filter_input(projfull[5:],'float')
+                        
+                if projfull[0:5]=='Npole':
+                    X,Y=azimuth2cart(LAT,LON,90,0)   
+                    lat_b=45
+                    if not(lon_lat_custom is None):lat_b=lon_lat_custom #bounding lat
+                    
 
+                        
+                if projfull[0:5]=='Spole':
+                    X,Y=azimuth2cart(LAT,LON,-90,0)   
+                    lat_b=-45
+                    if not( lon_lat_custom is None):lat_b=lon_lat_custom #bounding lat
+                if projfull[0:5]=='ortho':
+                    #Initialization
+                    lon_p,lat_p=-120,20
+                    if not( lon_lat_custom is None):lon_p=lon_lat_custom[0];lat_p=lon_lat_custom[1] #bounding lat
+                    X,Y,MASK=ortho2cart(LAT,LON,lat_p,lon_p)
+                    #Mask opposite side of the planet
+                    var=var*MASK
+                    zsurf=zsurf*MASK
+                    
+                    
+                
+                if self.range:
+                    plt.contourf(X, Y,var,np.linspace(self.range[0],self.range[1],levels),extend='both',cmap=cmap)
+                else:
+                    plt.contourf(X, Y,var,levels,cmap=cmap)
+                
+                
+                        
+                
+                cbar=plt.colorbar(orientation='horizontal',aspect=50)
+                cbar.ax.tick_params(labelsize=label_size-self.nPan//2) #shrink the colorbar label as the number of subplot increase
+                
+                #---Add topo contour---
+                plt.contour(X, Y,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
+                
+                if self.varfull2:
+                    lon,lat,var2,var_info2=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull2,self.plot_type)
+                    lon180,var2=shift_data(lon,var2)
+                    LON,LAT=np.meshgrid(lon180,lat)
+                    if projfull=='robin':X,Y=robin2cart(LAT,LON)
+                    if projfull=='moll':X,Y=mollweide2cart(LAT,LON)
+                    
+                    
+                    np.seterr(divide='ignore', invalid='ignore') #prevent error message when making contour
+   
+                
+                    if self.contour2 is None:
+                        CS=plt.contour(X, Y,var2,11,colors='k',linewidths=3)
+                    else:
+                        #If one contour is provided (as float), convert to array
+                        if type(self.contours2)==float:self.contour2=[self.contour2]
+                        CS=plt.contour(X, Y,var2,self.contour2,colors='k',linewidths=3)
+                    plt.clabel(CS, inline=1, fontsize=14,fmt='%g')
+                    
+                    var_info+=" (& "+var_info2+")"
+                
+                
             self.success=True
 
         except Exception as e: #Return the error
@@ -1833,7 +1962,7 @@ class Fig_2D_lat_lev(Fig_2D):
                 ylabel_txt='Pressure [Pa]'
             else:
                 ylabel_txt='Altitude [m]'
-
+                    
 
             if self.Xlim:plt.xlim(self.Xlim)
             if self.Ylim:plt.ylim(self.Ylim)
@@ -2037,7 +2166,7 @@ class Fig_1D(object):
 
         self.Dlim=None #Dimension limit
         self.Vlim=None #variable limits
-        self.axis_opts='-'
+        self.axis_opt1='-'
 
 
 
@@ -2048,7 +2177,7 @@ class Fig_1D(object):
         customFileIN.write("Ls 0-360       = {0}\n".format(self.t))           #3
         customFileIN.write("Latitude       = {0}\n".format(self.lat))         #4
         customFileIN.write("Lon +/-180     = {0}\n".format(self.lon))         #5
-        customFileIN.write("Level [Pa/m]     = {0}\n".format(self.lev))         #6
+        customFileIN.write("Level [Pa/m]   = {0}\n".format(self.lev))         #6
         customFileIN.write("Axis Options  : lat,lon+/-180,[Pa/m],sols = [None,None] | var = [None,None] | linestyle = - \n")#7
 
     def read_template(self):
@@ -2058,7 +2187,7 @@ class Fig_1D(object):
         self.lat=rT('float')                #4
         self.lon=rT('float')                #5
         self.lev=rT('float')                #6
-        self.Dlim,self.Vlim,self.axis_opts=read_axis_options(customFileIN.readline())     #7
+        self.Dlim,self.Vlim,self.axis_opt1,_=read_axis_options(customFileIN.readline())     #7
 
         self.plot_type=self.get_plot_type()
 
@@ -2171,7 +2300,7 @@ class Fig_1D(object):
 
         #Get the file type ('fixed','diurn', 'average', 'daily') and interpolation type (pfull, zstd etc...)
         f_type,interp_type=FV3_file_type(f)
-
+        
         #If self.fdim is empty, add the variable (do only once)
         add_fdim=False
         if not self.fdim_txt.strip():add_fdim=True
@@ -2182,21 +2311,21 @@ class Fig_1D(object):
         lon=f.variables['lon'][:];loni=np.arange(0,len(lon))
 
 
-
+        
         #------------------------Time of Day ----------------------------
         # For diurn files, select data on the time of day axis and update dimensions
         # so the resulting variable is the same as atmos_average and atmos_daily file.
         # Time of day is always the 2nd dimension, i.e. dim_info[1]
-
+      
         if f_type=='diurn' and dim_info[1][:11]=='time_of_day':
             tod=f.variables[dim_info[1]][:]
             todi,temp_txt =get_tod_index(ftod_req,tod)
             var=np.mean(f.variables[var_name][:,todi,:])
-
+            
             #Update dim_info from ('time','time_of_day_XX, 'lat', 'lon') to  ('time', 'lat', 'lon')
             # OR ('time','time_of_day_XX, 'pfull','lat', 'lon') to  ('time', 'pfull','lat', 'lon') etc...
             dim_info=(dim_info[0],)+dim_info[2:]
-
+            
             if add_fdim:self.fdim_txt+=temp_txt
         #======static======= , ignore level and time dimension
         if dim_info==(u'lat', u'lon'):
@@ -2218,7 +2347,6 @@ class Fig_1D(object):
         if f.variables[var_name].dimensions==(u'time', u'lat', u'lon'):
         #Initialize dimension
             t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
-            if f_type=='diurn'and len(Ls.shape)>1:Ls=np.squeeze(Ls[:,0])
             t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
 
             if plot_type=='1D_lat':
@@ -2236,7 +2364,7 @@ class Fig_1D(object):
                 if add_fdim:self.fdim_txt+=temp_txt
                 lati,temp_txt =get_lat_index(lat_req,lat)
                 if add_fdim:self.fdim_txt+=temp_txt
-
+            
             if f_type=='diurn':
                 var=f.variables[var_name][ti,todi,lati,loni].reshape(len(np.atleast_1d(ti)),len(np.atleast_1d(todi)),\
                      len(np.atleast_1d(lati)),len(np.atleast_1d(loni)))
@@ -2244,18 +2372,18 @@ class Fig_1D(object):
             else:
                 var=f.variables[var_name][ti,lati,loni].reshape(len(np.atleast_1d(ti)),len(np.atleast_1d(lati)),len(np.atleast_1d(loni)))
             f.close()
-
-
-
+            
+            
+            
             w=area_weights_deg(var.shape,lat[lati])
             if no_area :w[:]=1.;prCyan('Setting w=1')
-
-
+            
+            
             #Return data
             if plot_type=='1D_lat': return lat,    np.mean(np.mean(var,axis=2),axis=0),var_info
-            if plot_type=='1D_lon': return lon,    np.mean(np.average(var,weights=w,axis=1),axis=0),var_info
+            if plot_type=='1D_lon': return lon,    np.mean(np.average(var,weights=w,axis=1),axis=0),var_info 
             if plot_type=='1D_time':return t_stack,np.mean(np.average(var,weights=w,axis=1),axis=1),var_info
-
+                
 
 
         #======time,level,lat,lon=======
@@ -2265,15 +2393,14 @@ class Fig_1D(object):
            or dim_info==(u'time', u'zstd', u'lat', u'lon')
            or dim_info==(u'time', u'zagl', u'lat', u'lon')
            or dim_info==(u'time', u'zgrid', u'lat', u'lon')):
-
+           
             if dim_info[1] in ['pfull','level','pstd']:  self.vert_unit='Pa'
             if dim_info[1] in ['zagl','zstd']:  self.vert_unit='m'
-
+            
             #Initialize dimensions
-            levs=f.variables[dim_info[1]][:]
+            levs=f.variables[dim_info[1]][:] 
             zi=np.arange(0,len(levs))
             t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
-            if f_type=='diurn'and len(Ls.shape)>1:Ls=np.squeeze(Ls[:,0])
             t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
 
             if plot_type=='1D_lat':
@@ -2309,7 +2436,7 @@ class Fig_1D(object):
                 if add_fdim:self.fdim_txt+=temp_txt
 
 
-
+    
             #If diurn, we will do the tod averaging first.
             if f_type=='diurn':
                 var=f.variables[var_name][ti,todi,zi,lati,loni].reshape(len(np.atleast_1d(ti)),len(np.atleast_1d(todi)),\
@@ -2321,10 +2448,10 @@ class Fig_1D(object):
                                                                 len(np.atleast_1d(lati)),\
                                                                 len(np.atleast_1d(loni)))
             f.close()
-
+            
             w=area_weights_deg(var.shape,lat[lati])
             if no_area :w[:]=1.;prCyan('Setting w=1')
-
+            
             #(u'time', u'pfull', u'lat', u'lon')
             if plot_type=='1D_lat': return lat,    np.mean(np.mean(np.mean(var,axis=3),axis=1),axis=0),var_info
             if plot_type=='1D_lon': return lon,    np.mean(np.mean(np.average(var,weights=w,axis=2),axis=1),axis=0),var_info
@@ -2345,7 +2472,7 @@ class Fig_1D(object):
         out=fig_layout(self.subID,self.nPan,vertical_page)
         if self.subID==1 and not self.addLine:
             fig= plt.figure(facecolor='white',figsize=(width_inch, height_inch)) #create figure if 1st panel
-            #plt.suptitle(simulation_name) #TODO remove
+            #plt.suptitle(simulation_name) #TODO remove 
         if not self.addLine:
             ax = plt.subplot(out[0],out[1],out[2]) #nrow,ncol,subID
         else:
@@ -2395,7 +2522,7 @@ class Fig_1D(object):
 
             if self.plot_type=='1D_lat':
 
-                plt.plot(var,xdata,self.axis_opts,lw=2,label=txt_label)
+                plt.plot(var,xdata,self.axis_opt1,lw=2,label=txt_label)
                 plt.xlabel(var_info,fontsize=label_size-self.nPan//2)
                 plt.ylabel('Latitude',fontsize=label_size-self.nPan//2)
 
@@ -2407,7 +2534,7 @@ class Fig_1D(object):
             if self.plot_type=='1D_lon':
                 lon180,var=shift_data(xdata,var)
 
-                plt.plot(lon180,var,self.axis_opts,lw=2,label=txt_label)
+                plt.plot(lon180,var,self.axis_opt1,lw=2,label=txt_label)
                 plt.xlabel('Longitude',fontsize=label_size-self.nPan//2)
                 plt.ylabel(var_info,fontsize=label_size-self.nPan//2)
 
@@ -2420,7 +2547,7 @@ class Fig_1D(object):
             if self.plot_type=='1D_time':
                 tim=xdata[0,:];Ls=xdata[1,:]
 
-                plt.plot(Ls,var,self.axis_opts,lw=2,label=txt_label)
+                plt.plot(Ls,var,self.axis_opt1,lw=2,label=txt_label)
                 plt.ylabel(var_info,fontsize=label_size-self.nPan//2)
                 #Axis formatting
                 if self.Vlim:plt.ylim(self.Vlim)
@@ -2439,9 +2566,9 @@ class Fig_1D(object):
 
             if self.plot_type=='1D_lev':
 
-                plt.plot(var,xdata,self.axis_opts,lw=2,label=txt_label)
+                plt.plot(var,xdata,self.axis_opt1,lw=2,label=txt_label)
                 plt.xlabel(var_info,fontsize=label_size-self.nPan//2)
-
+                
 
                 if self.vert_unit=='Pa':
                     ax.set_yscale("log")
@@ -2449,9 +2576,9 @@ class Fig_1D(object):
                     ylabel_txt='Pressure [Pa]'
                 else:
                     ylabel_txt='Altitude [m]'
-
+                
                 plt.ylabel(ylabel_txt,fontsize=label_size-self.nPan//2)
-
+                 
                 if self.Dlim:plt.ylim(self.Dlim)
                 if self.Vlim:plt.xlim(self.Vlim)
 
