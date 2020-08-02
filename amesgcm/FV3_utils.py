@@ -1249,18 +1249,10 @@ def mollweide2cart(LAT,LON):
     LON=np.array(LON)*np.pi/180
     lon0=0
     
-    #Float or 1D array
-    if len(np.atleast_1d(LAT).shape)==1:
-        nlat=len(np.atleast_1d(LAT))
-        LAT=LAT.reshape((1,nlat))
-        LON=LON.reshape((1,nlat))
-        
-    # 2D array    
-    nlat=LAT.shape[0]
-    nlon=LAT.shape[1]
-    theta=np.zeros((nlat))
-    for i in range(0,nlat):
-        lat=LAT[i,0]
+    def compute_theta(lat):
+        '''
+        Internal function to compute theta, lat is in radians here
+        '''
         theta0=lat
         sum=0
         running=True
@@ -1271,8 +1263,24 @@ def mollweide2cart(LAT,LON):
             if np.abs((theta1-theta0))<10**-3:running=False
             theta0=theta1    
         if sum==100: print("Warning,in mollweide2cart():  Reached Max iterations")   
-        theta[i]=theta1
-    THETA=np.repeat(theta[:,np.newaxis],nlon,axis=1)   
+        return theta1
+    
+    #Float or 1D array
+    if len(np.atleast_1d(LAT).shape)==1:
+        nlat=len(np.atleast_1d(LAT))
+        LAT=LAT.reshape((nlat))
+        LON=LON.reshape((nlat))
+        THETA=np.zeros((nlat))
+        for i in range(0,nlat):
+            THETA[i]=compute_theta(LAT[i]) 
+        
+    else: # 2D array    
+        nlat=LAT.shape[0]
+        nlon=LAT.shape[1]
+        theta=np.zeros((nlat))
+        for i in range(0,nlat):
+            theta[i]=compute_theta(LAT[i,0]) 
+        THETA=np.repeat(theta[:,np.newaxis],nlon,axis=1)   
      
     X = 2*np.sqrt(2)/np.pi*(LON-lon0)*np.cos(THETA)
     Y =  np.sqrt(2)*np.sin(THETA)
