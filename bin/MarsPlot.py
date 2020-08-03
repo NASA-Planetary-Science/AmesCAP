@@ -1938,28 +1938,28 @@ class Fig_2D_lon_lat(Fig_2D):
                 plt.contour(X, Y,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
                 #=================================================================================
                 #=======================Solid contour 2nd variables===============================
-                #=================================================================================                
+                #=================================================================================
                 if self.varfull2:
                     lon,lat,var2,var_info2=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull2,self.plot_type)
                     lon180,var2=shift_data(lon,var2)
-                    
+
                     if projfull=='robin':
                         LON,LAT=np.meshgrid(lon180,lat)
                         X,Y=robin2cart(LAT,LON)
-    
+
                     if projfull=='moll':
                         LON,LAT=np.meshgrid(lon180,lat)
                         X,Y=mollweide2cart(LAT,LON)
-    
+
                     if projfull[0:5] in ['Npole','Spole','ortho']:
                         #Common to all azimutal projections
                         var2,lon180=add_cyclic(var2,lon180)
                         lon_lat_custom=None #Initialization
                         lat_b=None
-    
+
                         #Get custom lat/lon, if any
                         if len(projfull)>5:lon_lat_custom=filter_input(projfull[5:],'float')
-    
+
                     if projfull[0:5]=='Npole':
                         #Reduce data
                         lat_b=60
@@ -1977,7 +1977,7 @@ class Fig_2D_lon_lat(Fig_2D):
                         var2=var2[:lat_bi,:]
                         LON,LAT=np.meshgrid(lon180,lat)
                         X,Y=azimuth2cart(LAT,LON,-90,0)
-    
+
                     if projfull[0:5]=='ortho':
                         #Initialization
                         lon_p,lat_p=-120,20
@@ -1997,7 +1997,7 @@ class Fig_2D_lon_lat(Fig_2D):
                     plt.clabel(CS, inline=1, fontsize=14,fmt='%g')
 
                     var_info+=" (& "+var_info2+")"
-                    
+
 
                 if self.title:
                     plt.title(self.title,fontsize=label_size-self.nPan//2)
