@@ -174,7 +174,7 @@ def find_n(Lfull,Llev,reverse_input=False):
     Lfull=np.array(Lfull)               
     Nlev=len(np.atleast_1d(Llev))
     if Nlev==1:Llev=np.array([Llev])
-    dimsIN=Lfull.shape                         #get input variable dimensions
+    dimsIN=Lfull.shape                         #get input var2iable dimensions
     Nfull=dimsIN[0]  
     dimsOUT=tuple(np.append(Nlev,dimsIN[1:]))
     Ndim= np.int(np.prod(dimsIN[1:]))           #Ndim is the product  of all dimensions but the vertical axis
@@ -193,12 +193,12 @@ def find_n(Lfull,Llev,reverse_input=False):
 
 
 
-def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=None):
+def vinterp(var2IN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=None):
     '''
     Vertical linear or logarithmic interpolation for pressure or altitude.   Alex Kling 5-27-20
     Args:
-        varIN: variable to interpolate (N-dimensional array with VERTICAL AXIS FIRST)
-        Lfull: pressure [Pa] or atitude [m] at full layers same dimensions as varIN
+        var2IN: var2iable to interpolate (N-dimensional array with VERTICAL AXIS FIRST)
+        Lfull: pressure [Pa] or atitude [m] at full layers same dimensions as var2IN
         Llev : desired level for interpolation as a 1D array in [Pa] or [m] May be either increasing or decreasing as the output levels are processed one at the time.
         reverse_input (boolean) : reverse input arrays, e.g if zfull(0)=120 km, zLfull(N)=0km (which is typical) or if your input data is pfull(0)=1000Pa, pfull(N)=0Pa
         type : 'log' for logarithmic (typically pressure), 'lin' for linear (typically altitude)
@@ -206,7 +206,7 @@ def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=N
         index: indices for the interpolation, already procesed as [klev,Ndim] 
                Indices will be recalculated in not provided.
     Returns:
-        varOUT: variable interpolated on the Llev pressure or altitude levels
+        var2OUT: var2iable interpolated on the Llev pressure or altitude levels
         
     *** IMPORTANT NOTE***
     This interpolation assumes pressure are increasing downward, i.e:   
@@ -231,26 +231,26 @@ def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=N
     Nlev=len(np.atleast_1d(Llev))
     if Nlev==1:Llev=np.array([Llev])
  
-    dimsIN=varIN.shape               #get input variable dimensions
+    dimsIN=var2IN.shape               #get input var2iable dimensions
     Nfull=dimsIN[0]
     
-    #Special case where varIN and Lfull are a single profile            
-    if len(varIN.shape )==1:varIN=varIN.reshape([Nfull,1])
+    #Special case where var2IN and Lfull are a single profile            
+    if len(var2IN.shape )==1:var2IN=var2IN.reshape([Nfull,1])
     if len(Lfull.shape )==1:Lfull=Lfull.reshape([Nfull,1])
        
-    dimsIN=varIN.shape       #repeat in case varIN and Lfull were reshaped
+    dimsIN=var2IN.shape       #repeat in case var2IN and Lfull were reshaped
                
     dimsOUT=tuple(np.append(Nlev,dimsIN[1:]))
     Ndim= np.int(np.prod(dimsIN[1:]))          #Ndim is the product  of all dimensions but the vertical axis
-    varIN= np.reshape(varIN, (Nfull, Ndim))    #flatten the other dimensions to (Nfull, Ndim)
+    var2IN= np.reshape(var2IN, (Nfull, Ndim))    #flatten the other dimensions to (Nfull, Ndim)
     Lfull= np.reshape(Lfull, (Nfull, Ndim) )   #flatten the other dimensions to (Nfull, Ndim)
-    varOUT=np.zeros((Nlev, Ndim))
+    var2OUT=np.zeros((Nlev, Ndim))
     Ndimall=np.arange(0,Ndim)                   #all indices (does not change)
     
     #
     if reverse_input:
         Lfull=Lfull[::-1,:] 
-        varIN=varIN[::-1,:]
+        var2IN=var2IN[::-1,:]
     
     for k in range(0,Nlev):
         #Find nearest layer to Llev[k]
@@ -265,7 +265,7 @@ def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=N
         # for ii in range(Ndim):
         #     if n[ii]<Nfull-1:
         #         alpha=np.log(Llev[k]/Lfull[n[ii]+1,ii])/np.log(Lfull[n[ii],ii]/Lfull[n[ii]+1,ii])
-        #         varOUT[k,ii]=varIN[n[ii],ii]*alpha+(1-alpha)*varIN[n[ii]+1,ii]
+        #         var2OUT[k,ii]=var2IN[n[ii],ii]*alpha+(1-alpha)*var2IN[n[ii]+1,ii]
         
         #=================    Fast method  no loop  =======================
         #Convert the layers n to indexes, for a 2D matrix using nindex=i*ncol+j
@@ -289,9 +289,9 @@ def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=N
         #This does not affect the calculation as alpha is set to NaN for those values. 
         nindexp1[nindexp1>=Nfull*Ndim]=nindex[nindexp1>=Nfull*Ndim]
         
-        varOUT[k,:]=varIN.flatten()[nindex]*alpha+(1-alpha)*varIN.flatten()[nindexp1]
+        var2OUT[k,:]=var2IN.flatten()[nindex]*alpha+(1-alpha)*var2IN.flatten()[nindexp1]
         
-    return np.reshape(varOUT,dimsOUT)
+    return np.reshape(var2OUT,dimsOUT)
 
 
 def cart_to_azimut_TR(u,v,mode='from'):
@@ -351,11 +351,11 @@ def area_meridional_cells_deg(lat_c,dlon,dlat,normalize=False,R=3390000.):
     dlat*=np.pi/180    
     return 2.*R**2*dlon*np.cos(lat_c)*np.sin(dlat/2.)/area_tot
 
-def area_weights_deg(VAR_shape,lat_c,axis=-2):
+def area_weights_deg(var2_shape,lat_c,axis=-2):
     '''
-    Return weights for averaging of the variable VAR.   
+    Return weights for averaging of the var2iable var2.   
     Args:              
-        VAR_shape: Variable's shape, e.g. [133,36,48,46] typically obtained with 'VAR.shape' 
+        var2_shape: var2iable's shape, e.g. [133,36,48,46] typically obtained with 'var2.shape' 
         Expected dimensions are:                      (lat) [axis not need]
                                                  (lat, lon) [axis=-2 or axis=0]
                                            (time, lat, lon) [axis=-2 or axis=1]
@@ -367,11 +367,11 @@ def area_weights_deg(VAR_shape,lat_c,axis=-2):
         axis: Position of the latitude axis for 2D and higher-dimensional arrays. The default is the SECOND TO LAST dimension, e.g: axis=-2 
            >>> Because dlat is computed as lat_c[1]-lat_c[0] lat_c may be truncated on either end (e.g. lat= [-20 ...,0... +50]) but must be contineous. 
     Returns:
-        W: weights for VAR, ready for standard averaging as np.mean(VAR*W) [condensed form] or np.average(VAR,weights=W) [expended form]
+        W: weights for var2, ready for standard averaging as np.mean(var2*W) [condensed form] or np.average(var2,weights=W) [expended form]
 
     ***NOTE***
-    Given a variable VAR: 
-        VAR= [v1,v2,...vn]    
+    Given a var2iable var2: 
+        var2= [v1,v2,...vn]    
     Regular average is:    
         AVG = (v1+v2+... vn)/N   
     Weighted average is:     
@@ -380,44 +380,44 @@ def area_weights_deg(VAR_shape,lat_c,axis=-2):
     This function returns: 
         W= [w1,w2,... ,wn]*N/(w1+w2+...wn)
         
-    >>> Therfore taking a regular average of (VAR*W) with np.mean(VAR*W) or np.average(VAR,weights=W) returns the weighted-average of VAR
-    Use np.average(VAR,weights=W,axis=X) to average over a specific axis
+    >>> Therfore taking a regular average of (var2*W) with np.mean(var2*W) or np.average(var2,weights=W) returns the weighted-average of var2
+    Use np.average(var2,weights=W,axis=X) to average over a specific axis
         
     ''' 
     
-    #VAR or lat is a scalar, do nothing
-    if len(np.atleast_1d(lat_c))==1 or len(np.atleast_1d(VAR_shape))==1:
-        return np.ones(VAR_shape)
+    #var2 or lat is a scalar, do nothing
+    if len(np.atleast_1d(lat_c))==1 or len(np.atleast_1d(var2_shape))==1:
+        return np.ones(var2_shape)
     else:
         #Then, lat has at least 2 elements
         dlat=lat_c[1]-lat_c[0]   
         #Calculate cell areas. Since it is normalized, we can use dlon= 1 and R=1 without changing the result
         A=area_meridional_cells_deg(lat_c,1,dlat,normalize=True,R=1) #Note that sum(A)=(A1+A2+...An)=1  
-        #VAR is a 1D array. of size (lat). Easiest case since (w1+w2+...wn)=sum(A)=1 and N=len(lat)
-        if len(VAR_shape)==1:    
+        #var2 is a 1D array. of size (lat). Easiest case since (w1+w2+...wn)=sum(A)=1 and N=len(lat)
+        if len(var2_shape)==1:    
             W= A*len(lat_c)
         else: 
             # Generate the appropriate shape for the area A, e.g  (time, lev, lat, lon) > (1, 1, lat, 1)
             # In this case, N=time*lev*lat*lon and  (w1+w2+...wn) =time*lev*lon*sum(A) , therefore N/(w1+w2+...wn)=lat
-            reshape_shape=[1 for i in range(0,len(VAR_shape))]
+            reshape_shape=[1 for i in range(0,len(var2_shape))]
             reshape_shape[axis]=len(lat_c)
             W= A.reshape(reshape_shape)*len(lat_c)
-        return W*np.ones(VAR_shape)
+        return W*np.ones(var2_shape)
 
     
-def zonal_avg_P_lat(Ls,var,Ls_target,Ls_angle,symmetric=True):
+def zonal_avg_P_lat(Ls,var2,Ls_target,Ls_angle,symmetric=True):
     """
-    Return the zonally averaged mean value of a pressure interpolated 4D variable.
+    Return the zonally averaged mean value of a pressure interpolated 4D var2iable.
 
     Args:
-        Ls: 1D array of solar longitude of the input variable in degree (0->360)
-        var: a 4D variable var [time,levels,lat,lon] interpolated on the pressure levels (f_average_plevs file)
+        Ls: 1D array of solar longitude of the input var2iable in degree (0->360)
+        var2: a 4D var2iable var2 [time,levels,lat,lon] interpolated on the pressure levels (f_average_plevs file)
         Ls_target: central solar longitude of interest.     
         Ls_angle:  requested window angle centered around   Expl:  Ls_angle = 10.  (Window will go from Ls 85  
         symmetric: a boolean (default =True) If True, and if the requested window is out of range, Ls_angle is reduced
                                              If False, the time average is done on the data available
     Returns:
-        The zonnally and latitudinally-averaged field zpvar[level,lat]
+        The zonnally and latitudinally-averaged field zpvar2[level,lat]
     
     Expl:  Ls_target= 90.
            Ls_angle = 10.  
@@ -439,7 +439,7 @@ def zonal_avg_P_lat(Ls,var,Ls_target,Ls_angle,symmetric=True):
     if (Ls_max>360.):Ls_max-=360. 
     
     #Initialize output array
-    zpvar=np.zeros((var.shape[1],var.shape[2])) #nlev, nlat
+    zpvar2=np.zeros((var2.shape[1],var2.shape[2])) #nlev, nlat
     
     #check is the Ls of interest is within the data provided, raise execption otherwise
     if Ls_target <= Ls.min() or Ls_target >=Ls.max() :
@@ -465,17 +465,17 @@ def zonal_avg_P_lat(Ls,var,Ls_target,Ls_angle,symmetric=True):
                 print("I am only using            Ls %.2f <-- (%.2f)--> %.2f \n"%(max(Ls.min(),Ls_min),Ls_target,min(Ls.max(),Ls_max)))
     count=0
     #perform longitude average on the field
-    zvar= np.mean(var,axis=3)
+    zvar2= np.mean(var2,axis=3)
     
     for t in xrange(len(Ls)):
     #special case Ls around Ls =0 (wrap around)
         if (Ls_min<=Ls[t] <= Ls_max):
-            zpvar[:,:]=zpvar[:,:]+zvar[t,:,:]
+            zpvar2[:,:]=zpvar2[:,:]+zvar2[t,:,:]
             count+=1
             
     if  count>0:
-        zpvar/=count
-    return zpvar
+        zpvar2/=count
+    return zpvar2
     
 
     
@@ -630,20 +630,20 @@ def UT_LTtxt(UT_sol,lon_180=0.,roundmin=None):
             
      
 
-def space_time(lon,timex, varIN,kmx,tmx):
+def space_time(lon,timex, var2IN,kmx,tmx):
     """
     Obtain west and east propagating waves. This is a Python implementation of John Wilson's  space_time routine by Alex
     Args:
         lon:   longitude array in [degrees]   0->360 
         timex: 1D time array in units of [day]. Expl 1.5 days sampled every hour is  [0/24,1/24, 2/24,.. 1,.. 1.5]
-        varIN: input array for the Fourier analysis.
-               First axis must be longitude and last axis must be time.  Expl: varIN[lon,time] varIN[lon,lat,time],varIN[lon,lev,lat,time]
+        var2IN: input array for the Fourier analysis.
+               First axis must be longitude and last axis must be time.  Expl: var2IN[lon,time] var2IN[lon,lat,time],var2IN[lon,lev,lat,time]
         kmx: an integer for the number of longitudinal wavenumber to extract   (max allowable number of wavenumbers is nlon/2)
         tmx: an integer for the number of tidal harmonics to extract           (max allowable number of harmonics  is nsamples/2)
 
     Returns:
-        ampe:   East propagating wave amplitude [same unit as varIN]
-        ampw:   West propagating wave amplitude [same unit as varIN]
+        ampe:   East propagating wave amplitude [same unit as var2IN]
+        ampw:   West propagating wave amplitude [same unit as var2IN]
         phasee: East propagating phase [degree]
         phasew: West propagating phase [degree]
         
@@ -661,14 +661,14 @@ def space_time(lon,timex, varIN,kmx,tmx):
 
     """           
     
-    dims= varIN.shape             #get input variable dimensions
+    dims= var2IN.shape             #get input var2iable dimensions
     
     lon_id= dims[0]    # lon          
     time_id= dims[-1]  # time     
     dim_sup_id=dims[1:-1] #additional dimensions stacked in the middle
-    jd= np.int(np.prod( dim_sup_id))     #jd is the total number of dimensions in the middle is varIN>3D
+    jd= np.int(np.prod( dim_sup_id))     #jd is the total number of dimensions in the middle is var2IN>3D
     
-    varIN= np.reshape(varIN, (lon_id, jd, time_id) )   #flatten the middle dimensions if any
+    var2IN= np.reshape(var2IN, (lon_id, jd, time_id) )   #flatten the middle dimensions if any
     
     #Initialize 4 empty arrays
     ampw, ampe,phasew,phasee =[np.zeros((kmx,tmx,jd)) for _x in range(0,4)]
@@ -689,12 +689,12 @@ def space_time(lon,timex, varIN,kmx,tmx):
         sinx= np.sin( kk*argx )*rnorm
         
     #   Inner product to calculate the Fourier coefficients of the cosine
-    #   and sine contributions of the spatial variation
-        acoef = np.dot(varIN.T,cosx) 
-        bcoef = np.dot(varIN.T,sinx)
+    #   and sine contributions of the spatial var2iation
+        acoef = np.dot(var2IN.T,cosx) 
+        bcoef = np.dot(var2IN.T,sinx)
 
     # Now get the cos/sine series expansions of the temporal
-    #variations of the acoef and bcoef spatial terms.
+    #var2iations of the acoef and bcoef spatial terms.
         for nn in range(0,tmx):
             cosray= rnormt*np.cos(nn*arg )
             sinray= rnormt*np.sin(nn*arg )
@@ -732,15 +732,15 @@ def space_time(lon,timex, varIN,kmx,tmx):
 
     #TODO implement zonal mean: zamp,zphas,stamp,stphs
     '''
-    #  varIN= reshape( varIN, dims );
+    #  var2IN= reshape( var2IN, dims );
     
     #if nargout < 5;  return;  end ---> only  ampe,ampw,phasee,phasew are requested
     
     
     #   Now calculate the axisymmetric tides  zamp,zphas
     
-    zvarIN= np.mean(varIN,axis=0)
-    zvarIN= np.reshape( zvarIN, (jd, time_id) )
+    zvar2IN= np.mean(var2IN,axis=0)
+    zvar2IN= np.reshape( zvar2IN, (jd, time_id) )
     
     arg= timex * 2* np.pi
     arg= np.reshape( arg, (len(arg), 1 ))
@@ -750,8 +750,8 @@ def space_time(lon,timex, varIN,kmx,tmx):
         cosray= rnorm*np.cos( nn*arg )
         sinray= rnorm*np.sin( nn*arg )
     
-        cosser=  np.dot(zvarIN,cosray)
-        sinser=  np.dot(zvarIN,sinray)
+        cosser=  np.dot(zvar2IN,cosray)
+        sinser=  np.dot(zvar2IN,sinray)
     
         zamp[:,nn]= np.sqrt( cosser[:]**2 + sinser[:]**2 ).T
         zphas[:,nn]= np.mod( -np.arctan2( sinser, cosser )+tpi, tpi ).T * 180/np.pi
@@ -768,7 +768,7 @@ def space_time(lon,timex, varIN,kmx,tmx):
     
     #if nargout < 7;  return;  end
     
-    sxx= np.mean(varIN,ndims(varIN));
+    sxx= np.mean(var2IN,ndims(var2IN));
     [stamp,stphs]= amp_phase( sxx, lon, kmx );
     
     if len(dims)> 2;
@@ -782,7 +782,7 @@ def space_time(lon,timex, varIN,kmx,tmx):
 
 
         
-def dvar_dh(arr, h=None): 
+def dvar2_dh(arr, h=None): 
     '''
     Differentiate an array A(dim1,dim2,dim3...) with respect to h. The differentiated dimension must be the first dimension.
     > If h is 1D: h and dim1 must have the same length 
@@ -797,7 +797,7 @@ def dvar_dh(arr, h=None):
     *Example*
      #Compute dT/dz where T[time,LEV,lat,lon] is the temperature and Zkm is the array of  level heights in Km:
      #First we transpose t so the vertical dimension comes first as T[LEV,time,lat,lon] and then we transpose back to get dTdz[time,LEV,lat,lon].
-     dTdz=dvar_dh(t.transpose([1,0,2,3]),Zkm).transpose([1,0,2,3]) 
+     dTdz=dvar2_dh(t.transpose([1,0,2,3]),Zkm).transpose([1,0,2,3]) 
         
     '''
     h=np.array(h)
@@ -810,7 +810,7 @@ def dvar_dh(arr, h=None):
             d_arr[-1,...] = (arr[-1,...]-arr[-2,...])/(h[-1]-h[-2])
             d_arr[1:-1,...] = (arr[2:,...]-arr[0:-2,...])/(np.reshape(h[2:]-h[0:-2],reshape_shape))
          
-        #h has the same dimension as var    
+        #h has the same dimension as var2    
         elif h.shape==arr.shape:
             d_arr = np.copy(arr)
             d_arr[0,...] = (arr[1,...]-arr[0,...])/(h[1,...]-h[0,...])
@@ -819,7 +819,7 @@ def dvar_dh(arr, h=None):
         else:     
             print('Error,h.shape=', h.shape,'arr.shape=',arr.shape)
         
-    # h is not defined, we return only d_var, not d_var/dh
+    # h is not defined, we return only d_var2, not d_var2/dh
     else:
         d_arr = np.copy(arr)
         reshape_shape=np.append([arr.shape[0]-2],[1 for i in range(0,arr.ndim -1)]) 
@@ -1025,7 +1025,7 @@ def tshift(array, lon=None, timex=None, nsteps_out=None):
     Interpolate onto a new time grid with nsteps_out samples per sol  
     New time:   [ 0 ... nn-1/nsteps_out ]*24 
     Args:
-        array: variable to be shifted. Assume longitude is the first dimension and time in the last dimension
+        array: var2iable to be shifted. Assume longitude is the first dimension and time in the last dimension
         lon: longitude
         timex should be in units of hours  (only timex(1) is actually relevant)
         nsteps_out
