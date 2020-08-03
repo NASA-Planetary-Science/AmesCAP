@@ -656,7 +656,7 @@ def read_axis_options(axis_options_txt):
     Returns:
         Xaxis: X-axis bounds as a numpy array or None if undedefined
         Yaxis: Y-axis bounds as a numpy array or None if undedefined
-        custom_line1: string, i.e colormap ('jet', 'spectral') or line options, e.g '--r' for dashed red
+        custom_line1: string, i.e colormap ('jet', 'nipy_spectral') or line options, e.g '--r' for dashed red
         custom_line2: None of string for projections, e.g 'ortho -125,45'
 
     '''
@@ -964,10 +964,10 @@ def make_template():
         customFileIN.write(lh+"""> The other free dimensions accept value, 'all' or valmin,valmax as above\n""")
         customFileIN.write(lh+"""AXIS OPTIONS AND PROJECTIONS:\n""")
         customFileIN.write(lh+"""Set the x-axis and y-axis limits in the figure units. All Matplolib styles are supported:\n""")
-        customFileIN.write(lh+"""> 'cmap' changes the colormap: 'jet' (winds), 'spectral' (temperature), 'bwr' (diff plot)\n""")
+        customFileIN.write(lh+"""> 'cmap' changes the colormap: 'jet' (winds), 'nipy_spectral' (temperature), 'bwr' (diff plot)\n""")
         customFileIN.write(lh+"""> 'line' sets the line style:  '-r' (solid red), '--g' (dashed green), '-ob' (solid & blue markers)\n""")
         customFileIN.write(lh+"""> 'proj' sets the projection: Cylindrical options are 'cart' (cartesian), 'robin'  (Robinson), 'moll' (Mollweide) \n""")
-        customFileIN.write(lh+""">                              Azimutal   options are 'Npole' (north pole), 'Spole' (south pole), 'ortho' (Orthographic)  \n""")
+        customFileIN.write(lh+""">                             Azimutal   options are 'Npole' (north pole), 'Spole' (south pole), 'ortho' (Orthographic)  \n""")
         customFileIN.write(lh+""">  Azimutal projections accept customization arguments: 'Npole lat_max', 'Spole lat_min' , 'ortho lon_center, lat_center' \n""")
         customFileIN.write(lh+"""KEYWORDS:\n""")
         customFileIN.write(lh+"""> 'HOLD ON' [blocks of figures] 'HOLD OFF' groups the figures as a multi-panel page\n""")
@@ -1210,6 +1210,28 @@ def get_figure_header(line_txt):
     figtype=line_cmd.split('=')[0].strip()  #Plot 2D lon X lat
     boolPlot=line_cmd.split('=')[1].strip()=='True' # Return True
     return figtype, boolPlot
+
+def format_lon_lat(lon_lat,type):
+    '''
+    Format latitude and longitude as labels, e.g. 30S , 30N, 45W, 45E
+    Args:
+        lon_lat (float): latitude or longitude +/-180
+        type (string) : 'lat' or 'lon'
+    Returns:
+        lon_lat_label : (string), formatted label
+    '''
+    #Initialize
+    letter=""
+    if type =='lon':
+        if lon_lat<0:letter="W"
+        if lon_lat>0:letter="E"
+    elif type =='lat':
+        if lon_lat<0:letter="S"
+        if lon_lat>0:letter="N"
+    #Remove minus sign, if any
+    lon_lat=abs(lon_lat)
+    return "%i%s" %(lon_lat,letter)
+
 
 #======================================================
 #                  FILE SYSTEM UTILITIES
@@ -1716,11 +1738,11 @@ class Fig_2D(object):
     def solid_contour(self,xdata,ydata,var,contours):
        np.seterr(divide='ignore', invalid='ignore') #prevent error message when making contour
        if contours is None:
-           CS=plt.contour(xdata, ydata,var,11,colors='k',linewidths=3)
+           CS=plt.contour(xdata, ydata,var,11,colors='k',linewidths=2)
        else:
            #If one contour is provided (as float), convert to array
            if type(contours)==float:contours=[contours]
-           CS=plt.contour(xdata, ydata,var,contours,colors='k',linewidths=3)
+           CS=plt.contour(xdata, ydata,var,contours,colors='k',linewidths=2)
        plt.clabel(CS, inline=1, fontsize=14,fmt='%g')
 
 
@@ -1782,42 +1804,52 @@ class Fig_2D_lon_lat(Fig_2D):
                 ax.axis('off')
                 ax.patch.set_color('1') #Nan are reverse to white for projections
 
-                LON,LAT=np.meshgrid(lon180,lat)
-
-                #Add meridans and parallel
-                meridians=np.arange(-180,180,30)
-                parallels=np.arange(-60,90,30)
                 #---------------------------------------------------------------
                 if projfull=='robin':
                     LON,LAT=np.meshgrid(lon180,lat)
                     X,Y=robin2cart(LAT,LON)
 
                     #Add meridans and parallel
-                    for mer in meridians:
+                    for mer in np.arange(-180,180,30):
                         xg,yg=robin2cart(lat,lat*0+mer)
-                        xl,yl=robin2cart(90,mer)
                         plt.plot(xg,yg,':k',lw=0.5)
-                        plt.text(xl,yl,'  %i'%(mer), fontsize=6)
-
-                    for par in parallels:
+                    #Label for 1 meridian out of 2:
+                    for mer in np.arange(-180,181,90):
+                        xl,yl=robin2cart(lat.min(),mer)
+                        lab_txt=format_lon_lat(mer,'lon')
+                        plt.text(xl,yl,lab_txt, fontsize=label_size-self.nPan//2,verticalalignment='top',horizontalalignment='center')
+                    for par in np.arange(-60,90,30):
                         xg,yg=robin2cart(lon180*0+par,lon180)
-                        xl,yl=robin2cart(par,180)
                         plt.plot(xg,yg,':k',lw=0.5)
-                        plt.text(xl,yl,'%i S'%(par), fontsize=6)
+                        xl,yl=robin2cart(par,180)
+                        lab_txt=format_lon_lat(par,'lat')
+                        plt.text(xl,yl,lab_txt, fontsize=label_size-self.nPan//2)
 
                 #---------------------------------------------------------------
                 if projfull=='moll':
                     LON,LAT=np.meshgrid(lon180,lat)
                     X,Y=mollweide2cart(LAT,LON)
+                    #Add meridans and parallel
+                    for mer in np.arange(-180,180,30):
+                        xg,yg=mollweide2cart(lat,lat*0+mer)
+                        plt.plot(xg,yg,':k',lw=0.5)
+                    #Label for 1 meridian out of 2:
+                    for mer in [-180,0,180]:
+                        xl,yl=mollweide2cart(lat.min(),mer)
+                        lab_txt=format_lon_lat(mer,'lon')
+                        plt.text(xl,yl,lab_txt, fontsize=label_size-self.nPan//2,verticalalignment='top',horizontalalignment='center')
 
-
-
+                    for par in np.arange(-60,90,30):
+                        xg,yg=mollweide2cart(lon180*0+par,lon180)
+                        xl,yl=mollweide2cart(par,180)
+                        lab_txt=format_lon_lat(par,'lat')
+                        plt.plot(xg,yg,':k',lw=0.5)
+                        plt.text(xl,yl,lab_txt, fontsize=label_size-self.nPan//2)
 
                 if projfull[0:5] in ['Npole','Spole','ortho']:
                     #Common to all azimutal projections
                     var,_=add_cyclic(var,lon180)
                     zsurf,lon180=add_cyclic(zsurf,lon180)
-                    LON,LAT=np.meshgrid(lon180,lat)
                     lon_lat_custom=None #Initialization
                     lat_b=None
 
@@ -1825,24 +1857,70 @@ class Fig_2D_lon_lat(Fig_2D):
                     if len(projfull)>5:lon_lat_custom=filter_input(projfull[5:],'float')
 
                 if projfull[0:5]=='Npole':
-                    X,Y=azimuth2cart(LAT,LON,90,0)
-                    lat_b=45
+                    #Reduce data
+                    lat_b=60
                     if not(lon_lat_custom is None):lat_b=lon_lat_custom #bounding lat
+                    lat_bi,_=get_lat_index(lat_b,lat)
+                    lat=lat[lat_bi:]
+                    var=var[lat_bi:,:]
+                    zsurf=zsurf[lat_bi:,:]
+                    LON,LAT=np.meshgrid(lon180,lat)
+                    X,Y=azimuth2cart(LAT,LON,90,0)
 
-
-
+                     #Add meridans and parallel
+                    for mer in np.arange(-180,180,30):
+                        xg,yg=azimuth2cart(lat,lat*0+mer,90)
+                        plt.plot(xg,yg,':k',lw=0.5)
+                        xl,yl=azimuth2cart(lat.min()-3,mer,90) #Put label 3 degree south of the bounding latitude
+                        lab_txt=format_lon_lat(mer,'lon')
+                        plt.text(xl,yl,lab_txt, fontsize=label_size-self.nPan//2,verticalalignment='top',horizontalalignment='center')
+                    #Parallels start from 80N, every 10 degree
+                    for par in  np.arange(80,lat.min(),-10):
+                        xg,yg=azimuth2cart(lon180*0+par,lon180,90)
+                        plt.plot(xg,yg,':k',lw=0.5)
+                        xl,yl=azimuth2cart(par,180,90)
+                        lab_txt=format_lon_lat(par,'lat')
+                        plt.text(xl,yl,lab_txt, fontsize=5)
                 if projfull[0:5]=='Spole':
+                    lat_b=-60
+                    if not(lon_lat_custom is None):lat_b=lon_lat_custom #bounding lat
+                    lat_bi,_=get_lat_index(lat_b,lat)
+                    lat=lat[:lat_bi]
+                    var=var[:lat_bi,:]
+                    zsurf=zsurf[:lat_bi,:]
+                    LON,LAT=np.meshgrid(lon180,lat)
                     X,Y=azimuth2cart(LAT,LON,-90,0)
-                    lat_b=-45
-                    if not( lon_lat_custom is None):lat_b=lon_lat_custom #bounding lat
+                    #Add meridans and parallel
+                    for mer in np.arange(-180,180,30):
+                        xg,yg=azimuth2cart(lat,lat*0+mer,-90)
+                        plt.plot(xg,yg,':k',lw=0.5)
+                        xl,yl=azimuth2cart(lat.max()+3,mer,-90) #Put label 3 degree north of the bounding latitude
+                        lab_txt=format_lon_lat(mer,'lon')
+                        plt.text(xl,yl,lab_txt, fontsize=label_size-self.nPan//2,verticalalignment='top',horizontalalignment='center')
+                    #Parallels start from 80S, every 10 degree
+                    for par in np.arange(-80,lat.max(),10):
+                        xg,yg=azimuth2cart(lon180*0+par,lon180,-90)
+                        plt.plot(xg,yg,':k',lw=0.5)
+                        xl,yl=azimuth2cart(par,180,-90)
+                        lab_txt=format_lon_lat(par,'lat')
+                        plt.text(xl,yl,lab_txt, fontsize=5)
+
                 if projfull[0:5]=='ortho':
                     #Initialization
                     lon_p,lat_p=-120,20
-                    if not( lon_lat_custom is None):lon_p=lon_lat_custom[0];lat_p=lon_lat_custom[1] #bounding lat
+                    if not(lon_lat_custom is None):lon_p=lon_lat_custom[0];lat_p=lon_lat_custom[1] #bounding lat
+                    LON,LAT=np.meshgrid(lon180,lat)
                     X,Y,MASK=ortho2cart(LAT,LON,lat_p,lon_p)
                     #Mask opposite side of the planet
                     var=var*MASK
                     zsurf=zsurf*MASK
+                     #Add meridans and parallel
+                    for mer in np.arange(-180,180,30):
+                        xg,yg,maskg=ortho2cart(lat,lat*0+mer,lat_p,lon_p)
+                        plt.plot(xg*maskg,yg,':k',lw=0.5)
+                    for par in np.arange(-60,90,30):
+                        xg,yg,maskg=ortho2cart(lon180*0+par,lon180,lat_p,lon_p)
+                        plt.plot(xg*maskg,yg,':k',lw=0.5)
 
 
 
@@ -1851,35 +1929,78 @@ class Fig_2D_lon_lat(Fig_2D):
                 else:
                     plt.contourf(X, Y,var,levels,cmap=cmap)
 
-
-
-
                 cbar=plt.colorbar(orientation='horizontal',aspect=50)
                 cbar.ax.tick_params(labelsize=label_size-self.nPan//2) #shrink the colorbar label as the number of subplot increase
 
                 #---Add topo contour---
                 plt.contour(X, Y,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
-
+                #=================================================================================
+                #=======================Solid contour 2nd variables===============================
+                #=================================================================================                
                 if self.varfull2:
                     lon,lat,var2,var_info2=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull2,self.plot_type)
                     lon180,var2=shift_data(lon,var2)
-                    LON,LAT=np.meshgrid(lon180,lat)
-                    if projfull=='robin':X,Y=robin2cart(LAT,LON)
-                    if projfull=='moll':X,Y=mollweide2cart(LAT,LON)
-
+                    
+                    if projfull=='robin':
+                        LON,LAT=np.meshgrid(lon180,lat)
+                        X,Y=robin2cart(LAT,LON)
+    
+                    if projfull=='moll':
+                        LON,LAT=np.meshgrid(lon180,lat)
+                        X,Y=mollweide2cart(LAT,LON)
+    
+                    if projfull[0:5] in ['Npole','Spole','ortho']:
+                        #Common to all azimutal projections
+                        var2,lon180=add_cyclic(var2,lon180)
+                        lon_lat_custom=None #Initialization
+                        lat_b=None
+    
+                        #Get custom lat/lon, if any
+                        if len(projfull)>5:lon_lat_custom=filter_input(projfull[5:],'float')
+    
+                    if projfull[0:5]=='Npole':
+                        #Reduce data
+                        lat_b=60
+                        if not(lon_lat_custom is None):lat_b=lon_lat_custom #bounding lat
+                        lat_bi,_=get_lat_index(lat_b,lat)
+                        lat=lat[lat_bi:]
+                        var2=var2[lat_bi:,:]
+                        LON,LAT=np.meshgrid(lon180,lat)
+                        X,Y=azimuth2cart(LAT,LON,90,0)
+                    if projfull[0:5]=='Spole':
+                        lat_b=-60
+                        if not(lon_lat_custom is None):lat_b=lon_lat_custom #bounding lat
+                        lat_bi,_=get_lat_index(lat_b,lat)
+                        lat=lat[:lat_bi]
+                        var2=var2[:lat_bi,:]
+                        LON,LAT=np.meshgrid(lon180,lat)
+                        X,Y=azimuth2cart(LAT,LON,-90,0)
+    
+                    if projfull[0:5]=='ortho':
+                        #Initialization
+                        lon_p,lat_p=-120,20
+                        if not(lon_lat_custom is None):lon_p=lon_lat_custom[0];lat_p=lon_lat_custom[1] #bounding lat
+                        LON,LAT=np.meshgrid(lon180,lat)
+                        X,Y,MASK=ortho2cart(LAT,LON,lat_p,lon_p)
+                        #Mask opposite side of the planet
+                        var2=var2*MASK
 
                     np.seterr(divide='ignore', invalid='ignore') #prevent error message when making contour
-
-
                     if self.contour2 is None:
-                        CS=plt.contour(X, Y,var2,11,colors='k',linewidths=3)
+                        CS=plt.contour(X, Y,var2,11,colors='k',linewidths=2)
                     else:
                         #If one contour is provided (as float), convert to array
-                        if type(self.contours2)==float:self.contour2=[self.contour2]
-                        CS=plt.contour(X, Y,var2,self.contour2,colors='k',linewidths=3)
+                        if type(self.contour2)==float:self.contour2=[self.contour2]
+                        CS=plt.contour(X, Y,var2,self.contour2,colors='k',linewidths=2)
                     plt.clabel(CS, inline=1, fontsize=14,fmt='%g')
 
                     var_info+=" (& "+var_info2+")"
+                    
+
+                if self.title:
+                    plt.title(self.title,fontsize=label_size-self.nPan//2)
+                else:
+                    plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=label_size-self.nPan//2) #we remove the first coma ',' of fdim_txt to print to the new line
 
 
             self.success=True
