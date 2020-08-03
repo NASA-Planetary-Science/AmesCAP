@@ -1434,8 +1434,8 @@ class Fig_2D(object):
             self.range=None
 
         #Update the variable after reading template
-        #self.sol_array,self.filetype,self.var,self.simuID=split_varfull(self.varfull)
-        #if self.varfull2: self.sol_array2,self.filetype2,self.var2,self.simuID2=split_varfull(self.varfull2)
+        self.sol_array,self.filetype,self.var,self.simuID=split_varfull(self.varfull)
+        if self.varfull2: self.sol_array2,self.filetype2,self.var2,self.simuID2=split_varfull(self.varfull2)
 
 
     def prep_file(self,var_name,file_type,simuID,sol_array):
