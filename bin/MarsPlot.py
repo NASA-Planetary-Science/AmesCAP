@@ -1803,7 +1803,7 @@ class Fig_2D_lon_lat(Fig_2D):
 
                 ax.axis('off')
                 ax.patch.set_color('1') #Nan are reverse to white for projections
-
+                if projfull[0:5] in ['Npole','Spole','ortho']:ax.set_aspect('equal')
                 #---------------------------------------------------------------
                 if projfull=='robin':
                     LON,LAT=np.meshgrid(lon180,lat)
