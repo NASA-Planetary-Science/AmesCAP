@@ -684,7 +684,7 @@ def read_axis_options(axis_options_txt):
             Yaxis.append(np.float(txt.split(',')[i].strip()))
     #Line or colormap
     custom_line1=list_txt[2].split('=')[1].strip()
-    custom_line2=None 
+    custom_line2=None
     custom_line3=None
     
     # Scale: lin or log (2D plots only)
@@ -1733,13 +1733,11 @@ class Fig_2D(object):
 
     def filled_contour(self,xdata,ydata,var):
         cmap=self.axis_opt1
-        
-        if self.axis_opt2 =='lin':
-            norm =None #default, linear mapping
+        norm =None
+
         if self.axis_opt2 =='log':
             norm =LogNorm() #default, log mapping
         else: 
-            prYellow("""*** Warning*** scale %s, not recognized, using 'lin'"""%(self.axis_opt2))
             self.axis_opt2 ='lin'
             norm = None
             
@@ -1747,6 +1745,7 @@ class Fig_2D(object):
         #Personalized colormaps
         if cmap=='wbr':cmap=wbr_cmap()
         if cmap=='rjw':cmap=rjw_cmap()
+        
         if self.range:
             if self.axis_opt2 =='lin': 
                 levs=np.linspace(self.range[0],self.range[1],levels)
