@@ -21,6 +21,8 @@ try:
     from matplotlib.ticker import MultipleLocator, FuncFormatter  #format ticks
     from netCDF4 import Dataset, MFDataset
     from numpy import sqrt, exp, max, mean, min, log, log10,sin,cos
+    from matplotlib.colors import LogNorm
+    from matplotlib.ticker import LogFormatter
 
 except ImportError as error_msg:
     prYellow("Error while importing modules")
@@ -652,12 +654,13 @@ def read_axis_options(axis_options_txt):
     '''
     Return axis customization options
     Args:
-        axis_options_txt: One liner string: 'Axis Options  : lon = [5,8] | lat = [None,None] | cmap = jet |proj = cart'
+        axis_options_txt: One liner string: 'Axis Options  : lon = [5,8] | lat = [None,None] | cmap = jet | scale= lin | proj = cart'
     Returns:
         Xaxis: X-axis bounds as a numpy array or None if undedefined
         Yaxis: Y-axis bounds as a numpy array or None if undedefined
         custom_line1: string, i.e colormap ('jet', 'nipy_spectral') or line options, e.g '--r' for dashed red
-        custom_line2: None of string for projections, e.g 'ortho -125,45'
+        custom_line2: lin or log
+        custom_line3: None of string for projections, e.g 'ortho -125,45'
 
     '''
     list_txt=axis_options_txt.split(':')[1].split('|')
@@ -681,12 +684,15 @@ def read_axis_options(axis_options_txt):
             Yaxis.append(np.float(txt.split(',')[i].strip()))
     #Line or colormap
     custom_line1=list_txt[2].split('=')[1].strip()
-    #Projection information, if any:
-    if len(list_txt)==3:
-        custom_line2=None
-    elif len(list_txt)==4:
-        custom_line2=list_txt[3].split('=')[1].strip()
-    return Xaxis, Yaxis,custom_line1,custom_line2
+    custom_line2=None 
+    custom_line3=None
+    
+    # Scale: lin or log (2D plots only)
+
+    if len(list_txt)==4:custom_line2=list_txt[3].split('=')[1].strip()
+    if len(list_txt)==5:custom_line3=list_txt[4].split('=')[1].strip()
+    return Xaxis, Yaxis,custom_line1,custom_line2,custom_line3
+        
 
 def split_varfull(varfull):
     '''
@@ -966,6 +972,7 @@ def make_template():
         customFileIN.write(lh+"""Set the x-axis and y-axis limits in the figure units. All Matplolib styles are supported:\n""")
         customFileIN.write(lh+"""> 'cmap' changes the colormap: 'jet' (winds), 'nipy_spectral' (temperature), 'bwr' (diff plot)\n""")
         customFileIN.write(lh+"""> 'line' sets the line style:  '-r' (solid red), '--g' (dashed green), '-ob' (solid & blue markers)\n""")
+        customFileIN.write(lh+"""> 'scale' sets the color mapping:  'lin' (linear) or 'log' (logarithmic) For 'log', Cmin,Cmax are typically expected \n""")
         customFileIN.write(lh+"""> 'proj' sets the projection: Cylindrical options are 'cart' (cartesian), 'robin'  (Robinson), 'moll' (Mollweide) \n""")
         customFileIN.write(lh+""">                             Azimutal   options are 'Npole' (north pole), 'Spole' (south pole), 'ortho' (Orthographic)  \n""")
         customFileIN.write(lh+""">  Azimutal projections accept customization arguments: 'Npole lat_max', 'Spole lat_min' , 'ortho lon_center, lat_center' \n""")
@@ -1211,6 +1218,7 @@ def get_figure_header(line_txt):
     boolPlot=line_cmd.split('=')[1].strip()=='True' # Return True
     return figtype, boolPlot
 
+    
 def format_lon_lat(lon_lat,type):
     '''
     Format latitude and longitude as labels, e.g. 30S , 30N, 45W, 45E
@@ -1400,7 +1408,8 @@ class Fig_2D(object):
         self.Xlim=None
         self.Ylim=None
         self.axis_opt1='jet'
-        self.axis_opt2=None #place holder for projections
+        self.axis_opt2='lin' #Linear or logscale
+        self.axis_opt3=None #place holder for projections
 
     def make_template(self,plot_txt,fdim1_txt,fdim2_txt,Xaxis_txt,Yaxis_txt):
         customFileIN.write("<<<<<<<<<<<<<<| {0:<15} = {1} |>>>>>>>>>>>>>\n".format(plot_txt,self.doPlot))
@@ -1414,9 +1423,9 @@ class Fig_2D(object):
 
         #Write colormap AND projection if plot is of the type 2D_lon_lat
         if self.plot_type=='2D_lon_lat':
-            customFileIN.write("Axis Options  : {0} = [None,None] | {1} = [None,None] | cmap = jet | proj = cart \n".format(Xaxis_txt,Yaxis_txt)) #8
+            customFileIN.write("Axis Options  : {0} = [None,None] | {1} = [None,None] | cmap = jet | scale = lin | proj = cart \n".format(Xaxis_txt,Yaxis_txt)) #8
         else:
-            customFileIN.write("Axis Options  : {0} = [None,None] | {1} = [None,None] | cmap = jet \n".format(Xaxis_txt,Yaxis_txt))    #8
+            customFileIN.write("Axis Options  : {0} = [None,None] | {1} = [None,None] | cmap = jet |scale = lin \n".format(Xaxis_txt,Yaxis_txt))    #8
 
     def read_template(self):
         self.title= rT('char')                   #1
@@ -1426,7 +1435,7 @@ class Fig_2D(object):
         self.fdim2=rT('float')                   #5
         self.varfull2=rT('char')                 #6
         self.contour2=rT('float')                #7
-        self.Xlim,self.Ylim,self.axis_opt1,self.axis_opt2=read_axis_options(customFileIN.readline())     #8
+        self.Xlim,self.Ylim,self.axis_opt1,self.axis_opt2,self.axis_opt3=read_axis_options(customFileIN.readline())     #8
 
         #Various sanity checks
         if self.range and len(np.atleast_1d(self.range))==1:
@@ -1724,15 +1733,42 @@ class Fig_2D(object):
 
     def filled_contour(self,xdata,ydata,var):
         cmap=self.axis_opt1
+        
+        if self.axis_opt2 =='lin':
+            norm =None #default, linear mapping
+        if self.axis_opt2 =='log':
+            norm =LogNorm() #default, log mapping
+        else: 
+            prYellow("""*** Warning*** scale %s, not recognized, using 'lin'"""%(self.axis_opt2))
+            self.axis_opt2 ='lin'
+            norm = None
+            
+        
         #Personalized colormaps
         if cmap=='wbr':cmap=wbr_cmap()
         if cmap=='rjw':cmap=rjw_cmap()
         if self.range:
-            plt.contourf(xdata, ydata,var,np.linspace(self.range[0],self.range[1],levels),extend='both',cmap=cmap)
+            if self.axis_opt2 =='lin': 
+                levs=np.linspace(self.range[0],self.range[1],levels)
+            if self.axis_opt2 =='log': 
+                if self.range[0]<=0 or  self.range[1]<=0: prRed('*** Error using log scale, bounds cannot be zero or negative')
+                levs=np.logspace(np.log10(self.range[0]),np.log10(self.range[1]),levels) 
+                
+            plt.contourf(xdata, ydata,var,levs,extend='both',cmap=cmap,norm=norm)
         else:
-            plt.contourf(xdata, ydata,var,levels,cmap=cmap)
-
-        cbar=plt.colorbar(orientation='horizontal',aspect=50)
+            plt.contourf(xdata, ydata,var,levels,cmap=cmap,norm=norm)
+            
+        #Adjust colorbar for log 
+        if self.axis_opt2 =='log':    
+            formatter = LogFormatter(10, labelOnlyBase=False) 
+            if self.range:
+                cbar=plt.colorbar(ticks=levs,orientation='horizontal',aspect=50,format=formatter)
+            else:
+                cbar=plt.colorbar(orientation='horizontal',aspect=50,format=formatter)
+                    
+        else:    
+            cbar=plt.colorbar(orientation='horizontal',aspect=50)
+            
         cbar.ax.tick_params(labelsize=label_size-self.nPan//2) #shrink the colorbar label as the number of subplot increase
 
     def solid_contour(self,xdata,ydata,var,contours):
@@ -1765,7 +1801,7 @@ class Fig_2D_lon_lat(Fig_2D):
             zsurf=get_topo_2D(self.simuID,self.sol_array)
             _,zsurf=shift_data(lon,zsurf)
 
-            projfull=self.axis_opt2
+            projfull=self.axis_opt3
             #------------------------------------------------------------------------
             #If proj = cart, use the generic contours utility from the Fig_2D() class
             #------------------------------------------------------------------------
@@ -1923,7 +1959,6 @@ class Fig_2D_lon_lat(Fig_2D):
                     for par in np.arange(-60,90,30):
                         xg,yg,maskg=ortho2cart(lon180*0+par,lon180,lat_p,lon_p)
                         plt.plot(xg*maskg,yg,':k',lw=0.5)
-
 
 
                 if self.range:
@@ -2314,7 +2349,7 @@ class Fig_1D(object):
         self.lat=rT('float')                #4
         self.lon=rT('float')                #5
         self.lev=rT('float')                #6
-        self.Dlim,self.Vlim,self.axis_opt1,_=read_axis_options(customFileIN.readline())     #7
+        self.Dlim,self.Vlim,self.axis_opt1,_,_=read_axis_options(customFileIN.readline())     #7
 
         self.plot_type=self.get_plot_type()
 
