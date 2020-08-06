@@ -40,7 +40,7 @@ except Exception as exception:
 #                  ARGUMENTS PARSER
 #======================================================
 
-global current_version;current_version=2.1
+global current_version;current_version=2.2
 parser = argparse.ArgumentParser(description="""\033[93mAnalysis Toolkit for the Ames GCM, V%s\033[00m """%(current_version),
                                 formatter_class=argparse.RawTextHelpFormatter)
 
@@ -686,11 +686,13 @@ def read_axis_options(axis_options_txt):
     custom_line1=list_txt[2].split('=')[1].strip()
     custom_line2=None
     custom_line3=None
-    
     # Scale: lin or log (2D plots only)
 
-    if len(list_txt)==4:custom_line2=list_txt[3].split('=')[1].strip()
-    if len(list_txt)==5:custom_line3=list_txt[4].split('=')[1].strip()
+    if len(list_txt)==4:
+        custom_line2=list_txt[3].split('=')[1].strip()
+    if len(list_txt)==5:
+        custom_line2=list_txt[3].split('=')[1].strip()
+        custom_line3=list_txt[4].split('=')[1].strip()
     return Xaxis, Yaxis,custom_line1,custom_line2,custom_line3
         
 
@@ -1695,6 +1697,35 @@ class Fig_2D(object):
         plt.ylabel(ylabel,fontsize=label_size-self.nPan//2)
 
 
+    def make_colorbar(self,levs):
+        if self.axis_opt2 =='log':    
+            formatter = LogFormatter(10, labelOnlyBase=False) 
+            if self.range:
+                cbar=plt.colorbar(ticks=levs,orientation='horizontal',aspect=50,format=formatter)
+            else:
+                cbar=plt.colorbar(orientation='horizontal',aspect=50,format=formatter)
+                    
+        else:    
+            cbar=plt.colorbar(orientation='horizontal',aspect=50)
+            
+        cbar.ax.tick_params(labelsize=label_size-self.nPan//2) #shrink the colorbar label as the number of subplot increase
+
+    def return_norm_levs(self):    
+        norm =None
+        levs=None
+        if self.axis_opt2 =='log':
+            norm =LogNorm() # log mapping
+        else: #default,linear mapping
+            self.axis_opt2 ='lin'
+            norm = None
+        if self.range:    
+            if self.axis_opt2 =='lin': 
+                levs=np.linspace(self.range[0],self.range[1],levels)
+            if self.axis_opt2 =='log': 
+                if self.range[0]<=0 or  self.range[1]<=0: prRed('*** Error using log scale, bounds cannot be zero or negative')
+                levs=np.logspace(np.log10(self.range[0]),np.log10(self.range[1]),levels)         
+        return norm,levs   
+
     def exception_handler(self,e,ax):
         if debug:raise
         sys.stdout.write("\033[F");sys.stdout.write("\033[K")#cursor up one line, then clear the whole line previous output
@@ -1733,43 +1764,19 @@ class Fig_2D(object):
 
     def filled_contour(self,xdata,ydata,var):
         cmap=self.axis_opt1
-        norm =None
-
-        if self.axis_opt2 =='log':
-            norm =LogNorm() #default, log mapping
-        else: 
-            self.axis_opt2 ='lin'
-            norm = None
-            
-        
         #Personalized colormaps
         if cmap=='wbr':cmap=wbr_cmap()
         if cmap=='rjw':cmap=rjw_cmap()
         
-        if self.range:
-            if self.axis_opt2 =='lin': 
-                levs=np.linspace(self.range[0],self.range[1],levels)
-            if self.axis_opt2 =='log': 
-                if self.range[0]<=0 or  self.range[1]<=0: prRed('*** Error using log scale, bounds cannot be zero or negative')
-                levs=np.logspace(np.log10(self.range[0]),np.log10(self.range[1]),levels) 
-                
+        norm,levs=self.return_norm_levs()   
+       
+        if self.range:                
             plt.contourf(xdata, ydata,var,levs,extend='both',cmap=cmap,norm=norm)
         else:
             plt.contourf(xdata, ydata,var,levels,cmap=cmap,norm=norm)
             
-        #Adjust colorbar for log 
-        if self.axis_opt2 =='log':    
-            formatter = LogFormatter(10, labelOnlyBase=False) 
-            if self.range:
-                cbar=plt.colorbar(ticks=levs,orientation='horizontal',aspect=50,format=formatter)
-            else:
-                cbar=plt.colorbar(orientation='horizontal',aspect=50,format=formatter)
-                    
-        else:    
-            cbar=plt.colorbar(orientation='horizontal',aspect=50)
-            
-        cbar.ax.tick_params(labelsize=label_size-self.nPan//2) #shrink the colorbar label as the number of subplot increase
-
+        self.make_colorbar(levs)
+        
     def solid_contour(self,xdata,ydata,var,contours):
        np.seterr(divide='ignore', invalid='ignore') #prevent error message when making contour
        if contours is None:
@@ -1835,6 +1842,7 @@ class Fig_2D_lon_lat(Fig_2D):
                 cmap=self.axis_opt1
                 if cmap=='wbr':cmap=wbr_cmap()
                 if cmap=='rjw':cmap=rjw_cmap()
+                norm,levs=super(Fig_2D_lon_lat, self).return_norm_levs()    
 
                 ax.axis('off')
                 ax.patch.set_color('1') #Nan are reverse to white for projections
@@ -1961,12 +1969,12 @@ class Fig_2D_lon_lat(Fig_2D):
 
 
                 if self.range:
-                    plt.contourf(X, Y,var,np.linspace(self.range[0],self.range[1],levels),extend='both',cmap=cmap)
+                    plt.contourf(X, Y,var,levs,extend='both',cmap=cmap,norm=norm)
                 else:
-                    plt.contourf(X, Y,var,levels,cmap=cmap)
+                    plt.contourf(X, Y,var,levels,cmap=cmap,norm=norm)
+              
+                super(Fig_2D_lon_lat, self).make_colorbar(levs)
 
-                cbar=plt.colorbar(orientation='horizontal',aspect=50)
-                cbar.ax.tick_params(labelsize=label_size-self.nPan//2) #shrink the colorbar label as the number of subplot increase
 
                 #---Add topo contour---
                 plt.contour(X, Y,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
