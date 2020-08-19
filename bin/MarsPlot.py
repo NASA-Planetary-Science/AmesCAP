@@ -323,7 +323,7 @@ def MY_func(Ls_cont):
     return (Ls_cont)//(360.)+1
 
 
-def get_topo_2D(simuID,sol_array):
+def get_topo_2D_old(simuID,sol_array):
 
     '''
     This function shift the topography from a file
@@ -332,6 +332,7 @@ def get_topo_2D(simuID,sol_array):
     '''
     global input_paths
     global Ncdf_num
+    prCyan(simuID);prGreen(sol_array)
     if sol_array:
         Sol_num_current=sol_array
     else : #no sol requested, use default as provided by MarsPlot Custom.in -d sol
@@ -694,7 +695,7 @@ def read_axis_options(axis_options_txt):
         custom_line2=list_txt[3].split('=')[1].strip()
         custom_line3=list_txt[4].split('=')[1].strip()
     return Xaxis, Yaxis,custom_line1,custom_line2,custom_line3
-        
+
 
 def split_varfull(varfull):
     '''
@@ -1090,11 +1091,11 @@ def namelist_parser(Custom_file):
 
     #===========skip lines until the kweyword 'START' is found================
     nsafe=0 #initialize counter for safety
-    while True and nsafe<1000:
+    while True and nsafe<2000:
         line=customFileIN.readline()
         if line.strip()=='START':break
         nsafe+=1
-    if nsafe==1000:prRed(""" Custom.in is missing a 'START' keyword after the '=====' simulation block""")
+    if nsafe==2000:prRed(""" Custom.in is missing a 'START' keyword after the '=====' simulation block""")
 
     #=============Start reading the figures=================
     while True:
@@ -1220,7 +1221,7 @@ def get_figure_header(line_txt):
     boolPlot=line_cmd.split('=')[1].strip()=='True' # Return True
     return figtype, boolPlot
 
-    
+
 def format_lon_lat(lon_lat,type):
     '''
     Format latitude and longitude as labels, e.g. 30S , 30N, 45W, 45E
@@ -1393,8 +1394,10 @@ class Fig_2D(object):
         self.doPlot=doPlot
         self.plot_type=self.__class__.__name__[4:]
 
-        #Extract filetype, variable, and simulation ID (initialization only)
+        #Extract filetype, variable, and simulation ID (initialization only for the default plots)
+        # Note that the varfull objects for the default plots are simple , e.g are atmos_average.ucomp
         self.sol_array,self.filetype,self.var,self.simuID=split_varfull(self.varfull)
+        #prCyan(self.sol_array);prYellow(self.filetype);prGreen(self.var);prPurple(self.simuID)
         if self.varfull2: self.sol_array2,self.filetype2,self.var2,self.simuID2=split_varfull(self.varfull2)
 
         #Multi panel
@@ -1444,9 +1447,10 @@ class Fig_2D(object):
             prYellow('*** Warning ***, In plot %s, Cmin, Cmax must be two values, resetting to default'%(self.varfull))
             self.range=None
 
-        #Update the variable after reading template
-        self.sol_array,self.filetype,self.var,self.simuID=split_varfull(self.varfull)
-        if self.varfull2: self.sol_array2,self.filetype2,self.var2,self.simuID2=split_varfull(self.varfull2)
+        #Do not Update the variable after reading template
+
+        #self.sol_array,self.filetype,self.var,self.simuID=split_varfull(self.varfull)
+        #if self.varfull2: self.sol_array2,self.filetype2,self.var2,self.simuID2=split_varfull(self.varfull2)
 
 
     def prep_file(self,var_name,file_type,simuID,sol_array):
@@ -1698,19 +1702,19 @@ class Fig_2D(object):
 
 
     def make_colorbar(self,levs):
-        if self.axis_opt2 =='log':    
-            formatter = LogFormatter(10, labelOnlyBase=False) 
+        if self.axis_opt2 =='log':
+            formatter = LogFormatter(10, labelOnlyBase=False)
             if self.range:
                 cbar=plt.colorbar(ticks=levs,orientation='horizontal',aspect=50,format=formatter)
             else:
                 cbar=plt.colorbar(orientation='horizontal',aspect=50,format=formatter)
-                    
-        else:    
+
+        else:
             cbar=plt.colorbar(orientation='horizontal',aspect=50)
-            
+
         cbar.ax.tick_params(labelsize=label_size-self.nPan//2) #shrink the colorbar label as the number of subplot increase
 
-    def return_norm_levs(self):    
+    def return_norm_levs(self):
         norm =None
         levs=None
         if self.axis_opt2 =='log':
@@ -1718,13 +1722,13 @@ class Fig_2D(object):
         else: #default,linear mapping
             self.axis_opt2 ='lin'
             norm = None
-        if self.range:    
-            if self.axis_opt2 =='lin': 
+        if self.range:
+            if self.axis_opt2 =='lin':
                 levs=np.linspace(self.range[0],self.range[1],levels)
-            if self.axis_opt2 =='log': 
+            if self.axis_opt2 =='log':
                 if self.range[0]<=0 or  self.range[1]<=0: prRed('*** Error using log scale, bounds cannot be zero or negative')
-                levs=np.logspace(np.log10(self.range[0]),np.log10(self.range[1]),levels)         
-        return norm,levs   
+                levs=np.logspace(np.log10(self.range[0]),np.log10(self.range[1]),levels)
+        return norm,levs
 
     def exception_handler(self,e,ax):
         if debug:raise
@@ -1767,16 +1771,16 @@ class Fig_2D(object):
         #Personalized colormaps
         if cmap=='wbr':cmap=wbr_cmap()
         if cmap=='rjw':cmap=rjw_cmap()
-        
-        norm,levs=self.return_norm_levs()   
-       
-        if self.range:                
+
+        norm,levs=self.return_norm_levs()
+
+        if self.range:
             plt.contourf(xdata, ydata,var,levs,extend='both',cmap=cmap,norm=norm)
         else:
             plt.contourf(xdata, ydata,var,levels,cmap=cmap,norm=norm)
-            
+
         self.make_colorbar(levs)
-        
+
     def solid_contour(self,xdata,ydata,var,contours):
        np.seterr(divide='ignore', invalid='ignore') #prevent error message when making contour
        if contours is None:
@@ -1796,6 +1800,39 @@ class Fig_2D_lon_lat(Fig_2D):
     def make_template(self):
         super(Fig_2D_lon_lat, self).make_template('Plot 2D lon X lat','Ls 0-360','Level [Pa/m]','lon','lat')
 
+    def get_topo_2D(self,varfull,plot_type):
+
+        '''
+        This function returns the longitude, latitude and topography to overlay as contours in  2D_lon_lat plot
+        Because the main variable requested may be complex, e.g. [00668.atmos_average_psdt2.temp]/1000., we will ensure to
+        load the matching topography (here 00668.fixed.nc from the 2nd simulation), hence this function which does a simple task in a complicated way. Note that a great deal of the code is borrowed from the data_loader_2D() function
+
+        Returns:
+            lonz,latz,zsurf: the longitude,latitude,topography
+        '''
+
+        #Simply plot one of the variable in the file
+        if not '[' in varfull:
+            #---If overwriting dimensions, get the new dimensions and trim varfull from the '{lev=5.}' part
+            if '{' in varfull :
+                varfull,_,_,_=get_overwrite_dim_2D(varfull,plot_type,self.fdim1,self.fdim2,self.ftod)
+            sol_array,filetype,var,simuID=split_varfull(varfull)
+        #Realize a operation on the variables
+        else:
+            # Extract individual variables and prepare for execution
+            varfull=remove_whitespace(varfull)
+            varfull_list=get_list_varfull(varfull)
+            f=get_list_varfull(varfull)
+            sol_array,filetype,var,simuID=split_varfull(varfull_list[0])
+
+        f, var_info,dim_info, dims=self.prep_file('zsurf','fixed',simuID,sol_array)
+        #Get the file type ('fixed','diurn', 'average', 'daily') and interpolation type (pfull, zstd etc...)
+        zsurf=f.variables['zsurf'][:,:]
+        f.close()
+
+        return zsurf
+
+
     def do_plot(self):
 
         #create figure
@@ -1804,7 +1841,7 @@ class Fig_2D_lon_lat(Fig_2D):
             lon,lat,var,var_info=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull,self.plot_type)
             lon180,var=shift_data(lon,var)
             #get topo
-            zsurf=get_topo_2D(self.simuID,self.sol_array)
+            zsurf=self.get_topo_2D(self.varfull,self.plot_type)
             _,zsurf=shift_data(lon,zsurf)
 
             projfull=self.axis_opt3
@@ -1819,7 +1856,7 @@ class Fig_2D_lon_lat(Fig_2D):
 
                 if self.varfull2:
                     _,_,var2,var_info2=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull2,self.plot_type)
-                    lon180,var2=shift_data(lon,var2)
+                    lon180,var2=temp(lon,var2)
                     super(Fig_2D_lon_lat, self).solid_contour(lon180, lat,var2,self.contour2)
                     var_info+=" (& "+var_info2+")"
 
@@ -1842,7 +1879,7 @@ class Fig_2D_lon_lat(Fig_2D):
                 cmap=self.axis_opt1
                 if cmap=='wbr':cmap=wbr_cmap()
                 if cmap=='rjw':cmap=rjw_cmap()
-                norm,levs=super(Fig_2D_lon_lat, self).return_norm_levs()    
+                norm,levs=super(Fig_2D_lon_lat, self).return_norm_levs()
 
                 ax.axis('off')
                 ax.patch.set_color('1') #Nan are reverse to white for projections
@@ -1972,12 +2009,12 @@ class Fig_2D_lon_lat(Fig_2D):
                     plt.contourf(X, Y,var,levs,extend='both',cmap=cmap,norm=norm)
                 else:
                     plt.contourf(X, Y,var,levels,cmap=cmap,norm=norm)
-              
+
                 super(Fig_2D_lon_lat, self).make_colorbar(levs)
 
 
                 #---Add topo contour---
-                plt.contour(X, Y,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
+                plt.contour(X, Y ,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
                 #=================================================================================
                 #=======================Solid contour 2nd variables===============================
                 #=================================================================================
