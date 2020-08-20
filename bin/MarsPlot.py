@@ -323,26 +323,6 @@ def MY_func(Ls_cont):
     return (Ls_cont)//(360.)+1
 
 
-def get_topo_2D_old(simuID,sol_array):
-
-    '''
-    This function shift the topography from a file
-    Returns:
-        zsurf: the topography
-    '''
-    global input_paths
-    global Ncdf_num
-    prCyan(simuID);prGreen(sol_array)
-    if sol_array:
-        Sol_num_current=sol_array
-    else : #no sol requested, use default as provided by MarsPlot Custom.in -d sol
-        Sol_num_current =Ncdf_num
-    file_list = input_paths[simuID]+'/%05d.'%( Sol_num_current[0])+'fixed.nc' #TODO file list multiple simulations
-    f=Dataset(file_list, 'r', format='NETCDF4_classic')
-    zsurf=f.variables['zsurf'][:]
-    f.close()
-    return zsurf
-
 
 def get_lon_index(lon_query_180,lons):
     '''
@@ -1860,8 +1840,8 @@ class Fig_2D_lon_lat(Fig_2D):
                     super(Fig_2D_lon_lat, self).solid_contour(lon180, lat,var2,self.contour2)
                     var_info+=" (& "+var_info2+")"
 
-                if self.Xlim:plt.xlim(self.Xlim)
-                if self.Ylim:plt.ylim(self.Ylim)
+                if self.Xlim:plt.xlim(self.Xlim[0],self.Xlim[1])
+                if self.Ylim:plt.ylim(self.Ylim[0],self.Ylim[1])
 
                 super(Fig_2D_lon_lat, self).make_title(var_info,'Longitude','Latitude')
              #--- Annotation---
@@ -2112,12 +2092,14 @@ class Fig_2D_time_lat(Fig_2D):
                 super(Fig_2D_time_lat, self).solid_contour(Ls, lat,var2,self.contour2)
                 var_info+=" (& "+var_info2+")"
 
-
+            
             #Axis formatting
             if self.Xlim:
-                plt.xlim(self.Xlim)
-            if self.Ylim:plt.ylim(self.Ylim)
-
+                idmin=np.argmin(np.abs(tim-self.Xlim[0]))
+                idmax=np.argmin(np.abs(tim-self.Xlim[1]))
+                plt.xlim([Ls[idmin],Ls[idmax]])
+                
+            if self.Ylim:plt.ylim(self.Ylim[0],self.Ylim[1])
 
             Ls_ticks = [item for item in ax.get_xticks()]
             labels = [item for item in ax.get_xticklabels()]
@@ -2126,7 +2108,7 @@ class Fig_2D_time_lat(Fig_2D):
             for i in range(0,len(Ls_ticks)):
                 id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
                 labels[i]='Ls %g\nsol %i'%(np.mod(Ls_ticks[i],360.),tim[id])
-
+                
 
             ax.set_xticklabels(labels)
 
@@ -2262,7 +2244,10 @@ class Fig_2D_time_lev(Fig_2D):
 
 
             #Axis formatting
-            if self.Xlim:plt.xlim(self.Xlim)
+            if self.Xlim:
+                idmin=np.argmin(np.abs(tim-self.Xlim[0]))
+                idmax=np.argmin(np.abs(tim-self.Xlim[1]))
+                plt.xlim([Ls[idmin],Ls[idmax]])
             if self.Ylim:plt.ylim(self.Ylim)
 
             Ls_ticks = [item for item in ax.get_xticks()]
@@ -2317,7 +2302,11 @@ class Fig_2D_lon_time(Fig_2D):
 
             #Axis formatting
             if self.Xlim:plt.xlim(self.Xlim)
-            if self.Ylim:plt.ylim(self.Ylim)
+            #Axis formatting
+            if self.Ylim:
+                idmin=np.argmin(np.abs(tim-self.Ylim[0]))
+                idmax=np.argmin(np.abs(tim-self.Ylim[1]))
+                plt.ylim([Ls[idmin],Ls[idmax]])
 
 
             Ls_ticks = [item for item in ax.get_yticks()]
