@@ -340,26 +340,64 @@ def get_lon_index(lon_query_180,lons):
 
     #If None, set to default, i.e 'all' for a zonal average
     if lon_query_180.any()==None: lon_query_180=np.array(-99999)
-    #one longitude is provided
-    if lon_query_180.size==1:
-        #request zonal average
-        if lon_query_180==-99999:
-            loni=np.arange(0,Nlon)
-            txt_lon=', zonal avg'
-        else:
-            #get closet value
+    
+    #=============FV3 format ==============
+    # lons are 0>360, convert to -180>+180
+    #======================================
+    if lons.max()>180:
+        #one longitude is provided
+        if lon_query_180.size==1:
+            #request zonal average
+            if lon_query_180==-99999:
+                loni=np.arange(0,Nlon)
+                txt_lon=', zonal avg'
+            else:
+                #get closet value
+                lon_query_360=lon180_to_360(lon_query_180)
+                loni=np.argmin(np.abs(lon_query_360-lons))
+                txt_lon=', lon=%.1f'%(lon360_to_180(lons[loni]))
+        # a range is requested
+        elif lon_query_180.size==2:
             lon_query_360=lon180_to_360(lon_query_180)
-            loni=np.argmin(np.abs(lon_query_360-lons))
-            txt_lon=', lon=%.1f'%(lon360_to_180(lons[loni]))
-    # a range is requested
-    elif lon_query_180.size==2:
-        lon_query_360=lon180_to_360(lon_query_180)
-        loni_bounds=np.array([np.argmin(np.abs(lon_query_360[0]-lons)),np.argmin(np.abs(lon_query_360[1]-lons))])
-        #if loni_bounds[0]>loni_bounds[1]:loni_bounds=np.flipud(loni_bounds) #lon should be increasing for extraction #TODO
-        loni=np.arange(loni_bounds[0],loni_bounds[1]+1)
-        lon_bounds_180=lon360_to_180([lons[loni[0]],lons[loni[-1]]])
-        if lon_bounds_180[0]>lon_bounds_180[1]:lon_bounds_180=np.flipud(lon_bounds_180) #lon should be also increasing for display
-        txt_lon=', lon=avg[%.1f<->%.1f]'%(lon_bounds_180[0],lon_bounds_180[1])
+            loni_bounds=np.array([np.argmin(np.abs(lon_query_360[0]-lons)),np.argmin(np.abs(lon_query_360[1]-lons))])
+            #if loni_bounds[0]>loni_bounds[1]:loni_bounds=np.flipud(loni_bounds) #lon should be increasing for extraction #TODO
+            #Normal case, e.g. -45W>45E
+            if loni_bounds[0]<loni_bounds[1]:
+                loni=np.arange(loni_bounds[0],loni_bounds[1]+1)
+            else:
+                #Loop around, e.g, 160E>-40W
+                loni=np.append(np.arange(loni_bounds[0],len(lons)),np.arange(0,loni_bounds[1]+1)) 
+                prPurple(lon360_to_180(lons[loni]))
+            lon_bounds_180=lon360_to_180([lons[loni_bounds[0]],lons[loni_bounds[1]]])
+            
+            #if lon_bounds_180[0]>lon_bounds_180[1]:lon_bounds_180=np.flipud(lon_bounds_180) #lon should be also increasing for display
+            txt_lon=', lon=avg[%.1f<->%.1f]'%(lon_bounds_180[0],lon_bounds_180[1])
+        
+        #=========Legacy  format ===========
+        # lons are already -180>+180
+        #===================================    
+    else:        
+        #one longitude is provided
+        if lon_query_180.size==1:
+            #request zonal average
+            if lon_query_180==-99999:
+                loni=np.arange(0,Nlon)
+                txt_lon=', zonal avg'
+            else:
+                #get closet value
+                loni=np.argmin(np.abs(lon_query_180-lons))
+                txt_lon=', lon=%.1f'%(lons[loni])
+        # a range is requested
+        elif lon_query_180.size==2:
+            loni_bounds=np.array([np.argmin(np.abs(lon_query_180[0]-lons)),np.argmin(np.abs(lon_query_180[1]-lons))])
+            #Normal case, e.g. -45W>45E
+            if loni_bounds[0]<loni_bounds[1]:
+                loni=np.arange(loni_bounds[0],loni_bounds[1]+1)
+            else:
+                #Loop around, e.g, 160E>-40W
+                loni=np.append(np.arange(loni_bounds[0],len(lons)),np.arange(0,loni_bounds[1]+1)) 
+            txt_lon=', lon=avg[%.1f<->%.1f]'%(lons[loni_bounds[0]],lons[loni_bounds[1]])
+            
     return loni,txt_lon
 
 def get_lat_index(lat_query,lats):
@@ -424,8 +462,12 @@ def get_tod_index(tod_query,tods):
     # a range is requested
     elif tod_query.size==2:
         tod_bounds=np.array([np.argmin(np.abs(tod_query[0]-tods)),np.argmin(np.abs(tod_query[1]-tods))])
-        if tod_bounds[0]>tod_bounds[1]:tod_bounds=np.flipud(tod_bounds) #tod should be incresing for extraction
-        todi=np.arange(tod_bounds[0],tod_bounds[1]+1)
+        #Normal case, e.g. 4am>10am
+        if tod_bounds[0]<tod_bounds[1]:
+            todi=np.arange(tod_bounds[0],tod_bounds[1]+1)
+        else:
+            #Loop around, e.g, 18pm>6am
+            todi=np.append(np.arange(tod_bounds[0],len(tods)),np.arange(0,tod_bounds[1]+1))                
         txt_tmp=UT_LTtxt(tods[todi[0]]/24.,lon_180=0.,roundmin=1)
         txt_tmp2=UT_LTtxt(tods[todi[-1]]/24.,lon_180=0.,roundmin=1)
         txt_tod=', tod=avg[%s<->%s]'%(txt_tmp,txt_tmp2)
@@ -1246,6 +1288,7 @@ def get_Ncdf_num():
     if Ncdf_num.size==0:
         print("No XXXXX.fixed.nc detected in "+input_paths[0])
         raise SystemExit #Exit cleanly
+        Ncdf_num= None #TODO
     return Ncdf_num
 
 def select_range(Ncdf_num,bound):
