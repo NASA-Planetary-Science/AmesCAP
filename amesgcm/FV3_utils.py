@@ -404,20 +404,22 @@ def area_weights_deg(var_shape,lat_c,axis=-2):
             W= A.reshape(reshape_shape)*len(lat_c)
         return W*np.ones(var_shape)
 
-    
-def zonal_avg_P_lat(Ls,var,Ls_target,Ls_angle,symmetric=True):
+
+
+def areo_avg(VAR,areo,Ls_target,Ls_angle,symmetric=True):
     """
-    Return the zonally averaged mean value of a pressure interpolated 4D variable.
+    Return a value average over a central solar longitude
 
     Args:
-        Ls: 1D array of solar longitude of the input variable in degree (0->360)
-        var: a 4D variable var [time,levels,lat,lon] interpolated on the pressure levels (f_average_plevs file)
+        VAR: a ND variable variable with the 1st dimensions being the time, e.g (time,lev,lat,lon)
+        areo: 1D array of solar longitude of the input variable in degree (0->720)
         Ls_target: central solar longitude of interest.     
-        Ls_angle:  requested window angle centered around   Expl:  Ls_angle = 10.  (Window will go from Ls 85  
+        Ls_angle:  requested window angle centered around    Ls_target
         symmetric: a boolean (default =True) If True, and if the requested window is out of range, Ls_angle is reduced
                                              If False, the time average is done on the data available
     Returns:
-        The zonnally and latitudinally-averaged field zpvar[level,lat]
+        The variable VAR averaged over solar longitudes  Ls_target-Ls_angle/2 to Ls_target+Ls_angle/2
+         E.g in our example the size would (lev,lat,lon)
     
     Expl:  Ls_target= 90.
            Ls_angle = 10.  
@@ -428,9 +430,15 @@ def zonal_avg_P_lat(Ls,var,Ls_target,Ls_angle,symmetric=True):
                 If  symmetric =False and the input data ranges from Ls 88 to 100    88 <Ls_target < 95 (7  degree, assymetric)
     *NOTE* 
     
-    [Alex] as of 6/8/18, the routine will bin data from muliples Mars years if provided
+    [Alex] The routine will bin data from muliples Mars years if provided
          
     """
+    #Take the modulo of solar longitude
+    areo=np.mod(areo,360)
+    
+    shape_out=VAR.shape[1:] #All dimensions but time
+    VAR=VAR.reshape((len(areo),np.prod(shape_out))) #flatten array
+    
     #compute bounds from Ls_target and Ls_angle
     Ls_min= Ls_target-Ls_angle/2.
     Ls_max= Ls_target+Ls_angle/2.
@@ -439,15 +447,15 @@ def zonal_avg_P_lat(Ls,var,Ls_target,Ls_angle,symmetric=True):
     if (Ls_max>360.):Ls_max-=360. 
     
     #Initialize output array
-    zpvar=np.zeros((var.shape[1],var.shape[2])) #nlev, nlat
+    VAR_avg=np.zeros(np.prod(shape_out))
     
     #check is the Ls of interest is within the data provided, raise execption otherwise
-    if Ls_target <= Ls.min() or Ls_target >=Ls.max() :
+    if Ls_target <= areo.min() or Ls_target >=areo.max() :
         raise Exception("Error \nNo data found, requested  data :       Ls %.2f <-- (%.2f)--> %.2f\nHowever, data in file only ranges      Ls %.2f <-- (%.2f)--> %.2f"%(Ls_min,Ls_target,Ls_max,Ls.min(),(Ls.min()+Ls.max())/2.,Ls.max()))
 
     
     else : #If only some of the requested data is outside the ranges, process this data
-        if Ls_min <Ls.min() or Ls_max >Ls.max():
+        if Ls_min <areo.min() or Ls_max >areo.max():
             print("In zonal_avg_P_lat() Warning: \nRequested  data ranging    Ls %.2f <-- (%.2f)--> %.2f"%(Ls_min,Ls_target,Ls_max))
             if symmetric: #Case 1: reduce the window
                 if Ls_min <Ls.min():
@@ -464,20 +472,90 @@ def zonal_avg_P_lat(Ls,var,Ls_target,Ls_angle,symmetric=True):
             else: #Case 2: Use all data available
                 print("I am only using            Ls %.2f <-- (%.2f)--> %.2f \n"%(max(Ls.min(),Ls_min),Ls_target,min(Ls.max(),Ls_max)))
     count=0
-    #perform longitude average on the field
-    zvar= np.mean(var,axis=3)
     
-    for t in xrange(len(Ls)):
+    for t in range(len(areo)):
     #special case Ls around Ls =0 (wrap around)
-        if (Ls_min<=Ls[t] <= Ls_max):
-            zpvar[:,:]=zpvar[:,:]+zvar[t,:,:]
+        if (Ls_min<=areo[t] <= Ls_max):
+            VAR_avg+=VAR[t,...]
             count+=1
             
     if  count>0:
-        zpvar/=count
-    return zpvar
+        VAR_avg/=count
+    return VAR_avg.reshape(shape_out)
     
-
+    
+def mass_stream(v_avg,lat,level,type='pstd',psfc=700,H=8000.,factor=1.e-8):
+    '''
+    Compute the mass stream function.  
+                            P
+                            ⌠
+    Phi=(2 pi a) cos(lat)/g ⎮vz_tavg dp  
+                            ⌡
+                            p_top
+    Args:
+    
+        v_avg:  zonal winds  [m/s] with 'level' dimensions FIRST and 'lat' dimension SECOND e.g (pstd,lat), (pstd,lat,lon) or (pstd,lat,lon,time)
+                 >> This routine is set-up so the time and zonal averages may be done either ahead or after the MSF calculation.
+        lat  :1D array of latitudes in [degree]  
+        level : interpolated layers in [Pa] or [m] 
+        type : interpolation type, i.e. 'pstd', 'zstd' or 'zagl'
+        psfc: reference surface pressure in [Pa]                    
+        H    : reference scale height in [m]  
+        factor: normalize the mass stream function by a factor, use factor =1. to obtain [kg/s]
+    Returns:
+        MSF: The meridional mass stream function in factor*[kg/s]
+    ***NOTE*** 
+    [Alex. K] : The expressions for the MSF I have seen uses log(pressure) Z coordinate, which I assume integrates better numerically. 
+    
+    With p=p_sfc exp(-Z/H)  i.e. Z= H log(p_sfc/p) ==> dp= -p_sfc/H exp(-Z/H) dZ, we have:  
+                          
+                                      Z_top
+                                     ⌠
+    Phi=+(2 pi a) cos(lat)psfc/(g H) ⎮v_rmv exp(-Z/H) dZ  With p=p_sfc exp(-Z/H)
+                                     ⌡
+                                     Z                      
+                                                             n
+                                                            ⌠
+    The integral is calculated using trapezoidal rule, e.g. ⌡ f(z)dz  = (Zn-Zn-1){f(Zn)+f(Zn-1)}/2
+                                                            n-1
+    '''
+    g=3.72 #m/s2
+    a=3400*1000 #m
+    nlev=len(level)
+    shape_out=v_avg.shape
+    
+    #If size is (pstd,lat), turns to (pstd,lat,1) for generality
+    if len(shape_out)==2:v_avg=v_avg.reshape(nlev,len(lat),1)
+    
+    #Flatten array   
+    v_avg=v_avg.reshape((nlev,len(lat),np.prod(v_avg.shape[2:])))
+    MSF=np.zeros_like(v_avg)
+    
+    #Sum variable, same dimensions as v_avg but for the first dimension 
+    I=np.zeros(v_avg.shape[2:])
+    
+    #Make note of NaN positions and replace by zero for downward integration
+    mask=np.isnan(v_avg)
+    v_avg[mask]=0.
+    
+    if type=='pstd':
+        Z=H*np.log(psfc/level)
+    else: #Copy zagl or zstd instead of using a pseudo height
+        Z=level.copy()
+        
+    for k0 in range(nlev-2,0,-1):
+        I[:]=0.
+        for k in range(nlev-2,k0,-1):
+            zn=   Z[k]
+            znp1= Z[k+1]
+            fn=  v_avg[k,:,...] *np.exp(-zn/H)
+            fnp1=v_avg[k+1,:,...]*np.exp(-znp1/H)
+            I=I+0.5*(znp1-zn)*(fnp1+fn)
+        MSF[k0,:,...]=2*np.pi*a*psfc/(g*H)*np.cos(np.pi/180*lat).reshape([len(lat),1])*I*factor
+        
+    #Replace NaN where they initially were:   
+    MSF[mask]=np.NaN    
+    return MSF.reshape(shape_out)
     
 def alt_KM(press,scale_height_KM=8.,reference_press=610.):
     """

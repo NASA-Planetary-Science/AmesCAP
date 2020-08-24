@@ -6,8 +6,8 @@ import os       #access operating systems function
 import subprocess #run command
 import sys       #system command
 
-from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR
-from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR,mass_stream
+from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type
 from amesgcm.Ncdf_wrapper import Ncdf
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
@@ -54,11 +54,10 @@ parser.add_argument('-add','--add', nargs='+',default=[],
                       'Tco2       (CO2 condensation temperature)    Req. [ps,temp] \n'
                       'scorer_wl  (Scorer horizontal wavelength)    Req. [ps,temp,ucomp] \n'
                       '\033[00m\n' 
-                      '\033[93mON INTERPOLATED FILES (in progress):                                     \n'
-                      'ax         (wave-mean flow forcing)          Req. [ps,temp] \n'
-                      'msf        (mass stream function)            Req. [ps,temp] \n'
+                      '\033[93mON INTERPOLATED FILES :                                     \n'
+                      'msf        (mass stream function)            Req. [vcomp] \n'
                        '\033[00m')  
-
+#                      'ax         (wave-mean flow forcing)          Req. [ps,temp] \n'
 parser.add_argument('-zdiff','--zdiff', nargs='+',default=[],
                  help="""Differentiate a variable 'var' with respect to the z axis\n"""
                       """A new a variable dvar_dz in [Unit/m] will be added o the file\n"""
@@ -89,7 +88,8 @@ VAR= {'rho'       :['density (added postprocessing)','kg/m3'],
       'N'         :['Brunt Vaisala frequency (added postprocessing)','rad/s'],   
       'Ri'        :['Richardson number (added postprocessing)','none'], 
       'Tco2'      :['Condensation temerature of CO2  (added postprocessing)','K'],
-      'scorer_wl' :['Scorer horizontal wavelength L=2.pi/sqrt(l**2)   (added postprocessing)','m']   }                                                                                                       
+      'scorer_wl' :['Scorer horizontal wavelength L=2.pi/sqrt(l**2)   (added postprocessing)','m'],
+      'msf'       :['Mass stream function  (added postprocessing)','1.e8 x kg/s']     }                                                                                                       
 #=====================================================================
 #=====================================================================
 #=====================================================================
@@ -240,13 +240,22 @@ def main():
                 print('Processing: %s...'%(ivar))                
                 try:
                     fileNC=Dataset(ifile, 'a', format='NETCDF4_CLASSIC')
+                    f_type,interp_type=FV3_file_type(fileNC)
                     #---temp and ps are always needed---
                     dim_out=fileNC.variables['temp'].dimensions #get dimension
                     temp=fileNC.variables['temp'][:]
                     shape_out=temp.shape
-                    ps=fileNC.variables['ps'][:]
-                    p_3D=compute_p_3D(ps,ak,bk,shape_out)
-                    #----
+                    
+                    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     
+                    #~~~~~~~~~~~~  Non interpolated files ~~~~~~~~~~~~~~~~~
+                    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     
+                    #These are often needed so we will calculate once here
+                    if interp_type=='pfull':
+                        ps=fileNC.variables['ps'][:]
+                        p_3D=compute_p_3D(ps,ak,bk,shape_out)
+                    
+                    
                     if ivar=='pfull3D': OUT=p_3D
                     if ivar=='rho':
                         OUT=compute_rho(p_3D,temp)    
@@ -288,9 +297,28 @@ def main():
                         zfull=compute_zfull(ps,ak,bk,temp)
                         N=compute_N(theta,zfull)
                         OUT=compute_scorer(N,ucomp,zfull)
-               
+                    
+                    
+                    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     
+                    #~~~~~~~~~~~~~~~   Interpolated files ~~~~~~~~~~~~~~~~~~~
+                    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+                    
+                    #Common to all interpolated files:
+                    if interp_type!='pfull':
+                        lev=fileNC.variables[interp_type][:]
+
+                    
+                    if ivar=='msf':
+                        vcomp=fileNC.variables['vcomp'][:]
+                        
+                        lat=fileNC.variables['lat'][:]
+                        OUT=mass_stream(vcomp.transpose([1,2,3,0]),lat,lev,type=interp_type).transpose([3,0,1,2])
+                        
+                    
+                    
+                    
                     #filter nan  
-                    OUT[np.isnan(OUT)]=fill_value
+                    if interp_type=='pfull':OUT[np.isnan(OUT)]=fill_value
                     #Log the variable
                     var_Ncdf = fileNC.createVariable(ivar,'f4',dim_out) 
                     var_Ncdf.long_name=VAR[ivar][0]
