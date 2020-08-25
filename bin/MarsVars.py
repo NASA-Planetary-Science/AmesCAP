@@ -5,8 +5,10 @@ import argparse #parse arguments
 import os       #access operating systems function
 import subprocess #run command
 import sys       #system command
+import warnings #Suppress certain errors when dealing with NaN arrays
 
-from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR,mass_stream
+
+from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR,mass_stream,zonal_detrend
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type
 from amesgcm.Ncdf_wrapper import Ncdf
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
@@ -53,11 +55,22 @@ parser.add_argument('-add','--add', nargs='+',default=[],
                       'Ri         (Richardson number)               Req. [ps,temp] \n'
                       'Tco2       (CO2 condensation temperature)    Req. [ps,temp] \n'
                       'scorer_wl  (Scorer horizontal wavelength)    Req. [ps,temp,ucomp] \n'
+                      ' \nNOTE:                    \n'
+                      '     Some support on interpolated files, in particular if pfull3D \n'
+                      '                   is added before interpolation to _zagl, _zstd. \n'
                       '\033[00m\n' 
                       '\033[93mON INTERPOLATED FILES :                                     \n'
-                      'msf        (mass stream function)            Req. [vcomp] \n'
-                       '\033[00m')  
-#                      'ax         (wave-mean flow forcing)          Req. [ps,temp] \n'
+                      'msf        (mass stream function)              Req. [vcomp] \n'
+                      'ep         (wave potential energy)             Req. [temp] \n'
+                      'ek         (wave kinetic energy)               Req. [ucomp,vcomp] \n'
+                      'mx         (vertical flux of zonal momentum)   Req. [ucomp,w] \n' 
+                      'my         (vertical flux of merid. momentum)  Req. [vcomp,w]  \n'
+                      'ax         (zonal wave-mean flow forcing)      Req. [ucomp,w,rho]  \n'
+                      'ay         (merid. wave-mean flow forcing)     Req. [ucomp,w,rho]  \n'
+                      'tp_t       (norm. temperature perturbation)    Req. [temp]  \n'
+                      '\033[00m')  
+
+
 parser.add_argument('-zdiff','--zdiff', nargs='+',default=[],
                  help="""Differentiate a variable 'var' with respect to the z axis\n"""
                       """A new a variable dvar_dz in [Unit/m] will be added o the file\n"""
@@ -87,9 +100,17 @@ VAR= {'rho'       :['density (added postprocessing)','kg/m3'],
       'wspeed'    :['wind speed (added postprocessing)','m/s'],
       'N'         :['Brunt Vaisala frequency (added postprocessing)','rad/s'],   
       'Ri'        :['Richardson number (added postprocessing)','none'], 
-      'Tco2'      :['Condensation temerature of CO2  (added postprocessing)','K'],
+      'Tco2'      :['condensation temerature of CO2  (added postprocessing)','K'],
       'scorer_wl' :['Scorer horizontal wavelength L=2.pi/sqrt(l**2)   (added postprocessing)','m'],
-      'msf'       :['Mass stream function  (added postprocessing)','1.e8 x kg/s']     }                                                                                                       
+      'msf'       :['mass stream function  (added postprocessing)','1.e8 x kg/s'],
+      'ep'        :['wave potential energy (added postprocessing)',' J/kg'],
+      'ek'        :['wave kinetic energy (added postprocessing)',' J/kg'] ,
+      'mx'        :['vertical flux of zonal momentum (added postprocessing)',' J/kg'] ,
+      'my'        :['vertical flux of merididional momentum(added postprocessing)',' J/kg'] ,
+      'ax'        :['zonal wave-mean flow forcing (added postprocessing)',' m/s/s'] ,
+      'ay'        :['meridional wave-mean flow forcing (added postprocessing)',' m/s/s'] ,
+      'tp_t'      :['normalized temperature perturbation (added postprocessing)','None'] 
+          }                                                                                                       
 #=====================================================================
 #=====================================================================
 #=====================================================================
@@ -103,6 +124,7 @@ g    = 3.72            # m/s2
 R=8.314 #J/ mol. K
 Cp   = 735.0 #J/K
 M_co2 =0.044 # kg/mol
+N=0.01 #rad/s  This is used for the Ep calculation
 #===========================
 
 def compute_p_3D(ps,ak,bk,shape_out):
@@ -169,6 +191,42 @@ def compute_DP_3D(ps,ak,bk,shape_out):
     if len(DP_3D.shape)==3:DP_3D=DP_3D.transpose([2,0,1]) #p_3D [lat,lon,lev] ->    [lev, lat, lon]
     out=DP_3D.reshape(shape_out)
     return out
+
+
+def compute_Ep(temp):
+    """
+    Return the wave potential energy: Ep= 1/2 (g/N)**2 (T'/T)**2
+    """
+
+    return 0.5*g**2*(zonal_detrend(temp)/(temp*N))**2 
+ 
+def compute_Ek(ucomp,vcomp):
+    """
+    Return the wave kinetic energy: Ek= 1/2 (u'**2+v'**2)
+    """
+    return 0.5*(zonal_detrend(ucomp)**2+zonal_detrend(vcomp)**2 )  
+
+def compute_MF(UVcomp,w):
+    """
+    Return the zonal or meridional momentum fluxes u'w' or v'w' 
+    """
+    return zonal_detrend(UVcomp)*zonal_detrend(w)
+
+def compute_WMFF(MF,rho,lev,interp_type):
+    """
+    Return the zonal or meridional wave-mean flow forcing ax= -1/rho d(rho u'w')/dz in [m/s/s]
+    ***NOTE***                                            ay= -1/rho d(rho v'w')/dz
+    For pstd, we have:
+        du/dz= (du/dp).(dp/dz) > du/dz=-rho g (du/dp) with dp/dz = -rho g 
+    """
+    #Differentiate the variable 
+    darr_dz=dvar_dh((rho*MF).transpose([1,0,2,3]),lev).transpose([1,0,2,3])
+    
+    if interp_type=='pstd':
+        # We just computed du/dp, we need to multiply by (-rho g) to obtain du/dz
+        return g* darr_dz
+    else: #With zagl and zstd, levs are already in meters so we already computed du/dz 
+        return -1/rho*darr_dz
 
 def main():
     #load all the .nc files
@@ -255,6 +313,18 @@ def main():
                         ps=fileNC.variables['ps'][:]
                         p_3D=compute_p_3D(ps,ak,bk,shape_out)
                     
+                    #If using 'pstd', calculating the 3D pressure field is easy    
+                    elif interp_type=='pstd':
+                        lev=fileNC.variables['pstd'][:]
+                        axis=1 # in atmos_average, atmos_daily, the levels is the 2nd axis" (time,lev,lat,lon)
+                        reshape_shape=[1 for i in range(0,len(shape_out))]                 #(  0   1   2   3 )
+                        reshape_shape[axis]=len(lev)  #e.g [1,28,1,1]
+                        p_3D=lev.reshape(reshape_shape)
+                    #If inter_type is 'zstd', or 'zagl', we need the field pfull3D  pre-computed before interpolation
+                    else:
+                        p_3D=fileNC.variables['pfull3D'][:]
+                            
+                        
                     
                     if ivar=='pfull3D': OUT=p_3D
                     if ivar=='rho':
@@ -279,6 +349,7 @@ def main():
                         theta=compute_theta(p_3D,ps,temp)    
                         zfull=compute_zfull(ps,ak,bk,temp)  #TODO not with _pstd
                         OUT=compute_N(theta,zfull)
+                        
                     if ivar=='Ri':
                         theta=compute_theta(p_3D,ps,temp)   
                         zfull=compute_zfull(ps,ak,bk,temp) #TODO not with _pstd
@@ -291,6 +362,7 @@ def main():
                         OUT=N**2/(du_dz**2+dv_dz**2)
 
                     if ivar=='Tco2':OUT=compute_Tco2(p_3D,temp)
+                    
                     if ivar=='scorer_wl':
                         ucomp=fileNC.variables['ucomp'][:]
                         theta=compute_theta(p_3D,ps,temp)   
@@ -306,19 +378,47 @@ def main():
                     #Common to all interpolated files:
                     if interp_type!='pfull':
                         lev=fileNC.variables[interp_type][:]
-
                     
                     if ivar=='msf':
                         vcomp=fileNC.variables['vcomp'][:]
-                        
                         lat=fileNC.variables['lat'][:]
                         OUT=mass_stream(vcomp.transpose([1,2,3,0]),lat,lev,type=interp_type).transpose([3,0,1,2])
                         
+                    if ivar=='ep':
+                        #TODO    N=fileNC.variables['N'][:]  >>> Replaced by constant N=0.01 
+                        OUT=compute_Ep(temp)       
+                    if ivar=='ek':
+                        ucomp=fileNC.variables['ucomp'][:]
+                        vcomp=fileNC.variables['vcomp'][:]
+                        OUT=compute_Ek(ucomp,vcomp)     
                     
+                    if ivar=='mx':OUT=compute_MF(fileNC.variables['ucomp'][:],fileNC.variables['w'][:])                      
+
+                    if ivar=='my':OUT=compute_MF(fileNC.variables['vcomp'][:],fileNC.variables['w'][:])                      
                     
+                    if ivar=='ax':
+                        mx=compute_MF(fileNC.variables['ucomp'][:],fileNC.variables['w'][:])  
+                        rho=fileNC.variables['rho'][:]
+                        OUT=compute_WMFF(mx,rho,lev,interp_type)
                     
-                    #filter nan  
-                    if interp_type=='pfull':OUT[np.isnan(OUT)]=fill_value
+                    if ivar=='ay':
+                        my=compute_MF(fileNC.variables['vcomp'][:],fileNC.variables['w'][:])  
+                        rho=fileNC.variables['rho'][:]
+                        OUT=compute_WMFF(my,rho,lev,interp_type)    
+                        
+                    if ivar=='tp_t':OUT=zonal_detrend(temp)/temp
+                    
+                    #filter nan for native files 
+                    if interp_type=='pfull':
+                        OUT[np.isnan(OUT)]=fill_value
+                        
+                    #Add nan for interpolated file
+                    else :
+                        with warnings.catch_warnings():
+                            warnings.simplefilter("ignore", category=RuntimeWarning)
+                            OUT[OUT>1.e30]=np.NaN  
+                            OUT[OUT<-1.e30]=np.NaN                          
+                    
                     #Log the variable
                     var_Ncdf = fileNC.createVariable(ivar,'f4',dim_out) 
                     var_Ncdf.long_name=VAR[ivar][0]
@@ -366,7 +466,7 @@ def main():
                     ps=fileNC.variables['ps'][:]
                     zfull=fms_Z_calc(ps,ak,bk,temp.transpose([1,0,2,3]),topo=0.,lev_type='full') #z is first axis
 
-                    #differentiate the variable zith respect to z:
+                    #differentiate the variable with respect to z:
                     darr_dz=dvar_dh(var.transpose([1,0,2,3]),zfull).transpose([1,0,2,3]) 
                     
                     #Log the variable
