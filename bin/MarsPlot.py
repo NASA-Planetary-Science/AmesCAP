@@ -20,7 +20,7 @@ try:
     import numpy as np
     from matplotlib.ticker import MultipleLocator, FuncFormatter  #format ticks
     from netCDF4 import Dataset, MFDataset
-    from numpy import sqrt, exp, max, mean, min, log, log10,sin,cos
+    from numpy import sqrt, exp, max, mean, min, log, log10,sin,cos,abs
     from matplotlib.colors import LogNorm
     from matplotlib.ticker import LogFormatter
 
@@ -46,7 +46,8 @@ parser = argparse.ArgumentParser(description="""\033[93mAnalysis Toolkit for the
 
 parser.add_argument('custom_file', nargs='?',type=argparse.FileType('r'),default=None, #sys.stdin
                              help='Use optional input file Custom.in to plot the graphs \n'
-                                  '> Usage: MarsPlot Custom.in  [other options]')
+                                  '> Usage: MarsPlot Custom.in  [other options]\n' 
+                                 'UPDATE as needed with \033[96mpip install git+https://github.com/alex-kling/amesgcm.git --upgrade\033[00m')
 
 parser.add_argument('-i', '--inspect_file', default=None,
                  help="""Inspect Netcdf file content. Variables are sorted by dimensions \n"""
@@ -970,7 +971,7 @@ def make_template():
     #==============Create header with instructions, and add the version number to the title====
     customFileIN.write("===================== |MarsPlot V%s|===================\n"%(current_version))
     if parser.parse_args().template: #Additional instructions if requested
-        customFileIN.write(lh+"""INSTRUCTIONS:\n""")
+        customFileIN.write(lh+"""QUICK REFERENCE:\n""")
         customFileIN.write(lh+"""> Find the matching  template for the desired plot type. Do not edit any labels left of any '=' sign \n""")
         customFileIN.write(lh+"""> Duplicate/remove any of the <<<< blocks>>>>, skip by setting <<<< block = False >>>> \n""")
         customFileIN.write(lh+"""> 'True', 'False' and 'None' are capitalized. Do not use quotes '' anywhere in this file \n""")
@@ -1015,7 +1016,7 @@ def make_template():
         customFileIN.write(lh+"""> '[atmos_average.temp]-[atmos_average2.temp]'    (temp. difference between ref simu and simu 2)\n""")
         customFileIN.write(lh+"""> '[atmos_average.temp]-[atmos_average.temp{lev=10}]'    (temp. difference between the default (near surface) and the 10 Pa level\n""")
 
-        customFileIN.write(lh+"""        Supported expressions are: sqrt, log, exp, min, max, mean\n""")
+        customFileIN.write(lh+"""        Supported expressions are: sqrt, log, exp, abs,min, max, mean \n""")
     customFileIN.write("<<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>\n")
     customFileIN.write("ref> None\n")
     customFileIN.write("2>\n")

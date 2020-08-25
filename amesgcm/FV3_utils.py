@@ -1,6 +1,7 @@
 import numpy as np
 from netCDF4 import Dataset
 import os
+import warnings #Suppress certain errors when dealing with NaN arrays
 
 def fms_press_calc(psfc,ak,bk,lev_type='full'):
     """
@@ -101,7 +102,7 @@ def fms_Z_calc(psfc,ak,bk,T,topo=0.,lev_type='full'):
     
         Calculation is derived from ./atmos_cubed_sphere_mars/Mars_phys.F90:
         We have dp/dz = -rho g => dz= dp/(-rho g) and rho= p/(r T)  => dz=rT/g *(-dp/p) 
-        Let's define the log-pressure u as u = ln(p). We have du = du/dp *dp = (1/p)*dp =dp/p
+        Let's define the log-pressure u as u = ln(p). We have du = {du/dp}*dp = {1/p)*dp} =dp/p
         
         Finally , we have dz for the half layers:  dz=rT/g *-(du) => dz=rT/g *(+dp/p)   with N the layers defined from top to bottom.
     """
@@ -562,7 +563,7 @@ def alt_KM(press,scale_height_KM=8.,reference_press=610.):
     Gives the approximate altitude in km for a given pressure
     Args:
         press: the pressure in [Pa]
-        scale_height_KM: a scale height in [km], (default is 10 km)
+        scale_height_KM: a scale height in [km], (default is 8 km)
         reference_press: reference surface pressure in [Pa], (default is 610 Pa)
     Returns:
         z_KM: the equivalent altitude for that pressure level in [km]
@@ -908,7 +909,22 @@ def dvar_dh(arr, h=None):
     
     return d_arr
 
-
+def zonal_detrend(VAR):
+    '''
+    Substract zonnally averaged mean value from a field
+    Args:
+        VAR: ND-array with detrending dimension last (e.g time,lev,lat,lon)
+    Returns:
+        OUT: detrented field (same size as input)
+        
+    ***NOTE***
+    RuntimeWarnings are expected if the slice contains only NaN, which is the case below the surface 
+    and above the model's top in the interpolated files. We will disable those warnings temporarily
+    '''
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        return VAR-np.nanmean(VAR,axis=-1)[...,np.newaxis]
+    
 #========================================================================= 
 #=======================vertical grid utilities===========================
 #=========================================================================
