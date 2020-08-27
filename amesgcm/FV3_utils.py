@@ -30,10 +30,9 @@ def fms_press_calc(psfc,ak,bk,lev_type='full'):
         
          
     """
-    #Ignore division by zero warning for the Legacy GCM
     
     Nk=len(ak)
-    # If psfc is a float (e.g. psfc=7.) make it a one element array (e.g. psfc=[7.])
+    # If psfc is a float (e.g. psfc=700.) make it a one element array (e.g. psfc=[700])
     if len(np.atleast_1d(psfc))==1: psfc=np.array([np.squeeze(psfc)])
         
     #Flatten the pressure array to generalize to N dimensions

@@ -448,7 +448,7 @@ def main():
         
         for idiff in zdiff_list:
             fileNC=Dataset(ifile, 'a', format='NETCDF4_CLASSIC')
-
+            f_type,interp_type=FV3_file_type(fileNC)
             if idiff not in fileNC.variables.keys():
                 prRed("zdiff error: variable '%s' is not present in %s"%(idiff, ifile))
                 fileNC.close()
@@ -459,16 +459,25 @@ def main():
                     var=fileNC.variables[idiff][:,:,:,:]
                     newUnits=fileNC.variables[idiff].units[:-2]+'/m]' #remove the last ']' to update units, e.g turn '[kg]' to '[kg/m]'
                     newLong_name='vertical gradient of '+fileNC.variables[idiff].long_name
-                    
                     #---temp and ps are always needed---
                     dim_out=fileNC.variables['temp'].dimensions #get dimension
-                    temp=fileNC.variables['temp'][:]
-                    ps=fileNC.variables['ps'][:]
-                    zfull=fms_Z_calc(ps,ak,bk,temp.transpose([1,0,2,3]),topo=0.,lev_type='full') #z is first axis
+                    if interp_type=='pfull':
+                        temp=fileNC.variables['temp'][:]
+                        ps=fileNC.variables['ps'][:]
+                        zfull=fms_Z_calc(ps,ak,bk,temp.transpose([1,0,2,3]),topo=0.,lev_type='full') #z is first axis
+                        #differentiate the variable with respect to z:
+                        darr_dz=dvar_dh(var.transpose([1,0,2,3]),zfull).transpose([1,0,2,3]) 
+                        
+                    elif interp_type=='pstd':
+                        #If pstd, we need the zfull variable
+                        zfull=fileNC.variables['zfull'][:]
+                        darr_dz=dvar_dh(var.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])                         
+                        
+                    elif interp_type in ['zagl','zstd']: #zagl, zstd
+                        lev=fileNC.variables[interp_type][:]
+                        darr_dz=dvar_dh(var.transpose([1,0,2,3]),lev).transpose([1,0,2,3]) 
 
-                    #differentiate the variable with respect to z:
-                    darr_dz=dvar_dh(var.transpose([1,0,2,3]),zfull).transpose([1,0,2,3]) 
-                    
+                        
                     #Log the variable
                     var_Ncdf = fileNC.createVariable('d_dz_'+idiff,'f4',dim_out) 
                     var_Ncdf.long_name=newLong_name
