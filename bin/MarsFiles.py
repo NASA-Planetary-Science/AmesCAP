@@ -43,7 +43,7 @@ parser.add_argument('-fv3','--fv3', nargs='+',
 parser.add_argument('-c','--combine', action='store_true',
                     help="""Combine a sequence of similar files as a single file\n"""
                         """> Usage: MarsFiles.py *.atmos_average.nc --combine \n"""
-                        """> Works with Legacy, fixed, average, daily and dirun files\n"""
+                        """> Works with Legacy, fixed, average, daily and diuRn files\n"""
                         """ \n""")
                         
 parser.add_argument('-t','--tshift', action='store_true',
@@ -52,13 +52,23 @@ parser.add_argument('-t','--tshift', action='store_true',
             """> Works with diurn files only, \n"""
             """> Can also process vertically interpolated diurn files \n"""
             """>      e.g. ***_diurn_P.nc \n"""
-            """ \n""")                        
+            """ \n""")        
+            
+parser.add_argument('-ba','--bin_average', action='store_true',
+                    help="""Bin FV3's 'atmos_daily' files as 'atmos_average' Usefull after computation of high-level fields \n"""
+                        """> Usage: MarsFiles.py *.atmos_daily.nc -ba  \n"""
+                        """>        MarsFiles.py *.atmos_daily_pstd.nc -ba  \n"""
+                        """\033[00m""")            
+
+parser.add_argument('-bd','--bin_diurn', action='store_true',
+                    help=""" Bin FV3's atmos_daily files as atmos_diurn. Usefull after computation of high-level fields \n"""
+                        """> Usage: MarsFiles.py *.atmos_daily.nc -bd  \n"""
+                        """IN PROGRESS!! \033[00m""")               
+                            
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
 
-#======================================================
-#======================================================
-#======================================================
+
 
 #Use ncks or internal method to concatenate files
 #cat_method='ncks'
@@ -71,6 +81,12 @@ def main():
     if parser.parse_args().fv3 and parser.parse_args().combine:
         prRed('Use --fv3 and --combine sequentially to avoid ambiguity ')
         exit()
+        
+    #===========================================================================
+    #=============  Conversion Legacy > FV3 by Richard U. and Alex. K.==========
+    #===========================================================================   
+        
+        
     #=======Convert to FV3================
     if parser.parse_args().fv3:
         for irequest in parser.parse_args().fv3:
@@ -117,7 +133,9 @@ def main():
                     lsmax = str(max(int(lsmax),int(ls_r))).zfill(3)
                 a=make_FV3_files(f,parser.parse_args().fv3,True,cwd)
                    
-
+    #===========================================================================
+    #=============  Append netcdf files along the 'time' dimension =============
+    #===========================================================================
     elif parser.parse_args().combine:
         #TODO Use ncks if it is available (not tested yet)
         if cat_method=='ncks':
@@ -194,20 +212,17 @@ def main():
             p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
             p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
             prCyan(fileout +' was merged')
-    
-#=========== Tshift implemation by Victoria!! ===========================
-
+            
+#===============================================================================    
+#================= Tshift implemation by Victoria H. ===========================
+#===============================================================================
     elif parser.parse_args().tshift:
-        #Get files to process
-        histlist=[]
         for filei in file_list:
             #Add path unless full path is provided
             if not ('/' in filei):
                 fullnameIN = path2data + '/' + filei
             else:
                 fullnameIN=filei
-                
-            
             fullnameOUT = fullnameIN[:-3]+'_T'+'.nc'
 
             fdiurn = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
@@ -274,9 +289,28 @@ def main():
                     fnew.log_variable(ivar,varOUT,['time',tod_name,zaxis,'lat','lon'],fdiurn.variables[ivar].long_name,fdiurn.variables[ivar].units)
             fnew.close()
             fdiurn.close()    
+            
+            
+    #===========================================================================
+    #===============  Bin an atmos_daily file to atmos_average =================
+    #===========================================================================
+    elif parser.parse_args().bin_average:   
+        for filei in file_list:
+            #Add path unless full path is provided
+            if not ('/' in filei):
+                fullnameIN = path2data + '/' + filei
+            else:
+                fullnameIN=filei
+            fullnameOUT = fullnameIN[:-3]+'_T'+'.nc'
+
+            fdiurn = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
+            #Copy some dimensions from the old file to the new file
+            fnew.copy_all_dims_from_Ncfile(fdiurn)
+             
     
     else:
-        prRed("""Error: no action requested: use 'MarsFiles *nc --fv3 --combine, or --tshift'""")    
+        prRed("""Error: no action requested: use 'MarsFiles *nc --fv3 --combine, --tshift, --bin_average'""")    
         
         
 
@@ -298,8 +332,7 @@ def make_FV3_files(fpath,typelistfv3,renameFV3=True,cwd=None):
         histdir = os.path.dirname(fpath)
     else:
         histdir = cwd
-    result   = re.search('LegacyGCM_(.*).nc',histname)
-    fdate    = result.group(1)
+
     histfile = Dataset(fpath,'r',format='NETCDF4_CLASSIC')
     histvars = histfile.variables.keys()
     histdims = histfile.dimensions.keys()
@@ -479,8 +512,6 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
                 newdims=('time_of_day_16')
                 npvar=np.arange(0.75,24,1.5)  # every 1.5 hours, centered at half timestep ? AK
                 newf.log_variable(vname2,npvar,newdims,longname_txt2,units_txt2)
-                
-
                 
     return 0
 
