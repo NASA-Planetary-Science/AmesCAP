@@ -47,7 +47,8 @@ parser = argparse.ArgumentParser(description="""\033[93mAnalysis Toolkit for the
 parser.add_argument('custom_file', nargs='?',type=argparse.FileType('r'),default=None, #sys.stdin
                              help='Use optional input file Custom.in to plot the graphs \n'
                                   '> Usage: MarsPlot Custom.in  [other options]\n' 
-                                 'UPDATE as needed with \033[96mpip install git+https://github.com/alex-kling/amesgcm.git --upgrade\033[00m')
+                                  'UPDATE as needed with \033[96mpip install git+https://github.com/alex-kling/amesgcm.git --upgrade\033[00m \n'
+                                  'Tutorial at: \033[93mhttps://github.com/alex-kling/amesgcm\033[00m')
 
 parser.add_argument('-i', '--inspect_file', default=None,
                  help="""Inspect Netcdf file content. Variables are sorted by dimensions \n"""
