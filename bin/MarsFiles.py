@@ -427,7 +427,11 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
         vshape= npvar.shape
         ntod  = histfile.dimensions['ntod']
         
-        longname_txt=getattr(histfile.variables[vname],'longname','')
+        longname_txt=getattr(histfile.variables[vname],'long_name','')
+        
+        #On some files like the LegacyGCM_Ls*** on the NAS dataportal, the attribute 'long_name' may be mispelled 'longname'
+        if longname_txt=='':longname_txt=getattr(histfile.variables[vname],'longname','')
+        
         units_txt=getattr(histfile.variables[vname],'units','')
         
         if avgtod:
