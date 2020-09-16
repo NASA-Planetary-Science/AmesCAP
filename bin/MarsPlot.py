@@ -40,7 +40,7 @@ except Exception as exception:
 #                  ARGUMENTS PARSER
 #======================================================
 
-global current_version;current_version=2.2
+global current_version;current_version=2.3
 parser = argparse.ArgumentParser(description="""\033[93mAnalysis Toolkit for the Ames GCM, V%s\033[00m """%(current_version),
                                 formatter_class=argparse.RawTextHelpFormatter)
 
@@ -989,7 +989,7 @@ def make_template():
         customFileIN.write(lh+"""    -C) lat   = equator slice \n""")
         customFileIN.write(lh+"""    -D) lon   = 'all', i.e zonal average over all longitudes\n""")
         customFileIN.write(lh+"""    -E) tod   = '15', i.e. 3pm UT \n""")
-        customFileIN.write(lh+"""> Overwrite the dimension using atmos_average.temp{ls = 90 ; lev= 5.,10; lon= all ; lat=45} Use brackets '{}' and SEMI-COLONS ';'\n""")
+        customFileIN.write(lh+"""> Overwrite the dimensions using atmos_average.temp{ls = 90 ; lev= 5.,10; lon= all ; lat=45} Use brackets '{}' and SEMI-COLONS ';'\n""")
         customFileIN.write(lh+"""     Specific Time Of Day (tod) in diurn files are accessed with brackets, '{}', e.g. atmos_diurn.ps{tod = 20} \n""")
         customFileIN.write(lh+""">    Units must be the same as the free dimension block, i.e time [Ls], lev [Pa/m], lon [+/-180 deg], and lat [deg]   \n""")
         customFileIN.write(lh+"""TIME SERIES AND 1D PLOTS:\n""")
@@ -1010,14 +1010,14 @@ def make_template():
         customFileIN.write(lh+"""ALGEBRA AND CROSS-SIMULATIONS PLOTS:\n""")
         customFileIN.write(lh+"""Use 'N>' to add a Nth simulation with matching timesteps to the <<< Simulations >>> block  \n""")
         customFileIN.write(lh+"""Use full path, e.g. '2> /u/akling/FV3/verona/simu2/history' Empty fields are ignored, comment out with '#' \n""")
-        customFileIN.write(lh+"""A variable 'var' in a 'XXXXX.file.nc' from this Nth simulation is accessed using 'XXXXX.fileN.var' syntax \n""")
+        customFileIN.write(lh+"""A variable 'var' in a 'XXXXX.file.nc' from this Nth simulation is accessed using the 'XXXXX.fileN.var' syntax \n""")
         customFileIN.write(lh+"""Encompass raw outputs with square brackets '[]' for element-wise operations, e.g: \n""")
-        customFileIN.write(lh+"""> '[fixed.zurf]/(10.**3)'                               (convert topography from [m] to [km])\n""")
-        customFileIN.write(lh+"""> '[atmos_average.taudust_IR]/[atmos_average.ps]*(610)' (normalize the dust opacity)     \n""")
+        customFileIN.write(lh+"""> '[fixed.zsurf]/(10.**3)'                              (convert topography from [m] to [km])\n""")
+        customFileIN.write(lh+"""> '[atmos_average.taudust_IR]/[atmos_average.ps]*610' (normalize the dust opacity)     \n""")
         customFileIN.write(lh+"""> '[atmos_average.temp]-[atmos_average2.temp]'    (temp. difference between ref simu and simu 2)\n""")
-        customFileIN.write(lh+"""> '[atmos_average.temp]-[atmos_average.temp{lev=10}]'    (temp. difference between the default (near surface) and the 10 Pa level\n""")
+        customFileIN.write(lh+"""> '[atmos_average.temp]-[atmos_average.temp{lev=10}]'   (temp. difference between the default (near surface) and the 10 Pa level\n""")
 
-        customFileIN.write(lh+"""        Supported expressions are: sqrt, log, exp, abs,min, max, mean \n""")
+        customFileIN.write(lh+"""        Supported expressions are: sqrt, log, exp, abs, min, max, mean \n""")
     customFileIN.write("<<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>\n")
     customFileIN.write("ref> None\n")
     customFileIN.write("2>\n")

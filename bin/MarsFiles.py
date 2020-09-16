@@ -54,16 +54,12 @@ parser.add_argument('-t','--tshift', action='store_true',
             """>      e.g. ***_diurn_P.nc \n"""
             """ \n""")        
             
-parser.add_argument('-ba','--bin_average', action='store_true',
+parser.add_argument('-ba','--bin_average',nargs='?',const=5, type=int, #Default is 5 sols
                     help="""Bin FV3's 'atmos_daily' files as 'atmos_average' Usefull after computation of high-level fields \n"""
-                        """> Usage: MarsFiles.py *.atmos_daily.nc -ba  \n"""
-                        """>        MarsFiles.py *.atmos_daily_pstd.nc -ba  \n"""
+                        """> Usage: MarsFiles.py *.atmos_daily.nc -ba     (default: bin 5 days)\n"""
+                        """>        MarsFiles.py *.atmos_daily_pstd.nc -ba 10     (bin 10 days)\n"""
                         """\033[00m""")            
-
-parser.add_argument('-bd','--bin_diurn', action='store_true',
-                    help=""" Bin FV3's atmos_daily files as atmos_diurn. Usefull after computation of high-level fields \n"""
-                        """> Usage: MarsFiles.py *.atmos_daily.nc -bd  \n"""
-                        """IN PROGRESS!! \033[00m""")               
+             
                             
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
@@ -77,7 +73,7 @@ def main():
     file_list=parser.parse_args().input_file
     cwd=os.getcwd()
     path2data=os.getcwd()
-    
+
     if parser.parse_args().fv3 and parser.parse_args().combine:
         prRed('Use --fv3 and --combine sequentially to avoid ambiguity ')
         exit()
@@ -137,6 +133,7 @@ def main():
     #=============  Append netcdf files along the 'time' dimension =============
     #===========================================================================
     elif parser.parse_args().combine:
+        prYellow('Using %s method for concatenation'%(cat_method))
         #TODO Use ncks if it is available (not tested yet)
         if cat_method=='ncks':
             subprocess.check_call('ncks --version',shell=True,stdout=open(os.devnull, "w"), stderr=open(os.devnull, "w"))
@@ -236,9 +233,9 @@ def main():
             # find vertical dimension variable name
             if filei[:-3].endswith('_pstd'):
                 zaxis = 'pstd'
-            elif filei[:3].endswith('_zagl'):
+            elif filei[:-3].endswith('_zagl'):
                 zaxis = 'zagl'
-            elif filei[:3].endswith('_zstd'):
+            elif filei[:-3].endswith('_zstd'):
                 zaxis = 'zstd'
             else:
                 zaxis = 'pfull'
@@ -294,26 +291,107 @@ def main():
     #===========================================================================
     #===============  Bin an atmos_daily file to atmos_average =================
     #===========================================================================
-    elif parser.parse_args().bin_average:   
+    elif parser.parse_args().bin_average: 
+        nday=parser.parse_args().bin_average
         for filei in file_list:
             #Add path unless full path is provided
             if not ('/' in filei):
                 fullnameIN = path2data + '/' + filei
             else:
                 fullnameIN=filei
-            fullnameOUT = fullnameIN[:-3]+'_T'+'.nc'
+            fullnameOUT = fullnameIN[:-3]+'_ba'+'.nc'
 
-            fdiurn = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            var_list = fdaily.variables.keys()
+            
+            time_in=fdaily.variables['time'][:]
+            Nin=len(time_in)
+            
+            dt_in=time_in[1]-time_in[0]
+            iperday=int(1/dt_in)
+            combinedN=int(iperday*nday)
+            
+            N_even=Nin//combinedN
+            N_left=Nin%combinedN
+
+            if N_left!=0:
+                prYellow('***Warning*** requested  %i sols bin period. File has %i timestep/sols and %i/(%i x %i) is not a round number'%(nday,iperday,Nin,nday,iperday))
+                prYellow('    Will use %i  bins of (%i x %i)=%i timesteps (%i) and one bin with %i timesteps'%(N_even,nday,iperday,combinedN,N_even*combinedN,N_left)) 
+        
+
+
+
             fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
-            #Copy some dimensions from the old file to the new file
-            fnew.copy_all_dims_from_Ncfile(fdiurn)
-             
-    
+            #Copy all dims but time from the old file to the new file
+            fnew.copy_all_dims_from_Ncfile(fdaily,exclude_dim=['time'])
+            
+            #-----Calculate and log the new time array -----
+            fnew.add_dimension('time',None)
+            
+            if N_left!=0:
+                time_even=time_in[0:N_even*combinedN]
+                time_left=time_in[N_even*combinedN:]
+                time_out = np.append(np.mean(time_even.reshape(-1,combinedN),axis=1) ,time_left.mean()) 
+            else:    
+                time_out = np.mean(time_in.reshape(-1,combinedN),axis=1) 
+            
+            fnew.log_axis1D('time',time_out,'time',longname_txt="sol number",units_txt='days since 0000-00-00 00:00:00',cart_txt='T')
+            
+            #-------------------------------------------------
+            
+            #Loop over all variables in file
+            for ivar in var_list:
+                prCyan("Processing: %s ..."%(ivar))
+                var     = fdaily.variables[ivar]
+                npvar = var[:]
+                dims  = var.dimensions
+                ndims = npvar.ndim
+                vshape_in= npvar.shape
+
+                #vreshape= npvar.shape[]
+                
+                if 'time' in fdaily.variables[ivar].dimensions :       
+                    # Bin the time array
+                    if N_left!=0:
+                        #Do the average on the even part
+                        vreshape=np.append([-1,combinedN],vshape_in[1:]).astype(int)
+                        var_even = np.mean(npvar[0:N_even*combinedN,...].reshape(vreshape),axis=1)
+                        
+                        #Left over time steps
+                        var_left=np.mean(npvar[N_even*combinedN:,...],axis=0,keepdims=True)
+                        #Combine both
+                        var_out=np.concatenate((var_even,var_left),axis=0)
+                        
+                    #In this case = Nin/(ndayxiperday) is a round number
+                    else:
+                        
+
+                        vreshape=np.append([-1,combinedN],vshape_in[1:]).astype(int)
+                        var_out = np.mean(npvar.reshape(vreshape),axis=1)
+                    
+                    #Save the data to the file
+                    vshape_out=list(vshape_in);
+                    fnew.log_variable(ivar,var_out,dims,var.long_name,var.units)
+                    
+                else:
+                    
+                    if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl']:
+                        prCyan("Copying axis: %s..."%(ivar))
+                        fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
+                    else: 
+                        prCyan("Copying var: %s..."%(ivar))   
+                        fnew.copy_Ncvar(fdaily.variables[ivar]) 
+            fnew.close()
+            
     else:
         prRed("""Error: no action requested: use 'MarsFiles *nc --fv3 --combine, --tshift, --bin_average'""")    
-        
-        
 
+#END of script
+        
+#*******************************************************************************
+#*************Definitions for functions used in this script ********************
+#*******************************************************************************
+          
 
 def make_FV3_files(fpath,typelistfv3,renameFV3=True,cwd=None):
     '''
@@ -417,7 +495,7 @@ def make_FV3_files(fpath,typelistfv3,renameFV3=True,cwd=None):
 
 
 #Function to perform time averages over all fields
-def do_avg_vars(histfile,newf,avgtime,avgtod):
+def do_avg_vars(histfile,newf,avgtime,avgtod,Nday=5):
     histvars = histfile.variables.keys()
     for vname in histvars:
         var     = histfile.variables[vname]
@@ -463,8 +541,8 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
                 time0=ls2sol_1year(npvar[0])+np.linspace(0,10.,len(npvar)) 
                  
                 if avgtime:
-                    varnew = np.mean(npvar.reshape(-1,5),axis=1)
-                    time0 =  np.mean(time0.reshape(-1,5),axis=1)
+                    varnew = np.mean(npvar.reshape(-1,Nday),axis=1)
+                    time0 =  np.mean(time0.reshape(-1,Nday),axis=1)
 
                 if not avgtime and not avgtod: #i.e daily file
                     # Solar longitude
@@ -486,7 +564,7 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
         elif ndims == 4:
             varnew = npvar
             if avgtime:
-                varnew = np.mean(npvar.reshape(-1,5,vshape[1],vshape[2],vshape[3]),axis=1)
+                varnew = np.mean(npvar.reshape(-1,Nday,vshape[1],vshape[2],vshape[3]),axis=1)
             if avgtod:
                 varnew = varnew.mean(axis=1)
             if not avgtime and not avgtod:
@@ -499,7 +577,7 @@ def do_avg_vars(histfile,newf,avgtime,avgtod):
         elif ndims == 5:
             varnew = npvar
             if avgtime:
-                varnew = np.mean(npvar.reshape(-1,5,vshape[1],vshape[2],vshape[3],vshape[4]),axis=1)
+                varnew = np.mean(npvar.reshape(-1,Nday,vshape[1],vshape[2],vshape[3],vshape[4]),axis=1)
             if avgtod:
                 varnew = varnew.mean(axis=1)
             if not avgtime and not avgtod:
