@@ -923,6 +923,48 @@ def zonal_detrend(VAR):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
         return VAR-np.nanmean(VAR,axis=-1)[...,np.newaxis]
+
+
+def daily_to_average(varIN,dt_in,nday=5):
+    '''
+    Bin a variable from an atmos_daily file to the atmos_average format.
+    Args:
+        varIN: ND-array with time dimension first (e.g ts(time,lat,lon))
+        dt_in: Delta of time betwen timesteps in sols, e.g. dt_in=time[1]-time[0]
+        nday : bining period in sols, default is 5 sols
+    Returns:
+        varOUT: the variable bin over nday
+        
+    ***NOTE***
+    
+    If varIN(time,lat,lon) from atmos_daily = (160,48,96) and has 4 timestep per day (every 6 hours), the resulting variable  for nday=5 is 
+    varOUT(160/(4x5),48,96)=varOUT(8,48,96)
+    '''
+    vshape_in=varIN.shape
+    Nin=vshape_in[0] #time dimension
+    
+    iperday=int(1/dt_in)
+    combinedN=int(iperday*nday)
+    N_even=Nin//combinedN
+    N_left=Nin%combinedN
+    
+    # Nin/(ndayxiperday) is not a round number
+    if N_left!=0:
+        #Do the average on the even part
+        vreshape=np.append([-1,combinedN],vshape_in[1:]).astype(int)
+        var_even = np.mean(varIN[0:N_even*combinedN,...].reshape(vreshape),axis=1)
+        
+        #Left over time steps
+        var_left=np.mean(varIN[N_even*combinedN:,...],axis=0,keepdims=True)
+        #Combine both
+        varOUT=np.concatenate((var_even,var_left),axis=0)
+        
+    # Nin/(ndayxiperday) is a round number
+    else:
+        vreshape=np.append([-1,combinedN],vshape_in[1:]).astype(int)
+        varOUT = np.mean(varIN.reshape(vreshape),axis=1)
+    return varOUT
+                
     
 #========================================================================= 
 #=======================vertical grid utilities===========================
