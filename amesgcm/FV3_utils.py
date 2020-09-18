@@ -925,20 +925,26 @@ def zonal_detrend(VAR):
         return VAR-np.nanmean(VAR,axis=-1)[...,np.newaxis]
 
 
-def daily_to_average(varIN,dt_in,nday=5):
+def daily_to_average(varIN,dt_in,nday=5,trim=True):
     '''
     Bin a variable from an atmos_daily file to the atmos_average format.
     Args:
         varIN: ND-array with time dimension first (e.g ts(time,lat,lon))
         dt_in: Delta of time betwen timesteps in sols, e.g. dt_in=time[1]-time[0]
         nday : bining period in sols, default is 5 sols
+        trim : discard any leftover data at the end of file before binning.
+             
     Returns:
         varOUT: the variable bin over nday
         
     ***NOTE***
     
-    If varIN(time,lat,lon) from atmos_daily = (160,48,96) and has 4 timestep per day (every 6 hours), the resulting variable  for nday=5 is 
-    varOUT(160/(4x5),48,96)=varOUT(8,48,96)
+    1) If varIN(time,lat,lon) from atmos_daily = (160,48,96) and has 4 timestep per day (every 6 hours), the resulting variable  for nday=5 is 
+       varOUT(160/(4x5),48,96)=varOUT(8,48,96)
+       
+    2) If daily file is 668 sols, that is =133x5 +3 leftover sols. 
+       >If trim=True,  the time is 133 and last 3 sols the are discarded 
+       >If trim=False, the time is 134 and last bin contains only 3 sols of data
     '''
     vshape_in=varIN.shape
     Nin=vshape_in[0] #time dimension
@@ -949,7 +955,7 @@ def daily_to_average(varIN,dt_in,nday=5):
     N_left=Nin%combinedN
     
     # Nin/(ndayxiperday) is not a round number
-    if N_left!=0:
+    if N_left!=0 and not trim:
         #Do the average on the even part
         vreshape=np.append([-1,combinedN],vshape_in[1:]).astype(int)
         var_even = np.mean(varIN[0:N_even*combinedN,...].reshape(vreshape),axis=1)
@@ -959,13 +965,46 @@ def daily_to_average(varIN,dt_in,nday=5):
         #Combine both
         varOUT=np.concatenate((var_even,var_left),axis=0)
         
-    # Nin/(ndayxiperday) is a round number
+    # Nin/(ndayxiperday) is a round number or we request to trim the array
     else:
         vreshape=np.append([-1,combinedN],vshape_in[1:]).astype(int)
-        varOUT = np.mean(varIN.reshape(vreshape),axis=1)
+        varOUT = np.mean(varIN[0:N_even*combinedN,...].reshape(vreshape),axis=1)
     return varOUT
                 
+def daily_to_diurn(varIN,time_in):
+    '''
+    Bin a variable from an atmos_daily file into the atmos_diurn format.
+    Args:
+        varIN: ND-array with time dimension first (e.g ts(time,lat,lon))
+        time_in: Time array in sols. Only the first N elements (e.g. time[0:N]) are actually needed (if saving memory is important).
+    Returns:
+        varOUT: the variable bined in the atmos_diurn format, e.g. ts(time,time_of_day,lat,lon)
+        tod   : time of day in [hours]
+        
+    ***NOTE***
+    1) If varIN(time,lat,lon) from atmos_daily = (40,48,96) and has 4 timestep per day (every 6 hours):
+    > The resulting variable is varOUT(10,4,48,96)=(time,time_of_day,lat,lon)
+    > tod=[0.,6.,12.,18.] (for example)
     
+    2) Since the time dimension remains first, the output variables may be passed to the daily_to_average() function for further binning. 
+    '''
+    dt_in=time_in[1]-time_in[0]
+    iperday=int(1/dt_in)
+    vshape_in= varIN.shape
+    vreshape=np.append([-1,iperday],vshape_in[1:]).astype(int)
+    varOUT=varIN.reshape(vreshape)
+    
+    #Get time of day in hours
+    tod=np.mod(time_in[0:iperday]*24,24)
+    
+    #Sort by time of day, e.g. if  tod=[6.,12.,18.,0.] re-arange  into [0.,6.,12.,18.]
+    if not  np.all(tod[1:] >= tod[:-1], axis=0): #every element is array  is greater than the one on its left.
+    
+        #This returns the permutation, e.g. if tod=[6.,12.,18.,0.], i_sort = [3, 0, 1, 2]
+        i_sort=sorted(range(len(tod)), key=lambda k: tod[k]) 
+        tod=tod[i_sort]
+        varOUT=varOUT[:,i_sort,...] 
+    return varOUT    
 #========================================================================= 
 #=======================vertical grid utilities===========================
 #=========================================================================

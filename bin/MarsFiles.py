@@ -17,7 +17,7 @@ from netCDF4 import Dataset
 
 #===========
 from amesgcm.Ncdf_wrapper import Ncdf
-from amesgcm.FV3_utils import tshift
+from amesgcm.FV3_utils import tshift,daily_to_average,daily_to_diurn
 from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn
 #---
 
@@ -56,13 +56,18 @@ parser.add_argument('-t','--tshift', action='store_true',
             
 parser.add_argument('-ba','--bin_average',nargs='?',const=5, type=int, #Default is 5 sols
                     help="""Bin FV3's 'atmos_daily' files as 'atmos_average' Usefull after computation of high-level fields \n"""
-                        """> Usage: MarsFiles.py *.atmos_daily.nc -ba     (default: bin 5 days)\n"""
-                        """>        MarsFiles.py *.atmos_daily_pstd.nc -ba 10     (bin 10 days)\n"""
+                        """> Usage: MarsFiles.py *.atmos_daily.nc -ba          (default, bin 5 days)\n"""
+                        """>        MarsFiles.py *.atmos_daily_pstd.nc -ba 10  (bin 10 days)\n"""
                         """\033[00m""")            
              
+parser.add_argument('-bd','--bin_diurn', action='store_true', 
+                    help="""Bin FV3's 'atmos_daily' files as 'atmos_diurn' May be used jointly with --bin_average\n"""
+                        """> Usage: MarsFiles.py *.atmos_daily.nc -bd             (default, 5 days bin) \n"""
+                        """>        MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 10 (bin 10 days)\n"""
+                        """>        MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 1  (no binning, similar to raw Legacy output)\n"""
+                        """\033[00m""")    
                             
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
-
 
 
 
@@ -211,7 +216,7 @@ def main():
             prCyan(fileout +' was merged')
             
 #===============================================================================    
-#================= Tshift implemation by Victoria H. ===========================
+#================= Tshift implementation by Victoria H. ===========================
 #===============================================================================
     elif parser.parse_args().tshift:
         for filei in file_list:
@@ -260,21 +265,19 @@ def main():
             var_list = fdiurn.variables.keys() # get all variables from old file
 
             for ivar in var_list:
+                prCyan("Processing: %s ..."%(ivar))
                 varIN = fdiurn.variables[ivar][:]
                 vkeys = fdiurn.variables[ivar].dimensions
                 if (len(vkeys) == 4):
-                    print(ivar)
                     ilat = vkeys.index('lat')
                     ilon = vkeys.index('lon')
                     itime = vkeys.index('time')
                     itod = vkeys.index(tod_name)
                     newvar = np.transpose(varIN,(ilon,ilat,itime,itod))
                     newvarOUT = tshift(newvar,lon=longitude,timex=tod_in)
-                    varOUT = np.transpose(newvarOUT, (2,3,1,0))
-                        
+                    varOUT = np.transpose(newvarOUT, (2,3,1,0))            
                     fnew.log_variable(ivar,varOUT,['time',tod_name,'lat','lon'],fdiurn.variables[ivar].long_name,fdiurn.variables[ivar].units)
                 if (len(vkeys) == 5):
-                    print(ivar)
                     ilat = vkeys.index('lat')
                     ilon = vkeys.index('lon')
                     iz  = vkeys.index(zaxis)
@@ -291,7 +294,7 @@ def main():
     #===========================================================================
     #===============  Bin an atmos_daily file to atmos_average =================
     #===========================================================================
-    elif parser.parse_args().bin_average: 
+    elif parser.parse_args().bin_average and not parser.parse_args().bin_diurn: 
         nday=parser.parse_args().bin_average
         for filei in file_list:
             #Add path unless full path is provided
@@ -299,7 +302,7 @@ def main():
                 fullnameIN = path2data + '/' + filei
             else:
                 fullnameIN=filei
-            fullnameOUT = fullnameIN[:-3]+'_ba'+'.nc'
+            fullnameOUT = fullnameIN[:-3]+'_to_average'+'.nc'
 
             fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
             var_list = fdaily.variables.keys()
@@ -316,65 +319,29 @@ def main():
 
             if N_left!=0:
                 prYellow('***Warning*** requested  %i sols bin period. File has %i timestep/sols and %i/(%i x %i) is not a round number'%(nday,iperday,Nin,nday,iperday))
-                prYellow('    Will use %i  bins of (%i x %i)=%i timesteps (%i) and one bin with %i timesteps'%(N_even,nday,iperday,combinedN,N_even*combinedN,N_left)) 
+                prYellow('    Will use %i  bins of (%i x %i)=%i timesteps (%i) and discard %i timesteps'%(N_even,nday,iperday,combinedN,N_even*combinedN,N_left)) 
         
-
-
 
             fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
             #Copy all dims but time from the old file to the new file
             fnew.copy_all_dims_from_Ncfile(fdaily,exclude_dim=['time'])
             
+
             #-----Calculate and log the new time array -----
             fnew.add_dimension('time',None)
-            
-            if N_left!=0:
-                time_even=time_in[0:N_even*combinedN]
-                time_left=time_in[N_even*combinedN:]
-                time_out = np.append(np.mean(time_even.reshape(-1,combinedN),axis=1) ,time_left.mean()) 
-            else:    
-                time_out = np.mean(time_in.reshape(-1,combinedN),axis=1) 
-            
+            time_out=daily_to_average(time_in[:],dt_in,nday)
             fnew.log_axis1D('time',time_out,'time',longname_txt="sol number",units_txt='days since 0000-00-00 00:00:00',cart_txt='T')
-            
-            #-------------------------------------------------
-            
+        
+                
             #Loop over all variables in file
             for ivar in var_list:
                 prCyan("Processing: %s ..."%(ivar))
-                var     = fdaily.variables[ivar]
-                npvar = var[:]
-                dims  = var.dimensions
-                ndims = npvar.ndim
-                vshape_in= npvar.shape
-
-                #vreshape= npvar.shape[]
+                varNcf     = fdaily.variables[ivar]
                 
-                if 'time' in fdaily.variables[ivar].dimensions :       
-                    # Bin the time array
-                    if N_left!=0:
-                        #Do the average on the even part
-                        vreshape=np.append([-1,combinedN],vshape_in[1:]).astype(int)
-                        var_even = np.mean(npvar[0:N_even*combinedN,...].reshape(vreshape),axis=1)
-                        
-                        #Left over time steps
-                        var_left=np.mean(npvar[N_even*combinedN:,...],axis=0,keepdims=True)
-                        #Combine both
-                        var_out=np.concatenate((var_even,var_left),axis=0)
-                        
-                    #In this case = Nin/(ndayxiperday) is a round number
-                    else:
-                        
-
-                        vreshape=np.append([-1,combinedN],vshape_in[1:]).astype(int)
-                        var_out = np.mean(npvar.reshape(vreshape),axis=1)
-                    
-                    #Save the data to the file
-                    vshape_out=list(vshape_in);
-                    fnew.log_variable(ivar,var_out,dims,var.long_name,var.units)
-                    
+                if 'time' in varNcf.dimensions :     
+                    var_out=daily_to_average(varNcf[:],dt_in,nday)
+                    fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
                 else:
-                    
                     if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl']:
                         prCyan("Copying axis: %s..."%(ivar))
                         fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
@@ -382,9 +349,83 @@ def main():
                         prCyan("Copying var: %s..."%(ivar))   
                         fnew.copy_Ncvar(fdaily.variables[ivar]) 
             fnew.close()
+
+    #===========================================================================
+    #===============  Bin an atmos_daily file to atmos_diurn ===================
+    #===========================================================================
+    elif parser.parse_args().bin_diurn: 
+    
+
+    
+        
+        #Use defaut binning period of 5 days  
+        if parser.parse_args().bin_average is None:
+            nday=5
+        else:
+            nday=parser.parse_args().bin_average
+                
+        for filei in file_list:
+            #Add path unless full path is provided
+            if not ('/' in filei):
+                fullnameIN = path2data + '/' + filei
+            else:
+                fullnameIN=filei
+            fullnameOUT = fullnameIN[:-3]+'_to_diurn'+'.nc'
+
+            fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            var_list = fdaily.variables.keys()
+            
+            time_in=fdaily.variables['time'][:]
+            Nin=len(time_in)
+            
+            dt_in=time_in[1]-time_in[0]
+            iperday=int(1/dt_in)
+
+            
+            fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
+            #Copy all dims but time from the old file to the new file
+            fnew.copy_all_dims_from_Ncfile(fdaily,exclude_dim=['time'])
+            
+            
+            # If no binning is requested, copy time axis as-is
+            fnew.add_dimension('time',None)    
+            time_out=daily_to_average(time_in[:],dt_in,nday)
+            fnew.add_dim_with_content('time',time_out,longname_txt="sol number",units_txt='days since 0000-00-00 00:00:00',cart_txt='T')
+
+            #-----Create new  time of day dimension----
+            tod_name='time_of_day_%02d'%(iperday)
+            time_tod=np.squeeze(daily_to_diurn(time_in[0:iperday],time_in[0:iperday]))
+            tod=np.mod(time_tod*24,24)
+            fnew.add_dim_with_content(tod_name,tod,longname_txt="time of day",units_txt="hours since 0000-00-00 00:00:00",cart_txt='N')
+
+       
+                
+            #Loop over all variables in file
+            for ivar in var_list:
+                prCyan("Processing: %s ..."%(ivar))
+                varNcf     = fdaily.variables[ivar]
+                
+                #If time is the dimension (but not just a time array)
+                if 'time' in varNcf.dimensions and ivar!='time':   
+                    dims_in=varNcf.dimensions
+                    dims_out=(dims_in[0],)+(tod_name,)+dims_in[1:]
+                    var_out=daily_to_diurn(varNcf[:],time_in[0:iperday])
+                    if nday!=1:var_out=daily_to_average(var_out,1.,nday) #dt is 1 sol between two diurn timestep
+                    fnew.log_variable(ivar,var_out,dims_out,varNcf.long_name,varNcf.units)
+                    
+                else:
+                    
+                    if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl']:
+                        prCyan("Copying axis: %s..."%(ivar))
+                        fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
+                    elif ivar!='time': 
+                        prCyan("Copying var: %s..."%(ivar))   
+                        fnew.copy_Ncvar(fdaily.variables[ivar]) 
+            fnew.close()
             
     else:
-        prRed("""Error: no action requested: use 'MarsFiles *nc --fv3 --combine, --tshift, --bin_average'""")    
+        prRed("""Error: no action requested: use 'MarsFiles *nc --fv3 --combine, --tshift, --bin_average, --bin_diurn'""")    
+
 
 #END of script
         

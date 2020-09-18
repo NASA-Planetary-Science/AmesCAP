@@ -9,7 +9,8 @@ import sys       #system command
 
 #==============
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple
-from amesgcm.Script_utils import print_fileContent,print_varContent,FV3_file_type,wbr_cmap,rjw_cmap
+from amesgcm.Script_utils import print_fileContent,print_varContent,FV3_file_type
+from amesgcm.Script_utils import wbr_cmap,rjw_cmap,dkass_temp_cmap,dkass_dust_cmap
 from amesgcm.FV3_utils import lon360_to_180,lon180_to_360,UT_LTtxt,area_weights_deg
 from amesgcm.FV3_utils import add_cyclic,azimuth2cart,mollweide2cart,robin2cart,ortho2cart
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
@@ -1796,7 +1797,9 @@ class Fig_2D(object):
         #Personalized colormaps
         if cmap=='wbr':cmap=wbr_cmap()
         if cmap=='rjw':cmap=rjw_cmap()
-
+        if cmap=='dkass_temp':cmap=dkass_temp_cmap()
+        if cmap=='dkass_dust':cmap=dkass_dust_cmap()
+        
         norm,levs=self.return_norm_levs()
 
         if self.range:
