@@ -978,7 +978,8 @@ def make_template():
         customFileIN.write(lh+"""> Duplicate/remove any of the <<<< blocks>>>>, skip by setting <<<< block = False >>>> \n""")
         customFileIN.write(lh+"""> 'True', 'False' and 'None' are capitalized. Do not use quotes '' anywhere in this file \n""")
         customFileIN.write(lh+"""> Cmin, Cmax define the colorbar range. Scientific notation (e.g. 1e-6, 2e3) is supported \n""")
-        customFileIN.write(lh+"""> Solid contours for the 2nd variable are provide as list, e.g.:  150,200,250 \n""")
+        customFileIN.write(lh+"""       If more than 2 values are provided (e.g. 150,200,250) those define the shaded contours \n""")
+        customFileIN.write(lh+"""> Solid contours for the 2nd variable are always provided as list, e.g.:  150,200,250 \n""")
         customFileIN.write(lh+"""> 'Level' refers to either 'level','pfull', 'pstd' in [Pa], 'zstd' or 'zagl' [m] or 'zgrid' [m], depending on the type of *.nc file\n""")
         customFileIN.write(lh+"""FREE DIMENSIONS:\n""")
         customFileIN.write(lh+"""> Use 'Dimension = 55.' to set to the closest value\n""")
@@ -1272,7 +1273,6 @@ def format_lon_lat(lon_lat,type):
 #======================================================
 #                  FILE SYSTEM UTILITIES
 #======================================================
-
 
 
 def get_Ncdf_num():
@@ -1750,7 +1750,13 @@ class Fig_2D(object):
             norm = None
         if self.range:
             if self.axis_opt2 =='lin':
-                levs=np.linspace(self.range[0],self.range[1],levels)
+                #Two numbers are provided, e.g. Cmin,Cmax
+                if len(self.range)==2:
+                    levs=np.linspace(self.range[0],self.range[1],levels)
+                #The individual layers are provided    
+                else: 
+                    levs=self.range
+                    
             if self.axis_opt2 =='log':
                 if self.range[0]<=0 or  self.range[1]<=0: prRed('*** Error using log scale, bounds cannot be zero or negative')
                 levs=np.logspace(np.log10(self.range[0]),np.log10(self.range[1]),levels)
