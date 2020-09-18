@@ -18,7 +18,7 @@ from netCDF4 import Dataset
 #===========
 from amesgcm.Ncdf_wrapper import Ncdf
 from amesgcm.FV3_utils import tshift,daily_to_average,daily_to_diurn
-from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn
+from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn,FV3_file_type
 #---
 
 
@@ -234,16 +234,7 @@ def main():
 
             #find time of day variable name
             tod_name=find_tod_in_diurn(fdiurn)
-            
-            # find vertical dimension variable name
-            if filei[:-3].endswith('_pstd'):
-                zaxis = 'pstd'
-            elif filei[:-3].endswith('_zagl'):
-                zaxis = 'zagl'
-            elif filei[:-3].endswith('_zstd'):
-                zaxis = 'zstd'
-            else:
-                zaxis = 'pfull'
+            _,zaxis=FV3_file_type(fdiurn)
 
             # Copy some variables from the old file to the new file
             fnew.copy_Ncaxis_with_content(fdiurn.variables['lon'])
@@ -354,10 +345,6 @@ def main():
     #===============  Bin an atmos_daily file to atmos_diurn ===================
     #===========================================================================
     elif parser.parse_args().bin_diurn: 
-    
-
-    
-        
         #Use defaut binning period of 5 days  
         if parser.parse_args().bin_average is None:
             nday=5

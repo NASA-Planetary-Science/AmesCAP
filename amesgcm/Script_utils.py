@@ -222,7 +222,7 @@ def get_Ncdf_path(fNcdf):
     if not fname_out: fname_out=getattr(fNcdf,'filepath')() #Regular Dataset
     return fname_out
 
-
+#TODO this is not super robust if the files get renamed
 def FV3_file_type(fNcdf): 
     '''
     Return the type of output files:
@@ -247,7 +247,7 @@ def FV3_file_type(fNcdf):
     if 'fixed'         in filename:f_type='fixed'
     if 'atmos_average' in filename:f_type='average'
     if 'atmos_daily'   in filename:f_type='daily'
-    if 'atmos_diurn'   in filename:f_type='diurn'
+    if 'diurn'         in filename:f_type='diurn'
     
     dims=fNcdf.dimensions.keys()
     if 'pfull' in dims: interp_type='pfull'
