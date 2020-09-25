@@ -949,7 +949,7 @@ def daily_to_average(varIN,dt_in,nday=5,trim=True):
     vshape_in=varIN.shape
     Nin=vshape_in[0] #time dimension
     
-    iperday=int(1/dt_in)
+    iperday=int(np.round(1/dt_in))
     combinedN=int(iperday*nday)
     N_even=Nin//combinedN
     N_left=Nin%combinedN
@@ -989,7 +989,7 @@ def daily_to_diurn(varIN,time_in):
     2) Since the time dimension remains first, the output variables may be passed to the daily_to_average() function for further binning. 
     '''
     dt_in=time_in[1]-time_in[0]
-    iperday=int(1/dt_in)
+    iperday=int(np.round(1/dt_in))
     vshape_in= varIN.shape
     vreshape=np.append([-1,iperday],vshape_in[1:]).astype(int)
     varOUT=varIN.reshape(vreshape)

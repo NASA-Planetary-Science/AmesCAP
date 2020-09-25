@@ -66,7 +66,24 @@ parser.add_argument('-bd','--bin_diurn', action='store_true',
                         """>        MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 10 (bin 10 days)\n"""
                         """>        MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 1  (no binning, similar to raw Legacy output)\n"""
                         """\033[00m""")    
-                            
+
+ 
+# parser.add_argument('-hpf','--high_pass_filter',nargs='?',
+#                     help="""Filtering utilities, including: low, high, and band pass filters \n"""
+#                          """     (-hpf)  --high_pass_filter sol_min          \n"""
+#                          """     (-lpf)  --low_pass_filter  sol_max          \n"""
+#                          """     (-bpf)  --band_pass_filter sol_min sol max  \n"""
+#                          """> Usage: MarsFiles.py *.atmos_daily.nc -bpf 1. 10.  --include ps ts   \n"""
+#                         """\033[00m""")                        
+#                         
+# parser.add_argument('-lpf','--low_pass_filter', nargs='?',help=argparse.SUPPRESS) #same as  --hpf but without the instructions
+# parser.add_argument('-bpf','--band_pass_filter', nargs='?',help=argparse.SUPPRESS) #same as --hpf but without the instructions
+#                         
+# parser.add_argument('-include','--include',nargs='?',
+#                     help="""For all commands in this script only include listed variables. Dimensions and 1D variables are always included \n"""
+#                         """> Usage: MarsFiles.py *.atmos_daily.nc -ba --include ps ts ucomp    \n"""
+#                         """\033[00m""")      
+                                                
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
 
@@ -302,7 +319,7 @@ def main():
             Nin=len(time_in)
             
             dt_in=time_in[1]-time_in[0]
-            iperday=int(1/dt_in)
+            iperday=int(np.round(1/dt_in))
             combinedN=int(iperday*nday)
             
             N_even=Nin//combinedN
@@ -366,7 +383,7 @@ def main():
             Nin=len(time_in)
             
             dt_in=time_in[1]-time_in[0]
-            iperday=int(1/dt_in)
+            iperday=int(np.round(1/dt_in))
 
             
             fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
