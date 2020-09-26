@@ -18,8 +18,8 @@ from netCDF4 import Dataset
 #===========
 from amesgcm.Ncdf_wrapper import Ncdf
 from amesgcm.FV3_utils import tshift,daily_to_average,daily_to_diurn
-from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn,FV3_file_type
-#---
+from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn,FV3_file_type,filter_vars
+#==========
 
 
 #======================================================
@@ -68,21 +68,21 @@ parser.add_argument('-bd','--bin_diurn', action='store_true',
                         """\033[00m""")    
 
  
-# parser.add_argument('-hpf','--high_pass_filter',nargs='?',
-#                     help="""Filtering utilities, including: low, high, and band pass filters \n"""
-#                          """     (-hpf)  --high_pass_filter sol_min          \n"""
-#                          """     (-lpf)  --low_pass_filter  sol_max          \n"""
-#                          """     (-bpf)  --band_pass_filter sol_min sol max  \n"""
-#                          """> Usage: MarsFiles.py *.atmos_daily.nc -bpf 1. 10.  --include ps ts   \n"""
-#                         """\033[00m""")                        
-#                         
-# parser.add_argument('-lpf','--low_pass_filter', nargs='?',help=argparse.SUPPRESS) #same as  --hpf but without the instructions
-# parser.add_argument('-bpf','--band_pass_filter', nargs='?',help=argparse.SUPPRESS) #same as --hpf but without the instructions
-#                         
-# parser.add_argument('-include','--include',nargs='?',
-#                     help="""For all commands in this script only include listed variables. Dimensions and 1D variables are always included \n"""
-#                         """> Usage: MarsFiles.py *.atmos_daily.nc -ba --include ps ts ucomp    \n"""
-#                         """\033[00m""")      
+parser.add_argument('-hpf','--high_pass_filter',nargs='+',type=float,
+                    help="""Filtering utilities, including: low, high, and band pass filters \n"""
+                         """     (-hpf)  --high_pass_filter sol_min          \n"""
+                         """     (-lpf)  --low_pass_filter  sol_max          \n"""
+                         """     (-bpf)  --band_pass_filter sol_min sol max  \n"""
+                         """> Usage: MarsFiles.py *.atmos_daily.nc -bpf 0.5 10.    \n"""
+                        """\033[00m""")                        
+                        
+parser.add_argument('-lpf','--low_pass_filter', nargs='+',type=float,help=argparse.SUPPRESS) #same as  --hpf but without the instructions
+parser.add_argument('-bpf','--band_pass_filter', nargs='+',help=argparse.SUPPRESS) #same as --hpf but without the instructions
+                        
+parser.add_argument('-include','--include',nargs='+',
+                     help="""For data reduction, filtering, time-shift, only include listed variables. Dimensions and 1D variables are always included \n"""
+                         """> Usage: MarsFiles.py *.atmos_daily.nc -ba --include ps ts ucomp    \n"""
+                         """\033[00m""")      
                                                 
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
@@ -95,7 +95,7 @@ def main():
     file_list=parser.parse_args().input_file
     cwd=os.getcwd()
     path2data=os.getcwd()
-
+    
     if parser.parse_args().fv3 and parser.parse_args().combine:
         prRed('Use --fv3 and --combine sequentially to avoid ambiguity ')
         exit()
@@ -205,11 +205,19 @@ def main():
             #=========    
             fnum = len(histlist)
             prCyan('Merging %i files, starting with %s ...'%(fnum,file_list[0]))
-     
+            
+            #This section is to exclude any variable, if the --include option is used:
+            if parser.parse_args().include:
+                f=Dataset(file_list[0],'r')
+                exclude_list = filter_vars(f,parser.parse_args().include,giveExclude=True) # variable to exclude
+                f.close()
+            else: 
+                exclude_list=[]
+            
             #this is a temporaty file ***_tmp.nc
             file_tmp=histlist[0][:-3]+'_tmp'+'.nc'
             Log=Ncdf(file_tmp,'Merged file')
-            Log.merge_files_from_list(histlist)
+            Log.merge_files_from_list(histlist,exclude_var=exclude_list)
             Log.close()
             
             #=====Delete files that have been combined====
@@ -270,7 +278,7 @@ def main():
             # read 4D field and do time shift
             tod_in=np.array(fdiurn.variables[tod_name])
             longitude = np.array(fdiurn.variables['lon'])
-            var_list = fdiurn.variables.keys() # get all variables from old file
+            var_list = filter_vars(fdiurn,parser.parse_args().include) # get all variables
 
             for ivar in var_list:
                 prCyan("Processing: %s ..."%(ivar))
@@ -313,7 +321,7 @@ def main():
             fullnameOUT = fullnameIN[:-3]+'_to_average'+'.nc'
 
             fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
-            var_list = fdaily.variables.keys()
+            var_list = filter_vars(fdaily,parser.parse_args().include) # get all variables
             
             time_in=fdaily.variables['time'][:]
             Nin=len(time_in)
@@ -343,10 +351,10 @@ def main():
                 
             #Loop over all variables in file
             for ivar in var_list:
-                prCyan("Processing: %s ..."%(ivar))
                 varNcf     = fdaily.variables[ivar]
                 
                 if 'time' in varNcf.dimensions :     
+                    prCyan("Processing: %s ..."%(ivar))
                     var_out=daily_to_average(varNcf[:],dt_in,nday)
                     fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
                 else:
@@ -377,7 +385,7 @@ def main():
             fullnameOUT = fullnameIN[:-3]+'_to_diurn'+'.nc'
 
             fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
-            var_list = fdaily.variables.keys()
+            var_list = filter_vars(fdaily,parser.parse_args().include) # get all variables
             
             time_in=fdaily.variables['time'][:]
             Nin=len(time_in)
@@ -406,11 +414,12 @@ def main():
                 
             #Loop over all variables in file
             for ivar in var_list:
-                prCyan("Processing: %s ..."%(ivar))
+                
                 varNcf     = fdaily.variables[ivar]
                 
                 #If time is the dimension (but not just a time array)
                 if 'time' in varNcf.dimensions and ivar!='time':   
+                    prCyan("Processing: %s ..."%(ivar))
                     dims_in=varNcf.dimensions
                     dims_out=(dims_in[0],)+(tod_name,)+dims_in[1:]
                     var_out=daily_to_diurn(varNcf[:],time_in[0:iperday])
@@ -426,6 +435,98 @@ def main():
                         prCyan("Copying var: %s..."%(ivar))   
                         fnew.copy_Ncvar(fdaily.variables[ivar]) 
             fnew.close()
+
+
+    #===========================================================================
+    #========================  Transient wave analysis =========================
+    #===========================================================================
+    elif parser.parse_args().high_pass_filter or parser.parse_args().low_pass_filter or parser.parse_args().band_pass_filter: 
+    
+        
+        # This functions requires scipy > 1.2.0 , so we only import the package here if needed
+        from amesgcm.Spectral_utils import zeroPhi_filter
+        
+        if parser.parse_args().high_pass_filter:
+            btype='high';out_ext='_hpf';nsol=np.asarray(parser.parse_args().high_pass_filter).astype(float)
+            if len(np.atleast_1d(nsol))!=1:
+                prRed('***Error*** sol_min must be only one value')
+                exit()
+        if parser.parse_args().low_pass_filter:
+            btype='low';out_ext='_lpf';nsol=np.asarray(parser.parse_args().low_pass_filter).astype(float)
+            if len(np.atleast_1d(nsol))!=1:
+                prRed('sol_max must be only one value')
+                exit()
+        if parser.parse_args().band_pass_filter:
+            btype='band';out_ext='_bpf';nsol=np.asarray(parser.parse_args().band_pass_filter).astype(float)   
+            if len(np.atleast_1d(nsol))!=2:
+                prRed('Need 2 values: sol_min sol_max')   
+                exit()           
+        
+        for filei in file_list:
+            #Add path unless full path is provided
+            if not ('/' in filei):
+                fullnameIN = path2data + '/' + filei
+            else:
+                fullnameIN=filei
+            fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
+
+            fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            
+            var_list = filter_vars(fdaily,parser.parse_args().include) # get all variables
+            
+            time_in=fdaily.variables['time'][:]
+            
+            dt=time_in[1]-time_in[0]
+            
+            #Check if the frequency domain is allowed 
+          
+            if any(nn <= 2*dt for nn in nsol):
+                prRed('***Error***  min cut-off cannot be smaller than the Nyquist period of 2xdt=%g sol'%(2*dt))
+                exit()
+                
+           
+            fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
+            #Copy all dims but time from the old file to the new file
+            fnew.copy_all_dims_from_Ncfile(fdaily)
+            
+  
+            if btype=='low':
+                fnew.add_constant('sol_max',nsol,"Low-pass filter cut-off period ","sol")
+            elif btype=='high':    
+                fnew.add_constant('sol_min',nsol,"High-pass filter cut-off period ","sol")
+            elif btype=='band': 
+                fnew.add_constant('sol_min',nsol[0],"High-pass filter low cut-off period ","sol")
+                fnew.add_constant('sol_max',nsol[1],"High-pass filter high cut-off period ","sol")  
+            dt=time_in[1]-time_in[0]
+            
+            fs=1/(dt) # frequency in sol-1
+            if btype =='band':
+                # Flip the sols so the low frequency comes first
+                low_highcut=1/nsol[::-1]
+            else:
+                low_highcut=1./nsol
+                    
+            #Loop over all variables in file
+            for ivar in var_list:
+                varNcf     = fdaily.variables[ivar]
+                
+                if 'time' in varNcf.dimensions and ivar not in ['time','areo'] :     
+                    prCyan("Processing: %s ..."%(ivar))
+                    var_out=zeroPhi_filter(varNcf[:], btype, low_highcut, fs,axis=0,order=4)
+                    fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
+                else:
+                    if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl']:
+                        prCyan("Copying axis: %s..."%(ivar))
+                        fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
+                    else: 
+                        prCyan("Copying var: %s..."%(ivar))   
+                        fnew.copy_Ncvar(fdaily.variables[ivar]) 
+            fnew.close()
+
+
+
+
+
             
     else:
         prRed("""Error: no action requested: use 'MarsFiles *nc --fv3 --combine, --tshift, --bin_average, --bin_diurn'""")    

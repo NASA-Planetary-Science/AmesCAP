@@ -190,10 +190,10 @@ class Ncdf(object):
                     else:
                         self.copy_Ncvar(Ncfile_in.variables[ivar])
     
-    def merge_files_from_list(self,Ncfilename_list):
+    def merge_files_from_list(self,Ncfilename_list,exclude_var=[]):
         Mf_IN=MFDataset(Ncfilename_list,'r')
         self.copy_all_dims_from_Ncfile(Mf_IN)
-        self.copy_all_vars_from_Ncfile(Mf_IN)
+        self.copy_all_vars_from_Ncfile(Mf_IN,exclude_var=exclude_var)
         Mf_IN.close()
     
 ##=====TEST ONLY=======

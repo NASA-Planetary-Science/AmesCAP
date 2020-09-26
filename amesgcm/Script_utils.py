@@ -443,6 +443,45 @@ def section_content_amesgcm_profile(section_ID):
     except Exception as exception: #Return the error
         prRed('Error')
         print(exception)  
+
+
+def filter_vars(fNcdf,include_list=None,giveExclude=False):
+    '''
+    Filter variable names in netcdf file for processing.
+    Will return all dimensions (e.g. 'lon', 'lat'...), the 'areo' variable, and any variable included in include_list
+    Args:
+        fNcdf: an open netcdf4 object pointing to a diurn, daily or average file
+        include_list: a list of variables to include, e.g. ['ucomp','vcomp']
+        giveExclude: if True, instead return the variables that must be excluded from the file, i.e.
+                     exclude_var = [all the variables] - [axis & dimensions] - [include_list]
+    Return:
+        var_list
+    '''
+    var_list=fNcdf.variables.keys()
+    #If no list is provided, return all variables:
+    if include_list is None: return var_list
+    
+    #Make sure the requested variables are present in file
+    input_list_filtered=[] 
+    for ivar in include_list:
+        if ivar in var_list:
+            input_list_filtered.append(ivar)
+        else:
+            prYellow('***Warning***  In Script_utils/filter_vars(), variables %s not found in file'%(ivar))    
+    #Compute baseline variables, i.e. all dimensions, axis etc...
+    baseline_var=[]
+    for ivar in  var_list:
+        if ivar =='areo' or (len(fNcdf.variables[ivar].dimensions))<=2 :
+            baseline_var.append(ivar)
+    #Return the two lists   
+    out_list=baseline_var+input_list_filtered
+    if giveExclude: 
+        exclude_list= list(var_list)
+        for ivar in out_list:
+            exclude_list.remove(ivar)
+        out_list=  exclude_list     
+    return  out_list
+
         
 def wbr_cmap():
     '''
