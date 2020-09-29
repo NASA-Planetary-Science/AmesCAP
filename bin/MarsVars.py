@@ -8,7 +8,7 @@ import sys       #system command
 import warnings #Suppress certain errors when dealing with NaN arrays
 
 
-from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR,mass_stream,zonal_detrend
+from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR,mass_stream,zonal_detrend,spherical_div,spherical_curl
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type
 from amesgcm.Ncdf_wrapper import Ncdf
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
@@ -55,6 +55,8 @@ parser.add_argument('-add','--add', nargs='+',default=[],
                       'Ri         (Richardson number)               Req. [ps,temp] \n'
                       'Tco2       (CO2 condensation temperature)    Req. [ps,temp] \n'
                       'scorer_wl  (Scorer horizontal wavelength)    Req. [ps,temp,ucomp] \n'
+                      'div        (divergence)                      Req. [ucomp,vcomp] \n'
+                      'curl       (relative vorticity)              Req. [ucomp,vcomp] \n'
                       ' \nNOTE:                    \n'
                       '     Some support on interpolated files, in particular if pfull3D \n'
                       '                   is added before interpolation to _zagl, _zstd. \n'
@@ -101,6 +103,8 @@ VAR= {'rho'       :['density (added postprocessing)','kg/m3'],
       'N'         :['Brunt Vaisala frequency (added postprocessing)','rad/s'],   
       'Ri'        :['Richardson number (added postprocessing)','none'], 
       'Tco2'      :['condensation temerature of CO2  (added postprocessing)','K'],
+      'div'       :['divergence of the wind field  (added postprocessing)','Hz'],
+      'curl'      :['divergence of the wind field  (added postprocessing)','Hz'],
       'scorer_wl' :['Scorer horizontal wavelength L=2.pi/sqrt(l**2)   (added postprocessing)','m'],
       'msf'       :['mass stream function  (added postprocessing)','1.e8 x kg/s'],
       'ep'        :['wave potential energy (added postprocessing)',' J/kg'],
@@ -286,8 +290,8 @@ def main():
             name_fixed=ifile[0:5]+'.fixed.nc'
             f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
-            ak=np.array(f_fixed.variables['pk'])
-            bk=np.array(f_fixed.variables['bk'])
+            ak=f_fixed.variables['pk'][:]
+            bk=f_fixed.variables['bk'][:]
             f_fixed.close()
         #----    
             #----Check if the variable is currently supported---
@@ -324,7 +328,6 @@ def main():
                     else:
                         p_3D=fileNC.variables['pfull3D'][:]
                             
-                        
                     
                     if ivar=='pfull3D': OUT=p_3D
                     if ivar=='rho':
@@ -370,7 +373,15 @@ def main():
                         N=compute_N(theta,zfull)
                         OUT=compute_scorer(N,ucomp,zfull)
                     
+                    if ivar in ['div','curl']:
+                        lat=fileNC.variables['lat'][:]
+                        lon=fileNC.variables['lon'][:]
+                        ucomp=fileNC.variables['ucomp'][:]
+                        vcomp=fileNC.variables['vcomp'][:]
                     
+                    if ivar =='div': OUT=spherical_div(ucomp,vcomp,lon,lat,R=3400*1000.,spacing='regular')
+                    if ivar =='curl':OUT=spherical_curl(ucomp,vcomp,lon,lat,R=3400*1000.,spacing='regular')
+                        
                     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     
                     #~~~~~~~~~~~~~~~   Interpolated files ~~~~~~~~~~~~~~~~~~~
                     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 

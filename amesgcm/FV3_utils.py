@@ -750,7 +750,7 @@ def dvar_dh(arr, h=None):
         reshape_shape=np.append([arr.shape[0]-2],[1 for i in range(0,arr.ndim -1)]) 
         d_arr[0,...] = arr[1,...]-arr[0,...]
         d_arr[-1,...] = arr[-1,...]-arr[-2,...]
-        d_arr[1:-1,...] = arr[2:,...]-arr[0:-2,...]
+        d_arr[1:-1,...] = 0.5*(arr[2:,...]-arr[0:-2,...])
         
     
     return d_arr
@@ -1156,6 +1156,10 @@ def tshift(array, lon=None, timex=None, nsteps_out=None):
 
     return narray
 
+
+
+
+
 def lin_interp(X_in,X_ref,Y_ref):
     '''
     Simple linear interpolation with no dependance on scipy 
@@ -1205,7 +1209,111 @@ def add_cyclic(data,lon):
     data_c=np.zeros((data.shape[0],data.shape[1]+1),np.float)  
     data_c[:,0:-1] = data[:,:];data_c[:,-1] = data[:,0]
     return data_c,np.append(lon,lon[-1]+dlon)
-        
+
+def spherical_div(U,V,lon_deg,lat_deg,R=3400*1000.,spacing='varying'):
+    '''
+    Compute the divergence of the wind fields using finite difference.
+    div = du/dx + dv/dy
+    Args: 
+        U,V    : wind fields with latitude second to last and longitude as last dimensions  e.g. (lat,lon) or (time,lev,lat,lon)...
+        lon_deg: 1D array of longitude in [degree] or 2D (lat,lon) if irregularly-spaced
+        lat_deg: 1D array of latitude  in [degree] or 2D (lat,lon) if irregularly-spaced
+        R      : planetary radius in [m]
+        spacing : When lon, lat are  1D arrays, using spacing ='varying' differentiate lat and lon (default)
+                  If spacing='regular', only uses uses dx=lon[1]-lon[0], dy=colat[1]-colat[0] and the numpy.gradient() method
+    Return:
+        div: the horizonal divergence of the wind field   in [m-1]
+         
+    '''
+    lon=lon_deg*np.pi/180
+    lat=lat_deg*np.pi/180
+    colat=np.pi/2-lat 
+    
+    var_shape=U.shape
+       
+    #Transpose shapes:
+    T_array=np.arange(len(U.shape))
+    T_lonIN=np.append(T_array[-1],T_array[0:-1]) #one permutation only: lon is passsed to the 1st dimension
+    T_lonOUT=np.append(T_array[1:],T_array[0]) #one permutation only: lon is passsed to the 1st dimension
+    T_latIN=np.append(np.append(T_array[-2],T_array[0:-2]),T_array[-1])
+    T_latOUT=np.append(np.append(T_array[1:-1],T_array[0]),T_array[-1])
+            
+    #----lon, lat are 1D arrays---    
+    if  len(lon.shape)==1:
+        #Extend broadcasting dimensions for the colatitude, e.g  [1,1,lat,1] if U is size (time,lev,lat,lon)
+        reshape_shape=[1 for i in range(0,len(var_shape))]
+        reshape_shape[-2]=lat.shape[0]
+        colat_b=colat.reshape(reshape_shape)
+        if spacing=='regular':            
+            out=1/(R*np.sin(colat_b))*(np.gradient(U,axis=-1)/(lon[1]-lon[0])+np.gradient(V*np.sin(colat_b),axis=-2)/(colat[1]-colat[0])) 
+        else:    
+            out=1/(R*np.sin(colat_b))*(dvar_dh(U.transpose(T_lonIN),lon).transpose(T_lonOUT)+ \
+                                    dvar_dh((V*np.sin(colat_b)).transpose(T_latIN),colat).transpose(T_latOUT))
+    #----lon, lat are 2D array---                                  
+    else:
+        #if U is (time,lev,lat,lon), also reshape lat ,lon to (time,lev,lat,lon)
+        if var_shape!= lon.shape:
+            for ni in var_shape[:-2][::-1]: # (time,lev,lat,lon)> (time,lev) and reverse, so first lev, then time
+                colat=np.repeat(colat[np.newaxis,...],ni,axis=0)
+                lon  =np.repeat(lon[np.newaxis,...],ni,axis=0)
+
+        out=1/(R*np.sin(colat))*(dvar_dh(U.transpose(T_lonIN),lon.transpose(T_lonIN)).transpose(T_lonOUT)+ \
+                                    dvar_dh((V*np.sin(colat)).transpose(T_latIN),colat.transpose(T_latIN)).transpose(T_latOUT))
+    return  out
+
+
+def spherical_curl(U,V,lon_deg,lat_deg,R=3400*1000.,spacing='varying'):
+    '''
+    Compute the vertical component of the relative vorticy using finite difference.
+    curl = dv/dx -du/dy
+    Args: 
+        U,V    : wind fields with latitude second to last and longitude as last dimensions  e.g. (lat,lon) or (time,lev,lat,lon)...
+        lon_deg: 1D array of longitude in [degree] or 2D (lat,lon) if irregularly-spaced
+        lat_deg: 1D array of latitude  in [degree] or 2D (lat,lon) if irregularly-spaced
+        R      : planetary radius in [m]
+        spacing : When lon, lat are  1D arrays, using spacing ='varying' differentiate lat and lon (default)
+                  If spacing='regular', only uses uses dx=lon[1]-lon[0], dy=colat[1]-colat[0] and the numpy.gradient() method
+    Return:
+        curl: the vorticity of the wind field in [m-1] 
+         
+    '''
+    lon=lon_deg*np.pi/180
+    lat=lat_deg*np.pi/180
+    colat=np.pi/2-lat 
+    
+    var_shape=U.shape
+       
+    #Transpose shapes:
+    T_array=np.arange(len(U.shape))
+    T_lonIN=np.append(T_array[-1],T_array[0:-1]) #one permutation only: lon is passsed to the 1st dimension
+    T_lonOUT=np.append(T_array[1:],T_array[0]) #one permutation only: lon is passsed to the 1st dimension
+    T_latIN=np.append(np.append(T_array[-2],T_array[0:-2]),T_array[-1])
+    T_latOUT=np.append(np.append(T_array[1:-1],T_array[0]),T_array[-1])
+            
+    #----lon, lat are 1D arrays---    
+    if  len(lon.shape)==1:
+        #Extend broadcasting dimensions for the colatitude, e.g  [1,1,lat,1] if U is size (time,lev,lat,lon)
+        reshape_shape=[1 for i in range(0,len(var_shape))]
+        reshape_shape[-2]=lat.shape[0]
+        colat_b=colat.reshape(reshape_shape)
+        if spacing=='regular':            
+            out=1/(R*np.sin(colat_b))*(np.gradient(V,axis=-1)/(lon[1]-lon[0])-np.gradient(U*np.sin(colat_b),axis=-2)/(colat[1]-colat[0])) 
+        else:    
+            out=1/(R*np.sin(colat_b))*(dvar_dh(V.transpose(T_lonIN),lon).transpose(T_lonOUT)- \
+            dvar_dh((U*np.sin(colat_b)).transpose(T_latIN),colat).transpose(T_latOUT))
+    
+    #----lon, lat are 2D array---                                  
+    else:
+        #if U is (time,lev,lat,lon), also reshape lat ,lon to (time,lev,lat,lon)
+        if var_shape!= lon.shape:
+            for ni in var_shape[:-2][::-1]: # (time,lev,lat,lon)> (time,lev) and reverse, so first lev, then time
+                colat=np.repeat(colat[np.newaxis,...],ni,axis=0)
+                lon  =np.repeat(lon[np.newaxis,...],ni,axis=0)
+
+                                    
+        out=1/(R*np.sin(colat))*(dvar_dh(V.transpose(T_lonIN),lon.transpose(T_lonIN)).transpose(T_lonOUT)- \
+                     dvar_dh((U*np.sin(colat)).transpose(T_latIN),colat.transpose(T_latIN)).transpose(T_latOUT))                            
+    return  out        
 #==================================Projections==================================
 '''
 The projections below were implemented by Alex Kling, following:
