@@ -382,7 +382,6 @@ def area_weights_deg(var_shape,lat_c,axis=-2):
         
     >>> Therfore taking a regular average of (var*W) with np.mean(var*W) or np.average(var,weights=W) returns the weighted-average of var
     Use np.average(var,weights=W,axis=X) to average over a specific axis
-        
     ''' 
     
     #var or lat is a scalar, do nothing
@@ -726,31 +725,26 @@ def dvar_dh(arr, h=None):
         
     '''
     h=np.array(h)
+    d_arr = np.zeros_like(arr)
     if h.any():
         # h is provided as a 1D array
         if len(h.shape)==1:
-            d_arr = np.copy(arr)
             reshape_shape=np.append([arr.shape[0]-2],[1 for i in range(0,arr.ndim -1)]) 
             d_arr[0,...] = (arr[1,...]-arr[0,...])/(h[1]-h[0])
             d_arr[-1,...] = (arr[-1,...]-arr[-2,...])/(h[-1]-h[-2])
             d_arr[1:-1,...] = (arr[2:,...]-arr[0:-2,...])/(np.reshape(h[2:]-h[0:-2],reshape_shape))
-         
         #h has the same dimension as var   
         elif h.shape==arr.shape:
-            d_arr = np.copy(arr)
             d_arr[0,...] = (arr[1,...]-arr[0,...])/(h[1,...]-h[0,...])
             d_arr[-1,...] = (arr[-1,...]-arr[-2,...])/(h[-1,...]-h[-2,...])
             d_arr[1:-1,...] = (arr[2:,...]-arr[0:-2,...])/(h[2:,...]-h[0:-2,...])
         else:     
             print('Error,h.shape=', h.shape,'arr.shape=',arr.shape)
-        
     # h is not defined, we return only d_var, not d_var/dh
     else:
-        d_arr = np.copy(arr)
-        reshape_shape=np.append([arr.shape[0]-2],[1 for i in range(0,arr.ndim -1)]) 
         d_arr[0,...] = arr[1,...]-arr[0,...]
         d_arr[-1,...] = arr[-1,...]-arr[-2,...]
-        d_arr[1:-1,...] = 0.5*(arr[2:,...]-arr[0:-2,...])
+        d_arr[1:-1,...] = 0.5*(arr[2:,...]-arr[0:-2,...]) # > Note the 0.5 factor since differentiation uses a central scheme
         
     
     return d_arr
@@ -771,7 +765,102 @@ def zonal_detrend(VAR):
         warnings.simplefilter("ignore", category=RuntimeWarning)
         return VAR-np.nanmean(VAR,axis=-1)[...,np.newaxis]
 
+def get_trend_2D(VAR,LON,LAT,type_trend='wmean'):
+    '''
+    Extract spatial trend from data. The output can be directly substracted from the original field.
+    Args:
+        VAR:  Variable for decomposition, latitude is SECOND to LAST and longitude is LAST  e.g. (time,lat,lon) or (time,lev,lat,lon)
+        LON,LAT: 2D arrays of coordinates
+        type_trend:  'mean' > use a constant average over all latitude/longitude
+                     'wmean'> use a area-weighted average over all latitude/longitude
+                     'zonal'> detrend over the zonal axis only
+                     '2D'   > use a 2D planar regression (not area-weighted)
+    Returns:
+        TREND      : trend, same size as VAR e.g. (time,lev,lat,lon)
+    ''' 
+    var_shape=np.array(VAR.shape)
+    
+    # Type 'zonal' is the easiest as averaging is performed over 1 dimension only.
+    if type_trend=='zonal':
+        return np.repeat(np.nanmean(VAR,axis=-1)[...,np.newaxis],var_shape[-1],axis=-1)
+        
+    #The following options involve avering over both latitude and longitude dimensions:
+    
+    #Flatten array e.g. turn (10,36,lat,lon) to (360,lat,lon)
+    nflatten=int(np.prod(var_shape[:-2]))
+    reshape_flat=np.append(nflatten,var_shape[-2:])
+    VAR=VAR.reshape(reshape_flat)
+    
+    TREND=np.zeros(reshape_flat)    
+    for ii in range(nflatten):
+        if type_trend=='mean':
+            TREND[ii,...]=np.mean(VAR[ii,...].flatten())
+        elif type_trend=='wmean':
+            W=area_weights_deg(var_shape[-2:],LAT[:,0])
+            TREND[ii,...]=np.mean((VAR[ii,...]*W).flatten())
+        elif  type_trend=='2D':   
+            TREND[ii,...]=regression_2D(LON,LAT,VAR[ii,:,:],order=1)
+        else:
+            print("Error, in area_trend, type '%s' not recognized"%(type_trend))   
+            return None 
+    return TREND.reshape(var_shape)  
 
+
+def regression_2D(X,Y,VAR,order=1):
+    '''
+    Linear and quadratic regression on the plane.
+    Args: 
+        X: 2D array of first coordinate 
+        Y: 2D array of decond coordinate 
+        VAR: 2D array, same size as X
+        order : 1(linear) 2(quadratic)
+    
+    
+    ***NOTE***
+    With order =1, the equation is: aX + bY + C = Z
+    With order =2, the equation is:  a X**2 + 2b X*Y +c Y**2 +2dX +2eY+f = Z
+    
+    For the linear case:
+    > ax + by + c = z is re-writtent as A X =b with:
+        |x0   y0   1|        |a      |z0
+    A = |x1   y1   1|    X = |b   b= |     
+        |      ...  |        |c      |...
+        |xn   yn   1|                |zn
+    
+            [n,3]           [3]       [n]
+        
+    The least square regression provides the solution that that minimizes  ||b – A x||**2    
+    '''
+    if order ==1:
+        A=np.array([X.flatten(),Y.flatten(),np.ones_like(X.flatten())]).T
+        
+        # An Equivalent notation is:
+        #A=np.c_[X.flatten(),Y.flatten(),np.ones_like(X.flatten())]
+        
+        b=VAR.flatten()
+        
+        P, residuals, rank, s = np.linalg.lstsq(A,b,rcond=None) #P is the solution of  A X =b, ==> P[0] x + P[1]y + P[2] = z 
+        
+        Z =  P[0]*X + P[1]*Y+np.ones_like(X)*P[2]  
+    
+    elif order == 2:
+        # best-fit quadratic curve: a X**2 + 2b X*Y +c Y**2 +2dX +2eY+f
+        XX=X.flatten();YY=Y.flatten();ZZ=VAR.flatten()
+        data=np.zeros((len(XX),3))
+        data[:,0]=XX
+        data[:,1]=YY
+        data[:,2]=ZZ
+        
+        A = np.c_[np.ones(data.shape[0]), data[:,:2], np.prod(data[:,:2], axis=1), data[:,:2]**2]
+        P,_,_,_ = np.linalg.lstsq(A, data[:,2],rcond=None)
+        
+        # evaluate it on a grid (using vector product)
+        Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX*YY, XX**2, YY**2], P).reshape(X.shape)
+    return Z    
+    
+
+
+    
 def daily_to_average(varIN,dt_in,nday=5,trim=True):
     '''
     Bin a variable from an atmos_daily file to the atmos_average format.
@@ -1158,8 +1247,6 @@ def tshift(array, lon=None, timex=None, nsteps_out=None):
 
 
 
-
-
 def lin_interp(X_in,X_ref,Y_ref):
     '''
     Simple linear interpolation with no dependance on scipy 
@@ -1215,7 +1302,7 @@ def spherical_div(U,V,lon_deg,lat_deg,R=3400*1000.,spacing='varying'):
     Compute the divergence of the wind fields using finite difference.
     div = du/dx + dv/dy
     Args: 
-        U,V    : wind fields with latitude second to last and longitude as last dimensions  e.g. (lat,lon) or (time,lev,lat,lon)...
+        U,V    : wind field with latitude second to last and longitude as last dimensions  e.g. (lat,lon) or (time,lev,lat,lon)...
         lon_deg: 1D array of longitude in [degree] or 2D (lat,lon) if irregularly-spaced
         lat_deg: 1D array of latitude  in [degree] or 2D (lat,lon) if irregularly-spaced
         R      : planetary radius in [m]

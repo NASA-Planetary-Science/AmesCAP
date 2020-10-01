@@ -17,7 +17,7 @@ from netCDF4 import Dataset
 
 #===========
 from amesgcm.Ncdf_wrapper import Ncdf
-from amesgcm.FV3_utils import tshift,daily_to_average,daily_to_diurn
+from amesgcm.FV3_utils import tshift,daily_to_average,daily_to_diurn,get_trend_2D
 from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn,FV3_file_type,filter_vars
 #==========
 
@@ -69,15 +69,31 @@ parser.add_argument('-bd','--bin_diurn', action='store_true',
 
  
 parser.add_argument('-hpf','--high_pass_filter',nargs='+',type=float,
-                    help="""Filtering utilities, including: low, high, and band pass filters \n"""
+                    help="""Temporal filtering utilities, including: low, high, and band pass filters \n"""
+                         """> Use '--no_trend' flag  to  keep amplitudes only (data is always detrended before filtering)  \n"""
                          """     (-hpf)  --high_pass_filter sol_min          \n"""
                          """     (-lpf)  --low_pass_filter  sol_max          \n"""
                          """     (-bpf)  --band_pass_filter sol_min sol max  \n"""
-                         """> Usage: MarsFiles.py *.atmos_daily.nc -bpf 0.5 10.    \n"""
+                         """> Usage: MarsFiles.py *.atmos_daily.nc -bpf 0.5 10. --no_trend    \n"""
                         """\033[00m""")                        
                         
 parser.add_argument('-lpf','--low_pass_filter', nargs='+',type=float,help=argparse.SUPPRESS) #same as  --hpf but without the instructions
 parser.add_argument('-bpf','--band_pass_filter', nargs='+',help=argparse.SUPPRESS) #same as --hpf but without the instructions
+parser.add_argument('-no_trend','--no_trend',action='store_true',help=argparse.SUPPRESS) #do not include trend 
+
+
+parser.add_argument('-hpk','--high_pass_zonal',nargs='+',type=int,
+                    help="""Spatial filtering utilities, including: low, high, and band pass filters \n"""
+                         """> Use '--no_trend' flag  to  keep amplitudes only (data is always detrended before filtering)  \n"""
+                         """     (-hpk)  --high_pass_zonal kmin          \n"""
+                         """     (-lpk)  --low_pass_zonal  kmax          \n"""
+                         """     (-bpk)  --band_pass_zonal kmin kmax  \n"""
+                         """> Usage: MarsFiles.py *.atmos_daily.nc -lpk 20 --no_trend    \n"""
+                        """\033[00m""")                        
+                        
+parser.add_argument('-lpk','--low_pass_zonal', nargs='+',type=int,help=argparse.SUPPRESS) #same as  --hpf but without the instructions
+parser.add_argument('-bpk','--band_pass_zonal', nargs='+',help=argparse.SUPPRESS) #same as --hpf but without the instructions
+
                         
 parser.add_argument('-include','--include',nargs='+',
                      help="""For data reduction, filtering, time-shift, only include listed variables. Dimensions and 1D variables are always included \n"""
@@ -460,7 +476,8 @@ def main():
             btype='band';out_ext='_bpf';nsol=np.asarray(parser.parse_args().band_pass_filter).astype(float)   
             if len(np.atleast_1d(nsol))!=2:
                 prRed('Need 2 values: sol_min sol_max')   
-                exit()           
+                exit()          
+        if parser.parse_args().no_trend:out_ext =out_ext+'_no_trend'      
         
         for filei in file_list:
             #Add path unless full path is provided
@@ -484,7 +501,6 @@ def main():
                 prRed('***Error***  min cut-off cannot be smaller than the Nyquist period of 2xdt=%g sol'%(2*dt))
                 exit()
                 
-           
             fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
             #Copy all dims but time from the old file to the new file
             fnew.copy_all_dims_from_Ncfile(fdaily)
@@ -512,7 +528,7 @@ def main():
                 
                 if 'time' in varNcf.dimensions and ivar not in ['time','areo'] :     
                     prCyan("Processing: %s ..."%(ivar))
-                    var_out=zeroPhi_filter(varNcf[:], btype, low_highcut, fs,axis=0,order=4)
+                    var_out=zeroPhi_filter(varNcf[:], btype, low_highcut, fs,axis=0,order=4,no_trend=parser.parse_args().no_trend)
                     fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
                 else:
                     if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl']:
@@ -523,7 +539,110 @@ def main():
                         fnew.copy_Ncvar(fdaily.variables[ivar]) 
             fnew.close()
 
+    #===========================================================================
+    #========================  Zonal decomposition analysis ====================
+    #===========================================================================
+    elif parser.parse_args().high_pass_zonal or parser.parse_args().low_pass_zonal or parser.parse_args().band_pass_zonal: 
+    
+        # This functions requires scipy > 1.2.0 , so we only import the package here if needed
+        from amesgcm.Spectral_utils import zonal_decomposition, zonal_construct
+        
+        if parser.parse_args().high_pass_zonal:
+            btype='high';out_ext='_hpk';nk=np.asarray(parser.parse_args().high_pass_zonal).astype(int)
+            if len(np.atleast_1d(nk))!=1:
+                prRed('***Error*** kmin must be only one value')
+                exit()
+        if parser.parse_args().low_pass_zonal:
+            btype='low';out_ext='_lpk';nk=np.asarray(parser.parse_args().low_pass_zonal).astype(int)
+            if len(np.atleast_1d(nk))!=1:
+                prRed('kmax must be only one value')
+                exit()
+        if parser.parse_args().band_pass_zonal:
+            btype='band';out_ext='_bpk';nk=np.asarray(parser.parse_args().band_pass_zonal).astype(int)   
+            if len(np.atleast_1d(nk))!=2:
+                prRed('Need 2 values: kmin kmax')   
+                exit()           
+                
+        if parser.parse_args().no_trend:out_ext =out_ext+'_no_trend' 
+        
+        for filei in file_list:
+            #Add path unless full path is provided
+            if not ('/' in filei):
+                fullnameIN = path2data + '/' + filei
+            else:
+                fullnameIN=filei
+            fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
+    
+            fname = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            
+            var_list = filter_vars(fname,parser.parse_args().include) # get all variables
+            
+            lon=fname.variables['lon'][:]
+            lat=fname.variables['lat'][:]
+            LON,LAT=np.meshgrid(lon,lat)
+            
+            dlat=lat[1]-lat[0]
+            dx=2*np.pi*3400
+            
+            #Check if the frequency domain is allowed and display some information 
+        
+            if any(nn > len(lat)/2 for nn in nk):
+                prRed('***Warning***  max wavenumber cut-off cannot be larger than the Nyquist criteria of nlat/2= %i sol'%(len(lat)/2))
+            elif btype=='low':
+                L_max=(1./nk)*dx
+                prYellow('Low pass filter, letting only wavelenght > %g km'%(L_max))
+            elif btype=='high':
+                L_min=(1./nk)*dx
+                prYellow('High pass filter, letting only wavelenght < %g km'%(L_min))                
+            elif btype=='band':
+                L_min=(1./nk[1])*dx
+                L_max=1./max(nk[0],1.e-20)*dx 
+                if L_max>1.e20:L_max=np.inf
+                prYellow('Band pass filter, letting only %g km < wavelenght < %g km'%(L_min,L_max))                
 
+        
+            fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
+            #Copy all dims but time from the old file to the new file
+            fnew.copy_all_dims_from_Ncfile(fname)
+            
+            if btype=='low':
+                fnew.add_constant('kmax',nk,"Low-pass filter zonal wavenumber ","wavenumber")
+            elif btype=='high':    
+                fnew.add_constant('kmin',nk,"High-pass filter zonal wavenumber ","wavenumber")
+            elif btype=='band': 
+                fnew.add_constant('kmin',nk[0],"Band-pass filter low zonal wavenumber ","wavenumber")
+                fnew.add_constant('kmax',nk[1],"Band-pass filter high zonal wavenumber ","wavenumber")  
+            
+            low_highcut=nk
+                    
+            #Loop over all variables in file
+            for ivar in var_list:
+                varNcf     = fname.variables[ivar]
+                
+                if ('lat' in varNcf.dimensions) and ('lon' in varNcf.dimensions):     
+                    prCyan("Processing: %s ..."%(ivar))
+                    
+                    # Step 1 : detrend the data
+                    TREND=get_trend_2D(varNcf[:],LON,LAT,'wmean')
+                    # Step 2 : calculate spherical harmonic coefficients
+                    COEFF,PSD=zonal_decomposition(varNcf[:]-TREND)
+                    # Step 3 : Recompose the variable out of the coefficients
+                    VAR_filtered=zonal_construct(COEFF,varNcf[:].shape,btype=btype,low_highcut=low_highcut)
+                    #Step 4: add the trend, if request
+                    if parser.parse_args().no_trend:
+                        var_out=VAR_filtered
+                    else:    
+                        var_out=VAR_filtered+TREND
+                                        
+                    fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
+                else:
+                    if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time','areo']:
+                        prCyan("Copying axis: %s..."%(ivar))
+                        fnew.copy_Ncaxis_with_content(fname.variables[ivar])
+                    else: 
+                        prCyan("Copying var: %s..."%(ivar))   
+                        fnew.copy_Ncvar(fname.variables[ivar]) 
+            fnew.close()
 
 
 

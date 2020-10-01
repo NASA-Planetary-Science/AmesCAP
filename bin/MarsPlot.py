@@ -1513,8 +1513,9 @@ class Fig_2D(object):
         for i in range(0,nfiles):
             file_list[i] = input_paths[simuID]+'/%05d.'%(Sol_num_current[i])+file_type+'.nc'
             check_file_tape(file_list[i],abort=False)
-
-        if file_type=='fixed': # XXXX.fixed.nc does not have an aggregation dimension so we use Dataset
+        
+        #TODO This is not robust to change of name
+        if 'fixed' in file_type: # XXXX.fixed.nc does not have an aggregation dimension so we use Dataset
             f=Dataset(file_list[0], 'r')
         else:
             f=MFDataset(file_list, 'r') #use MFDataset instead

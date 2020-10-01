@@ -104,13 +104,13 @@ VAR= {'rho'       :['density (added postprocessing)','kg/m3'],
       'Ri'        :['Richardson number (added postprocessing)','none'], 
       'Tco2'      :['condensation temerature of CO2  (added postprocessing)','K'],
       'div'       :['divergence of the wind field  (added postprocessing)','Hz'],
-      'curl'      :['divergence of the wind field  (added postprocessing)','Hz'],
+      'curl'      :['relative vorticity for the wind field  (added postprocessing)','Hz'],
       'scorer_wl' :['Scorer horizontal wavelength L=2.pi/sqrt(l**2)   (added postprocessing)','m'],
       'msf'       :['mass stream function  (added postprocessing)','1.e8 x kg/s'],
-      'ep'        :['wave potential energy (added postprocessing)',' J/kg'],
-      'ek'        :['wave kinetic energy (added postprocessing)',' J/kg'] ,
-      'mx'        :['vertical flux of zonal momentum (added postprocessing)',' J/kg'] ,
-      'my'        :['vertical flux of merididional momentum(added postprocessing)',' J/kg'] ,
+      'ep'        :['wave potential energy (added postprocessing)','J/kg'],
+      'ek'        :['wave kinetic energy (added postprocessing)','J/kg'] ,
+      'mx'        :['vertical flux of zonal momentum (added postprocessing)','J/kg'] ,
+      'my'        :['vertical flux of merididional momentum(added postprocessing)','J/kg'] ,
       'ax'        :['zonal wave-mean flow forcing (added postprocessing)',' m/s/s'] ,
       'ay'        :['meridional wave-mean flow forcing (added postprocessing)',' m/s/s'] ,
       'tp_t'      :['normalized temperature perturbation (added postprocessing)','None'] 
@@ -123,12 +123,12 @@ VAR= {'rho'       :['density (added postprocessing)','kg/m3'],
 #Fill values for NaN Do not use np.NaN as this would raise issue when running runpinterp
 fill_value=0.
 #===Define constants=========
-rgas = 189.            # J/(kg-K) => m2/(s2 K)
-g    = 3.72            # m/s2
-R=8.314 #J/ mol. K
+rgas = 189.  # J/(kg-K) => m2/(s2 K)
+g    = 3.72  # m/s2
+R=8.314      # J/ mol. K
 Cp   = 735.0 #J/K
 M_co2 =0.044 # kg/mol
-N=0.01 #rad/s  This is used for the Ep calculation
+N=0.01       #rad/s  This is used for the Ep calculation
 #===========================
 
 def compute_p_3D(ps,ak,bk,shape_out):
@@ -139,18 +139,18 @@ def compute_p_3D(ps,ak,bk,shape_out):
     """
     p_3D= fms_press_calc(ps,ak,bk,lev_type='full')
     if len(p_3D.shape)==4:p_3D=p_3D.transpose([1,0,2,3])# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
-                                    # TODO add dirun
+                                    # TODO add diurn
     return p_3D.reshape(shape_out)  
     
 def compute_rho(p_3D,temp):
     """
-    Return the density in kg/m3
+    Return the density in [kg/m3]
     """
     return p_3D/(rgas*temp)
     
 def compute_theta(p_3D,ps,temp):
     """
-    Return the potential temperature in K
+    Return the potential temperature in [K]
     """
     theta_exp= R/(M_co2*Cp)
     ps_shape=ps.shape #(time,lat,lon) is transformed into (time,1,lat,lon) in the next line with np.reshape
@@ -161,7 +161,7 @@ def compute_w(rho,omega):
 
 def compute_zfull(ps,ak,bk,temp):
     """
-    Compute the altitude AGL in m
+    Compute the altitude AGL in [m]
     """
     dim_out=temp.shape
     if len(dim_out)==4:
@@ -171,24 +171,32 @@ def compute_zfull(ps,ak,bk,temp):
     
 def compute_N(theta,zfull):
     """
-    Compute the Brunt Vaisala freqency in rad/s
+    Compute the Brunt Vaisala freqency in [rad/s]
     """
     dtheta_dz  = dvar_dh(theta.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])        
     return np.sqrt(g/theta*dtheta_dz)
 
 
 def compute_Tco2(P_3D,temp):
-    #From [Fannale 1982]i Mars: The regolit-atmosphere cap system and climate change. Icarus 
+    """
+    Compute the frost point of CO2 in [K]
+    From [Fannale 1982] Mars: The regolit-atmosphere cap system and climate change. Icarus 
+    """
     return np.where(P_3D<518000,-3167.8/(np.log(0.01*P_3D)-23.23),684.2-92.3*np.log(P_3D)+4.32*np.log(P_3D)**2)
 
 def compute_scorer(N,ucomp,zfull):
+    """
+    Compute the Scorer wavelenght in [m]
+    """
     dudz=dvar_dh(ucomp.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])
     dudz2=dvar_dh(dudz.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])
     scorer2= N**2/ucomp**2 -1./ucomp*dudz2    
     return 2*np.pi/np.sqrt(scorer2) 
 
 def compute_DP_3D(ps,ak,bk,shape_out):
-    #Compute the thickness of a layer
+    """
+    Compute the thickness of a layer in [Pa]
+    """
     p_half3D= fms_press_calc(ps,ak,bk,lev_type='half')
     DP_3D=p_half3D[1:,...,]- p_half3D[0:-1,...]
     if len(DP_3D.shape)==4:DP_3D=DP_3D.transpose([1,0,2,3])# p_3D [tim,lat,lon,lev] ->[tim, lev, lat, lon]
@@ -199,14 +207,13 @@ def compute_DP_3D(ps,ak,bk,shape_out):
 
 def compute_Ep(temp):
     """
-    Return the wave potential energy: Ep= 1/2 (g/N)**2 (T'/T)**2
+    Return the wave potential energy: Ep= 1/2 (g/N)**2 (T'/T)**2 in [J/kg]
     """
-
     return 0.5*g**2*(zonal_detrend(temp)/(temp*N))**2 
  
 def compute_Ek(ucomp,vcomp):
     """
-    Return the wave kinetic energy: Ek= 1/2 (u'**2+v'**2)
+    Return the wave kinetic energy: Ek= 1/2 (u'**2+v'**2) in[J/kg]
     """
     return 0.5*(zonal_detrend(ucomp)**2+zonal_detrend(vcomp)**2 )  
 
@@ -219,7 +226,7 @@ def compute_MF(UVcomp,w):
 def compute_WMFF(MF,rho,lev,interp_type):
     """
     Return the zonal or meridional wave-mean flow forcing ax= -1/rho d(rho u'w')/dz in [m/s/s]
-    ***NOTE***                                            ay= -1/rho d(rho v'w')/dz
+    ***NOTE***                                            ay= -1/rho d(rho v'w')/dz in [m/s/s]
     For pstd, we have:
         du/dz= (du/dp).(dp/dz) > du/dz=-rho g (du/dp) with dp/dz = -rho g 
     """
@@ -558,5 +565,4 @@ def main():
              
 if __name__ == '__main__':
     main()        
-#          
-
+#
