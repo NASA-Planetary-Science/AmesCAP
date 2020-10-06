@@ -40,7 +40,7 @@ parser.add_argument('-f', '--filename',nargs='+',type=str,
                       '> Usage:  ./MarsPull -f LegacyGCM_fixed.nc  LegacyGCM_Ls000_Ls004.nc')
 #===Define variables===
 
-URLbase="https://data.nas.nasa.gov/legacygcm/download_data.php?file=/legacygcmdata/"
+URLbase="https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/"
 saveDir=os.getcwd()+'/'
 #============================ Files available in the database ======================
 Ls_ini=np.array([0,5,10,15,19,24,29,34,38,43,48,52,57,61,66,70,75,79,84,88,93,97,102,\
