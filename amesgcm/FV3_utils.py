@@ -555,6 +555,62 @@ def mass_stream(v_avg,lat,level,type='pstd',psfc=700,H=8000.,factor=1.e-8):
     #Replace NaN where they initially were:   
     MSF[mask]=np.NaN    
     return MSF.reshape(shape_out)
+
+
+def vw_from_MSF(msf,lat,lev,ztype='pstd',norm=True,psfc=700,H=8000.):
+    '''
+    Return the [v] and [w] component of the circulation from the mass stream function. 
+
+    Args:
+        msf  : the mass stream function with 'level' SECOND to LAST and the 'latitude' dimension LAST, e.g. (lev,lat), (time,lev,lat), (time,lon,lev,lat)... 
+        lat  : 1D latitude array in [degree]
+        lev  : 1D level array  in [Pa] or [m]  e.g. pstd, zagl, zstd
+        ztype: Use 'pstd' for pressure so vertical differentation is done in log space. 
+        norm : if  True, normalize  the lat and lev before differentiation avoid having to rescale manually  the vectors in quiver plots
+        psfc : surface  pressure for pseudo-height when ztype ='pstd'
+        H    : scale height for pseudo-height when ztype ='pstd'
+    Return:
+        V,W the meditional and altitude component of the mass stream function, to be plotted as quiver or streamlines.
+        
+    ***NOTE***
+    The componetns are:
+        [v]=  g/(2 pi cos(lat)) dphi/dz 
+        [w]= -g/(2 pi cos(lat)) dphi/dlat     
+    '''
+    g=3.72 #m/s2
+    
+    lat=lat*np.pi/180
+    var_shape=msf.shape
+       
+    xx=lat.copy()
+    zz=lev.copy()
+    
+    if ztype=='pstd':
+        zz=H*np.log(psfc/lev)
+        
+    if norm:
+        xx=(xx-xx.min())/(xx.max()-xx.min())
+        zz=(zz-zz.min())/(zz.max()-zz.min())
+    
+    #Extend broadcasting dimensions for the latitude, e.g  [1,1,lat] if msf is size (time,lev,lat)
+    reshape_shape=[1 for i in range(0,len(var_shape))]
+    reshape_shape[-1]=lat.shape[0]
+    lat1d=lat.reshape(reshape_shape)
+    
+    #Transpose shapes:
+    T_array=np.arange(len(msf.shape))
+    
+    T_latIN=np.append(T_array[-1],T_array[0:-1]) #one permutation only: lat is passed to the 1st dimension
+    T_latOUT=np.append(T_array[1:],T_array[0]) #one permutation only: lat is passed to the 1st dimension
+    
+    T_levIN=np.append(np.append(T_array[-2],T_array[0:-2]),T_array[-1])
+    T_levOUT=np.append(np.append(T_array[1:-1],T_array[0]),T_array[-1])
+    
+    
+    V=g/(2*np.pi*np.cos(lat1d)) *dvar_dh(msf.transpose(T_levIN),zz).transpose(T_levOUT)    
+    W=-g/(2*np.pi*np.cos(lat1d))*dvar_dh(msf.transpose(T_latIN),xx).transpose(T_latOUT)
+    
+    return V,W
     
 def alt_KM(press,scale_height_KM=8.,reference_press=610.):
     """
