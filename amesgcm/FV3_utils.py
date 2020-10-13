@@ -138,7 +138,7 @@ def fms_Z_calc(psfc,ak,bk,T,topo=0.,lev_type='full'):
     
     Z_h[-1,:] = topo_flat
     
-    # Other layes, from the bottom-ip:
+    # Other layers, from the bottom-up:
     for k in range(Nk-2,-1,-1):
         Z_h[k,:] = Z_h[k+1,:]+(r_co2*T[k,:]/g)*(logPPRESS_h[k+1,:]-logPPRESS_h[k,:])
         Z_f[k,:] = Z_h[k+1,:]+(r_co2*T[k,:]/g)*(1-PRESS_h[k,:]/PRESS_f[k,:])

@@ -47,7 +47,9 @@ parser.add_argument('-add','--add', nargs='+',default=[],
                       'rho        (density)                         Req. [ps,temp] \n'
                       'theta      (pot. temperature)                Req. [ps,temp] \n'
                       'pfull3D    (pressure at layer midpoint)      Req. [ps,temp] \n' 
-                      'zfull      (altitude AGL)                    Req. [ps,temp] \n'                      
+                      'DP         (layer pressure thickness)        Req. [ps,temp] \n' 
+                      'zfull      (altitude AGL)                    Req. [ps,temp] \n'       
+                      'DZ         (layer altitude thickness)        Req. [ps,temp] \n'                
                       'w          (vertical winds)                  Req. [ps,temp,omega] \n'
                       'wdir       (wind direction)                  Req. [ucomp,vcomp] \n'
                       'wspeed     (wind magnitude)                  Req. [ucomp,vcomp] \n'
@@ -96,8 +98,10 @@ parser.add_argument('--debug',  action='store_true', help='Debug flag: release t
 VAR= {'rho'       :['density (added postprocessing)','kg/m3'],
       'theta'     :['potential temperature (added postprocessing)','K'],
       'w'         :['vertical wind (added postprocessing)','m/s'],    
-      'pfull3D'   :['pressure at layer midpoint (added postprocessing)','Pa'],  
-      'zfull'     :['altitude  AGL atlayer midpoint (added postprocessing)','m'],     
+      'pfull3D'   :['pressure at layer midpoint (added postprocessing)','Pa'], 
+      'DP'        :['layer thickness (added postprocessing)','Pa'],   
+      'zfull'     :['altitude  AGL at layer midpoint (added postprocessing)','m'],
+      'DZ'        :['layer thickness (added postprocessing)','m'],      
       'wdir'      :['wind direction (added postprocessing)','deg'],
       'wspeed'    :['wind speed (added postprocessing)','m/s'],
       'N'         :['Brunt Vaisala frequency (added postprocessing)','rad/s'],   
@@ -111,8 +115,8 @@ VAR= {'rho'       :['density (added postprocessing)','kg/m3'],
       'ek'        :['wave kinetic energy (added postprocessing)','J/kg'] ,
       'mx'        :['vertical flux of zonal momentum (added postprocessing)','J/kg'] ,
       'my'        :['vertical flux of merididional momentum(added postprocessing)','J/kg'] ,
-      'ax'        :['zonal wave-mean flow forcing (added postprocessing)',' m/s/s'] ,
-      'ay'        :['meridional wave-mean flow forcing (added postprocessing)',' m/s/s'] ,
+      'ax'        :['zonal wave-mean flow forcing (added postprocessing)','m/s/s'] ,
+      'ay'        :['meridional wave-mean flow forcing (added postprocessing)','m/s/s'] ,
       'tp_t'      :['normalized temperature perturbation (added postprocessing)','None'] 
           }                                                                                                       
 #=====================================================================
@@ -166,9 +170,21 @@ def compute_zfull(ps,ak,bk,temp):
     dim_out=temp.shape
     if len(dim_out)==4:
         zfull=fms_Z_calc(ps,ak,bk,temp.transpose([1,0,2,3]),topo=0.,lev_type='full') # temp: [tim,lev,lat,lon,lev] ->[lev,time, lat, lon]
-        zfull=zfull.transpose([1,0,2,3])# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
+        zfull=zfull.transpose([1,0,2,3])# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon] 
+    # TODO add diurn
     return zfull
-    
+
+def compute_zhalf(ps,ak,bk,temp):
+    """
+    Compute the altitude AGL in [m]
+    """
+    dim_out=temp.shape
+    if len(dim_out)==4:
+        zhalf=fms_Z_calc(ps,ak,bk,temp.transpose([1,0,2,3]),topo=0.,lev_type='half') # temp: [tim,lev,lat,lon,lev] ->[lev,time, lat, lon]
+        zhalf=zhalf.transpose([1,0,2,3])# p_3D [lev+1,tim,lat,lon] ->[tim, lev+1, lat, lon]
+    # TODO add diurn    
+    return zhalf
+
 def compute_N(theta,zfull):
     """
     Compute the Brunt Vaisala freqency in [rad/s]
@@ -197,13 +213,21 @@ def compute_DP_3D(ps,ak,bk,shape_out):
     """
     Compute the thickness of a layer in [Pa]
     """
-    p_half3D= fms_press_calc(ps,ak,bk,lev_type='half')
-    DP_3D=p_half3D[1:,...,]- p_half3D[0:-1,...]
-    if len(DP_3D.shape)==4:DP_3D=DP_3D.transpose([1,0,2,3])# p_3D [tim,lat,lon,lev] ->[tim, lev, lat, lon]
-    if len(DP_3D.shape)==3:DP_3D=DP_3D.transpose([2,0,1]) #p_3D [lat,lon,lev] ->    [lev, lat, lon]
+    p_half3D= fms_press_calc(ps,ak,bk,lev_type='half') #[lev,tim,lat,lon]
+    DP_3D=p_half3D[1:,...,]- p_half3D[0:-1,...] 
+    if len(DP_3D.shape)==4:DP_3D=DP_3D.transpose([1,0,2,3])# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
     out=DP_3D.reshape(shape_out)
     return out
 
+def compute_DZ_3D(ps,ak,bk,temp,shape_out):
+    """
+    Compute the thickness of a layer in [Pa]
+    """
+    z_half3D= fms_Z_calc(ps,ak,bk,temp.transpose([1,0,2,3]),topo=0.,lev_type='half')
+    DZ_3D=z_half3D[0:-1,...]-z_half3D[1:,...,] #Note the reverse order as Z decreases with increasing levels
+    if len(DZ_3D.shape)==4:DZ_3D=DZ_3D.transpose([1,0,2,3])# DZ_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
+    out=DZ_3D.reshape(shape_out)
+    return out
 
 def compute_Ep(temp):
     """
@@ -337,6 +361,7 @@ def main():
                             
                     
                     if ivar=='pfull3D': OUT=p_3D
+                    if ivar=='DP':      OUT=compute_DP_3D(ps,ak,bk,shape_out)
                     if ivar=='rho':
                         OUT=compute_rho(p_3D,temp)    
                     if ivar=='theta':
@@ -347,6 +372,7 @@ def main():
                         OUT=compute_w(rho,omega)
                          
                     if ivar=='zfull': OUT=compute_zfull(ps,ak,bk,temp) #TODO not with _pstd
+                    if ivar=='DZ': OUT=compute_DZ_3D(ps,ak,bk,temp,shape_out)
                     
                     if ivar=='wspeed' or ivar=='wdir': 
                         ucomp=fileNC.variables['ucomp'][:] 

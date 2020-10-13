@@ -546,6 +546,8 @@ def main():
     
         # This functions requires scipy > 1.2.0 , so we only import the package here if needed
         from amesgcm.Spectral_utils import zonal_decomposition, zonal_construct
+        #Load the module
+        #init_shtools()
         
         if parser.parse_args().high_pass_zonal:
             btype='high';out_ext='_hpk';nk=np.asarray(parser.parse_args().high_pass_zonal).astype(int)
@@ -636,7 +638,7 @@ def main():
                                         
                     fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
                 else:
-                    if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time','areo']:
+                    if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time']:
                         prCyan("Copying axis: %s..."%(ivar))
                         fnew.copy_Ncaxis_with_content(fname.variables[ivar])
                     else: 
@@ -708,14 +710,23 @@ def make_FV3_files(fpath,typelistfv3,renameFV3=True,cwd=None):
                 bk=np.zeros(nump)
                 pfull=np.zeros(num)
                 phalf=np.zeros(nump)
-                dsgm=histfile.variables['dsgm']
+                dsgm=histfile.variables['dsgm'] #TODO not used
                 sgm =histfile.variables['sgm']
-                pk[0]=.08
+                pk[0]=0.08/2 #[AK] changed pk[0]=.08 to pk[0]=.08/2, otherwise phalf[0] would be greater than phalf[1]
+                #*** NOTE that pk in amesGCM/mars_data/Legacy.fixed.nc was also updated***
                 for z in range(num):
                     bk[z+1] = sgm[2*z+2]
                 phalf[:]=pk[:]+pref*bk[:] # output in  Pa
-                pfull[:] = (phalf[1:]-phalf[:num])/(np.log(phalf[1:])-np.log(phalf[:num]))
-                #
+
+                # DEPRECIATED: pfull[:] = (phalf[1:]-phalf[:num])/(np.log(phalf[1:])-np.log(phalf[:num]))
+                #First layer
+                if pk[0]==0 and bk[0]==0: 
+                    pfull[0]=0.5*(phalf[0]+phalf[1])
+                else:
+                    pfull[0]=(phalf[1]-phalf[0])/(np.log(phalf[1])-np.log(phalf[0]))
+                #Rest of layers:   
+                pfull[1:] = (phalf[2:]-phalf[1:-1])/(np.log(phalf[2:])-np.log(phalf[1:-1]))
+
                 newf.add_dim_with_content('pfull',pfull,'ref full pressure level','Pa')
                 newf.add_dim_with_content('phalf',phalf,'ref half pressure level','Pa')
                 newf.log_axis1D('pk',pk,('phalf'),longname_txt='pressure part of the hybrid coordinate',units_txt='Pa',cart_txt='')
