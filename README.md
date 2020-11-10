@@ -33,7 +33,7 @@ Optionally, you can install:
 * **ghostscript** which will allow the analysis pipeline to generate multiple figures as a single pdf file. Type
 `gs -version ` to see if Ghostscript is already available on your system. If it is not, you can installing from this page: [https://www.ghostscript.com/download.html](https://www.ghostscript.com/download.html) or decide to use png images instead.
 
-To make sure the paths are fully actualized, we recommend to close the current terminal. Then, open a fresh terminal, type `python` and hit the TAB key. If multiple options are be available (e.g. _python_, _python2_, _python 3.7_, _python.exe_), this means that you have other versions of Python sitting on your system (e.g. an old _python2_  executable located in _/usr/local/bin/python_ ...). The same holds true for the `pip command` (e.g. old  _pip_, _pip3_, _pip.exe_). Pick the one you think may be from the Anaconda version you just installed and confirm this with the _which_ command, for example:
+To make sure the paths are fully actualized, we recommend to close the current terminal. Then, open a fresh terminal, type `python` and hitting the TAB key. If multiple options are be available (e.g. _python_, _python2_, _python 3.7_, _python.exe_), this means that you have other versions of Python sitting on your system (e.g. an old _python2_  executable located in _/usr/local/bin/python_ ...). The same holds true for the `pip command` (e.g. old  _pip_, _pip3_, _pip.exe_). Pick the one you think may be from the Anaconda version you just installed and confirm this with the _which_ command, for example:
 
 
 `python3 --version`    (`python.exe --version` in Cygwin/Windows)
@@ -77,7 +77,7 @@ Now activate the virtual environment with:
 Note that in Cygwin/Windows, the  _bin_ directory may be named **_Scripts_**
 
 
-You may notice that your prompt change from _username>_ to _(amesGCM3)username>_ which indicates that you are INSIDE the virtual environment, even when navigating to different directory on your machine.  
+You may notice that your prompt changed from _username>_ to _(amesGCM3)username>_ which indicates that you are INSIDE the virtual environment, even when navigating to different directories on your machine.  
 
 After entering the virtual environment, we can verify that ```which python ``` and ```which pip ``` unambiguously point to _amesGCM3/bin/python3_ and _amesGCM3/bin/pip_ so there is no need use the full paths.
 
@@ -89,7 +89,7 @@ From **inside** the virtual environment, run:
 `pip install git+https://github.com/alex-kling/amesgcm.git`
 
 ##### From a .zip archive:
-Download an untar the '_amesgcm-master.zip_' archive anywhere (e.g. in our _Downloads_ directory). From **inside** the virtual environment, run:
+If you have been provided with an archive, download and untar the '_amesgcm-master.zip_' archive anywhere (e.g. in our _Downloads_ directory). From **inside** the virtual environment, run:
 
 ```
 cd amesgcm-master
@@ -141,7 +141,7 @@ You can check that the tools are installed properly by typing `Mars` and hit the
 (amesGCM3) username$ Mars
 MarsFiles.py   MarsInterp.py  MarsPlot.py    MarsPull.py    MarsVars.py
 ```
-If no executable show up, the paths have not not been set-up in the virtual environment. You can use the full paths to the executable e.g. `~/amesGCM3/bin/MarsPlot.py`, and it that works for you, also consider setting-up your own aliases, for example:
+If no executable show up, the paths have not not been set-up in the virtual environment. You can use the full paths to the executable e.g. instead of using  `MarsPlot.py`, use `~/amesGCM3/bin/MarsPlot.py`. If that solution works for you, also consider setting-up your own aliases, for example:
 
 Add `alias MarsPlot.py='/username/amesGCM3/bin/MarsPlot.py'` to your _~/.bash_profile_  and run
 `source ~/.bash_profile` (in **bash**)
@@ -231,7 +231,7 @@ When provided with no arguments, the variable utility _MarsVars.py_ has the same
 
 `MarsVars.py 00000.atmos_average.nc`
 
-To see what _MarVars_ can do, check the `--help` option (`MarsVars.py -h`)
+To see what _MarsVars.py_ can do, check the `--help` option (`MarsVars.py -h`)
 
 For example, to compute the atmospheric density (rho) from the vertical grid data (pk, bk), surface pressure (ps) and air temperature (temp), run:
 
@@ -299,7 +299,7 @@ A file _Diagnostic.pdf_ will be generated in the current directory with the requ
 You can try to add a new figure by making a copy/paste of any of the entire `<<<| Plot ... = True |>>>` blocks below the `HOLD ON[...]HOLD OFF` statement, which is used to put multiple figures on a same page.  For example, to compute the  zonally-averaged (`Lon +/-180 = all`) and time-average of the first 10 degree of solar longitude (`Ls 0-360 = 0.,10`) for the dust field (dst_mass) from the interpolated file (atmos_average_pstd), we use:
 
 ```
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
 Title          = This is the dust field converted to [g/kg]
 Main Variable  = [atmos_average_pstd.dst_mass]*1000.
 Cmin, Cmax     = None
@@ -307,7 +307,7 @@ Ls 0-360       = 0.,10
 Lon +/-180     = all
 2nd Variable   = None
 Contours Var 2 = None
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Wistia
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Wistia | scale = lin
 ```
 Note that we decided to use the "**[ ]**" syntax around the variable to plot the dust field in [g/kg] instead of the default unit of [kg/kg], and changed the default title accordingly. We also decided to change the colormap to _Wistia_ and adjusted the `Axis Options`. You can now feed the modified template back to _MarsPlot_. By default `MarsPlot.py Custom.in` runs the requested analysis on the **last** set of output files present in the directory (identified by **XXXXX.fixed.nc**) To run the analysis over a single specific data file or a range of files, use the **--date**  options:
 
