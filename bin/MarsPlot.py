@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser(description="""\033[93mAnalysis Toolkit for the
 
 parser.add_argument('custom_file', nargs='?',type=argparse.FileType('r'),default=None, #sys.stdin
                              help='Use optional input file Custom.in to plot the graphs \n'
-                                  '> Usage: MarsPlot Custom.in  [other options]\n' 
+                                  '> Usage: MarsPlot Custom.in  [other options]\n'
                                   'UPDATE as needed with \033[96mpip install git+https://github.com/alex-kling/amesgcm.git --upgrade\033[00m \n'
                                   'Tutorial at: \033[93mhttps://github.com/alex-kling/amesgcm\033[00m')
 
@@ -343,7 +343,7 @@ def get_lon_index(lon_query_180,lons):
 
     #If None, set to default, i.e 'all' for a zonal average
     if lon_query_180.any()==None: lon_query_180=np.array(-99999)
-    
+
     #=============FV3 format ==============
     # lons are 0>360, convert to -180>+180
     #======================================
@@ -369,17 +369,17 @@ def get_lon_index(lon_query_180,lons):
                 loni=np.arange(loni_bounds[0],loni_bounds[1]+1)
             else:
                 #Loop around, e.g, 160E>-40W
-                loni=np.append(np.arange(loni_bounds[0],len(lons)),np.arange(0,loni_bounds[1]+1)) 
+                loni=np.append(np.arange(loni_bounds[0],len(lons)),np.arange(0,loni_bounds[1]+1))
                 prPurple(lon360_to_180(lons[loni]))
             lon_bounds_180=lon360_to_180([lons[loni_bounds[0]],lons[loni_bounds[1]]])
-            
+
             #if lon_bounds_180[0]>lon_bounds_180[1]:lon_bounds_180=np.flipud(lon_bounds_180) #lon should be also increasing for display
             txt_lon=', lon=avg[%.1f<->%.1f]'%(lon_bounds_180[0],lon_bounds_180[1])
-        
+
         #=========Legacy  format ===========
         # lons are already -180>+180
-        #===================================    
-    else:        
+        #===================================
+    else:
         #one longitude is provided
         if lon_query_180.size==1:
             #request zonal average
@@ -398,9 +398,9 @@ def get_lon_index(lon_query_180,lons):
                 loni=np.arange(loni_bounds[0],loni_bounds[1]+1)
             else:
                 #Loop around, e.g, 160E>-40W
-                loni=np.append(np.arange(loni_bounds[0],len(lons)),np.arange(0,loni_bounds[1]+1)) 
+                loni=np.append(np.arange(loni_bounds[0],len(lons)),np.arange(0,loni_bounds[1]+1))
             txt_lon=', lon=avg[%.1f<->%.1f]'%(lons[loni_bounds[0]],lons[loni_bounds[1]])
-            
+
     return loni,txt_lon
 
 def get_lat_index(lat_query,lats):
@@ -470,7 +470,7 @@ def get_tod_index(tod_query,tods):
             todi=np.arange(tod_bounds[0],tod_bounds[1]+1)
         else:
             #Loop around, e.g, 18pm>6am
-            todi=np.append(np.arange(tod_bounds[0],len(tods)),np.arange(0,tod_bounds[1]+1))                
+            todi=np.append(np.arange(tod_bounds[0],len(tods)),np.arange(0,tod_bounds[1]+1))
         txt_tmp=UT_LTtxt(tods[todi[0]]/24.,lon_180=0.,roundmin=1)
         txt_tmp2=UT_LTtxt(tods[todi[-1]]/24.,lon_180=0.,roundmin=1)
         txt_tod=', tod=avg[%s<->%s]'%(txt_tmp,txt_tmp2)
@@ -1513,7 +1513,7 @@ class Fig_2D(object):
         for i in range(0,nfiles):
             file_list[i] = input_paths[simuID]+'/%05d.'%(Sol_num_current[i])+file_type+'.nc'
             check_file_tape(file_list[i],abort=False)
-        
+
         #TODO This is not robust to change of name
         if 'fixed' in file_type: # XXXX.fixed.nc does not have an aggregation dimension so we use Dataset
             f=Dataset(file_list[0], 'r')
@@ -1754,10 +1754,10 @@ class Fig_2D(object):
                 #Two numbers are provided, e.g. Cmin,Cmax
                 if len(self.range)==2:
                     levs=np.linspace(self.range[0],self.range[1],levels)
-                #The individual layers are provided    
-                else: 
+                #The individual layers are provided
+                else:
                     levs=self.range
-                    
+
             if self.axis_opt2 =='log':
                 if self.range[0]<=0 or  self.range[1]<=0: prRed('*** Error using log scale, bounds cannot be zero or negative')
                 levs=np.logspace(np.log10(self.range[0]),np.log10(self.range[1]),levels)
@@ -1806,7 +1806,7 @@ class Fig_2D(object):
         if cmap=='rjw':cmap=rjw_cmap()
         if cmap=='dkass_temp':cmap=dkass_temp_cmap()
         if cmap=='dkass_dust':cmap=dkass_dust_cmap()
-        
+
         norm,levs=self.return_norm_levs()
 
         if self.range:
@@ -1891,7 +1891,7 @@ class Fig_2D_lon_lat(Fig_2D):
 
                 if self.varfull2:
                     _,_,var2,var_info2=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull2,self.plot_type)
-                    lon180,var2=temp(lon,var2)
+                    lon180,var2=shift_data(lon,var2)
                     super(Fig_2D_lon_lat, self).solid_contour(lon180, lat,var2,self.contour2)
                     var_info+=" (& "+var_info2+")"
 
@@ -2147,13 +2147,13 @@ class Fig_2D_time_lat(Fig_2D):
                 super(Fig_2D_time_lat, self).solid_contour(Ls, lat,var2,self.contour2)
                 var_info+=" (& "+var_info2+")"
 
-            
+
             #Axis formatting
             if self.Xlim:
                 idmin=np.argmin(np.abs(tim-self.Xlim[0]))
                 idmax=np.argmin(np.abs(tim-self.Xlim[1]))
                 plt.xlim([Ls[idmin],Ls[idmax]])
-                
+
             if self.Ylim:plt.ylim(self.Ylim[0],self.Ylim[1])
 
             Ls_ticks = [item for item in ax.get_xticks()]
@@ -2163,7 +2163,7 @@ class Fig_2D_time_lat(Fig_2D):
             for i in range(0,len(Ls_ticks)):
                 id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
                 labels[i]='Ls %g\nsol %i'%(np.mod(Ls_ticks[i],360.),tim[id])
-                
+
 
             ax.set_xticklabels(labels)
 

@@ -496,10 +496,10 @@ def mass_stream(v_avg,lat,level,type='pstd',psfc=700,H=8000.,factor=1.e-8):
         v_avg:  zonal winds  [m/s] with 'level' dimensions FIRST and 'lat' dimension SECOND e.g (pstd,lat), (pstd,lat,lon) or (pstd,lat,lon,time)
                  >> This routine is set-up so the time and zonal averages may be done either ahead or after the MSF calculation.
         lat  :1D array of latitudes in [degree]  
-        level : interpolated layers in [Pa] or [m] 
+        level: interpolated layers in [Pa] or [m] 
         type : interpolation type, i.e. 'pstd', 'zstd' or 'zagl'
-        psfc: reference surface pressure in [Pa]                    
-        H    : reference scale height in [m]  
+        psfc : reference surface pressure in [Pa]                    
+        H    : reference scale height in [m] when pressure are used. 
         factor: normalize the mass stream function by a factor, use factor =1. to obtain [kg/s]
     Returns:
         MSF: The meridional mass stream function in factor*[kg/s]

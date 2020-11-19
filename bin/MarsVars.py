@@ -129,7 +129,7 @@ fill_value=0.
 #===Define constants=========
 rgas = 189.  # J/(kg-K) => m2/(s2 K)
 g    = 3.72  # m/s2
-R=8.314      # J/ mol. K
+R=    8.314  # J/ mol. K
 Cp   = 735.0 #J/K
 M_co2 =0.044 # kg/mol
 N=0.01       #rad/s  This is used for the Ep calculation
@@ -539,7 +539,17 @@ def main():
         #=================================================================
         #=============  Column  integration   ============================
         #=================================================================
-
+        '''
+                          z_top
+                          ⌠
+        We have col=      ⌡ var rho dz  with dp/dz=-rho g => rho dz = -dp/g
+                          0
+                      
+                      ___ p_sfc
+             >  col = \       
+                      /__ (var dp/g)  
+                        p_top
+        ''' 
         #ak and bk are needed to derive the distance between layer pfull
         if col_list:
             name_fixed=ifile[0:5]+'.fixed.nc'
