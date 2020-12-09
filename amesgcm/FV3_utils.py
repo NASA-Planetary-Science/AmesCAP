@@ -1456,7 +1456,61 @@ def spherical_curl(U,V,lon_deg,lat_deg,R=3400*1000.,spacing='varying'):
                                     
         out=1/(R*np.sin(colat))*(dvar_dh(V.transpose(T_lonIN),lon.transpose(T_lonIN)).transpose(T_lonOUT)- \
                      dvar_dh((U*np.sin(colat)).transpose(T_latIN),colat.transpose(T_latIN)).transpose(T_latOUT))                            
-    return  out        
+    return  out  
+    
+    
+
+def MGSzmax_ls_lat(ls,lat):
+    '''
+    Return the max altitude for the dust from "MGS scenario"
+    from Montmessin et al. (2004), Origin and role of water ice clouds in the Martian 
+                                   water cycle as inferred from a general circulation model
+    
+    Args:
+        ls  : solar longitude in degree 
+        lat : latitude in degree
+    Returns:
+        zmax : top altitude for the dusk in [km]
+    '''
+    lat=np.array(lat)*np.pi/180
+    ls_p=(np.array(ls)-158)*np.pi/180
+
+    return 60+18*np.sin(ls_p)-(32+18*np.sin(ls_p))*np.sin(lat)**4-8*np.sin(ls_p)*np.sin(lat)**5
+
+def MGStau_ls_lat(ls,lat):
+    '''
+    Return the max altitude for the dust from "MGS scenario"
+    from Montmessin et al. (2004), Origin and role of water ice clouds in the Martian 
+                                   water cycle as inferred from a general circulation model
+    
+    Args:
+        ls  : solar longitude in degree 
+        lat : latitude in degree
+    Returns:
+        zmax : top altitude for the dusk in [km]
+    '''
+    lat=np.array(lat)
+    ls_p=(np.array(ls)-250)*np.pi/180
+    
+    tn=0.1
+    teq=0.2+0.3*np.cos(0.5*ls_p)**14
+    ts= 0.1+0.4*np.cos(0.5*ls_p)**14
+    
+    #We have tanh(-x)=-tanh(x)
+    t_north=tn+0.5*(teq-tn)*(1+np.tanh(4.5-lat/10))
+    t_south=ts+0.5*(teq-ts)*(1+np.tanh(4.5+lat/10))
+    
+    #One latitude
+    if len(np.atleast_1d(lat))==1:
+        tau=t_north  if lat>=0 else t_south
+    else:         
+        tau=np.zeros_like(lat)
+        tau[lat<=0]=t_south[lat<=0]
+        tau[lat>0]= t_north[lat>0]
+         
+    return tau
+    
+              
 #==================================Projections==================================
 '''
 The projections below were implemented by Alex Kling, following:
