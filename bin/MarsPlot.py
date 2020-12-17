@@ -533,6 +533,10 @@ def get_time_index(Ls_query_360,Ls):
         txt_time: text descriptor for the extracted solar longitudes
     *** Note that the keyword 'all' is passed as -99999 by the rT() functions
     '''
+    
+    #Special case where the file has only one timestep, transform Ls to array:
+    if len(np.atleast_1d(Ls))==1:Ls=np.array([Ls])
+    
     Nt=len(Ls)
     Ls_query_360=np.array(Ls_query_360)
 
