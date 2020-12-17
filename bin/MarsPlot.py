@@ -180,7 +180,7 @@ def main():
            namelist_parser(path_to_template(parser.parse_args().do))
 
 
-        # set bounds  (e.g. starting file, end file)
+        # Set bounds  (e.g. starting file, end file)
         if parser.parse_args().date: #a date single date or a range is provided
             # first check if the value provided is the right type
             try:
@@ -190,14 +190,20 @@ def main():
                 prRed("""Please use:   'MarsPlot Custom.in -d XXXX [YYYY] -o out' """)
                 exit()
 
-        else: # no date is provided, default is last file only
-            bound=np.asarray(get_Ncdf_num()[-1])
-
+        else: # no date is provided, default is last file XXXXX.fixed.nc in directory
+            bound=get_Ncdf_num()
+            #If one or multiple  XXXXX.fixed.nc files are found, use the last one
+            if bound:bound=bound[-1]
         #-----
-
+        
+        #Initialization
         Ncdf_num=get_Ncdf_num() #Get all timestamps in directory
-        Ncdf_num=select_range(Ncdf_num,bound)  # Apply bounds to the desired dates
-        nfiles=len(Ncdf_num)                   #number of timestamps
+
+        if Ncdf_num:
+            Ncdf_num=select_range(Ncdf_num,bound)  # Apply bounds to the desired dates
+            nfiles=len(Ncdf_num)                   #number of timestamps
+        else: #No XXXXX.fixed.nc, in the directory. It is assumed we will be looking at one single file
+            nfiles=1
 
 
         #print('MarsPlot is running...')
@@ -1425,19 +1431,17 @@ def prep_file(var_name,file_type,simuID,sol_array):
     global input_paths
     global Ncdf_num #global variable that holds  the different sos number, e.g [1500,2400]
     # A specific sol was requested, e.g [2400]
-    
+    Sol_num_current = [0] #Set dummy value
     #First check if the file exist on tape without a sol number (e.g. 'Luca_dust_MY24_dust.nc') exists on the disk
     if os.path.isfile(input_paths[simuID]+'/'+file_type+'.nc'):
-            Sol_num_current = [0] #Set dummy value
             file_has_sol_number=False
-            
     # If the file does NOT exist, append sol number as provided by MarsPlot Custom.in -d sol or last file in directory
     else: 
         file_has_sol_number=True
         # Two options here: first a file number is explicitly provided in the varfull, e.g. 00668.atmos_average.nc
         if sol_array != [None]:
             Sol_num_current=sol_array
-        else:
+        elif Ncdf_num !=None:
             Sol_num_current =Ncdf_num
     #Creat a list of files for generality (even if only one file is provided)
     nfiles=len(Sol_num_current)
