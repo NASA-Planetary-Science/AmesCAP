@@ -1292,10 +1292,9 @@ def get_Ncdf_num():
     avail_fixed = [k for k in list_dir if '.fixed.nc' in k] #e.g. '00350.fixed.nc', '00000.fixed.nc'
     list_num = [item[0:5] for item in avail_fixed]          #remove .fixed.nc, e.g. '00350', '00000'
     Ncdf_num=np.sort(np.asarray(list_num).astype(np.float)) # transform to array, e.g. [0, 350]
-    if Ncdf_num.size==0:
-        print("No XXXXX.fixed.nc detected in "+input_paths[0])
-        raise SystemExit #Exit cleanly
-        Ncdf_num= None #TODO
+    if Ncdf_num.size==0:Ncdf_num= None 
+    #    print("No XXXXX.fixed.nc detected in "+input_paths[0])
+    #    raise SystemExit #Exit cleanly
     return Ncdf_num
 
 def select_range(Ncdf_num,bound):
@@ -1432,14 +1431,14 @@ def prep_file(var_name,file_type,simuID,sol_array):
             Sol_num_current = [0] #Set dummy value
             file_has_sol_number=False
             
-    # If the file does not exist, append sol number as provided by MarsPlot Custom.in -d sol or last file in directory
+    # If the file does NOT exist, append sol number as provided by MarsPlot Custom.in -d sol or last file in directory
     else: 
         file_has_sol_number=True
-        if sol_array:
+        # Two options here: first a file number is explicitly provided in the varfull, e.g. 00668.atmos_average.nc
+        if sol_array != [None]:
             Sol_num_current=sol_array
         else:
             Sol_num_current =Ncdf_num
-
     #Creat a list of files for generality (even if only one file is provided)
     nfiles=len(Sol_num_current)
     file_list = [None]*nfiles #initialize the list
@@ -1451,13 +1450,13 @@ def prep_file(var_name,file_type,simuID,sol_array):
         else:    #no sol number
             file_list[i] = input_paths[simuID]+'/'+file_type+'.nc'
         check_file_tape(file_list[i],abort=False)
-
-    #TODO This is not robust to change of name
-    if 'fixed' in file_type: # XXXX.fixed.nc does not have an aggregation dimension so we use Dataset
-        f=Dataset(file_list[0], 'r')
-    else:
-        f=MFDataset(file_list, 'r') #use MFDataset instead
-
+    #We know the files exist on tape, now open it with MFDataset if an aggregation dimension is detected
+    try:
+        f=MFDataset(file_list, 'r') 
+    except IOError:
+        #This IOError should be :'master dataset ***.nc does not have a aggregation dimension', we will use Dataset otherwise
+        f=Dataset(file_list[0], 'r')    
+        
     var_info=f.variables[var_name].long_name+' ['+ f.variables[var_name].units+']'
     dim_info=f.variables[var_name].dimensions
     dims=f.variables[var_name].shape
@@ -1916,10 +1915,9 @@ class Fig_2D_lon_lat(Fig_2D):
         load the matching topography (here 00668.fixed.nc from the 2nd simulation), hence this function which does a simple task in a complicated way. Note that a great deal of the code is borrowed from the data_loader_2D() function
 
         Returns:
-            lonz,latz,zsurf: the longitude,latitude,topography
+            zsurf: the topography or 'None' if no matching XXXXX.fixed.nc is found
         '''
 
-        #Simply plot one of the variable in the file
         if not '[' in varfull:
             #---If overwriting dimensions, get the new dimensions and trim varfull from the '{lev=5.}' part
             if '{' in varfull :
@@ -1932,12 +1930,16 @@ class Fig_2D_lon_lat(Fig_2D):
             varfull_list=get_list_varfull(varfull)
             f=get_list_varfull(varfull)
             sol_array,filetype,var,simuID=split_varfull(varfull_list[0])
-
-        f, var_info,dim_info, dims=prep_file('zsurf','fixed',simuID,sol_array)
-        #Get the file type ('fixed','diurn', 'average', 'daily') and interpolation type (pfull, zstd etc...)
-        zsurf=f.variables['zsurf'][:,:]
-        f.close()
-
+        
+        # If requesting a lat/lon plot for 00668.atmos_average.nc, try to find matching  00668.fixed.nc
+        try:
+            f, var_info,dim_info, dims=prep_file('zsurf','fixed',simuID,sol_array)
+            #Get the file type ('fixed','diurn', 'average', 'daily') and interpolation type (pfull, zstd etc...)
+            zsurf=f.variables['zsurf'][:,:]
+            f.close()
+        except:
+            # If input file has not matching  00668.fixed.nc, return None
+            zsurf=None
         return zsurf
 
 
@@ -1948,9 +1950,14 @@ class Fig_2D_lon_lat(Fig_2D):
         try:    #try to do the figure, will return the error otherwise
             lon,lat,var,var_info=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull,self.plot_type)
             lon180,var=shift_data(lon,var)
-            #get topo
+            #Try to get topo if a matching XXXXX.fixed.nc file exist
+            
             zsurf=self.get_topo_2D(self.varfull,self.plot_type)
-            _,zsurf=shift_data(lon,zsurf)
+            if zsurf is None:
+                add_topo=False
+            else:
+                add_topo=True    
+                _,zsurf=shift_data(lon,zsurf)
 
             projfull=self.axis_opt3
             #------------------------------------------------------------------------
@@ -1960,7 +1967,7 @@ class Fig_2D_lon_lat(Fig_2D):
 
                 super(Fig_2D_lon_lat, self).filled_contour(lon180, lat,var)
                 #---Add topo contour---
-                plt.contour(lon180, lat,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
+                if add_topo:plt.contour(lon180, lat,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
 
                 if self.varfull2:
                     _,_,var2,var_info2=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull2,self.plot_type)
@@ -2036,8 +2043,9 @@ class Fig_2D_lon_lat(Fig_2D):
 
                 if projfull[0:5] in ['Npole','Spole','ortho']:
                     #Common to all azimutal projections
-                    var,_=add_cyclic(var,lon180)
-                    zsurf,lon180=add_cyclic(zsurf,lon180)
+                    lon180_original=lon180.copy()
+                    var,lon180=add_cyclic(var,lon180)
+                    if add_topo:zsurf,_=add_cyclic(zsurf,lon180_original)
                     lon_lat_custom=None #Initialization
                     lat_b=None
 
@@ -2051,7 +2059,7 @@ class Fig_2D_lon_lat(Fig_2D):
                     lat_bi,_=get_lat_index(lat_b,lat)
                     lat=lat[lat_bi:]
                     var=var[lat_bi:,:]
-                    zsurf=zsurf[lat_bi:,:]
+                    if add_topo:zsurf=zsurf[lat_bi:,:]
                     LON,LAT=np.meshgrid(lon180,lat)
                     X,Y=azimuth2cart(LAT,LON,90,0)
 
@@ -2076,7 +2084,7 @@ class Fig_2D_lon_lat(Fig_2D):
                     lat_bi,_=get_lat_index(lat_b,lat)
                     lat=lat[:lat_bi]
                     var=var[:lat_bi,:]
-                    zsurf=zsurf[:lat_bi,:]
+                    if add_topo:zsurf=zsurf[:lat_bi,:]
                     LON,LAT=np.meshgrid(lon180,lat)
                     X,Y=azimuth2cart(LAT,LON,-90,0)
                     #Add meridans and parallel
@@ -2103,7 +2111,7 @@ class Fig_2D_lon_lat(Fig_2D):
                     X,Y,MASK=ortho2cart(LAT,LON,lat_p,lon_p)
                     #Mask opposite side of the planet
                     var=var*MASK
-                    zsurf=zsurf*MASK
+                    if add_topo:zsurf=zsurf*MASK
                      #Add meridans and parallel
                     for mer in np.arange(-180,180,30):
                         xg,yg,maskg=ortho2cart(lat,lat*0+mer,lat_p,lon_p)
@@ -2122,7 +2130,7 @@ class Fig_2D_lon_lat(Fig_2D):
 
 
                 #---Add topo contour---
-                plt.contour(X, Y ,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
+                if add_topo:plt.contour(X, Y ,zsurf,11,colors='k',linewidths=0.5,linestyles='solid')   #topo
                 #=================================================================================
                 #=======================Solid contour 2nd variables===============================
                 #=================================================================================
@@ -2531,36 +2539,6 @@ class Fig_1D(object):
             prYellow('''*** Warning *** In 1D plot, %s: 'AXIS' keyword may only be used once '''%(self.varfull))
         return graph_type
 
-
-    def prep_file(self,var_name,file_type,simuID,sol_array):
-        global input_paths
-        global Ncdf_num
-        #first file in the list
-        # A specific sol was requested, e.g [2400]
-        if sol_array:
-            Sol_num_current=sol_array
-        else : #no sol requested, use default as provided by MarsPlot Custom.in -d sol
-            Sol_num_current =Ncdf_num
-
-        nfiles=len(Sol_num_current)
-
-
-        file_list = [None]*nfiles #initialize the list
-
-        #Loop over the requested time steps
-        for i in range(0,nfiles):
-            file_list[i] = input_paths[simuID]+'/%05d.'%(Sol_num_current[i])+file_type+'.nc'
-            check_file_tape(file_list[i],abort=False)
-
-        if file_type=='fixed': # XXXX.fixed.nc does not have an aggregation dimension so we use Dataset
-            f=Dataset(file_list[0], 'r')
-        else:
-            f=MFDataset(file_list, 'r') #use MFDataset instead
-
-        var_info=f.variables[var_name].long_name+' ['+ f.variables[var_name].units+']'
-        dim_info=f.variables[var_name].dimensions
-        dims=f.variables[var_name].shape
-        return f, var_info,dim_info, dims
 
     def data_loader_1D(self,varfull,plot_type):
 
