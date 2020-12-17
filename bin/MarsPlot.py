@@ -1460,8 +1460,8 @@ def prep_file(var_name,file_type,simuID,sol_array):
     except IOError:
         #This IOError should be :'master dataset ***.nc does not have a aggregation dimension', we will use Dataset otherwise
         f=Dataset(file_list[0], 'r')    
-        
-    var_info=f.variables[var_name].long_name+' ['+ f.variables[var_name].units+']'
+                  
+    var_info=getattr(f.variables[var_name],'long_name','')+' ['+ getattr(f.variables[var_name],'units','')+']'
     dim_info=f.variables[var_name].dimensions
     dims=f.variables[var_name].shape
     return f, var_info,dim_info, dims
@@ -1543,63 +1543,6 @@ class Fig_2D(object):
         #self.sol_array,self.filetype,self.var,self.simuID=split_varfull(self.varfull)
         #if self.varfull2: self.sol_array2,self.filetype2,self.var2,self.simuID2=split_varfull(self.varfull2)
 
-
-    def prep_file(self,var_name,file_type,simuID,sol_array):
-        '''
-        Given the different information, open the file as a Dataset or MFDataset object.
-        Note that the input arguments are typically extracted  from a varfull object, e.g.  '03340.atmos_average.ucomp',
-        not a file from those the existence on the disk is known beforehand
-        Args:
-            var_name: variable to extract, e.g. 'ucomp'
-            file_type: 'fixed', atmos_average_pstd
-            simuID:    e.g 2 for 2nd simulation
-            sol_array: e.g [3340,4008]
-
-        Returns:
-            f: Dataset or MFDataset object
-            var_info: longname and units
-            dim_info: dimensions e.g ('time', 'lat','lon')
-            dims:    shape of the array e.g [133,48,96]
-        '''
-        global input_paths
-        global Ncdf_num #global variable that holds  the different sos number, e.g [1500,2400]
-        # A specific sol was requested, e.g [2400]
-        
-        #First check if the file exist on tape without a sol number (e.g. 'Luca_dust_MY24_dust.nc') exists on the disk
-        if os.path.isfile(input_paths[simuID]+'/'+file_type+'.nc'):
-                Sol_num_current = [0] #Set dummy value
-                file_has_sol_number=False
-                
-        # If the file does not exist, append sol number as provided by MarsPlot Custom.in -d sol or last file in directory
-        else: 
-            file_has_sol_number=True
-            if sol_array:
-                Sol_num_current=sol_array
-            else:
-                Sol_num_current =Ncdf_num
-
-        #Creat a list of files for generality (even if only one file is provided)
-        nfiles=len(Sol_num_current)
-        file_list = [None]*nfiles #initialize the list
-
-        #Loop over the requested time steps
-        for i in range(0,nfiles):
-            if file_has_sol_number: #include sol number
-                file_list[i] = input_paths[simuID]+'/%05d.'%(Sol_num_current[i])+file_type+'.nc'
-            else:    #no sol number
-                file_list[i] = input_paths[simuID]+'/'+file_type+'.nc'
-            check_file_tape(file_list[i],abort=False)
-
-        #TODO This is not robust to change of name
-        if 'fixed' in file_type: # XXXX.fixed.nc does not have an aggregation dimension so we use Dataset
-            f=Dataset(file_list[0], 'r')
-        else:
-            f=MFDataset(file_list, 'r') #use MFDataset instead
-
-        var_info=f.variables[var_name].long_name+' ['+ f.variables[var_name].units+']'
-        dim_info=f.variables[var_name].dimensions
-        dims=f.variables[var_name].shape
-        return f, var_info,dim_info, dims
 
     def data_loader_2D(self,varfull,plot_type):
 
