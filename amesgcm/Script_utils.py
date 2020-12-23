@@ -38,7 +38,7 @@ def find_tod_in_diurn(fNcdf):
     '''
     regex=re.compile('time_of_day.')
     varset=fNcdf.variables.keys()
-    return [string for string in varset if re.match(regex, string)][0] #Exctract the 1st element of the list 
+    return [string for string in varset if re.match(regex, string)][0] #Extract the 1st element of the list 
  
 
 
