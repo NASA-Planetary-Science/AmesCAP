@@ -275,7 +275,7 @@ syntax on
 colorscheme default
 au BufReadPost *.in  set syntax=python
 ```
-Close the file and run: `source ~/.vimrc`
+Close the file (`:wq`): next time you open Custom.in with Vim, numbers and keywords like 'True' or 'None' will be highlighted.
 ***
 
 In order to access data in a specific file,  _MarsPlot_ uses the syntax ` Main Variable  = XXXXX.fileN.var`,  `XXXXX` being the sol number (e.g. "03335", optional), `file` being the file type (e.g. "`atmos_average_pstd`"), `N`  being the simulation number (e.g. "2" if comparing two different simulations, optional), and `var` the requested variable (e.g. "`ucomp`" for the zonal winds).

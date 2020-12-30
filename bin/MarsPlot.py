@@ -75,8 +75,8 @@ parser.add_argument('--template','-template', action='store_true',
 parser.add_argument('-temp','--temp', action='store_true',help=argparse.SUPPRESS) #same as --template but without the instructions
 
 parser.add_argument('-do','--do', nargs=1,type=str,default=None, #sys.stdin
-                             help='(Re)-use a template file my_custom.in. First search in ~/env/mars_templates/,\n'
-                                 '                                                then in /u/mkahre/MCMC/analysis/working/templates/ \n'
+                             help='(Re)-use a template file my_custom.in. First search in ~/amesGCM3/mars_templates/,\n'
+                                 '                                                then in /u/mkahre/MCMC/analysis/working/shared_templates/ \n'
                                   '> Usage: MarsPlot -do my_custom [other options]')
 
 parser.add_argument("-o", "--output",default="pdf",
@@ -119,6 +119,7 @@ def main():
     global width_inch; #pixel width for saving figure
     global height_inch; #pixel width for saving figure
     global vertical_page;vertical_page=parser.parse_args().vertical #vertical pages instead of horizonal for saving figure
+    global shared_dir; shared_dir='/u/mkahre/MCMC/analysis/working/shared_templates' #directory containing shared templates
 
 
     #Set Figure dimensions
@@ -1352,13 +1353,10 @@ def path_to_template(custom_name):
     Returns:
         full_path: full_path to /u/user/FV3/templates/my_custom.in
 
-         If file not found,try:/lou/s2n/mkahre/MCMC/analysis/working/templates/my_custom.in
+         If file not found, try shared directory
     '''
-
-    #local_dir=os.path.expanduser("~") +'/FV3/templates'
     local_dir=sys.prefix+'/mars_templates'
-    shared_dir='/lou/s2n/mkahre/MCMC/analysis/working/templates'
-
+    
     #---
     custom_name=custom_name[0] #convert the 1-element list to a string
     if custom_name[-3:]!='.in':  custom_name=custom_name+'.in'#add extension if not provided
