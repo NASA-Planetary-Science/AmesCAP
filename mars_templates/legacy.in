@@ -1,53 +1,10 @@
-===================== |MarsPlot V1.5|===================
-# INSTRUCTIONS:
-# > Find the matching  template for the desired plot type. Do not edit any labels left of any '=' sign
-# > Duplicate/remove any of the <<<< blocks>>>>, skip by setting <<<< block = False >>>>
-# > 'True', 'False' and 'None' are capitalized. Do not use quotes '' anywhere in this file
-# > Cmin, Cmax define the colorbar range. Scientific notation (e.g. 1e-6, 2e3) is supported
-# > 'Level' refers to 'level'[Pa], 'pfull'[Pa] or 'zgrid' [m] depending on the type of *.nc file
-# FREE DIMENSIONS:
-# > Use 'Dimension = 55.' to set to the closest value
-# > Use 'Dimension = all' to average over all values
-# > Use 'Dimension = -55.,55.' to get the average between -55. and 55.
-# > 'None' refers to the default setting for that Dimension:
-#     -A) time  = instant time step at Nt (i.e last timestep)
-#     -B) lev = sfc (i.e, Nz for *.nc files and 0 for *_plevs.nc files)
-#     -C) lat   = equator slice
-#     -D) lon   = 'all', i.e zonal average over all longitudes
-# > Overwrite the dimension using atmos_average_pstd.temp{time = 100 ; lev= 5.; lon= all ; lat=45} Use brackets '{}' and SEMI-COLONS ';'
-# >    Units must be the same as the free dimension block, i.e time [Ls], lev [Pa], lon [deg], and lat [deg]
-# TIME SERIES AND 1D PLOTS:
-# > Use 'Dimension = AXIS' to set the varying axis
-# > The other free dimensions accept value, 'all' or valmin,valmax as above
-# AXIS OPTIONS:
-# Set the x-axis and y-axis limits in the figure units. All Matplolib styles are supported:
-# > 'cmap' changes the colormap: 'jet' (winds), 'spectral' (temperature), 'bwr' (diff plot)
-# > 'line' sets the line style:  '-r' (solid red), '--g' (dashed green), '-ob' (solid & blue markers)
-# KEYWORDS:
-# > 'HOLD ON' [blocks of figures] 'HOLD OFF' groups the figures as a multi-pannel page
-# > [line plot 1] 'ADD LINE' [line plot 2] adds similar 1D-plots on the same figure)
-# > 'START' and (optionally) 'STOP' can be used to conveniently skip plots below. Use '#' to add comments.
-# ALGEBRA AND CROSS-SIMULATIONS PLOTS:
-# Use 'N>' to add a Nth simulation with matching timesteps to the <<< Simulations >>> block
-# Use full path: '2> /u/akling/FV3/verona/simu2/history' Empty fields are ignored, comment out with '#'
-# A variable 'var' in a 'XXXXX.file.nc' from this simulation is accessed using 'XXXXX.fileN.var' syntax
-# Encompass raw outputs with square brackets '[]' for element-wise operations, e.g:
-# > '[fixed.zurf]/(10.**3)'                               (convert topography from [m] to [km])
-# > '[atmos_average_pstd.taudust_IR]/[atmos_average_pstd.ps]*(610)' (normalize the dust opacity)
-# > '[atmos_average_pstd.temp]-[atmos_average_pstd2.temp]'    (temp. difference between ref simu and simu 2)
-# > '[atmos_average_pstd.temp]-[atmos_average_pstd.temp{lev=10}]'    (temp. difference between the default (near surface) and the 10 Pa level
-#         Supported expressions are: sqrt, log, exp, min, max, mean
+===================== |MarsPlot V3.0|===================
 <<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>
 ref> None
-2>
+2> /u/mkahre/MCMC/analysis/obsdata/amesgcmOBS
 3>
 =======================================================
 START
-
-#======================================================
-#====================1D plots==========================
-#======================================================
-
 
 <<<<<<<<<<<<<<| Plot 1D = True |>>>>>>>>>>>>>
 Legend         = Viking Lander 1
@@ -56,7 +13,9 @@ Ls 0-360       = AXIS
 Latitude       = 22.27
 Lon +/-180     = -47.95
 Level [Pa]     = None
+Diurnal  [hr]  = None
 Axis Options  : lat,lon+/-180,[Pa],sols = [None,None] | var = [None,None] | linestyle = -
+
 ADD LINE
 <<<<<<<<<<<<<<| Plot 1D = True |>>>>>>>>>>>>>
 Legend         = Viking Lander 2
@@ -65,9 +24,11 @@ Ls 0-360       = AXIS
 Latitude       = 47.64
 Lon +/-180     = -225.71
 Level [Pa]     = None
+Diurnal  [hr]  = None
 Axis Options  : lat,lon+/-180,[Pa],sols = [None,None] | var = [None,None] | linestyle = -
 
 HOLD ON
+
 #======================================================
 #============= Time vs latitude =======================
 #======================================================
@@ -79,34 +40,38 @@ Cmin, Cmax     = None
 Lon +/-180     = None
 Level [Pa]     = 50
 2nd Variable   = atmos_average_pstd.temp
+Contours Var 2 = None
 Axis Options  : sols = [None,None] | lat = [None,None] | cmap = nipy_spectral
 
 <<<<<<<<<<<<<<| Plot 2D time X lat = True |>>>>>>>>>>>>>
 Title          = Column Integrated Water [prec um]
-Main Variable  = [atmos_average.colint_vap_mass]*1000.
+Main Variable  = [atmos_average.vap_mass_col]*1000.
 Cmin, Cmax     = None
 Lon +/-180     = None
 Level [Pa]     = None
-2nd Variable   = [atmos_average.colint_vap_mass]*1000.
+2nd Variable   = [atmos_average.vap_mass_col]*1000.
+Contours Var 2 = None
 Axis Options  : sols = [None,None] | lat = [None,None] | cmap = Blues
 
 <<<<<<<<<<<<<<| Plot 2D time X lat = True |>>>>>>>>>>>>>
 Title          = Column Integrated Ice [g/m2]
-Main Variable  = [atmos_average.colint_ice_mass]*1000
+Main Variable  = [atmos_average.ice_mass_col]*1000
 Cmin, Cmax     = None
 Lon +/-180     = None
 Level [Pa]     = None
-2nd Variable   = [atmos_average.colint_ice_mass]*1000
+2nd Variable   = [atmos_average.ice_mass_col]*1000
+Contours Var 2 = None
 Axis Options  : sols = [None,None] | lat = [None,None] | cmap = Purples
 
 
 <<<<<<<<<<<<<<| Plot 2D time X lat = True |>>>>>>>>>>>>>
 Title          = Column Integrated Dust  [g/m2]
-Main Variable  = [atmos_average.colint_dst_mass]*1000.
+Main Variable  = [atmos_average.dst_mass_col]*1000.
 Cmin, Cmax     = None
 Lon +/-180     = None
 Level [Pa]     = None
-2nd Variable   = [atmos_average.colint_dst_mass]*1000.
+2nd Variable   = [atmos_average.dst_mass_col]*1000.
+Contours Var 2 = None
 Axis Options  : sols = [None,None] | lat = [None,None] | cmap = Wistia
 
 HOLD OFF
@@ -117,283 +82,258 @@ HOLD OFF
 
 #======================LS 0============================
 HOLD ON
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
 Title          = Zonal winds [m/s]
 Main Variable  = atmos_average_pstd.ucomp
 Cmin, Cmax     = None
 Ls 0-360       = 355,5
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ucomp
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = jet
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = Mass stream function [TO DO]
-Main Variable  = [atmos_average_pstd.ucomp]*0
-Cmin, Cmax     = None
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Mass stream function
+Main Variable  = atmos_average_pstd.msf
+Cmin, Cmax     = -100,100
 Ls 0-360       = 355,5
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.ucomp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = rainbow
+2nd Variable   = atmos_average_pstd.msf
+Contours Var 2 = None
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = bwr
 
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
 Title          = None
 Main Variable  = atmos_average_pstd.temp
 Cmin, Cmax     = None
 Ls 0-360       = 355,5
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.temp
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = nipy_spectral
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.vap_mass
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Water [g/kg]
+Main Variable  = [atmos_average_pstd.vap_mass]*1000
 Cmin, Cmax     = None
 Ls 0-360       = 355,5
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.vap_mass
+2nd Variable   = [atmos_average_pstd.vap_mass]*1000
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Blues
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.ice_mass
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Ice [g/kg]
+Main Variable  = [atmos_average_pstd.ice_mass]*1000
 Cmin, Cmax     = None
 Ls 0-360       = 355,5
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.ice_mass
+2nd Variable   = [atmos_average_pstd.ice_mass]*1000
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Purples
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.dst_mass
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Dust  [g/kg]
+Main Variable  = [atmos_average_pstd.dst_mass]*1000
 Cmin, Cmax     = None
 Ls 0-360       = 355,5
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.dst_mass
+2nd Variable   = [atmos_average_pstd.dst_mass]*1000
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Wistia
 
 HOLD OFF
 #======================LS 90============================
 HOLD ON
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
 Title          = Zonal winds [m/s]
 Main Variable  = atmos_average_pstd.ucomp
 Cmin, Cmax     = None
 Ls 0-360       = 85,95
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ucomp
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = jet
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = Mass stream function [TO DO]
-Main Variable  = [atmos_average_pstd.ucomp]*0
-Cmin, Cmax     = None
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Mass stream function
+Main Variable  = atmos_average_pstd.msf
+Cmin, Cmax     = -100,100
 Ls 0-360       = 85,95
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.ucomp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = rainbow
+2nd Variable   = atmos_average_pstd.msf
+Contours Var 2 = None
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = bwr
 
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
 Title          = None
 Main Variable  = atmos_average_pstd.temp
 Cmin, Cmax     = None
 Ls 0-360       = 85,95
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.temp
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = nipy_spectral
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.vap_mass
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Water [g/kg]
+Main Variable  = [atmos_average_pstd.vap_mass]*1000
 Cmin, Cmax     = None
 Ls 0-360       = 85,95
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.vap_mass
+2nd Variable   = [atmos_average_pstd.vap_mass]*1000
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Blues
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.ice_mass
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Ice [g/kg]
+Main Variable  = [atmos_average_pstd.ice_mass]*1000
 Cmin, Cmax     = None
 Ls 0-360       = 85,95
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.ice_mass
+2nd Variable   = [atmos_average_pstd.ice_mass]*1000
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Purples
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.dst_mass
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Dust [g/kg]
+Main Variable  = [atmos_average_pstd.dst_mass]*1000
 Cmin, Cmax     = None
 Ls 0-360       = 85,95
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.dst_mass
+2nd Variable   = [atmos_average_pstd.dst_mass]*1000
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Wistia
 
 HOLD OFF
 #======================LS 180============================
 HOLD ON
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
 Title          = Zonal winds [m/s]
 Main Variable  = atmos_average_pstd.ucomp
 Cmin, Cmax     = None
 Ls 0-360       = 175,185
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ucomp
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = jet
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = Mass stream function [TO DO]
-Main Variable  = [atmos_average_pstd.ucomp]*0
-Cmin, Cmax     = None
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Mass stream function
+Main Variable  = atmos_average_pstd.msf
+Cmin, Cmax     = -100,100
 Ls 0-360       = 175,185
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.ucomp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = rainbow
+2nd Variable   = atmos_average_pstd.msf
+Contours Var 2 = None
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = bwr
 
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
 Title          = None
 Main Variable  = atmos_average_pstd.temp
 Cmin, Cmax     = None
 Ls 0-360       = 175,185
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.temp
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = nipy_spectral
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.vap_mass
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Water [g/kg]
+Main Variable  = [atmos_average_pstd.vap_mass]*1000
 Cmin, Cmax     = None
 Ls 0-360       = 175,185
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.vap_mass
+2nd Variable   = [atmos_average_pstd.vap_mass]*1000
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Blues
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.ice_mass
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Ice [g/kg]
+Main Variable  = [atmos_average_pstd.ice_mass]*1000
 Cmin, Cmax     = None
 Ls 0-360       = 175,185
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.ice_mass
+2nd Variable   = [atmos_average_pstd.ice_mass]*1000
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Purples
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.dst_mass
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Dust [g/kg]
+Main Variable  = [atmos_average_pstd.dst_mass]*1000
 Cmin, Cmax     = None
 Ls 0-360       = 175,185
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.dst_mass
+2nd Variable   = [atmos_average_pstd.dst_mass]*1000
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Wistia
 
 HOLD OFF
 
 #======================LS 270============================
 HOLD ON
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
 Title          = Zonal winds [m/s]
 Main Variable  = atmos_average_pstd.ucomp
 Cmin, Cmax     = None
 Ls 0-360       = 265,275
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.ucomp
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = jet
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = Mass stream function [TO DO]
-Main Variable  = [atmos_average_pstd.ucomp]*0
-Cmin, Cmax     = None
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Mass stream function
+Main Variable  = atmos_average_pstd.msf
+Cmin, Cmax     = -100,100
 Ls 0-360       = 265,275
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.ucomp
-Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = rainbow
+2nd Variable   = atmos_average_pstd.msf
+Contours Var 2 = None
+Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = bwr
 
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
 Title          = None
 Main Variable  = atmos_average_pstd.temp
 Cmin, Cmax     = None
 Ls 0-360       = 265,275
 Lon +/-180     = None
 2nd Variable   = atmos_average_pstd.temp
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = nipy_spectral
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.vap_mass
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Water [g/kg]
+Main Variable  = [atmos_average_pstd.vap_mass]*1000
 Cmin, Cmax     = None
 Ls 0-360       = 265,275
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.vap_mass
+2nd Variable   = [atmos_average_pstd.vap_mass]*1000
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Blues
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.ice_mass
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Ice [g/kg]
+Main Variable  = [atmos_average_pstd.ice_mass]*1000
 Cmin, Cmax     = None
 Ls 0-360       = 265,275
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.ice_mass
+2nd Variable   = [atmos_average_pstd.ice_mass]*1000
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Purples
 
-<<<<<<<<<<<<<<| Plot 2D lat X press = True |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.dst_mass
+<<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
+Title          = Dust [g/kg]
+Main Variable  = [atmos_average_pstd.dst_mass]*1000
 Cmin, Cmax     = None
 Ls 0-360       = 265,275
 Lon +/-180     = None
-2nd Variable   = atmos_average_pstd.dst_mass
+2nd Variable   = [atmos_average_pstd.dst_mass]*1000
+Contours Var 2 = None
 Axis Options  : Lat = [None,None] | level[Pa] = [1e3,0.2] | cmap = Wistia
 
 HOLD OFF
-
-#=========================================================================
-#================== Empty Templates (set to False)========================
-#=========================================================================
-
-<<<<<<<<<<<<<<| Plot 2D time X lat = False |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.taudust_IR
-Cmin, Cmax     = None
-Lon +/-180     = None
-Level [Pa]     = None
-2nd Variable   = None
-Axis Options  : sols = [None,None] | lat = [None,None] | cmap = jet
-
-<<<<<<<<<<<<<<| Plot 2D lon X press = False |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.temp
-Cmin, Cmax     = None
-Ls 0-360       = None
-Latitude       = None
-2nd Variable   = None
-Axis Options  : Lon +/-180 = [None,None] | level[Pa] = [None,None] | cmap = jet
-
-<<<<<<<<<<<<<<| Plot 2D time X press = False |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.temp
-Cmin, Cmax     = None
-Latitude       = None
-Lon +/-180     = None
-2nd Variable   = None
-Axis Options  : sols = [None,None] | level[Pa] = [None,None] | cmap = jet
-
-<<<<<<<<<<<<<<| Plot 2D lon X time = False |>>>>>>>>>>>>>
-Title          = None
-Main Variable  = atmos_average_pstd.temp
-Cmin, Cmax     = None
-Latitude       = None
-Level [Pa]     = None
-2nd Variable   = None
-Axis Options  : Lon +/-180 = [None,None] | sols = [None,None] | cmap = jet
-
-<<<<<<<<<<<<<<| Plot 1D = False |>>>>>>>>>>>>>
-Legend         = None
-Main Variable  = atmos_average_pstd.temp
-Ls 0-360       = AXIS
-Latitude       = None
-Lon +/-180     = None
-Level [Pa]     = None
-Axis Options  : lat,lon+/-180,[Pa],sols = [None,None] | var = [None,None] | linestyle = -

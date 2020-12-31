@@ -251,8 +251,12 @@ def main():
 
             #Output name for the pdf
             try:
-                input_file=output_path+'/'+parser.parse_args().custom_file.name
-                basename=input_file.split('/')[-1].split('.')[0].strip() #get the input file name, e.g "Custom_01" or
+                if parser.parse_args().do:
+                    basename=parser.parse_args().do[0]
+                else:    
+                    input_file=output_path+'/'+parser.parse_args().custom_file.name
+                    basename=input_file.split('/')[-1].split('.')[0].strip() #get the input file name, e.g "Custom_01" or
+                
             except: #Special case where no Custom.in is provided
                 basename='Custom'
 
