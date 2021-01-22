@@ -130,6 +130,22 @@ amesGCM3/
     └── legacy.in
 ```
 
+***
+**Quick Tip:**
+If you prefer to use the _conda_ package manager to set-up your virtual environment instead of _pip_ , you may use the following commands instead to install the pipeline:
+Verify with ```conda info``` or  ```which conda``` that you are using the intented _conda_ executable (two or more versions of _conda_ might be present if both python 2 and python 3 are installed on your system). Then install the pipeline with:
+
+```
+conda create -n amesGCM3
+conda activate amesGCM3
+conda install pip
+pip install git+https://github.com/alex-kling/amesgcm.git
+```
+
+The source code will be installed in _your_conda/envs/amesGCM3/_ . The pipeline can then be activated with ```conda activate amesGCM3``` and exited with ```conda deactivate``` (more on this below).
+
+***
+
 ## Routine use of the pipeline
 
 Every time you want to use the analysis pipeline from a new terminal session, simply run:
