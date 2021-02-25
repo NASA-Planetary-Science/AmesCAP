@@ -194,7 +194,7 @@ It is also safe to delete the entire _amesGCM3_ virtual environment directory as
 The following steps will be used to access the data, reduce it, compute additional diagnostics, interpolate the diagnostics to standard pressures levels, and visualize the results.
 ![](./docs/cheat_sheet.png)
 ## Download raw Legacy GCM outputs
-The data from the Legacy GCM is archived every 1.5 hours (i.e. 16 times a day) and packaged in chunks of 10 sols (1 sol = 1 martian day). Files are available for download on the MCMC Data portal at : [https://data.nas.nasa.gov/legacygcm/data_legacygcm.php](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php), and referenced by their solar longitude or "_Ls_", which  is 0° at the vernal equinox (beginning of Northern spring), 90° during the summer solstice, 180° at the autumnal equinox, and 270° during winter solstice. To download a 30-sols chunk starting at the beginning at the the martian year (Ls =0 to Ls=15), navigate to a place you would like to store the data and run :
+The data from the Legacy GCM is archived every 1.5 hours (i.e. 16 times a day) and packaged in chunks of 10 sols (1 sol = 1 martian day). Files are available for download on the MCMC Data portal at : [https://data.nas.nasa.gov/legacygcm/data_legacygcm.php](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php), and referenced by their solar longitude or "_Ls_", which  is 0° at the vernal equinox (beginning of Northern spring), 90° during the summer solstice, 180° at the autumnal equinox, and 270° during winter solstice. To download a 30-sols chunk starting at the beginning at the martian year (Ls =0 to Ls=15), navigate to a place you would like to store the data and run :
 ```
 MarsPull.py --help
 MarsPull.py --ls 0 15
@@ -285,7 +285,7 @@ and open the file _Custom.in_ with a text editor  (you can rename the file to _s
 START
 ```
 ***
-**Quick Tip:** _MarsPlot_ uses text files with a '_.in_' extension as input files. Select "Python"  as the language (in place of "Plain text") when editing the file from text editor (gedit, atom ...) to enable syntax-highlighting of key words. If you are using the **vim** editor, add the following lines to your **~/.vimrc**:_ to recognize "Custom.in' as using Python' syntax.
+**Quick Tip:** _MarsPlot_ uses text files with a '_.in_' extension as input files. Select "Python"  as the language (in place of "Plain text") when editing the file from text editor (gedit, atom ...) to enable syntax-highlighting of key words. If you are using the **vim** editor, add the following lines to your **~/.vimrc** to recognize "Custom.in' as using Python's syntax.
 ```
 syntax on
 colorscheme default
@@ -294,7 +294,7 @@ au BufReadPost *.in  set syntax=python
 Close the file (`:wq`): next time you open Custom.in with Vim, numbers and keywords like 'True' or 'None' will be highlighted.
 ***
 
-In order to access data in a specific file,  _MarsPlot_ uses the syntax ` Main Variable  = XXXXX.fileN.var`,  `XXXXX` being the sol number (e.g. "03335", optional), `file` being the file type (e.g. "`atmos_average_pstd`"), `N`  being the simulation number (e.g. "2" if comparing two different simulations, optional), and `var` the requested variable (e.g. "`ucomp`" for the zonal winds).
+In order to access data in a specific file,  _MarsPlot_ uses the syntax ` Main Variable  = XXXXX.file@N.var`,  `XXXXX` being the sol number (e.g. "03335", optional), `file` being the file type (e.g. "`atmos_average_pstd`"), `@N`  being the simulation number (e.g. "@2" if comparing two different simulations, optional), and `var` the requested variable (e.g. "`ucomp`" for the zonal winds).
 
 When dimensions are omitted with `None`, _MarsPlot_ makes educated guesses for data selection (e.g, if no layer is requested, use the surface layer etc...) and will tell you exactly how the data is being processed both in the default title for the figures, and in the terminal output.  This behavior is detailed in the commented instructions at the top of _Custom.in_, as well as additional features:  For example, note the use of the brackets "**[ ]**" for variable operations,  "**{ }**" to overwrite the default dimensions, and  the possibility of adding another simulation to the **<<<<< Simulations >>>>>** block for comparison purposes.
 
