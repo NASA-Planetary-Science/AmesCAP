@@ -2,7 +2,7 @@
 #   This files contains wave analysis routine. Note the dependencies on scipy.signal
 #===================================================================================
 import numpy as np
-from amesgcm.Script_utils import prYellow,prCyan,prRed
+from amesgcm.Script_utils import prYellow,prCyan,prRed,prGreen
 from amesgcm.FV3_utils import area_weights_deg
 
 try:
@@ -14,22 +14,151 @@ except Exception as exception:
     # Output unexpected Exceptions.
     print(exception.__class__.__name__ + ": ", exception)
     exit()
+    
+    
+def init_shtools():
+    '''
+    The following code simply loads the pyshtools module and provides adequate referencing.
+    Since dependencies may need to be solved by the user, the module import is wrapped in a function
+    that may be called when needed.
+    '''
+    try:
+        import pyshtools
+    except ImportError as error_msg:
+        prYellow("__________________")
+        prYellow("Zonal decomposition relies on the pyshtools library, referenced at:")
+        prYellow('')
+        prYellow("Mark A. Wieczorek and Matthias Meschede (2018). SHTools - Tools for working with spherical harmonics, Geochemistry, Geophysics, Geosystems, 19, 2574-2592, doi:10.1029/2018GC007529")
+        prYellow("Please consult installation instructions at:")
+        prCyan("https://pypi.org/project/pyshtools")
+        prYellow("And install with:")
+        prCyan("pip install pyshtools")
+        exit()
+    except Exception as exception:
+        # Output unexpected Exceptions.
+        print(exception.__class__.__name__ + ": ", exception)
 
-try:
-    import pyshtools
-except ImportError as error_msg:
-    prYellow("Zonal decomposition relies on the pyshtools library, referenced at:")
-    prYellow("Mark A. Wieczorek and Matthias Meschede (2018). SHTools - Tools for working with spherical harmonics, Geochemistry, Geophysics, Geosystems, 19, 2574-2592, doi:10.1029/2018GC007529")
-    prYellow("Please consult installation instructions at:")
-    prCyan("https://pypi.org/project/pyshtools")
-    prYellow("And install with:")
-    prCyan("pip install pyshtools")
-    exit()
-except Exception as exception:
-    # Output unexpected Exceptions.
-    print(exception.__class__.__name__ + ": ", exception)
-    exit()
 
+init_shtools()    
+import pyshtools
+
+
+def diurn_extract(VAR,N,tod,lon):
+    '''
+    Extract the diurnal component of a field. Original code by J.Wilson adapted by A. Kling. April, 2021
+    Args:
+        VAR (1D or ND array)   : field to process with time of day dimension FIRST, e.g (tod,time,lat,lon) or (tod)
+        N   (int)              : number of harmonics to extract (N=1 for diurnal,N=2  for diurnal + semi diurnal etc...)
+        tod (1D array)         : universal time of day in sols (0>1.) If provided in hours (0>24), it  will  be  normalized.
+        lon (1D array or float): longitudes 0>360
+    Return:
+        amp (ND array)  :  the amplitudes for the Nth first harmonics, e.g. size (Nh,time,lat,lon)    
+        phase (ND array):  the phases for the Nth first harmonics, e.g. size (Nh,time,lat,lon) 
+    '''
+    dimsIN=VAR.shape
+    
+    nsteps= len(tod)    
+    period= 24;   rnorm= 1/nsteps;   delta= period/nsteps;
+    
+    #   Be sure that the local time grid is in units of days
+    if max(tod) > 1:   tod= tod/24.
+    
+    freq= (delta/period)*2.0*np.pi 
+    arg= tod * 2* np.pi 
+    arg= arg.reshape([len(tod), 1] ) #reshape array for matrix operations
+        
+    #Dimensions for the output
+    if len(dimsIN) == 1:
+        dimsOUT=[N,1] # if VAR is size (tod,time,lat,lon) dimsOUT is size (N,time,lat,lon)
+    else:
+        dimsOUT=np.append([N],dimsIN[1:])
+        
+    #Reshape input variable VAR as a 2D array (tod,Nelements) for generalization 
+    
+    Ndim= np.int(np.prod(dimsIN[1:]))   #Ndim is the product of all dimensions but the time of day axis, e.g. time x lat x lon
+    dimsFLAT=np.append([nsteps],[Ndim])  # Shape of flattened array        
+    dimsOUT_flat=np.append([N],[Ndim])   # Shape of flattened array    
+    VAR= VAR.reshape(dimsFLAT)     #Flatten array to  (tod,Nelements)
+    
+    #Initialize output arrays
+    amp,phas=np.zeros(dimsOUT_flat),np.zeros(dimsOUT_flat) 
+    
+    #if nargin > 3 (Initial code, we will assume lon is always provided)
+    
+    if len(dimsIN) == 1:
+        corr= np.array([lon])
+    else : #Repeat longitude array to match the size of the input VARIABLES, minus the first (tod) axis.
+        tilenm= np.append(dimsIN[1:-1],1)  # Create axis to expend the longitude array
+        lonND=np.tile(lon,tilenm)      # if VAR is (tod,time,lat,lon) lonN is longitude repeated as (time,lat,lon)
+        corr=lonND.flatten()
+         
+    # Python indexing starts at 0 so we index at nn-1
+    for nn in range(1,N+1):
+        cosser=   np.dot(VAR[:,...].T ,np.cos(nn*arg )).squeeze()
+        sinser=   np.dot(VAR[:,...].T ,np.sin(nn*arg )).squeeze()
+    
+        amp[nn-1,:]= 2*rnorm*np.sqrt( cosser**2 + sinser**2)
+        phas[nn-1,:]= (180/np.pi) * np.arctan2( sinser, cosser)
+    
+        #Apply local time correction to the phase
+        phas[nn-1,:]= phas[nn-1,:] + 360 + nn*corr[:]
+        phas[nn-1,:]= (24/(nn)/360) * np.mod( phas[nn-1,:],360 )
+         
+    
+    # Return the phase and amplitude
+    return  amp.reshape( dimsOUT), phas.reshape( dimsOUT )
+    
+    
+def reconstruct_diurn(amp,phas,tod,lon,sumList=[]):
+    '''
+    Reconstruct a field wave based on its diurnal harmonics
+    Args:
+        amp   : amplitude of the signal, with  harmonics dimension FIRST, e.g. (N,time,lat,lon) 
+        phas : phase of the signal, in [hr], with harmonics dimension FIRST
+        tod   : 1D array for the time of day, in UT [hr]
+        lon   : 1D array  or float for the longitudes, used to convert UT to LT
+        sumList : (optional) list containing the harmonics to include when reconstructing the wave, e.g. sumN=[1,2,4] 
+    Return:
+        VAR   : a variable with reconstructed harmonics with N dimension FIRST and time of day SECOND, e.g. (N,tod,time,lat,lon)
+                if  sumList is provided, the wave output has the harmonics already agregated, e.g. size is    (tod,time,lat,lon)
+    '''
+    
+    #Initialization
+    dimsIN=amp.shape
+    N=dimsIN[0]
+    dimsSUM=np.append([len(tod)],dimsIN[1:])
+    dimAXIS=np.arange(len(dimsSUM)) #Create dimensions array, e.g. [0,1,2,3] for a 4D variables 
+  
+    dimsOUT=np.append([dimsIN[0],len(tod)],dimsIN[1:])
+    varOUT=np.zeros(dimsOUT)
+    
+    #Special case for station data (lon is a float)
+    if len(np.atleast_1d(lon))==1:lon=np.array([lon])
+    
+    #Reshape  lon array for broadcasting, e.g. lon[96] to  [1,1,1,96]
+    dimAXIS=np.arange(len(dimsSUM));dimAXIS[:]=1;dimAXIS[-1]=len(lon)#
+    lon=lon.reshape(dimAXIS)
+    #Reshape tod array
+    dimAXIS=np.arange(len(dimsSUM));dimAXIS[:]=1;dimAXIS[0]=len(tod) 
+    tod=tod.reshape(dimAXIS)    
+
+    # Shift in phase due to local time
+    DT=lon/360*24
+    
+    varSUM =np.zeros(dimsSUM)
+    for nn in range(1,N+1):
+        #Compute each harmonic
+        varOUT[nn-1,...]=amp[nn-1,...]*np.cos(nn*(tod-phas[nn-1,...]+DT)/24*2*np.pi)
+        # If a sum of harmonics is requested, sum it
+        if nn in sumList:varSUM+=varOUT[nn-1,...]
+        
+    if sumList:
+        #Return the agregated harmonics 
+        return varSUM
+    else:
+        #Return all harmonics individually
+        return varOUT     
+        
 def space_time(lon,timex, varIN,kmx,tmx):
     """
     Obtain west and east propagating waves. This is a Python implementation of John Wilson's  space_time routine by [A. Kling, 2019]
@@ -227,6 +356,7 @@ def zonal_decomposition(VAR):
     ***NOTE***    
     Output size is (...,lat/2, lat/2) as latitude is the smallest dimension and to match the Nyquist frequency
     '''  
+    init_shtools() #Not optimal but prevent issues when library is not installed
     var_shape=np.array(VAR.shape)
     
     #Flatten array e.g. turn (10,36,lat,lon) to (360,lat,lon)
@@ -263,8 +393,9 @@ def zonal_construct(COEFFS_flat,VAR_shape,btype=None,low_highcut=None):
     dx=2*np.pi*3400
     L_min=(1./kmax)*dx
     L_max=1./max(kmin,1.e-20)*dx ; if L_max>1.e20:L_max=np.inf
-    print('(kmin,kmax)=(%g,%g)>>dx min= %g km,dx max= %g km'%(kmin,kmax,L_min,L_max))
+    print('(kmin,kmax)=(#g,#g)>>dx min= #g km,dx max= #g km'#(kmin,kmax,L_min,L_max))
     '''  
+    init_shtools() #Not optimal but prevent issues when library is not installed
     #--Initialization---
     nflatten=COEFFS_flat.shape[0]
     kmin=0
