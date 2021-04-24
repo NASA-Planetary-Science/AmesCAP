@@ -79,6 +79,9 @@ parser.add_argument('-do','--do', nargs=1,type=str,default=None, #sys.stdin
                                  '                                                then in /u/mkahre/MCMC/analysis/working/shared_templates/ \n'
                                   '> Usage: MarsPlot -do my_custom [other options]')
 
+parser.add_argument('-sy', '--stack_year', action='store_true',default=False,
+                 help='Stack consecutive  years in 1D time series \n')
+
 parser.add_argument("-o", "--output",default="pdf",
                  choices=['pdf','eps','png'],
                  help='Output file format\n'
@@ -2868,6 +2871,8 @@ class Fig_1D(object):
 
             if self.plot_type=='1D_time':
                 tim=xdata[0,:];Ls=xdata[1,:]
+                # If simulations cover different years, those can be stacked instead of continueous
+                if parser.parse_args().stack_year:Ls=np.mod(Ls,360)
 
                 plt.plot(Ls,var,self.axis_opt1,lw=2,label=txt_label)
                 plt.ylabel(var_info,fontsize=label_size-self.nPan//2)
