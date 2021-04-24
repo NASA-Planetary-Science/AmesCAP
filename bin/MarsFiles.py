@@ -90,11 +90,18 @@ parser.add_argument('-hpk','--high_pass_zonal',nargs='+',type=int,
                          """     (-bpk)  --band_pass_zonal kmin kmax  \n"""
                          """> Usage: MarsFiles.py *.atmos_daily.nc -lpk 20 --no_trend    \n"""
                         """\033[00m""")                        
-                        
 parser.add_argument('-lpk','--low_pass_zonal', nargs='+',type=int,help=argparse.SUPPRESS) #same as  --hpf but without the instructions
 parser.add_argument('-bpk','--band_pass_zonal', nargs='+',help=argparse.SUPPRESS) #same as --hpf but without the instructions
 
-                        
+parser.add_argument('-tidal','--tidal',nargs='+',type=int,
+                    help="""Tide analyis on diurn files: extract diurnal and its harmonics \n"""
+                         """> Usage: MarsFiles.py *.atmos_diurn.nc 4  (extract 4 harmonics, N=1 is diurnal, N=2 semi diurnal...)  \n"""       
+                         """>        MarsFiles.py *.atmos_diurn.nc 6  --include ps temp --reconstruct (reconstruct the first 6 harmonics) \n"""                
+                        """\033[00m""")      
+parser.add_argument('-reconstruct','--reconstruct',action='store_true',help=argparse.SUPPRESS) #this flag is used jointly with --tidal                      
+
+
+                
 parser.add_argument('-include','--include',nargs='+',
                      help="""For data reduction, filtering, time-shift, only include listed variables. Dimensions and 1D variables are always included \n"""
                          """> Usage: MarsFiles.py *.atmos_daily.nc -ba --include ps ts ucomp    \n"""
@@ -646,11 +653,96 @@ def main():
                         fnew.copy_Ncvar(fname.variables[ivar]) 
             fnew.close()
 
+    #===========================================================================
+    #========================  Tidal analysis =========================
+    #===========================================================================
+    elif parser.parse_args().tidal: 
+        from amesgcm.Spectral_utils import diurn_extract,reconstruct_diurn
+        N=parser.parse_args().tidal[0]
+        if len(np.atleast_1d(N))!=1:
+            prRed('***Error*** N must be only one value')
+            exit()
+        out_ext='_tidal';
+        if parser.parse_args().reconstruct:out_ext =out_ext+'_reconstruct'      
+        
+        for filei in file_list:
+            #Add path unless full path is provided
+            if not ('/' in filei):
+                fullnameIN = path2data + '/' + filei
+            else:
+                fullnameIN=filei
+            fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
+
+            fdiurn = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            
+            var_list = filter_vars(fdiurn,parser.parse_args().include) # get all variables
+            
+            #find time of day variable name
+            tod_name=find_tod_in_diurn(fdiurn)
+            
+            tod_in=fdiurn.variables[tod_name][:]
+            lon=fdiurn.variables['lon'][:]
+            areo=fdiurn.variables['areo'][:]
+                
+            fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
+            #Copy all dims but time of day from the old file to the new file
+            
+            #Harmonics to reconstruct the signal , we will use the original time_of_day array.
+            if parser.parse_args().reconstruct:
+                fnew.copy_all_dims_from_Ncfile(fdiurn)
+                #Copy time_of_day axis from initial files
+                fnew.copy_Ncaxis_with_content(fdiurn.variables[tod_name])
+       
+            else:    
+                fnew.copy_all_dims_from_Ncfile(fdiurn,exclude_dim=[tod_name])
+                # Create new dimension holding the harmonics. We will reuse the 'time_of_day' name to facilitate
+                # compatibility with others routines but keep in mind this is the harmonic number
+                fnew.add_dim_with_content('time_of_day_%i'%(N),np.arange(1,N+1),longname_txt="tidal harmonics",units_txt="Diurnal harmonic number",cart_txt='N')
+        
+            #Loop over all variables in file
+            for ivar in var_list:
+                varNcf     = fdiurn.variables[ivar]
+                if tod_name in varNcf.dimensions and ivar not in [tod_name,'areo'] :     
+                    prCyan("Processing: %s ..."%(ivar))
+                    
+                    amp,phas=diurn_extract(varNcf[:].swapaxes(0,1),N,tod_in,lon)
+                    if parser.parse_args().reconstruct:
+                        VARN=reconstruct_diurn(amp,phas,tod_in,lon,sumList=[])
+                        for nn in range(N):
+                            fnew.log_variable("%s_N%i"%(ivar,nn+1),VARN[nn,...].swapaxes(0,1),varNcf.dimensions,"harmonic N=%i for %s"%(nn+1,varNcf.long_name),varNcf.units)
+                            
+                    else:    
+                        #Update the dimensions
+                        new_dim=list(varNcf.dimensions)
+                        new_dim[1]='time_of_day_%i'%(N)
+                        fnew.log_variable("%s_amp"%(ivar),amp.swapaxes(0,1),new_dim,"tidal amplitude for %s"%(varNcf.long_name),varNcf.units)
+                        fnew.log_variable("%s_phas"%(ivar),phas.swapaxes(0,1),new_dim,"tidal phase for %s"%(varNcf.long_name),'hr')
+                
+                elif  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time']:
+                        prCyan("Copying axis: %s..."%(ivar))
+                        fnew.copy_Ncaxis_with_content(fdiurn.variables[ivar])
+                elif  ivar in ['areo']:
+                        if parser.parse_args().reconstruct:
+                            #time_of_day is the same size as the original file
+                            prCyan("Copying axis: %s..."%(ivar))
+                            fnew.copy_Ncvar(fdiurn.variables['areo'])
+                        else:
+                            prCyan("Processing: %s ..."%(ivar))
+                            #Create areo variable reflecting the new shape
+                            areo_new=np.zeros((areo.shape[0],N,1))   
+                            #Copy areo
+                            for xx in range(N):areo_new[:,xx,:]=areo[:,0,:]
+                            #Update the dimensions
+                            new_dim=list(varNcf.dimensions)
+                            new_dim[1]='time_of_day_%i'%(N)
+                            fnew.log_variable(ivar,areo_new,new_dim,varNcf.long_name,varNcf.units)
+                                
+            fnew.close()
 
 
             
     else:
-        prRed("""Error: no action requested: use 'MarsFiles *nc --fv3 --combine, --tshift, --bin_average, --bin_diurn'""")    
+        prRed("""Error: no action requested: use 'MarsFiles *nc --fv3 --combine, --tshift, --bin_average, --bin_diurn etc ...'""")    
 
 
 #END of script
