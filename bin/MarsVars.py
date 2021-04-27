@@ -8,7 +8,7 @@ import sys       #system command
 import warnings #Suppress certain errors when dealing with NaN arrays
 
 
-from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR,mass_stream,zonal_detrend,spherical_div,spherical_curl
+from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR,mass_stream,zonal_detrend,spherical_div,spherical_curl,frontogenesis
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type
 from amesgcm.Ncdf_wrapper import Ncdf
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
@@ -59,6 +59,7 @@ parser.add_argument('-add','--add', nargs='+',default=[],
                       'scorer_wl  (Scorer horizontal wavelength)    Req. [ps,temp,ucomp] \n'
                       'div        (divergence)                      Req. [ucomp,vcomp] \n'
                       'curl       (relative vorticity)              Req. [ucomp,vcomp] \n'
+                      'fn         (frontogenesis)                   Req. [ucomp,vcomp,theta] \n'
                       ' \nNOTE:                    \n'
                       '     Some support on interpolated files, in particular if pfull3D \n'
                       '                   is added before interpolation to _zagl, _zstd. \n'
@@ -83,9 +84,15 @@ parser.add_argument('-zdiff','--zdiff', nargs='+',default=[],
 parser.add_argument('-col','--col', nargs='+',default=[],
                  help="""Integrate a mixing ratio of a  variable 'var' through the column\n"""
                       """A new a variable  var_col in [kg/m2] will be added o the file\n"""
-                      """> Usage: MarsVars ****.atmos.average.nc -col ice_mass\n"""
-                      """ \n""")                      
-
+                      """> Usage: MarsVars ****.atmos.average.nc -col ice_mass \n"""
+                      """ \n""")               
+                             
+parser.add_argument('-zd','--zonal_detrend', nargs='+',default=[],
+                 help="""Detrend a variable by substracting the zonal mean value \n"""
+                      """A new a variable  var_p (for prime) will be added to the file \n"""
+                      """> Usage: MarsVars ****.atmos.average.nc -zd ucomp \n"""
+                      """ \n""")       
+                      
 parser.add_argument('-rm','--remove', nargs='+',default=[],
                  help='Remove any variable from the file  \n'
                       '> Usage: MarsVars ****.atmos.average.nc -rm rho \n')                          
@@ -117,7 +124,8 @@ VAR= {'rho'       :['density (added postprocessing)','kg/m3'],
       'my'        :['vertical flux of merididional momentum(added postprocessing)','J/kg'] ,
       'ax'        :['zonal wave-mean flow forcing (added postprocessing)','m/s/s'] ,
       'ay'        :['meridional wave-mean flow forcing (added postprocessing)','m/s/s'] ,
-      'tp_t'      :['normalized temperature perturbation (added postprocessing)','None'] 
+      'tp_t'      :['normalized temperature perturbation (added postprocessing)','None'],
+      'fn'        :['frontogenesis (added postprocessing)','K m-1 s-1'],
           }                                                                                                       
 #=====================================================================
 #=====================================================================
@@ -268,14 +276,15 @@ def main():
     file_list=parser.parse_args().input_file
     add_list=parser.parse_args().add
     zdiff_list=parser.parse_args().zdiff
+    zdetrend_list=parser.parse_args().zonal_detrend
     col_list=parser.parse_args().col
     remove_list=parser.parse_args().remove
     debug =parser.parse_args().debug
     
     #Check if an operation is requested, otherwise print file content.
-    if not (add_list or zdiff_list or remove_list or col_list): 
+    if not (add_list or zdiff_list or zdetrend_list or remove_list or col_list): 
         print_fileContent(file_list[0])
-        prYellow(''' ***Notice***  No operation requested, use '-add var',  '-zdiff var', '-col var', '-rm var' ''')
+        prYellow(''' ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var' ''')
         exit() #Exit cleanly
         
     #For all the files    
@@ -406,7 +415,7 @@ def main():
                         N=compute_N(theta,zfull)
                         OUT=compute_scorer(N,ucomp,zfull)
                     
-                    if ivar in ['div','curl']:
+                    if ivar in ['div','curl','fn']:
                         lat=fileNC.variables['lat'][:]
                         lon=fileNC.variables['lon'][:]
                         ucomp=fileNC.variables['ucomp'][:]
@@ -414,7 +423,10 @@ def main():
                     
                     if ivar =='div': OUT=spherical_div(ucomp,vcomp,lon,lat,R=3400*1000.,spacing='regular')
                     if ivar =='curl':OUT=spherical_curl(ucomp,vcomp,lon,lat,R=3400*1000.,spacing='regular')
-                        
+                    if ivar =='fn': 
+                        theta=fileNC.variables['theta'][:]
+                        OUT=frontogenesis(ucomp,vcomp,theta,lon,lat,R=3400*1000.,spacing='regular')  
+                                          
                     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     
                     #~~~~~~~~~~~~~~~   Interpolated files ~~~~~~~~~~~~~~~~~~~
                     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
@@ -536,6 +548,42 @@ def main():
                         prYellow("""***Error*** Variable already exists""")
                         prYellow("""Delete existing variable %s with 'MarsVars %s -rm %s'"""%('d_dz_'+idiff,ifile,'d_dz_'+idiff))
                          
+
+        #=================================================================
+        #================ Zonal detrending action=========================
+        #=================================================================
+        
+        
+        for izdetrend in zdetrend_list:
+            fileNC=Dataset(ifile, 'a', format='NETCDF4_CLASSIC')
+            f_type,interp_type=FV3_file_type(fileNC)
+            if izdetrend not in fileNC.variables.keys():
+                prRed("zdiff error: variable '%s' is not present in %s"%(izdetrend, ifile))
+                fileNC.close()
+            else:    
+                print('Detrending: %s...'%(izdetrend))   
+                 
+                try:
+                    var=fileNC.variables[izdetrend][:]
+                    newUnits=fileNC.variables[izdetrend].units 
+                    newLong_name='zonal perturbation of '+fileNC.variables[izdetrend].long_name
+                    dim_out=fileNC.variables[izdetrend].dimensions #get dimension
+                            
+                    #Log the variable
+                    var_Ncdf = fileNC.createVariable(izdetrend+'_p','f4',dim_out) 
+                    var_Ncdf.long_name=newLong_name
+                    var_Ncdf.units=   newUnits
+                    var_Ncdf[:]=  zonal_detrend(var)
+                    fileNC.close()
+                    
+                    print('%s: \033[92mDone\033[00m'%(izdetrend+'_p'))
+                except Exception as exception:
+                    if debug:raise
+                    if str(exception)=='NetCDF: String match to name in use':
+                        prYellow("""***Error*** Variable already exists""")
+                        prYellow("""Delete existing variable %s with 'MarsVars %s -rm %s'"""%('d_dz_'+idiff,ifile,'d_dz_'+idiff))
+                        
+
         #=================================================================
         #=============  Column  integration   ============================
         #=================================================================

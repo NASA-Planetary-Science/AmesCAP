@@ -573,7 +573,7 @@ def vw_from_MSF(msf,lat,lev,ztype='pstd',norm=True,psfc=700,H=8000.):
         V,W the meditional and altitude component of the mass stream function, to be plotted as quiver or streamlines.
         
     ***NOTE***
-    The componetns are:
+    The components are:
         [v]=  g/(2 pi cos(lat)) dphi/dz 
         [w]= -g/(2 pi cos(lat)) dphi/dlat     
     '''
@@ -705,7 +705,7 @@ def shiftgrid_180_to_360(lon,data): #longitude is LAST
         
 def second_hhmmss(seconds,lon_180=0.):
     """
-    Given the time seconds return Local true Solar Time at a certain longitude
+    Given the time in seconds return Local true Solar Time at a certain longitude
     Args:
         seconds: a float, the time in seconds
         lon_180: a float, the longitude in -/+180 coordinate
@@ -869,7 +869,7 @@ def regression_2D(X,Y,VAR,order=1):
         X: 2D array of first coordinate 
         Y: 2D array of decond coordinate 
         VAR: 2D array, same size as X
-        order : 1(linear) 2(quadratic)
+        order : 1 (linear) or 2 (quadratic)
     
     
     ***NOTE***
@@ -1356,22 +1356,20 @@ def add_cyclic(data,lon):
 def spherical_div(U,V,lon_deg,lat_deg,R=3400*1000.,spacing='varying'):
     '''
     Compute the divergence of the wind fields using finite difference.
-    div = du/dx + dv/dy
+    div = du/dx + dv/dy = 1/(r cos lat)[d(u)/dlon +d(v cos lat)/dlat]
     Args: 
         U,V    : wind field with latitude second to last and longitude as last dimensions  e.g. (lat,lon) or (time,lev,lat,lon)...
         lon_deg: 1D array of longitude in [degree] or 2D (lat,lon) if irregularly-spaced
         lat_deg: 1D array of latitude  in [degree] or 2D (lat,lon) if irregularly-spaced
         R      : planetary radius in [m]
         spacing : When lon, lat are  1D arrays, using spacing ='varying' differentiate lat and lon (default)
-                  If spacing='regular', only uses uses dx=lon[1]-lon[0], dy=colat[1]-colat[0] and the numpy.gradient() method
+                  If spacing='regular', only uses uses dx=lon[1]-lon[0], dy=lat[1]-lat[0] and the numpy.gradient() method
     Return:
         div: the horizonal divergence of the wind field   in [m-1]
          
     '''
     lon=lon_deg*np.pi/180
-    lat=lat_deg*np.pi/180
-    colat=np.pi/2-lat 
-    
+    lat=lat_deg*np.pi/180    
     var_shape=U.shape
        
     #Transpose shapes:
@@ -1383,46 +1381,45 @@ def spherical_div(U,V,lon_deg,lat_deg,R=3400*1000.,spacing='varying'):
             
     #----lon, lat are 1D arrays---    
     if  len(lon.shape)==1:
-        #Extend broadcasting dimensions for the colatitude, e.g  [1,1,lat,1] if U is size (time,lev,lat,lon)
+        #Extend broadcasting dimensions for the latitude, e.g  [1,1,lat,1] if U is size (time,lev,lat,lon)
         reshape_shape=[1 for i in range(0,len(var_shape))]
         reshape_shape[-2]=lat.shape[0]
-        colat_b=colat.reshape(reshape_shape)
+        lat_b=lat.reshape(reshape_shape)
         if spacing=='regular':            
-            out=1/(R*np.sin(colat_b))*(np.gradient(U,axis=-1)/(lon[1]-lon[0])+np.gradient(V*np.sin(colat_b),axis=-2)/(colat[1]-colat[0])) 
+            out=1/(R*np.cos(lat_b))*(np.gradient(U,axis=-1)/(lon[1]-lon[0])+np.gradient(V*np.cos(lat_b),axis=-2)/(lat[1]-lat[0])) 
         else:    
-            out=1/(R*np.sin(colat_b))*(dvar_dh(U.transpose(T_lonIN),lon).transpose(T_lonOUT)+ \
-                                    dvar_dh((V*np.sin(colat_b)).transpose(T_latIN),colat).transpose(T_latOUT))
+            out=1/(R*np.cos(lat_b))*(dvar_dh(U.transpose(T_lonIN),lon).transpose(T_lonOUT)+ \
+                                    dvar_dh((V*np.cos(lat_b)).transpose(T_latIN),lat).transpose(T_latOUT))
     #----lon, lat are 2D array---                                  
     else:
         #if U is (time,lev,lat,lon), also reshape lat ,lon to (time,lev,lat,lon)
         if var_shape!= lon.shape:
             for ni in var_shape[:-2][::-1]: # (time,lev,lat,lon)> (time,lev) and reverse, so first lev, then time
-                colat=np.repeat(colat[np.newaxis,...],ni,axis=0)
+                lat=np.repeat(lat[np.newaxis,...],ni,axis=0)
                 lon  =np.repeat(lon[np.newaxis,...],ni,axis=0)
 
-        out=1/(R*np.sin(colat))*(dvar_dh(U.transpose(T_lonIN),lon.transpose(T_lonIN)).transpose(T_lonOUT)+ \
-                                    dvar_dh((V*np.sin(colat)).transpose(T_latIN),colat.transpose(T_latIN)).transpose(T_latOUT))
+        out=1/(R*np.cos(lat))*(dvar_dh(U.transpose(T_lonIN),lon.transpose(T_lonIN)).transpose(T_lonOUT)+ \
+                                    dvar_dh((V*np.cos(lat)).transpose(T_latIN),lat.transpose(T_latIN)).transpose(T_latOUT))
     return  out
 
 
 def spherical_curl(U,V,lon_deg,lat_deg,R=3400*1000.,spacing='varying'):
     '''
     Compute the vertical component of the relative vorticy using finite difference.
-    curl = dv/dx -du/dy
+    curl = dv/dx -du/dy  = 1/(r cos lat)[d(v)/dlon +d(u(cos lat)/dlat]
     Args: 
         U,V    : wind fields with latitude second to last and longitude as last dimensions  e.g. (lat,lon) or (time,lev,lat,lon)...
         lon_deg: 1D array of longitude in [degree] or 2D (lat,lon) if irregularly-spaced
         lat_deg: 1D array of latitude  in [degree] or 2D (lat,lon) if irregularly-spaced
         R      : planetary radius in [m]
         spacing : When lon, lat are  1D arrays, using spacing ='varying' differentiate lat and lon (default)
-                  If spacing='regular', only uses uses dx=lon[1]-lon[0], dy=colat[1]-colat[0] and the numpy.gradient() method
+                  If spacing='regular', only uses uses dx=lon[1]-lon[0], dy=lat[1]-lat[0] and the numpy.gradient() method
     Return:
         curl: the vorticity of the wind field in [m-1] 
          
     '''
     lon=lon_deg*np.pi/180
     lat=lat_deg*np.pi/180
-    colat=np.pi/2-lat 
     
     var_shape=U.shape
        
@@ -1435,31 +1432,113 @@ def spherical_curl(U,V,lon_deg,lat_deg,R=3400*1000.,spacing='varying'):
             
     #----lon, lat are 1D arrays---    
     if  len(lon.shape)==1:
-        #Extend broadcasting dimensions for the colatitude, e.g  [1,1,lat,1] if U is size (time,lev,lat,lon)
+        #Extend broadcasting dimensions for the latitude, e.g  [1,1,lat,1] if U is size (time,lev,lat,lon)
         reshape_shape=[1 for i in range(0,len(var_shape))]
         reshape_shape[-2]=lat.shape[0]
-        colat_b=colat.reshape(reshape_shape)
+        lat_b=lat.reshape(reshape_shape)
         if spacing=='regular':            
-            out=1/(R*np.sin(colat_b))*(np.gradient(V,axis=-1)/(lon[1]-lon[0])-np.gradient(U*np.sin(colat_b),axis=-2)/(colat[1]-colat[0])) 
+            out=1/(R*np.cos(lat_b))*(np.gradient(V,axis=-1)/(lon[1]-lon[0])-np.gradient(U*np.cos(lat_b),axis=-2)/(lat[1]-lat[0])) 
         else:    
-            out=1/(R*np.sin(colat_b))*(dvar_dh(V.transpose(T_lonIN),lon).transpose(T_lonOUT)- \
-            dvar_dh((U*np.sin(colat_b)).transpose(T_latIN),colat).transpose(T_latOUT))
+            out=1/(R*np.cos(lat_b))*(dvar_dh(V.transpose(T_lonIN),lon).transpose(T_lonOUT)- \
+            dvar_dh((U*np.cos(lat_b)).transpose(T_latIN),lat).transpose(T_latOUT))
     
     #----lon, lat are 2D array---                                  
     else:
         #if U is (time,lev,lat,lon), also reshape lat ,lon to (time,lev,lat,lon)
         if var_shape!= lon.shape:
             for ni in var_shape[:-2][::-1]: # (time,lev,lat,lon)> (time,lev) and reverse, so first lev, then time
-                colat=np.repeat(colat[np.newaxis,...],ni,axis=0)
+                lat=np.repeat(lat[np.newaxis,...],ni,axis=0)
                 lon  =np.repeat(lon[np.newaxis,...],ni,axis=0)
 
                                     
-        out=1/(R*np.sin(colat))*(dvar_dh(V.transpose(T_lonIN),lon.transpose(T_lonIN)).transpose(T_lonOUT)- \
-                     dvar_dh((U*np.sin(colat)).transpose(T_latIN),colat.transpose(T_latIN)).transpose(T_latOUT))                            
+        out=1/(R*np.cos(lat))*(dvar_dh(V.transpose(T_lonIN),lon.transpose(T_lonIN)).transpose(T_lonOUT)- \
+                     dvar_dh((U*np.cos(lat)).transpose(T_latIN),lat.transpose(T_latIN)).transpose(T_latOUT))                            
+    return  out 
+    
+def frontogenesis(U,V,theta,lon_deg,lat_deg,R=3400*1000.,spacing='varying'):
+    '''
+    Compute the frontogenesis,i.e. local change in potential temperature gradient near a front.
+    Following Richter et al. 2010 Toward a Physically Based Gravity Wave Source Parameterization in
+     a General Circulation Model, JAS 67 we have Fn= 1/2 D(Del Theta)**2/Dt in [K/m/s]
+
+    Args: 
+        U,V    : wind fields with latitude second to last and longitude as last dimensions  e.g. (lat,lon) or (time,lev,lat,lon)...
+        theta  : potential temperature [K]
+        lon_deg: 1D array of longitude in [degree] or 2D (lat,lon) if irregularly-spaced
+        lat_deg: 1D array of latitude  in [degree] or 2D (lat,lon) if irregularly-spaced
+        R      : planetary radius in [m]
+        spacing : When lon, lat are  1D arrays, using spacing ='varying' differentiate lat and lon (default)
+                  If spacing='regular', only uses uses dx=lon[1]-lon[0], dy=lat[1]-lat[0] and the numpy.gradient() method
+    Return: 
+        Fn: the frontogenesis field in [m-1] 
+
+    '''
+    lon=lon_deg*np.pi/180
+    lat=lat_deg*np.pi/180
+     
+    var_shape=U.shape
+       
+    #Transpose shapes:
+    T_array=np.arange(len(U.shape))
+    T_lonIN=np.append(T_array[-1],T_array[0:-1]) #one permutation only: lon is passsed to the 1st dimension
+    T_lonOUT=np.append(T_array[1:],T_array[0]) #one permutation only: lon is passsed to the 1st dimension
+    T_latIN=np.append(np.append(T_array[-2],T_array[0:-2]),T_array[-1])
+    T_latOUT=np.append(np.append(T_array[1:-1],T_array[0]),T_array[-1])
+
+    
+    #----lon, lat are 1D arrays---    
+    if  len(lon.shape)==1:
+        #Extend broadcasting dimensions for the colatitude, e.g  [1,1,lat,1] if U is size (time,lev,lat,lon)
+        reshape_shape=[1 for i in range(0,len(var_shape))]
+        reshape_shape[-2]=lat.shape[0]
+        lat_b=lat.reshape(reshape_shape)
+        if spacing=='regular': 
+
+            du_dlon=np.gradient(U,axis=-1)/(lon[1]-lon[0])
+            dv_dlon=np.gradient(V,axis=-1)/(lon[1]-lon[0])
+            dtheta_dlon= np.gradient(theta,axis=-1)/(lon[1]-lon[0])
+            
+            du_dlat= np.gradient(U,axis=-2)/(lat[1]-lat[0])
+            dv_dlat= np.gradient(V,axis=-2)/(lat[1]-lat[0])
+            dtheta_dlat=  np.gradient(theta,axis=-2)/(lat[1]-lat[0])
+                 
+        else:    
+
+            du_dlon=dvar_dh(U.transpose(T_lonIN),lon).transpose(T_lonOUT)
+            dv_dlon=dvar_dh(V.transpose(T_lonIN),lon).transpose(T_lonOUT)
+            dtheta_dlon=dvar_dh(theta.transpose(T_lonIN),lon).transpose(T_lonOUT)
+            
+            du_dlat=dvar_dh(U.transpose(T_latIN),lat).transpose(T_latOUT)
+            dv_dlat=dvar_dh(V.transpose(T_latIN),lat).transpose(T_latOUT)
+            dtheta_dlat=dvar_dh(theta.transpose(T_latIN),lat).transpose(T_latOUT)     
+            
+            
+    #----lon, lat are 2D array---                                  
+    else:
+        #if U is (time,lev,lat,lon), also reshape lat ,lon to (time,lev,lat,lon)
+        if var_shape!= lon.shape:
+            lat_b=lat.copy()
+            for ni in var_shape[:-2][::-1]: # (time,lev,lat,lon)> (time,lev) and reverse, so first lev, then time
+                lat=np.repeat(lat[np.newaxis,...],ni,axis=0)
+                lon  =np.repeat(lon[np.newaxis,...],ni,axis=0)
+
+            du_dlon=dvar_dh(U.transpose(T_lonIN),lon.transpose(T_lonIN)).transpose(T_lonOUT)
+            dv_dlon=dvar_dh(V.transpose(T_lonIN),lon.transpose(T_lonIN)).transpose(T_lonOUT)
+            dtheta_dlon=dvar_dh(theta.transpose(T_lonIN),lon.transpose(T_lonIN)).transpose(T_lonOUT)
+            
+            du_dlat=dvar_dh(U.transpose(T_latIN),lat.transpose(T_latIN)).transpose(T_latOUT)
+            dv_dlat=dvar_dh(V.transpose(T_latIN),lat.transpose(T_latIN)).transpose(T_latOUT)
+            dtheta_dlat=dvar_dh(theta.transpose(T_latIN),lat.transpose(T_latIN)).transpose(T_latOUT)     
+                                        
+    out= -(1/(R*np.cos(lat_b))*dtheta_dlon)**2*\
+    (1/(R*np.cos(lat_b))*du_dlon -V*np.tan(lat_b)/R)  -\
+    (1/R*dtheta_dlat)**2*(1/R*dv_dlat)-\
+    (1/(R*np.cos(lat_b))*dtheta_dlon)*(1/R*dtheta_dlat)*\
+    (1/(R*np.cos(lat_b))*dv_dlon+1/R*du_dlat+U*np.tan(lat_b)/R)
+                    
     return  out  
     
     
-
 def MGSzmax_ls_lat(ls,lat):
     '''
     Return the max altitude for the dust from "MGS scenario"

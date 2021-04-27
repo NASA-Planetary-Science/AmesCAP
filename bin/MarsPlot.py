@@ -80,7 +80,8 @@ parser.add_argument('-do','--do', nargs=1,type=str,default=None, #sys.stdin
                                   '> Usage: MarsPlot -do my_custom [other options]')
 
 parser.add_argument('-sy', '--stack_year', action='store_true',default=False,
-                 help='Stack consecutive  years in 1D time series \n')
+                 help='Stack consecutive years in 1D time series instead of having them back to back\n'
+                     '> Usage: MarsPlot Custom.in -sy \n')
 
 parser.add_argument("-o", "--output",default="pdf",
                  choices=['pdf','eps','png'],
