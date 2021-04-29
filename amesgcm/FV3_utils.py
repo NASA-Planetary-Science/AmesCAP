@@ -534,8 +534,19 @@ def mass_stream(v_avg,lat,level,type='pstd',psfc=700,H=8000.,factor=1.e-8):
     I=np.zeros(v_avg.shape[2:])
     
     #Make note of NaN positions and replace by zero for downward integration
-    mask=np.isnan(v_avg)
-    v_avg[mask]=0.
+    isNan=False
+    if np.isnan(v_avg).any(): 
+        isNan=True
+        mask=np.isnan(v_avg)
+        v_avg[mask]=0.
+    
+    #Missing data may also be masked instead of set to NaN:
+    isMasked=False
+    if np.ma.is_masked(v_avg):
+        isMasked=True
+        mask0 = np.ma.getmaskarray(v_avg)
+        mask=mask0.copy() #Make a standalone copy of the mask array
+        v_avg[mask0]=0.    #Set masked elements to 0. Note that this effectively unmask the array as 0. is a valid entry.
     
     if type=='pstd':
         Z=H*np.log(psfc/level)
@@ -552,8 +563,10 @@ def mass_stream(v_avg,lat,level,type='pstd',psfc=700,H=8000.,factor=1.e-8):
             I=I+0.5*(znp1-zn)*(fnp1+fn)
         MSF[k0,:,...]=2*np.pi*a*psfc/(g*H)*np.cos(np.pi/180*lat).reshape([len(lat),1])*I*factor
         
-    #Replace NaN where they initially were:   
-    MSF[mask]=np.NaN    
+    #Replace NaN where they initially were:  
+    if isNan:MSF[mask]=np.NaN    
+    if isMasked:MSF=np.ma.array(MSF, mask=mask)
+       
     return MSF.reshape(shape_out)
 
 

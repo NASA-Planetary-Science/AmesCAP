@@ -10,7 +10,7 @@ import re         # string matching module to handle time_of_day_XX
 
 from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,vinterp,find_n
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-from amesgcm.Script_utils import section_content_amesgcm_profile,find_tod_in_diurn
+from amesgcm.Script_utils import section_content_amesgcm_profile,find_tod_in_diurn,filter_vars
 from amesgcm.Ncdf_wrapper import Ncdf
 
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
@@ -43,14 +43,19 @@ parser.add_argument('input_file', nargs='+', #sys.stdin
                              help='***.nc file or list of ***.nc files ')
 parser.add_argument('-t','--type',type=str,default='pstd',
                  help=""">  --type may be 'pstd', 'zstd' or 'zagl' [DEFAULT is pstd, 36 levels] \n"""
-                      """>  Usage: MarsInterp ****.atmos.average.nc \n"""
-                      """          MarsInterp ****.atmos.average.nc -t zstd \n""")      
+                      """>  Usage: MarsInterp.py ****.atmos.average.nc \n"""
+                      """          MarsInterp.py ****.atmos.average.nc -t zstd \n""")      
                       
 parser.add_argument('-l','--level',type=str,default=None,
                  help=""">  Layers ID as defined in your personal ~/.amesgcm_profile  \n"""
-                      """>  Usage: MarsInterp ****.atmos.average.nc -t pstd -l p44 \n"""
-                      """          MarsInterp ****.atmos.average.nc -t zstd -l phalf_mb  \n""") 
-                           
+                      """>  Usage: MarsInterp.py ****.atmos.average.nc -t pstd -l p44 \n"""
+                      """          MarsInterp.py ****.atmos.average.nc -t zstd -l phalf_mb  \n""") 
+                        
+parser.add_argument('-include','--include',nargs='+',
+                     help="""Only include listed variables. Dimensions and 1D variables are always included \n"""
+                         """> Usage: MarsInterp.py *.atmos_daily.nc --include ps ts temp     \n"""
+                         """\033[00m""")      
+                                                                        
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
 
@@ -213,7 +218,8 @@ def main():
         fnew = Ncdf(newname,'Pressure interpolation using MarsInterp.py')
         #===========      Replicate existing DIMENSIONS but pfull  =================
         #get all variables in file:
-        var_list=fNcdf.variables.keys()
+        ###var_list=fNcdf.variables.keys()
+        var_list = filter_vars(fNcdf,parser.parse_args().include) # get the variables
         
         fnew.copy_all_dims_from_Ncfile(fNcdf,exclude_dim=['pfull'])
         fnew.add_dim_with_content(interp_type,lev_in,longname_txt,units_txt) #Add new vertical dimension
