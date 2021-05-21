@@ -222,7 +222,6 @@ def get_Ncdf_path(fNcdf):
     if not fname_out: fname_out=getattr(fNcdf,'filepath')() #Regular Dataset
     return fname_out
 
-#TODO this is not super robust if the files get renamed
 def FV3_file_type(fNcdf): 
     '''
     Return the type of output files:
@@ -241,22 +240,33 @@ def FV3_file_type(fNcdf):
     _,filename=os.path.split(fullpath)
     
     #Initialize
-    f_type='other'
+    f_type='unknow'
     interp_type='unknown'
+    tod_name='n/a'
     
-    if 'fixed'         in filename:f_type='fixed'
-    if 'atmos_average' in filename:f_type='average'
+    # These are initial guesses based on the filename. They are not robust if 
+    # the file gets renamed but also, only apply to the 'daily' and 'average'
+    # which have an identical data structure anyway
     if 'atmos_daily'   in filename:f_type='daily'
-    if 'diurn'         in filename:f_type='diurn'
+    if ('atmos_average' in filename) or ('to_average' in filename) :f_type='average'
+    # Note: 'to_average' is for files re-binned by MarsFile.py
+
+    #If 'time' is not a dimension, assume it is a 'fixed' file
+    if 'time' not in fNcdf.dimensions.keys():f_type='fixed'
     
+    #If 'tod_name_XX' is present as a dimension, it is a diurn file (this is robust)
+    try:
+        tod_name=find_tod_in_diurn(fNcdf)
+        if tod_name in fNcdf.dimensions.keys():f_type='diurn'
+    except:
+        pass
+        
     dims=fNcdf.dimensions.keys()
     if 'pfull' in dims: interp_type='pfull'
     if 'pstd'  in dims: interp_type='pstd'
     if 'zstd'  in dims: interp_type='zstd'
     if 'zagl'  in dims: interp_type='zagl'
     return f_type,interp_type
-
-
 
 def alt_FV3path(fullpaths,alt,test_exist=True):
     '''

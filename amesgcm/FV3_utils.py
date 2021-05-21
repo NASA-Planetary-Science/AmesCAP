@@ -200,11 +200,11 @@ def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=N
         varIN: variable to interpolate (N-dimensional array with VERTICAL AXIS FIRST)
         Lfull: pressure [Pa] or atitude [m] at full layers same dimensions as varIN
         Llev : desired level for interpolation as a 1D array in [Pa] or [m] May be either increasing or decreasing as the output levels are processed one at the time.
-        reverse_input (boolean) : reverse input arrays, e.g if zfull(0)=120 km, zLfull(N)=0km (which is typical) or if your input data is pfull(0)=1000Pa, pfull(N)=0Pa
+        reverse_input (boolean) : reverse input arrays, e.g if zfull(0)=120 km, zfull(N)=0km (which is typical) or if your input data is pfull(0)=1000Pa, pfull(N)=0Pa
         type : 'log' for logarithmic (typically pressure), 'lin' for linear (typically altitude)
         masktop: set to NaN values if above the model top
-        index: indices for the interpolation, already procesed as [klev,Ndim] 
-               Indices will be recalculated in not provided.
+        index: indices for the interpolation, already processed as [klev,Ndim] 
+               Indices will be recalculated if not provided.
     Returns:
         varOUT: variable interpolated on the Llev pressure or altitude levels
         
@@ -448,28 +448,31 @@ def areo_avg(VAR,areo,Ls_target,Ls_angle,symmetric=True):
     #Initialize output array
     VAR_avg=np.zeros(np.prod(shape_out))
     
+    # This was removed, for exemple, if 10 degree of data are requested around Ls 0:
+    #                       Ls 355 <-- (0.00)--> 5
+    #   and the file is       Ls 1 <-- (180)--> 357   the  data selected should be 1>5 and 355 > 357
+    '''
     #check is the Ls of interest is within the data provided, raise execption otherwise
     if Ls_target <= areo.min() or Ls_target >=areo.max() :
-        raise Exception("Error \nNo data found, requested  data :       Ls %.2f <-- (%.2f)--> %.2f\nHowever, data in file only ranges      Ls %.2f <-- (%.2f)--> %.2f"%(Ls_min,Ls_target,Ls_max,Ls.min(),(Ls.min()+Ls.max())/2.,Ls.max()))
+        raise Exception("Error \nNo data found, requested  data :       Ls %.2f <-- (%.2f)--> %.2f\n However, data in file only ranges      Ls %.2f <-- (%.2f)--> %.2f"%(Ls_min,Ls_target,Ls_max,areo.min(),(areo.min()+areo.max())/2.,areo.max()))
+    '''
 
-    
-    else : #If only some of the requested data is outside the ranges, process this data
-        if Ls_min <areo.min() or Ls_max >areo.max():
-            print("In zonal_avg_P_lat() Warning: \nRequested  data ranging    Ls %.2f <-- (%.2f)--> %.2f"%(Ls_min,Ls_target,Ls_max))
-            if symmetric: #Case 1: reduce the window
-                if Ls_min <Ls.min():
-                    Ls_min =Ls.min()
-                    Ls_angle=2*(Ls_target-Ls_min)
-                    Ls_max= Ls_target+Ls_angle/2.
-                    
-                if Ls_max >Ls.max():
-                    Ls_max =Ls.max()
-                    Ls_angle=2*(Ls_max-Ls_target)
-                    Ls_min= Ls_target-Ls_angle/2.
-                    
-                print("Reshaping data ranging     Ls %.2f <-- (%.2f)--> %.2f"%(Ls_min,Ls_target,Ls_max))        
-            else: #Case 2: Use all data available
-                print("I am only using            Ls %.2f <-- (%.2f)--> %.2f \n"%(max(Ls.min(),Ls_min),Ls_target,min(Ls.max(),Ls_max)))
+    if Ls_min <areo.min() or Ls_max >areo.max():
+        print("In areo_avg() Warning: \nRequested  data ranging    Ls %.2f <-- (%.2f)--> %.2f"%(Ls_min,Ls_target,Ls_max))
+        if symmetric: #Case 1: reduce the window
+            if Ls_min <areo.min():
+                Ls_min =areo.min()
+                Ls_angle=2*(Ls_target-Ls_min)
+                Ls_max= Ls_target+Ls_angle/2.
+                
+            if Ls_max >areo.max():
+                Ls_max =areo.max()
+                Ls_angle=2*(Ls_max-Ls_target)
+                Ls_min= Ls_target-Ls_angle/2.
+                
+            print("Reshaping data ranging     Ls %.2f <-- (%.2f)--> %.2f"%(Ls_min,Ls_target,Ls_max))        
+        else: #Case 2: Use all data available
+            print("I am only using            Ls %.2f <-- (%.2f)--> %.2f \n"%(max(areo.min(),Ls_min),Ls_target,min(areo.max(),Ls_max)))
     count=0
     
     for t in range(len(areo)):

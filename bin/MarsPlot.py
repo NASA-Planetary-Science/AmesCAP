@@ -942,7 +942,7 @@ def fig_layout(subID,nPan,vertical_page=False):
     Return figure layout
     Args:
         subID:    integer, current subplot number
-        nPan : integer, number of panels desired on the figure up 36 (6x6 panel)
+        nPan : integer, number of panels desired on the figure, up to 64 (8x8 panel)
         vertical_page: if True, reverse the tuple for vertical layout
     Returns:
         out: tuple with approriate layout: plt.subplot(nrows=out[0],ncols=out[1],plot_number=out[2])
@@ -1020,7 +1020,8 @@ def make_template():
         customFileIN.write(lh+""">                             Azimutal   options are 'Npole' (north pole), 'Spole' (south pole), 'ortho' (Orthographic)  \n""")
         customFileIN.write(lh+""">  Azimutal projections accept customization arguments: 'Npole lat_max', 'Spole lat_min' , 'ortho lon_center, lat_center' \n""")
         customFileIN.write(lh+"""KEYWORDS:\n""")
-        customFileIN.write(lh+"""> 'HOLD ON' [blocks of figures] 'HOLD OFF' groups the figures as a multi-panel page\n""")
+        customFileIN.write(lh+"""> 'HOLD ON' [blocks of figures] 'HOLD OFF' groups the figures as a multi-panel page  \n""")
+        customFileIN.write(lh+"""  (Optional: use 'HOLD ON 2,3' to force a 2 lines 3 column layout) \n""")
         customFileIN.write(lh+"""> [line plot 1] 'ADD LINE' [line plot 2] adds similar 1D-plots on the same figure)\n""")
         customFileIN.write(lh+"""> 'START' and (optionally) 'STOP' can be used to conveniently skip plots below. Use '#' to add comments. \n""")
         customFileIN.write(lh+"""ALGEBRA AND CROSS-SIMULATIONS PLOTS:\n""")
@@ -1092,13 +1093,15 @@ def namelist_parser(Custom_file):
     panelList=[] #list of panels
     subplotList=[] #layout of figures
     addLineList=[] #add several line plot on the same graphs
+    layoutList=[]
     nobj=0        #number for the object: e.g 1,[2,3],4... with 2 & 3 plotted as a two panels plot
-    npanel=1        #number of panels ploted along this object, e.g: '1' for object #1 and '2' for the objects #2 and #3
+    npanel=1      #number of panels ploted along this object, e.g: '1' for object #1 and '2' for the objects #2 and #3
     subplotID=1  #subplot ID per object: e.g '1' for object #1, '1' for object #2 and '2' for object #3
     holding=False
     addLine=False
     addedLines=0  #line plots
     npage=0       #plot number at the begining of a new page (e.g 'HOLD ON')
+    layout =None  #Used if layout is provided with HOLD ON (e.g. HOLD ON 2,3')
 
     customFileIN=open(Custom_file,'r')
     #===Get version in the header====
@@ -1144,9 +1147,16 @@ def namelist_parser(Custom_file):
         if not line or line.strip()=='STOP':
             break #Reached End Of File
 
-        if line.strip()=='HOLD ON':
+        if line.strip()[0:7]=='HOLD ON':
             holding=True
             subplotID=1
+            
+            #Get layout info
+            if ',' in line: # layout is provided, e.g. 'HOLD ON 2,3'
+                tmp= line.split('ON')[-1].strip()  # this returns '2,3' as a  string
+                layout=[int(tmp.split(',')[0]),int(tmp.split(',')[1])] #This returns [2,3]
+            else:
+                layout=None    
         #adding a 1D plot to an existing line plot
         if line.strip()=='ADD LINE':
             addLine=True
@@ -1185,8 +1195,14 @@ def namelist_parser(Custom_file):
                     #We are not holding: there is a single panel per page and we reset the page counter
                     panelList.append(1)
                     subplotList.append(1)
-                    npage=nobj
-
+                    npage=nobj 
+                    layout=None 
+                    
+                if layout:
+                    layoutList.append(layout)
+                else:    
+                    layoutList.append(None)
+                
                 #====================
 
                 if addLine:
@@ -1224,6 +1240,7 @@ def namelist_parser(Custom_file):
             holding=False
             subplotID=1
             npage=nobj
+            
 
 
     #Make sure we are not still holding figures
@@ -1242,6 +1259,8 @@ def namelist_parser(Custom_file):
         objectList[i].subID=subplotList[i]
         objectList[i].nPan=panelList[i]
         objectList[i].addLine=addLineList[i]
+        objectList[i].layout=layoutList[i]
+
         #==debug only====
         #prPurple('%i:[%i,%i,%i]'%(i,objectList[i].subID,objectList[i].nPan,objectList[i].addLine))
     customFileIN.close()
@@ -1495,6 +1514,7 @@ class Fig_2D(object):
         #Multi panel
         self.nPan=1
         self.subID=1
+        self.layout = None # e.g. [2,3], used only if 'HOLD ON 2,3' is used 
         #Annotation for free dimensions
         self.fdim_txt=''
         self.success=False
@@ -1791,7 +1811,10 @@ class Fig_2D(object):
 
     def fig_init(self):
         #create figure
-        out=fig_layout(self.subID,self.nPan,vertical_page)
+        if self.layout is None : #No layout is specified
+            out=fig_layout(self.subID,self.nPan,vertical_page)
+        else:
+            out=np.append(self.layout,self.subID)
         if self.subID==1:
             fig= plt.figure(facecolor='white',figsize=(width_inch, height_inch)) #create figure if 1st panel, 1.4 is ratio (16:9 screen would be 1.77)
             #plt.suptitle(simulation_name)
@@ -2428,6 +2451,7 @@ class Fig_1D(object):
         self.nPan=1
         self.subID=1
         self.addLine=False
+        self.layout = None # e.g. [2,3], used only if 'HOLD ON 2,3' is used 
         #Annotation for free dimensions
         self.fdim_txt=''
         self.success=False
@@ -2794,8 +2818,13 @@ class Fig_1D(object):
             bbox=dict(boxstyle="round",ec=(1., 0.5, 0.5),fc=(1., 0.8, 0.8),),\
             transform=ax.transAxes,wrap=True,fontsize=16)
 
-    def fig_init(self):
-        out=fig_layout(self.subID,self.nPan,vertical_page)
+    def fig_init(self):         
+        #create figure
+        if self.layout is None : #No layout is specified
+            out=fig_layout(self.subID,self.nPan,vertical_page)
+        else:
+            out=np.append(self.layout,self.subID)
+        
         if self.subID==1 and not self.addLine:
             fig= plt.figure(facecolor='white',figsize=(width_inch, height_inch)) #create figure if 1st panel
             #plt.suptitle(simulation_name) #TODO remove

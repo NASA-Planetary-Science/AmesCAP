@@ -62,7 +62,7 @@ parser.add_argument('-add','--add', nargs='+',default=[],
                       'fn         (frontogenesis)                   Req. [ucomp,vcomp,theta] \n'
                       ' \nNOTE:                    \n'
                       '     Some support on interpolated files, in particular if pfull3D \n'
-                      '                   is added before interpolation to _zagl, _zstd. \n'
+                      '         and zfull are added before interpolation to _pstd, _zagl, _zstd. \n'
                       '\033[00m\n' 
                       '\033[93mON INTERPOLATED FILES :                                     \n'
                       'msf        (mass stream function)              Req. [vcomp] \n'
@@ -192,6 +192,57 @@ def compute_zhalf(ps,ak,bk,temp):
         zhalf=zhalf.transpose([1,0,2,3])# p_3D [lev+1,tim,lat,lon] ->[tim, lev+1, lat, lon]
     # TODO add diurn    
     return zhalf
+
+def compute_DZ_full_pstd(pstd,temp,ftype='average'):
+    '''
+    Return the distance between two layers  mid-point from the standard pressure levels
+
+    Args:
+        pstd: 1D  array of standard pressure in [Pa] 
+        temp : 3D array of temperature
+        ftype: 'daily', 'aveage' or 'diurn'
+    Returns:
+        DZ_full_pstd: 3D array of distancez  between adjacent layers
+        
+    *** NOTE***
+    In this context p_full = p_std, with the half layers boundaries defined somewhere in between successive layers 
+        
+    --- Nk --- TOP        ========  p_half
+    --- Nk-1 ---                    
+                         --------  p_full = p_std   ^
+                                                    | DZ_full_pstd
+                         ========  p_half           |
+    --- 1 ---            --------  p_full = p_std   v
+    --- 0 --- SFC        ========  p_half 
+                        / / / / 
+    '''               
+    rgas = 189.  # J/(kg-K) => m2/(s2 K)  
+    g    = 3.72  # m/s2   
+    if ftype=='diurn':
+        axis=2
+    else:
+        axis=1    
+        
+    temp=np.swapaxes(temp,0,axis)  
+
+    #Create broadcasting array for pstd
+    shape_out=temp.shape
+    reshape_shape=[1 for i in range(0,len(shape_out))]     
+    reshape_shape[0]=len(pstd)  #e.g [28,1,1,1]
+    pstd_b=pstd.reshape(reshape_shape)
+    
+    DZ_full_pstd=np.zeros_like(temp)
+    
+    # We Use the average temperature for both layers
+
+    DZ_full_pstd[0:-1,...]=-rgas*0.5*(temp[1:,...]+temp[0:-1,...])/g*np.log(pstd_b[1:,...]/pstd_b[0:-1,...])
+    
+    # There  is nothing to differentiate the last layer with, so we will copy over the value at N-1
+    # Note  that unless you fine-tuned the standard pressure  levels to match the model top, there is typically missing data in the 
+    # last few layers so this is not be a big issue.
+    DZ_full_pstd[-1,...]=DZ_full_pstd[-2,...]   
+    return np.swapaxes(DZ_full_pstd,0,axis)
+
 
 def compute_N(theta,zfull):
     """
@@ -364,10 +415,13 @@ def main():
                         reshape_shape=[1 for i in range(0,len(shape_out))]                 #(  0   1   2   3 )
                         reshape_shape[axis]=len(lev)  #e.g [1,28,1,1]
                         p_3D=lev.reshape(reshape_shape)
-                    #If inter_type is 'zstd', or 'zagl', we need the field pfull3D  pre-computed before interpolation
+                    #If inter_type is 'zstd', or 'zagl', we need the field pfull3D  pre-computed before interpolation.
+                    # We use a 'try' statement as some computations (e.g. wind speed) do not require pfull and will work anyway
                     else:
-                        p_3D=fileNC.variables['pfull3D'][:]
-                            
+                        try:
+                            p_3D=fileNC.variables['pfull3D'][:]
+                        except:
+                            pass    
                     
                     if ivar=='pfull3D': OUT=p_3D
                     if ivar=='DP':      OUT=compute_DP_3D(ps,ak,bk,shape_out)
@@ -526,8 +580,14 @@ def main():
                         
                     elif interp_type=='pstd':
                         #If pstd, we need the zfull variable
-                        zfull=fileNC.variables['zfull'][:]
-                        darr_dz=dvar_dh(var.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])                         
+                        if 'zfull' in fileNC.variables.keys():
+                            zfull=fileNC.variables['zfull'][:]
+                            darr_dz=dvar_dh(var.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])
+                        else:
+                            lev=fileNC.variables[interp_type][:]
+                            temp=fileNC.variables['temp'][:]
+                            dzfull_pstd=compute_DZ_full_pstd(lev,temp)
+                            darr_dz=dvar_dh(var.transpose([1,0,2,3])).transpose([1,0,2,3])/dzfull_pstd                      
                         
                     elif interp_type in ['zagl','zstd']: #zagl, zstd
                         lev=fileNC.variables[interp_type][:]
