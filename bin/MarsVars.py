@@ -78,7 +78,7 @@ parser.add_argument('-add','--add', nargs='+',default=[],
 
 parser.add_argument('-zdiff','--zdiff', nargs='+',default=[],
                  help="""Differentiate a variable 'var' with respect to the z axis\n"""
-                      """A new a variable dvar_dz in [Unit/m] will be added o the file\n"""
+                      """A new a variable d_dz_var in [Unit/m] will be added o the file\n"""
                       """> Usage: MarsVars ****.atmos.average.nc -zdiff temp\n"""  
                       """ \n""")    
 parser.add_argument('-col','--col', nargs='+',default=[],

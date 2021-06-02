@@ -8,7 +8,7 @@ import sys        # system command
 import time       # monitor interpolation time
 import re         # string matching module to handle time_of_day_XX
 
-from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,vinterp,find_n
+from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,vinterp,find_n,polar2XYZ,interp_KDTree,axis_interp
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
 from amesgcm.Script_utils import section_content_amesgcm_profile,find_tod_in_diurn,filter_vars
 from amesgcm.Ncdf_wrapper import Ncdf
@@ -47,10 +47,11 @@ parser.add_argument('-t','--type',type=str,default='pstd',
                       """          MarsInterp.py ****.atmos.average.nc -t zstd \n""")      
                       
 parser.add_argument('-l','--level',type=str,default=None,
-                 help=""">  Layers ID as defined in your personal ~/.amesgcm_profile  \n"""
+                 help=""">  Layers ID as defined in your personal ~/.amesgcm_profile hidden file \n"""
+                      """"(For 1st time set-up, copy \033[96mcp ~/amesGCM3/mars_templates/amesgcm_profile ~/.amesgcm_profile\033[00m )   \n"""
                       """>  Usage: MarsInterp.py ****.atmos.average.nc -t pstd -l p44 \n"""
                       """          MarsInterp.py ****.atmos.average.nc -t zstd -l phalf_mb  \n""") 
-                        
+ 
 parser.add_argument('-include','--include',nargs='+',
                      help="""Only include listed variables. Dimensions and 1D variables are always included \n"""
                          """> Usage: MarsInterp.py *.atmos_daily.nc --include ps ts temp     \n"""

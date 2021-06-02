@@ -198,7 +198,7 @@ def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=N
     Vertical linear or logarithmic interpolation for pressure or altitude.   Alex Kling 5-27-20
     Args:
         varIN: variable to interpolate (N-dimensional array with VERTICAL AXIS FIRST)
-        Lfull: pressure [Pa] or atitude [m] at full layers same dimensions as varIN
+        Lfull: pressure [Pa] or altitude [m] at full layers same dimensions as varIN
         Llev : desired level for interpolation as a 1D array in [Pa] or [m] May be either increasing or decreasing as the output levels are processed one at the time.
         reverse_input (boolean) : reverse input arrays, e.g if zfull(0)=120 km, zfull(N)=0km (which is typical) or if your input data is pfull(0)=1000Pa, pfull(N)=0Pa
         type : 'log' for logarithmic (typically pressure), 'lin' for linear (typically altitude)
@@ -292,6 +292,133 @@ def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=N
         varOUT[k,:]=varIN.flatten()[nindex]*alpha+(1-alpha)*varIN.flatten()[nindexp1]
         
     return np.reshape(varOUT,dimsOUT)
+
+
+def axis_interp(var_IN, x, xi, axis, reverse_input=False, type='lin'):
+    '''
+    One dimensional linear /log interpolation along one axis. [Alex Kling, May 2021]
+    Args:
+        var_IN (N-D array): N-Dimensional variable, e.g.  [lev,lat,lon],[time,lev,lat,lon] on a REGULAR grid.
+        x (1D array)      : original position array (e.g. time)  
+        xi (1D array)     : target array to interpolate the array on 
+        axis (int)        : position of  the interpolation axis (e.g. 0 if time interpolation for [time,lev,lat,lon])
+        reverse_input (boolean) : reverse input arrays, e.g if zfull(0)=120 km, zfull(N)=0km (which is typical) 
+        type : 'log' for logarithmic (typically pressure), 'lin' for linear
+    Returns:
+        VAR_OUT: interpolated data on the requested axis
+    
+    ***NOTE***    
+    > This routine is similar, but simpler, than the vertical interpolation vinterp()  as the  interpolation axis is assumed to be fully defined by a 1D
+     array (e.g. 'time', 'pstd' or 'zstd) unlike  pfull or zfull which are 3D arrays. 
+    
+    > For lon/lat interpolation, you may consider using  interp_KDTree() instead
+    
+    We have: 
+    
+    X_OUT= Xn*A + (1-A)*Xn+1
+    with A = log(xi/xn+1)/log(xn/xn+1) in 'log' mode     
+         A =    (xi-xn+1)/(xn-xn+1)    in 'lin' mode
+         
+
+    
+    '''
+    
+    #Move interpolated axis to 1st axis:
+    var_IN=np.moveaxis(var_IN,axis,0) 
+    if reverse_input:
+        var_IN=var_IN[::-1,...]
+        x=x[::-1]
+        
+    index=find_n(x,xi,False) #This is called everytime as it is fast on 1D array
+    
+    dimsIN=var_IN.shape 
+    dimsOUT=tuple(np.append(len(xi),dimsIN[1:]))
+    var_OUT=np.zeros(dimsOUT)
+    
+    for k in range(0,len(index)):
+        n= index[k]
+        np1=n+1
+        if np1>=len(x):np1-=1
+        if type=='log':
+            alpha=np.log(xi[k]/x[np1])/np.log(x[n]/x[np1])
+        elif type=='lin':
+            alpha=(xi[k]-x[np1])/(x[n]- x[np1])
+        var_OUT[k,:]=var_IN[n,...]*alpha+(1-alpha)*var_IN[np1,...]
+        
+    return   np.moveaxis(var_OUT,0,axis) 
+        
+    
+def polar2XYZ(lon, lat, alt,Re=3400*10**3): #radian
+    '''
+    Spherical to cartesian coordinates transformation
+    Args:
+        lon,lat (ND array): longitude and latitude, in [rad]
+        alt (ND array): altitude in [m]
+    Return:
+        X,Y,Z in cartesian coordinates [m]
+    ***NOTE***
+    This is a classic polar coordinate system with colat = pi/2 -lat,  the colatitude and cos(colat) = sin(lat)
+    '''
+    lon=np.array(lon);lat=np.array(lat);alt=np.array(alt)
+    R=Re+alt
+    X=R*np.cos(lon)*np.cos(lat)
+    Y=R*np.sin(lon)*np.cos(lat)
+    Z=R*np.sin(lat)*np.ones_like(lon) # added in case broadcasted variables are used (e.g. [1,lat,1], [1,1,lon])
+    return X,Y,Z              
+    
+
+def interp_KDTree(var_IN,lat_IN,lon_IN,lat_OUT,lon_OUT,N_nearest=10):
+    '''
+    Inverse-distance-weighted interpolation using nearest neighboor for ND variables.  [Alex Kling , May 2021]
+    Args:
+        var_IN: N-Dimensional variable to regrid, e.g.  [lev,lat,lon],[time,lev,lat,lon]... with [lat, lon] dimensions LAST in [deg]
+        lat_IN,lon_IN        (1D or 2D):   lat, lon 1D arrays or LAT[y,x] LON[y,x] for irregular grids in [deg]
+        lat_OUT,lon_OUT(1D or 2D):lat,lon for the TARGET grid structure , e.g. lat1,lon1 or LAT1[y,x], LON1[y,x] for irregular grids in [deg]
+        N_nearest: integer, number of nearest neighbours for the search.   
+    Returns:
+        VAR_OUT: interpolated data on the target grid
+    
+    ***NOTE***
+    > This implementation is much FASTER than griddata and supports unstructured grids (e.g. FV3 tile)
+    > The nearest neighbour interpolation is only done on the lon/lat axis, (not level).  Although this interpolation work well on the 3D field (x,y,z), 
+    this is typically not what is expected: In a 4°x4° run, the closest points East, West, North and South, on the target grid  are 100's of km away 
+    while the closest points in the vertical are a few 10's -100's meter in the PBL, which would results in excessive weighting in the vertical.
+    '''
+    from scipy.spatial import cKDTree #TODO Import called each time. MMay be moved out of the routine is scipy is a requirement for the pipeline 
+
+    dimsIN=var_IN.shape
+    nlon_IN=dimsIN[-1]
+    nlat_IN=dimsIN[-2]
+
+    #If var is 2D, extend the dimensions for generality
+    if len(dimsIN)==2:var_IN=var_IN.reshape(1,nlat_IN,nlon_IN)
+    
+    #If input/output latitudes/longitudes are 1D, extend the dimensions for generality:
+    if len(lat_IN.shape)==1   : lon_IN,lat_IN=np.meshgrid(lon_IN,lat_IN) #TODO broadcast instead? 
+    if len(lat_OUT.shape)==1:   lon_OUT,lat_OUT=np.meshgrid(lon_OUT,lat_OUT) 
+    
+    nlat_OUT=lat_OUT.shape[0]
+    nlon_OUT=lon_OUT.shape[1]
+    
+    #If lat, lon are 1D, broadcast dimensions:
+    
+    Ndim= np.int(np.prod(dimsIN[0:-2])) # Ndim is the product of all input dimensions but lat & lon
+    dims_IN_reshape=tuple(np.append(Ndim,nlon_IN*nlat_IN))
+    dims_OUT_reshape=tuple(np.append(Ndim,nlat_OUT*nlon_OUT))    
+    dims_OUT=np.append(dimsIN[0:-2],[nlat_OUT,nlon_OUT])
+    var_OUT=np.zeros(dims_OUT_reshape)          #Initialization
+    Ndimall=np.arange(0,Ndim)                   #all indices (does not change)
+
+    #Compute cartesian coordinate for source and target files  polar2XYZ(lon,lat,lev)   
+    xs,ys,zs=polar2XYZ(lon_IN*np.pi/180 ,lat_IN*np.pi/180,0.,Re=1.)
+    xt,yt,zt=polar2XYZ(lon_OUT*np.pi/180 ,lat_OUT*np.pi/180,0.,Re=1.)
+    
+    tree = cKDTree(list(zip(xs.flatten(), ys.flatten(),zs.flatten())))
+    d, inds = tree.query(list(zip(xt.flatten(), yt.flatten(),zt.flatten())), k = N_nearest)
+    #Inverse distance
+    w = 1.0 / d**2
+    var_OUT=np.sum(w*var_IN.reshape(dims_IN_reshape)[:,inds],axis=2)/np.sum(w, axis=1) # sum the weights  and normalize
+    return var_OUT.reshape(dims_OUT)    
 
 
 def cart_to_azimut_TR(u,v,mode='from'):
@@ -1605,7 +1732,20 @@ def MGStau_ls_lat(ls,lat):
          
     return tau
     
-              
+    
+def broadcast(var_1D,shape_out,axis):
+    '''
+    Broadcast a 1D array based on a variable's dimensions
+    Args:
+        var_1D     (1D array), e.g. lat size (36), or time size (133)
+        shape_out (ND list) : braodcasting shape e.g temp.shape= [133,(lev),36,(lon)]
+    Return:
+        var_b (ND array): broadcasted variables, e.g. size [1,36,1,1] for lat or [133,1,1,1] for time
+    '''
+    var_1D=np.atleast_1d(var_1D) #Special case where var_1D has only one element
+    reshape_shape=[1 for i in range(0,len(shape_out))]     
+    reshape_shape[axis]=len(var_1D)  #e.g [28,1,1,1]
+    return var_1D.reshape(reshape_shape)    
 #==================================Projections==================================
 '''
 The projections below were implemented by Alex Kling, following:

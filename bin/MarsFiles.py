@@ -18,7 +18,8 @@ from netCDF4 import Dataset
 #===========
 from amesgcm.Ncdf_wrapper import Ncdf
 from amesgcm.FV3_utils import tshift,daily_to_average,daily_to_diurn,get_trend_2D
-from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn,FV3_file_type,filter_vars
+#from amesgcm.FV3_utils import regrid_Ncfile #regrid source
+from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn,FV3_file_type,filter_vars,regrid_Ncfile
 #==========
 
 
@@ -99,8 +100,13 @@ parser.add_argument('-tidal','--tidal',nargs='+',type=int,
                          """>        MarsFiles.py *.atmos_diurn.nc 6  --include ps temp --reconstruct (reconstruct the first 6 harmonics) \n"""                
                         """\033[00m""")      
 parser.add_argument('-reconstruct','--reconstruct',action='store_true',help=argparse.SUPPRESS) #this flag is used jointly with --tidal                      
+parser.add_argument('-norm','--normalize',action='store_true',help=argparse.SUPPRESS)          #this flag is used jointly with --tidal                      
 
-
+parser.add_argument('-rs','--regrid_source',nargs='+',
+                 help=""" Reggrid  GCMs or observation files using another netcdf file (time,lev,lat,lon) grid structure  \n"""
+                      """>  Both source(s) and target files should be vertically-interpolated to a standard grid (e.g. zstd, zagl, pstd)\n"""
+                      """>  Usage: MarsInterp.py ****.atmos.average_pstd.nc -rs simu2/00668.atmos_average_pstd.nc \n""") 
+                                             
                 
 parser.add_argument('-include','--include',nargs='+',
                      help="""For data reduction, filtering, time-shift, only include listed variables. Dimensions and 1D variables are always included \n"""
@@ -663,7 +669,8 @@ def main():
             prRed('***Error*** N must be only one value')
             exit()
         out_ext='_tidal';
-        if parser.parse_args().reconstruct:out_ext =out_ext+'_reconstruct'      
+        if parser.parse_args().reconstruct:out_ext =out_ext+'_reconstruct'  
+        if parser.parse_args().normalize:out_ext =out_ext+'_norm'     
         
         for filei in file_list:
             #Add path unless full path is provided
@@ -702,20 +709,28 @@ def main():
             #Loop over all variables in file
             for ivar in var_list:
                 varNcf     = fdiurn.variables[ivar]
+                varIN=varNcf[:] 
+                var_unit=varNcf.units
                 if tod_name in varNcf.dimensions and ivar not in [tod_name,'areo'] :     
                     prCyan("Processing: %s ..."%(ivar))
                     
-                    amp,phas=diurn_extract(varNcf[:].swapaxes(0,1),N,tod_in,lon)
+                    # Normalize the data
+                    if parser.parse_args().normalize:
+                        norm=np.mean(varIN,axis=1)[:,np.newaxis,...] #normalize and reshape array along the time_of_day dimension
+                        varIN=100*(varIN-norm)/norm
+                        var_unit='% of diurnal mean'
+                    
+                    amp,phas=diurn_extract(varIN.swapaxes(0,1),N,tod_in,lon)
                     if parser.parse_args().reconstruct:
                         VARN=reconstruct_diurn(amp,phas,tod_in,lon,sumList=[])
                         for nn in range(N):
-                            fnew.log_variable("%s_N%i"%(ivar,nn+1),VARN[nn,...].swapaxes(0,1),varNcf.dimensions,"harmonic N=%i for %s"%(nn+1,varNcf.long_name),varNcf.units)
+                            fnew.log_variable("%s_N%i"%(ivar,nn+1),VARN[nn,...].swapaxes(0,1),varNcf.dimensions,"harmonic N=%i for %s"%(nn+1,varNcf.long_name),var_unit)
                             
                     else:    
                         #Update the dimensions
                         new_dim=list(varNcf.dimensions)
                         new_dim[1]='time_of_day_%i'%(N)
-                        fnew.log_variable("%s_amp"%(ivar),amp.swapaxes(0,1),new_dim,"tidal amplitude for %s"%(varNcf.long_name),varNcf.units)
+                        fnew.log_variable("%s_amp"%(ivar),amp.swapaxes(0,1),new_dim,"tidal amplitude for %s"%(varNcf.long_name),var_unit)
                         fnew.log_variable("%s_phas"%(ivar),phas.swapaxes(0,1),new_dim,"tidal phase for %s"%(varNcf.long_name),'hr')
                 
                 elif  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time']:
@@ -739,8 +754,49 @@ def main():
                                 
             fnew.close()
 
+    #===========================================================================
+    #========================  Regrid  files ===================================
+    #===========================================================================
+    elif parser.parse_args().regrid_source: 
+        out_ext='_regrid'
+        name_target=parser.parse_args().regrid_source[0]
+        
+        #Add path unless full path is provided
+        if not ('/' in name_target):name_target= path2data + '/' + name_target
+        fNcdf_t=Dataset(name_target,'r')
+    
+                
+                        
+        for filei in file_list:
+            #Add path unless full path is provided
+            if not ('/' in filei):
+                fullnameIN = path2data + '/' + filei
+            else:
+                fullnameIN=filei
+            fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
 
+            f_in = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+                    
+            var_list = filter_vars(f_in,parser.parse_args().include) # get all variables
+
+            fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
             
+            #Copy all dims  from the target file to the new file
+            fnew.copy_all_dims_from_Ncfile(fNcdf_t)
+
+            #Loop over all variables in file
+            for ivar in var_list:
+                varNcf     = f_in.variables[ivar]
+                if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time','areo']:
+                        prCyan("Copying axis: %s..."%(ivar))
+                        fnew.copy_Ncaxis_with_content(fNcdf_t.variables[ivar])
+                elif varNcf.dimensions[-2:]==('lat', 'lon'): #Ignore variables like  'time_bounds', 'scalar_axis' or 'grid_xt_bnds'...
+                    prCyan("Regridding: %s..."%(ivar))
+                    var_OUT=regrid_Ncfile(varNcf,f_in,fNcdf_t)        
+                    fnew.log_variable(ivar,var_OUT,varNcf.dimensions,varNcf.long_name,varNcf.units)
+            fnew.close()
+            fNcdf_t.close()
+        f_in    
     else:
         prRed("""Error: no action requested: use 'MarsFiles *nc --fv3 --combine, --tshift, --bin_average, --bin_diurn etc ...'""")    
 

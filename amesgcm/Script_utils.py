@@ -41,8 +41,6 @@ def find_tod_in_diurn(fNcdf):
     return [string for string in varset if re.match(regex, string)][0] #Extract the 1st element of the list 
  
 
-
- 
     
 def print_fileContent(fileNcdf):
     '''
@@ -228,7 +226,7 @@ def FV3_file_type(fNcdf):
     Args:
         fNcdf: an (open) Netcdf file object 
     Return:
-       f_type (string): 'fixed', 'average', 'daily', or 'diurn'
+       f_type (string): 'fixed', 'contineous', or 'diurn'
        interp_type (string): 'pfull','pstd','zstd','zagl'
     '''
     #Get the full path from the file
@@ -239,16 +237,11 @@ def FV3_file_type(fNcdf):
     #Get the filename without the path
     _,filename=os.path.split(fullpath)
     
-    #Initialize
-    f_type='unknow'
+    #Initialize, assume the file is contineuous
+    f_type='contineous'
     interp_type='unknown'
     tod_name='n/a'
     
-    # These are initial guesses based on the filename. They are not robust if 
-    # the file gets renamed but also, only apply to the 'daily' and 'average'
-    # which have an identical data structure anyway
-    if 'atmos_daily'   in filename:f_type='daily'
-    if ('atmos_average' in filename) or ('to_average' in filename) :f_type='average'
     # Note: 'to_average' is for files re-binned by MarsFile.py
 
     #If 'time' is not a dimension, assume it is a 'fixed' file
@@ -383,6 +376,86 @@ def smart_reader(fNcdf,var_list,suppress_warning=False):
                     out_list.append(np.NaN)
     if one_element:out_list=out_list[0]
     return out_list
+
+
+def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
+    '''
+    Regrid a Ncdf variable from one file's structure to match another file  [Alex Kling , May 2021]
+    Args:
+        VAR_Ncdf: A netCDF4 variable OBJECT, e.g. 'f_in.variables['temp']' from the source file
+        file_Nc_in: The opened netcdf file object  for that input variable, e.g f_in=Dataset('fname','r')
+        file_Nc_target: Anopened netcdf file object  for the target grid t e.g f_out=Dataset('fname','r')  
+    Returns:
+        VAR_OUT: the VALUES of VAR_Ncdf[:], interpolated on the grid for the target file. 
+    while the closest points in the vertical are a few 10's -100's meter in the PBL, which would results in excessive weighting in the vertical.
+    '''
+    from amesgcm.FV3_utils import interp_KDTree, axis_interp
+    ftype_in,zaxis_in=FV3_file_type(file_Nc_in)
+    ftype_t,zaxis_t=FV3_file_type(file_Nc_target)
+    
+    #Sanity check
+    if ftype_in !=ftype_t:
+        print("""*** Error*** in regrid_Ncfile, input file  '%s' and target file '%s' must have the same type"""%(ftype_in,ftype_t))
+        exit
+    if zaxis_in!=zaxis_t:
+        print("""*** Error*** in regrid_Ncfile, input file  '%s' and target file '%s' must have the same vertical grid"""%(zaxis_in,zaxis_t))
+        exit
+    if zaxis_in=='pfull' or zaxis_t=='pfull':
+        print("""*** Error*** in regrid_Ncfile, input file  '%s' and target file '%s' must be vertically interpolated"""%(zaxis_in,zaxis_t))
+        exit
+    
+    #===Get target dimensions===
+    lon_t=file_Nc_target.variables['lon'][:]
+    lat_t=file_Nc_target.variables['lat'][:]
+    areo_t=file_Nc_target.variables['areo'][:]
+    time_t=file_Nc_target.variables['time'][:]  
+    
+    #===Get input dimensions===
+    lon_in=file_Nc_in.variables['lon'][:]
+    lat_in=file_Nc_in.variables['lat'][:]
+    areo_in=file_Nc_in.variables['areo'][:]
+    time_in=file_Nc_in.variables['time'][:] 
+    
+    #Get array elements
+    var_OUT=VAR_Ncdf[:]
+    
+    #STEP 1: Lat/lon interpolation always performed unless target lon and lat are identical
+    if not (np.all(lat_in==lat_t) and np.all(lon_in==lon_t)) :
+        var_OUT=interp_KDTree(var_OUT,lat_in,lon_in,lat_t,lon_t) #lon/lat
+        
+    #STEP 2: Linear or log interpolation if there is a vertical axis
+    if zaxis_in in VAR_Ncdf.dimensions:
+        pos_axis=VAR_Ncdf.dimensions.index(zaxis_in) #Get position: 'pstd' position is 1 in ('time', 'pstd', 'lat', 'lon')
+        lev_in=file_Nc_in.variables[zaxis_in][:]
+        lev_t=file_Nc_target.variables[zaxis_t][:]
+        #Check if the input need to be reverse, note thatwe are reusing find_n() function  which was designed for pressure interpolation 
+        #so the values are reverse if increasing upward (yes, this is counter intuituve)
+        if lev_in[0]<lev_in[-1]:
+            reverse_input=True
+        else:
+            reverse_input=False
+        if zaxis_in in ['zagl','zstd'] :
+            intType='lin'
+        elif zaxis_in=='pstd':
+            intType='log'  
+        var_OUT=axis_interp(var_OUT, lev_in,lev_t, pos_axis, reverse_input=reverse_input, type=intType)
+        
+    #STEP 3: Linear interpolation in Ls
+    if 'time' in VAR_Ncdf.dimensions:
+        pos_axis=0
+        var_OUT=axis_interp(var_OUT, np.squeeze(areo_in)%360,np.squeeze(areo_t)%360, pos_axis, reverse_input=False, type='lin')   
+        
+    #STEP 4: Linear interpolation in time of day  
+    if ftype_in =='diurn':
+        pos_axis=1
+        
+        tod_name_in=find_tod_in_diurn(file_Nc_in)
+        tod_name_t=find_tod_in_diurn(file_Nc_target)
+        tod_in=file_Nc_in.variables[tod_name_in][:]
+        tod_t=file_Nc_target.variables[tod_name_t][:]
+        var_OUT=axis_interp(var_OUT, tod_in,tod_t, pos_axis, reverse_input=False, type='lin')  
+       
+    return var_OUT   
 
             
 def progress(k,Nmax):

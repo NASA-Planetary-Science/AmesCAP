@@ -310,7 +310,7 @@ After inspecting the file, you can verify once again that pdf-ghostscript is ava
 
 By default MarsPlot will handle errors by itself (e.g. missing data) and reports them after completion both in  the terminal and overlayed in the figures. To by-pass this behavior (when debugging), use the  **--debug** option.
 
-A file _Diagnostic.pdf_ will be generated in the current directory with the requested plots which can be opened with a pdf viewer (`open Diagnostic.pdf` on MacOS, `evince Diagnostic.pdf` on Linux). If you have used the `--output png` formatting option, the images will be located in _plots/_ in the current directory.
+A file _Diagnostic.pdf_ will be generated in the current directory with the requested plots which can be opened with a pdf viewer. Run `open -a Preview Diagnostic.pdf` on MacOS: this opens the file with the Preview App that conveniently auto-reload pdfs (the 'Skim' editor, available for download offers a similar feature in _Preferences/Sync_) or use `evince Diagnostic.pdf` on Linux. If you have used the `--output png` formatting option, the images will be located in _plots/_ in the current directory.
 
 You can try to add a new figure by making a copy/paste of any of the entire `<<<| Plot ... = True |>>>` blocks below the `HOLD ON[...]HOLD OFF` statement, which is used to put multiple figures on a same page.  For example, to compute the  zonally-averaged (`Lon +/-180 = all`) and time-average of the first 10 degree of solar longitude (`Ls 0-360 = 0.,10`) for the dust field (dst_mass) from the interpolated file (atmos_average_pstd), we use:
 
