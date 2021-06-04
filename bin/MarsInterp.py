@@ -56,7 +56,11 @@ parser.add_argument('-include','--include',nargs='+',
                      help="""Only include listed variables. Dimensions and 1D variables are always included \n"""
                          """> Usage: MarsInterp.py *.atmos_daily.nc --include ps ts temp     \n"""
                          """\033[00m""")      
-                                                                        
+                                                                    
+parser.add_argument('-e','--ext',type=str,default=None,
+                 help="""> Append an extension _ext.nc to the output file instead of replacing any existing file \n"""
+                      """>  Usage: MarsInterp.py ****.atmos.average.nc -ext B \n"""
+                      """   This will produce   ****.atmos.average_pstd_B.nc files     \n""") 
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
 
@@ -160,7 +164,12 @@ def main():
     for ifile in file_list:
         #First check if file is present on the disk (Lou only)
         check_file_tape(ifile)
-        newname=filepath+'/'+ifile[:-3]+'_'+interp_type+'.nc'
+        
+        #Append extension, in any
+        if parser.parse_args().ext:
+            newname=filepath+'/'+ifile[:-3]+'_'+interp_type+'_'+parser.parse_args().ext+'.nc'
+        else:    
+            newname=filepath+'/'+ifile[:-3]+'_'+interp_type+'.nc'
 
         #=================================================================
         #=======================Interpolate action========================
