@@ -760,11 +760,13 @@ def alt_KM(press,scale_height_KM=8.,reference_press=610.):
     Gives the approximate altitude in km for a given pressure
     Args:
         press: the pressure in [Pa]
-        scale_height_KM: a scale height in [km], (default is 8 km)
+        scale_height_KM: a scale height in [km], (default is 8 km, an isothermal at 155K)
         reference_press: reference surface pressure in [Pa], (default is 610 Pa)
     Returns:
         z_KM: the equivalent altitude for that pressure level in [km]
-   
+        
+    ***NOTE***    
+    Scale height is H=rT/g
     """      
     return -scale_height_KM*np.log(press/reference_press) # p to altitude in km      
     
@@ -773,11 +775,12 @@ def press_pa(alt_KM,scale_height_KM=8.,reference_press=610.):
     Gives the approximate altitude in km for a given pressure
     Args:
         alt_KM: the altitude in  [km]
-        scale_height_KM: a scale height in [km], (default is 8 km)
+        scale_height_KM: a scale height in [km], (default is 8 km, an isothermal at 155K)
         reference_press: reference surface pressure in [Pa], (default is 610 Pa)
     Returns:
          press_pa: the equivalent pressure at that altitude in [Pa]
-   
+    ***NOTE***    
+    Scale height is H=rT/g
     """      
     return reference_press*np.exp(-alt_KM/scale_height_KM) # p to altitude in km 
      

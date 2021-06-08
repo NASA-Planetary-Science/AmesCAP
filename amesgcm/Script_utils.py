@@ -773,3 +773,62 @@ def dkass_temp_cmap():
 #=========================================================================   
 #=========================================================================
 #=========================================================================
+
+def pretty_print_to_fv_eta(var,varname,nperline=6):
+    """
+    Print the ak or bk coefficients to copy paste in fv_eta.f90 
+    Args:
+        data: ak or bk data
+        varname: the variable name, 'a' or 'b'
+        nperline:the number of elements per line
+    Returns:
+         The print statement ready to copy-paste in fv_eta.f90
+   
+    """
+    NLAY=len(var)-1
+    import sys
+    ni=0
+    print('') #skip a line
+    
+    #===========================================================
+    #=====print the piece of code to copy/paste in fv_eta.f90===
+    #===========================================================
+    
+    #If a, print the variable definitions before the variable content
+    if varname=='a':
+        print('      real a%i(%i),b%i(%i)'%(NLAY,NLAY+1,NLAY,NLAY+1)  )
+        print('')
+    
+    
+    
+    #===Initialize the first line===
+    print("data %s%i /      &"%(varname,NLAY))
+    sys.stdout.write('    ') #first tab
+    #===Loop over all elements=====
+    for i in range(0,len(var)-1):
+        sys.stdout.write('%16.10e, '%var[i])
+        ni+=1
+        if ni==nperline: 
+            sys.stdout.write(' &\n    ')
+            ni=0
+    #===last line===   
+    sys.stdout.write('%16.10e /\n'%var[NLAY])  
+    
+    #If b, print the code snippet after the displaying the variable
+    if varname=='b':
+        ks=0
+        while var[ks]==0. :
+            ks+=1
+        print('')
+        
+        #We remove 1 as it takes two boundary points to form one layer
+  
+        
+        print('        case (%i)'%(NLAY))
+        print('          ks = %i'%(ks-1))
+        print('          do k=1,km+1')
+        print('            ak(k) = a%i(k)'%(NLAY))
+        print('            bk(k) = b%i(k)'%(NLAY))
+        print('          enddo  ')
+        print(' ')
+     

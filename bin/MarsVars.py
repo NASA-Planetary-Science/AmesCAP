@@ -9,7 +9,7 @@ import warnings #Suppress certain errors when dealing with NaN arrays
 
 
 from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR,mass_stream,zonal_detrend,spherical_div,spherical_curl,frontogenesis
-from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type
+from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type,filter_vars
 from amesgcm.Ncdf_wrapper import Ncdf
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
@@ -95,7 +95,11 @@ parser.add_argument('-zd','--zonal_detrend', nargs='+',default=[],
                       
 parser.add_argument('-rm','--remove', nargs='+',default=[],
                  help='Remove any variable from the file  \n'
-                      '> Usage: MarsVars ****.atmos.average.nc -rm rho \n')                          
+                      '> Usage: MarsVars ****.atmos.average.nc -rm rho theta \n')      
+                      
+parser.add_argument('-extract','--extract', nargs='+',default=[],
+                 help='Extract variable to a new  _extract.nc file \n'
+                      '> Usage: MarsVars ****.atmos.average.nc -extract ps ts \n')                                          
 
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
@@ -330,10 +334,11 @@ def main():
     zdetrend_list=parser.parse_args().zonal_detrend
     col_list=parser.parse_args().col
     remove_list=parser.parse_args().remove
+    extract_list=parser.parse_args().extract
     debug =parser.parse_args().debug
     
     #Check if an operation is requested, otherwise print file content.
-    if not (add_list or zdiff_list or zdetrend_list or remove_list or col_list): 
+    if not (add_list or zdiff_list or zdetrend_list or remove_list or col_list or extract_list): 
         print_fileContent(file_list[0])
         prYellow(''' ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var' ''')
         exit() #Exit cleanly
@@ -371,6 +376,22 @@ def main():
                 cmd_txt='mv '+ifile_tmp+' '+ifile
                 p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
                 prCyan(ifile+' was updated')
+                
+        #=================================================================
+        #====================Extract action================================
+        #=================================================================
+        
+        if extract_list: 
+            f_IN=Dataset(ifile, 'r', format='NETCDF4_CLASSIC')
+            exclude_list = filter_vars(f_IN,parser.parse_args().extract,giveExclude=True) # variable to exclude
+            print()
+            ifile_tmp=ifile[:-3]+'_extract.nc'
+            Log=Ncdf(ifile_tmp,'Edited in postprocessing')
+            Log.copy_all_dims_from_Ncfile(f_IN)
+            Log.copy_all_vars_from_Ncfile(f_IN,exclude_list)
+            f_IN.close()
+            Log.close()
+            prCyan(ifile+' was created')                
  
         #=================================================================
         #=======================Add action================================
