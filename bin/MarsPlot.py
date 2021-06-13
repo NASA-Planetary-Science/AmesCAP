@@ -1930,12 +1930,14 @@ class Fig_2D_lon_lat(Fig_2D):
             lon180,var=shift_data(lon,var)
             #Try to get topo if a matching XXXXX.fixed.nc file exist
             
-            zsurf=self.get_topo_2D(self.varfull,self.plot_type)
-            if zsurf is None:
-                add_topo=False
-            else:
-                add_topo=True    
+            # Try to get topography is matching file
+            try :
+                surf=self.get_topo_2D(self.varfull,self.plot_type)
                 _,zsurf=shift_data(lon,zsurf)
+                add_topo=True
+            except:
+                add_topo=False   
+                
 
             projfull=self.axis_opt3
             #------------------------------------------------------------------------
