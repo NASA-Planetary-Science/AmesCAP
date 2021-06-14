@@ -104,6 +104,34 @@ def fms_Z_calc(psfc,ak,bk,T,topo=0.,lev_type='full'):
         Let's define the log-pressure u as u = ln(p). We have du = {du/dp}*dp = {1/p)*dp} =dp/p
         
         Finally , we have dz for the half layers:  dz=rT/g *-(du) => dz=rT/g *(+dp/p)   with N the layers defined from top to bottom.
+     
+    Z_half calculation:    
+    ------------------
+    Hydrostatic relation within the  layer >  P(k+1)/P(k)=exp(-DZ(k)/H)
+     > DZ(k)= rT/g *-(du) (layer thickness)  
+     > Z_h(k)=Z_h(k+1)+DZ_h(h)   (previous layer altitude + thickness of layer)
+    
+    Z_full calculation:
+    ------------------
+    Z_f(k)= Z_f(k+1)+(0.5 DZ(k)+ 0.5 DZ(k+1))  (previous altitude + half the thickness of previous layer and half of current layer)
+          = Z_f(k+1)+ DZ(k) + 0.5 (DZ(k+1)- DZ(k)) (we added +0.5 DZ(k)-0.5 DZ(k)=0 and re-organized the equation )
+          =    Z_h (k+1)    + 0.5 (DZ(k+1)- DZ(k))
+          
+          
+    We have the  specific hear ratio       γ=cp/cv (and cv= cp-R) =>   γ =cp/(cp-R) Also (γ-1)/γ=R/cp
+    We have the dry adiabatic lapse rate   Γ = g/cp => Γ=(gγ)/R
+    We have the isentropic relation        T2= T1(p2/p1)**(R/cp)
+    
+             therefore T_half[k+1]/Tfull[k]=(p_half[k+1]/p_full[k])**(R/Cp)            =====Thalf=====zhalf[k]  \ 
+                                                                                                                 \
+                                                                                                                  \
+    From the lapse rate, we assume T decreases lineraly within the layer:              -----Tfull-----zfull[k]     \ T(z)= To-Γ (z-zo)
+    T_half[k+1]=T_full[k] + Γ (Z_full[k]-Z_half[k+1]) (Tfull<Thalf and Γ>0)                                         \
+    > Z_full[k] = Z_half[k] +(T_half[k+1]-T_full[k])/Γ                                 =====Thalf=====zhalf[k+1]     \
+    Pulling out Tfull from eq. above and using  Γ = (gγ)/R: 
+    =>  Z_full[k] = Z_half[k+1]+ (R Tfull[k])/(gγ)(T_half[k+1]/T_full[k] -1)
+    Using the isentropic relation above:
+     => Z_full = Z_half[k+1]+ (R Tfull[k])/(gγ)(p_half[k+1]/p_full[k])**(R/Cp)-1)  
     """
     g=3.72 #acc. m/s2
     r_co2= 191.00 # kg/mol
@@ -134,14 +162,14 @@ def fms_Z_calc(psfc,ak,bk,T,topo=0.,lev_type='full'):
     Z_f=np.zeros((Nk-1,len(psfc_flat)))
     Z_h=np.zeros((Nk  ,len(psfc_flat)))
 
-    #First half layer is equal to the surface elevation
+    #First half layer is equal to the surface elevation  
     
     Z_h[-1,:] = topo_flat
-    
-    # Other layers, from the bottom-up:
-    for k in range(Nk-2,-1,-1):
-        Z_h[k,:] = Z_h[k+1,:]+(r_co2*T[k,:]/g)*(logPPRESS_h[k+1,:]-logPPRESS_h[k,:])
-        Z_f[k,:] = Z_h[k+1,:]+(r_co2*T[k,:]/g)*(1-PRESS_h[k,:]/PRESS_f[k,:])
+                                              
+    # Other layers, from the bottom-up:                                              
+    for k in range(Nk-2,-1,-1):                                                      
+        Z_h[k,:] = Z_h[k+1,:]+(r_co2*T[k,:]/g)*(logPPRESS_h[k+1,:]-logPPRESS_h[k,:]) 
+        Z_f[k,:] = Z_h[k+1,:]+(r_co2*T[k,:]/g)*(1-PRESS_h[k,:]/PRESS_f[k,:])        
         
     #return the arrays
     if lev_type=="full":
@@ -405,7 +433,7 @@ def interp_KDTree(var_IN,lat_IN,lon_IN,lat_OUT,lon_OUT,N_nearest=10):
     Ndim= np.int(np.prod(dimsIN[0:-2])) # Ndim is the product of all input dimensions but lat & lon
     dims_IN_reshape=tuple(np.append(Ndim,nlon_IN*nlat_IN))
     dims_OUT_reshape=tuple(np.append(Ndim,nlat_OUT*nlon_OUT))    
-    dims_OUT=np.append(dimsIN[0:-2],[nlat_OUT,nlon_OUT])
+    dims_OUT=np.append(dimsIN[0:-2],[nlat_OUT,nlon_OUT]).astype(int) #Needed if var is (lat,lon)
     var_OUT=np.zeros(dims_OUT_reshape)          #Initialization
     Ndimall=np.arange(0,Ndim)                   #all indices (does not change)
 
@@ -483,7 +511,7 @@ def area_weights_deg(var_shape,lat_c,axis=-2):
     Return weights for averaging of the variable var.   
     Args:              
         var_shape: variable's shape, e.g. [133,36,48,46] typically obtained with 'var.shape' 
-        Expected dimensions are:                      (lat) [axis not need]
+        Expected dimensions are:                      (lat) [axis not needed]
                                                  (lat, lon) [axis=-2 or axis=0]
                                            (time, lat, lon) [axis=-2 or axis=1]
                                       (time, lev, lat, lon) [axis=-2 or axis=2]
