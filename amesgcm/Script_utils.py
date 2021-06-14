@@ -394,27 +394,30 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
     ftype_t,zaxis_t=FV3_file_type(file_Nc_target)
     
     #Sanity check
+
     if ftype_in !=ftype_t:
-        print("""*** Error*** in regrid_Ncfile, input file  '%s' and target file '%s' must have the same type"""%(ftype_in,ftype_t))
-        exit
+        print("""*** Warning*** in regrid_Ncfile, input file  '%s' and target file '%s' must have the same type"""%(ftype_in,ftype_t))
+        
     if zaxis_in!=zaxis_t:
-        print("""*** Error*** in regrid_Ncfile, input file  '%s' and target file '%s' must have the same vertical grid"""%(zaxis_in,zaxis_t))
-        exit
+        print("""*** Warning*** in regrid_Ncfile, input file  '%s' and target file '%s' must have the same vertical grid"""%(zaxis_in,zaxis_t))
+        
     if zaxis_in=='pfull' or zaxis_t=='pfull':
-        print("""*** Error*** in regrid_Ncfile, input file  '%s' and target file '%s' must be vertically interpolated"""%(zaxis_in,zaxis_t))
-        exit
+        print("""*** Warning*** in regrid_Ncfile, input file  '%s' and target file '%s' must be vertically interpolated"""%(zaxis_in,zaxis_t))
+        
     
     #===Get target dimensions===
     lon_t=file_Nc_target.variables['lon'][:]
     lat_t=file_Nc_target.variables['lat'][:]
-    areo_t=file_Nc_target.variables['areo'][:]
-    time_t=file_Nc_target.variables['time'][:]  
+    if 'time' in VAR_Ncdf.dimensions:
+        areo_t=file_Nc_target.variables['areo'][:]
+        time_t=file_Nc_target.variables['time'][:]  
     
     #===Get input dimensions===
     lon_in=file_Nc_in.variables['lon'][:]
     lat_in=file_Nc_in.variables['lat'][:]
-    areo_in=file_Nc_in.variables['areo'][:]
-    time_in=file_Nc_in.variables['time'][:] 
+    if 'time' in VAR_Ncdf.dimensions:
+        areo_in=file_Nc_in.variables['areo'][:]
+        time_in=file_Nc_in.variables['time'][:] 
     
     #Get array elements
     var_OUT=VAR_Ncdf[:]
