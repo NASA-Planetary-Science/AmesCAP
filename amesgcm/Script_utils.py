@@ -449,6 +449,9 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
         var_OUT=axis_interp(var_OUT, np.squeeze(areo_in)%360,np.squeeze(areo_t)%360, pos_axis, reverse_input=False, type='lin')   
         
     #STEP 4: Linear interpolation in time of day  
+    #TODO the interpolation scheme is not cyclic. 
+    #> If Available diurn times  are 04 10 16 22 and requested time is 23, value is left to zero  and not interpololated from 22 and 04 times as it should
+    # if requesting 
     if ftype_in =='diurn':
         pos_axis=1
         
@@ -460,7 +463,7 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
        
     return var_OUT   
 
-            
+
 def progress(k,Nmax):
     """
     Display a progress bar to monitor heavy calculations. 
@@ -834,4 +837,35 @@ def pretty_print_to_fv_eta(var,varname,nperline=6):
         print('            bk(k) = b%i(k)'%(NLAY))
         print('          enddo  ')
         print(' ')
-     
+    
+
+def replace_dims(Ncvar_dim,vert_dim_name=None):
+    '''
+    Update the name for the variables dimension to match FV3's
+    Args:
+        Ncvar_dim: Netcdf variable dimensions, e.g f_Ncdf.variables['temp'].dimensions
+        vert_dim_name(optional): 'pstd', 'zstd', or 'zagl' if the vertical dimensions is ambigeous
+    Return:
+        dims_out: updated dimensions matching FV3's naming convention
+        
+    '''
+    #Set input dictionary options that would be recognized as FV3 variables
+    lat_dic=['lat','lats','latitudes','latitude']
+    lon_dic=['lon','lon','longitude','longitudes']
+    lev_dic=['pressure','altitude']
+    areo_dic=['ls']
+    
+    #Desired outputs
+
+    dims_out=list(Ncvar_dim).copy()
+    for ii,idim in enumerate(Ncvar_dim):
+        if idim in lat_dic: dims_out[ii]='lat' #Rename axis 
+        if idim in lon_dic: dims_out[ii]='lon'
+        if idim in lev_dic:
+            #Vertical coordinate: If no input is provided, assume it is standard pressure 'pstd'
+            if vert_dim_name is None:
+                dims_out[ii]='pstd'
+            else: #use provided dimension
+                dims_out[ii]=vert_dim_name
+                    
+    return tuple(dims_out)

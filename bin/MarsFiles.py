@@ -111,7 +111,11 @@ parser.add_argument('-include','--include',nargs='+',
                      help="""For data reduction, filtering, time-shift, only include listed variables. Dimensions and 1D variables are always included \n"""
                          """> Usage: MarsFiles.py *.atmos_daily.nc -ba --include ps ts ucomp    \n"""
                          """\033[00m""")      
-                                                
+
+parser.add_argument('-e','--ext',type=str,default=None,
+                 help="""> Append an extension _ext.nc to the output file instead of replacing any existing file \n"""
+                      """>  Usage: MarsFiles.py ****.atmos.average.nc [actions] -ext B \n"""
+                      """   This will produce   ****.atmos.average.nc files     \n""")                                                 
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
 
@@ -279,6 +283,10 @@ def main():
             else:
                 fullnameIN=filei
             fullnameOUT = fullnameIN[:-3]+'_T'+'.nc'
+            
+            #Append extension, in any:
+            if parser.parse_args().ext:fullnameOUT=fullnameOUT[:-3]+'_'+parser.parse_args().ext+'.nc'
+
 
             fdiurn = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
             fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
@@ -347,7 +355,10 @@ def main():
             else:
                 fullnameIN=filei
             fullnameOUT = fullnameIN[:-3]+'_to_average'+'.nc'
-
+            
+            #Append extension, in any:
+            if parser.parse_args().ext:fullnameOUT=fullnameOUT[:-3]+'_'+parser.parse_args().ext+'.nc'
+            
             fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
             var_list = filter_vars(fdaily,parser.parse_args().include) # get all variables
             
@@ -411,6 +422,9 @@ def main():
             else:
                 fullnameIN=filei
             fullnameOUT = fullnameIN[:-3]+'_to_diurn'+'.nc'
+            
+            #Append extension, in any:
+            if parser.parse_args().ext:fullnameOUT=fullnameOUT[:-3]+'_'+parser.parse_args().ext+'.nc'
 
             fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
             var_list = filter_vars(fdaily,parser.parse_args().include) # get all variables
@@ -498,6 +512,9 @@ def main():
             else:
                 fullnameIN=filei
             fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
+            
+            #Append extension, in any:
+            if parser.parse_args().ext:fullnameOUT=fullnameOUT[:-3]+'_'+parser.parse_args().ext+'.nc'
 
             fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
             
@@ -587,6 +604,9 @@ def main():
                 fullnameIN=filei
             fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
     
+            #Append extension, in any:
+            if parser.parse_args().ext:fullnameOUT=fullnameOUT[:-3]+'_'+parser.parse_args().ext+'.nc'
+            
             fname = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
             
             var_list = filter_vars(fname,parser.parse_args().include) # get all variables
@@ -678,6 +698,9 @@ def main():
             else:
                 fullnameIN=filei
             fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
+            
+            #Append extension, in any:
+            if parser.parse_args().ext:fullnameOUT=fullnameOUT[:-3]+'_'+parser.parse_args().ext+'.nc'
 
             fdiurn = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
             
@@ -773,6 +796,9 @@ def main():
             else:
                 fullnameIN=filei
             fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
+            
+            #Append extension, in any:
+            if parser.parse_args().ext:fullnameOUT=fullnameOUT[:-3]+'_'+parser.parse_args().ext+'.nc'
 
             f_in = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
                     
