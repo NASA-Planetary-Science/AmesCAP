@@ -92,7 +92,20 @@ def main():
      
     #The fixed file is needed if pk, bk are not available in the requested file, or
     # to load the topography is zstd output is requested 
-    name_fixed=filepath+'/'+file_list[0][0:5]+'.fixed.nc'
+    try:
+        name_fixed=filepath+'/'+file_list[0][0:5]+'.fixed.nc'
+        f_fixed=Dataset(name_fixed,'r')
+    except:
+        try:
+            name_fixed=filepath+'/'+'fixed.'+file_list[0][12:17]+'.nc'
+            f_fixed=Dataset(name_fixed,'r')
+        except:
+            try:
+                name_fixed=filepath+'/'+'fixed.'+file_list[0][14:19]+'.nc'
+                f_fixed=Dataset(name_fixed,'r')
+            except:
+                name_fixed=filepath+'/'+'fixed.'+file_list.split('.')[1][:5]+'.nc'
+                f_fixed=Dataset(name_fixed,'r')
     
     # PRELIMINARY DEFINITIONS
     #===========================pstd============================================
@@ -186,7 +199,22 @@ def main():
         except:
             #If pk and bk are not available in the file, try the matching XXXXX.fixed.nc
             name_fixed=filepath+'/'+ifile[0:5]+'.fixed.nc'
-            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')  
+            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
+            try:
+                name_fixed=filepath+'/'+ifile[0][0:5]+'.fixed.nc'
+                f_fixed=Dataset(name_fixed,'r', format='NETCDF4_CLASSIC')
+            except:
+                try:
+                    name_fixed=filepath+'/'+'fixed.'+ifile[12:17]+'.nc'
+                    f_fixed=Dataset(name_fixed,'r', format='NETCDF4_CLASSIC')
+                except:
+                    try:
+                        name_fixed=filepath+'/'+'fixed.'+ifile[14:19]+'.nc'
+                        f_fixed=Dataset(name_fixed,'r', format='NETCDF4_CLASSIC')
+                    except:
+                        name_fixed=filepath+'/'+'fixed.'+ifile.split('.')[1][:5]+'.nc'
+                        f_fixed=Dataset(name_fixed,'r', format='NETCDF4_CLASSIC')
+            
             pk=np.array(f_fixed.variables['pk'])
             bk=np.array(f_fixed.variables['bk'])  
             f_fixed.close()
