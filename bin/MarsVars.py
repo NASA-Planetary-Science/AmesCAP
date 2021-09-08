@@ -399,8 +399,20 @@ def main():
         
         #If the list is not empty, load ak and bk for pressure calculation, those are always needed.
         if add_list: 
-            name_fixed=ifile[0:5]+'.fixed.nc'
-            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
+            try:
+                name_fixed=ifile[0:5]+'.fixed.nc'
+                f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
+            except FileNotFoundError:
+                try:
+                    name_fixed='fixed.'+ifile[12:17]+'.nc'
+                    f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
+                except FileNotFoundError:
+                      try:
+                          name_fixed='fixed.'+ifile[14:19]+'.nc'
+                          f_fixed=Dataset(name_fixed,'r', format='NETCDF4_CLASSIC')
+                      except FileNotFoundError:
+                          name_fixed='fixed.'+ifile.split('.')[1][:5]+'.nc'
+                          f_fixed=Dataset(name_fixed,'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=f_fixed.variables['pk'][:]
             bk=f_fixed.variables['bk'][:]
@@ -570,8 +582,20 @@ def main():
         
         #ak and bk are needed to derive the distance between layer pfull
         if zdiff_list: 
-            name_fixed=ifile[0:5]+'.fixed.nc'
-            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
+            try:
+                name_fixed=ifile[0:5]+'.fixed.nc'
+                f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
+            except FileNotFoundError:
+                try:
+                    name_fixed='fixed.'+ifile[12:17]+'.nc'
+                    f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
+                except FileNotFoundError:
+                      try:
+                          name_fixed='fixed.'+ifile[14:19]+'.nc'
+                          f_fixed=Dataset(name_fixed,'r', format='NETCDF4_CLASSIC')
+                      except FileNotFoundError:
+                          name_fixed='fixed.'+ifile.split('.')[1][:5]+'.nc'
+                          f_fixed=Dataset(name_fixed,'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=np.array(f_fixed.variables['pk'])
             bk=np.array(f_fixed.variables['bk'])
@@ -681,8 +705,20 @@ def main():
         ''' 
         #ak and bk are needed to derive the distance between layer pfull
         if col_list:
-            name_fixed=ifile[0:5]+'.fixed.nc'
-            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
+             try:
+                name_fixed=ifile[0:5]+'.fixed.nc'
+                f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
+            except FileNotFoundError:
+                try:
+                    name_fixed='fixed.'+ifile[12:17]+'.nc'
+                    f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
+                except FileNotFoundError:
+                      try:
+                          name_fixed='fixed.'+ifile[14:19]+'.nc'
+                          f_fixed=Dataset(name_fixed,'r', format='NETCDF4_CLASSIC')
+                      except FileNotFoundError:
+                          name_fixed='fixed.'+ifile.split('.')[1][:5]+'.nc'
+                          f_fixed=Dataset(name_fixed,'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=np.array(f_fixed.variables['pk'])
             bk=np.array(f_fixed.variables['bk'])
