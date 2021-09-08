@@ -470,7 +470,7 @@ You can customize your own plots using the programming language of your choice. 
 
 Create a file called `demo.py` and copy $ paste the following within it:
 
-```
+```python3
 #======================= Import python packages ================================
 import numpy as np                          # for array operations
 import matplotlib.pyplot as plt             # python plotting library
