@@ -2,15 +2,15 @@ Welcome to the Mars Climate Modeling Center (MCMC) Community Analysis Pipeline (
 
 The simulation results presented on this page are extensively documented in [Haberle et al. 2019](https://www.sciencedirect.com/science/article/pii/S0019103518305761)
 
-# INSTALLATION {#INSTALLATION}
+# INSTALLATION
 
 The analysis pipeline is entirely written in pure Python which is an intuitive and open source programming language. You may identify yourself in one the following categories:
 
-* A. You are familiar with the Python infrastructure and would like to install the Analysis pipeline on top of your current Python installation: Check the requirements below and skip to [Installing the Pipeline](#Install_CAP). Note that you may have to manually add aliases to the `Mars***.py` executables to your search path.
+* A. You are familiar with the Python infrastructure and would like to install the Analysis pipeline on top of your current Python installation: Check the requirements below and skip to [Installing the Pipeline](#installing-the-pipeline). Note that you may have to manually add aliases to the `Mars***.py` executables to your search path.
 
-* B. You have experience with Python but not with managing packages, or you are new to Python: To ensure that there is no conflict with other Python versions that may be on your system, we will install a fresh Python distribution **locally** (this does not require admin permission). Additionally, we will install the analysis pipeline in a self-contained **virtual environment**. A virtual environment is basically a stand-alone copy of your entire Python distribution minus the 'core' code that is shared with the main Python distribution.  This will allow you to use your fresh Python installation for other projects (including installing or upgrading packages) without the risk of altering CAP. It will also be safe to alter (or even completely delete) the virtual environment without breaking the main Python distribution.
+* B. You have experience with Python but not with managing packages, or you are new to Python: To ensure that there is no conflict with other Python versions that may be on your system, we will install a fresh Python distribution **locally** (this does not require admin permission). Additionally, we will install the analysis pipeline in a self-contained **virtual environment**. A virtual environment is basically a stand-alone copy of your entire Python distribution minus the 'core' code that is shared with the main Python distribution.  This will allow you to use your fresh Python installation for other projects (including installing or upgrading packages) without the risk of altering CAP. It will also be safe to alter (or even completely delete) the virtual environment without breaking the main Python distribution. [test](#installation)
 
-##  Requirements {#Requirements}
+## Requirements
 
 **Python 3**
 If you are already a Python user, you can install CAP on top of your current Python installation. For new users, we recommend you use the latest version of the Anaconda Python distribution because it ships with pre-compiled math and plotting packages (e.g. `numpy`, `matplotlib`) as well as pre-compiled libraries (e.g. `hdf5` headers to read `netCDF` files). You can download Anaconda using either the command-line installer or the graphical interface via the instructions [here](https://www.anaconda.com/distribution/#download-section). If you are the owner ("admin") of your system, you can choose to install Python at the system level. Otherwise, you can install Python in your home directory if you don't have permission to install at the system level.
@@ -108,7 +108,7 @@ If it is not installed, follow the directions on the `ghostscript` [website](htt
 
 ***
 
-## Creation of the Virtual Environment {#Create_venv}
+## Creation of the Virtual Environment
 
 Next, we will create a virtual environment in which to download CAP. The virtual environment shares the your main Python core but branches out with its own packages. We will name it `amesGCM3` to remind ourselves that this environment shares the core Python3 structure it is derived from. To create the virtual environment, open a terminal and type:
 ```bash
@@ -145,16 +145,16 @@ You may notice that after sourcing `amesGCM3`, your prompt changed to `(amesGCM3
 
 After sourcing the virtual environment, we can verify that `which python` and `which pip` unambiguously point to `amesGCM3/bin/python3` and `amesGCM3/bin/pip`, respectively. There is therefore no need to reference their full paths for the following instructions.
 
-## Installing the Pipeline {#Install_CAP}
+## Installing the Pipeline
 
-##### Directly from Github {#Install_CAP_GitHub}
+#### Directly from Github
 
 From *inside* the virtual environment, `amesGCM3`, run:
 ```bash
 (amesGCM3)>$ pip install git+https://github.com/alex-kling/amesgcm.git
 ```
 
-##### From a .zip Archive  {#Install_CAP_zip}
+#### From a .zip Archive
 
 If you have been provided with an archive, download and untar the `amesgcm-master.zip` archive wherever it is on your machine (e.g. in `/Downloads`). From **inside** the virtual environment, type:
 ```bash
@@ -230,7 +230,7 @@ $
 
 ***
 
-## Routine use of the pipeline  {#Routine_Use}
+## Routine use of the pipeline
 
 Every time you want to use CAP from a new terminal session, simply source the `amesGCM3` virtual environment:
 ```bash
@@ -276,7 +276,7 @@ Remember, you can exit the virtual environment using:
 (amesGCM3)>$ deactivate
 ```
 
-## Upgrade or Remove CAP {#Upgrade}
+## Upgrade or Remove CAP
 To upgrade your version of CAP to the most recent release, activate `amesGCM3` and run the `upgrade` command:
 ```bash
 $ source amesGCM3/bin/activate      # in bash, OR
@@ -295,13 +295,13 @@ It is also safe to delete the entire `~/amesGCM3` directory in order to delete C
 
 ***
 
-# TUTORIAL {#TUTORIAL}
-## Overview of Using CAP for Analysis {#Overview}
+# TUTORIAL
+## Overview of Using CAP for Analysis
 
 The following steps show you how to use CAP to access Mars GCM data, reduce it, compute diagnostics, interpolate diagnostics to standard pressures levels, and visualize the results. A quick overview of what these steps are is shown in the graphic below.
 ![](./docs/cheat_sheet.png)
 
-## Download Raw Legacy GCM Outputs {#Legacy_Download}
+## Download Raw Legacy GCM Outputs
 The data from the Legacy GCM are available for download on the [MCMC Data portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php). The data are archived in 1.5 hours intervals (i.e. 16 times a day), packaged in sets of 10 sols (1 sol = 1 Martian day), and referenced by their solar longitude ("_Ls_"). Ls=0° is northern vernal equinox (beginning of Northern spring), Ls=90° is northern summer solstice, Ls=180° is northern autumnal equinox, and Ls=270° is northern winter solstice. 
 
 Let's begin by downloading 30-sols of data starting the beginning of the Martian year (Ls=0° to Ls=15°). First, source the virtual environment. Then, navigate to the directory in which you would like to store the data and run:
@@ -352,7 +352,7 @@ We can use `--dump` (or `--stat`) with `MarsPlot.py` to inspect the changes made
 (amesGCM3)>$ MarsPlot.py -i 00000.atmos_average.nc -dump time areo
 ```
 
-## Variable Operations {#Variable_ops}
+## Variable Operations
 When no arguments are provided, the variable utility `MarsVars.py` has the same functionality as `MarsPlot.py -i`:
 ```bash
 (amesGCM3)>$ MarsVars.py 00000.atmos_average.nc
@@ -378,7 +378,7 @@ Similarly, we can perform a column integration on the water vapor variable (`vap
 (amesGCM3)>$ MarsVars.py 00000.atmos_average.nc -col vap_mass -rm ice_num dst_num
 ```
 
-## Pressure Interpolation {#pinterp}
+## Pressure Interpolation
 
 The Legacy GCM uses a pressure coordinate (`pfull`) in the vertical which means that a single atmospheric layer will be located at different geometric heights (and pressure levels) between the atmospheric columns. Before we do any zonal averaging, it is therefore necessary to interpolate the data to standard pressure surfaces. This operation can be done using `MarsInterp` with the `--type pstd` option:
 ```bash
@@ -392,7 +392,7 @@ Inspecting the file with:
 ```
 we can see that the vertical coordinate `pfull` (formerly 24 layers) has been replaced by a standard pressure coordinate `pstd`. Also, the shape of the 3D variables reflect the new shape of `pstd`.
 
-## Plotting the results with MarsPlot {#Plotting}
+## Plotting the results with MarsPlot
 
 While you may use the software of your choice to visualize the results (e.g. Matlab, IDL), a utility is provided in CAP that creates 2D figures and 1D line plots that are easily configured from an input template. To generate a plotting template (`Custom.in`) in the current directory, use:
 ```bash
@@ -491,7 +491,7 @@ By default, `MarsPlot.py` runs the requested analysis on the *last* set of outpu
 
 Close and open the PDF again and you should see a new figure of the updated dust field. You can use `Custom.in` jointly with `MarsPlot.py --inspect` to add new figures and to explore the other plot types outlined in `Custom.in`. By default, plot templates are set to `= False` but can be enabled with `= True`.
 
-# Moving Forward with Your Own Analysis {#Your_Analysis}
+# Moving Forward with Your Own Analysis
 
 You can customize your own plots using the programming language of your choice. Here is a Python script to get you started. Unless you have installed python-netCDF4 and CAP on top of your main distribution, this script has to be be run from within the `amesGCM3` virtual environment. This will allow access to the `netCDF4` and `amesGCM3` packages.
 
