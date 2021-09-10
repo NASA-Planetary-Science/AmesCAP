@@ -1,8 +1,8 @@
-Welcome to the Mars Climate Modeling Center (MCMC) Community Analysis Pipeline (CAP). This document includes the instructions for [installing CAP](#installation) and its dependencies (Python3 & its packages) as well as a [tutorial](#tutorial) detailing how to use CAP in practice. By the end of this tutorial, you will know how to download Mars Climate data from the MCMC data portal, reduce these large climate simulations to meaningful data, and make plots for Martian winds, temperature, and aerosols at specific seasons and locations.
+Welcome to the Mars Climate Modeling Center (MCMC) Community Analysis Pipeline (CAP). This document includes the instructions for [installing CAP](#cap-installation) and its dependencies (Python3 & its packages) as well as a [tutorial](#cap-tutorial) detailing how to use CAP in practice. By the end of this tutorial, you will know how to download Mars Climate data from the MCMC data portal, reduce these large climate simulations to meaningful data, and make plots for Martian winds, temperature, and aerosols at specific seasons and locations.
 
 The simulation results presented on this page are extensively documented in [Haberle et al. 2019](https://www.sciencedirect.com/science/article/pii/S0019103518305761)
 
-# Installation
+# CAP Installation
 
 The analysis pipeline is entirely written in pure Python which is an intuitive and open source programming language. You may identify yourself in one the following categories:
 
@@ -294,7 +294,7 @@ It is also safe to delete the entire `~/amesGCM3` directory in order to delete C
 
 ***
 
-# TUTORIAL
+# CAP Tutorial
 ## Overview of Using CAP for Analysis
 
 The following steps show you how to use CAP to access Mars GCM data, reduce it, compute diagnostics, interpolate diagnostics to standard pressures levels, and visualize the results. A quick overview of what these steps are is shown in the graphic below.
