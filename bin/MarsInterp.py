@@ -92,7 +92,7 @@ def main():
      
     #The fixed file is needed if pk, bk are not available in the requested file, or
     # to load the topography is zstd output is requested 
-    name_fixed=find_fixedfile(filepath,file_list)
+    name_fixed=find_fixedfile(filepath,file_list[0])
     
     # PRELIMINARY DEFINITIONS
     #===========================pstd============================================
