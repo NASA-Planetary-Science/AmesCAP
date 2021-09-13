@@ -399,7 +399,7 @@ def main():
         
         #If the list is not empty, load ak and bk for pressure calculation, those are always needed.
         if add_list: 
-            name_fixed=find_fixedfile(filepath,ifile)
+            name_fixed=find_fixedfile(None,ifile)
             f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=f_fixed.variables['pk'][:]
@@ -570,7 +570,7 @@ def main():
         
         #ak and bk are needed to derive the distance between layer pfull
         if zdiff_list: 
-            name_fixed=find_fixedfile(filepath,ifile)
+            name_fixed=find_fixedfile(None,ifile)
             f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=np.array(f_fixed.variables['pk'])
@@ -681,7 +681,7 @@ def main():
         ''' 
         #ak and bk are needed to derive the distance between layer pfull
         if col_list:
-            name_fixed=find_fixedfile(filepath,ifile)
+            name_fixed=find_fixedfile(None,ifile)
             f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=np.array(f_fixed.variables['pk'])
