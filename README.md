@@ -398,3 +398,10 @@ plt.show()
 This will produce the following:
 
 ![](./docs/demo_figure.png)
+
+## TEST EQUATION RAW
+$$ \frac{\partial \rho}{\partial t} +\mathrm{div}\left(\rho V\right)= 0.$$
+$$ \frac{\partial \rho q}{\partial t} +\mathrm{div}\left(\rho qV\right)= 0.$$
+
+## TEST EQUATION WORK AROUND
+![equation](https://latex.codecogs.com/gif.latex?%5Cfrac%7B%5Cpartial%20%5Crho%7D%7B%5Cpartial%20t%7D%20&plus;%5Cmathrm%7Bdiv%7D%5Cleft%28%5Crho%20V%5Cright%29%3D%200.%20%5Cfrac%7B%5Cpartial%20%5Crho%20q%7D%7B%5Cpartial%20t%7D%20&plus;%5Cmathrm%7Bdiv%7D%5Cleft%28%5Crho%20qV%5Cright%29%3D%200.)
