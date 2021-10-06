@@ -1,36 +1,36 @@
-# The Community Analysis Pipeline (CAP)
+![](./tutorial_images/Tutorial_Banner_Final.png)
 
+***
 
-
-
-## Introducing CAP
+# Introducing the Community Analysis Pipeline (CAP)
 
 CAP is toolkit designed to simplify post-processing MGCM output. CAP is written in Python and works with existing Python libraries allowing any Python user to install and use CAP easily and free of charge. Without CAP, plotting MGCM output requires that the user provide their own scripts for post-processing, including code to interpolate the vertical grid, compute derived variables, convert between file types, and create diagnostic plots. The user would be responsible for the entire post-processing effort as illustrated in Figure 1.
 
-![Figure 1. The Typical Pipeline](/tutorial_images/Typical_Pipeline.png)
+![Figure 1. The Typical Pipeline](./tutorial_images/Typical_Pipeline.png)
 
 Such a process requires that the user be familiar with Fortran files and be able to write (or provide) script(s) to perform file manipulations and create plots from the data. At best, this effort is cumbersome. At worst, it excludes users who lack access to (or knowledge of how to write) post-processing scripts and Fortran code. CAP standardizes the post-processing effort by providing tools that can be called from the command line to perform file manipulations and create diagnostic plots. This enables users of almost any skill level to post-process and plot MGCM data (Figure 2).
 
-![Figure 2. The New Pipeline (CAP)](/tutorial_images/CAP.png)
+![Figure 2. The New Pipeline (CAP)](./tutorial_images/CAP.png)
 
 Specifically, CAP consists of five subroutines that provide tools to perform the following functions:
 
-1. `MarsPull.py`    Access MGCM output
-2. `MarsFiles.py`   Reduce the files
-3. `MarsVars.py`    Perform variable operations
-4. `MarsInterp.py`  Interpolate the vertical grid
-5. `MarsPlot.py`    Visualize the MGCM output
+1. `MarsPull.py`    Accessing MGCM output
+2. `MarsFiles.py`   Reducing the files
+3. `MarsVars.py`    Performing variable operations
+4. `MarsInterp.py`  Interpolating the vertical grid
+5. `MarsPlot.py`    Visualizing the MGCM output
 
 These routines and their commonly-used functions are illustrated in the cheat sheet below, which you should feel free to reference even after the tutorial:
 
-![Figure 3. Quick Guide to Using CAP](/tutorial_images/Cheat_Sheet.png)
+![Figure 3. Quick Guide to Using CAP](./tutorial_images/Cheat_Sheet.png)
 
-CAP is designed to be used modularly. A user could use CAP exclusively to post-process and then plot MGCM output, but the tools in CAP can also be employed individually. Thus, users are free to selectively integrate CAP into their own analysis routine to the extent they see fit.
-
-
+CAP is designed to be modular. A user could use CAP exclusively to post-process and then plot MGCM output, but the tools in CAP can also be employed individually. Thus, users are free to selectively integrate CAP into their own analysis routine to the extent they see fit.
 
 
-## The Five Components of CAP
+***
+
+
+# The Five Components of CAP
 
 In this section, we describe the tools provided in CAP by stepping through each of the five subroutines that make up CAP. The routines are presented in the order in which they are most often used, the same order that was listed in the introduction:
 
@@ -40,12 +40,11 @@ In this section, we describe the tools provided in CAP by stepping through each 
 4. `MarsInterp.py`
 5. `MarsPlot.py`
 
+
 ***
 
 
-
-
-### 1. `MarsPull.py` - Downloading Raw MGCM Output
+## 1. `MarsPull.py` - Downloading Raw MGCM Output
 
 `MarsPull` is a utility for accessing MGCM output files hosted on the [MCMC Data portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php). MGCM data is archived in 1.5 hour intervals (16x/day, '_ntod_') and packaged in files containing 10 sols ('_time_') of data. The file naming convention is:
 
@@ -55,12 +54,11 @@ LegacyGCM_LsXXX_LsYYY.nc
 
 Where XXX and YYY are three-digit Solar Longitude (L<sub>s</sub>) values. The files can be retrieved from the command line using CAP by providing `MarsPull` with either a range of Solar Longitudes from which to pull data or a specific filename.
 
+
 ***
 
 
-
-
-### 2. `MarsFiles.py` - Reducing the Files
+## 2. `MarsFiles.py` - Reducing the Files
 
 `MarsFiles` provides several tools for file manipulations, including code designed to create binned, averaged, and time-shifted files from MGCM output. These are the file formats that `MarsFiles` can create from the raw MGCM output files:
 
@@ -74,12 +72,14 @@ Where XXX and YYY are three-digit Solar Longitude (L<sub>s</sub>) values. The fi
 
 Finally, `MarsFiles` can be used to perform basic tidal analysis (temporal and spatial filtering, diurnal tides and their harmonics).
 
+
+
 ***
 
 
 
 
-### 3. `MarsVars.py` - Performing Variable Operations
+## 3. `MarsVars.py` - Performing Variable Operations
 
 `MarsVars` provides several tools relating to variable operations such as adding and removing variables and performing column integrations. With no other arguments, passing a file to `MarsVars` displays file content much like `ncdump`:
 
@@ -236,7 +236,7 @@ Ls ranging from 242.52 to 252.30: 15.00 days
 
 
 
-### 4. `MarsInterp.py` - Interpolating the Vertical Grid
+## 4. `MarsInterp.py` - Interpolating the Vertical Grid
 
 Native MGCM output files use pressure as the vertical coordinate, which means the geometric height and pressure level of an atmospheric layer varies based on location. Climate data is usually analyzed on a standardized grid, however, and it is often necessary to interpolate the files to standard pressure coordinates. The `-type` argument in `MarsInterp` can interpolate files for you:
 
@@ -290,7 +290,7 @@ You can even add your own vertical coordinate array to `amesgcm_profile` so that
 
 
 
-### 5. `MarsPlot.py` - Plotting the Results
+## 5. `MarsPlot.py` - Plotting the Results
 
 The last component of CAP is the plotting routine, `MarsPlot`, which accepts a modifiable template containing a list of plots to create. `MarsPlot` is useful for creating plots from MGCM output quickly, and it is designed specifically for use with the netCDF output files (`daily`, `diurn`, `average`, `fixed`) generated by `MarsFiles`. The default template, Custom.in, can be created by passing the `-template` argument to `MarsPlot`. Custom.in is pre-populated to draw two plots on one page: a topographical plot from the fixed file and a cross-section of the zonal wind from the average file. Creating the template and passing it into `MarsPlot` creates a PDF containing the plots as in Figure 4:
 
@@ -308,7 +308,7 @@ Merging figures...
 %
 ```
 
-![Figure 4. The default plots in Diagnostics.pdf created by Custom.in](/tutorial_images/Diagnostics.png)
+![Figure 4. The default plots in Diagnostics.pdf created by Custom.in](./tutorial_images/Diagnostics.png)
 
 `Custom.in` can be modified using your preferred text editor and renamed to your liking. 
 
