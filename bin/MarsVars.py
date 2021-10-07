@@ -98,7 +98,7 @@ parser.add_argument('-rm','--remove', nargs='+',default=[],
                       '> Usage: MarsVars ****.atmos.average.nc -rm rho theta \n')      
                       
 parser.add_argument('-extract','--extract', nargs='+',default=[],
-                 help='Extract variable to a new  _extract.nc file \n'
+                 help='Extract variable(s) to a new  _extract.nc file \n'
                       '> Usage: MarsVars ****.atmos.average.nc -extract ps ts \n')                                          
 
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
@@ -154,8 +154,7 @@ def compute_p_3D(ps,ak,bk,shape_out):
     The shape_out argument ensures that, when time=1 (one timestep) results are returned as (1,lev,lat,lon), not (lev,lat,lon)
     """
     p_3D= fms_press_calc(ps,ak,bk,lev_type='full')
-    if len(p_3D.shape)==4:p_3D=p_3D.transpose([1,0,2,3])# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
-                                    # TODO add diurn
+    p_3D=p_3D.transpose(lev_T)# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
     return p_3D.reshape(shape_out)  
     
 def compute_rho(p_3D,temp):
@@ -164,13 +163,19 @@ def compute_rho(p_3D,temp):
     """
     return p_3D/(rgas*temp)
     
-def compute_theta(p_3D,ps,temp):
+def compute_theta(p_3D,ps,temp,f_type):
     """
     Return the potential temperature in [K]
     """
     theta_exp= R/(M_co2*Cp)
-    ps_shape=ps.shape #(time,lat,lon) is transformed into (time,1,lat,lon) in the next line with np.reshape
-    return temp*(np.reshape(ps,(ps_shape[0],1,ps_shape[1],ps_shape[2]))/p_3D)**(theta_exp) #potential temperature
+    #Broadcast dimensions
+    ps_shape=ps.shape
+    if f_type=='diurn':
+        ps_shape=[ps_shape[0],ps_shape[1],1,ps_shape[2],ps_shape[3]]#(time,tod,lat,lon) is transformed into (time,tod,1,lat,lon)
+    else:   
+        ps_shape=[ps_shape[0],1,ps_shape[1],ps_shape[2]] #(time,lat,lon) is transformed into (time,1,lat,lon)
+
+    return temp*(np.reshape(ps,ps_shape)/p_3D)**(theta_exp) 
     
 def compute_w(rho,omega):    
     return -omega/(rho*g)
@@ -180,10 +185,11 @@ def compute_zfull(ps,ak,bk,temp):
     Compute the altitude AGL in [m]
     """
     dim_out=temp.shape
-    if len(dim_out)==4:
-        zfull=fms_Z_calc(ps,ak,bk,temp.transpose([1,0,2,3]),topo=0.,lev_type='full') # temp: [tim,lev,lat,lon,lev] ->[lev,time, lat, lon]
-        zfull=zfull.transpose([1,0,2,3])# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon] 
-    # TODO add diurn
+    prCyan(temp.transpose(lev_T).shape)  #(lev, tod, time, lat, lon)
+    zfull=fms_Z_calc(ps,ak,bk,temp.transpose(lev_T),topo=0.,lev_type='full') # (lev, time, tod, lat,lon)
+    prGreen(zfull.shape)
+    zfull=zfull.transpose(lev_T_out)# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon] # temp: [tim,tod,lev,lat,lon,lev] ->[lev,time, tod,lat, lon]
+    prRed(zfull.shape)
     return zfull
 
 def compute_zhalf(ps,ak,bk,temp):
@@ -191,10 +197,8 @@ def compute_zhalf(ps,ak,bk,temp):
     Compute the altitude AGL in [m]
     """
     dim_out=temp.shape
-    if len(dim_out)==4:
-        zhalf=fms_Z_calc(ps,ak,bk,temp.transpose([1,0,2,3]),topo=0.,lev_type='half') # temp: [tim,lev,lat,lon,lev] ->[lev,time, lat, lon]
-        zhalf=zhalf.transpose([1,0,2,3])# p_3D [lev+1,tim,lat,lon] ->[tim, lev+1, lat, lon]
-    # TODO add diurn    
+    zhalf=fms_Z_calc(ps,ak,bk,temp.transpose(lev_T),topo=0.,lev_type='half') # temp: [tim,lev,lat,lon,lev] ->[lev,time, lat, lon]
+    zhalf=zhalf.transpose(lev_T_out)# p_3D [lev+1,tim,lat,lon] ->[tim, lev+1, lat, lon]  
     return zhalf
 
 def compute_DZ_full_pstd(pstd,temp,ftype='average'):
@@ -252,7 +256,7 @@ def compute_N(theta,zfull):
     """
     Compute the Brunt Vaisala freqency in [rad/s]
     """
-    dtheta_dz  = dvar_dh(theta.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])        
+    dtheta_dz  = dvar_dh(theta.transpose(lev_T),zfull.transpose(lev_T)).transpose(lev_T)        
     return np.sqrt(g/theta*dtheta_dz)
 
 
@@ -267,8 +271,8 @@ def compute_scorer(N,ucomp,zfull):
     """
     Compute the Scorer wavelenght in [m]
     """
-    dudz=dvar_dh(ucomp.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])
-    dudz2=dvar_dh(dudz.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])
+    dudz=dvar_dh(ucomp.transpose(lev_T),zfull.transpose(lev_T)).transpose(lev_T)
+    dudz2=dvar_dh(dudz.transpose(lev_T),zfull.transpose(lev_T)).transpose(lev_T)
     scorer2= N**2/ucomp**2 -1./ucomp*dudz2    
     return 2*np.pi/np.sqrt(scorer2) 
 
@@ -278,7 +282,7 @@ def compute_DP_3D(ps,ak,bk,shape_out):
     """
     p_half3D= fms_press_calc(ps,ak,bk,lev_type='half') #[lev,tim,lat,lon]
     DP_3D=p_half3D[1:,...,]- p_half3D[0:-1,...] 
-    if len(DP_3D.shape)==4:DP_3D=DP_3D.transpose([1,0,2,3])# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
+    DP_3D=DP_3D.transpose(lev_T)# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
     out=DP_3D.reshape(shape_out)
     return out
 
@@ -286,9 +290,9 @@ def compute_DZ_3D(ps,ak,bk,temp,shape_out):
     """
     Compute the thickness of a layer in [Pa]
     """
-    z_half3D= fms_Z_calc(ps,ak,bk,temp.transpose([1,0,2,3]),topo=0.,lev_type='half')
+    z_half3D= fms_Z_calc(ps,ak,bk,temp.transpose(lev_T),topo=0.,lev_type='half')
     DZ_3D=z_half3D[0:-1,...]-z_half3D[1:,...,] #Note the reverse order as Z decreases with increasing levels
-    if len(DZ_3D.shape)==4:DZ_3D=DZ_3D.transpose([1,0,2,3])# DZ_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
+    DZ_3D=DZ_3D.transpose(lev_T)# DZ_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
     out=DZ_3D.reshape(shape_out)
     return out
 
@@ -318,7 +322,7 @@ def compute_WMFF(MF,rho,lev,interp_type):
         du/dz= (du/dp).(dp/dz) > du/dz=-rho g (du/dp) with dp/dz = -rho g 
     """
     #Differentiate the variable 
-    darr_dz=dvar_dh((rho*MF).transpose([1,0,2,3]),lev).transpose([1,0,2,3])
+    darr_dz=dvar_dh((rho*MF).transpose(lev_T),lev).transpose(lev_T)
     
     if interp_type=='pstd':
         # We just computed du/dp, we need to multiply by (-rho g) to obtain du/dz
@@ -336,6 +340,9 @@ def main():
     remove_list=parser.parse_args().remove
     extract_list=parser.parse_args().extract
     debug =parser.parse_args().debug
+    
+    global lev_T #an array to swap vertical axis first and back: [1,0,2,3] for [time,lev,lat,lon], and [2,1,0,3,4]for [tim, tod,lev, lat, lon]
+    global lev_T_out #reshape in zfull, zhalf calculation
     
     #Check if an operation is requested, otherwise print file content.
     if not (add_list or zdiff_list or zdetrend_list or remove_list or col_list or extract_list): 
@@ -419,7 +426,17 @@ def main():
                     dim_out=fileNC.variables['temp'].dimensions #get dimension
                     temp=fileNC.variables['temp'][:]
                     shape_out=temp.shape
-                    
+                    if f_type=='diurn':
+                        lev_T= [2,1,0,3,4] # [tim, tod,lev, lat, lon] >[lev,tod,time,lat,lon] > [time, tod,lev, lat, lon]
+                        #                      0    1   2    3    4      2   1    0   3   4       2    1   0    3    4 
+                        lev_T_out=[1,2,0,3,4]
+                        lev_axis=2 # in atmos_diurn,the levels is the 3rd axis" (time,tod,lev,lat,lon)
+                    else:
+                        lev_T= [1,0,2,3] # [tim,lev, lat, lon] > [lev,time,lat,lon] > [tim,lev,lat,lon]
+                        #                    0   1   2    3        1   0    2    3      1  0    2     3
+                        lev_T_out=lev_T
+                        lev_axis=1 # in atmos_average, atmos_daily, the levels is the 2nd axis" (time,lev,lat,lon)
+                            
                     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     
                     #~~~~~~~~~~~~  Non interpolated files ~~~~~~~~~~~~~~~~~
                     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -432,9 +449,8 @@ def main():
                     #If using 'pstd', calculating the 3D pressure field is easy    
                     elif interp_type=='pstd':
                         lev=fileNC.variables['pstd'][:]
-                        axis=1 # in atmos_average, atmos_daily, the levels is the 2nd axis" (time,lev,lat,lon)
                         reshape_shape=[1 for i in range(0,len(shape_out))]                 #(  0   1   2   3 )
-                        reshape_shape[axis]=len(lev)  #e.g [1,28,1,1]
+                        reshape_shape[lev_axis]=len(lev)  #e.g [1,28,1,1]
                         p_3D=lev.reshape(reshape_shape)
                     #If inter_type is 'zstd', or 'zagl', we need the field pfull3D  pre-computed before interpolation.
                     # We use a 'try' statement as some computations (e.g. wind speed) do not require pfull and will work anyway
@@ -449,7 +465,7 @@ def main():
                     if ivar=='rho':
                         OUT=compute_rho(p_3D,temp)    
                     if ivar=='theta':
-                        OUT=compute_theta(p_3D,ps,temp)
+                        OUT=compute_theta(p_3D,ps,temp,f_type)
                     if ivar=='w':
                         omega=fileNC.variables['omega'][:]     
                         rho=compute_rho(p_3D,temp)         
@@ -466,26 +482,26 @@ def main():
                         if ivar=='wspeed':OUT=mag
                             
                     if ivar=='N':
-                        theta=compute_theta(p_3D,ps,temp)    
+                        theta=compute_theta(p_3D,ps,temp,f_type)    
                         zfull=compute_zfull(ps,ak,bk,temp)  #TODO not with _pstd
                         OUT=compute_N(theta,zfull)
                         
                     if ivar=='Ri':
-                        theta=compute_theta(p_3D,ps,temp)   
+                        theta=compute_theta(p_3D,ps,temp,f_type)   
                         zfull=compute_zfull(ps,ak,bk,temp) #TODO not with _pstd
                         N=compute_N(theta,zfull)  
                         
                         ucomp=fileNC.variables['ucomp'][:] 
                         vcomp=fileNC.variables['vcomp'][:]    
-                        du_dz=dvar_dh(ucomp.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])
-                        dv_dz=dvar_dh(vcomp.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])
+                        du_dz=dvar_dh(ucomp.transpose(lev_T),zfull.transpose(lev_T)).transpose(lev_T)
+                        dv_dz=dvar_dh(vcomp.transpose(lev_T),zfull.transpose(lev_T)).transpose(lev_T)
                         OUT=N**2/(du_dz**2+dv_dz**2)
 
                     if ivar=='Tco2':OUT=compute_Tco2(p_3D,temp)
                     
                     if ivar=='scorer_wl':
                         ucomp=fileNC.variables['ucomp'][:]
-                        theta=compute_theta(p_3D,ps,temp)   
+                        theta=compute_theta(p_3D,ps,temp,f_type)   
                         zfull=compute_zfull(ps,ak,bk,temp)
                         N=compute_N(theta,zfull)
                         OUT=compute_scorer(N,ucomp,zfull)
@@ -513,7 +529,14 @@ def main():
                     if ivar=='msf':
                         vcomp=fileNC.variables['vcomp'][:]
                         lat=fileNC.variables['lat'][:]
-                        OUT=mass_stream(vcomp.transpose([1,2,3,0]),lat,lev,type=interp_type).transpose([3,0,1,2])
+                        if f_type=='diurn':
+                            #[time,tod,lev,lat,lon] > [lev,lat,time,tod,lon]  >  [time,tod,lev,lat,lon]
+                            #  0    1   2   3   4       2   3    0   1   4         2    3   0   1   4
+                            OUT=mass_stream(vcomp.transpose([2,3,0,1,4]),lat,lev,type=interp_type).transpose([2,3,0,1,4]) 
+                        else:    
+                            #[time,lev,lat,lon] > [lev,lat,lon,time]  >  [time,lev,lat,lon] 
+                            #  0    1   2   3       1   2    3   0         3    0   1   2
+                            OUT=mass_stream(vcomp.transpose([1,2,3,0]),lat,lev,type=interp_type).transpose([3,0,1,2]) 
                         
                     if ivar=='ep':
                         #TODO    N=fileNC.variables['N'][:]  >>> Replaced by constant N=0.01 
@@ -584,10 +607,13 @@ def main():
                 prRed("zdiff error: variable '%s' is not present in %s"%(idiff, ifile))
                 fileNC.close()
             else:    
-                print('Differentiating: %s...'%(idiff))   
-                 
+                print('Differentiating: %s...'%(idiff))  
+                if f_type=='diurn':
+                    lev_T= [2,1,0,3,4] # [tim, tod,lev, lat, lon]
+                else: #[time,lat,lon] 
+                    lev_T= [1,0,2,3] # [tim,lev, lat, lon]
                 try:
-                    var=fileNC.variables[idiff][:,:,:,:]
+                    var=fileNC.variables[idiff][:]
                     newUnits=fileNC.variables[idiff].units[:-2]+'/m]' #remove the last ']' to update units, e.g turn '[kg]' to '[kg/m]'
                     newLong_name='vertical gradient of '+fileNC.variables[idiff].long_name
                     #---temp and ps are always needed---
@@ -595,24 +621,26 @@ def main():
                     if interp_type=='pfull':
                         temp=fileNC.variables['temp'][:]
                         ps=fileNC.variables['ps'][:]
-                        zfull=fms_Z_calc(ps,ak,bk,temp.transpose([1,0,2,3]),topo=0.,lev_type='full') #z is first axis
+                        zfull=fms_Z_calc(ps,ak,bk,temp.transpose(lev_T),topo=0.,lev_type='full') #z is first axis
+                        # atmos_average: zfull= (lev, time, lat, lon)
+                        # atmos_diurn :   zfull= (lev, tod, time, lat, lon)
                         #differentiate the variable with respect to z:
-                        darr_dz=dvar_dh(var.transpose([1,0,2,3]),zfull).transpose([1,0,2,3]) 
+                        darr_dz=dvar_dh(var.transpose(lev_T),zfull).transpose(lev_T) 
                         
                     elif interp_type=='pstd':
                         #If pstd, we need the zfull variable
                         if 'zfull' in fileNC.variables.keys():
                             zfull=fileNC.variables['zfull'][:]
-                            darr_dz=dvar_dh(var.transpose([1,0,2,3]),zfull.transpose([1,0,2,3])).transpose([1,0,2,3])
+                            darr_dz=dvar_dh(var.transpose(lev_T),zfull.transpose(lev_T)).transpose(lev_T)
                         else:
                             lev=fileNC.variables[interp_type][:]
                             temp=fileNC.variables['temp'][:]
                             dzfull_pstd=compute_DZ_full_pstd(lev,temp)
-                            darr_dz=dvar_dh(var.transpose([1,0,2,3])).transpose([1,0,2,3])/dzfull_pstd                      
+                            darr_dz=dvar_dh(var.transpose(lev_T)).transpose(lev_T)/dzfull_pstd                      
                         
                     elif interp_type in ['zagl','zstd']: #zagl, zstd
                         lev=fileNC.variables[interp_type][:]
-                        darr_dz=dvar_dh(var.transpose([1,0,2,3]),lev).transpose([1,0,2,3]) 
+                        darr_dz=dvar_dh(var.transpose(lev_T),lev).transpose(lev_T) 
 
                         
                     #Log the variable
@@ -690,7 +718,7 @@ def main():
 
         for icol in col_list:
             fileNC=Dataset(ifile, 'a') #, format='NETCDF4_CLASSIC
-
+            f_type,interp_type=FV3_file_type(fileNC)
             if icol not in fileNC.variables.keys():
                 prRed("column integration error: variable '%s' is not present in %s"%(icol, ifile))
                 fileNC.close()
@@ -707,10 +735,19 @@ def main():
                     dim_in=fileNC.variables['temp'].dimensions #get dimension
                     shape_in=fileNC.variables['temp'].shape
                     #TODO edged cases where time =1
-                    dim_out=tuple([dim_in[0],dim_in[2],dim_in[3]])
-                    ps=fileNC.variables['ps'][:,:,:] 
+                    if f_type=='diurn':
+                        #[time,tod,lat,lon] 
+                        lev_T= [2,1,0,3,4] # [tim, tod,lev, lat, lon]
+                        dim_out=tuple([dim_in[0],dim_in[1],dim_in[3],dim_in[4]])
+                        lev_axis=2 # in atmos_diurn,the levels is the 3rd axis" (time,tod,lev,lat,lon)
+                    else: #[time,lat,lon] 
+                        lev_T= [1,0,2,3] # [tim,lev, lat, lon]
+                        dim_out=tuple([dim_in[0],dim_in[2],dim_in[3]])
+                        lev_axis=1
+
+                    ps=fileNC.variables['ps'][:] 
                     DP=compute_DP_3D(ps,ak,bk,shape_in)
-                    out=np.sum(var*DP/g,axis=1)
+                    out=np.sum(var*DP/g,axis=lev_axis) 
                     
                     #Log the variable
                     var_Ncdf = fileNC.createVariable(icol+'_col','f4',dim_out)
