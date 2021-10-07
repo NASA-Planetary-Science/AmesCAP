@@ -1,12 +1,12 @@
 # TUTORIAL:
 
-![](./tutorial_images/Picture1.png)
+![](./tutorial_images/Typical_Pipeline.png)
 
 
-![](./tutorial_images/Picture2.png)
+![](./tutorial_images/CAP.png)
 ## Overview of the process
 The following steps will be used to access the data, reduce it, compute additional diagnostics, interpolate the diagnostics to standard pressures levels, and visualize the results.
-![](../docs/cheat_sheet.png)
+![](./tutorial_images/Cheat_Sheet.png)
 
 
 ## Variable operations

@@ -9,7 +9,7 @@ import warnings #Suppress certain errors when dealing with NaN arrays
 
 
 from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR,mass_stream,zonal_detrend,spherical_div,spherical_curl,frontogenesis
-from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type,filter_vars
+from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type,filter_vars,find_fixedfile
 from amesgcm.Ncdf_wrapper import Ncdf
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
@@ -406,7 +406,7 @@ def main():
         
         #If the list is not empty, load ak and bk for pressure calculation, those are always needed.
         if add_list: 
-            name_fixed=ifile[0:5]+'.fixed.nc'
+            name_fixed=find_fixedfile(None,ifile)
             f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=f_fixed.variables['pk'][:]
@@ -593,7 +593,7 @@ def main():
         
         #ak and bk are needed to derive the distance between layer pfull
         if zdiff_list: 
-            name_fixed=ifile[0:5]+'.fixed.nc'
+            name_fixed=find_fixedfile(None,ifile)
             f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=np.array(f_fixed.variables['pk'])
@@ -709,7 +709,7 @@ def main():
         ''' 
         #ak and bk are needed to derive the distance between layer pfull
         if col_list:
-            name_fixed=ifile[0:5]+'.fixed.nc'
+            name_fixed=find_fixedfile(None,ifile)
             f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=np.array(f_fixed.variables['pk'])
