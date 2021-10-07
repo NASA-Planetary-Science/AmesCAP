@@ -166,10 +166,11 @@ def fms_Z_calc(psfc,ak,bk,T,topo=0.,lev_type='full'):
     
     Z_h[-1,:] = topo_flat
                                               
-    # Other layers, from the bottom-up:                                              
+    # Other layers, from the bottom-up:  
+    #Isothermal within  the layer, we have Z=Z0+r*T0/g*ln(P0/P)                                            
     for k in range(Nk-2,-1,-1):                                                      
         Z_h[k,:] = Z_h[k+1,:]+(r_co2*T[k,:]/g)*(logPPRESS_h[k+1,:]-logPPRESS_h[k,:]) 
-        Z_f[k,:] = Z_h[k+1,:]+(r_co2*T[k,:]/g)*(1-PRESS_h[k,:]/PRESS_f[k,:])        
+        Z_f[k,:] = Z_h[k+1,:]+(r_co2*T[k,:]/g)*(1-PRESS_h[k,:]/PRESS_f[k,:])          
         
     #return the arrays
     if lev_type=="full":
@@ -181,47 +182,158 @@ def fms_Z_calc(psfc,ak,bk,T,topo=0.,lev_type='full'):
     #=====return the levels in Z coordinates [m]====
     else: 
         raise Exception("""Altitudes levels type not recognized: use 'full' or 'half' """)
-        
-def find_n(Lfull,Llev,reverse_input=False):
+
+#TODO : delete: ==========Former version of find_n() : only provides 1D >1D and ND > 1D mapping=======        
+def find_n0(Lfull_IN,Llev_OUT,reverse_input=False):
     '''
-    Return the index for the level(s) just below Llev.
-    This assumes Lfull increases with increasing e.g p(0)=0Pa, p(N)=1000Pa
+    Return the index for the level(s) just below Llev_OUT.
+    This assumes Lfull_IN increases with increasing e.g p(0)=0Pa, p(N)=1000Pa
     
     Args:
-        Lfull (array)            : input pressure [pa] or altitude [m] at full levels, level dimension is FIRST 
-        Llev (float or 1D array) : desired level for interpolation [Pa] or [m]
+        Lfull_IN (array)             : input pressure [pa] or altitude [m] at full levels, level dimension is FIRST 
+        Llev_OUT (float or 1D array) : desired level for interpolation [Pa] or [m]
         reverse_input (boolean)  : reverse array, e.g if z(0)=120 km, z(N)=0km (which is typical) or if your input data is p(0)=1000Pa, p(N)=0Pa
     Returns:
         n:    index for the level(s) where the pressure is just below plev.
     ***NOTE***
-        - if Lfull is 1D array and  Llev is a float        > n is a float 
-        - if Lfull is ND [lev,time,lat,lon] and Llev is a 1D array of size klev > n is an array of size[klev,Ndim]
+        - if Lfull_IN is 1D array and  Llev_OUT is a float        > n is a float 
+        - if Lfull_IN is ND [lev,time,lat,lon] and Llev_OUT is a 1D array of size klev > n is an array of size[klev,Ndim]
           with Ndim =time x lat x lon
     '''
                    #number of original layers
-    Lfull=np.array(Lfull)               
-    Nlev=len(np.atleast_1d(Llev))
-    if Nlev==1:Llev=np.array([Llev])
-    dimsIN=Lfull.shape                         #get input variable dimensions
+    Lfull_IN=np.array(Lfull_IN)               
+    Nlev=len(np.atleast_1d(Llev_OUT))
+    if Nlev==1:Llev_OUT=np.array([Llev_OUT])
+    dimsIN=Lfull_IN.shape                         #get input variable dimensions
     Nfull=dimsIN[0]  
     dimsOUT=tuple(np.append(Nlev,dimsIN[1:]))
     Ndim= np.int(np.prod(dimsIN[1:]))           #Ndim is the product  of all dimensions but the vertical axis
-    Lfull= np.reshape(Lfull, (Nfull, Ndim) )  
+    Lfull_IN= np.reshape(Lfull_IN, (Nfull, Ndim) )  
     
-    if reverse_input:Lfull=Lfull[::-1,:]          
+    if reverse_input:Lfull_IN=Lfull_IN[::-1,:]          
        
-    ncol=Lfull.shape[-1]
+    ncol=Lfull_IN.shape[-1]
     n=np.zeros((Nlev,ncol),dtype=int)
     
     for i in range(0,Nlev):
         for j in range(0,ncol) :
-            n[i,j]=np.argmin(np.abs(Lfull[:,j]-Llev[i]))
-            if Lfull[n[i,j],j]>Llev[i]:n[i,j]=n[i,j]-1
+            n[i,j]=np.argmin(np.abs(Lfull_IN[:,j]-Llev_OUT[i]))
+            if Lfull_IN[n[i,j],j]>Llev_OUT[i]:n[i,j]=n[i,j]-1
     return n
 
+def find_n(X_IN,X_OUT,reverse_input=False,modulo=None):
+    '''
+    Map  the closest index from a 1D input array to a ND output array just below the input  values.
+    Args:
+        X_IN (float or 1D array)  :source level [Pa] or [m]
+        X_OUT (ND  array)        : desired pressure [pa] or altitude [m] at full levels, level dimension is FIRST 
+        reverse_input (boolean)  : if inout array is decreasing, e.g if z(0)=120 km, z(N)=0km (which is typical) or if your input data is p(0)=1000Pa, p(N)=0Pa
+    Returns:
+        n:    index for the level(s) where the pressure is just below plev.
+        Case  1:     Case 2:      Case 3:        Case 4:
+        (ND)   (1D)  (1D)  (1D)   (1D)   (ND)    (ND)        (ND)               
+       |x|x|         |x|            |x|            |x|x|     
+       |x|x| > |x|   |x| > |x|      |x| > |x|x|    |x|x|  >  |x|x|
+       |x|x|   |x|   |x|   |x|      |x|   |x|x|    |x|x|     |x|x|  (case 4, must have same 
+       |x|x|   |x|   |x|   |x|      |x|   |x|x|    |x|x|     |x|x|  (# of elements along the other dimensions)
+       
+       *** Note ***
+       Cyclic array are handled naturally (e.g. time of day 0.5 ..23.5 > 0.5) or longitudes 0 >... 359 >0
+       >>> if first (0) array element is above requested value, (e.g 0.2 is requested from [0.5 1.5... 23.5], n is set to 0-1=-1 which refers to the last element, 23.5 here)
+       >>> last element in array is always inferior or equal to selected value: (e.g 23.8 is requested from [0.5 1.5... 23.5], 23.5 will be selected
+       
+       Therefore, the cyclic values must therefore be handled during the interpolation but not at this stage.
 
+       ''' 
+    #number of original layers
+    if type(X_IN)!=np.ndarray:X_IN=np.array(X_IN)               
+    #If one value is requested, convert float to array
+    if len(np.atleast_1d(X_OUT))==1:
+        X_OUT=np.array([X_OUT])
+    elif type(X_OUT)!=np.ndarray:#Convert list to numpy array as needed
+        X_OUT=np.array(X_OUT)  
+    
+    dimsIN=X_IN.shape                         #get input variable dimensions
+    dimsOUT=X_OUT.shape                        #get output variable dimensions
+    N_IN=dimsIN[0]                             #Size of interpolation axis
+    N_OUT=dimsOUT[0]
+    
+    #Number of element in arrays other than interpolation axis
+    NdimsIN=np.int(np.prod(dimsIN[1:]))
+    NdimsOUT=np.int(np.prod(dimsOUT[1:]))   
 
-def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=None):
+    if (NdimsIN >1 and NdimsOUT> 1) and (NdimsIN !=NdimsOUT): 
+        print('*** Error in find_n(): dimensions of arrays other than the interpolated (first) axis must be 1 or identical***')
+        
+    #Ndims_IN and Ndims_OUT are either '1' or equal
+    Ndim=max(NdimsIN,NdimsOUT)
+    
+    X_IN = np.reshape(X_IN, (N_IN, NdimsIN) )
+    X_OUT= np.reshape(X_OUT, (N_OUT, NdimsOUT) )  
+    
+    #Reverse input array if monotically decreasing 
+    if reverse_input:X_IN=X_IN[::-1,:]
+  
+    n=np.zeros((N_OUT,Ndim),dtype=int)
+
+    #Some repetition below but that allows to keep the 'if' statement out of the big loop over all array elements
+    if len(dimsIN)==1:
+        for i in range(N_OUT):
+            for j in range(Ndim):
+                n[i,j]=np.argmin(np.abs(X_OUT[i,j]-X_IN[:]))
+                if X_IN[n[i,j]]>X_OUT[i,j]:n[i,j]=n[i,j]-1
+    elif len(dimsOUT)==1:
+        for i in range(N_OUT):
+            for j in range(Ndim):
+                n[i,j]=np.argmin(np.abs(X_OUT[i]-X_IN[:,j]))
+                if X_IN[n[i,j],j]>X_OUT[i]:n[i,j]=n[i,j]-1
+    else: 
+        for i in range(N_OUT):
+            for j in range(Ndim):
+                n[i,j]=np.argmin(np.abs(X_OUT[i,j]-X_IN[:,j]))
+                if X_IN[n[i,j],j]>X_OUT[i,j]:n[i,j]=n[i,j]-1   
+                        
+    if len(dimsOUT)==1: n=np.squeeze(n)
+    return n
+
+def expand_index(Nindex,VAR_shape_axis_FIRST,axis_list):
+    '''
+    Repeat interpolation indices along an axis. 
+    Args:
+        Nindex: inteprolation indices, size is (n_axis, Nfull= time x lat x lon)
+        VAR_shape_axis_FIRST: shape for the variable to interpolate with interpolation axis first e.g. (tod,time,lev,lat,lon)
+        axis_list (int or list): position or list of positions for axis to insert, e.g. '2' for LEV in (tod,time,LEV,lat,lon), '[2,4]' for LEV and LON
+                                 The axis position are those for the final shape (VAR_shape_axis_FIRST) and must be INCREASING 
+    Returns:
+        LFULL: a 2D array size(n_axis, NfFULL= time x LEV x lat x lon) with the indices expended  along the LEV dimensions and flattened
+    ***NOTE***
+    Example of application: 
+     Observational time of day  may the same at all vertical levels so the interpolation of a 5D variable
+    (tod,time,LEV,lat,lon) only requires the interpolation indices for (tod,time,lat,lon).
+    This routines expands the indices from (tod,time,lat,lon) to (tod,time,LEV,lat,lon) with Nfull=time x lev x lat x lon for use in interpolation    
+        
+    '''
+    #If one element, turn axis to list
+    if len(np.atleast_1d(axis_list))==1:axis_list=[axis_list]
+        
+    #size for the interpolation, e.g. (tod, time x lev x lat x lon)
+    Nfull=Nindex.shape[0]
+    dimsOUT_flat=tuple(np.append(Nfull,np.prod(VAR_shape_axis_FIRST[1:]))) #Desired output size with LEV axis repeated(tod, time x lev x lat x lon)
+    
+    dimsIN=[] #Reconstruct  the initial (un-flattened) size of Nindex
+    for ii,len_axis in enumerate(VAR_shape_axis_FIRST): #using the dimenions from VAR_shape_axis_FIRST
+        if ii>0 and not ii in axis_list:dimsIN.append(len_axis) ## skip the first (interpolated) axis and add to the list of initial dims unless the axis are the ones we are expending.
+    dimsIN=np.insert(dimsIN,0,Nfull)   #Initial shape for :Nindex 
+    #Reshape Nindex from its iniatial flattened sahpe (Nfull,time x lat x lon) to a  ND array (tod, time , lat , lon)
+    Nindex= np.reshape(Nindex, dimsIN)  
+    #Repeat the interpolation indices on the requested axis
+    for ii,len_axis in enumerate(VAR_shape_axis_FIRST):
+        if ii in axis_list:Nindex=np.repeat(np.expand_dims(Nindex,axis=ii),len_axis,ii)  
+    #e.g. Nindex is now (tod, time ,LEV, lat , lon)                                        
+    #Return the new, flattened version of Nindex 
+    return Nindex.reshape(dimsOUT_flat)
+    
+def vinterp(varIN,Lfull,Llev,type_int='log',reverse_input=False,masktop=True,index=None):
     '''
     Vertical linear or logarithmic interpolation for pressure or altitude.   Alex Kling 5-27-20
     Args:
@@ -229,7 +341,7 @@ def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=N
         Lfull: pressure [Pa] or altitude [m] at full layers same dimensions as varIN
         Llev : desired level for interpolation as a 1D array in [Pa] or [m] May be either increasing or decreasing as the output levels are processed one at the time.
         reverse_input (boolean) : reverse input arrays, e.g if zfull(0)=120 km, zfull(N)=0km (which is typical) or if your input data is pfull(0)=1000Pa, pfull(N)=0Pa
-        type : 'log' for logarithmic (typically pressure), 'lin' for linear (typically altitude)
+        type_int : 'log' for logarithmic (typically pressure), 'lin' for linear (typically altitude)
         masktop: set to NaN values if above the model top
         index: indices for the interpolation, already processed as [klev,Ndim] 
                Indices will be recalculated if not provided.
@@ -287,7 +399,7 @@ def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=N
             n= index[k,:]
         else:
             # Compute index on the fly for that layer. 
-            # Note that inverse_input is always set to False as if desired, Lfull was reversed earlier
+            # Note that reversed_input is always set to False as if desired, Lfull was reversed earlier
             n= np.squeeze(find_n(Lfull,Llev[k],False))
         #==Slower method (but explains what is done below): loop over Ndim======
         # for ii in range(Ndim):
@@ -304,9 +416,9 @@ def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=N
         alpha=np.NaN*Ndimall
         #Only calculate alpha  where the indices are <Nfull
         Ndo=Ndimall[nindexp1<Nfull*Ndim]
-        if type=='log':
+        if type_int=='log':
             alpha[Ndo]=np.log(Llev[k]/Lfull.flatten()[nindexp1[Ndo]])/np.log(Lfull.flatten()[nindex[Ndo]]/Lfull.flatten()[nindexp1[Ndo]])
-        elif type=='lin':
+        elif type_int=='lin':
             alpha[Ndo]=(Llev[k]-Lfull.flatten()[nindexp1[Ndo]])/(Lfull.flatten()[nindex[Ndo]]- Lfull.flatten()[nindexp1[Ndo]])
             
         #Mask if Llev[k]<model top for the pressure interpolation
@@ -322,7 +434,7 @@ def vinterp(varIN,Lfull,Llev,type='log',reverse_input=False,masktop=True,index=N
     return np.reshape(varOUT,dimsOUT)
 
 
-def axis_interp(var_IN, x, xi, axis, reverse_input=False, type='lin'):
+def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int='lin',modulo=None):
     '''
     One dimensional linear /log interpolation along one axis. [Alex Kling, May 2021]
     Args:
@@ -331,7 +443,8 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type='lin'):
         xi (1D array)     : target array to interpolate the array on 
         axis (int)        : position of  the interpolation axis (e.g. 0 if time interpolation for [time,lev,lat,lon])
         reverse_input (boolean) : reverse input arrays, e.g if zfull(0)=120 km, zfull(N)=0km (which is typical) 
-        type : 'log' for logarithmic (typically pressure), 'lin' for linear
+        type_int : 'log' for logarithmic (typically pressure), 'lin' for linear
+        modulo (float)    : for 'lin' interpolation only, use cyclic input (e.g when using modulo = 24 for time of day, 23.5 and 00am are considered 30 min appart, not 23.5hr)
     Returns:
         VAR_OUT: interpolated data on the requested axis
     
@@ -346,31 +459,42 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type='lin'):
     X_OUT= Xn*A + (1-A)*Xn+1
     with A = log(xi/xn+1)/log(xn/xn+1) in 'log' mode     
          A =    (xi-xn+1)/(xn-xn+1)    in 'lin' mode
-         
-
-    
     '''
-    
+    #Convert list to numpy array as needed
+    if type(var_IN)!=np.ndarray:var_IN=np.array(var_IN) 
     #Move interpolated axis to 1st axis:
     var_IN=np.moveaxis(var_IN,axis,0) 
     if reverse_input:
         var_IN=var_IN[::-1,...]
         x=x[::-1]
         
-    index=find_n(x,xi,False) #This is called everytime as it is fast on 1D array
+    index=find_n(x,xi,False) #This is called everytime as it is fast on a 1D array
     
     dimsIN=var_IN.shape 
     dimsOUT=tuple(np.append(len(xi),dimsIN[1:]))
+    print(dimsOUT)
     var_OUT=np.zeros(dimsOUT)
     
     for k in range(0,len(index)):
         n= index[k]
         np1=n+1
-        if np1>=len(x):np1-=1
-        if type=='log':
+        # Treatment of edge cases where the interpolated value is outside the domain, i.e. n is the last element  and n+1 does not exist 
+        if np1>=len(x):
+            #If looping around (e.g. longitude, time of day...)replace n+1 by the first element
+            if modulo is not None:
+                np1=0
+            else:    
+                #This will set the interpolated value to NaN in xi as last value  as x[n] - x[np1] =0
+                np1-=1
+        #Also set n=n+1 (which results in NaN) if n =-1 (requested value is samller than first element array) and the values are NOT cyclic    
+        if n==-1 and modulo is None:n=0
+        if type_int=='log':
             alpha=np.log(xi[k]/x[np1])/np.log(x[n]/x[np1])
-        elif type=='lin':
-            alpha=(xi[k]-x[np1])/(x[n]- x[np1])
+        elif type_int=='lin':
+            if modulo is None:
+                alpha=(xi[k]-x[np1])/(x[n]- x[np1])
+            else:
+                alpha=np.mod(xi[k]-x[np1]+modulo,modulo)/np.mod(x[n]- x[np1]+modulo,modulo)    
         var_OUT[k,:]=var_IN[n,...]*alpha+(1-alpha)*var_IN[np1,...]
         
     return   np.moveaxis(var_OUT,0,axis) 
@@ -412,7 +536,7 @@ def interp_KDTree(var_IN,lat_IN,lon_IN,lat_OUT,lon_OUT,N_nearest=10):
     this is typically not what is expected: In a 4°x4° run, the closest points East, West, North and South, on the target grid  are 100's of km away 
     while the closest points in the vertical are a few 10's -100's meter in the PBL, which would results in excessive weighting in the vertical.
     '''
-    from scipy.spatial import cKDTree #TODO Import called each time. MMay be moved out of the routine is scipy is a requirement for the pipeline 
+    from scipy.spatial import cKDTree #TODO Import called each time. May be moved out of the routine is scipy is a requirement for the pipeline 
 
     dimsIN=var_IN.shape
     nlon_IN=dimsIN[-1]
@@ -870,7 +994,6 @@ def shiftgrid_180_to_360(lon,data): #longitude is LAST
         data: ND array with last dimension being the longitude (transpose first if necessary)
     Returns:
         data: shifted data
-    Note: Use np.ma.hstack instead of np.hstack to keep the masked array properties
     '''
     lon=np.array(lon)
     lon[lon<0]+=360. #convert to 0-360
@@ -1196,8 +1319,8 @@ def compute_uneven_sigma(num_levels, N_scale_heights, surf_res, exponent, zero_t
     b=np.zeros(int(num_levels)+1)
     for k in range(0,num_levels):
         zeta = 1.-k/np.float(num_levels) #zeta decreases with k
-        z  = surf_res*zeta + (1.0 - surf_res)*(zeta**exponent)
-        b[k] = np.exp(-z*N_scale_heights)
+        z  = surf_res*zeta + (1.0 - surf_res)*(zeta**exponent)  
+        b[k] = np.exp(-z*N_scale_heights)  # z goes from 1 to 0
     b[-1] = 1.0
     if(zero_top):  b[0] = 0.0
     return b
@@ -1777,6 +1900,179 @@ def broadcast(var_1D,shape_out,axis):
     reshape_shape=[1 for i in range(0,len(shape_out))]     
     reshape_shape[axis]=len(var_1D)  #e.g [28,1,1,1]
     return var_1D.reshape(reshape_shape)    
+    
+    
+def ref_atmosphere_Mars_PTD(Zi):
+    '''
+    Analytical atmospheric model for Martian pressure, temperature and density,  [Alex Kling, June 2021]
+    Args:
+        Zi (float or 1D array): input altitude in m (must be >= 0)
+    Return:
+        P,T,D (floats ot 1D arrays): tuple of corresponding pressure [Pa], temperature [K] and density  [kg/m3]
+    
+    ***NOTE***    
+    
+    This model was obtained by  fitting globally and annually averaged reference temperature profiles derived from the Legacy GCM, MCS observations,
+    and Mars Climate  Database. 
+    
+    The temperature fit was constructed using quadratic temperature T(z)= T0+ gam(z-z0)+a*(z-z0)**2 
+    over 4 segments (0>57 km, 57>110km, 110>120 km and 120>300km)
+    
+    From the ground to 120km, he pressure is obtained be integrating analytically  the hydrostatic equation:
+     dp/dz=-g. p/(rT) with T(z)= T0+ gam(z-z0)+a*(z-z0)**2 .
+    
+    Above ~120km P=P0 exp(-(z-z0)g/rT) is not a good approximation as the fluid is in molecula regime. For those altitude, we  provide
+    fit in the form P=P0 exp(-az-bz**2),based on diurnal average of the MCD database at lat 0, Ls 150. 
+    '''
+    #=================================
+    #=======Internal functions========
+    #=================================
+    
+    def alt_to_temp_quad(Z,Z0,T0,gam,a):
+        '''
+        Return the a representative globally and annually average temperature in the form T(z)= a(z-z0)**2 +b(z-z0) +T0 
+        Args:
+            Z:  Altitude in [m]
+            Z0: Starting altitude [m]
+            T0,gam,a: quadratic coefficients.
+        Returns:
+            T: temperature at altitude Z [K]
+        '''
+        return T0+gam*(Z-Z0)+a*(Z-Z0)**2    
+    
+    def alt_to_press_quad(Z,Z0,P0,T0,gam,a,rgas,g):
+        '''
+        Return the pressure in Pa in the troposphere as a function of height for a quadratic temperature profile.
+        T(z)= T0+ gam(z-z0)+a*(z-z0)**2
+        Args:
+            Z:  Altitude in [m]
+            Z0: Referecence altitude in [m]
+            P0: reference pressure  at Z0[Pa]
+            T0: reference temperature  at Z0[Pa]
+            gam,a: linear and quadratic coefficients for the temperature
+            rgas,g:specific gas constant [J/kg/K] and gravity [m/s2]
+        Returns:
+            P: pressure at alitude Z [Pa]
+        '''
+        delta=4*a*T0-gam**2
+        
+        if delta>=0:
+            sq_delta=np.sqrt(4*a*T0-gam**2)
+            return P0*np.exp(-2*g/(rgas*sq_delta)*(np.arctan((2*a*(Z-Z0)+gam)/sq_delta)-np.arctan(gam/sq_delta)))
+        else:
+            delta=-delta
+            sq_delta=np.sqrt(delta)
+            return P0*(((2*a*(Z-Z0)+gam)-sq_delta)*(gam+sq_delta)/(((2*a*(Z-Z0)+gam)+sq_delta)*(gam-sq_delta)))**(-g/(rgas*sq_delta))
+
+    def P_mars_120_300(Zi,Z0=120000.,P0=0.00012043158397922564,p1=1.09019694e-04,p2=-3.37385416e-10):
+        '''
+        Martian pressure from 120 to 300km . Above ~120km P=P0 exp(-(z-z0)g/rT) is not a good approximation as the fluid is in molecular
+        regime
+        Fit from a diurnal average of the MCD database at lat 0, Ls 150. from Alex K.
+        Consistently to what is done for the Earth, we use P=P0 exp(-az-bz**2-cz**c-d**4 ...)
+        Args:
+            Z: altitude in [m]
+        Returns:
+            P: pressure in [Pa]
+        '''
+        return P0*np.exp(-p1*(Zi-Z0)-p2*(Zi-Z0)**2)
+    #The following is a best fit of globally averaged temperature profile from various sources: Legacy GCM, MCS, MCD   
+    def T_analytic_scalar(Zi):
+        if Zi<=57000:
+            return alt_to_temp_quad(Zi,Z0=0,T0=225.9, gam=-0.00213479, a=1.44823e-08)
+        elif 57000<Zi<=110000:
+            return alt_to_temp_quad(Zi,Z0=57000,T0= 151.2, gam=-0.000367444, a=-6.8256e-09)
+        elif 110000<Zi<=170000:
+            return alt_to_temp_quad(Zi,Z0=110000,T0= 112.6, gam=0.00212537, a=-1.81922e-08)    
+        elif 170000<=Zi:
+            return 174.6
+    # Analytical solution for the pressure derived from the temperature profile        
+    def P_analytic_scalar(Zi):
+        if Zi<=57000:
+            return alt_to_press_quad(Zi,Z0=0,P0=610,T0=225.9, gam=-0.00213479, a=1.44823e-08,rgas=192,g=3.72)
+        elif 57000<Zi<=110000:
+            return alt_to_press_quad(Zi,Z0=57000,P0=1.2415639872674782,T0= 151.2, gam=-0.000367444, a=-6.8256e-09,rgas=192,g=3.72)
+        #The following must be discarded above 120 km when we enter the molecular regime    
+        elif 110000<Zi<=120000:
+            return alt_to_press_quad(Zi,Z0=110000,P0=0.0005866878792825923,T0= 112.6, gam=0.00212537, a=-1.81922e-08,rgas=192,g=3.72)    
+        elif 120000<=Zi:
+            return P_mars_120_300(Zi)
+            
+    #Vectorize array as needed:
+    if len(np.atleast_1d(Zi))>1:
+        P_analytic_scalar=np.vectorize(P_analytic_scalar)
+        T_analytic_scalar=np.vectorize(T_analytic_scalar)
+    return P_analytic_scalar(Zi),T_analytic_scalar(Zi),  P_analytic_scalar(Zi)/(192*T_analytic_scalar(Zi))
+
+    
+    
+    
+def press_to_alt_atmosphere_Mars(Pi):
+    '''
+    Return the altitude in m as a function of pressur from the analytical calculations derived above.
+    Args:
+        Pi (float or 1D array): input pressure in Pa (must be <=610 Pa)
+    Return:
+        Z (float ot 1D array): corresponding altitude in m
+    '''   
+    #=================================
+    #=======Internal functions========
+    #=================================
+        
+    def press_to_alt_quad(P,Z0,P0,T0,gam,a,rgas,g):
+        '''
+        Return the altitude in m as a function of pressure for a quadratic temperature profile.
+        T(z)= T0+ gam(z-z0)+a*(z-z0)**2
+        Args:
+            P:  Pressure in [Pa]
+            Z0: Referecence altitude in [m]
+            P0: reference pressure  at Z0[Pa]
+            T0: reference temperature  at Z0[Pa]
+            gam,a: linear and quadratic coefficients for the temperature
+            rgas,g:specific gas constant [J/kg/K] and gravity [m/s2]
+        Returns:
+            Z: altitude in m
+        '''
+        delta=4*a*T0-gam**2
+        
+        if delta>=0:
+            sq_delta=np.sqrt(4*a*T0-gam**2)
+            return Z0+sq_delta/(2*a)*np.tan(np.arctan(gam/sq_delta)+np.log(P0/P)*rgas*sq_delta/(2*g))-gam/(2*a)
+        else:
+            delta=-delta
+            sq_delta=np.sqrt(delta)
+            return Z0+(gam-sq_delta)/(2*a)*(1-(P/P0)**(-rgas*sq_delta/g))/((gam-sq_delta)/(gam+sq_delta)*(P/P0)**(-rgas*sq_delta/g)-1)
+        
+    def press_to_alt_mars_120_300(P,Z0=120000.,P0=0.00012043158397922564,p1=1.09019694e-04,p2=-3.37385416e-10):
+        '''
+        Martian altitude as a function of pressure from 120 to 300km . 
+        Args:
+            P: pressure in [m]
+        Returns:
+            Z: altitude in [m]
+        '''
+        delta=p1**2-4*p2*np.log(P/P0) # delta >0 on this pressure interval
+        return (-p1+np.sqrt(delta))/(2*p2) +Z0 
+        
+    def alt_analytic_scalar(Pi):
+        '''
+        Analytical solution for altitude as a function of pressure. 
+        '''
+        if Pi>=610:
+            return 0.
+        elif 610>Pi>=1.2415639872674782: #This is the pressure from alt_to_press_quad at 57000. m
+            return press_to_alt_quad(Pi,Z0=0,P0=610,T0=225.9, gam=-0.00213479, a=1.44823e-08,rgas=192,g=3.72)
+        elif 1.2415639872674782>Pi>=0.0005866878792825923: #57000 to 110000m
+            return press_to_alt_quad(Pi,Z0=57000,P0=1.2415639872674782,T0= 151.2, gam=-0.000367444, a=-6.8256e-09,rgas=192,g=3.72)
+        elif 0.0005866878792825923>Pi>=0.00012043158397922564: # 110000m to 120000 m
+            return press_to_alt_quad(Pi,Z0=110000,P0=0.0005866878792825923,T0= 112.6, gam=0.00212537, a=-1.81922e-08,rgas=192,g=3.72)    
+        elif 0.00012043158397922564>Pi:#120000m to 300000
+            return press_to_alt_mars_120_300(Pi,Z0=120000.,P0=0.00012043158397922564,p1=1.09019694e-04,p2=-3.37385416e-10)
+            
+    if len(np.atleast_1d(Pi))>1:
+        alt_analytic_scalar=np.vectorize(alt_analytic_scalar)
+    return alt_analytic_scalar(Pi)      
+    
 #==================================Projections==================================
 '''
 The projections below were implemented by Alex Kling, following:

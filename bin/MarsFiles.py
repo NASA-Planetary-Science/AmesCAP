@@ -16,7 +16,7 @@ from netCDF4 import Dataset
 
 
 #===========
-from amesgcm.Ncdf_wrapper import Ncdf
+from amesgcm.Ncdf_wrapper import Ncdf, Fort
 from amesgcm.FV3_utils import tshift,daily_to_average,daily_to_diurn,get_trend_2D
 #from amesgcm.FV3_utils import regrid_Ncfile #regrid source
 from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn,FV3_file_type,filter_vars,regrid_Ncfile
@@ -144,9 +144,8 @@ def main():
                 prRed(irequest +""" is not available, select 'fixed', 'average', 'daily', or 'diurn'""")
     #argument definitions:
         
-        do_multi= False
-        do_1year= False #Used with LegacyGCM_1year.nc'
-    
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
         #Get files to process
         histlist=[]
         for filei in file_list:
@@ -155,20 +154,12 @@ def main():
             else:
                 histlist.append(filei)
         fnum = len(histlist)
-        if fnum >= 0:do_multi = True #TODO why not 1?
-    
-        try:
-            hist1year= path2data+'/LegacyGCM_1year.nc'
-            file1year= Dataset(hist1year,'r',format='NETCDF4_CLASSIC')
-            do_1year = True
-        except:
-            hist1year= None
-            do_1year = False
-    
+
         lsmin = None
         lsmax = None
-    
-        if do_multi:
+        
+        if histlist[0][-3:]=='.nc':
+            print('Processing LegacyGCM_*.nc files')
             for f in histlist:
                 histname = os.path.basename(f)
                 ls_l = histname[-12:-9]
@@ -182,6 +173,17 @@ def main():
                 else:
                     lsmax = str(max(int(lsmax),int(ls_r))).zfill(3)
                 a=make_FV3_files(f,parser.parse_args().fv3,True,cwd)
+                
+        else :
+            print('Processing fort.11 files')
+            for fname in histlist:
+                f=Fort(fname)
+                if 'fixed' in parser.parse_args().fv3: f.write_to_fixed()
+                if 'average' in parser.parse_args().fv3: f.write_to_average()
+                if 'daily' in parser.parse_args().fv3: f.write_to_daily()
+                if 'diurn' in parser.parse_args().fv3: f.write_to_diurn()
+
+                       
                    
     #===========================================================================
     #=============  Append netcdf files along the 'time' dimension =============
@@ -883,7 +885,7 @@ def make_FV3_files(fpath,typelistfv3,renameFV3=True,cwd=None):
                 bk=np.zeros(nump)
                 pfull=np.zeros(num)
                 phalf=np.zeros(nump)
-                dsgm=histfile.variables['dsgm'] #TODO not used
+                
                 sgm =histfile.variables['sgm']
                 pk[0]=0.08/2 #[AK] changed pk[0]=.08 to pk[0]=.08/2, otherwise phalf[0] would be greater than phalf[1]
                 #*** NOTE that pk in amesGCM/mars_data/Legacy.fixed.nc was also updated***
@@ -1047,6 +1049,9 @@ def do_avg_vars(histfile,newf,avgtime,avgtod,Nday=5):
     return 0
 
 def change_vname_longname_unit(vname,longname_txt,units_txt):
+    '''
+    Update variables names, longname and units. This was designed specifically for LegacyCGM.nc files.
+    '''
     
     if vname == 'psurf':
         vname = 'ps'
@@ -1099,8 +1104,12 @@ def change_vname_longname_unit(vname,longname_txt,units_txt):
         pass
     return vname,longname_txt,units_txt
     
-#Function to replace dimensions with fv3 names and remove tod
+
 def replace_dims(dims,todflag):
+    '''
+    Function to replace dimensions with fv3 names and remove tod.
+    This was designed specifically for LegacyCGM.nc files.
+    '''
     newdims = dims
     if 'nlat' in dims:
         newdims = replace_at_index(newdims,newdims.index('nlat'),'lat')
@@ -1115,11 +1124,18 @@ def replace_dims(dims,todflag):
             newdims = replace_at_index(newdims,newdims.index('ntod'),'time_of_day_16')
     return newdims
 
-def replace_at_index(tup, ix, val):
-    if val is None:
-        return tup[:ix]+tup[ix+1:]
+def replace_at_index(tuple_dims, idx, new_name):
+    '''
+    Function to update dimensions.
+    Args:
+        tup: dimensions as tuples, e.g. ('pfull','nlat','nlon')
+        idx      :  index:  axis of dimensions to update (e.g. ix=1  for 'nlat')
+        new_name:    new dimension's name (e.g. 'latitude')
+    '''
+    if new_name is None:
+        return tuple_dims[:idx]+tuple_dims[idx+1:]
     else:
-        return tup[:ix] + (val,) + tup[ix+1:]
+        return tuple_dims[:idx] + (new_name,) + tuple_dims[idx+1:]
 
 
 def ls2sol_1year(Ls_deg,offset=True,round10=True):
