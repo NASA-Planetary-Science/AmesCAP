@@ -10,7 +10,7 @@ import re         # string matching module to handle time_of_day_XX
 
 from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,vinterp,find_n,polar2XYZ,interp_KDTree,axis_interp
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-from amesgcm.Script_utils import section_content_amesgcm_profile,find_tod_in_diurn,filter_vars
+from amesgcm.Script_utils import section_content_amesgcm_profile,find_tod_in_diurn,filter_vars,find_fixedfile
 from amesgcm.Ncdf_wrapper import Ncdf
 
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
@@ -92,7 +92,7 @@ def main():
      
     #The fixed file is needed if pk, bk are not available in the requested file, or
     # to load the topography is zstd output is requested 
-    name_fixed=filepath+'/'+file_list[0][0:5]+'.fixed.nc'
+    name_fixed=find_fixedfile(filepath,file_list[0])
     
     # PRELIMINARY DEFINITIONS
     #===========================pstd============================================
@@ -185,7 +185,7 @@ def main():
             bk=np.array(fNcdf.variables['bk'])
         except:
             #If pk and bk are not available in the file, try the matching XXXXX.fixed.nc
-            name_fixed=filepath+'/'+ifile[0:5]+'.fixed.nc'
+            name_fixed=find_fixedfile(filepath,ifile)
             f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')  
             pk=np.array(f_fixed.variables['pk'])
             bk=np.array(f_fixed.variables['bk'])  
