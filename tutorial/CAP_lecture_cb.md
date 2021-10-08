@@ -14,21 +14,20 @@ Such a process requires that the user be familiar with Fortran files and be able
 
 Specifically, CAP consists of five subroutines that provide tools to perform the following functions:
 
-1. `MarsPull.py`    Accessing MGCM output
-2. `MarsFiles.py`   Reducing the files
-3. `MarsVars.py`    Performing variable operations
-4. `MarsInterp.py`  Interpolating the vertical grid
-5. `MarsPlot.py`    Visualizing the MGCM output
+1. `MarsPull.py`    Access MGCM output
+2. `MarsFiles.py`   Reduce the files
+3. `MarsVars.py`    Perform variable operations
+4. `MarsInterp.py`  Interpolate the vertical grid
+5. `MarsPlot.py`    Visualize the MGCM output
 
 These routines and their commonly-used functions are illustrated in the cheat sheet below, which you should feel free to reference even after the tutorial:
 
 ![Figure 3. Quick Guide to Using CAP](./tutorial_images/Cheat_Sheet.png)
 
-CAP is designed to be modular. A user could use CAP exclusively to post-process and then plot MGCM output, but the tools in CAP can also be employed individually. Thus, users are free to selectively integrate CAP into their own analysis routine to the extent they see fit.
+CAP is designed to be used modularly. A user could use CAP exclusively to post-process and then plot MGCM output, but the tools in CAP can also be employed individually. Thus, users are free to selectively integrate CAP into their own analysis routine to the extent they see fit.
 
 
 ***
-
 
 # The Five Components of CAP
 
@@ -40,8 +39,9 @@ In this section, we describe the tools provided in CAP by stepping through each 
 4. `MarsInterp.py`
 5. `MarsPlot.py`
 
-
 ***
+
+
 
 
 ## 1. `MarsPull.py` - Downloading Raw MGCM Output
@@ -54,8 +54,9 @@ LegacyGCM_LsXXX_LsYYY.nc
 
 Where XXX and YYY are three-digit Solar Longitude (L<sub>s</sub>) values. The files can be retrieved from the command line using CAP by providing `MarsPull` with either a range of Solar Longitudes from which to pull data or a specific filename.
 
-
 ***
+
+
 
 
 ## 2. `MarsFiles.py` - Reducing the Files
@@ -72,8 +73,6 @@ Where XXX and YYY are three-digit Solar Longitude (L<sub>s</sub>) values. The fi
 
 Finally, `MarsFiles` can be used to perform basic tidal analysis (temporal and spatial filtering, diurnal tides and their harmonics).
 
-
-
 ***
 
 
@@ -83,152 +82,148 @@ Finally, `MarsFiles` can be used to perform basic tidal analysis (temporal and s
 
 `MarsVars` provides several tools relating to variable operations such as adding and removing variables and performing column integrations. With no other arguments, passing a file to `MarsVars` displays file content much like `ncdump`:
 
-```python
-% MarsVars.py 00000.atmos_average.nc
-%
-===================DIMENSIONS==========================
-['bnds', 'time', 'lat', 'lon', 'pfull', 'scalar_axis', 'phalf']
-OrderedDict([('bnds', <class 'netCDF4._netCDF4.Dimension'>: name = 'bnds', size = 2
-), ('time', <class 'netCDF4._netCDF4.Dimension'> (unlimited): name = 'time', size = 4
-), ('lat', <class 'netCDF4._netCDF4.Dimension'>: name = 'lat', size = 180
-), ('lon', <class 'netCDF4._netCDF4.Dimension'>: name = 'lon', size = 360
-), ('pfull', <class 'netCDF4._netCDF4.Dimension'>: name = 'pfull', size = 30
-), ('scalar_axis', <class 'netCDF4._netCDF4.Dimension'>: name = 'scalar_axis', size = 1
-====================CONTENT==========================
-pfull          : ('pfull',)= (30,), ref full pressure level  [Pa]
-time           : ('time',)= (4,), time  [days since 0000-00-00 00:00:00]
-scalar_axis    : ('scalar_axis',)= (1,), none  [none]
-lat            : ('lat',)= (180,), latitude  [degrees_N]
-bk             : ('phalf',)= (31,), vertical coordinate sigma value  [none]
-pk             : ('phalf',)= (31,), pressure part of the hybrid coordinate  [Pa]
-lon            : ('lon',)= (360,), longitude  [degrees_E]
-areo           : ('time', 'scalar_axis')= (4, 1), areo  [degrees]
-ps             : ('time', 'lat', 'lon')= (4, 180, 360), surface pressure  [Pa]
-temp           : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), temperature  [K]
-omega          : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), omega  [Pa/s]
-dst_mass_micro : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), dust_mass  [none]
-
-Ls ranging from 242.52 to 252.30: 15.00 days
-               (MY 02)   (MY 02)
-=====================================================
- ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var' 
-% 
+```bash
+(amesGCM3)>$ MarsVars.py 00000.atmos_average.nc
+>>> ===================DIMENSIONS==========================
+>>> ['bnds', 'time', 'lat', 'lon', 'pfull', 'scalar_axis', 'phalf']
+>>> OrderedDict([('bnds', <class 'netCDF4._netCDF4.Dimension'>: name = 'bnds', size = 2
+>>> ), ('time', <class 'netCDF4._netCDF4.Dimension'> (unlimited): name = 'time', size = 4
+>>> ), ('lat', <class 'netCDF4._netCDF4.Dimension'>: name = 'lat', size = 180
+>>> ), ('lon', <class 'netCDF4._netCDF4.Dimension'>: name = 'lon', size = 360
+>>> ), ('pfull', <class 'netCDF4._netCDF4.Dimension'>: name = 'pfull', size = 30
+>>> ), ('scalar_axis', <class 'netCDF4._netCDF4.Dimension'>: name = 'scalar_axis', size = 1
+>>> ====================CONTENT==========================
+>>> pfull          : ('pfull',)= (30,), ref full pressure level  [Pa]
+>>> time           : ('time',)= (4,), time  [days since 0000-00-00 00:00:00]
+>>> scalar_axis    : ('scalar_axis',)= (1,), none  [none]
+>>> lat            : ('lat',)= (180,), latitude  [degrees_N]
+>>> bk             : ('phalf',)= (31,), vertical coordinate sigma value  [none]
+>>> pk             : ('phalf',)= (31,), pressure part of the hybrid coordinate  [Pa]
+>>> lon            : ('lon',)= (360,), longitude  [degrees_E]
+>>> areo           : ('time', 'scalar_axis')= (4, 1), areo  [degrees]
+>>> ps             : ('time', 'lat', 'lon')= (4, 180, 360), surface pressure  [Pa]
+>>> temp           : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), temperature  [K]
+>>> omega          : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), omega  [Pa/s]
+>>> dst_mass_micro : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), dust_mass  [none]>>> 
+>>>
+>>> Ls ranging from 242.52 to 252.30: 15.00 days
+>>>                (MY 02)   (MY 02)
+>>> =====================================================
+>>>  ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var' 
 ```
 
 This file contains several variables including `ps`, `temp`, and `omega`. Since this is a native file (i.e. the vertical grid is `pfull` indicating the file has not been interpolated), we can calculate the vertical wind (`w`) using `ps`, `temp`, and `omega` and add it to the file:
 
 ```bash
-MarsVars.py 00000.atmos_average.nc -add w
+(amesGCM3)>$ MarsVars.py 00000.atmos_average.nc -add w
 ```
 
 We can see that `w` was added by calling `MarsVars` with no argument as before:
 
-```python
-% MarsVars.py 00000.atmos_average.nc
-%
-===================DIMENSIONS==========================
-['bnds', 'time', 'lat', 'lon', 'pfull', 'scalar_axis', 'phalf']
-OrderedDict([('bnds', <class 'netCDF4._netCDF4.Dimension'>: name = 'bnds', size = 2
-), ('time', <class 'netCDF4._netCDF4.Dimension'> (unlimited): name = 'time', size = 4
-), ('lat', <class 'netCDF4._netCDF4.Dimension'>: name = 'lat', size = 180
-), ('lon', <class 'netCDF4._netCDF4.Dimension'>: name = 'lon', size = 360
-), ('pfull', <class 'netCDF4._netCDF4.Dimension'>: name = 'pfull', size = 30
-), ('scalar_axis', <class 'netCDF4._netCDF4.Dimension'>: name = 'scalar_axis', size = 1
-====================CONTENT==========================
-pfull          : ('pfull',)= (30,), ref full pressure level  [Pa]
-time           : ('time',)= (4,), time  [days since 0000-00-00 00:00:00]
-scalar_axis    : ('scalar_axis',)= (1,), none  [none]
-lat            : ('lat',)= (180,), latitude  [degrees_N]
-bk             : ('phalf',)= (31,), vertical coordinate sigma value  [none]
-pk             : ('phalf',)= (31,), pressure part of the hybrid coordinate  [Pa]
-lon            : ('lon',)= (360,), longitude  [degrees_E]
-areo           : ('time', 'scalar_axis')= (4, 1), areo  [degrees]
-ps             : ('time', 'lat', 'lon')= (4, 180, 360), surface pressure  [Pa]
-temp           : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), temperature  [K]
-omega          : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), omega  [Pa/s]
-dst_mass_micro : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), dust_mass  [none]
-w              : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), vertical wind (added postprocessing)  [m/s]
-
-Ls ranging from 242.52 to 252.30: 15.00 days
-               (MY 02)   (MY 02)
-=====================================================
- ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var' 
-% 
+```bash
+(amesGCM3)>$ MarsVars.py 00000.atmos_average.nc
+>>> ===================DIMENSIONS==========================
+>>> ['bnds', 'time', 'lat', 'lon', 'pfull', 'scalar_axis', 'phalf']
+>>> OrderedDict([('bnds', <class 'netCDF4._netCDF4.Dimension'>: name = 'bnds', size = 2
+>>> ), ('time', <class 'netCDF4._netCDF4.Dimension'> (unlimited): name = 'time', size = 4
+>>> ), ('lat', <class 'netCDF4._netCDF4.Dimension'>: name = 'lat', size = 180
+>>> ), ('lon', <class 'netCDF4._netCDF4.Dimension'>: name = 'lon', size = 360
+>>> ), ('pfull', <class 'netCDF4._netCDF4.Dimension'>: name = 'pfull', size = 30
+>>> ), ('scalar_axis', <class 'netCDF4._netCDF4.Dimension'>: name = 'scalar_axis', size = 1
+>>> ====================CONTENT==========================
+>>> pfull          : ('pfull',)= (30,), ref full pressure level  [Pa]
+>>> time           : ('time',)= (4,), time  [days since 0000-00-00 00:00:00]
+>>> scalar_axis    : ('scalar_axis',)= (1,), none  [none]
+>>> lat            : ('lat',)= (180,), latitude  [degrees_N]
+>>> bk             : ('phalf',)= (31,), vertical coordinate sigma value  [none]
+>>> pk             : ('phalf',)= (31,), pressure part of the hybrid coordinate  [Pa]
+>>> lon            : ('lon',)= (360,), longitude  [degrees_E]
+>>> areo           : ('time', 'scalar_axis')= (4, 1), areo  [degrees]
+>>> ps             : ('time', 'lat', 'lon')= (4, 180, 360), surface pressure  [Pa]
+>>> temp           : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), temperature  [K]
+>>> omega          : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), omega  [Pa/s]
+>>> dst_mass_micro : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), dust_mass  [none]
+>>> w              : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), vertical wind (added postprocessing)  [m/s]
+>>> 
+>>> Ls ranging from 242.52 to 252.30: 15.00 days
+>>>                (MY 02)   (MY 02)
+>>> =====================================================
+>>>  ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var' 
 ```
 
-MarsVars can also remove variables from files which is particularly useful for reducing file sizes:
+`MarsVars` can also remove variables from files which is particularly useful for reducing file sizes:
 
-```python
-% MarsVars.py 00000.atmos_average.nc -rm time
-%
-% MarsVars.py 00000.atmos_average.nc
-%
-===================DIMENSIONS==========================
-['bnds', 'time', 'lat', 'lon', 'pfull', 'scalar_axis', 'phalf']
-OrderedDict([('bnds', <class 'netCDF4._netCDF4.Dimension'>: name = 'bnds', size = 2
-), ('time', <class 'netCDF4._netCDF4.Dimension'> (unlimited): name = 'time', size = 4
-), ('lat', <class 'netCDF4._netCDF4.Dimension'>: name = 'lat', size = 180
-), ('lon', <class 'netCDF4._netCDF4.Dimension'>: name = 'lon', size = 360
-), ('pfull', <class 'netCDF4._netCDF4.Dimension'>: name = 'pfull', size = 30
-), ('scalar_axis', <class 'netCDF4._netCDF4.Dimension'>: name = 'scalar_axis', size = 1
-====================CONTENT==========================
-pfull          : ('pfull',)= (30,), ref full pressure level  [Pa]
-scalar_axis    : ('scalar_axis',)= (1,), none  [none]
-lat            : ('lat',)= (180,), latitude  [degrees_N]
-bk             : ('phalf',)= (31,), vertical coordinate sigma value  [none]
-pk             : ('phalf',)= (31,), pressure part of the hybrid coordinate  [Pa]
-lon            : ('lon',)= (360,), longitude  [degrees_E]
-areo           : ('time', 'scalar_axis')= (4, 1), areo  [degrees]
-ps             : ('time', 'lat', 'lon')= (4, 180, 360), surface pressure  [Pa]
-temp           : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), temperature  [K]
-omega          : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), omega  [Pa/s]
-dst_mass_micro : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), dust_mass  [none]
-w              : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), vertical wind (added postprocessing)  [m/s]
-
-Ls ranging from 242.52 to 252.30: 15.00 days
-               (MY 02)   (MY 02)
-=====================================================
- ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var' 
-% 
+```bash
+(amesGCM3)>$ MarsVars.py 00000.atmos_average.nc -rm time
+(amesGCM3)>$ MarsVars.py 00000.atmos_average.nc
+>>> ===================DIMENSIONS==========================
+>>> ['bnds', 'time', 'lat', 'lon', 'pfull', 'scalar_axis', 'phalf']
+>>> OrderedDict([('bnds', <class 'netCDF4._netCDF4.Dimension'>: name = 'bnds', size = 2
+>>> ), ('time', <class 'netCDF4._netCDF4.Dimension'> (unlimited): name = 'time', size = 4
+>>> ), ('lat', <class 'netCDF4._netCDF4.Dimension'>: name = 'lat', size = 180
+>>> ), ('lon', <class 'netCDF4._netCDF4.Dimension'>: name = 'lon', size = 360
+>>> ), ('pfull', <class 'netCDF4._netCDF4.Dimension'>: name = 'pfull', size = 30
+>>> ), ('scalar_axis', <class 'netCDF4._netCDF4.Dimension'>: name = 'scalar_axis', size = 1
+>>> ====================CONTENT==========================
+>>> pfull          : ('pfull',)= (30,), ref full pressure level  [Pa]
+>>> scalar_axis    : ('scalar_axis',)= (1,), none  [none]
+>>> lat            : ('lat',)= (180,), latitude  [degrees_N]
+>>> bk             : ('phalf',)= (31,), vertical coordinate sigma value  [none]
+>>> pk             : ('phalf',)= (31,), pressure part of the hybrid coordinate  [Pa]
+>>> lon            : ('lon',)= (360,), longitude  [degrees_E]
+>>> areo           : ('time', 'scalar_axis')= (4, 1), areo  [degrees]
+>>> ps             : ('time', 'lat', 'lon')= (4, 180, 360), surface pressure  [Pa]
+>>> temp           : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), temperature  [K]
+>>> omega          : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), omega  [Pa/s]
+>>> dst_mass_micro : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), dust_mass  [none]
+>>> w              : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), vertical wind (added postprocessing)  [m/s]
+>>>
+>>> Ls ranging from 242.52 to 252.30: 15.00 days
+>>>                (MY 02)   (MY 02)
+>>> =====================================================
+>>>  ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var' 
 ```
 
-MarsVars is useful when performing column integrations because the function preserves the original variable and creates a new variable ending in `_col` that contains the column integrated values:
+`MarsVars` is useful when performing column integrations because the function preserves the original variable and creates a new variable ending in `_col` that contains the column integrated values:
 
-```python
-% MarsVars.py 00000.atmos_average.nc -col dst_mass_micro
-Performing colum integration: dst_mass_micro...
-dst_mass_micro_col: Done
-%
-% MarsVars.py 00000.atmos_average.nc
-%
-===================DIMENSIONS==========================
-['bnds', 'time', 'lat', 'lon', 'pfull', 'scalar_axis', 'phalf']
-OrderedDict([('bnds', <class 'netCDF4._netCDF4.Dimension'>: name = 'bnds', size = 2
-), ('time', <class 'netCDF4._netCDF4.Dimension'> (unlimited): name = 'time', size = 4
-), ('lat', <class 'netCDF4._netCDF4.Dimension'>: name = 'lat', size = 180
-), ('lon', <class 'netCDF4._netCDF4.Dimension'>: name = 'lon', size = 360
-), ('pfull', <class 'netCDF4._netCDF4.Dimension'>: name = 'pfull', size = 30
-), ('scalar_axis', <class 'netCDF4._netCDF4.Dimension'>: name = 'scalar_axis', size = 1
-====================CONTENT==========================
-pfull          : ('pfull',)= (30,), ref full pressure level  [Pa]
-scalar_axis    : ('scalar_axis',)= (1,), none  [none]
-lat            : ('lat',)= (180,), latitude  [degrees_N]
-bk             : ('phalf',)= (31,), vertical coordinate sigma value  [none]
-pk             : ('phalf',)= (31,), pressure part of the hybrid coordinate  [Pa]
-lon            : ('lon',)= (360,), longitude  [degrees_E]
-areo           : ('time', 'scalar_axis')= (4, 1), areo  [degrees]
-ps             : ('time', 'lat', 'lon')= (4, 180, 360), surface pressure  [Pa]
-dst_mass_micro_col: ('time', 'lat', 'lon')= (4, 180, 360), column integration of dust_mass  [n/m2]
-temp           : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), temperature  [K]
-omega          : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), omega  [Pa/s]
-dst_mass_micro : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), dust_mass  [none]
-w              : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), vertical wind (added postprocessing)  [m/s]
+```bash
+(amesGCM3)>$ MarsVars.py 00000.atmos_average.nc -col dst_mass_micro
+> Performing colum integration: dst_mass_micro...
+> dst_mass_micro_col: Done
+```
 
-Ls ranging from 242.52 to 252.30: 15.00 days
-               (MY 02)   (MY 02)
-=====================================================
- ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var'
-% 
+You can see the added variable in the file:
+
+```bash
+(amesGCM3)>$ MarsVars.py 00000.atmos_average.nc
+(amesGCM3)>$ 
+>>> ===================DIMENSIONS==========================
+>>> ['bnds', 'time', 'lat', 'lon', 'pfull', 'scalar_axis', 'phalf']
+>>> OrderedDict([('bnds', <class 'netCDF4._netCDF4.Dimension'>: name = 'bnds', size = 2
+>>> ), ('time', <class 'netCDF4._netCDF4.Dimension'> (unlimited): name = 'time', size = 4
+>>> ), ('lat', <class 'netCDF4._netCDF4.Dimension'>: name = 'lat', size = 180
+>>> ), ('lon', <class 'netCDF4._netCDF4.Dimension'>: name = 'lon', size = 360
+>>> ), ('pfull', <class 'netCDF4._netCDF4.Dimension'>: name = 'pfull', size = 30
+>>> ), ('scalar_axis', <class 'netCDF4._netCDF4.Dimension'>: name = 'scalar_axis', size = 1
+>>> ====================CONTENT==========================
+>>> pfull          : ('pfull',)= (30,), ref full pressure level  [Pa]
+>>> scalar_axis    : ('scalar_axis',)= (1,), none  [none]
+>>> lat            : ('lat',)= (180,), latitude  [degrees_N]
+>>> bk             : ('phalf',)= (31,), vertical coordinate sigma value  [none]
+>>> pk             : ('phalf',)= (31,), pressure part of the hybrid coordinate  [Pa]
+>>> lon            : ('lon',)= (360,), longitude  [degrees_E]
+>>> areo           : ('time', 'scalar_axis')= (4, 1), areo  [degrees]
+>>> ps             : ('time', 'lat', 'lon')= (4, 180, 360), surface pressure  [Pa]
+>>> dst_mass_micro_col: ('time', 'lat', 'lon')= (4, 180, 360), column integration of dust_mass  [n/m2]
+>>> temp           : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), temperature  [K]
+>>> omega          : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), omega  [Pa/s]
+>>> dst_mass_micro : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), dust_mass  [none]
+>>> w              : ('time', 'pfull', 'lat', 'lon')= (4, 30, 180, 360), vertical wind (added postprocessing)  [m/s] 
+>>>
+>>> Ls ranging from 242.52 to 252.30: 15.00 days
+>>>                (MY 02)   (MY 02)
+>>> =====================================================
+>>>  ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var'
 ```
 
 ***
@@ -241,42 +236,41 @@ Ls ranging from 242.52 to 252.30: 15.00 days
 Native MGCM output files use pressure as the vertical coordinate, which means the geometric height and pressure level of an atmospheric layer varies based on location. Climate data is usually analyzed on a standardized grid, however, and it is often necessary to interpolate the files to standard pressure coordinates. The `-type` argument in `MarsInterp` can interpolate files for you:
 
 ```bash
-MarsInterp.py  00000.atmos_average.nc -t pstd
+(amesGCM3)>$ MarsInterp.py  00000.atmos_average.nc -t pstd
 ```
 
 An inspection of the file shows that the pressure level axis which was `pfull` (30 layers) has been replaced by a standard pressure coordinate `pstd` (36 layers), and all 3- and 4-dimensional variables reflect the new shape:
 
-```python
-% MarsInterp.py  00000.atmos_average.nc -t pstd
-%
-% MarsVars.py 00000.atmos_average.nc
-%
-===================DIMENSIONS==========================
-['bnds', 'time', 'lat', 'lon', 'scalar_axis', 'phalf', 'pstd']
-OrderedDict([('bnds', <class 'netCDF4._netCDF4.Dimension'>: name = 'bnds', size = 2
-), ('time', <class 'netCDF4._netCDF4.Dimension'> (unlimited): name = 'time', size = 4
-), ('lat', <class 'netCDF4._netCDF4.Dimension'>: name = 'lat', size = 180
-), ('lon', <class 'netCDF4._netCDF4.Dimension'>: name = 'lon', size = 360
-), ('pstd', <class 'netCDF4._netCDF4.Dimension'>: name = 'pstd', size = 36
-), ('scalar_axis', <class 'netCDF4._netCDF4.Dimension'>: name = 'scalar_axis', size = 1
-====================CONTENT==========================
-pstd           : ('pstd',)= (36,), pressure  [Pa]
-scalar_axis    : ('scalar_axis',)= (1,), none  [none]
-lat            : ('lat',)= (180,), latitude  [degrees_N]
-lon            : ('lon',)= (360,), longitude  [degrees_E]
-areo           : ('time', 'scalar_axis')= (4, 1), areo  [degrees]
-ps             : ('time', 'lat', 'lon')= (4, 180, 360), surface pressure  [Pa]
-dst_mass_micro_col: ('time', 'lat', 'lon')= (4, 180, 360), column integration of dust_mass  [n/m2]
-temp           : ('time', 'pfull', 'lat', 'lon')= (4, 36, 180, 360), temperature  [K]
-omega          : ('time', 'pfull', 'lat', 'lon')= (4, 36, 180, 360), omega  [Pa/s]
-dst_mass_micro : ('time', 'pfull', 'lat', 'lon')= (4, 36, 180, 360), dust_mass  [none]
-w              : ('time', 'pfull', 'lat', 'lon')= (4, 36, 180, 360), vertical wind (added postprocessing)  [m/s]
-
-Ls ranging from 242.52 to 252.30: 15.00 days
-               (MY 02)   (MY 02)
-=====================================================
- ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var'
-% 
+```bash
+(amesGCM3)>$ MarsInterp.py  00000.atmos_average.nc -t pstd
+(amesGCM3)>$ 
+(amesGCM3)>$ MarsVars.py 00000.atmos_average.nc
+(amesGCM3)>$ 
+>>> ===================DIMENSIONS==========================
+>>> ['bnds', 'time', 'lat', 'lon', 'scalar_axis', 'phalf', 'pstd']
+>>> OrderedDict([('bnds', <class 'netCDF4._netCDF4.Dimension'>: name = 'bnds', size = 2
+>>> ), ('time', <class 'netCDF4._netCDF4.Dimension'> (unlimited): name = 'time', size = 4
+>>> ), ('lat', <class 'netCDF4._netCDF4.Dimension'>: name = 'lat', size = 180
+>>> ), ('lon', <class 'netCDF4._netCDF4.Dimension'>: name = 'lon', size = 360
+>>> ), ('pstd', <class 'netCDF4._netCDF4.Dimension'>: name = 'pstd', size = 36
+>>> ), ('scalar_axis', <class 'netCDF4._netCDF4.Dimension'>: name = 'scalar_axis', size = 1
+>>> ====================CONTENT==========================
+>>> pstd           : ('pstd',)= (36,), pressure  [Pa]
+>>> scalar_axis    : ('scalar_axis',)= (1,), none  [none]
+>>> lat            : ('lat',)= (180,), latitude  [degrees_N]
+>>> lon            : ('lon',)= (360,), longitude  [degrees_E]
+>>> areo           : ('time', 'scalar_axis')= (4, 1), areo  [degrees]
+>>> ps             : ('time', 'lat', 'lon')= (4, 180, 360), surface pressure  [Pa]
+>>> dst_mass_micro_col: ('time', 'lat', 'lon')= (4, 180, 360), column integration of dust_mass  [n/m2]
+>>> temp           : ('time', 'pfull', 'lat', 'lon')= (4, 36, 180, 360), temperature  [K]
+>>> omega          : ('time', 'pfull', 'lat', 'lon')= (4, 36, 180, 360), omega  [Pa/s]
+>>> dst_mass_micro : ('time', 'pfull', 'lat', 'lon')= (4, 36, 180, 360), dust_mass  [none]
+>>> w              : ('time', 'pfull', 'lat', 'lon')= (4, 36, 180, 360), vertical wind (added postprocessing)  [m/s]
+>>> 
+>>> Ls ranging from 242.52 to 252.30: 15.00 days
+>>>                (MY 02)   (MY 02)
+>>> =====================================================
+>>> ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var'
 ```
 
 You can also interpolate files to a standard height `zstd` or height above ground level `zagl`. The specific pressure and altitude definitions that `pstd`, `zstd`, and `zagl` correspond to can be found in `/amesGCM3/bin/MarsInterp.py`. 
@@ -295,17 +289,17 @@ You can even add your own vertical coordinate array to `amesgcm_profile` so that
 The last component of CAP is the plotting routine, `MarsPlot`, which accepts a modifiable template containing a list of plots to create. `MarsPlot` is useful for creating plots from MGCM output quickly, and it is designed specifically for use with the netCDF output files (`daily`, `diurn`, `average`, `fixed`) generated by `MarsFiles`. The default template, Custom.in, can be created by passing the `-template` argument to `MarsPlot`. Custom.in is pre-populated to draw two plots on one page: a topographical plot from the fixed file and a cross-section of the zonal wind from the average file. Creating the template and passing it into `MarsPlot` creates a PDF containing the plots as in Figure 4:
 
 ```bash
-% MarsPlot.py -template
-/path/to/simulation/run_name/history/Custom.in was created
-%
-% MarsPlot.py Custom.in 
-Reading Custom.in
-[----------]  0 % (2D_lon_lat :fixed.zsurf)
-[#####-----] 50 % (2D_lat_lev :atmos_average.ucomp, Ls= (MY 2) 252.30, zonal avg)
-[##########]100 % (Done)
-Merging figures...
-/path/to/simulation/run_name/history/Diagnostics.pdf was generated
-%
+(amesGCM3)>$ MarsPlot.py -template
+>>> /path/to/simulation/run_name/history/Custom.in was created
+(amesGCM3)>$ 
+(amesGCM3)>$ MarsPlot.py Custom.in 
+>>> Reading Custom.in
+>>> [----------]  0 % (2D_lon_lat :fixed.zsurf)
+>>> [#####-----] 50 % (2D_lat_lev :atmos_average.ucomp, Ls= (MY 2) 252.30, zonal avg)
+>>> [##########]100 % (Done)
+>>> Merging figures...
+>>> /path/to/simulation/run_name/history/Diagnostics.pdf was generated
+(amesGCM3)>$ 
 ```
 
 ![Figure 4. The default plots in Diagnostics.pdf created by Custom.in](./tutorial_images/Diagnostics.png)
@@ -315,7 +309,7 @@ Merging figures...
 The above plots are created from the first two blocks of code set to `= True` in `Custom.in`. These code blocks are named after the type of plots they create and appear like this:
 
 ```python
-<<<<<<<<<<<<<<| Plot 2D lon X lat = True |>>>>>>>>>>>>>
+ <<<<<<<<<<<<<<| Plot 2D lon X lat = True |>>>>>>>>>>>>>
  Title          = None
  Main Variable  = fixed.zsurf
  Cmin, Cmax     = None
@@ -339,13 +333,13 @@ The above plots are created from the first two blocks of code set to `= True` in
 Note that each code block is set to `= True`, instructing `MarsPlot` to draw those plots. Below these is the section containing templates set to `= False` which instructs `MarsPlot` to skip those plots. In total, `MarsPlot` is equipped to create seven plot types, which are shown below along with their default setting:
 
 ```python
-<<<<<| Plot 2D lon X lat  = True  |>>>>>
-<<<<<| Plot 2D lon X time = False |>>>>>
-<<<<<| Plot 2D lon X lev  = False |>>>>>
-<<<<<| Plot 2D lat X lev  = True  |>>>>>
-<<<<<| Plot 2D time X lat = False |>>>>>
-<<<<<| Plot 2D time X lev = False |>>>>>
-<<<<<| Plot 1D            = False |>>>>> # Any 1D Plot Type (Dimension x Variable)
+ <<<<<| Plot 2D lon X lat  = True  |>>>>>
+ <<<<<| Plot 2D lon X time = False |>>>>>
+ <<<<<| Plot 2D lon X lev  = False |>>>>>
+ <<<<<| Plot 2D lat X lev  = True  |>>>>>
+ <<<<<| Plot 2D time X lat = False |>>>>>
+ <<<<<| Plot 2D time X lev = False |>>>>>
+ <<<<<| Plot 1D            = False |>>>>> # Any 1D Plot Type (Dimension x Variable)
 ```
 
 The settings for each plot vary a bit, but every plot contains the following inputs:
