@@ -290,7 +290,6 @@ class Fort(object):
         #Log static variables
         for ivar in self.variables.keys():
             if 'time' not in self.variables[ivar].dimensions:
-                print('Procesing '+ivar+'...')
                 fort_var=self.variables[ivar]
                 Log.log_variable(variable_name=ivar,DATAin=fort_var,dim_array=fort_var.dimensions,longname_txt=fort_var.long_name,units_txt=fort_var.units)
         Log.close()
@@ -317,7 +316,6 @@ class Fort(object):
         #Log dynamic variables, as well as pk, bk
         for ivar in self.variables.keys():
             if 'time' in self.variables[ivar].dimensions or ivar in ['pk','bk']:
-                print('Procesing '+ivar+'...')
                 fort_var=self.variables[ivar]
                 Log.log_variable(variable_name=ivar,DATAin=fort_var,dim_array=fort_var.dimensions,longname_txt=fort_var.long_name,units_txt=fort_var.units)
         Log.close()
@@ -345,14 +343,12 @@ class Fort(object):
 
         #Log static variables 
         for ivar in ['pk','bk']:
-            print('Procesing '+ivar+'...')
             fort_var=self.variables[ivar]
             Log.log_variable(variable_name=ivar,DATAin=fort_var,dim_array=fort_var.dimensions,longname_txt=fort_var.long_name,units_txt=fort_var.units)
         
         #Log dynamic variables 
         for ivar in self.variables.keys():
             if 'time' in self.variables[ivar].dimensions:
-                print('Procesing '+ivar+'...')
                 fort_var=self.variables[ivar]
                 var_out=daily_to_average(fort_var,time_in[1]-time_in[0],nday=day_average,trim=True)
                 Log.log_variable(variable_name=ivar,DATAin=var_out,dim_array=fort_var.dimensions,longname_txt=fort_var.long_name,units_txt=fort_var.units)
@@ -388,14 +384,12 @@ class Fort(object):
         
         #Log static variables 
         for ivar in ['pk','bk']:
-            print('Procesing '+ivar+'...')
             fort_var=self.variables[ivar]
             Log.log_variable(variable_name=ivar,DATAin=fort_var,dim_array=fort_var.dimensions,longname_txt=fort_var.long_name,units_txt=fort_var.units)
         
         #Loop over all variables in file
         for ivar in self.variables.keys():
             if 'time' in self.variables[ivar].dimensions :
-                print('Procesing '+ivar+'...')
                 fort_var=self.variables[ivar]
                 #If time is the dimension (but not just a time array)
                 if 'time' in fort_var.dimensions and ivar!='time':   

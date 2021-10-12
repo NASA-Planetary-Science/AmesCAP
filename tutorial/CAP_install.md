@@ -1,107 +1,243 @@
-Welcome to the Mars Climate Modeling Center (MCMC) Analysis Pipeline. By the end of this tutorial, you will know how to download Mars Climate data from the MCMC's data portal, reduce these large climate simulations to meaningful data, and make plots for Martian winds, temperature, and aerosols at specific seasons and locations.
-
-The simulation results presented on this page are extensively documented in [Haberle et al. 2019 _Documentation of the NASA/Ames Legacy Mars Global Climate Model: Simulations of the present seasonal water cycle_ ](https://www.sciencedirect.com/science/article/pii/S0019103518305761)
-
-# INSTALLATION:
-The analysis pipeline is entirely written in pure Python, which is an intuitive and open source programming language. You may identify yourself in one the following categories:
-
-* A. You are familiar with the Python infrastructure and would like to install the Analysis pipeline on top of your current Python installation: Check the requirements below and skip to '**_Installing the pipeline_**'. Note that you may have to manually add aliases to the _Mars***.py_ executables to your search path.
-* B. You have experience with Python but not with managing packages, or are new to Python: To ensure that there is no conflict with other Python versions that may be on your system, we will install a fresh Python distribution **locally** (this does not require admin permission). Additionally, we will install the analysis pipeline in a self-contained _virtual environment_  which is basically a standalone copy of your entire distribution, minus the 'core' code that is shared with the main python distribution.  This will allow you to use your fresh Python installation for other projects (including installing or upgrading packages) without the risk of altering the analysis pipeline. It will also be safe to alter (or even completely delete) that virtual environment without breaking the main distribution.
-##  Requirements
-
-**Python 3**: It you are already a Python user, you can install the Ames analysis pipeline on top of you current installation. For new users, we recommend to use the latest version of the Anaconda Python distribution as it already ships with pre-compiled math and plotting packages (e.g. _numpy_, _matplotlib_), and pre-compiled libraries (e.g. hdf5 headers to read netcdf files). You can download either the command-line installer or the graphical interface [here](https://www.anaconda.com/distribution/#download-section). If you are the owner of the system you can choose to install Python at the system level, but you can install it in your home directory if you don't have permission on your system.
-
-* In MacOS and Linux, you can install a fresh Python3  **locally** from a terminal with:
-
-`chmod +x Anaconda3-2020.02-MacOSX-x86_64.sh` (this make the .sh file executable)
-
-`./Anaconda3-2020.02-MacOSX-x86_64.sh`          (this runs the executable)
-
-Read (ENTER) and accept (yes) the terms. Take note of the location for the installation directory. You can use the default location or change it if you would like, for example _/Users/username/anaconda3_ works well.
-
-* In Windows, we recommend installing the pipeline under a Linux-type environment using [Cygwin](https://www.cygwin.com/), so we will be able to use the pipeline as command-line tools. Simply download the _Windows_ version on the [Anaconda website](https://www.anaconda.com/distribution/#download-section) and follow the instructions from the installation GUI. When asked about the installation location, make sure you install Python under your emulated-Linux home _/home/username_ and **not** on the default location _/cygdrive/c/Users/username/anaconda3_. From the installation GUI, the path you want to select is something like: `C:/Program Files/cygwin64/home/username/anaconda3` Also make sure to check YES  for _Add Anaconda to my PATH environment variable_
+![](./tutorial_images/Tutorial_Banner_Final.png)
 
 ***
 
-The analysis pipeline requires the following **Python packages** which will be installed automatically in the analysis pipeline virtual environment (more on this later):
-* **numpy** (array operations)
-* **matplotlib** (plotting library)
-* **netCDF4 Python** (handling of netcdf files)
-* **requests** (for downloading data from the MCMC Portal)
+# Intstalling the Community Analysis Pipeline (CAP)
 
-Optionally, you can install:
-* **ghostscript** which will allow the analysis pipeline to generate multiple figures as a single pdf file. Type
-`gs -version ` to see if Ghostscript is already available on your system. If it is not, you can installing from this page: [https://www.ghostscript.com/download.html](https://www.ghostscript.com/download.html) or decide to use png images instead.
+## Welcome to the installation of CAP!
 
-To make sure the paths are fully actualized, we recommend to close the current terminal. Then, open a fresh terminal, type `python` and hitting the TAB key. If multiple options are be available (e.g. _python_, _python2_, _python 3.7_, _python.exe_), this means that you have other versions of Python sitting on your system (e.g. an old _python2_  executable located in _/usr/local/bin/python_ ...). The same holds true for the `pip command` (e.g. old  _pip_, _pip3_, _pip.exe_). Pick the one you think may be from the Anaconda version you just installed and confirm this with the _which_ command, for example:
+These are the instructions for installing the NASA Ames MCMC's Community Analysis Pipeline (CAP). **We ask that you come to the MGCM Tutorial on November 2-4 with CAP installed on your machine** so that we can jump right into using it! We'll be using the tools in CAP to analyze MGCM output on the second day of the Tutorial. Installing CAP is fairly straightforward. We will create a python virtual environment, download CAP, and then install CAP within that virtual environment. That's it!
 
+A quick overview of what is covered in this installation document:
 
-`python3 --version`    (`python.exe --version` in Cygwin/Windows)
+1. Creating the Virtual Environment
+2. Installing CAP
+3. Testing & Using CAP
+4. Practical Tips
+5. Do This *Before* Attending the Tutorial!
 
-`which python3`        (`which python.exe` in Cygwin/Windows)
+## 1. Creating the Virtual Environment
 
-We are looking for a python executable that looks like it was installed with Anaconda, like _/username/anaconda3/bin/python3_ (MacOS/Linux)  or _/username/anaconda3/python.exe_ (Cygwin/Windows)   If `which python3` or `which python.exe` already points to one of those locations, you are good to go. If  `which` points  to some other location (e.g. _/usr/local/bin/python_) proceed with the FULL paths to the Anaconda-Python, e.g.
-
-`/Users/username/anaconda3/bin/python3` instead of `python3` (Linux/MacOS) or `/Users/username/anaconda3/python.exe` instead of `python.exe` (Cygwin/Windows)
-
-
-## Creation of a virtual environment:
-We will create a virtual environment for the Ames analysis pipeline which shares the same Python core but branches out with its own packages. We will call it  _amesGCM3_ to remind ourselves that it shares the same structure that the core python3 it is derived from. From a terminal run:
-
-`python3 -m venv --system-site-packages amesGCM3` (remember to use FULL PATH to `python` if needed)
-
-Here is what just happened :
+We'll begin by creating a virtual environment in which to install CAP. The virtual environment is an isolated Python environment cloned from an existing Python distribution. The virtual environment consists of the same directory trees as the original environment, but it includes activation and deactivation scripts that are used to move in and out of the virtual environment. Here's an illustration of how the two Python environments might look:
 
 ```
-anaconda3                  amesGCM3/
-├── bin                    ├── bin
-│   ├── pip       (copy)   │    ├── pip
-│   └── python3    >>>>    │    ├──python3
-└── lib                    │    ├── activate
-                           │    ├── activate.csh
-                           │    └── deactivate
-                           └── lib             
+     anaconda3                    virtual_env3/
+     ├── bin                      ├── bin
+     │   ├── pip       (copy)     │    ├── pip
+     │   └── python3    >>>>      │    ├── python3
+     └── lib                      │    ├── activate
+                                  │    ├── activate.csh
+                                  │    └── deactivate
+                                  └── lib             
 
-  MAIN ENVIRONMENT           VIRTUAL ENVIRONMENT
-(Leave untouched for)       (OK to mess around, will vanish
-this particular project)     everytime we run 'deactivate')
-
+  ORIGINAL ENVIRONMENT           VIRTUAL ENVIRONMENT
+      (Untouched)            (Vanishes upon deactivation)
 ```
 
-Now activate the virtual environment with:
-
-`source amesGCM3/bin/activate`      (if you are using **bash** )
-
-`source amesGCM3/bin/activate.csh`  (if you are using **csh/tcsh** )
-
-Note that in Cygwin/Windows, the  _bin_ directory may be named **_Scripts_**
+We can install and upgrade packages in the virtual environment without the risk of altering CAP or breaking the main Python environment. It is safe to change or even completely delete the virtual environment without breaking the main distribution. This allows us to experiment freely in the virtual environment.
 
 
-You may notice that your prompt changed from _username>_ to _(amesGCM3)username>_ which indicates that you are INSIDE the virtual environment, even when navigating to different directories on your machine.  
 
-After entering the virtual environment, we can verify that ```which python ``` and ```which pip ``` unambiguously point to _amesGCM3/bin/python3_ and _amesGCM3/bin/pip_ so there is no need use the full paths.
 
-## Installing the pipeline
-##### Directly from Github:
 
-From **inside** the virtual environment, run:
+### Step 1: Identify Your Preferred Python Distribution
 
-`pip install git+https://github.com/alex-kling/amesgcm.git`
+We highly recommend using the latest version of the Anaconda Python distribution. It ships with pre-compiled math and plotting packages such as `numpy` and `matplotlib` as well as pre-compiled libraries like `hdf5 headers` for reading `netCDF` files (the preferred filetype for analysing MGCM output).
 
-##### From a .zip archive:
-If you have been provided with an archive, download and untar the '_amesgcm-master.zip_' archive anywhere (e.g. in our _Downloads_ directory). From **inside** the virtual environment, run:
+You can install the Anaconda Python distribution via the command-line or a [graphical interface](https://www.anaconda.com/distribution/#download-section). You may install Anaconda at either the `System/` or `User/` level. For command-line installation, open a terminal and type the following:
 
+```bash
+(local)>$ chmod +x Anaconda3-2021.05-MacOSX-x86_64.sh   # creates the .sh file executable
+(local)>$ ./Anaconda3-2021.05MacOSX-x86_64.sh           # runs the executable
 ```
-cd amesgcm-master
-pip install .
+
+Which will return the following:
+
+```bash
+> Welcome to Anaconda3 2021.05
+>
+> In order to continue the installation process, please review the license agreement.
+> Please, press ENTER to continue
+> >>>
 ```
-It is safe to move (or remove) both the '_amesgcm-master_' source code, and the '.zip' archive from your _Downloads_ directory since _pip_ installed the pipeline inside your _~/amesGCM3_ virtual environment.
+
+Read (ENTER) and accept (yes) the terms, choose your installation location, and initialize Anaconda3:
+
+```bash
+(local)>$ [ENTER]
+> Do you accept the license terms? [yes|no]
+> [no] >>>
+(local)>$ yes
+> Anaconda3 will now be installed into this location:
+> /Users/username/anaconda3
+>
+>  - Press ENTER to confirm the location
+>  - Press CTRL-C to abort the installation
+>  - Or specify a different location below
+>
+> [/Users/cbatters/anaconda3] >>>
+(local)>$ [ENTER]
+> PREFIX=/Users/cbatters/anaconda3
+> Unpacking payload ...
+> Collecting package metadata (current_repodata.json):
+>   done                                                       
+> Solving environment: done
+>
+> ## Package Plan ##
+> ...
+> Preparing transaction: done
+> Executing transaction: -
+> done
+> installation finished.
+> Do you wish the installer to initialize Anaconda3 by running conda init? [yes|no]
+> [yes] >>>
+(local)>$ yes
+```
+
+> For Windows users, we recommend installing the pipeline under a Linux-type environment using [Cygwin](https://www.cygwin.com/) so that you will be able to use the pipeline as command line tools. Simply download the Windows version of Anaconda on the [Anaconda website](https://www.anaconda.com/distribution/#download-section) and follow the instructions from the installation GUI. When asked about the installation location, make sure you install Python under your emulated-Linux home directory (`/home/username`) and ***not*** in the default location (`/cygdrive/c/Users/username/anaconda3`). From the installation GUI, the path you want to select is something like `C:/Program Files/cygwin64/home/username/anaconda3` Also, make sure to check **YES** for "Add Anaconda to my `PATH` environment variable."
+
+Confirm that your path to the Anaconda Python distribution is fully actualized by closing the current terminal, opening a fresh terminal, and typing:
+
+```bash
+(local)>$ python[TAB]
+```
+
+If this returns multiple options (e.g. `python`, `python2`, `python 3.7`, `python.exe`), then you have other versions of Python sitting on your system (an old `python2` executable located in `/usr/local/bin/python`, for example). You can see these versions by typing:
+
+```bash
+(local)>$ python3 --version     # in bash, csh OR
+(local)>$ python.exe --version  # in Cygwin/Windows
+```
+
+Do this again for the `pip` command, which could return an old  `pip`, `pip3`, or `pip.exe` in addition to the Anaconda pip distribution. Find and set your `$PATH` environment variable to point to the Anaconda Python *and* pip distributions.
+
+```bash
+# with bash:
+(local)>$ echo 'export PATH=/Users/username/anaconda3/bin:$PATH' >> ~/.bash_profile
+# with csh/tsch:
+(local)>$ echo 'setenv PATH $PATH\:/Users/username/anaconda3/bin\:$HOME/bin\:.'  >> ~/.cshrc
+```
+
+Confirm the setting with the `which` command:
+
+```bash
+(local)>$ which python3         # in bash, csh OR
+(local)>$ which python.exe      # in Cygwin/Windows
+```
+
+We are looking for a Python executable that looks like it was installed with Anaconda, such as:
+
+```bash
+/username/anaconda3/bin/python3 # on MacOS/Linux, OR
+/username/anaconda3/python.exe # on Cygwin/Windows
+```
+
+If `which` points to either of those locations, you are good to go and you can proceed from here using the shorthand path to your Anaconda Python distribution:
+
+```bash
+python3     # Linux/MacOS
+python.exe  # Cygwin/Windows
+```
+
+If, however, `which` points to some other location, such as `/usr/local/bin/python`, proceed from here using the FULL path to the Anaconda Python distribution like so:
+
+```bash
+/Users/username/anaconda3/bin/python3 # Linux/MacOS
+/Users/username/anaconda3/python.exe  # Cygwin/Windows
+```
 ***
-To make sure the paths to the executables are correctly set in your terminal, exit the virtual environment with
 
-`deactivate`
 
-This complete the one-time installation of the Ames analysis pipeline:
+
+
+
+
+### Step 2: Set Up the Virtual Environment:
+
+The virtual environment is created from the terminal with the following syntax:
+
+```bash
+(local)>$ python3 -m venv --system-site-packages amesGCM3` # Use FULL PATH to python if needed
+```
+
+We can now activate the virtual environment with:
+
+```bash
+(local)>$ source amesGCM3/bin/activate      # if you are using **bash**
+(local)>$ source amesGCM3/bin/activate.csh  # if you are using **csh/tcsh**
+```
+
+> Note that in Cygwin/Windows, the `/bin` directory may be named `/Scripts`.
+
+You may notice that after sourcing `amesGCM3`, your prompt changed to `(amesGCM3)>$`. This confirms that you are **inside** the virtual environment even when you navigate to different directories on your machine.
+
+After sourcing the virtual environment, we can verify that `which python` and `which pip` unambiguously point to `amesGCM3/bin/python3` and `amesGCM3/bin/pip`, respectively. There is therefore no need to reference their full paths for the following instructions.
+
+
+***
+
+
+
+
+## 2. Installing CAP
+
+Now we can download and install cap in the `amesGCM3` virtual environment. CAP was provided to you in the tarfile `CAP_tarball.zip` that was sent along with these instructions. Download CAP_tarball.zip and leave it in `Downloads/`. Open a terminal window, activate the virtual environment, and untar the file:
+
+```bash
+(local)>$ source ~/amesGCM3/bin/activate        # bash
+(local)>$ source ~/amesGCM3/bin/activate.csh    # cshr/tsch
+(amesGCM3)>$
+(amesGCM3)>$ cd ~/Downloads
+(amesGCM3)>$ tar -xf CAP_tarball.zip
+(amesGCM3)>$ cd amesgcm-master
+(amesGCM3)>$ pip install .
+```
+
+That's it! CAP is installed in `amesGCM3`, and you can see the MarsXXXX.py tools in `~/amesGCM3/bin/`:
+
+```bash
+(local)>$ ls ~/amesGCM3/bin/
+> Activate.ps1     MarsPull.py      activate.csh     f2py             nc4tonc3         pip3
+> MarsFiles.py     MarsVars.py      activate.fish    f2py3            ncinfo           pip3.8
+> MarsInterp.py    MarsViewer.py    easy_install     f2py3.8          normalizer       python
+> MarsPlot.py      activate         easy_install-3.8 nc3tonc4         pip              python3
+```
+
+It is now safe to remove both `amesgcm-master/` and the `.zip` archive from your `/Downloads` directory since `pip` installed the pipeline inside your `amesGCM3` virtual environment:
+
+```bash
+(local)>$ cd ~/Downloads
+(local)>$ rm -r CAP_tarball.zip amesgcm3
+```
+
+***
+
+
+
+Double check that the paths to the executables are correctly set in your terminal by exiting the virtual environment:
+
+```bash
+(amesGCM3)>$ deactivate
+```
+
+Then, activate the virtual environment:
+
+```bash
+(local)>$ source ~/amesGCM3/bin/activate     # bash
+(local)>$ source ~/amesGCM3/bin/activate.csh # csh/tsch
+```
+
+and check the documentation for any CAP executible using the `--help` option:
+
+```bash
+(amesGCM3)>$ MarsPlot.py --help # or
+(amesGCM3)>$ MarsPlot.py -h
+```
+
+If the pipeline is installed correctly, `--help` will display documentation and command-line arguments for `MarsPlot` in the terminal.
+
+This completes the one-time installation of CAP in your virtual environment, `amesGCM3`, which now looks like:
+
 ```
 amesGCM3/
 ├── bin
@@ -131,111 +267,193 @@ amesGCM3/
 ```
 
 ***
-**Quick Tip:**
-If you prefer to use the _conda_ package manager to set-up your virtual environment instead of _pip_ , you may use the following commands instead to install the pipeline:
-Verify with ```conda info``` or  ```which conda``` that you are using the intented _conda_ executable (two or more versions of _conda_ might be present if both python 2 and python 3 are installed on your system). Then install the pipeline with:
 
-```
-conda create -n amesGCM3
-conda activate amesGCM3
-conda install pip
-pip install git+https://github.com/alex-kling/amesgcm.git
-```
+For your reference, CAP requires the following Python packages. These were installed automatically when you installed CAP:
 
-The source code will be installed in _your_conda/envs/amesGCM3/_ . The pipeline can then be activated with ```conda activate amesGCM3``` and exited with ```conda deactivate``` (more on this below).
+* matplotlib        # the MatPlotLib plotting library
+* netCDF4 Python    # handling netCDF files
+* requests          # downloading data from the MCMC Portal
+
+> **Note:** If you prefer using the `conda` package manager for setting up your virtual environment instead of `pip`, you may use the following commands to install CAP.
+>
+> First, verify (using `conda info` or `which conda`) that you are using the intented `conda` executable (two or more versions of `conda` might be present if both Python2 and Python3 are installed on your system):
+>
+>```bash
+>(local)>$ conda create -n amesGCM3
+>(local)>$ conda activate amesGCM3
+>(amesGCM3)>$ conda install pip
+>(amesGCM3)>$ pip install git+https://github.com/alex-kling/amesgcm.git
+>```
+>
+> The source code will be installed in:
+>
+>```bash
+>/path/to/anaconda3/envs/amesGCM3/
+>```
+>
+> and the pipeline can then be activated and exited with conda:
+>```bash
+>(local)>$ conda activate amesGCM3
+>(amesGCM3)>$ conda deactivate
+>(local)>$
+>```
+
+
+
+
+
 
 ***
 
-## Routine use of the pipeline
+### Removing CAP
 
-Every time you want to use the analysis pipeline from a new terminal session, simply run:
+To permanently remove CAP, activate the virtual environment and run the uninstall command:
 
-`source amesGCM3/bin/activate`    (`source amesGCM3/bin/activate.csh` in **csh/tcsh**)
-
-You can check that the tools are installed properly by typing `Mars` and hit the **TAB** key. No matter where you are on your system, you should see the following:
-```
-(amesGCM3) username$ Mars
-MarsFiles.py   MarsInterp.py  MarsPlot.py    MarsPull.py    MarsVars.py
-```
-If no executable show up, the paths have not not been set-up in the virtual environment. You can use the full paths to the executable e.g. instead of using  `MarsPlot.py`, use `~/amesGCM3/bin/MarsPlot.py`. If that solution works for you, also consider setting-up your own aliases, for example:
-
-Add `alias MarsPlot.py='/username/amesGCM3/bin/MarsPlot.py'` to your _~/.bash_profile_  and run
-`source ~/.bash_profile` (in **bash**)
-
-Add `alias MarsPlot.py /username/amesGCM3/bin/MarsPlot.py` to your _~/.cshrc_  and run
-`source ~/.cshrc` (in **csh**)  
-
-Check the documentation for any of the executables above with the `--help` option:
-
-`MarsPlot.py --help` (`MarsPlot.py -h` for short)
-
-
-After you are done with your work, you can exit the analysis pipeline with:
-
- `deactivate`
-
-## Upgrade, or remove the pipeline
-To upgrade the pipeline, activate the virtual environment:
-
-`source amesGCM3/bin/activate`    (`source amesGCM3/bin/activate.csh` in **csh/tcsh**)
-
-And run:
-
-`pip install git+https://github.com/alex-kling/amesgcm.git --upgrade`
-
-To permanently remove the amesgcm pipeline, activate the virtual environment and run :
-
-`pip uninstall amesgcm`
-
-It is also safe to delete the entire _amesGCM3_ virtual environment directory as this will not affect your main Python distribution.
-
-
-## Download raw Legacy GCM outputs
-The data from the Legacy GCM is archived every 1.5 hours (i.e. 16 times a day) and packaged in chunks of 10 sols (1 sol = 1 martian day). Files are available for download on the MCMC Data portal at : [https://data.nas.nasa.gov/legacygcm/data_legacygcm.php](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php), and referenced by their solar longitude or "_Ls_", which  is 0° at the vernal equinox (beginning of Northern spring), 90° during the summer solstice, 180° at the autumnal equinox, and 270° during winter solstice. To download a 30-sols chunk starting at the beginning at the martian year (Ls =0 to Ls=15), navigate to a place you would like to store the data and run :
-```
-MarsPull.py --help
-MarsPull.py --ls 0 15
-```
-This will download three LegacyGCM_Ls000***.nc raw outputs, each ~280MB each.
-
-We can use the **--inspect** command of MarsPlot.py to peak into the content for one of the raw outputs:
-
-`MarsPlot.py -i LegacyGCM_Ls000_Ls004.nc`
-
-Note the characteristic structure for the Legacy GCM raw outputs with 10 days chunks ('_time_') , and 16 time of day ('_ntod_').
-
-## File format conversion
-For analysis purposes, it is useful to reduce the data from the raw outputs into different formats:
-
-* **fixed**:   static fields (e.g. surface albedo, topography)
-* **average**: 5 days averages
-* **daily** : continuous time series
-* **diurn** : 5 days average for each time of the day
-
-New files for each of the formats listed above can be created using the _MarsFiles_ utility which handles conversions from the Legacy format to this new (FV3) format. To create _fixed_ and _average_ files for each of the 10 days output from the Legacy GCM, run:
-
-```
-MarsFiles.py -h
-MarsFiles.py LegacyGCM_Ls* -fv3 fixed average
-```
-And check the new content for one of the files with:
-```
-MarsPlot.py -i 00000.fixed.nc
-MarsPlot.py -i 00000.atmos_average.nc
+```bash
+(local)>$ source amesGCM3/bin/activate      # bash
+(local)>$ source amesGCM3/bin/activate.csh  # csh/tcsh
+(amesGCM3)>$ pip uninstall amesgcm
 ```
 
-Moving forward with the postprocessing pipeline, it is the user's choice to proceed with individual sets of files (00000, 00010, and 00020 files in our example), or merge those files together into one.
-All the utilities from the analysis pipeline (including the plotting routine) accept a **list** of files as input, and keeping separate files can be strategic when computer memory is limited (the **daily** files remain 280MB each and there are 67 of those in one Mars year).
+You may also delete the `amesGCM3` virtual environment directory at any time. This will uninstall CAP, remove the virtual environment from your machine, and will not affect your main Python distribution.
 
-Since working with 5 days average involves relatively small files, we can use the **--combine** option of _MarsFiles_ to merge them together along the '_time_' dimension:
+***
 
-```
-MarsFiles.py *fixed.nc -c
-MarsFiles.py *atmos_average.nc -c
-```
-We can use the **--dump** (or **--stat**) option of MarsPlot to inspect the changes made to the time dimension:
 
+
+
+## 3. Testing & Using CAP
+
+Whenever you want to use CAP, simply activate the virtual environment and all of CAP's tools will be accessible from the command line:
+
+```bash
+(local)>$ source amesGCM3/bin/activate      # bash
+(local)>$ source amesGCM3/bin/activate.csh  # csh/tcsh
 ```
-MarsPlot.py -i 00000.atmos_average.nc
-MarsPlot.py -i 00000.atmos_average.nc -dump time areo
+
+You can check that the tools are installed properly by typing `Mars` adn then the **TAB** key. No matter where you are on your system, you should see the following pop up:
+
+```bash
+(amesGCM3)>$ Mars
+> MarsFiles.py   MarsInterp.py  MarsPlot.py    MarsPull.py    MarsVars.py
 ```
+
+If no executables show up then the paths have not been properly set in the virtual environment. You can either use the full paths to the executable:
+
+```bash
+(amesGCM3)>$ ~/amesGCM3/bin/MarsPlot.py
+```
+
+Or set up aliases in your `./bashrc` or `.cshrc`:
+
+```bash
+# with bash:
+(local)>$ echo alias MarsPlot='/Users/username/amesGCM3/bin/MarsPlot.py' >> ~/.bashrc
+(local)>$ source ~/.bashrc
+# with csh/tsch
+(local)>$ echo alias MarsPlot /username/amesGCM3/bin/MarsPlot >> ~/.cshrc
+(local)>$ source ~/.cshrc
+```
+
+***
+
+
+
+
+
+
+
+
+## 4. Practical Tips (for later use during the tutorial)
+
+
+
+### Install `ghostscript` to Create Multiple-Page PDFs using MarsPlot
+
+Installing `ghostscript` on your local machine allows CAP to generate a multiple-page PDF file when creating lots of plots. Without `ghostcript`, CAP defaults to generating multiple `.png` files instead of a single PDF file, and we therefore strongly recommend installing `ghostscript` to streamline the process.
+
+
+First, check whether you already have `ghostscript` on your machine. Open a terminal and type:
+
+```bash
+(local)>$ gs -version
+> GPL Ghostscript 9.54.0 (2021-03-30)
+> Copyright (C) 2021 Artifex Software, Inc.  All rights reserved.
+```
+
+If it is not installed, follow the directions on the `ghostscript` [website](https://www.ghostscript.com/download.html).
+
+
+
+### Enable Syntax Highlighting for the Plot Template
+
+The MarsPlot plotting routine needs an input template written in Python, and the template generated by MarsPlot has the `.in` file extension. We recommend using a text editor that provides language-specific (Python) syntax highlighting to make keywords more readable. A few options include: [Atom](https://atom.io/) and vim (MacOS, Windows, Linux), notepad++ (Windows), or gedit (Linux).
+
+Enabling proper syntax-highlighting for Python in **vim** requires you add the following lines to `~/.vimrc`:
+
+```bash
+syntax on
+colorscheme default
+au BufReadPost *.in  set syntax=python
+```
+
+
+***
+
+
+5. Do This *Before* Attending the Tutorial!
+
+In order to follow along with the practical part of the MGCM Tutorial November 2-4, we ask that you download several MGCM output files that we will be working with. You should save these on the machine you'll be using during the tutorial.
+
+We'll use CAP to retrieve these files from the MGCM Data Portal. To begin, activate the virtual environment:
+
+```bash
+(local)>$ source amesGCM3/bin/activate      # bash
+(local)>$ source amesGCM3/bin/activate.csh  # csh/tcsh
+```
+
+Choose a directory in which to store these MGCM output files on your machine. For example, we will create a `~/CAP_tutorial` folder with  two sub-directories: one for an MGCM simulation with radiatively inert clouds and one for an MGCM simulation with radiatively active clouds:
+
+```bash
+(amesGCM3)>$ mkdir ~/CAP_tutorial
+(amesGCM3)>$ cd CAP_tutorial
+(amesGCM3)>$ mkdir INERTCLDS ACTIVECLDS
+```
+
+The MarsPull.py executable, can be  used to download data from the MCMC data portal, documentation is available with the `--help`  argument:
+
+```bash
+(amesGCM3)>$ MarsPull.py -h
+```
+
+We will use the simulation identifier (`--id`) and solar longitude (`--ls`) arguments listed in MarsPull.py's the documentation to download a specific set of GCM outputs.
+The simulation outputs we choose will span over 30 degree of solar longitudes centered at Ls= 270  (`-ls 255 285`) for the simulation with radiatively inert clouds (`-id INERTCLDS`) and for the simulation with radiatively active clouds (`-id ACTIVECLDS`).
+
+```bash
+(amesGCM3)>$ cd INERTCLDS
+(amesGCM3)>$ MarsPull.py -id INERTCLDS -ls 255 285
+(amesGCM3)>$ cd ../ACTIVECLDS
+(amesGCM3)>$ MarsPull.py -id ACTIVECLDS -ls 255 285
+```
+
+That's it! `~/amesGCM3/CAP_tutorial` now holds the necessary `fort.11` fortran binaries from the radiatively active and inert MGCM simulations.
+
+
+>The processing of those files will be covered in detail during the tutorial. However, if you are curious about the content of the files, we provide, with no further comments a list of commands to convert those individual files to the netCDF data format (`MarsFiles.py --fv3`), merge them as two files (`MarsFiles.py --combine`), and inspect their general content (`MarsFiles.py --inspect`).
+```bash
+(amesGCM3)>$ MarsFiles.py fort.11_* -fv3 fixed average
+(amesGCM3)>$ MarsFiles.py *fixed.nc -c
+(amesGCM3)>$ MarsFiles.py *atmos_average.nc -c
+(amesGCM3)>$ MarsPlot.py -i 00490.fixed.nc
+(amesGCM3)>$ MarsPlot.py -i 00490.atmos_average.nc
+```
+
+You can now deactivate the virtual environment:
+
+```bash
+(amesGCM3)>$ deactivate
+```
+
+and we'll see you November 2nd for the tutorial!
+
+***
