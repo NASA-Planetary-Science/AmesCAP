@@ -400,10 +400,9 @@ au BufReadPost *.in  set syntax=python
 
 ***
 
+## 5. Homework. Please complete this section BEFORE attending the Tutorial!
 
-5. Do This *Before* Attending the Tutorial!
-
-In order to follow along with the practical part of the MGCM Tutorial November 2-4, we ask that you download several MGCM output files that we will be working with. You should save these on the machine you'll be using during the tutorial.
+In order to follow along with the practical part of the MGCM Tutorial November 2-4, we ask that you download several MGCM output files (i.e. fort.11 files) that we will be working with. There is a total of 10 files which are 430Mb each. Please plan for 4Gb of available disk space on your system, plus at least another to 10Gb to leave room for postprocessing. **You should save these on the machine you'll be using during the tutorial.** 
 
 We'll use CAP to retrieve these files from the MGCM Data Portal. To begin, activate the virtual environment:
 
