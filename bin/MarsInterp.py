@@ -256,7 +256,7 @@ def main():
                 #==This with loop suppresses divided by zero errors==
                 with np.errstate(divide='ignore', invalid='ignore'):
                     varOUT=vinterp(varIN.transpose(permut),L_3D_P,     
-                                   lev_in,type=interp_technic,reverse_input=need_to_reverse,
+                                   lev_in,type_int=interp_technic,reverse_input=need_to_reverse,
                                    masktop=True,index=index).transpose(permut)
                 if not do_diurn:                   
                     fnew.log_variable(ivar,varOUT,('time',interp_type, 'lat', 'lon'),
