@@ -16,9 +16,9 @@ Specifically, CAP consists of five subroutines that provide tools to perform the
 
 When learning to use CAP, it is useful to divide the above CAP functions into three parts:
 
-1. [Retrieving Data](#Retrieving-Data)
-2. [File Manipulations](#File-Manipulations)
-3. [Plotting Routines](#Plotting-Routines)
+1. [Retrieving Data](#1.-Retrieving-Data)
+2. [File Manipulations](#2.-File-Manipulations)
+3. [Plotting Routines](#3.-Plotting-Routines)
 
 We will practice using CAP for all three parts. You already have experience using CAP for Retrieving Data, which was covered at the end of the CAP installation instructions (the install asked you to use `MarsPull` to retrieve several `fort.11` files before the tutorial). Here, you will have a chance to practice using all five Python routines in CAP.
 
