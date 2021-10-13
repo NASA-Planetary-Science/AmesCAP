@@ -436,7 +436,9 @@ au BufReadPost *.in  set syntax=python
 
 In order to follow along with the practical part of the MGCM Tutorial, we ask that you **download several MGCM output files beforehand**. You should save these on the machine you'll be using during the tutorial.
 
-We'll use CAP to retrieve these files from the MGCM Data Portal. To begin, activate the virtual environment:
+We'll use CAP to retrieve these files from the MGCM Data Portal. To begin, click on [this link to the MCMC data portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php?dir=/legacygcmdata/INERTCLDS). If the rows under "Size" display the message *data temporarily unavailable*, then you will have to download the data at a later time. An estimated offline time displays at bottom left of the webpage; check the website again after that time has elapsed.
+
+If the rows under "Size" display file sizes, then you can continue downloading the data. Begin by activating the virtual environment:
 
 ```bash
 (local)>$ source amesGCM3/bin/activate      # bash
