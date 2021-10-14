@@ -23,34 +23,58 @@ When learning to use CAP, it is useful to divide its functions into three catego
 
 We will practice using CAP for all three parts. You already have experience using CAP for Retrieving Data, which was covered at the end of the CAP installation instructions (the install asked you to use `MarsPull` to retrieve several `fort.11` files before the tutorial). Here, you will have a chance to practice using all five Python routines in CAP.
 
-**Activation of the Community Analysis Pipeline**
-As always with CAP, you first start by activating the CAP virtual environment (you can revisit the [installation instructions](https://github.com/alex-kling/amesgcm/blob/master/tutorial/CAP_install.md) as a refresher).
+**Activate CAP**
+As always with CAP, you must activate the `amesGCM3` virtual environment to access the executibles (you can revisit the [installation instructions](https://github.com/alex-kling/amesgcm/blob/master/tutorial/CAP_install.md) as a refresher).
 
 ```bash
-(local)>$ source amesGCM3/bin/activate      # bash
-(local)>$ source amesGCM3/bin/activate.csh  # csh/tcsh
+(local)>$ source ~/amesGCM3/bin/activate      # bash
+(local)>$ source ~/amesGCM3/bin/activate.csh  # csh/tcsh
 ```
 
-For each Mars executable, we recommend you check the `--help` argument (`-h` for short) to see which documentation, for example:
+As a reminder, each Mars executable has a `--help` argument (`-h` for short) that can show you information about an executible, for example:
 
 ```bash
 (amesGCM3)>$ MarsPull.py -h
 ```
+
+
+
+
+
+
 ***
 
 ## 1. Retrieving Data
 ### Using `MarsPull.py` to download MGCM output
 
-`MarsPull` is a utility for accessing MGCM output files hosted on the [MCMC Data portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php). During the installation, you were asked to use `MarsPull` to download several `fort.11` files into your `INERTCLDS/` and `ACTIVECLDS/` directories. You can use `MarsPull` to download any file hosted on the MCMC Data portal. Specify a simulation identifier, and a Solar Longitude (L<sub>s</sub>), or a range of Solar Longitudes (L<sub>s</sub>) corresponding to the desired file(s):
+`MarsPull` is a utility for accessing MGCM output files hosted on the [MCMC Data portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php). During the installation, you were asked to use `MarsPull` to download several `fort.11` files into your `INERTCLDS/` and `ACTIVECLDS/` directories. You should have already downloaded the necessary `fort.11` files for this tutorial. If you haven't, you can do so now by following along with the instructions below.
 
+We asked that you create a `CAP_Tutorial` directory containing two subdirectories, `INERTCLDS/` and `ACTIVECLDS/`, in `amesGCM3/`:
 
 ```bash
-(amesGCM3)>$ MarsPull.py -id INERTCLDS -ls XXX YYY
+(amesGCM3)>$ cd ~/amesGCM3
+(amesGCM3)>$ mkdir CAP_Tutorial
+(amesGCM3)>$ cd CAP_Tutorial
+(amesGCM3)>$ mkdir ACTIVECLDS INERTCLDS
 ```
 
-Where XXX and YYY are three-digit L<sub>s</sub> values. You should have already downloaded the necessary `fort.11` files for this tutorial. If you haven't, please see item five from the installation instructions, *5. Do This Before Attending the Tutorial!*, for instructions. There should be a total of ten files : fort.11_0719, fort.11_0720, fort.11_0721, fort.11_0722 and fort.11_0723 for EACH simulation.
+Navigate to `INERTCLDS/` and use `MarsPull` to retrieve the files. Specify the simulation identifier (`INERTCLDS/`) and the range of Solar Longitudes (255 285) corresponding to the desired file(s):
 
-> If you have downloaded other fort.11 files in addition of the five (ten total) listed above,  we recommend you copy the five files above in dedicated folders for the purpose of the tutorial. It  will make it easier to follow-along the tutorial if you work with a small subset of the year-long simulation.
+```bash
+(amesGCM3)>$ MarsPull.py -id INERTCLDS -ls 255 285
+```
+
+Then, do the same for the `ACTIVECLDS/` case.
+
+There should now be 5 `fort.11` files in each directory, `INERTCLDS/` and `ACTIVECLDS/`: 
+
+```bash
+> fort.11_0719 fort.11_0720 fort.11_0721 fort.11_0722 fort.11_0723
+```
+
+> If you have any `fort.11` files *other than the ones listed above* in *either* directory, please delete them. It will be make it easier to follow the tutorial if you work with the specific subset of files listed above.
+
+
 
 
 ***
@@ -62,21 +86,22 @@ After retrieving output from the data portal or using output from a simulation y
 The following exercises are designed to demonstrate how CAP can be used for post-processing MGCM output. You should follow along in the directories you created containing the `fort.11` files you downloaded during the installation process. After post-processing these files, **we will use them to make plots with MarsPlot**. Don't delete anything!
 
 
-We will start with the `INERTCLDS/` simulation (radiatively inert clouds) and complete exercises 2.1-2.8 below. Repeat the exercises for the `ACTIVECLDS/` (radiatively active clouds) afterward. In section 3, we access both simulations to make plots.
+Start with the radiatively inert clouds simulation (RIC), `INERTCLDS/`, and complete exercises 2.1-2.8 below. Then we will give you specific instructions regarding which exercises to repeat for the radiatively active clouds (RAC) simulation `ACTIVECLDS/`. We access files from both simulations to make plots in Section 3.
+
+
 
 
 ***
 
 #### 2.1 Convert the `fort.11` files into `netCDF` files for compatibility with CAP.
 
-To do this, activate the virtual environment, go to the `INERTCLDS/` directory, and type:
+To do this, go to your `INERTCLDS/` directory, and type:
 
 ```bash
-(amesGCM3)>$ MarsFiles.py -h # display documentation
 (amesGCM3)>$ MarsFiles.py fort.11_* -fv3 fixed average daily diurn
 ```
 
-This created a bunch of `netCDF` files. Your directory should look like this:
+This created several `netCDF` files:
 
 ```bash
 (amesGCM3)>$ ls
@@ -86,14 +111,16 @@ This created a bunch of `netCDF` files. Your directory should look like this:
 > 00490.fixed.nc          00500.fixed.nc          00510.fixed.nc          00520.fixed.nc          00530.fixed.nc          fort.11_0722
 ```
 
-Several `netCDF` filetypes are located in the directory:
+The `netCDF` filetypes are:
 
-- `*atmos_fixed.nc` files contain static variables that **do not change over time** (e.g. albedo & topography maps)
-- `*atmos_average.nc` files contain **5-day average** of MGCM output
-- `*atmos_diurn.nc` files contain **hourly** MGCM output, also averaged over 5 days
-- `*atmos_daily.nc` files contain **continuous time series** of the MGCM output, these are the most voluminous files
+| Type                  | Description |
+| --------------------- | ----------- |
+| `*atmos_fixed.nc`     | static variables that **do not change over time**           |
+| `*atmos_average.nc`   | **5-day averages** of MGCM output                           |
+| `*atmos_diurn.nc`     | files contain **hourly** MGCM output averaged over 5 days   |
+| `*atmos_daily.nc`     | **continuous time series** of the MGCM output               |
 
-For easier post-processing and plotting, we can combine alike files along the time axis to create one of each filetype:
+For easier post-processing and plotting, we can combine like files along the time axis. This creates one of each filetype:
 
 ```bash
 (amesGCM3)>$ MarsFiles.py *fixed.nc -c
@@ -102,7 +129,7 @@ For easier post-processing and plotting, we can combine alike files along the ti
 (amesGCM3)>$ MarsFiles.py *daily.nc -c
 ```
 
-This merged like-filetypes and created the four following files:
+This merge created the following four files:
 
 ```bash
 > 00490.atmos_fixed.nc 00490.atmos_average.nc 00490.atmos_diurn.nc 00490.atmos_daily.nc
@@ -116,21 +143,22 @@ This merged like-filetypes and created the four following files:
 
 #### 2.2 Interpolate `atmos_average` to standard pressure coordinates.
 
-This requires using `MarsInterp`:
+This requires using `MarsInterp`. As a reminder, you can display documentation for MarsInterp using:
 
 ```bash
-(amesGCM3)>$ MarsInterp.py -h # display documentation
-(amesGCM3)>$ MarsInterp.py 00490.atmos_average.nc -t pstd # standard pressure
+(amesGCM3)>$ MarsInterp.py -h
 ```
 
-and creates a new file:
+Convert to standard pressure coordinates by entering the following:
+```bash
+(amesGCM3)>$ MarsInterp.py 00490.atmos_average.nc -t pstd
+```
+
+which creates:
 
 ```bash
 > 00490.atmos_average_pstd.nc
 ```
-
-in the same directory as the original `00490.atmos_average.nc` file.
-
 
 
 
@@ -188,7 +216,7 @@ In this case, we add the variable after the interpolation because the mass strea
 The variables in `00490.atmos_diurn.nc` are organized by time-of-day in universal time at the prime martian meridian, but you can time-shift the fields to uniform local time using `MarsFiles`. You might use this function to allow plotting global variables at 3 AM and 3 PM, for example. We will only retain the surface pressure `ps`, surface temperature `ts` and atmospheric temperature `temp` using `--include` to minimize the size of the file and processing time.
 
 ```bash
-(amesGCM3)>$ MarsFiles.py 00490.atmos_diurn.nc -tshift --include ts ps temp
+(amesGCM3)>$ MarsFiles.py 00490.atmos_diurn.nc -t --include ts ps temp
 ```
 
 This function can only be performed on `diurn` files, since only `diurn` files contain hourly output. This function creates a new, time-shifted file, `00490.atmos_diurn_T.nc`. Next, pressure interpolate the file using `MarsInterp` (like we did for `atmos_average`).
@@ -197,19 +225,34 @@ This function can only be performed on `diurn` files, since only `diurn` files c
 (amesGCM3)>$ MarsInterp.py 00490.atmos_diurn_T.nc -t pstd
 ```
 
-We now have three diurn filetypes:
+This should take just over a minute. Note that pressure interpolating large files can take a long time which is why we only included `ps`, `ts`, and `temp` in this file. We now have three diurn filetypes:
+
 ```bash
 > 00490.atmos_diurn.nc 00490.atmos_diurn_T.nc 00490.atmos_diurn_T_pstd.nc
 ```
+
+> **Note:** We will *not* do this here, but you can specify a vertical grid to interpolate to with CAP. See the documentation for `MarsInterp.py` to learn how.
 
 
 
 
 ***
 
-#### 2.6 Estimate the magnitude of the wind shear using CAP. Add dU/dZ and dV/dZ to `00490.atmos_average_zstd.nc` and then display the minimum, mean, and maximum values for each variable between the surface and 10 km.
+#### 2.6 Apply a low-pass filter (`-lpf`) to the surface pressure (`ps`) and temperature (`ts`) in the `atmos_daily` with a 10 sols cut-off  frequency (set `sol_max` > 10) to isolate synoptic-scale feature.
 
-In addition of adding new variables, `MarsVars` can apply certain operations such as column integration or vertical differentiation to existing variables. We will use the later as follows:
+This will filter-out the pressure and save the variable in a new file:
+
+```bash
+(amesGCM3)>$ MarsFiles.py 00490.atmos_daily.nc -lpf 10 -include ps ts         
+```
+
+
+
+
+
+
+#### 2.7 Estimate the magnitude of the wind shear using CAP. Add dU/dZ and dV/dZ to `00490.atmos_average_zstd.nc`.
+In addition of adding new variables, `MarsVars` can apply certain operations such as column integration or vertical differentiation to existing variables. Vertical differentiation can be done as follows:
 
 ```bash
 (amesGCM3)>$ MarsVars.py 00490.atmos_average_zstd.nc -zdiff ucomp vcomp
@@ -233,7 +276,13 @@ You can use `--inspect` (`-i`) to find the names of the derived variables dU/dZ 
 > =====================================================
 ```
 
-Now, use `-dump` with `MarsPlot` (analogue of the NCL command `ncdump`) to print the altitude array to the terminal and determine the **index** at which `zstd` is 10 km:
+> **The `--inspect` function works on any netCDF file, not just the ones created here!**
+
+
+
+#### 2.8 Display the minimum, mean, and maximum altitude values.
+
+We can view the values in an array by calling `--dump` with `MarsPlot -i` (analogue of the NCL command `ncdump`):
 
 ```bash
 (amesGCM3)>$ MarsPlot.py -i 00490.atmos_average_zstd.nc -dump zstd
@@ -246,29 +295,27 @@ Now, use `-dump` with `MarsPlot` (analogue of the NCL command `ncdump`) to print
 > ______________________________________________________________________
 ```
 
-We can verify that the layer corresponding to an altitude of 10km (10000m) is the 28th element in `zstd` (i=27 since Python's indexing start at i=0)
+
+We can also index specific values:
 
 ```bash
 (amesGCM3)>$ MarsPlot.py -i 00490.atmos_average_zstd.nc -dump 'zstd[27]'
->zstd[27]=
->10000.0
+> zstd[27]=
+> 10000.0
 > ______________________________________________________________________
 ```
 
-When you determine the index, use `-stat` to display the min, mean, and max values of dU/dZ, in that specific altitude slice  (`:27` following Python's convention)
+and we can use `-stat` to display the min, mean, and max values of a variable:
 
 ```bash
-(amesGCM3)>$ MarsPlot.py -i 00490.atmos_average_zstd.nc -stat 'd_dz_ucomp[:,:27,:,:]'
+(amesGCM3)>$ MarsPlot.py -i 00490.atmos_average_zstd.nc -stat 'zstd'
 >__________________________________________________________________________
 >           VAR            |      MIN      |      MEAN     |      MAX      |
 >__________________________|_______________|_______________|_______________|
->     d_dz_ucomp[:,:27,:,:]|     -0.0161607|     0.00188501|      0.0278951|
+>                      zstd|          -7000|        17488.9|         100000|
 >__________________________|_______________|_______________|_______________|
->
-(amesGCM3)>$ MarsPlot.py -i 00490.atmos_average_zstd.nc -stat 'd_dz_vcomp[:,:27,:,:]'
 ```
 
-Do the same for dV/dZ.
 
 > **Note:** quotes '' are necessary when browsing dimensions.
 
@@ -276,42 +323,6 @@ Do the same for dV/dZ.
 
 
 
-
-***
-
-#### 2.7 Compute the amplitude and phase of the semi-diurnal components of the tide (`N=2`) on the `atmos_diurn` file.
-We can use `MarsFiles` with `-tidal N` (`N` denotes the tide harmonic) to create a file containing the N-diurnal components of the tide:
-
-```bash
-(amesGCM3)>$ MarsFiles.py 00490.atmos_diurn.nc -tidal 2
-```
-
-`N=1` is diurnal, `N=2` is semi diurnal, etc. By default, `MarsFiles` will perform the analysis on all available fields. To speed-up computing time, you can specify only the fields you are interested in (here the surface pressure `ps`, and atmospheric temperature `temp`)  using `--include`:
-
-```bash
-(amesGCM3)>$ MarsFiles.py 00490.atmos_diurn.nc -tidal 2 --include ps temp
-```
-
-
-***
-
-#### 2.8 Apply a low-pass filter (`-lpf`) to the surface pressure (`ps`) and temperature (`ts`) in the `atmos_daily` with a 10 sols cut-off  frequency (set `sol_max` > 10) to isolate synoptic-scale feature.
-
-This will filter-out the pressure and save the variable in a new file:
-
-```bash
-(amesGCM3)>$ MarsFiles.py 00490.atmos_daily.nc -lpf 10 -include ps ts         
-```
-
-CAP is capable of applying high-, low-, and band-pass filters to netCDF files using the syntax:
-
-```bash
-(amesGCM3)>$ MarsFiles.py file.nc -hpf --high_pass_filter sol_min          
-(amesGCM3)>$ MarsFiles.py file.nc -lpf --low_pass_filter  sol_max          
-(amesGCM3)>$ MarsFiles.py file.nc -bpf --band_pass_filter sol_min sol max  
-```
-
-Where `sol_min` and `sol_max` are the minimum and maximum number of days in a filtering period, respectively.
 
 
 ### Remember to repeat this post-processing on the `ACTIVECLDS/` simulation as well!
@@ -514,7 +525,7 @@ Name the plots accordingly. Save `Custom.in` and pass it to `MarsPlot`.
 
 ***
 
-#### 3.4 Plot the following two cross-sections (`lat x lev`) on the same page:
+#### 3.6 Plot the following two cross-sections (`lat x lev`) on the same page:
 
 - Mass Streamfunction (`msf`) at Ls=270. Change the colormap from `jet` to `bwr` and force symmetrical contouring by setting the colorbar's minimum and maximum values to -50 and 50. Adjust the y axis limits to 1,000 Pa and 1 Pa. Finally, add solid contours for `msf`=-10 and `msf`=10 on top. *Hint: set both `Main Variable` and `2nd Variable` to `msf`*
 - Zonal mean temperature (`temp`) at Ls=270 from the same (pressure-interpolated) file. Overplot the zonal wind (`ucomp`).
@@ -526,7 +537,7 @@ Don't forget to use `HOLD ON` and `HOLD OFF` and to name your plots accordingly.
 
 ***
 
-#### 3.5 Plot the zonal mean temperature at Ls=270 from the average file for the inert cloud case and the active cloud case. Also create a difference plot for them.
+#### 3.7 Plot the zonal mean temperature at Ls=270 from the average file for the inert cloud case and the active cloud case. Also create a difference plot for them.
 
 Use `HOLD ON` and `HOLD OFF`. Copy and paste a `lat x lev` plot three times. For the difference plot, you'll need to use `@N` to point to the `ACTIVECLDS/` directory and square brackets to subtract one variable from the other:
 
@@ -543,7 +554,7 @@ Save `Custom.in` and pass it to `MarsPlot`.
 
 ***
 
-#### 3.6 Generate a **1D temperature profile** (`temp`) at `50°N, 150°E` at Ls=270 at both 3 AM and 3 PM from the radiatively inert case. Plot these on the same plot.
+#### 3.8 Generate a **1D temperature profile** (`temp`) at `50°N, 150°E` at Ls=270 at both 3 AM and 3 PM from the radiatively inert case. Plot these on the same plot.
 
 CAP can overplot 1D data on the same graph by concatenating two 1D templates together with `ADD LINE`:
 
@@ -572,29 +583,11 @@ Save `Custom.in` and pass it to `MarsPlot`.
 
 
 
-***
 
-#### 3.7 Plot the semi-diurnal amplitude and phase of the surface pressure a Ls=270. Use orthographic projection centered over `50°N, 150°E`. Create two plots: one for each simulation.
-
-This will be a `lat X lon` plot. Use `temp_amp` and `temp_phas` from `atmos_diurn_tidal` file. For tidal analysis, the `time_of_day` dimension is used as a placeholder for the harmonics after their decomposition as shown with:
-
-```bash
-(amesGCM3)>$ MarsPlot.py -i 00490.atmos_diurn_tidal.nc
-...
->time_of_day_2  : ('time_of_day_2',)= (2,), tidal harmonics  [Diurnal harmonic number]
-```
-
-You can therefore use the `{tod=2}` syntax in MarsPlot to extract the **semi**-diurnal component.
-
-To change the projection *and* specify the centerpoint, edit `Axis Options` with the following:
-```python
-proj = ortho 150, 50
-```
-Save `Custom.in` and pass it to `MarsPlot`.
 
 ***
 
-#### 3.8 Plot the filtered and un-filtered surface pressure over a 20 sol period.
+#### 3.9 Plot the filtered and un-filtered surface pressure over a 20 sol period.
 
 Some hints:
 - Both are 1D plots. Use `ADD LINE` to plot on the same axes
@@ -609,7 +602,6 @@ Save `Custom.in` and pass it to `MarsPlot`.
 
 
 
-***
 
 ***
 
