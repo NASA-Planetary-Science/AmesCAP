@@ -185,11 +185,8 @@ def compute_zfull(ps,ak,bk,temp):
     Compute the altitude AGL in [m]
     """
     dim_out=temp.shape
-    prCyan(temp.transpose(lev_T).shape)  #(lev, tod, time, lat, lon)
     zfull=fms_Z_calc(ps,ak,bk,temp.transpose(lev_T),topo=0.,lev_type='full') # (lev, time, tod, lat,lon)
-    prGreen(zfull.shape)
     zfull=zfull.transpose(lev_T_out)# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon] # temp: [tim,tod,lev,lat,lon,lev] ->[lev,time, tod,lat, lon]
-    prRed(zfull.shape)
     return zfull
 
 def compute_zhalf(ps,ak,bk,temp):

@@ -735,7 +735,7 @@ def main():
                 varNcf     = fdiurn.variables[ivar]
                 varIN=varNcf[:] 
                 var_unit=varNcf.units
-                if tod_name in varNcf.dimensions and ivar not in [tod_name,'areo'] :     
+                if tod_name in varNcf.dimensions and ivar not in [tod_name,'areo'] and len(varNcf.shape)>2 :     
                     prCyan("Processing: %s ..."%(ivar))
                     
                     # Normalize the data
