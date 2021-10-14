@@ -472,7 +472,7 @@ All of the following variables come from `00490.atmos_daily.nc` and should be pl
 - Surface CO2 ice content (`snow`) *north of 50 latitude*
 - Surface temperature (`ts`) *For this plot, set the colorscale (`Cmin, Cmax`) to range from 150 K to 300 K.*
 - Surface Wind Speed (`(u^2 + v^2)/2`) (this requires the use of square brackets **and** two variables)
-- Diabatic Heating Rate (`dheat`) at the 14th vertical layer (index dimension `pfull`=14).
+- Diabatic Heating Rate (`dheat`) at 50 Pa (index dimension `lev`=50).
 
 The general format will be:
 
@@ -574,30 +574,35 @@ Save `Custom.in` and pass it to `MarsPlot`.
 
 ***
 
-#### 3.7 Plot the amplitude and phase of the thermal tide at 6 AM and Ls=270. Use orthographic projection centered over `50°N, 150°E`. Create two plots: one for each simulation.
+#### 3.7 Plot the semi-diurnal amplitude and phase of the surface pressure a Ls=270. Use orthographic projection centered over `50°N, 150°E`. Create two plots: one for each simulation.
 
-This will be a `lat X lon` plot. Use `temp_amp` and `temp_phas` from `atmos_diurn_tidal`. Remember to use the `{tod=6}` syntax. To change the projection *and* specify the centerpoint, edit `Axis Options` with the following:
+This will be a `lat X lon` plot. Use `temp_amp` and `temp_phas` from `atmos_diurn_tidal` file. For tidal analysis, the `time_of_day` dimension is used as a placeholder for the harmonics after their decomposition as shown with:
 
+```bash
+(amesGCM3)>$ MarsPlot.py -i 00490.atmos_diurn_tidal.nc
+...
+>time_of_day_2  : ('time_of_day_2',)= (2,), tidal harmonics  [Diurnal harmonic number]
+```
+
+You can therefore use the `{tod=2}` syntax in MarsPlot to extract the **semi**-diurnal component.
+
+To change the projection *and* specify the centerpoint, edit `Axis Options` with the following:
 ```python
 proj = ortho 150, 50
 ```
-
 Save `Custom.in` and pass it to `MarsPlot`.
-
-
-
 
 ***
 
-#### 3.8 Plot the filtered and un-filtered noon surface temperature over a 20-Ls period.
+#### 3.8 Plot the filtered and un-filtered surface pressure over a 20 sol period.
 
 Some hints:
 - Both are 1D plots. Use `ADD LINE` to plot on the same axes
-- Use `ts` from the `00490.atmos_daily.nc` and `00490.atmos_daily_lpf.nc` files
+- Use `ps` from the `00490.atmos_daily.nc` and `00490.atmos_daily_lpf.nc` files
 - Index noon `{tod=12}`
 - Set `Latitude = 50` and `Lon +/-180 = 150`
-- Under `Axis Options`, set the y axis range (temperature) to 150K--190K (`var = [150, 190]`)
 - Under `Axis Options`, set the x axis range (time) to 260--280 (`sols = [260, 280]`)
+- Under `Axis Options`, set the y axis range (pressure) to 850Pa--1000Pa(`var = [850, 1000]`)
 
 Save `Custom.in` and pass it to `MarsPlot`.
 
