@@ -23,11 +23,13 @@ Specifically, CAP consists of five executibles that perform the following functi
 4. `MarsInterp.py`  Interpolate the vertical grid
 5. `MarsPlot.py`    Visualize the MGCM output
 
-These executibles and their commonly-used functions are illustrated in the cheat sheet below, which you should feel free to reference during and after the tutorial:
+These executibles and their commonly-used functions are illustrated in the cheat sheet below, which you should feel free to reference during and after the tutorial.
 
-![Figure 3. Quick Guide to Using CAP](./tutorial_images/Cheat_Sheet.png)
 
 CAP is designed to be modular. For example, a user could post-process and plot MGCM output exclusively with CAP or a user could employ their own post-processing routine and then use CAP to plot the data. Users are free to selectively integrate CAP into their own analysis routine to the extent they see fit.
+
+
+![Figure 3. Quick Guide to Using CAP](./tutorial_images/Cheat_Sheet.png)
 
 
 
