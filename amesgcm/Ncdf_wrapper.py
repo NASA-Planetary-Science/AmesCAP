@@ -307,11 +307,16 @@ class Fort(object):
             if ivar in ['pfull' ,'phalf','zgrid']:cart_ax='Z'
             fort_var=self.variables[ivar]
             Log.add_dim_with_content(dimension_name=ivar,DATAin=fort_var,longname_txt=fort_var.long_name,units_txt=fort_var.units,cart_txt=cart_ax)
+        
+        #Add scalar_axis dimension (size 1, only used with areo) 
+        Log.add_dimension('scalar_axis',1)    
             
         #Add aggregation dimension (None size for unlimited) 
         Log.add_dimension('time',None)
         fort_var=self.variables['time']
         Log.log_axis1D(variable_name='time',DATAin=fort_var,dim_name='time',longname_txt=fort_var.long_name,units_txt=fort_var.units,cart_txt='T')
+        
+
         
         #Log dynamic variables, as well as pk, bk
         for ivar in self.variables.keys():
@@ -332,7 +337,10 @@ class Fort(object):
             if ivar in ['pfull' ,'phalf','zgrid']:cart_ax='Z'
             fort_var=self.variables[ivar]
             Log.add_dim_with_content(dimension_name=ivar,DATAin=fort_var,longname_txt=fort_var.long_name,units_txt=fort_var.units,cart_txt=cart_ax)
-            
+        
+        #Add scalar_axis dimension (size 1, only used with areo) 
+        Log.add_dimension('scalar_axis',1)
+        
         #Add aggregation dimension (None size for unlimited) 
         Log.add_dimension('time',None)
         
@@ -370,6 +378,8 @@ class Fort(object):
             fort_var=self.variables[ivar]
             Log.add_dim_with_content(dimension_name=ivar,DATAin=fort_var,longname_txt=fort_var.long_name,units_txt=fort_var.units,cart_txt=cart_ax)
         
+        #Add scalar_axis dimension (size 1, only used with areo) 
+        Log.add_dimension('scalar_axis',1)
         
         #Add time_of_day dimensions
         Log.add_dim_with_content(dimension_name=self.tod_name,DATAin=self.tod,longname_txt='time of day',units_txt='hours since 0000-00-00 00:00:00',cart_txt='N')
@@ -630,7 +640,7 @@ class Fort(object):
             #TAU=Rec[0];VPOUT=Rec[1]; RSDIST=Rec[2]; TOFDAY=Rec[3]; PSF=Rec[4]; PTROP=Rec[5]; TAUTOT=Rec[6]; RPTAU=Rec[7]; SIND=Rec[8]; GASP2=Rec[9]
             
             self.variables['time']=  self.Fort_var(self._ra_1D(Rec[0]/24,'time')  ,'time','elapsed time from the start of the run','days since 0000-00-00 00:00:00',('time'))
-            self.variables['areo']= self.Fort_var(self._ra_1D(Rec[1],'areo')     ,'areo','solar longitude','degree',('time'))     #TODO monotically increasing ?
+            self.variables['areo']= self.Fort_var(self._ra_1D(Rec[1].reshape([1,1]),'areo')     ,'areo','solar longitude','degree',('time','scalar_axis'))     #TODO monotically increasing ?
             self.variables['rdist']= self.Fort_var(self._ra_1D(Rec[2],'rdist')    ,'rdist','square of the Sun-Mars distance','(AU)**2',('time'))    
             self.variables['tofday']=self.Fort_var(self._ra_1D(Rec[3],'tofday')   ,'npcflag','time of day','hours since 0000-00-00 00:00:00',('time')) #TODO edge or center ?
             self.variables['psf']=   self.Fort_var(self._ra_1D(Rec[4]*100,'psf')  ,'psf','Initial global surface pressure','Pa',('time'))   
