@@ -645,7 +645,7 @@ class Fort(object):
             self.variables['tofday']=self.Fort_var(self._ra_1D(Rec[3],'tofday')   ,'npcflag','time of day','hours since 0000-00-00 00:00:00',('time')) #TODO edge or center ?
             self.variables['psf']=   self.Fort_var(self._ra_1D(Rec[4]*100,'psf')  ,'psf','Initial global surface pressure','Pa',('time'))   
             self.variables['ptrop']= self.Fort_var(self._ra_1D(Rec[5],'ptrop')    ,'ptrop','pressure at the tropopause','Pa',('time'))   
-            self.variables['tautot']=self.Fort_var(self._ra_1D(Rec[6],'tautot')   ,'tautot','iInput (global) dust optical depth at the reference pressure','none',('time'))   
+            self.variables['tautot']=self.Fort_var(self._ra_1D(Rec[6],'tautot')   ,'tautot','Input (global) dust optical depth at the reference pressure','none',('time'))   
             self.variables['rptau']= self.Fort_var(self._ra_1D(Rec[7]*100,'rptau'),'rptau','reference pressure for dust optical depth','Pa',('time'))   
             self.variables['sind']=  self.Fort_var(self._ra_1D(Rec[8],'sind')     ,'sind','sine of the sub-solar latitude','none',('time'))   
             self.variables['gasp']=  self.Fort_var(self._ra_1D(Rec[9]*100,'gasp') ,'gasp','global average surface pressure','Pa',('time'))   
