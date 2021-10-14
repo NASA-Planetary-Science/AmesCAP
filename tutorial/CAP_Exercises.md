@@ -185,13 +185,13 @@ In this case, we add the variable after the interpolation because the mass strea
 ***
 
 #### 2.5 Use `MarsFiles` to time-shift the diurn file, then pressure-interpolate the file.
-The variables in `00490.atmos_diurn.nc` are organized by time-of-day in universal time at the prime martian meridian, but you can time-shift the fields to uniform local time using `MarsFiles`. You might use this function to allow plotting global variables at 3 AM and 3 PM, for example.
+The variables in `00490.atmos_diurn.nc` are organized by time-of-day in universal time at the prime martian meridian, but you can time-shift the fields to uniform local time using `MarsFiles`. You might use this function to allow plotting global variables at 3 AM and 3 PM, for example. We will only retain the surface pressure `ps`, surface temperature `ts` and atmospheric temperature `temp` using `--include` to minimize the size of the file and processing time.
 
 ```bash
-(amesGCM3)>$ MarsFiles.py 00490.atmos_diurn.nc -t
+(amesGCM3)>$ MarsFiles.py 00490.atmos_diurn.nc -tshift --include ts ps temp
 ```
 
-This function can only be performed on `diurn` files, since only `diurn` files contain hourly output. This function creates a new, time-shifted file, `00490.atmos_diurn_T.nc`. Next, pressure interpolate the file using `MarsInterp` (like we did for `atmos_average`):
+This function can only be performed on `diurn` files, since only `diurn` files contain hourly output. This function creates a new, time-shifted file, `00490.atmos_diurn_T.nc`. Next, pressure interpolate the file using `MarsInterp` (like we did for `atmos_average`).
 
 ```bash
 (amesGCM3)>$ MarsInterp.py 00490.atmos_diurn_T.nc -t pstd
@@ -295,12 +295,12 @@ We can use `MarsFiles` with `-tidal N` (`N` denotes the tide harmonic) to create
 
 ***
 
-#### 2.8 Apply a low-pass filter (`-lpf`) to the surface temperature (`ps`) in the `atmos_daily` with a 10 sols cut-off  frequency (set `sol_max` > 10) to isolate synoptic-scale feature.
+#### 2.8 Apply a low-pass filter (`-lpf`) to the surface pressure (`ps`) and temperature (`ts`) in the `atmos_daily` with a 10 sols cut-off  frequency (set `sol_max` > 10) to isolate synoptic-scale feature.
 
 This will filter-out the pressure and save the variable in a new file:
 
 ```bash
-(amesGCM3)>$ MarsFiles.py 00490.atmos_daily.nc -lpf 10 -include ps         
+(amesGCM3)>$ MarsFiles.py 00490.atmos_daily.nc -lpf 10 -include ps ts         
 ```
 
 CAP is capable of applying high-, low-, and band-pass filters to netCDF files using the syntax:
@@ -332,13 +332,15 @@ Let's take a 15 minute break from the tutorial. You can use this time to catch u
 
 The last part of this tutorial covers the plotting capabilities within CAP. CAP can create several kinds of plots:
 
-- Longitude v Latitude
-- Longitude v Time
-- Longitude v Level
-- Latitude v Level
-- Time v Latitude
-- Time v level
-- Any 1-dimensional line plot
+|Type of plot      |    MarsPlot designation|
+|----------------------|-------------------|
+| Longitude v Latitude | Plot 2D lon X lat|
+| Longitude v Time     |Plot 2D lon X time|
+| Longitude v Level    |Plot 2D lon X lev|
+| Latitude v Level     |Plot 2D lat X lev|
+| Time v Latitude      |Plot 2D time X lat|
+| Time v level         |Plot 2D time X lev |
+| Any 1-dimensional line plot |Plot 1D|
 
 and CAP can display each plot on its own page or place multiple plots on the same page.
 
@@ -354,16 +356,15 @@ The blank template is called `Custom.in`. Pass `Custom.in` back to `MarsPlot` us
 (amesGCM3)>$ MarsPlot.py Custom.in
 ```
 
-This will have created `Diagnostics.pdf`, a single-page PDF with a topographical plot and a cross-section of the zonal mean wind.
+This will have created `Diagnostics.pdf`, a single-page PDF with a topographical plot and a cross-section of the zonal mean wind. Open the pdf to see the plots.
 
-You can rename `Custom.in` and still pass it to `MarsPlot` successfully:
-
+> You can rename `Custom.in` and still pass it to `MarsPlot` successfully:
 ```bash
 (amesGCM3)>$ mv Custom.in myplots.in
 (amesGCM3)>$ MarsPlot.py myplots.in
 ```
-
 If the template is named anything other than `Custom.in`, `MarsPlot` will produce a PDF named after the renamed template, i.e. `myplots.pdf`.
+
 
 Those are the basics of plotting with CAP. We'll try creating several plot types in exercises 3.8--3.8 below.
 
@@ -376,10 +377,10 @@ Those are the basics of plotting with CAP. We'll try creating several plot types
 
 For this first plot, we'll edit `Custom.in` together. Open the template in your preferred text editor and make the following changes:
 
-- Change the second default template `Plot 2D lat X lev` to `False` so that `MarsPlot` does not draw it.
+- Change the second default template `Plot 2D lat X lev` to `False` so that `MarsPlot` does not draw it (we will use it later)
 - Set the `Title` of the first default template `Plot 2D lon X lat` to reflect the variable being plotted.
-- Set `Main Variable` to thermal inertia (`thin`, located in the `fixed` file)
-- Set `2nd Variable` to topography (`zsurf`, located in the `fixed` file)
+- Set `Main Variable` to albedo (`alb`, located in the `fixed` file), this will be plotted as shaded contours
+- Set `2nd Variable` to topography (`zsurf`, located in the `fixed` file), this will be plotted as solid contours
 
 Here is what your template should look like:
 
@@ -395,14 +396,14 @@ Contours Var 2 = None
 Axis Options  : lon = [None,None] | lat = [None,None] | cmap = binary | scale = lin | proj = cart
 ```
 
-Save the template and pass it back to `MarsPlot`:
+Save the template in your text editor and pass it back to `MarsPlot`:
 
 ```bash
 (amesGCM3)>$ MarsPlot.py Custom.in
 ```
 
 Open `Diagnostics.pdf` and check to make sure it contains a global map of surface albedo and topography.
-
+> Depending on the settings for your specific pdf viewer, you may have to close and open the file.
 
 
 
@@ -525,7 +526,7 @@ Don't forget to use `HOLD ON` and `HOLD OFF` and to name your plots accordingly.
 
 ***
 
-#### 3.5 Plot the zonal mean temperature at Ls=270 from the daily file for the intert cloud case and the active cloud case. Also create a difference plot for them.
+#### 3.5 Plot the zonal mean temperature at Ls=270 from the average file for the inert cloud case and the active cloud case. Also create a difference plot for them.
 
 Use `HOLD ON` and `HOLD OFF`. Copy and paste a `lat x lev` plot three times. For the difference plot, you'll need to use `@N` to point to the `ACTIVECLDS/` directory and square brackets to subtract one variable from the other:
 
