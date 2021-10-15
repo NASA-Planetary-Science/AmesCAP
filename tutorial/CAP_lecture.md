@@ -1,7 +1,14 @@
 ![](./tutorial_images/Tutorial_Banner_Final.png)
 
 
+# The BIG QUESTION: How do I do this ?
 
+Ask for help!
+
+```bash
+(amesGCM3)>$ MarsPlot.py --help
+(amesGCM3)>$ MarsPlot.py -h
+```
 
 ***
 
@@ -15,7 +22,7 @@ Such a process requires that users be familiar with Fortran files and be able to
 
 ![Figure 2. The New Pipeline (CAP)](./tutorial_images/CAP.png)
 
-Specifically, CAP consists of five executibles that perform the following functions:
+Specifically, CAP consists of five executables that perform the following functions:
 
 1. `MarsPull.py`    Access MGCM output
 2. `MarsFiles.py`   Reduce the files
@@ -23,7 +30,7 @@ Specifically, CAP consists of five executibles that perform the following functi
 4. `MarsInterp.py`  Interpolate the vertical grid
 5. `MarsPlot.py`    Visualize the MGCM output
 
-These executibles and their commonly-used functions are illustrated in the cheat sheet below, which you should feel free to reference during and after the tutorial.
+These executables and their commonly-used functions are illustrated in the cheat sheet below, which you should feel free to reference during and after the tutorial.
 
 
 CAP is designed to be modular. For example, a user could post-process and plot MGCM output exclusively with CAP or a user could employ their own post-processing routine and then use CAP to plot the data. Users are free to selectively integrate CAP into their own analysis routine to the extent they see fit.
@@ -32,13 +39,11 @@ CAP is designed to be modular. For example, a user could post-process and plot M
 ![Figure 3. Quick Guide to Using CAP](./tutorial_images/Cheat_Sheet.png)
 
 
-
-
 ***
 
 # The Five Components of CAP
 
-In the following sections, we describe the executibles in CAP in the order in which they are most often used:
+In the following sections, we describe the executables in CAP in the order in which they are most often used:
 
 1. `MarsPull.py`
 2. `MarsFiles.py`
@@ -46,7 +51,7 @@ In the following sections, we describe the executibles in CAP in the order in wh
 4. `MarsInterp.py`
 5. `MarsPlot.py`
 
-
+# Introducing the Community Analysis Pipeline (CAP)
 
 
 ***
@@ -79,6 +84,7 @@ Where XXX and YYY are three-digit Solar Longitude (L<sub>s</sub>) values. The fi
 |* **_lpf**,**_hpf**,**_bpf** |low, high and band pass filtered|
 |* **_tidal** |tidally-decomposed files into  harmonics|
 |* **_to_average** **_to_diurn** |custom re-binning of daily files|
+|* **_regrid**  |4N-dimensional interpolation (lon,lat,time,altitude) to a different grid |
 
 
 `MarsFiles` can concatenate like-files together on the time dimension. `MarsFiles` can also be used to perform basic tidal analyses (temporal and spatial filtering, diurnal tides and their harmonics).
@@ -107,6 +113,9 @@ Where XXX and YYY are three-digit Solar Longitude (L<sub>s</sub>) values. The fi
 ```
 
 This file contains several variables including `ps`, `temp`, and `omega`. Since this is a native file (i.e. the vertical grid is `pfull` indicating the file has not been interpolated), we can calculate the vertical wind (`w`) using `ps`, `temp`, and `omega` and add it to the file:
+
+
+![Figure 3. MarsVars options](./tutorial_images/marsvars.png)
 
 ```bash
 (amesGCM3)>$ MarsVars.py 00000.atmos_average.nc -add w
@@ -390,3 +399,7 @@ Main Variable  = [atmos_diurn_plevs_T@2.dst_mass_micro{tod = 15}]*1.e6 # dust pp
 
 
 ***
+
+
+
+## A

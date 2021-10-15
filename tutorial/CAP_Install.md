@@ -53,9 +53,11 @@ We can install and upgrade packages in the virtual environment without breaking 
 
 ### Step 1: Identify Your Preferred Python Distribution
 
-We highly recommend using the latest version of the Anaconda Python distribution. It ships with pre-compiled math and plotting packages such as `numpy` and `matplotlib` as well as pre-compiled libraries like `hdf5` headers for reading `netCDF` files (the preferred filetype for analysing MGCM output).
+If you are already comfortable with Python's package management system, you are welcome to install the pipeline on top any python**3** distribution already present on your computer. Jump to Step #2 and resolve any missing package dependency.
 
-You can install the Anaconda Python distribution via the command-line or using a [graphical interface](https://www.anaconda.com/distribution/#download-section), and you can install Anaconda at either the `System/` or `User/` level. For command-line installation, open a terminal and type the following:
+For all other users, we highly recommend using the latest version of the Anaconda Python distribution. It ships with pre-compiled math and plotting packages such as `numpy` and `matplotlib` as well as pre-compiled libraries like `hdf5` headers for reading `netCDF` files (the preferred filetype for analysing MGCM output).
+
+You can install the Anaconda Python distribution via the command-line or using a [graphical interface](https://www.anaconda.com/distribution/#download-section) (scroll to the very bottom of the page for all download options). You can install Anaconda at either the `System/` level or the `User/` level (the later does not require admin-priviledges). For command-line installation, open a terminal and type the following:
 
 ```bash
 (local)>$ chmod +x Anaconda3-2021.05-MacOSX-x86_64.sh   # creates the .sh file executable
@@ -136,7 +138,7 @@ Confirm these settings using the `which` command:
 (local)>$ which python.exe      # in Cygwin/Windows
 ```
 
-which hopefully returns a Python executable that looks like it was installed with Anaconda, such as:
+which hopefully returns a Python executable that looks like **it was installed with Anaconda**, such as:
 
 ```bash
 > /username/anaconda3/bin/python3     # on MacOS/Linux, OR
@@ -153,8 +155,8 @@ If `which` points to either of those locations, you are good to go and you can p
 If, however, `which` points to some other location, such as `/usr/local/bin/python`, or more than one location, proceed from here using the **full** path to the Anaconda Python distribution:
 
 ```bash
-(local)>$ /Users/username/anaconda3/bin/python3 # Linux/MacOS
-(local)>$ /Users/username/anaconda3/python.exe  # Cygwin/Windows
+(local)>$ /username/anaconda3/bin/python3 # Linux/MacOS
+(local)>$ /username/anaconda3/python.exe  # Cygwin/Windows
 ```
 
 
@@ -167,14 +169,16 @@ If, however, `which` points to some other location, such as `/usr/local/bin/pyth
 Python virtual environments are created from the command line. Create an environment called `amesGCM3` by typing:
 
 ```bash
-(local)>$ python3 -m venv --system-site-packages amesGCM3` # Use FULL PATH to python if needed
+(local)>$ python3 -m venv -system-site-packages amesGCM3    # Linux/MacOS Use FULL PATH to python if needed
+(local)>$ python.exe -m venv –system-site-packages amesGCM3  # Cygwin/Windows Use FULL PATH to python if needed
 ```
 
 We can now activate the virtual environment with:
 
 ```bash
-(local)>$ source amesGCM3/bin/activate      # bash
-(local)>$ source amesGCM3/bin/activate.csh  # csh/tcsh
+(local)>$ source amesGCM3/bin/activate          # bash
+(local)>$ source amesGCM3/bin/activate.csh      # csh/tcsh
+(local)>$ source amesGCM3/Scripts/activate.csh  # Cygwin/Windows
 ```
 
 > In Cygwin/Windows, the `/bin` directory may be named `/Scripts`.
@@ -185,10 +189,14 @@ We can verify that `which python` and `which pip` unambiguously point to `amesGC
 
 ```bash
 (amesGCM3)>$ which python3         # in bash, csh OR
-(amesGCM3)>$ which python.exe      # in Cygwin/Windows
 > amesGCM3/bin/python3
 (amesGCM3)>$ which pip
 > amesGCM3/bin/pip
+
+(amesGCM3)>$ which python.exe      # in Cygwin/Windows
+> amesGCM3/Scripts/python.exe
+(amesGCM3)>$ which pip.exe
+> amesGCM3/Scripts/pip.exe
 ```
 
 There is therefore no need to reference the full paths while **inside** the virtual environment.
@@ -207,16 +215,17 @@ Now we can download and install CAP in `amesGCM3`. CAP was provided to you in th
 Open a terminal window, activate the virtual environment, and untar the file:
 
 ```bash
-(local)>$ source ~/amesGCM3/bin/activate        # bash
-(local)>$ source ~/amesGCM3/bin/activate.csh    # cshr/tsch
+(local)>$ source ~/amesGCM3/bin/activate          # bash
+(local)>$ source ~/amesGCM3/bin/activate.csh      # cshr/tsch
+(local)>$ source ~/amesGCM3/Scripts/activate.csh  #  Cygwin/Windows
 (amesGCM3)>$
-(amesGCM3)>$ cd ~/Downloads
 (amesGCM3)>$ tar -xf CAP_tarball.zip
 (amesGCM3)>$ cd amesgcm-master
 (amesGCM3)>$ pip install .
 ```
+> It is safe to upgrade pip if suggested during that steps.
 
-That's it! CAP is installed in `amesGCM3` and you can see the `MarsXXXX.py` executibles stored in `~/amesGCM3/bin/`:
+That's it! CAP is installed in `amesGCM3` and you can see the `MarsXXXX.py` executables stored in `~/amesGCM3/bin/`:
 
 ```bash
 (local)>$ ls ~/amesGCM3/bin/
@@ -226,7 +235,7 @@ That's it! CAP is installed in `amesGCM3` and you can see the `MarsXXXX.py` exec
 > MarsPlot.py      activate         easy_install-3.8 nc3tonc4         pip              python3
 ```
 
-It is now safe to remove both `amesgcm-master/` and the `.zip` archive from your `/Downloads` directory because we installed CAP inside the `amesGCM3` virtual environment:
+> Shall you need to modify any code, note that when you access the `Mars` tools above, those are **not** executed from the `amesgcm-master/` folder in your `/Downloads` directory, but instead from the `amesGCM3` virtual environment where they were installed by pip.
 
 ```bash
 (local)>$ cd ~/Downloads
@@ -244,9 +253,10 @@ then reactivating the virtual environment:
 ```bash
 (local)>$ source ~/amesGCM3/bin/activate     # bash
 (local)>$ source ~/amesGCM3/bin/activate.csh # csh/tsch
+(local)>$ source ~/amesGCM3/Scripts/activate.csh
 ```
 
-and checking the documentation for any CAP executible using the `--help` option:
+and checking the documentation for any CAP executable using the `--help` option:
 
 ```bash
 (amesGCM3)>$ MarsPlot.py --help # or
@@ -357,7 +367,7 @@ You may also delete the `amesGCM3` virtual environment directory at any time. Th
 
 ## 3. Testing & Using CAP
 
-Whenever you want to use CAP, simply activate the virtual environment and all of CAP's executibles will be accessible from the command line:
+Whenever you want to use CAP, simply activate the virtual environment and all of CAP's executables will be accessible from the command line:
 
 ```bash
 (local)>$ source amesGCM3/bin/activate      # bash
@@ -417,7 +427,7 @@ If `ghostscript` is not installed, follow the directions on the `ghostscript` [w
 
 ### Enable Syntax Highlighting for the Plot Template
 
-The `MarsPlot` executible requires an input template with the `.in` file extension. We recommend using a text editor that provides language-specific (Python) syntax highlighting to make keywords more readable. A few options include: [Atom](https://atom.io/) and vim (compatible with MacOS, Windows, Linux), notepad++ (compatible with Windows), or gedit (compatible with Linux).
+The `MarsPlot` executable requires an input template with the `.in` file extension. We recommend using a text editor that provides language-specific (Python) syntax highlighting to make keywords more readable. A few options include: [Atom](https://atom.io/) and vim (compatible with MacOS, Windows, Linux), notepad++ (compatible with Windows), or gedit (compatible with Linux).
 
 The most commonly used text editor is vim. Enabling proper syntax-highlighting for Python in **vim** can be done by adding the following lines to `~/.vimrc`:
 
@@ -472,9 +482,9 @@ That's it! `~/amesGCM3/CAP_tutorial` now holds the necessary `fort.11` files fro
 amesGCM3/
 ├── CAP_tutorial/
     ├── INERTCLDS/
-    │   └── fort.11 files
+    │   └── fort.11_0719  fort.11_0720  fort.11_0721  fort.11_0722  fort.11_0723
     ├── ACTIVECLDS/
-        └── fort.11 files
+        └── fort.11_0719  fort.11_0720  fort.11_0721  fort.11_0722  fort.11_0723
 ```
 
 You can now deactivate the virtual environment:

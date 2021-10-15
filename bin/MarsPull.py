@@ -162,8 +162,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-import wget
-def bar_custom(current, total, width=80):
-    print("Downloading: %d%% [%d / %d] bytes" % (current / total * 100, current, total))
-wget.download('https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/INERTCLDS/fort.11_0674', bar=bar_custom)
