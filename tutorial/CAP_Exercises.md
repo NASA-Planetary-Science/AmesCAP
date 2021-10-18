@@ -66,7 +66,7 @@ Navigate to `INERTCLDS/` and use `MarsPull` to retrieve the files. Specify the s
 
 Then, do the same for the `ACTIVECLDS/` case.
 
-There should now be 5 `fort.11` files in each directory, `INERTCLDS/` and `ACTIVECLDS/`: 
+There should now be 5 `fort.11` files in each directory, `INERTCLDS/` and `ACTIVECLDS/`:
 
 ```bash
 > fort.11_0719 fort.11_0720 fort.11_0721 fort.11_0722 fort.11_0723
@@ -249,8 +249,6 @@ This will filter-out the pressure and save the variable in a new file:
 
 
 
-
-
 #### 2.7 Estimate the magnitude of the wind shear using CAP. Add dU/dZ and dV/dZ to `00490.atmos_average_zstd.nc`.
 In addition of adding new variables, `MarsVars` can apply certain operations such as column integration or vertical differentiation to existing variables. Vertical differentiation can be done as follows:
 
@@ -279,49 +277,43 @@ You can use `--inspect` (`-i`) to find the names of the derived variables dU/dZ 
 > **The `--inspect` function works on any netCDF file, not just the ones created here!**
 
 
+#### 2.8 Display the minimum, mean, and maximum near-surface temperature .
 
-#### 2.8 Display the minimum, mean, and maximum altitude values.
-
-We can view the values in an array by calling `--dump` with `MarsPlot -i` (analogue of the NCL command `ncdump`):
+We can display values in an array by calling `--dump` with `MarsPlot -i` (analogue of the NCL command `ncdump`). For example, the content for the reference pressure (`pfull` variable in the file) is:
 
 ```bash
-(amesGCM3)>$ MarsPlot.py -i 00490.atmos_average_zstd.nc -dump zstd
-> zstd=
-> [ -7000.  -6000.  -5000.  -4500.  -4000.  -3500.  -3000.  -2500.  -2000.
->   -1500.  -1000.   -500.      0.    500.   1000.   1500.   2000.   2500.
->    3000.   3500.   4000.   4500.   5000.   6000.   7000.   8000.   9000.
->   10000.  12000.  14000.  16000.  18000.  20000.  25000.  30000.  35000.
->   40000.  45000.  50000.  55000.  60000.  70000.  80000.  90000. 100000.]
+(amesGCM3)>$ MarsPlot.py -i 00490.atmos_average.nc -dump pfull
+> pfull=
+> [8.7662227e-02 2.5499690e-01 5.4266089e-01 1.0518962e+00 1.9545468e+00
+> 3.5580616e+00 6.2466631e+00 1.0509957e+01 1.7400265e+01 2.8756382e+01
+> 4.7480076e+01 7.8348366e+01 1.2924281e+02 2.0770235e+02 3.0938846e+02
+> 4.1609518e+02 5.1308148e+02 5.9254102e+02 6.4705731e+02 6.7754218e+02
+> 6.9152936e+02 6.9731799e+02 6.9994830e+02 7.0082477e+02]
 > ______________________________________________________________________
 ```
 
-
-We can also index specific values:
+We can also index specific values using quotes and square brackets `'[ ]'`. For example, we can display the reference pressure in the first layer above the surface ( we use `-1` to refer to the last array element per Python convention):
 
 ```bash
-(amesGCM3)>$ MarsPlot.py -i 00490.atmos_average_zstd.nc -dump 'zstd[27]'
-> zstd[27]=
-> 10000.0
+(amesGCM3)>$ MarsPlot.py -i 00490.atmos_average.nc -dump 'pfull[-1]'
+> pfull[-1]=
+> 700.8247680664062
 > ______________________________________________________________________
 ```
 
-and we can use `-stat` to display the min, mean, and max values of a variable:
+ `-stat` display the min, mean, and max values of a variable, which is better suited to display statistics over a large array or for specific data-slices. For example, to display the min, mean, and max air temperature for all timesteps, all latitudes, all longitudes, and near the surface (`[time,pfull,lon,lat]=[:,-1,:,:]`), we use:
 
 ```bash
-(amesGCM3)>$ MarsPlot.py -i 00490.atmos_average_zstd.nc -stat 'zstd'
->__________________________________________________________________________
->           VAR            |      MIN      |      MEAN     |      MAX      |
->__________________________|_______________|_______________|_______________|
->                      zstd|          -7000|        17488.9|         100000|
->__________________________|_______________|_______________|_______________|
+(amesGCM3)>$ MarsPlot.py -i 00490.atmos_average.nc -stat 'temp[:,-1,:,:]'
+__________________________________________________________________________
+           VAR            |      MIN      |      MEAN     |      MAX      |
+__________________________|_______________|_______________|_______________|
+            temp[:,-1,:,:]|        149.016|        202.508|         251.05|
+__________________________|_______________|_______________|_______________|
 ```
 
 
 > **Note:** quotes '' are necessary when browsing dimensions.
-
-> **Note:** We added `zfull` to the `atmos_average` file *before* interpolating to standard altitude. Then we computed the wind shear on the interpolated grid (`_zstd`).
-
-
 
 
 
