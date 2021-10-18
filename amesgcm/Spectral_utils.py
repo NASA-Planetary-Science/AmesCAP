@@ -23,7 +23,7 @@ def init_shtools():
     that may be called when needed.
     '''
     try:
-        import pyshtools
+        import   
     except ImportError as error_msg:
         prYellow("__________________")
         prYellow("Zonal decomposition relies on the pyshtools library, referenced at:")
@@ -39,8 +39,8 @@ def init_shtools():
         print(exception.__class__.__name__ + ": ", exception)
 
 
-init_shtools()    
-import pyshtools
+#init_shtools()    
+
 
 
 def diurn_extract(VAR,N,tod,lon):

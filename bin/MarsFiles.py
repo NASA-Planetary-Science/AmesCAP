@@ -83,16 +83,19 @@ parser.add_argument('-bpf','--band_pass_filter', nargs='+',help=argparse.SUPPRES
 parser.add_argument('-no_trend','--no_trend',action='store_true',help=argparse.SUPPRESS) #do not include trend 
 
 
-parser.add_argument('-hpk','--high_pass_zonal',nargs='+',type=int,
-                    help="""Spatial filtering utilities, including: low, high, and band pass filters \n"""
-                         """> Use '--no_trend' flag  to  keep amplitudes only (data is always detrended before filtering)  \n"""
-                         """     (-hpk)  --high_pass_zonal kmin          \n"""
-                         """     (-lpk)  --low_pass_zonal  kmax          \n"""
-                         """     (-bpk)  --band_pass_zonal kmin kmax  \n"""
-                         """> Usage: MarsFiles.py *.atmos_daily.nc -lpk 20 --no_trend    \n"""
-                        """\033[00m""")                        
-parser.add_argument('-lpk','--low_pass_zonal', nargs='+',type=int,help=argparse.SUPPRESS) #same as  --hpf but without the instructions
-parser.add_argument('-bpk','--band_pass_zonal', nargs='+',help=argparse.SUPPRESS) #same as --hpf but without the instructions
+#=====Decomposition in zonal harmonics, disabled for initial CAp release==========
+
+# parser.add_argument('-hpk','--high_pass_zonal',nargs='+',type=int,
+#                     help="""Spatial filtering utilities, including: low, high, and band pass filters \n"""
+#                          """> Use '--no_trend' flag  to  keep amplitudes only (data is always detrended before filtering)  \n"""
+#                          """     (-hpk)  --high_pass_zonal kmin          \n"""
+#                          """     (-lpk)  --low_pass_zonal  kmax          \n"""
+#                          """     (-bpk)  --band_pass_zonal kmin kmax  \n"""
+#                          """> Usage: MarsFiles.py *.atmos_daily.nc -lpk 20 --no_trend    \n"""
+#                         """\033[00m""")                        
+# parser.add_argument('-lpk','--low_pass_zonal', nargs='+',type=int,help=argparse.SUPPRESS) #same as  --hpf but without the instructions
+# parser.add_argument('-bpk','--band_pass_zonal', nargs='+',help=argparse.SUPPRESS) #same as --hpf but without the instructions
+
 
 parser.add_argument('-tidal','--tidal',nargs='+',type=int,
                     help="""Tide analyis on diurn files: extract diurnal and its harmonics \n"""
