@@ -1,23 +1,7 @@
 ![](./tutorial_images/Tutorial_Banner_Final.png)
 
 
-<!-- TOC titleSize:2 tabSpaces:2 depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 skip:0 title:1 charForUnorderedList:* -->
-## Table of Contents
-* [Introducing the Community Analysis Pipeline (CAP)](#introducing-the-community-analysis-pipeline-cap)
-* [The big question... How do I do this? >  <span style="color:red">Ask for help!  </span>](#the-big-question-how-do-i-do-this---span-stylecolorredask-for-help--span)
-* [Introducing the Community Analysis Pipeline (CAP)](#introducing-the-community-analysis-pipeline-cap)
-  * [1. `MarsPull.py` - Downloading Raw MGCM Output](#1-marspullpy---downloading-raw-mgcm-output)
-  * [2. `MarsFiles.py` - Reducing the Files](#2-marsfilespy---reducing-the-files)
-  * [3. `MarsVars.py` - Performing Variable Operations](#3-marsvarspy---performing-variable-operations)
-  * [4. `MarsInterp.py` - Interpolating the Vertical Grid](#4-marsinterppy---interpolating-the-vertical-grid)
-  * [5. `MarsPlot.py` - Plotting the Results](#5-marsplotpy---plotting-the-results)
-    * [Overview](#overview)
-    * [Customize Plots](#customize-plots)
-    * [1D-plots](#1d-plots)
-    * [Access simulation in a different directory](#access-simulation-in-a-different-directory)
-    * [Element-wise operations](#element-wise-operations)
-    * [Debugging](#debugging)
-<!-- /TOC -->
+
 ***
 
 # Introducing the Community Analysis Pipeline (CAP)
@@ -46,6 +30,25 @@ These executables and their commonly-used functions are illustrated in the cheat
 
 CAP is designed to be modular. For example, a user could post-process and plot MGCM output exclusively with CAP or a user could employ their own post-processing routine and then use CAP to plot the data. Users are free to selectively integrate CAP into their own analysis routine to the extent they see fit.
 
+<!-- TOC titleSize:2 tabSpaces:2 depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 skip:0 title:1 charForUnorderedList:* -->
+## Table of Contents
+* [Introducing the Community Analysis Pipeline (CAP)](#introducing-the-community-analysis-pipeline-cap)
+* [The big question... How do I do this? >  <span style="color:red">Ask for help!  </span>](#the-big-question-how-do-i-do-this---span-stylecolorredask-for-help--span)
+* [1. `MarsPull.py` - Downloading Raw MGCM Output](#1-marspullpy---downloading-raw-mgcm-output)
+* [2. `MarsFiles.py` - Reducing the Files](#2-marsfilespy---reducing-the-files)
+* [3. `MarsVars.py` - Performing Variable Operations](#3-marsvarspy---performing-variable-operations)
+* [4. `MarsInterp.py` - Interpolating the Vertical Grid](#4-marsinterppy---interpolating-the-vertical-grid)
+* [5. `MarsPlot.py` - Plotting the Results](#5-marsplotpy---plotting-the-results)
+  * [Overview](#overview)
+  * [How to](#how-to)
+    * [Disable or add a new plot](#disable-or-add-a-new-plot)
+    * [Customize Plots](#customize-plots)
+    * [Make a 1D-plot](#make-a-1d-plot)
+    * [Access simulation in a different directory](#access-simulation-in-a-different-directory)
+    * [Element-wise operations](#element-wise-operations)
+    * [Debugging](#debugging)
+<!-- /TOC -->
+
 ***
 # The big question... How do I do this? >  <span style="color:red">Ask for help!  </span>
 Use the `--help` (`-h` for short) option on any executable to display documentation and examples.
@@ -56,11 +59,11 @@ Use the `--help` (`-h` for short) option on any executable to display documentat
 >                   [--debug]
 >                   [custom_file]
 ```
-# Introducing the Community Analysis Pipeline (CAP)
+
 
 ***
 
-## 1. `MarsPull.py` - Downloading Raw MGCM Output
+# 1. `MarsPull.py` - Downloading Raw MGCM Output
 
 `MarsPull` is a utility for accessing MGCM output files hosted on the [MCMC Data portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php). MGCM data is archived in 1.5 hour intervals (16x/day, '_ntod_') and packaged in files containing 10 sols ('_time_') of data. The file naming convention is:
 
@@ -73,7 +76,7 @@ Where XXX and YYY are three-digit Solar Longitude (L<sub>s</sub>) values. The fi
 
 ***
 
-## 2. `MarsFiles.py` - Reducing the Files
+# 2. `MarsFiles.py` - Reducing the Files
 
 `MarsFiles` provides several tools for file manipulations, including code designed to create binned, averaged, and time-shifted files from MGCM output. These are the file formats that `MarsFiles` can create from the fort.11 MGCM output files:
 
@@ -105,7 +108,7 @@ Where `sol_min` and `sol_max` are the minimum and maximum number of days in a fi
 
 ***
 
-## 3. `MarsVars.py` - Performing Variable Operations
+# 3. `MarsVars.py` - Performing Variable Operations
 
 `MarsVars` provides several tools relating to variable operations such as adding and removing variables and performing column integrations. With no other arguments, passing a file to `MarsVars` displays file content much like `ncdump`:
 
@@ -194,7 +197,7 @@ You can see the added variable in the file:
 
 ***
 
-## 4. `MarsInterp.py` - Interpolating the Vertical Grid
+# 4. `MarsInterp.py` - Interpolating the Vertical Grid
 
 Native MGCM output files use pressure as the vertical coordinate (`pfull`), which means the geometric height and pressure level of an atmospheric layer varies based on location. Climate data is usually analyzed on a standardized grid, however, and it is often necessary to interpolate the files to standard pressure coordinates. The `-type` (`-t`) argument in `MarsInterp` can interpolate files for you:
 
@@ -228,9 +231,9 @@ You can even add your own vertical coordinate array to `amesgcm_profile` so that
 
 ***
 
-## 5. `MarsPlot.py` - Plotting the Results
+# 5. `MarsPlot.py` - Plotting the Results
 
-### Overview
+## Overview
 
 The last component of CAP is the plotting routine, `MarsPlot`, which accepts a modifiable template (`Custom.in`) containing a list of plots to create. `MarsPlot` is useful for creating plots from MGCM output quickly, and it is designed specifically for use with the `netCDF` output files (`daily`, `diurn`, `average`, `fixed`) generated by `MarsFiles`.
 
@@ -266,7 +269,8 @@ Contours Var 2 = None
 Axis Options  : lon = [None,None] | lat = [None,None] | cmap = jet | scale = lin | proj = cart
 
 ```
-
+## How to
+### Disable or add a new plot
 Code blocks is set to `= True` instruct `MarsPlot` to draw those plots. Other templates in `Custom.in` are set to `= False` by default, which instructs `MarsPlot` to skip those plots. In total, `MarsPlot` is equipped to create seven plot types:
 
 ```python
@@ -323,7 +327,7 @@ proj        = cart          # Projection ([cart]esian, [robin]son, [moll]weide, 
 
 
 ***
-### 1D-plots
+### Make a 1D-plot
 The 1D plot template is different from the others in a few key ways:
 
 - Instead of `Title`, the template requires a `Legend`. When overploting several 1D variables on top of one another, the legend option will label them insetad of changing the plot title.
