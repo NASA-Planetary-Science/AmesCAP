@@ -1,7 +1,34 @@
 ![](./tutorial_images/Tutorial_Banner_Final.png)
 
 
-
+<!-- TOC titleSize:2 tabSpaces:2 depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 skip:0 title:1 charForUnorderedList:* -->
+## Table of Contents
+* [Practical: Using the Community Analysis Pipeline (CAP)](#practical-using-the-community-analysis-pipeline-cap)
+  * [1. Retrieving Data](#1-retrieving-data)
+    * [Using `MarsPull.py` to download MGCM output](#using-marspullpy-to-download-mgcm-output)
+  * [2. File Manipulations](#2-file-manipulations)
+      * [2.1 Convert the `fort.11` files into `netCDF` files for compatibility with CAP.](#21-convert-the-fort11-files-into-netcdf-files-for-compatibility-with-cap)
+      * [2.2 Interpolate `atmos_average` to standard pressure coordinates.](#22-interpolate-atmosaverage-to-standard-pressure-coordinates)
+      * [2.3 Add density (`rho`) and mid-point altitude (`zfull`) to `atmos_average`, then interpolate the file to standard altitude (`zstd`)](#23-add-density-rho-and-mid-point-altitude-zfull-to-atmosaverage-then-interpolate-the-file-to-standard-altitude-zstd)
+      * [2.4 Add mass stream function (`msf`) to `atmos_average_pstd`.](#24-add-mass-stream-function-msf-to-atmosaveragepstd)
+      * [2.5 Use `MarsFiles` to time-shift the diurn file, then pressure-interpolate the file.](#25-use-marsfiles-to-time-shift-the-diurn-file-then-pressure-interpolate-the-file)
+      * [2.6 Apply a low-pass filter (`-lpf`) to the surface pressure (`ps`) and temperature (`ts`) in the `atmos_daily` with a 10 sols cut-off  frequency (set `sol_max` > 10) to isolate synoptic-scale feature.](#26-apply-a-low-pass-filter--lpf-to-the-surface-pressure-ps-and-temperature-ts-in-the-atmosdaily-with-a-10-sols-cut-off--frequency-set-solmax--10-to-isolate-synoptic-scale-feature)
+      * [2.7 Estimate the magnitude of the wind shear using CAP. Add dU/dZ and dV/dZ to `00490.atmos_average_zstd.nc`.](#27-estimate-the-magnitude-of-the-wind-shear-using-cap-add-dudz-and-dvdz-to-00490atmosaveragezstdnc)
+      * [2.8 Display the minimum, mean, and maximum near-surface temperature .](#28-display-the-minimum-mean-and-maximum-near-surface-temperature-)
+    * [Remember to repeat this post-processing on the `ACTIVECLDS/` simulation as well!](#remember-to-repeat-this-post-processing-on-the-activeclds-simulation-as-well)
+* [Break!](#break)
+  * [3. Plotting Routines](#3-plotting-routines)
+      * [3.1 Plot a global map of surface albedo (`alb`) with topography (`zsurf`) contoured on top.](#31-plot-a-global-map-of-surface-albedo-alb-with-topography-zsurf-contoured-on-top)
+      * [3.2 Next, plot a cross-section of the zonal mean zonal wind at Ls=270° using altitude as the vertical coordinate.](#32-next-plot-a-cross-section-of-the-zonal-mean-zonal-wind-at-ls270-using-altitude-as-the-vertical-coordinate)
+      * [3.3 Create the same plot for the radiatively active cloud case, and put both zonal mean zonal wind plots on their own page.](#33-create-the-same-plot-for-the-radiatively-active-cloud-case-and-put-both-zonal-mean-zonal-wind-plots-on-their-own-page)
+      * [3.4 Add temperature as solid contours overtop of the zonal wind plot.](#34-add-temperature-as-solid-contours-overtop-of-the-zonal-wind-plot)
+      * [3.5 Plot the following four global maps (`lon x lat`) on a new page:](#35-plot-the-following-four-global-maps-lon-x-lat-on-a-new-page)
+      * [3.6 Plot the following two cross-sections (`lat x lev`) on the same page:](#36-plot-the-following-two-cross-sections-lat-x-lev-on-the-same-page)
+      * [3.7 Plot the zonal mean temperature at Ls=270 from the average file for the inert cloud case and the active cloud case. Also create a difference plot for them.](#37-plot-the-zonal-mean-temperature-at-ls270-from-the-average-file-for-the-inert-cloud-case-and-the-active-cloud-case-also-create-a-difference-plot-for-them)
+      * [3.8 Generate a **1D temperature profile** (`temp`) at `50°N, 150°E` at Ls=270 at both 3 AM and 3 PM from the radiatively inert case. Plot these on the same plot.](#38-generate-a-1d-temperature-profile-temp-at-50n-150e-at-ls270-at-both-3-am-and-3-pm-from-the-radiatively-inert-case-plot-these-on-the-same-plot)
+      * [3.9 Plot the filtered and un-filtered surface pressure over a 20 sol period.](#39-plot-the-filtered-and-un-filtered-surface-pressure-over-a-20-sol-period)
+  * [That's a Wrap!](#thats-a-wrap)
+<!-- /TOC -->
 
 ***
 
@@ -301,7 +328,7 @@ We can also index specific values using quotes and square brackets `'[ ]'`. For 
 > ______________________________________________________________________
 ```
 
- `-stat` display the min, mean, and max values of a variable, which is better suited to display statistics over a large array or for specific data-slices. For example, to display the min, mean, and max air temperature for all timesteps, all latitudes, all longitudes, and near the surface (`[time,pfull,lon,lat]=[:,-1,:,:]`), we use:
+ `-stat` display the min, mean, and max values of a variable, which is better suited to display statistics over a large array or for specific data-slices. For example, to display the min, mean, and max air temperature for all timesteps, all latitudes, all longitudes, and near the surface (`[time,pfull,lat,lon]=[:,-1,:,:]`), we use:
 
 ```bash
 (amesGCM3)>$ MarsPlot.py -i 00490.atmos_average.nc -stat 'temp[:,-1,:,:]'
