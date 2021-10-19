@@ -16,28 +16,28 @@ except Exception as exception:
     exit()
     
     
-def init_shtools():
-    '''
-    The following code simply loads the pyshtools module and provides adequate referencing.
-    Since dependencies may need to be solved by the user, the module import is wrapped in a function
-    that may be called when needed.
-    '''
-    try:
-        import  pyshtools
-    except ImportError as error_msg:
-        prYellow("__________________")
-        prYellow("Zonal decomposition relies on the pyshtools library, referenced at:")
-        prYellow('')
-        prYellow("Mark A. Wieczorek and Matthias Meschede (2018). SHTools - Tools for working with spherical harmonics, Geochemistry, Geophysics, Geosystems, 19, 2574-2592, doi:10.1029/2018GC007529")
-        prYellow("Please consult installation instructions at:")
-        prCyan("https://pypi.org/project/pyshtools")
-        prYellow("And install with:")
-        prCyan("pip install pyshtools")
-        exit()
-    except Exception as exception:
-        # Output unexpected Exceptions.
-        print(exception.__class__.__name__ + ": ", exception)
- 
+# def init_shtools():
+#     '''
+#     The following code simply loads the pyshtools module and provides adequate referencing.
+#     Since dependencies may need to be solved by the user, the module import is wrapped in a function
+#     that may be called when needed.
+#     '''
+#     try:
+#         import  pyshtools
+#     except ImportError as error_msg:
+#         prYellow("__________________")
+#         prYellow("Zonal decomposition relies on the pyshtools library, referenced at:")
+#         prYellow('')
+#         prYellow("Mark A. Wieczorek and Matthias Meschede (2018). SHTools - Tools for working with spherical harmonics, Geochemistry, Geophysics, Geosystems, 19, 2574-2592, doi:10.1029/2018GC007529")
+#         prYellow("Please consult installation instructions at:")
+#         prCyan("https://pypi.org/project/pyshtools")
+#         prYellow("And install with:")
+#         prCyan("pip install pyshtools")
+#         exit()
+#     except Exception as exception:
+#         # Output unexpected Exceptions.
+#         print(exception.__class__.__name__ + ": ", exception)
+#  
 
 
 def diurn_extract(VAR,N,tod,lon):
