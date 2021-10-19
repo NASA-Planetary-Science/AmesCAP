@@ -316,11 +316,14 @@ class Fort(object):
         fort_var=self.variables['time']
         Log.log_axis1D(variable_name='time',DATAin=fort_var,dim_name='time',longname_txt=fort_var.long_name,units_txt=fort_var.units,cart_txt='T')
         
-
+        #Special case for the solar longitude (areo): needs to be interpolated linearly every 16 timesteps
+        ivar='areo';fort_var=self.variables[ivar]
+        var_out=self._linInterpLs(np.squeeze(fort_var[:]),16).reshape([len(fort_var),1]) #areo is reshaped as [time,scalar_axis]=[160,1]
+        Log.log_variable(variable_name=ivar,DATAin=var_out,dim_array=fort_var.dimensions,longname_txt=fort_var.long_name,units_txt=fort_var.units)
         
         #Log dynamic variables, as well as pk, bk
         for ivar in self.variables.keys():
-            if 'time' in self.variables[ivar].dimensions or ivar in ['pk','bk']:
+            if 'time' in self.variables[ivar].dimensions and ivar!='areo' or ivar in ['pk','bk']:
                 fort_var=self.variables[ivar]
                 Log.log_variable(variable_name=ivar,DATAin=fort_var,dim_array=fort_var.dimensions,longname_txt=fort_var.long_name,units_txt=fort_var.units)
         Log.close()
@@ -763,4 +766,25 @@ class Fort(object):
                 Ds[Ds<0]=Ds[Ds<0]+Ns
         if round: Ds=np.round(Ds,-1)  #-1 means round to the nearest 10      
         return Ds
+        
+    def _linInterpLs(self,Ls,stride=16):
+        '''
+        Linearly interpolate a step-wise 1D array
+        Args:
+            Ls     (float):   Input solar longitude
+            stride   (int):   Default stride
+        Returns
+            Ls_out (float):   Ls
+        ***NOTE***
+        In the Legacy GCM fortran binaries, the solar longitude is only updated once per day, implying that 16 successive timesteps would have the same ls value.
+        This routine linearly interpolate the ls between those successive values.   
+        '''
+        Ls=np.array(Ls);Ls_out=np.zeros_like(Ls)
+        Lsdi=Ls[::stride]
+        #Add a end point using the last Delta Ls:
+        Lsdi=np.append(Lsdi,2*Lsdi[-1]-Lsdi[-2])
+    
+        for i in range(len(Ls)//stride):
+            Ls_out[i*stride:(i+1)*stride]=np.arange(0,stride)/np.float(stride)*(Lsdi[i+1]-Lsdi[i])+Lsdi[i]
+        return Ls_out
   

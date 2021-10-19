@@ -576,113 +576,114 @@ def main():
     #===========================================================================
     #========================  Zonal decomposition analysis ====================
     #===========================================================================
-    elif parser.parse_args().high_pass_zonal or parser.parse_args().low_pass_zonal or parser.parse_args().band_pass_zonal: 
     
-        # This functions requires scipy > 1.2.0 , so we only import the package here if needed
-        from amesgcm.Spectral_utils import zonal_decomposition, zonal_construct
-        #Load the module
-        #init_shtools()
-        
-        if parser.parse_args().high_pass_zonal:
-            btype='high';out_ext='_hpk';nk=np.asarray(parser.parse_args().high_pass_zonal).astype(int)
-            if len(np.atleast_1d(nk))!=1:
-                prRed('***Error*** kmin must be only one value')
-                exit()
-        if parser.parse_args().low_pass_zonal:
-            btype='low';out_ext='_lpk';nk=np.asarray(parser.parse_args().low_pass_zonal).astype(int)
-            if len(np.atleast_1d(nk))!=1:
-                prRed('kmax must be only one value')
-                exit()
-        if parser.parse_args().band_pass_zonal:
-            btype='band';out_ext='_bpk';nk=np.asarray(parser.parse_args().band_pass_zonal).astype(int)   
-            if len(np.atleast_1d(nk))!=2:
-                prRed('Need 2 values: kmin kmax')   
-                exit()           
-                
-        if parser.parse_args().no_trend:out_ext =out_ext+'_no_trend' 
-        
-        for filei in file_list:
-            #Add path unless full path is provided
-            if not ('/' in filei):
-                fullnameIN = path2data + '/' + filei
-            else:
-                fullnameIN=filei
-            fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
-    
-            #Append extension, in any:
-            if parser.parse_args().ext:fullnameOUT=fullnameOUT[:-3]+'_'+parser.parse_args().ext+'.nc'
-            
-            fname = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
-            
-            var_list = filter_vars(fname,parser.parse_args().include) # get all variables
-            
-            lon=fname.variables['lon'][:]
-            lat=fname.variables['lat'][:]
-            LON,LAT=np.meshgrid(lon,lat)
-            
-            dlat=lat[1]-lat[0]
-            dx=2*np.pi*3400
-            
-            #Check if the frequency domain is allowed and display some information 
-        
-            if any(nn > len(lat)/2 for nn in nk):
-                prRed('***Warning***  max wavenumber cut-off cannot be larger than the Nyquist criteria of nlat/2= %i sol'%(len(lat)/2))
-            elif btype=='low':
-                L_max=(1./nk)*dx
-                prYellow('Low pass filter, letting only wavelenght > %g km'%(L_max))
-            elif btype=='high':
-                L_min=(1./nk)*dx
-                prYellow('High pass filter, letting only wavelenght < %g km'%(L_min))                
-            elif btype=='band':
-                L_min=(1./nk[1])*dx
-                L_max=1./max(nk[0],1.e-20)*dx 
-                if L_max>1.e20:L_max=np.inf
-                prYellow('Band pass filter, letting only %g km < wavelenght < %g km'%(L_min,L_max))                
+    # elif parser.parse_args().high_pass_zonal or parser.parse_args().low_pass_zonal or parser.parse_args().band_pass_zonal: 
+    # 
+    #     # This functions requires scipy > 1.2.0 , so we only import the package here if needed
+    #     from amesgcm.Spectral_utils import zonal_decomposition, zonal_construct
+    #     #Load the module
+    #     #init_shtools()
+    #     
+    #     if parser.parse_args().high_pass_zonal:
+    #         btype='high';out_ext='_hpk';nk=np.asarray(parser.parse_args().high_pass_zonal).astype(int)
+    #         if len(np.atleast_1d(nk))!=1:
+    #             prRed('***Error*** kmin must be only one value')
+    #             exit()
+    #     if parser.parse_args().low_pass_zonal:
+    #         btype='low';out_ext='_lpk';nk=np.asarray(parser.parse_args().low_pass_zonal).astype(int)
+    #         if len(np.atleast_1d(nk))!=1:
+    #             prRed('kmax must be only one value')
+    #             exit()
+    #     if parser.parse_args().band_pass_zonal:
+    #         btype='band';out_ext='_bpk';nk=np.asarray(parser.parse_args().band_pass_zonal).astype(int)   
+    #         if len(np.atleast_1d(nk))!=2:
+    #             prRed('Need 2 values: kmin kmax')   
+    #             exit()           
+    #             
+    #     if parser.parse_args().no_trend:out_ext =out_ext+'_no_trend' 
+    #     
+    #     for filei in file_list:
+    #         #Add path unless full path is provided
+    #         if not ('/' in filei):
+    #             fullnameIN = path2data + '/' + filei
+    #         else:
+    #             fullnameIN=filei
+    #         fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
+    # 
+    #         #Append extension, in any:
+    #         if parser.parse_args().ext:fullnameOUT=fullnameOUT[:-3]+'_'+parser.parse_args().ext+'.nc'
+    #         
+    #         fname = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+    #         
+    #         var_list = filter_vars(fname,parser.parse_args().include) # get all variables
+    #         
+    #         lon=fname.variables['lon'][:]
+    #         lat=fname.variables['lat'][:]
+    #         LON,LAT=np.meshgrid(lon,lat)
+    #         
+    #         dlat=lat[1]-lat[0]
+    #         dx=2*np.pi*3400
+    #         
+    #         #Check if the frequency domain is allowed and display some information 
+    #     
+    #         if any(nn > len(lat)/2 for nn in nk):
+    #             prRed('***Warning***  max wavenumber cut-off cannot be larger than the Nyquist criteria of nlat/2= %i sol'%(len(lat)/2))
+    #         elif btype=='low':
+    #             L_max=(1./nk)*dx
+    #             prYellow('Low pass filter, letting only wavelenght > %g km'%(L_max))
+    #         elif btype=='high':
+    #             L_min=(1./nk)*dx
+    #             prYellow('High pass filter, letting only wavelenght < %g km'%(L_min))                
+    #         elif btype=='band':
+    #             L_min=(1./nk[1])*dx
+    #             L_max=1./max(nk[0],1.e-20)*dx 
+    #             if L_max>1.e20:L_max=np.inf
+    #             prYellow('Band pass filter, letting only %g km < wavelenght < %g km'%(L_min,L_max))                
 
-        
-            fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
-            #Copy all dims but time from the old file to the new file
-            fnew.copy_all_dims_from_Ncfile(fname)
-            
-            if btype=='low':
-                fnew.add_constant('kmax',nk,"Low-pass filter zonal wavenumber ","wavenumber")
-            elif btype=='high':    
-                fnew.add_constant('kmin',nk,"High-pass filter zonal wavenumber ","wavenumber")
-            elif btype=='band': 
-                fnew.add_constant('kmin',nk[0],"Band-pass filter low zonal wavenumber ","wavenumber")
-                fnew.add_constant('kmax',nk[1],"Band-pass filter high zonal wavenumber ","wavenumber")  
-            
-            low_highcut=nk
-                    
-            #Loop over all variables in file
-            for ivar in var_list:
-                varNcf     = fname.variables[ivar]
-                
-                if ('lat' in varNcf.dimensions) and ('lon' in varNcf.dimensions):     
-                    prCyan("Processing: %s ..."%(ivar))
-                    
-                    # Step 1 : detrend the data
-                    TREND=get_trend_2D(varNcf[:],LON,LAT,'wmean')
-                    # Step 2 : calculate spherical harmonic coefficients
-                    COEFF,PSD=zonal_decomposition(varNcf[:]-TREND)
-                    # Step 3 : Recompose the variable out of the coefficients
-                    VAR_filtered=zonal_construct(COEFF,varNcf[:].shape,btype=btype,low_highcut=low_highcut)
-                    #Step 4: add the trend, if request
-                    if parser.parse_args().no_trend:
-                        var_out=VAR_filtered
-                    else:    
-                        var_out=VAR_filtered+TREND
-                                        
-                    fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
-                else:
-                    if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time']:
-                        prCyan("Copying axis: %s..."%(ivar))
-                        fnew.copy_Ncaxis_with_content(fname.variables[ivar])
-                    else: 
-                        prCyan("Copying var: %s..."%(ivar))   
-                        fnew.copy_Ncvar(fname.variables[ivar]) 
-            fnew.close()
-
+   ##       
+    #         fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
+    #         #Copy all dims but time from the old file to the new file
+    #         fnew.copy_all_dims_from_Ncfile(fname)
+    #         
+    #         if btype=='low':
+    #             fnew.add_constant('kmax',nk,"Low-pass filter zonal wavenumber ","wavenumber")
+    #         elif btype=='high':    
+    #             fnew.add_constant('kmin',nk,"High-pass filter zonal wavenumber ","wavenumber")
+    #         elif btype=='band': 
+    #             fnew.add_constant('kmin',nk[0],"Band-pass filter low zonal wavenumber ","wavenumber")
+    #             fnew.add_constant('kmax',nk[1],"Band-pass filter high zonal wavenumber ","wavenumber")  
+    #         
+    #         low_highcut=nk
+    #                 
+    #         #Loop over all variables in file
+    #         for ivar in var_list:
+    #             varNcf     = fname.variables[ivar]
+    #             
+    #             if ('lat' in varNcf.dimensions) and ('lon' in varNcf.dimensions):     
+    #                 prCyan("Processing: %s ..."%(ivar))
+    #                 
+    #                 # Step 1 : detrend the data
+    #                 TREND=get_trend_2D(varNcf[:],LON,LAT,'wmean')
+    #                 # Step 2 : calculate spherical harmonic coefficients
+    #                 COEFF,PSD=zonal_decomposition(varNcf[:]-TREND)
+    #                 # Step 3 : Recompose the variable out of the coefficients
+    #                 VAR_filtered=zonal_construct(COEFF,varNcf[:].shape,btype=btype,low_highcut=low_highcut)
+    #                 #Step 4: add the trend, if request
+    #                 if parser.parse_args().no_trend:
+    #                     var_out=VAR_filtered
+    #                 else:    
+    #                     var_out=VAR_filtered+TREND
+    #                                     
+    #                 fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
+    #             else:
+    #                 if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time']:
+    #                     prCyan("Copying axis: %s..."%(ivar))
+    #                     fnew.copy_Ncaxis_with_content(fname.variables[ivar])
+    #                 else: 
+    #                     prCyan("Copying var: %s..."%(ivar))   
+    #                     fnew.copy_Ncvar(fname.variables[ivar]) 
+    #         fnew.close()
+    # 
     #===========================================================================
     #========================  Tidal analysis =========================
     #===========================================================================

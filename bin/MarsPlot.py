@@ -1034,7 +1034,7 @@ def make_template():
         customFileIN.write(lh+"""> [line plot 1] 'ADD LINE' [line plot 2] adds similar 1D-plots on the same figure)\n""")
         customFileIN.write(lh+"""> 'START' and (optionally) 'STOP' can be used to conveniently skip plots below. Use '#' to add comments. \n""")
         customFileIN.write(lh+"""ALGEBRA AND CROSS-SIMULATIONS PLOTS:\n""")
-        customFileIN.write(lh+"""Use 'N>' to add a Nth simulation with matching timesteps to the <<< Simulations >>> block (e.g. 4>, 5>...)  \n""")
+        customFileIN.write(lh+"""Use 'N>' to add a Nth simulation with matching timesteps to the <<< Simulations >>> block (e.g.  4>, 5>...)  \n""")
         customFileIN.write(lh+"""Use full path, e.g. '2> /u/akling/FV3/verona/simu2/history' Empty fields are ignored, comment out with '#' \n""")
         customFileIN.write(lh+"""A variable 'var' in a 'XXXXX.file.nc' from this Nth simulation is accessed using the '@' symbol and 'XXXXX.file@N.var' syntax \n""")
         customFileIN.write(lh+"""Encompass raw outputs with square brackets '[]' for element-wise operations, e.g: \n""")
@@ -2190,7 +2190,7 @@ class Fig_2D_time_lat(Fig_2D):
 
     def make_template(self):
         #make_template is calling method from the parent class
-        super(Fig_2D_time_lat, self).make_template('Plot 2D time X lat','Lon +/-180','Level [Pa/m]','sols','lat')
+        super(Fig_2D_time_lat, self).make_template('Plot 2D time X lat','Lon +/-180','Level [Pa/m]','Ls','lat')
                                                                         #self.fdim1,  self.fdim2, self.Xlim,self.Ylim
 
     def do_plot(self):
@@ -2334,7 +2334,7 @@ class Fig_2D_time_lev(Fig_2D):
 
     def make_template(self):
         #make_template is calling method from the parent class
-        super(Fig_2D_time_lev, self).make_template('Plot 2D time X lev','Latitude','Lon +/-180','sols','level[Pa/m]')
+        super(Fig_2D_time_lev, self).make_template('Plot 2D time X lev','Latitude','Lon +/-180','Ls','level[Pa/m]')
 
     def do_plot(self):
         #create figure
@@ -2389,7 +2389,7 @@ class Fig_2D_lon_time(Fig_2D):
 
     def make_template(self):
         #make_template is calling method from the parent class
-        super(Fig_2D_lon_time, self).make_template('Plot 2D lon X time','Latitude','Level [Pa/m]','Lon +/-180','sols')
+        super(Fig_2D_lon_time, self).make_template('Plot 2D lon X time','Latitude','Level [Pa/m]','Lon +/-180','Ls')
 
     def do_plot(self):
         #create figure
@@ -2484,7 +2484,7 @@ class Fig_1D(object):
         customFileIN.write("Lon +/-180     = {0}\n".format(self.lon))         #5
         customFileIN.write("Level [Pa/m]   = {0}\n".format(self.lev))         #6
         customFileIN.write("Diurnal  [hr]  = {0}\n".format(self.hour))        #7
-        customFileIN.write("Axis Options  : lat,lon+/-180,[Pa/m],sols = [None,None] | var = [None,None] | linestyle = - | axlabel = None \n")#7
+        customFileIN.write("Axis Options  : lat,lon+/-180,[Pa/m],Ls = [None,None] | var = [None,None] | linestyle = - | axlabel = None \n")#7
 
     def read_template(self):
         self.legend= rT('char')             #1
@@ -2522,7 +2522,7 @@ class Fig_1D(object):
         if not '[' in varfull:
             if '{' in varfull :
                 varfull,t_req,lat_req,lon_req,lev_req,ftod_req=get_overwrite_dim_1D(varfull,self.t,self.lat,self.lon,self.lev,self.ftod)
-                # t_req,lat_req,lon_req,lev_req constain the dimensions to overwrite is '{}' are provided of the defaultself.t,self.lat,self.lon,self.lev otherwise
+                # t_req,lat_req,lon_req,lev_req constain the dimensions to overwrite is '{}' are provided of the default self.t,self.lat,self.lon,self.lev otherwise
             else: # no '{ }' use to overwrite the dimensions, copy the plots' defaults
                 t_req,lat_req,lon_req,lev_req,ftod_req= self.t,self.lat,self.lon,self.lev,self.ftod
             sol_array,filetype,var,simuID=split_varfull(varfull)
