@@ -219,7 +219,7 @@ Open a terminal window, activate the virtual environment, and untar the file:
 (local)>$ source ~/amesGCM3/bin/activate.csh      # cshr/tsch
 (local)>$ source ~/amesGCM3/Scripts/activate.csh  #  Cygwin/Windows
 (amesGCM3)>$
-(amesGCM3)>$ tar -xf CAP_tarball.zip
+(amesGCM3)>$ tar -xf amesgcm-master.zip
 (amesGCM3)>$ cd amesgcm-master
 (amesGCM3)>$ pip install .
 ```
