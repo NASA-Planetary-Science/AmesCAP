@@ -118,8 +118,8 @@ Confirm that your path to the Anaconda Python distribution is fully actualized b
 If this returns multiple options (e.g. `python`, `python2`, `python 3.7`, `python.exe`), then you have more than one version of Python sitting on your system (an old `python2` executable located in `/usr/local/bin/python`, for example). You can see what these versions are by typing:
 
 ```bash
-(local)>$ python3 --version     # in bash, csh OR
-(local)>$ python.exe --version  # in Cygwin/Windows
+(local)>$ python3 --version     # Linux/MacOS
+(local)>$ python.exe --version  # Cygwin/Windows
 ```
 
 Check your version of `pip` the same way, then find and set your `$PATH` environment variable to point to the Anaconda Python *and* Anaconda  pip distributions. You can update these paths like so:
@@ -134,15 +134,15 @@ Check your version of `pip` the same way, then find and set your `$PATH` environ
 Confirm these settings using the `which` command:
 
 ```bash
-(local)>$ which python3         # in bash, csh OR
+(local)>$ which python3         #Linux/MacOS
 (local)>$ which python.exe      # in Cygwin/Windows
 ```
 
 which hopefully returns a Python executable that looks like **it was installed with Anaconda**, such as:
 
 ```bash
-> /username/anaconda3/bin/python3     # on MacOS/Linux, OR
-> /username/anaconda3/python.exe      # on Cygwin/Windows
+> /username/anaconda3/bin/python3     # Linux/MacOS
+> /username/anaconda3/python.exe      # Cygwin/Windows
 ```
 
 If `which` points to either of those locations, you are good to go and you can proceed from here using the shorthand path to your Anaconda Python distribution:
@@ -173,6 +173,13 @@ Python virtual environments are created from the command line. Create an environ
 (local)>$ python.exe -m venv –system-site-packages amesGCM3  # Cygwin/Windows Use FULL PATH to python if needed
 ```
 
+First, find out if your terminal is using *bash* or a variation of *C-shell* (*.csh*, *.tsch*...) typing:
+
+```bash
+(local)>$ echo $0          # bash
+> -bash
+```
+
 We can now activate the virtual environment with:
 
 ```bash
@@ -188,15 +195,15 @@ You will notice that after sourcing `amesGCM3`, your prompt changed indicate tha
 We can verify that `which python` and `which pip` unambiguously point to `amesGCM3/bin/python3` and `amesGCM3/bin/pip`, respectively, by calling `which` within the virtual environment:
 
 ```bash
-(amesGCM3)>$ which python3         # in bash, csh OR
+(amesGCM3)>$ which python3         # in bash, csh
 > amesGCM3/bin/python3
 (amesGCM3)>$ which pip
 > amesGCM3/bin/pip
 
 (amesGCM3)>$ which python.exe      # in Cygwin/Windows
 > amesGCM3/Scripts/python.exe
-(amesGCM3)>$ which pip.exe
-> amesGCM3/Scripts/pip.exe
+(amesGCM3)>$ which pip
+> amesGCM3/Scripts/pip            
 ```
 
 There is therefore no need to reference the full paths while **inside** the virtual environment.
@@ -259,7 +266,7 @@ then reactivating the virtual environment:
 and checking the documentation for any CAP executable using the `--help` option:
 
 ```bash
-(amesGCM3)>$ MarsPlot.py --help # or
+(amesGCM3)>$ MarsPlot.py --help 
 (amesGCM3)>$ MarsPlot.py -h
 ```
 
