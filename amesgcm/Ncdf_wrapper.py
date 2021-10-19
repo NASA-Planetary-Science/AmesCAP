@@ -748,7 +748,7 @@ class Fort(object):
         '''
         Lsp=250.99   #Ls at perihelion
         tperi=485.35 #Time (in sols) at perihelion
-        Ns=668.6     #Number of soils in 1 MY
+        Ns=668.6     #Number of sols in 1 MY
         e=0.093379   #from GCM: modules.f90
         nu=(Ls_deg-Lsp)*np.pi/180
         E=2*np.arctan(np.tan(nu/2)*np.sqrt((1-e)/(1+e)))

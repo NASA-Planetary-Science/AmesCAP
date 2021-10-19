@@ -208,7 +208,7 @@ There is therefore no need to reference the full paths while **inside** the virt
 
 ## 2. Installing CAP
 
-Now we can download and install CAP in `amesGCM3`. CAP was provided to you in the tarfile `CAP_tarball.zip` that was sent along with these instructions. Download `CAP_tarball.zip` and leave it in `Downloads/`.
+Now we can download and install CAP in `amesGCM3`. CAP was provided to you in the tarfile `amesgcm-master.zip` that was sent along with these instructions. Download `CAP_tarball.zip` and leave it in `Downloads/`.
 
 ### Using `pip`
 
@@ -239,7 +239,7 @@ That's it! CAP is installed in `amesGCM3` and you can see the `MarsXXXX.py` exec
 
 ```bash
 (local)>$ cd ~/Downloads
-(local)>$ rm -r CAP_tarball.zip amesgcm3
+(local)>$ rm -r CAP_tarball.zip amesgcm-master
 ```
 
 Double check that the paths to the executables are correctly set in your terminal by exiting the virtual environment:
@@ -361,8 +361,6 @@ To permanently remove CAP, activate the virtual environment and run the `uninsta
 You may also delete the `amesGCM3` virtual environment directory at any time. This will uninstall CAP, remove the virtual environment from your machine, and will not affect your main Python distribution.
 
 
-
-
 ***
 
 ## 3. Testing & Using CAP
@@ -453,17 +451,11 @@ We'll use CAP to retrieve these files from the MGCM Data Portal. To begin, activ
 (local)>$ source amesGCM3/bin/activate.csh  # csh/tcsh
 ```
 
-Choose a directory in which to store these MGCM output files on your machine. A good option is to create a directory in `~/amesGCM3/`:
+Choose a directory in which to store these MGCM output files on your machine. We will also create two sub- directories, one for an MGCM simulation with radiatively inert clouds (RIC) and one for an MGCM simulation with radiatively active clouds (RAC):
 
 ```bash
-(amesGCM3)>$ cd ~/amesGCM3
 (amesGCM3)>$ mkdir CAP_tutorial
 (amesGCM3)>$ cd CAP_tutorial
-```
-
-Create two more directories, one for an MGCM simulation with radiatively inert clouds (RIC) and one for an MGCM simulation with radiatively active clouds (RAC):
-
-```bash
 (amesGCM3)>$ mkdir INERTCLDS ACTIVECLDS
 ```
 
@@ -476,15 +468,14 @@ Then, download the corresponding data in each directory:
 (amesGCM3)>$ MarsPull.py -id ACTIVECLDS -ls 255 285
 ```
 
-That's it! `~/amesGCM3/CAP_tutorial` now holds the necessary `fort.11` files from the radiatively active and inert MGCM simulations:
+That's it! `CAP_tutorial` now holds the necessary `fort.11` files from the radiatively active and inert MGCM simulations:
 
 ```
-amesGCM3/
-├── CAP_tutorial/
-    ├── INERTCLDS/
-    │   └── fort.11_0719  fort.11_0720  fort.11_0721  fort.11_0722  fort.11_0723
-    ├── ACTIVECLDS/
-        └── fort.11_0719  fort.11_0720  fort.11_0721  fort.11_0722  fort.11_0723
+CAP_tutorial/
+├── INERTCLDS/
+│   └── fort.11_0719  fort.11_0720  fort.11_0721  fort.11_0722  fort.11_0723
+└── ACTIVECLDS/
+    └── fort.11_0719  fort.11_0720  fort.11_0721  fort.11_0722  fort.11_0723
 ```
 
 You can now deactivate the virtual environment:
@@ -492,8 +483,9 @@ You can now deactivate the virtual environment:
 ```bash
 (amesGCM3)>$ deactivate
 ```
-and we'll see you **$**November 2, 2021** for the tutorial!
+> If you encounter an issue during the download process, please verify the files availability on [the MCMC Data Portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php) and try again later. You may also download the 10 files listed above manually.
 
+and we'll see you **November 2, 2021** for the tutorial!
 
 
 
