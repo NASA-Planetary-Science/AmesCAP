@@ -251,7 +251,12 @@ class Fort(object):
         self.path,self.name=os.path.split(filename) 
         print('Reading '+filename + ' ...')
         self.f = FortranFile(filename)
-        self.fort_type=filename[-7:-5] #Get output number, e.g. 11 for fort.11_0070, 45 for fort.45_0070 etc...
+        if len(filename)==12:
+            self.fort_type=filename[-7:-5] #Get output number, e.g. 11 for fort.11_0070, 45 for fort.45_0070 etc..
+        else:
+            #Case if file is simply named 'fort.11'  which is the case for the first file of a cold  start
+            self.fort_type=filename[-2:]
+            
         self.nperday=16  # TODO Hard-coded: 16 outputs per day
         self.nsolfile=10 # TODO Hard-coded: 10 sols per output
         #Add time of day dimensions

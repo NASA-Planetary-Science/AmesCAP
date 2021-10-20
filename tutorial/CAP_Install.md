@@ -134,8 +134,8 @@ Check your version of `pip` the same way, then find and set your `$PATH` environ
 Confirm these settings using the `which` command:
 
 ```bash
-(local)>$ which python3         #Linux/MacOS
-(local)>$ which python.exe      # in Cygwin/Windows
+(local)>$ which python3         # Linux/MacOS
+(local)>$ which python.exe      # Cygwin/Windows
 ```
 
 which hopefully returns a Python executable that looks like **it was installed with Anaconda**, such as:
@@ -169,18 +169,18 @@ If, however, `which` points to some other location, such as `/usr/local/bin/pyth
 Python virtual environments are created from the command line. Create an environment called `amesGCM3` by typing:
 
 ```bash
-(local)>$ python3 -m venv -system-site-packages amesGCM3    # Linux/MacOS Use FULL PATH to python if needed
-(local)>$ python.exe -m venv –system-site-packages amesGCM3  # Cygwin/Windows Use FULL PATH to python if needed
+(local)>$ python3 -m venv --system-site-packages amesGCM3    # Linux/MacOS Use FULL PATH to python if needed
+(local)>$ python.exe -m venv –-system-site-packages amesGCM3  # Cygwin/Windows Use FULL PATH to python if needed
 ```
 
-First, find out if your terminal is using *bash* or a variation of *C-shell* (*.csh*, *.tsch*...) typing:
+First, find out if your terminal is using *bash* or a variation of *C-shell* (*.csh*, *.tsch*...) by typing:
 
 ```bash
-(local)>$ echo $0          # bash
+(local)>$ echo $0
 > -bash
 ```
 
-We can now activate the virtual environment with:
+Depending on the answer, you can now activate the virtual environment with one of the options below:
 
 ```bash
 (local)>$ source amesGCM3/bin/activate          # bash
@@ -215,7 +215,7 @@ There is therefore no need to reference the full paths while **inside** the virt
 
 ## 2. Installing CAP
 
-Now we can download and install CAP in `amesGCM3`. CAP was provided to you in the tarfile `amesgcm-master.zip` that was sent along with these instructions. Download `CAP_tarball.zip` and leave it in `Downloads/`.
+Now we can download and install CAP in `amesGCM3`. CAP was provided to you in the tarfile `amesgcm-master.zip` that was sent along with these instructions. Download `amesgcm-master.zip` and leave it in `Downloads/`.
 
 ### Using `pip`
 
@@ -230,24 +230,19 @@ Open a terminal window, activate the virtual environment, and untar the file:
 (amesGCM3)>$ cd amesgcm-master
 (amesGCM3)>$ pip install .
 ```
-> It is safe to upgrade pip if suggested during that steps.
+> Please follow the instructions to upgrade pip if recommended during that steps.
 
 That's it! CAP is installed in `amesGCM3` and you can see the `MarsXXXX.py` executables stored in `~/amesGCM3/bin/`:
 
 ```bash
 (local)>$ ls ~/amesGCM3/bin/
-> Activate.ps1     MarsPull.py      activate.csh     f2py             nc4tonc3         pip3
-> MarsFiles.py     MarsVars.py      activate.fish    f2py3            ncinfo           pip3.8
-> MarsInterp.py    MarsViewer.py    easy_install     f2py3.8          normalizer       python
-> MarsPlot.py      activate         easy_install-3.8 nc3tonc4         pip              python3
+> Activate.ps1     MarsPull.py      activate.csh              nc4tonc3         pip3
+> MarsFiles.py     MarsVars.py      activate.fish             ncinfo           pip3.8
+> MarsInterp.py    MarsViewer.py    easy_install              normalizer       python
+> MarsPlot.py      activate         easy_install-3.8          pip              python3
 ```
 
-> Shall you need to modify any code, note that when you access the `Mars` tools above, those are **not** executed from the `amesgcm-master/` folder in your `/Downloads` directory, but instead from the `amesGCM3` virtual environment where they were installed by pip.
-
-```bash
-(local)>$ cd ~/Downloads
-(local)>$ rm -r CAP_tarball.zip amesgcm-master
-```
+> Shall you need to modify any code, note that when you access the `Mars` tools above, those are **not** executed from the `amesgcm-master/` folder in your `/Downloads` directory, but instead from the `amesGCM3` virtual environment where they were installed by pip. You can safely move amesgcm-master.zip and the amesgcm-master directory to a different location on your system.
 
 Double check that the paths to the executables are correctly set in your terminal by exiting the virtual environment:
 
@@ -266,7 +261,7 @@ then reactivating the virtual environment:
 and checking the documentation for any CAP executable using the `--help` option:
 
 ```bash
-(amesGCM3)>$ MarsPlot.py --help 
+(amesGCM3)>$ MarsPlot.py --help
 (amesGCM3)>$ MarsPlot.py -h
 ```
 
@@ -375,8 +370,8 @@ You may also delete the `amesGCM3` virtual environment directory at any time. Th
 Whenever you want to use CAP, simply activate the virtual environment and all of CAP's executables will be accessible from the command line:
 
 ```bash
-(local)>$ source amesGCM3/bin/activate      # bash
-(local)>$ source amesGCM3/bin/activate.csh  # csh/tcsh
+(local)>$ source amesGCM3/bin/activate      # if  using bash
+(local)>$ source amesGCM3/bin/activate.csh  # if  using csh/tcsh
 ```
 
 You can check that the tools are installed properly by typing `Mars` and then pressing the **TAB** key. No matter where you are on your system, you should see the following pop up:
