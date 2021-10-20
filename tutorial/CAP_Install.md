@@ -57,7 +57,7 @@ If you are already comfortable with Python's package management system, you are 
 
 For all other users, we highly recommend using the latest version of the Anaconda Python distribution. It ships with pre-compiled math and plotting packages such as `numpy` and `matplotlib` as well as pre-compiled libraries like `hdf5` headers for reading `netCDF` files (the preferred filetype for analysing MGCM output).
 
-You can install the Anaconda Python distribution via the command-line or using a [graphical interface](https://www.anaconda.com/distribution/#download-section) (scroll to the very bottom of the page for all download options). You can install Anaconda at either the `System/` level or the `User/` level (the later does not require admin-priviledges). The instructions below are for the **command-line installation** and installs Anaconda in your **home directory**, which is the recommened location. Open a terminal and type the following:
+You can install the Anaconda Python distribution via the command-line or using a [graphical interface](https://www.anaconda.com/distribution/#download-section) (scroll to the very bottom of the page for all download options). You can install Anaconda at either the `System/` level or the `User/` level (the later does not require admin-priviledges). The instructions below are for the **command-line installation** and installs Anaconda in your **home directory**, which is the recommended location. Open a terminal and type the following:
 
 ```bash
 (local)>$ chmod +x Anaconda3-2021.05-MacOSX-x86_64.sh   # make the .sh file executable (actual name may differ)

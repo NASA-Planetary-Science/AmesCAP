@@ -250,11 +250,14 @@ The default template, Custom.in, can be created by passing the `-template` argum
 > [##########]100 % (Done)
 > Merging figures...
 > /path/to/simulation/run_name/history/Diagnostics.pdf was generated
-(amesGCM3)>$
 ```
 
+The following figure shows the three components of MarsPlot:
+- *MarsPlot.py*, opened in **a terminal** to inspect the netcdf files and ingest the Custom.in template
+- *Custom.in* , a template opened in **a text editor**
+- *Diagnostics.pdf*, refreshed in a **pdf viewer**
 
-![Figure 4. MarsPlot workflow](./tutorial_images/Marsplot_graphics.png)
+![Figure 4. MarsPlot workflow](./tutorial_images/MarsPlot_graphics.png)
 
 
 `Custom.in` can be modified using your preferred text editor and renamed to your liking. The above plots are created from the first two blocks of code in `Custom.in` which are set to `= True`. These code blocks are named after the type of plots they create:
