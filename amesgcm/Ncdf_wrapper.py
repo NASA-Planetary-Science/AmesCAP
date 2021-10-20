@@ -251,7 +251,7 @@ class Fort(object):
         self.path,self.name=os.path.split(filename) 
         print('Reading '+filename + ' ...')
         self.f = FortranFile(filename)
-        if len(filename)==12:
+        if len(self.name)==12:
             self.fort_type=filename[-7:-5] #Get output number, e.g. 11 for fort.11_0070, 45 for fort.45_0070 etc..
         else:
             #Case if file is simply named 'fort.11'  which is the case for the first file of a cold  start
@@ -274,7 +274,8 @@ class Fort(object):
             self._read_Fort11_dynamic()
             self._add_axis_as_variables()
             #TODO monotically increasing MY: Get date as FV3 file e.g. 00000
-            self.fdate="%05i"%self._ls2sol_1year(self.variables['areo'][0])
+            #self.fdate="%05i"%self._ls2sol_1year(self.variables['areo'][0]) #based on areo, depreciated
+            self.fdate="%05i"%np.round(self.variables['time'][0],-1) #-1 round to nearest 10
             
     #Public methods       
     def write_to_fixed(self):
@@ -741,6 +742,7 @@ class Fort(object):
        
     def _ls2sol_1year(self,Ls_deg,offset=True,round10=True):
         '''
+        DEPRECIATED
         Returns a sol number from the solar longitude.
         Args:
             Ls_deg: solar longitude in degree
