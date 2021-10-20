@@ -253,7 +253,9 @@ The default template, Custom.in, can be created by passing the `-template` argum
 (amesGCM3)>$
 ```
 
-![Figure 4. The default plots in Diagnostics.pdf created by Custom.in](./tutorial_images/Diagnostics.png)
+
+![Figure 4. MarsPlot workflow](./tutorial_images/Marsplot_graphics.png)
+
 
 `Custom.in` can be modified using your preferred text editor and renamed to your liking. The above plots are created from the first two blocks of code in `Custom.in` which are set to `= True`. These code blocks are named after the type of plots they create:
 
