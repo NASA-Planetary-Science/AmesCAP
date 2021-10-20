@@ -57,10 +57,10 @@ If you are already comfortable with Python's package management system, you are 
 
 For all other users, we highly recommend using the latest version of the Anaconda Python distribution. It ships with pre-compiled math and plotting packages such as `numpy` and `matplotlib` as well as pre-compiled libraries like `hdf5` headers for reading `netCDF` files (the preferred filetype for analysing MGCM output).
 
-You can install the Anaconda Python distribution via the command-line or using a [graphical interface](https://www.anaconda.com/distribution/#download-section) (scroll to the very bottom of the page for all download options). You can install Anaconda at either the `System/` level or the `User/` level (the later does not require admin-priviledges). For command-line installation, open a terminal and type the following:
+You can install the Anaconda Python distribution via the command-line or using a [graphical interface](https://www.anaconda.com/distribution/#download-section) (scroll to the very bottom of the page for all download options). You can install Anaconda at either the `System/` level or the `User/` level (the later does not require admin-priviledges). The instructions below are for the **command-line installation** and installs Anaconda in your **home directory**, which is the recommened location. Open a terminal and type the following:
 
 ```bash
-(local)>$ chmod +x Anaconda3-2021.05-MacOSX-x86_64.sh   # creates the .sh file executable
+(local)>$ chmod +x Anaconda3-2021.05-MacOSX-x86_64.sh   # make the .sh file executable (actual name may differ)
 (local)>$ ./Anaconda3-2021.05MacOSX-x86_64.sh           # runs the executable
 ```
 
@@ -88,9 +88,9 @@ Read (`ENTER`) and accept (`yes`) the terms, choose your installation location, 
 >  - Press CTRL-C to abort the installation
 >  - Or specify a different location below
 >
-> [/Users/cbatters/anaconda3] >>>
+> [/Users/username/anaconda3] >>>
 (local)>$ [ENTER]
-> PREFIX=/Users/cbatters/anaconda3
+> PREFIX=/Users/username/anaconda3
 > Unpacking payload ...
 > Collecting package metadata (current_repodata.json):
 >   done                                                       
@@ -122,7 +122,7 @@ If this returns multiple options (e.g. `python`, `python2`, `python 3.7`, `pytho
 (local)>$ python.exe --version  # Cygwin/Windows
 ```
 
-Check your version of `pip` the same way, then find and set your `$PATH` environment variable to point to the Anaconda Python *and* Anaconda  pip distributions. You can update these paths like so:
+Check your version of `pip` the same way, then find and set your `$PATH` environment variable to point to the Anaconda Python *and* Anaconda  pip distributions. If you are planning to use Python for other projects, you can update these paths like so:
 
 ```bash
 # with bash:
@@ -265,6 +265,13 @@ and checking the documentation for any CAP executable using the `--help` option:
 (amesGCM3)>$ MarsPlot.py -h
 ```
 
+or using **full** paths:
+
+```bash
+(amesGCM3)>$ ~/amesGCM3/bin/MarsPlot.py -h     # Linux/MacOS
+(amesGCM3)>$ ~/amesGCM3/Scripts/MarsPlot.py -h # Cygwin/Windows
+```
+
 If the pipeline is installed correctly, `--help` will display documentation and command-line arguments for `MarsPlot` in the terminal.
 
 This completes the one-time installation of CAP in your virtual environment, `amesGCM3`, which now looks like:
@@ -341,10 +348,11 @@ and the virtual environment may be activated and deactivated with `conda`:
 > **Note:** CAP requires the following Python packages, which were automatically installed with CAP:
 > ```bash
 > matplotlib        # the MatPlotLib plotting library
+> numpy             # math library
+> scipy             # math library and input/output for fortran binaries
 > netCDF4 Python    # handling netCDF files
-> requests          # downloading data from the MCMC Portal
+> requests          # downloading GCM output from the MCMC Data Portal
 > ```
-
 
 
 
@@ -355,8 +363,9 @@ and the virtual environment may be activated and deactivated with `conda`:
 To permanently remove CAP, activate the virtual environment and run the `uninstall` command:
 
 ```bash
-(local)>$ source amesGCM3/bin/activate      # bash
-(local)>$ source amesGCM3/bin/activate.csh  # csh/tcsh
+(local)>$ source amesGCM3/bin/activate          # bash
+(local)>$ source amesGCM3/bin/activate.csh      # csh/tcsh
+(local)>$ source amesGCM3/Scripts/activate.csh  # Cygwin/Windows
 (amesGCM3)>$ pip uninstall amesgcm
 ```
 
@@ -370,8 +379,9 @@ You may also delete the `amesGCM3` virtual environment directory at any time. Th
 Whenever you want to use CAP, simply activate the virtual environment and all of CAP's executables will be accessible from the command line:
 
 ```bash
-(local)>$ source amesGCM3/bin/activate      # if  using bash
-(local)>$ source amesGCM3/bin/activate.csh  # if  using csh/tcsh
+(local)>$ source amesGCM3/bin/activate          #   bash
+(local)>$ source amesGCM3/bin/activate.csh      #   csh/tcsh
+(local)>$ source amesGCM3/Scripts/activate.csh  #   Cygwin/Windows
 ```
 
 You can check that the tools are installed properly by typing `Mars` and then pressing the **TAB** key. No matter where you are on your system, you should see the following pop up:
@@ -398,7 +408,6 @@ Or set up aliases in your `./bashrc` or `.cshrc`:
 (local)>$ echo alias MarsPlot /username/amesGCM3/bin/MarsPlot >> ~/.cshrc
 (local)>$ source ~/.cshrc
 ```
-
 
 
 
