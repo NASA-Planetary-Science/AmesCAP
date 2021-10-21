@@ -682,9 +682,9 @@ class Fort(object):
 
             
             self._log_var('dst_mass','dust aerosol mass mixing ratio','kg/kg',('time','pfull','lat','lon')           ,Rec=Rec[...,0])
-            self._log_var('dst_num','dust aerosol number','number',('time','pfull','lat','lon')                      ,Rec=Rec[...,1])
+            self._log_var('dst_num','dust aerosol number','number/kg',('time','pfull','lat','lon')                      ,Rec=Rec[...,1])
             self._log_var('ice_mass','water ice aerosol mass mixing ratio','kg/kg',('time','pfull','lat','lon')      ,Rec=Rec[...,2])
-            self._log_var('ice_num','water ice  aerosol number','number',('time','pfull','lat','lon')                ,Rec=Rec[...,3])
+            self._log_var('ice_num','water ice  aerosol number','number/kg',('time','pfull','lat','lon')                ,Rec=Rec[...,3])
             self._log_var('cor_mass','dust core mass mixing ratio for water ice','kg/kg',('time','pfull','lat','lon'),Rec=Rec[...,4])
             self._log_var('vap_mass','water vapor mass mixing ratio','kg/kg',('time','pfull','lat','lon')            ,Rec=Rec[...,5])
             
