@@ -307,7 +307,7 @@ class Fort(object):
         Log=Ncdf(self.path+'/'+self.fdate+'.atmos_daily.nc')
         
         #Define dimensions
-        for ivar in ['lat','lon','pfull','phalf']:
+        for ivar in ['lat','lon','pfull','phalf','zgrid']:
             if ivar =='lon':cart_ax='X'
             if ivar =='lat':cart_ax='Y'
             if ivar in ['pfull' ,'phalf','zgrid']:cart_ax='Z'
@@ -340,7 +340,7 @@ class Fort(object):
         '''
         Log=Ncdf(self.path+'/'+self.fdate+'.atmos_average.nc')
         #Define dimensions
-        for ivar in ['lat','lon','pfull','phalf']:
+        for ivar in ['lat','lon','pfull','phalf','zgrid']:
             if ivar =='lon':cart_ax='X'
             if ivar =='lat':cart_ax='Y'
             if ivar in ['pfull' ,'phalf','zgrid']:cart_ax='Z'
@@ -380,7 +380,7 @@ class Fort(object):
         '''
         Log=Ncdf(self.path+'/'+self.fdate+'.atmos_diurn.nc')
         #Define dimensions
-        for ivar in ['lat','lon','pfull','phalf']:
+        for ivar in ['lat','lon','pfull','phalf','zgrid']:
             if ivar =='lon':cart_ax='X'
             if ivar =='lat':cart_ax='Y'
             if ivar in ['pfull' ,'phalf','zgrid']:cart_ax='Z'
@@ -649,7 +649,7 @@ class Fort(object):
             #TAU=Rec[0];VPOUT=Rec[1]; RSDIST=Rec[2]; TOFDAY=Rec[3]; PSF=Rec[4]; PTROP=Rec[5]; TAUTOT=Rec[6]; RPTAU=Rec[7]; SIND=Rec[8]; GASP2=Rec[9]
             
             self.variables['time']=  self.Fort_var(self._ra_1D(Rec[0]/24,'time')  ,'time','elapsed time from the start of the run','days since 0000-00-00 00:00:00',('time'))
-            self.variables['areo']= self.Fort_var(self._ra_1D(Rec[1].reshape([1,1]),'areo')     ,'areo','solar longitude','degree',('time','scalar_axis'))     #TODO monotically increasing ?
+            self.variables['areo']= self.Fort_var(self._ra_1D(Rec[1].reshape([1,1]),'areo')     ,'areo','solar longitude','degree',('time','scalar_axis'))  #TODO monotically increasing ?
             self.variables['rdist']= self.Fort_var(self._ra_1D(Rec[2],'rdist')    ,'rdist','square of the Sun-Mars distance','(AU)**2',('time'))    
             self.variables['tofday']=self.Fort_var(self._ra_1D(Rec[3],'tofday')   ,'npcflag','time of day','hours since 0000-00-00 00:00:00',('time')) #TODO edge or center ?
             self.variables['psf']=   self.Fort_var(self._ra_1D(Rec[4]*100,'psf')  ,'psf','Initial global surface pressure','Pa',('time'))   
@@ -677,10 +677,32 @@ class Fort(object):
             self._log_var('tausurf','visible dust optical depth at the surface.','none',('time','lat','lon'))
             self._log_var('ssun','solar energy absorbed by the atmosphere','W/m2',('time','lat','lon'))
 
+            #Write(11) QTRACE # dust mass:1, dust number 2|| water ice mass: 3 and water ice number 4|| dust core mass:5|| water vapor mass: 6
+            Rec=self.f.read_reals('f4').reshape(self.JM,self.IM,self.LM,self.ntrace,order='F')#.transpose([2,0,1,3])
+
             
-            QTRACE=self.f.read_reals('f4').reshape(self.JM,self.IM,self.LM,self.ntrace,order='F') ;QTRACE[-1,:,:,:]=QTRACE[-2,:,:,:]
-            QCOND=self.f.read_reals('f4').reshape(self.JM,self.IM,self.ntrace,order='F');QCOND[-1,:,:]=QCOND[-2,:,:]
-            STEMP=self.f.read_reals('f4').reshape(self.JM,self.IM,self.NL,order='F');STEMP[-1,:,:]=STEMP[-2,:,:]
+            self._log_var('dst_mass','dust aerosol mass mixing ratio','kg/kg',('time','pfull','lat','lon')           ,Rec=Rec[...,0])
+            self._log_var('dst_num','dust aerosol number','number',('time','pfull','lat','lon')                      ,Rec=Rec[...,1])
+            self._log_var('ice_mass','water ice aerosol mass mixing ratio','kg/kg',('time','pfull','lat','lon')      ,Rec=Rec[...,2])
+            self._log_var('ice_num','water ice  aerosol number','number',('time','pfull','lat','lon')                ,Rec=Rec[...,3])
+            self._log_var('cor_mass','dust core mass mixing ratio for water ice','kg/kg',('time','pfull','lat','lon'),Rec=Rec[...,4])
+            self._log_var('vap_mass','water vapor mass mixing ratio','kg/kg',('time','pfull','lat','lon')            ,Rec=Rec[...,5])
+            
+
+            #write(11) QCOND   dust mass:1, dust number 2|| water ice mass: 3 and water ice number 4|| dust core mass:5|| water vapor mass: 6
+            Rec=self.f.read_reals('f4').reshape(self.JM,self.IM,self.ntrace,order='F')
+
+            self._log_var('dst_mass_sfc','dust aerosol mass on the surface','kg/m2',('time','lat','lon')   ,Rec=Rec[...,0])
+            self._log_var('dst_num_sfc','dust aerosol number on the surface','number/m2',('time','lat','lon')      ,Rec=Rec[...,1])
+            self._log_var('ice_mass_sfc','water ice aerosol mass on the surface','kg/m2',('time','lat','lon')      ,Rec=Rec[...,2])
+            self._log_var('ice_num_sfc','water ice  aerosol number on the surface','number/m2',('time','lat','lon'),Rec=Rec[...,3])
+            self._log_var('cor_mass_sfc','dust core mass for water ice on the surface','kg/m2',('time','lat','lon'),Rec=Rec[...,4])
+            self._log_var('vap_mass_sfc','water vapor mass on the surface','kg/m2',('time','lat','lon')            ,Rec=Rec[...,5])
+            
+            
+            #write(11) stemp
+            Rec=self.f.read_reals('f4').reshape(self.JM,self.IM,self.NL,order='F')
+            self._log_var('soil_temp','sub-surface soil temperature','K',('time','zgrid','lat','lon') ,Rec=Rec)
             
             #write(11) fuptopv, fdntopv, fupsurfv, fdnsurfv
             Rec=self.f.read_record('({0},{1})f4'.format(self.IM,self.JM),'({0},{1})f4'.format(self.IM,self.JM),'({0},{1})f4'.format(self.IM,self.JM),'({0},{1})f4'.format(self.IM,self.JM))
