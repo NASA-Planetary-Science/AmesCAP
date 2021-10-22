@@ -9,13 +9,14 @@
     * [1.1 Download MGCM output](#11-use-marspullpy-to-download-mgcm-output)
   * [2. File Manipulations](#2-file-manipulations)
       * [2.1 `fort.11` to `netCDF` Conversion](#21-convert-the-fort11-files-into-netcdf-files-for-compatibility-with-cap)
-      * [2.2 Interpolate to standard pressure](#22-interpolate-atmosaverage-to-standard-pressure-coordinates)
+      * [2.2 Interpolate `atmos_average` to standard pressure](#22-interpolate-atmosaverage-to-standard-pressure-coordinates)
       * [2.3 Add `msf` to `atmos_average_pstd`](#23-add-mass-stream-function-msf-to-atmosaveragepstd)
-      * [2.4 Add `rho` and `zfull` to `atmos_average`; Interpolate to Standard Altitude](#24-add-density-rho-and-mid-point-altitude-zfull-to-atmosaverage-then-interpolate-the-file-to-standard-altitude-zstd)
-      * [2.5 Time-Shift & Pressure-Interpolate the Diurn File](#25-use-marsfiles-to-time-shift-the-diurn-file-then-pressure-interpolate-the-diurn-file-with-marsinterp)
-      * [2.6 Apply a Low-Pass Filter (`-lpf`) to the `atmos_daily` File](#26-apply-a-low-pass-filter--lpf-to-the-surface-pressure-ps-and-temperature-ts-in-the-atmosdaily-file)
-      * [2.7 Estimate the Magnitude of the Wind Shear](#27-estimate-the-magnitude-of-the-wind-shear-using-cap)
-      * [2.8 Determine the Minimum, Mean, and Maximum Near-Surface Temperatures](#28-display-the-values-of-pfull-then-display-the-minimum-mean-and-maximum-near-surface-temperatures-temp-over-the-globe)
+      * [2.4 Add `rho` and `zfull` to `atmos_average`](#24-add-density-rho-and-mid-point-altitude-zfull-to-atmosaverage)
+      * [2.5 Interpolate `atmos_average` to standard altitude](#25-interpolate-the-file-to-standard-altitude)
+      * [2.6 Time-Shift & Pressure-Interpolate the Diurn File](#26-use-marsfiles-to-time-shift-the-diurn-file-then-pressure-interpolate-the-diurn-file-with-marsinterp)
+      * [2.7 Apply a Low-Pass Filter (`-lpf`) to the `atmos_daily` File](#27-apply-a-low-pass-filter--lpf-to-the-surface-pressure-ps-and-temperature-ts-in-the-atmosdaily-file)
+      * [2.8 Estimate the Magnitude of the Wind Shear](#28-estimate-the-magnitude-of-the-wind-shear-using-cap)
+      * [2.9 Determine the Minimum, Mean, and Maximum Near-Surface Temperatures](#29-display-the-values-of-pfull-then-display-the-minimum-mean-and-maximum-near-surface-temperatures-temp-over-the-globe)
   * [Break!](#break)
   * [3. Plotting Routines](#3-plotting-routines)
       * [3.1 Global Map: Surface Albedo and Topography](#31-create-a-global-map-of-surface-albedo-alb-with-topography-zsurf-contoured-on-top)
@@ -27,7 +28,7 @@
       * [3.7 Four Global Maps on One Page: `time X lev`](#37-plot-the-following-four-time-x-lev-variables-at-150-e-longitude-averaged-over-all-latitudes-on-a-new-page)
       * [3.8 Two Cross-Sections on One Page](#38-plot-the-following-two-cross-sections-lat-x-lev-on-the-same-page)
       * [3.9 Zonal Mean Temperatures: RIC and RAC](#39-plot-the-zonal-mean-temperature-at-ls=270-from-the-atmosaverage-file-for-both-the-ric-and-rac-cases-also-create-a-difference-plot-for-them)
-      * [3.10 1D Temperature Profiles](#310-generate-two-1d-temperature-profiles-temp-from-the-ric-case-both-at-50°n-150°e-and-ls=270-at-3-am-and-3-pm)
+      * [3.10 1D Temperature Profiles](#310-generate-two-1d-temperature-profiles-temp-from-the-ric-case-both-at-50n-150e-and-ls=270-at-3-am-and-3-pm)
       * [3.11 Tidal Analysis](#311-plot-the-filtered-and-un-filtered-surface-pressure-over-a-20-sol-period)
 <!-- /TOC -->
 
@@ -222,7 +223,7 @@ Adding or removing variables from files is done using `-add` and `-rem` in the c
 
 ***
 
-### 2.4 Add density (`rho`) and mid-point altitude (`zfull`) to `atmos_average`, then interpolate the file to standard altitude (`zstd`)
+### 2.4 Add density (`rho`) and mid-point altitude (`zfull`) to `atmos_average`
 
 
 Again, add variables to files using `-add`:
@@ -235,7 +236,15 @@ Density (`rho`) was derived from the pressure and temperature variables output b
 
 Note that we've added `rho` to the **non-interpolated** file. This is because some derived variables (such as `rho`) are computed on the native model grid in CAP, and will not be properly derived on any other vertical grid. Other variables (like `msf` from the previous step) are computed on a pressure grid, in which case we have to interpolate the file *before* adding `msf` to it.
 
-The instructions asked us to add `rho` and `zfull` to an altitude-interpolated file, so we add `rho` and `zfull` to `07180.atmos_average.nc` first and perform the interpolation after:
+
+
+
+
+
+***
+### 2.5 Interpolate `atmos_average` to standard altitude
+
+We added `rho` and `zfull` to `atmos_average` in the last step because these variables cannot be added to an interpolated file. We can now interpolate the file to standard altitude coordinates so that we have `rho` and `zfull` in an interpolated file:
 
 ```bash
 (amesGCM3)>$ MarsInterp.py 07180.atmos_average.nc -t zstd   # standard altitude
@@ -247,7 +256,7 @@ Our directory now contains three `atmos_average` files:
 > 07180.atmos_average.nc 07180.atmos_average_pstd.nc 07180.atmos_average_zstd.nc
 ```
 
-The original file (`07180.atmos_average.nc`) and the altitude-interpolated file (`07180.atmos_average_zstd.nc`) contain `rho` and `zfull`, and the pressure-interpolated file (`07180.atmos_average_pstd.nc`) contains `msf` but does not contain `rho` or `zfull`. You can view the variables in each file using the `--inspect` (`-i`) function from `MarsPlot`:
+The original file (`07180.atmos_average.nc`) and the altitude-interpolated file (`07180.atmos_average_zstd.nc`) contain `rho` and `zfull`. The pressure-interpolated file (`07180.atmos_average_pstd.nc`) contains `msf` but does not contain `rho` or `zfull`, because it was created before we added those variables. You can confirm that these are the variables in each file using the `--inspect` (`-i`) function from `MarsPlot`:
 
 ```bash
 (amesGCM3)>$ MarsPlot.py -i 07180.atmos_average.nc          # the original file + rho, zfull
@@ -260,9 +269,12 @@ The original file (`07180.atmos_average.nc`) and the altitude-interpolated file 
 
 
 
+
+
+
 ***
 
-### 2.5 Use `MarsFiles` to time-shift the `diurn` file, then pressure-interpolate the file with `MarsInterp`
+### 2.6 Use `MarsFiles` to time-shift the `diurn` file, then pressure-interpolate the file with `MarsInterp`
 
 The variables in `07180.atmos_diurn.nc` are organized by time-of-day assuming **universal time** beginning at the Martian prime meridian. You can time-shift the fields to **uniform local time** using `MarsFiles`. This function is useful for comparing MGCM output to observations from satellites in fixed local time orbit, for example.
 
@@ -295,7 +307,7 @@ After time-shifting and interpolating, our directory contains three `diurn` file
 
 ***
 
-### 2.6 Apply a low-pass filter (`-lpf`) to the surface pressure (`ps`) and temperature (`ts`) in the `atmos_daily` file
+### 2.7 Apply a low-pass filter (`-lpf`) to the surface pressure (`ps`) and temperature (`ts`) in the `atmos_daily` file
 
 Let's use a 10-sol cut-off frequency (`sol_max` > 10) so we can isolate synoptic-scale features. Including only `ps` and `ts` means only those two variables will be time-filtered:
 
@@ -309,7 +321,7 @@ This function created a new file, `atmos_daily_lpf`, which contains only `ps`, `
 
 
 
-### 2.7 Estimate the magnitude of the wind shear using CAP
+### 2.8 Estimate the magnitude of the wind shear using CAP
 
 Do this by adding dU/dZ and dV/dZ to `07180.atmos_average_zstd.nc`. You already know that `MarsVars` is used when adding variables, however, deriving the zonal (`ucomp`) and meridional (`vcomp`) wind shear is **not** done using the `-add` function like we've practiced. Instead, we use `-zdiff` to perform a vertical differentiation on `ucomp` and `vcomp`. `MarsVars` also has a `-col` function, which performs a column integration on specified variables. 
 
@@ -346,7 +358,7 @@ Use `--inspect` (`-i`) to see the contents of `07180.atmos_average_zstd.nc` and 
 
 
 
-### 2.8 Display the values of `pfull`, then display the minimum, mean, and maximum near-surface temperatures `temp` over the globe
+### 2.9 Display the values of `pfull`, then display the minimum, mean, and maximum near-surface temperatures `temp` over the globe
 
 We can display values in an array using `--dump` (analog of the NCL command `ncdump`) and `MarsPlot -i`. For example, the content of the reference pressure (`pfull`) variable in `07180.atmos_average.nc` is viewed by typing:
 
@@ -594,10 +606,10 @@ Save `Custom.in` and pass it to `MarsPlot`. View `Diagnostics.pdf` to see the re
 
 ### 3.5 Plot the following four global maps (`lon X lat`) on a new page
 
-- Surface CO2 Ice Content (`snow`) *north of 50 latitude*
-- Surface Temperature (`ts`) *For this plot, set the colorscale (`Cmin, Cmax`) to range from 150 K to 300 K*
+- Surface CO2 Ice Content (`snow`) north of 50 latitude
+- Surface Temperature (`ts`). Set the colorscale (`Cmin, Cmax`) to range from 150 K to 300 K
 - Surface Wind Speed (`(u^2 + v^2)/2`) (this requires the use of square brackets **and** two variables)
-- Diabatic Heating Rate (`dheat`) at 50 Pa (index dimension `lev`=50)
+- Diabatic Heating Rate (`dheat`) at 50 Pa (index dimension `lev=50`)
 
 > **Tip:** Use `HOLD ON` and `HOLD OFF` again. You can use this syntax multiple times in the same template.
 
@@ -629,7 +641,7 @@ Source all of the variables from the `atmos_daily` file in `INERTCLDS/`. Plot th
 >```python
 >Main Variable  = [atmos_daily.snow]*1000
 >```
-> Similarly, you can add two variables together like so:**
+> **Similarly, you can add two variables together like so:**
 >```python
 >Main Variable  = ([atmos_daily.ucomp]**2+[atmos_daily.vcomp]**2)**0.5
 >```
@@ -697,25 +709,25 @@ Name the plots accordingly. Save `Custom.in` and pass it to `MarsPlot`.
 Source all of the variables from the `atmos_average_pstd` file in `INERTCLDS/`. The general format will be:
 
 ```python
-HOLD ON
-
-<<<<<<| Plot 2D time X lev = True |>>>>>>
-Title    = 150 E Temperature (K)
-(etc)
-
-<<<<<<| Plot 2D time X lev = True |>>>>>>
-Title    = 150 E Dust Mass (kg/kg)
-(etc)
-
-<<<<<<| Plot 2D time X lev = True |>>>>>>
-Title    = 150 E Water Ice Mass (kg/kg)
-(etc)
-
-<<<<<<| Plot 2D time X lev = True |>>>>>>
-Title    = 150 E Water Vapor Mass (kg/kg)
-(etc)
-
-HOLD OFF
+> HOLD ON
+> 
+> <<<<<<| Plot 2D time X lev = True |>>>>>>
+> Title    = 150 E Temperature (K)
+> (etc)
+> 
+> <<<<<<| Plot 2D time X lev = True |>>>>>>
+> Title    = 150 E Dust Mass (kg/kg)
+> (etc)
+> 
+> <<<<<<| Plot 2D time X lev = True |>>>>>>
+> Title    = 150 E Water Ice Mass (kg/kg)
+> (etc)
+> 
+> <<<<<<| Plot 2D time X lev = True |>>>>>>
+> Title    = 150 E Water Vapor Mass (kg/kg)
+> (etc)
+> 
+> HOLD OFF
 ```
 
 Name the plots accordingly. Save `Custom.in` and pass it to `MarsPlot`.
