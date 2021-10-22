@@ -3,8 +3,7 @@
 
 <!-- TOC titleSize:2 tabSpaces:2 depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 skip:0 title:1 charForUnorderedList:* -->
 ## Table of Contents
-* [Practical: Using the Community Analysis Pipeline (CAP)]
-(#practical-using-the-community-analysis-pipeline-cap)
+* [Practical: Using the Community Analysis Pipeline (CAP)](#practical-using-the-community-analysis-pipeline-cap)
   * [Activate CAP](#activate-cap)
   * [1. Retrieve Data](#1-retrieving-data)
     * [1.1 Download MGCM output](#11-use-marspullpy-to-download-mgcm-output)
