@@ -27,7 +27,7 @@
       * [3.7 Four Global Maps on One Page: `time X lev`](#37-plot-the-following-four-time-x-lev-variables-at-150-e-longitude-averaged-over-all-latitudes-on-a-new-page)
       * [3.8 Two Cross-Sections on One Page](#38-plot-the-following-two-cross-sections-lat-x-lev-on-the-same-page)
       * [3.9 Zonal Mean Temperatures: RIC and RAC](#39-plot-the-zonal-mean-temperature-at-ls=270-from-the-atmos_average-file-for-both-the-ric-and-rac-cases-also-create-a-difference-plot-for-them)
-      * [3.10 1D Temperature Profiles](#310-generate-two-1d-temperature-profiles-temp-from-the-ric-case-both-at-50n-150e-and-ls=270-at-3-am-and-3-pm)
+      * [3.10 1D Temperature Profiles](#310-generate-two-1d-temperature-profiles-temp-from-the-ric-case-both-at-50°n-150°e-and-ls=270°-at-3-am-and-3-pm)
       * [3.11 Tidal Analysis](#311-plot-the-filtered-and-un-filtered-surface-pressure-over-a-20-sol-period)
 <!-- /TOC -->
 
