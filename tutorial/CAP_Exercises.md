@@ -20,14 +20,14 @@
   * [3. Plotting Routines](#3-plotting-routines)
       * [3.1 Global Map: Surface Albedo and Topography](#31-create-a-global-map-of-surface-albedo-alb-with-topography-zsurf-contoured-on-top)
       * [3.2 Zonal Mean Zonal Wind Cross-Section: RIC](#32-plot-the-zonal-mean-zonal-wind-cross-section-at-ls=270-using-altitude-as-the-vertical-coordinate)
-      * [3.3 Zonal Mean Zonal Wind Cross-Section: RAC](#33-create-the-same-plot-for-the-rac-case-place-these-plots-on-the-same-page)
+      * [3.3 Zonal Mean Zonal Wind Cross-Section: RAC](#33-add-the-same-plot-for-the-rac-case-to-the-same-page)
       * [3.4 Overplot Temperatures](#34-overplot-temperature-in-solid-contours)
       * [3.5 Four Global Maps on One Page: `lon X lat`](#35-plot-the-following-four-global-maps-lon-x-lat-on-a-new-page)
       * [3.6 Four Global Maps on One Page: `time X lat`](#36-plot-the-following-four-time-x-lat-surface-variables-at-150-e-longitude-on-a-new-page)
       * [3.7 Four Global Maps on One Page: `time X lev`](#37-plot-the-following-four-time-x-lev-variables-at-150-e-longitude-averaged-over-all-latitudes-on-a-new-page)
       * [3.8 Two Cross-Sections on One Page](#38-plot-the-following-two-cross-sections-lat-x-lev-on-the-same-page)
-      * [3.9 Zonal Mean Temperatures: RIC and RAC](#39-plot-the-zonal-mean-temperature-at-ls=270-from-the-atmos_average-file-for-both-the-ric-and-rac-cases-also-create-a-difference-plot-for-them)
-      * [3.10 1D Temperature Profiles](#310-generate-two-1d-temperature-profiles-temp-from-the-ric-case-both-at-50n-150e-and-ls=270-at-3-am-and-3-pm)
+      * [3.9 Zonal Mean Temperatures: RIC and RAC](#39-plot-the-zonal-mean-temperature-at-ls=270°-from-the-atmos_average-file-for-both-the-ric-and-rac-cases-also-create-a-difference-plot-for-them)
+      * [3.10 1D Temperature Profiles](310-generate-two-1d-temperature-profiles-temp-from-the-ric-case-both-at-50°n-150°e-and-ls=270°-at-3-am-and-3-pm)
       * [3.11 Tidal Analysis](#311-plot-the-filtered-and-un-filtered-surface-pressure-over-a-20-sol-period)
 <!-- /TOC -->
 
@@ -555,7 +555,7 @@ Save `Custom.in`, and pass it to `MarsPlot`. Again, view `Diagnostics.pdf` to se
 
 ***
 
-### 3.3 Create the same plot for the RAC case. Place these plots on the same page
+### 3.3 Add the same plot for the RAC case to the same page
 
 > **Tip:** Copy and paste the `lat x lev` plot you made in 3.2 so that you have two identical templates.
 
@@ -779,7 +779,7 @@ Save `Custom.in` and pass it to `MarsPlot`.
 
 ***
 
-### 3.10 Generate two **1D temperature profiles** (`temp`) from the RIC case, both at `50°N, 150°E` and Ls=270°, at 3 AM and 3 PM 
+### 3.10 Generate two **1D temperature profiles** (`temp`) from the RIC case, both at `50°N, 150°E` and Ls=270°, at 3 AM and 3 PM
 
 There should be two lines on one plot: the thermal profile at 3 AM and the thermal profile at 3 PM. CAP can overplot 1D data on the same graph by concatenating two 1D templates together with `ADD LINE`:
 
