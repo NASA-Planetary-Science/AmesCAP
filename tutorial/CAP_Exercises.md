@@ -13,7 +13,7 @@
       * [2.4 Add `rho` and `zfull` to `atmos_average`](#24-add-density-rho-and-mid-point-altitude-zfull-to-atmosaverage)
       * [2.5 Interpolate `atmos_average` to standard altitude](#25-interpolate-atmosaverage-to-standard-altitude)
       * [2.6 Time-Shift & Pressure-Interpolate the Diurn File](#26-use-marsfiles-to-time-shift-the-diurn-file-then-pressure-interpolate-the-file-with-marsinterp)
-      * [2.7 Apply a Low-Pass Filter (`-lpf`) to the `atmos_daily` File](#27-apply-a-low-pass-filter--lpf-to-the-surface-pressure-ps-and-temperature-ts-in-the-atmosdaily-file)
+      * [2.7 Apply a Low-Pass Filter (`-lpf`) to the `atmos_daily` File](#27-Apply-a-low-pass-filter--lpf-to-the-surface-pressure-ps-and-temperature-ts-in-the-atmos_daily-file)
       * [2.8 Estimate the Magnitude of the Wind Shear](#28-estimate-the-magnitude-of-the-wind-shear-using-cap)
       * [2.9 Determine the Minimum, Mean, and Maximum Near-Surface Temperatures](#29-display-the-values-of-pfull-then-display-the-minimum-mean-and-maximum-near-surface-temperatures-temp-over-the-globe)
   * [Break!](#break)
