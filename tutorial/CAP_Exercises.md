@@ -26,8 +26,8 @@
       * [3.6 Four Global Maps on One Page: `time X lat`](#36-plot-the-following-four-time-x-lat-surface-variables-at-150-e-longitude-on-a-new-page)
       * [3.7 Four Global Maps on One Page: `time X lev`](#37-plot-the-following-four-time-x-lev-variables-at-150-e-longitude-averaged-over-all-latitudes-on-a-new-page)
       * [3.8 Two Cross-Sections on One Page](#38-plot-the-following-two-cross-sections-lat-x-lev-on-the-same-page)
-      * [3.9 Zonal Mean Temperatures: RIC and RAC](#39-plot-the-zonal-mean-temperature-at-ls=270-from-the-atmos_average-file-for-both-the-ric-and-rac-cases-also-create-a-difference-plot-for-them)
-      * [3.10 1D Temperature Profiles](#310-generate-two-1d-temperature-profiles-temp-from-the-ric-case-both-at-50-n-150-e-and-ls=270-at-3-am-and-3-pm)
+      * [3.9 Zonal Mean Temperatures: RIC and RAC](#39-plot-the-zonal-mean-temperature-at-ls=270°-from-the-atmos_average-file-for-both-the-ric-and-rac-cases,-then-create-a-difference-plot)
+      * [3.10 1D Temperature Profiles](#310-generate-two-1d-temperature-profiles-temp-from-the-ric-case)
       * [3.11 Tidal Analysis](#311-plot-the-filtered-and-un-filtered-surface-pressure-over-a-20-sol-period)
 <!-- /TOC -->
 
@@ -760,7 +760,7 @@ Don't forget to use `HOLD ON` and `HOLD OFF` and to name your plots accordingly.
 
 ***
 
-### 3.9 Plot the zonal mean temperature at Ls=270° from the `atmos_average` file for both the RIC and RAC cases. Also create a difference plot for them
+### 3.9 Plot the zonal mean temperature at Ls=270° from the `atmos_average` file for both the RIC and RAC cases, then create a difference plot
 
 Make use of `HOLD ON` and `HOLD OFF` again here. Copy and paste a `lat x lev` template three times. For the difference plot, you'll need to use `@N` to point to the `ACTIVECLDS/` directory and use square brackets to subtract one variable from the other:
 
@@ -779,7 +779,9 @@ Save `Custom.in` and pass it to `MarsPlot`.
 
 ***
 
-### 3.10 Generate two **1D temperature profiles** (`temp`) from the RIC case, both at `50°N, 150°E` and Ls=270°, at 3 AM and 3 PM
+### 3.10 Generate two 1D temperature profiles (`temp`) from the RIC case 
+
+Both thermal profiles are at `50°N, 150°E` and Ls=270°, one at 3 AM and the other at 3 PM.
 
 There should be two lines on one plot: the thermal profile at 3 AM and the thermal profile at 3 PM. CAP can overplot 1D data on the same graph by concatenating two 1D templates together with `ADD LINE`:
 
@@ -824,7 +826,7 @@ Save `Custom.in` and pass it to `MarsPlot`. View `Diagnostics.pdf`.
 
 ***
 
-### 3.11 Plot the filtered and un-filtered surface pressure over a 20 sol period
+### 3.11 Plot the filtered and unfiltered surface pressure over a 20 sol period
 
 Here we're asked to compare surface pressure `ps` from the orginal file (`atmos_daily`) to the surface pressure that we time-filtered using `MarsFiles` in exercise 2.6 (`atmos_daily_lpf`). Some hints:
 
