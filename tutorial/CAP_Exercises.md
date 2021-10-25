@@ -14,8 +14,9 @@
       * [2.5 Interpolate `atmos_average` to standard altitude](#25-interpolate-atmos_average-to-standard-altitude)
       * [2.6 Time-Shift & Pressure-Interpolate the Diurn File](#26-use-marsfiles-to-time-shift-the-diurn-file-then-pressure-interpolate-the-file-with-marsinterp)
       * [2.7 Apply a Low-Pass Filter (`-lpf`) to the `atmos_daily` File](#27-Apply-a-low-pass-filter--lpf-to-the-surface-pressure-ps-and-temperature-ts-in-the-atmos_daily-file)
-      * [2.8 Estimate the Magnitude of the Wind Shear](#28-estimate-the-magnitude-of-the-wind-shear-using-cap)
-      * [2.9 Determine the Minimum, Mean, and Maximum Near-Surface Temperatures](#29-display-the-values-of-pfull-then-display-the-minimum-mean-and-maximum-near-surface-temperatures-temp-over-the-globe)
+      * [2.8 Vertical Differentiation](#28-estimate-the-magnitude-of-the-wind-shear-using-cap)
+      * [2.9 Column Integration](#29-calculate-the-column-integrated-temperature-and-dust-water-ice-and-water-vapor-mixing-ratios-in-the-atmos_daily-file)
+      * [2.10 Determine the Minimum, Mean, and Maximum Near-Surface Temperatures](#210-display-the-values-of-pfull-then-display-the-minimum-mean-and-maximum-near-surface-temperatures-temp-over-the-globe)
   * [Break!](#break)
   * [3. Plotting Routines](#3-plotting-routines)
       * [3.1 Global Map: Surface Albedo and Topography](#31-create-a-global-map-of-surface-albedo-alb-with-topography-zsurf-contoured-on-top)
@@ -119,7 +120,7 @@ The following exercises are designed to demonstrate how CAP can be used for post
 **After post-processing these files, we will use them to make plots with `MarsPlot` so do *not* delete anything!**
 
 
-Start with the RIC simulation (`INERTCLDS/`) and complete exercises 2.1-2.8 below. We will then provide specific instructions regarding which exercises to repeat with the RAC simulation (`ACTIVECLDS/`).
+Start with the RIC simulation (`INERTCLDS/`) and complete exercises 2.1-2.10 below. We will then provide specific instructions regarding which exercises to repeat with the RAC simulation (`ACTIVECLDS/`).
 
 
 
@@ -322,7 +323,7 @@ This function created a new file, `atmos_daily_lpf`, which contains only `ps`, `
 
 ### 2.8 Estimate the magnitude of the wind shear using CAP
 
-Do this by adding dU/dZ and dV/dZ to `07180.atmos_average_zstd.nc`. You already know that `MarsVars` is used when adding variables, however, deriving the zonal (`ucomp`) and meridional (`vcomp`) wind shear is **not** done using the `-add` function like we've practiced. Instead, we use `-zdiff` to perform a vertical differentiation on `ucomp` and `vcomp`. `MarsVars` also has a `-col` function, which performs a column integration on specified variables. 
+Do this by adding dU/dZ and dV/dZ to `07180.atmos_average_zstd.nc`. You already know that `MarsVars` is used when adding variables, however, deriving the zonal (`ucomp`) and meridional (`vcomp`) wind shear is **not** done using the `-add` function like we've practiced. Instead, we use `-zdiff` to perform a vertical differentiation on `ucomp` and `vcomp`.
 
 Apply vertical differentiation to add dU/dZ and dV/dZ to the file as follows:
 
@@ -354,10 +355,46 @@ Use `--inspect` (`-i`) to see the contents of `07180.atmos_average_zstd.nc` and 
 
 
 
+### 2.9 Calculate the column-integrated temperature and dust, water ice, and water vapor mixing ratios in the `atmos_daily` file
+
+Similar to the -`zdiff` function, `MarsVars` has a `-col` function that performs column integration on specified variables. This function adds a new variable named `var_col` to the specified file. A column integration on the temperature and dust, water ice, and water vapor mixing ratios can be done like so:
+
+```bash
+(amesGCM3)>$ MarsVars.py 07180.atmos_daily.nc -col dst_mass ice_mass vap_mass temp
+```
+
+Using the inspect (`MarsPlot.py -i`) function, we can see the new variables in the file:
+
+```bash
+(amesGCM3)>$ MarsPlot.py -i 07180.atmos_daily.nc
+> ===================DIMENSIONS==========================
+> ['lat', 'lon', 'pfull', 'phalf', 'zgrid', 'scalar_axis', 'time']
+> (etc)
+> ====================CONTENT==========================
+> (etc)
+> dst_mass_col   : ('time', 'lat', 'lon')= (800, 36, 60), column integration of dust aerosol mass mixing ratio  [kg/m2]
+> ice_mass_col   : ('time', 'lat', 'lon')= (800, 36, 60), column integration of water ice aerosol mass mixing ratio  [kg/m2]
+> vap_mass_col   : ('time', 'lat', 'lon')= (800, 36, 60), column integration of water vapor mass mixing ratio  [kg/m2]
+> temp_col       : ('time', 'lat', 'lon')= (800, 36, 60), column integration of temperature  [/m2]
+> temp           : ('time', 'pfull', 'lat', 'lon')= (800, 24, 36, 60), temperature  [K]
+> dst_mass       : ('time', 'pfull', 'lat', 'lon')= (800, 24, 36, 60), dust aerosol mass mixing ratio  [kg/kg]
+> ice_mass       : ('time', 'pfull', 'lat', 'lon')= (800, 24, 36, 60), water ice aerosol mass mixing ratio  [kg/kg]
+> vap_mass       : ('time', 'pfull', 'lat', 'lon')= (800, 24, 36, 60), water vapor mass mixing ratio  [kg/kg]
+>
+> Ls ranging from 254.12 to 286.06: 49.94 days
+>                (MY 01)   (MY 01)
+> =====================================================
+```
 
 
 
-### 2.9 Display the values of `pfull`, then display the minimum, mean, and maximum near-surface temperatures `temp` over the globe
+
+
+
+
+
+
+### 2.10 Display the values of `pfull`, then display the minimum, mean, and maximum near-surface temperatures `temp` over the globe
 
 We can display values in an array using `--dump` (analog of the NCL command `ncdump`) and `MarsPlot -i`. For example, the content of the reference pressure (`pfull`) variable in `07180.atmos_average.nc` is viewed by typing:
 
@@ -653,32 +690,32 @@ Name the plots accordingly. Save `Custom.in` and pass it to `MarsPlot`. You shou
 
 ***
 
-### 3.6 Plot the following four `time X lat` surface variables at 150° E longitude on a new page
+### 3.6 Plot the following four `time X lat` column-integrated variables at 150° E longitude on a new page
 
-- Surface temperature (`ts`). Set the colormap to `nipy_spectral`.
-- Surface dust mass (`dst_mass_sfc`). Set the colormap to `jet`.
-- Surface water ice mass (`ice_mass_sfc`) Set the colormap to `Spectral_r`.
-- Surface water vapor mass (`vap_mass_sfc`) Set the colormap to `Spectral_r`.
+- Temperature (`temp_col`). Set the colormap to `nipy_spectral`.
+- Dust mass (`dst_mass_col`). Set the colormap to `jet`.
+- Water ice mass (`ice_mass_col`) Set the colormap to `Spectral_r`.
+- Water vapor mass (`vap_mass_col`) Set the colormap to `Spectral_r`.
 
-Source all of the variables from the `atmos_average_pstd` file in `INERTCLDS/`. The general format will be:
+Source all of the variables from the `atmos_daily` file in `INERTCLDS/`. The general format will be:
 
 ```python
 > HOLD ON
 > 
 > <<<<<<| Plot 2D time X lat = True |>>>>>>
-> Title    = 150 E Surface Temperature (K)
+> Title    = 150 E Column Integrated Temperature (K)
 > (etc)
 > 
 > <<<<<<| Plot 2D time X lat = True |>>>>>>
-> Title    = 150 E Surface Dust Mass (kg/m2)
+> Title    = 150 E Column Integrated Dust Mass (kg/m2)
 > (etc)
 > 
 > <<<<<<| Plot 2D time X lat = True |>>>>>>
-> Title    = 150 E Surface Water Ice Mass (kg/m2)
+> Title    = 150 E Column Integrated Water Ice Mass (kg/m2)
 > (etc)
 > 
 > <<<<<<| Plot 2D time X lat = True |>>>>>>
-> Title    = 150 E Surface Water Vapor Mass (kg/m2)
+> Title    = 150 E Column Integrated Water Vapor Mass (kg/m2)
 > (etc)
 > 
 > HOLD OFF
