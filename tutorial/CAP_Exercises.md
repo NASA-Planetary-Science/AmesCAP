@@ -20,7 +20,7 @@
   * [Break!](#break)
   * [3. Plotting Routines](#3-plotting-routines)
       * [3.1 Global Map: Surface Albedo and Topography](#31-create-a-global-map-of-surface-albedo-alb-with-topography-zsurf-contoured-on-top)
-      * [3.2 Zonal Mean Zonal Wind Cross-Section: RIC](#32-plot-the-zonal-mean-zonal-wind-cross-section-at-ls=270-using-altitude-as-the-vertical-coordinate)
+      * [3.2 Zonal Mean Zonal Wind Cross-Section: RIC](#32-plot-the-zonal-mean-zonal-wind-cross-section-at-ls=270°-using-altitude-as-the-vertical-coordinate)
       * [3.3 Zonal Mean Zonal Wind Cross-Section: RAC](#33-add-the-same-plot-for-the-rac-case-to-the-same-page)
       * [3.4 Overplot Temperatures](#34-overplot-temperature-in-solid-contours)
       * [3.5 Four Global Maps on One Page: `lon X lat`](#35-plot-the-following-four-global-maps-lon-x-lat-on-a-new-page)
@@ -29,7 +29,7 @@
       * [3.8 Two Cross-Sections on One Page](#38-plot-the-following-two-cross-sections-lat-x-lev-on-the-same-page)
       * [3.9 Zonal Mean Temperatures: RIC and RAC](#39-plot-zonal-mean-temperature-from-the-ric-and-rac-cases)
       * [3.10 1D Temperature Profiles](#310-generate-two-1d-temperature-profiles-temp-from-the-ric-case)
-      * [3.11 Tidal Analysis](#311-plot-the-filtered-and-un-filtered-surface-pressure-over-a-20-sol-period)
+      * [3.11 Tidal Analysis](#311-plot-the-filtered-and-unfiltered-surface-pressure-over-a-20-sol-period)
 <!-- /TOC -->
 
 ***
@@ -862,7 +862,7 @@ Save `Custom.in` and pass it to `MarsPlot`. View `Diagnostics.pdf`.
 
 ***
 
-### 3.11 Plot the filtered and unfiltered surface pressure over a 20 sol period
+### 3.11 Plot the filtered and unfiltered surface pressure over a 20-sol period
 
 Here we're asked to compare surface pressure `ps` from the orginal file (`atmos_daily`) to the surface pressure that we time-filtered using `MarsFiles` in exercise 2.6 (`atmos_daily_lpf`). Some hints:
 
