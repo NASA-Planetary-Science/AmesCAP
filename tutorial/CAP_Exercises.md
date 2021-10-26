@@ -20,7 +20,7 @@
   * [Break!](#break)
   * [3. Plotting Routines](#3-plotting-routines)
       * [3.1 Global Map: Surface Albedo and Topography](#31-create-a-global-map-of-surface-albedo-alb-with-topography-zsurf-contoured-on-top)
-      * [3.2 Zonal Mean Zonal Wind Cross-Section: RIC](#32-plot-the-zonal-mean-zonal-wind-cross-section-at-ls=270°-using-altitude-as-the-vertical-coordinate)
+      * [3.2 Zonal Mean Zonal Wind Cross-Section: RIC](#32-plot-the-zonal-mean-zonal-wind-cross-section-at-ls=270-using-altitude-as-the-vertical-coordinate)
       * [3.3 Zonal Mean Zonal Wind Cross-Section: RAC](#33-add-the-same-plot-for-the-rac-case-to-the-same-page)
       * [3.4 Overplot Temperatures](#34-overplot-temperature-in-solid-contours)
       * [3.5 Four Global Maps on One Page: `lon X lat`](#35-plot-the-following-four-global-maps-lon-x-lat-on-a-new-page)
