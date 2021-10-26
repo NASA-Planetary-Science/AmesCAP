@@ -678,13 +678,13 @@ class Fort(object):
             self._log_var('ssun','solar energy absorbed by the atmosphere','W/m2',('time','lat','lon'))
 
             #Write(11) QTRACE # dust mass:1, dust number 2|| water ice mass: 3 and water ice number 4|| dust core mass:5|| water vapor mass: 6
-            Rec=self.f.read_reals('f4').reshape(self.JM,self.IM,self.LM,self.ntrace,order='F')#.transpose([2,0,1,3])
+            Rec=self.f.read_reals('f4').reshape(self.JM,self.IM,self.LM,self.ntrace,order='F')
 
             
             self._log_var('dst_mass','dust aerosol mass mixing ratio','kg/kg',('time','pfull','lat','lon')           ,Rec=Rec[...,0])
-            self._log_var('dst_num','dust aerosol number','number/kg',('time','pfull','lat','lon')                      ,Rec=Rec[...,1])
+            self._log_var('dst_num','dust aerosol number','number/kg',('time','pfull','lat','lon')                   ,Rec=Rec[...,1])
             self._log_var('ice_mass','water ice aerosol mass mixing ratio','kg/kg',('time','pfull','lat','lon')      ,Rec=Rec[...,2])
-            self._log_var('ice_num','water ice  aerosol number','number/kg',('time','pfull','lat','lon')                ,Rec=Rec[...,3])
+            self._log_var('ice_num','water ice  aerosol number','number/kg',('time','pfull','lat','lon')             ,Rec=Rec[...,3])
             self._log_var('cor_mass','dust core mass mixing ratio for water ice','kg/kg',('time','pfull','lat','lon'),Rec=Rec[...,4])
             self._log_var('vap_mass','water vapor mass mixing ratio','kg/kg',('time','pfull','lat','lon')            ,Rec=Rec[...,5])
             
@@ -692,7 +692,7 @@ class Fort(object):
             #write(11) QCOND   dust mass:1, dust number 2|| water ice mass: 3 and water ice number 4|| dust core mass:5|| water vapor mass: 6
             Rec=self.f.read_reals('f4').reshape(self.JM,self.IM,self.ntrace,order='F')
 
-            self._log_var('dst_mass_sfc','dust aerosol mass on the surface','kg/m2',('time','lat','lon')   ,Rec=Rec[...,0])
+            self._log_var('dst_mass_sfc','dust aerosol mass on the surface','kg/m2',('time','lat','lon')           ,Rec=Rec[...,0])
             self._log_var('dst_num_sfc','dust aerosol number on the surface','number/m2',('time','lat','lon')      ,Rec=Rec[...,1])
             self._log_var('ice_mass_sfc','water ice aerosol mass on the surface','kg/m2',('time','lat','lon')      ,Rec=Rec[...,2])
             self._log_var('ice_num_sfc','water ice  aerosol number on the surface','number/m2',('time','lat','lon'),Rec=Rec[...,3])

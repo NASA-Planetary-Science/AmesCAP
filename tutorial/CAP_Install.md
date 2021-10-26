@@ -479,7 +479,17 @@ Then, download the corresponding data in each directory:
 (amesGCM3)>$ MarsPull.py -id ACTIVECLDS -ls 255 285
 ```
 
-That's it! `CAP_tutorial` now holds the necessary `fort.11` files from the radiatively active and inert MGCM simulations:
+Finally, check for files integrity using the `disk use` command:
+
+```bash
+cd ..
+du -h INERTCLDS/fort.11*
+du -h ACTIVECLDS/fort.11*
+> 433M	fort.11_0719
+[...]
+```
+
+The files should be 433Mb each. That's it! `CAP_tutorial` now holds the necessary `fort.11` files from the radiatively active and inert MGCM simulations:
 
 ```
 CAP_tutorial/
@@ -489,12 +499,13 @@ CAP_tutorial/
     └── fort.11_0719  fort.11_0720  fort.11_0721  fort.11_0722  fort.11_0723
 ```
 
+
 You can now deactivate the virtual environment:
 
 ```bash
 (amesGCM3)>$ deactivate
 ```
-> If you encounter an issue during the download process, please verify the files availability on [the MCMC Data Portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php) and try again later. You may also download the 10 files listed above manually.
+> If you encounter an issue during the download process or if the files are not 433Mb, please verify the files availability on [the MCMC Data Portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php) and try again later. You can re-attempt to download specific files as follows: `MarsPull.py -id  ACTIVECLDS -f fort.11_0720 fort.11_0723` (make sure to navigate to the appropriate simulation directory first), or simply download the 10 files listed above manually from the website.
 
 and we'll see you **November 2, 2021** for the tutorial!
 
