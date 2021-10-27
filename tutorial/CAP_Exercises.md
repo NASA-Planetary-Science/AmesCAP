@@ -15,21 +15,21 @@
       * [2.6 Time-Shift & Pressure-Interpolate the Diurn File](#26-use-marsfiles-to-time-shift-the-diurn-file-then-pressure-interpolate-the-file-with-marsinterp)
       * [2.7 Apply a Low-Pass Filter (`-lpf`) to the `atmos_daily` File](#27-Apply-a-low-pass-filter--lpf-to-the-surface-pressure-ps-and-temperature-ts-in-the-atmos_daily-file)
       * [2.8 Vertical Differentiation](#28-estimate-the-magnitude-of-the-wind-shear-using-cap)
-      * [2.9 Column Integration](#29-calculate-the-column-integrated-temperature-and-dust-water-ice-and-water-vapor-mixing-ratios-in-the-atmos_daily-file)
+      * [2.9 Column Integration](#29-calculate-the-column-integrated-dust-water-ice-and-water-vapor-mixing-ratios-in-the-atmos_daily-file)
       * [2.10 Determine the Minimum, Mean, and Maximum Near-Surface Temperatures](#210-display-the-values-of-pfull-then-display-the-minimum-mean-and-maximum-near-surface-temperatures-temp-over-the-globe)
   * [Break!](#break)
   * [3. Plotting Routines](#3-plotting-routines)
       * [3.1 Global Map: Surface Albedo and Topography](#31-create-a-global-map-of-surface-albedo-alb-with-topography-zsurf-contoured-on-top)
-      * [3.2 Zonal Mean Zonal Wind Cross-Section: RIC](#32-plot-the-zonal-mean-zonal-wind-cross-section-at-ls=270-using-altitude-as-the-vertical-coordinate)
+      * [3.2 Zonal Mean Zonal Wind Cross-Section: RIC](#32-plot-the-zonal-mean-zonal-wind-cross-section-at-ls270-using-altitude-as-the-vertical-coordinate)
       * [3.3 Zonal Mean Zonal Wind Cross-Section: RAC](#33-add-the-same-plot-for-the-rac-case-to-the-same-page)
       * [3.4 Overplot Temperatures](#34-overplot-temperature-in-solid-contours)
       * [3.5 Four Global Maps on One Page: `lon X lat`](#35-plot-the-following-four-global-maps-lon-x-lat-on-a-new-page)
-      * [3.6 Four Global Maps on One Page: `time X lat`](#36-plot-the-following-four-time-x-lat-surface-variables-at-150-e-longitude-on-a-new-page)
+      * [3.6 Four Global Maps on One Page: `time X lat`](#36-plot-the-following-four-time-x-lat-variables-at-150-e-longitude-on-a-new-page)
       * [3.7 Four Global Maps on One Page: `time X lev`](#37-plot-the-following-four-time-x-lev-variables-at-150-e-longitude-averaged-over-all-latitudes-on-a-new-page)
       * [3.8 Two Cross-Sections on One Page](#38-plot-the-following-two-cross-sections-lat-x-lev-on-the-same-page)
       * [3.9 Zonal Mean Temperatures: RIC and RAC](#39-plot-zonal-mean-temperature-from-the-ric-and-rac-cases)
       * [3.10 1D Temperature Profiles](#310-generate-two-1d-temperature-profiles-temp-from-the-ric-case)
-      * [3.11 Tidal Analysis](#311-plot-the-filtered-and-un-filtered-surface-pressure-over-a-20-sol-period)
+      * [3.11 Tidal Analysis](#311-plot-the-filtered-and-unfiltered-surface-pressure-over-a-20-sol-period)
 <!-- /TOC -->
 
 ***
@@ -78,9 +78,9 @@ Let's get started by reviewing the data retrieval process covered at the end of 
 
 ### 1.1 Use `MarsPull.py` to download MGCM output
 
-`MarsPull` is a utility for accessing MGCM output files hosted on the [MCMC Data portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php). During the installation, you were asked to create a `CAP_Tutorial/INERTCLDS/` directory, a `CAP_Tutorial/ACTIVECLDS/` directory, and to use `MarsPull` to download several `fort.11` files into each. You should have already downloaded the necessary `fort.11` files for this tutorial, so this step should be simply a review. If you haven't downloaded the files, however, you can do so now by following these instructions.
+`MarsPull` is a utility for accessing MGCM output files hosted on the [MCMC Data portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php). During the installation, you were asked to create a `CAP_Tutorial/INERTCLDS` directory, a `CAP_Tutorial/ACTIVECLDS` directory, and to use `MarsPull` to download several `fort.11` files into each. You should have already downloaded the necessary `fort.11` files for this tutorial, so this step should be simply a review. If you haven't downloaded the files, however, you can do so now by following these instructions.
 
-Create a `CAP_Tutorial` directory in your preferred location, and then create two subdirectories within it. Name them `INERTCLDS/` and `ACTIVECLDS/`, which represent data from the radiatively intert cloud (RIC) simulation and radiatively active cloud (RAC) simulation, respectively:
+Create a `CAP_Tutorial` directory in your preferred location, and then create two subdirectories within it. Name them `/INERTCLDS` and `/ACTIVECLDS`, which represent data from the radiatively intert cloud (RIC) simulation and radiatively active cloud (RAC) simulation, respectively:
 
 ```bash
 (amesGCM3)>$ cd ~/path/do/preferred/location
@@ -89,13 +89,13 @@ Create a `CAP_Tutorial` directory in your preferred location, and then create tw
 (amesGCM3)>$ mkdir ACTIVECLDS INERTCLDS
 ```
 
-Navigate to `INERTCLDS/` and use `MarsPull` to retrieve files from the RIC simulation. Specify the simulation identifier (`INERTCLDS/`) and the range of Solar Longitudes (Ls=255° through Ls=285°) corresponding to the desired file(s) in the call to `MarsPull`:
+Navigate to `/INERTCLDS` and use `MarsPull` to retrieve files from the RIC simulation. Specify the simulation identifier (`/INERTCLDS`) and the range of Solar Longitudes (Ls=255° through Ls=285°) corresponding to the desired file(s) in the call to `MarsPull`:
 
 ```bash
 (amesGCM3)>$ MarsPull.py -id INERTCLDS -ls 255 285
 ```
 
-Then, navigate to the `ACTIVECLDS/` directory and do the same for the RAC case. After this step, you should see the following 5 `fort.11` files in each directory (`INERTCLDS/` and `ACTIVECLDS/`):
+Then, navigate to the `/ACTIVECLDS` directory and do the same for the RAC case. After this step, you should see the following 5 `fort.11` files in each directory (`/INERTCLDS` and `/ACTIVECLDS`):
 
 ```bash
 (amesGCM3)>$ ls CAP_Tutorial/INERTCLDS
@@ -115,12 +115,12 @@ Then, navigate to the `ACTIVECLDS/` directory and do the same for the RAC case. 
 
 After retrieving the `fort.11` files from the data portal, we can process the data using CAP. CAP's post-processing capabilities include interpolating and regridding data to different vertical coordinate systems, adding derived variables to the files, and converting between filetypes, just to name a few examples.
 
-The following exercises are designed to demonstrate how CAP can be used for post-processing MGCM output. You should follow along using the files in your `INERTCLDS/` and `ACTIVECLDS/` directories. 
+The following exercises are designed to demonstrate how CAP can be used for post-processing MGCM output. You should follow along using the files in your `/INERTCLDS` and `/ACTIVECLDS` directories. 
 
 **After post-processing these files, we will use them to make plots with `MarsPlot` so do *not* delete anything!**
 
 
-Start with the RIC simulation (`INERTCLDS/`) and complete exercises 2.1-2.10 below. We will then provide specific instructions regarding which exercises to repeat with the RAC simulation (`ACTIVECLDS/`).
+Start with the RIC simulation (`/INERTCLDS`) and complete exercises 2.1-2.10 below. We will then provide specific instructions regarding which exercises to repeat with the RAC simulation (`/ACTIVECLDS`).
 
 
 
@@ -129,7 +129,7 @@ Start with the RIC simulation (`INERTCLDS/`) and complete exercises 2.1-2.10 bel
 
 ### 2.1 Convert the `fort.11` files into `netCDF` files for compatibility with CAP
 
-First, go to your `INERTCLDS/` directory, and type:
+First, go to your `/INERTCLDS` directory, and type:
 
 ```bash
 (amesGCM3)>$ MarsFiles.py fort.11_* -fv3 fixed average daily diurn
@@ -154,7 +154,7 @@ The `netCDF` filetypes and a description of their contents are listed below:
 | `*atmos_diurn.nc`     | files contain **hourly** MGCM output averaged over 5 days   |
 | `*atmos_daily.nc`     | **continuous time series** of the MGCM output               |
 
-> Note that the 5-digit number at the begining of each `netCDF` file corresponds to the sol number at which that file's records begin. These files are pulled from a simulation that was warm-started from a 10 year run. `10 years x ~668 sols/year = 6680 sols`. The earliest date on our files is 07180 (the middle of the year).
+> **NOTE:** the 5-digit number at the begining of each `netCDF` file corresponds to the sol number at which that file's records begin. These files are pulled from a simulation that was warm-started from a 10 year run. `10 years x ~668 sols/year = 6680 sols`. The earliest date on our files is 07180 (the middle of the year).
 
 
 For easier post-processing and plotting, we can combine like files along the `time` axis to create one of each filetype:
@@ -349,18 +349,17 @@ Use `--inspect` (`-i`) to see the contents of `07180.atmos_average_zstd.nc` and 
 > =====================================================
 ```
 
-> **Note: The `--inspect` function works on any netCDF file, not just the ones created with CAP!**
+> **NOTE:** The `--inspect` function works on any netCDF file, not just the ones created with CAP!
 
 
 
 
+### 2.9 Calculate the column-integrated dust, water ice, and water vapor mixing ratios in the `atmos_daily` file
 
-### 2.9 Calculate the column-integrated temperature and dust, water ice, and water vapor mixing ratios in the `atmos_daily` file
-
-Similar to the -`zdiff` function, `MarsVars` has a `-col` function that performs column integration on specified variables. This function adds a new variable named `var_col` to the specified file. A column integration on the temperature and dust, water ice, and water vapor mixing ratios can be done like so:
+Similar to the -`zdiff` function, `MarsVars` has a `-col` function that performs column integration on specified variables. This function adds a new variable named `var_col` to the specified file. A column integration on the dust, water ice, and water vapor mixing ratios can be done like so:
 
 ```bash
-(amesGCM3)>$ MarsVars.py 07180.atmos_daily.nc -col dst_mass ice_mass vap_mass temp
+(amesGCM3)>$ MarsVars.py 07180.atmos_daily.nc -col dst_mass ice_mass vap_mass
 ```
 
 Using the inspect (`MarsPlot.py -i`) function, we can see the new variables in the file:
@@ -375,8 +374,6 @@ Using the inspect (`MarsPlot.py -i`) function, we can see the new variables in t
 > dst_mass_col   : ('time', 'lat', 'lon')= (800, 36, 60), column integration of dust aerosol mass mixing ratio  [kg/m2]
 > ice_mass_col   : ('time', 'lat', 'lon')= (800, 36, 60), column integration of water ice aerosol mass mixing ratio  [kg/m2]
 > vap_mass_col   : ('time', 'lat', 'lon')= (800, 36, 60), column integration of water vapor mass mixing ratio  [kg/m2]
-> temp_col       : ('time', 'lat', 'lon')= (800, 36, 60), column integration of temperature  [/m2]
-> temp           : ('time', 'pfull', 'lat', 'lon')= (800, 24, 36, 60), temperature  [K]
 > dst_mass       : ('time', 'pfull', 'lat', 'lon')= (800, 24, 36, 60), dust aerosol mass mixing ratio  [kg/kg]
 > ice_mass       : ('time', 'pfull', 'lat', 'lon')= (800, 24, 36, 60), water ice aerosol mass mixing ratio  [kg/kg]
 > vap_mass       : ('time', 'pfull', 'lat', 'lon')= (800, 24, 36, 60), water vapor mass mixing ratio  [kg/kg]
@@ -433,14 +430,14 @@ Using `-stat` with `MarsPlot -i` calculates and displays the minimum, mean, and 
 
 > **Note:** quotes `''` are necessary when browsing dimensions.
 
-and that's it for post-processing the data in the RIC simulation! Before we move on to plotting, we need to repeat some of these steps for the RAC simulation. Feel free to repeat all of Steps 2.1-2.8 for the RAC case if you like, but **you are only required to repeat Steps 2.1, 2.2, and 2.4** for this tutorial:
+and that's it for post-processing the data in the RIC simulation! Before we move on to plotting, we need to repeat some of these steps for the RAC simulation. Feel free to repeat all of Steps 2.1-2.8 for the RAC case if you like, but **you are only required to repeat Steps 2.1, 2.2, and 2.5** for this tutorial:
 
-* [2.1 `fort.11` to `netCDF` conversion](#21-convert-the-fort11-files-into-netcdf-files-for-compatibility-with-cap)
-* [2.2 Interpolate to standard pressure](#22-interpolate-atmosaverage-to-standard-pressure-coordinates)
-* [2.4 Add `rho` and `zfull` to `atmos_average`; Interpolate to standard altitude](#24-add-density-rho-and-mid-point-altitude-zfull-to-atmosaverage-then-interpolate-the-file-to-standard-altitude-zstd)
+* [2.1 `fort.11` to `netCDF` Conversion](#21-convert-the-fort11-files-into-netcdf-files-for-compatibility-with-cap)
+* [2.2 Interpolate `atmos_average` to standard pressure](#22-interpolate-atmos_average-to-standard-pressure-coordinates)
+* [2.5 Interpolate `atmos_average` to standard altitude](#25-interpolate-atmos_average-to-standard-altitude)
 
 
-### Navigate to the `ACTIVECLDS/` directory and complete Steps 2.1, 2.2, and 2.4 before continuing
+### Navigate to the `/ACTIVECLDS` directory and complete Steps 2.1, 2.2, and 2.5 before continuing
 
 
 
@@ -478,7 +475,7 @@ The last part of this tutorial introduces the plotting capabilities of CAP. CAP'
 
 `MarsPlot` is highly customizable. Plots can be displayed in PDF or image format and in landscape or portrait mode. Multiple plots can be drawn on a single page, overplotting is supported, and you can choose your axes dimensions, colormap, map projection type, contour levels, and more.
 
-Plotting with CAP requires passing a template to `MarsPlot`. A blank template is created in the directory in which the following command is executed, so navigate to the `INERTCLDS/` directory before typing:
+Plotting with CAP requires passing a template to `MarsPlot`. A blank template is created in the directory in which the following command is executed, so navigate to the `/INERTCLDS` directory before typing:
 
 ```bash
 (amesGCM3)>$ MarsPlot.py -template
@@ -535,7 +532,7 @@ Those are the basics of plotting with CAP. We'll create several plots in exercis
 (amesGCM3)>$ MarsPlot.py -template
 ```
 
-Make sure you're in the `INERTCLDS/` directory before continuing.
+Make sure you're in the `/INERTCLDS` directory before continuing.
 
 
 
@@ -596,7 +593,7 @@ Save `Custom.in`, and pass it to `MarsPlot`. Again, view `Diagnostics.pdf` to se
 
 > **Tip:** Copy and paste the `lat x lev` plot you made in 3.2 so that you have two identical templates.
 
-First, point `MarsPlot` to the `ACTIVECLDS/` directory. Do this by editing the `<<<<<<< Simulations <<<<<<<` section so that `2>` points to `/ACTIVECLDS` like so:
+First, point `MarsPlot` to the `/ACTIVECLDS` directory. Do this by editing the `<<<<<<< Simulations <<<<<<<` section so that `2>` points to `/ACTIVECLDS` like so:
 
 ```python
 > <<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>
@@ -604,7 +601,7 @@ First, point `MarsPlot` to the `ACTIVECLDS/` directory. Do this by editing the `
 > 2> ../ACTIVECLDS
 ```
 
-Then, edit `Main Variable` in the copy/pasted template so that the `atmos_average` file in `ACTIVECLDS/` is sourced:
+Then, edit `Main Variable` in the copy/pasted template so that the `atmos_average` file in `/ACTIVECLDS` is sourced:
 
 ```python
 > Main Variable  = atmos_average@2.ucomp
@@ -649,7 +646,7 @@ Save `Custom.in` and pass it to `MarsPlot`. View `Diagnostics.pdf` to see the re
 
 > **Tip:** Use `HOLD ON` and `HOLD OFF` again. You can use this syntax multiple times in the same template.
 
-Source all of the variables from the `atmos_daily` file in `INERTCLDS/`. Plot the results at Ls=270°. The general format will be:
+Source all of the variables from the `atmos_daily` file in `/INERTCLDS`. Plot the results at Ls=270°. The general format will be:
 
 ```python
 > HOLD ON
@@ -673,11 +670,11 @@ Source all of the variables from the `atmos_daily` file in `INERTCLDS/`. Plot th
 > HOLD OFF
 ```
 
-> **Note: convert kg -> g using square brackets for variable operations:**
+> **NOTE:** convert kg -> g using square brackets for variable operations:
 >```python
 >Main Variable  = [atmos_daily.snow]*1000
 >```
-> **Similarly, you can add two variables together like so:**
+> Similarly, you can add two variables together like so:
 >```python
 >Main Variable  = ([atmos_daily.ucomp]**2+[atmos_daily.vcomp]**2)**0.5
 >```
@@ -690,20 +687,20 @@ Name the plots accordingly. Save `Custom.in` and pass it to `MarsPlot`. You shou
 
 ***
 
-### 3.6 Plot the following four `time X lat` column-integrated variables at 150° E longitude on a new page
+### 3.6 Plot the following four `time X lat` variables at 150° E longitude on a new page
 
-- Temperature (`temp_col`). Set the colormap to `nipy_spectral`.
+- Surface Temperature (`ts`). Set the colormap to `nipy_spectral`.
 - Dust mass (`dst_mass_col`). Set the colormap to `jet`.
 - Water ice mass (`ice_mass_col`) Set the colormap to `Spectral_r`.
 - Water vapor mass (`vap_mass_col`) Set the colormap to `Spectral_r`.
 
-Source all of the variables from the `atmos_daily` file in `INERTCLDS/`. The general format will be:
+Source all of the variables from the `atmos_daily` file in `/INERTCLDS`. The general format will be:
 
 ```python
 > HOLD ON
 > 
 > <<<<<<| Plot 2D time X lat = True |>>>>>>
-> Title    = 150 E Column Integrated Temperature (K)
+> Title    = 150 E Surface Temperature (K)
 > (etc)
 > 
 > <<<<<<| Plot 2D time X lat = True |>>>>>>
@@ -721,7 +718,7 @@ Source all of the variables from the `atmos_daily` file in `INERTCLDS/`. The gen
 > HOLD OFF
 ```
 
-> **Note: set the colormap in `Axis Options`:**
+> **NOTE:** set the colormap in `Axis Options`:
 >```python
 >Axis Options  : sols = [None,None] | lat = [None,None] | cmap = nipy_spectral |scale = lin
 >```
@@ -742,7 +739,7 @@ Name the plots accordingly. Save `Custom.in` and pass it to `MarsPlot`.
 - Meridional mean water ice mass (`ice_mass`) Set the colormap to `Spectral_r`.
 - Meridional mean water vapor mass (`vap_mass`) Set the colormap to `Spectral_r`.
 
-Source all of the variables from the `atmos_average_pstd` file in `INERTCLDS/`. The general format will be:
+Source all of the variables from the `atmos_average_pstd` file in `/INERTCLDS`. The general format will be:
 
 ```python
 > HOLD ON
@@ -801,7 +798,7 @@ Don't forget to use `HOLD ON` and `HOLD OFF` and to name your plots accordingly.
 
 Create both plots at Ls=270° from the `atmos_average` file, then create a difference plot.
 
-Make use of `HOLD ON` and `HOLD OFF` again here. Copy and paste a `lat x lev` template three times. For the difference plot, you'll need to use `@N` to point to the `ACTIVECLDS/` directory and use square brackets to subtract one variable from the other:
+Make use of `HOLD ON` and `HOLD OFF` again here. Copy and paste a `lat x lev` template three times. For the difference plot, you'll need to use `@N` to point to the `/ACTIVECLDS` directory and use square brackets to subtract one variable from the other:
 
 ```python
 > Main Variable  = [atmos_average_pstd.temp]-[atmos_average_pstd@2.temp]
@@ -836,7 +833,7 @@ There should be two lines on one plot: the thermal profile at 3 AM and the therm
 > (etc)
 ```
 
-#### *Note: You do not use `HOLD ON` and `HOLD OFF` to overplot 1D plots. `HOLD` is always for drawing separate plots on the same page*
+#### **NOTE:** You do not use `HOLD ON` and `HOLD OFF` to overplot 1D plots. `HOLD` is always for drawing separate plots on the same page
 
 Call `temp` from the `diurn_T_pstd` file, which is the time-shifted and pressure-interpolated version of the hourly file. 3 AM is index=`3`, 3 PM is index=`15`, so `Main Variable` will be set as:
 
@@ -865,7 +862,7 @@ Save `Custom.in` and pass it to `MarsPlot`. View `Diagnostics.pdf`.
 
 ***
 
-### 3.11 Plot the filtered and unfiltered surface pressure over a 20 sol period
+### 3.11 Plot the filtered and unfiltered surface pressure over a 20-sol period
 
 Here we're asked to compare surface pressure `ps` from the orginal file (`atmos_daily`) to the surface pressure that we time-filtered using `MarsFiles` in exercise 2.6 (`atmos_daily_lpf`). Some hints:
 
