@@ -46,6 +46,9 @@ CAP is designed to be modular. For example, a user could post-process and plot M
   * [Access simulation in a different directory](#access-simulation-in-a-different-directory)
   * [Element-wise operations](#element-wise-operations)
   * [Debugging](#debugging)
+  * [Accessing CAP librareis from FV3_utils.py](#accessing-cap-librareis-from-fv3utilspy)
+  * [Loading fort.11 files into Python for you Analysis](#loading-fort11-files-into-python-for-you-analysis)
+  * [Read fortran binaries by hand in Python](#read-fortran-binaries-by-hand-in-python)
 <!-- /TOC -->
 
 ***
@@ -209,13 +212,18 @@ The following `type` (`-t` flag) of vertical interpolation are supported:
 |_zstd | standard altitude [m]   |  -7000m
 |_zagl | standard altitude above ground level [m]   | 0 m
 
-It is also possible for the user to specify the layers for the interpolation. This is done by editing a **hidden** file `.amesgcm_profile`(note the dot '`.`) in your home directory.  
+**Use of custom vertical grids**
+
+It is also possible for the users to specify the layers for the interpolation. This is done by editing a **hidden** file `.amesgcm_profile`(note the dot '`.`) in your home directory.  
 
 For the first use, you will need  to copy a template of `amesgcm_profile` to your /home directory:
 
 ```bash
 (amesGCM3)>$ cp ~/amesGCM3/mars_templates/amesgcm_profile ~/.amesgcm_profile # Note the dot '.' !!!
->
+```
+You can open `~/.amesgcm_profile` wiht any text editor:
+
+```
 > <<<<<<<<<<<<<<| Pressure definitions for pstd |>>>>>>>>>>>>>
 
 >p44=[1.0e+03, 9.5e+02, 9.0e+02, 8.5e+02, 8.0e+02, 7.5e+02, 7.0e+02,
@@ -412,6 +420,12 @@ Main Variable  = [atmos_diurn_plevs_T@2.dst_mass_micro{tod = 15}]*1.e6 # dust pp
 `MarsPlot` is designed to make plotting MGCM output easier and faster so it handles missing data for you. For example, when dimensions are omitted with `None`, `MarsPlot` makes educated guesses for data selection and will tell you exactly how the data is being processed both in the title for the figures (if `Title = None`), and in the terminal output. Specifics about this behavior are detailed in the instructions at the top of `Custom.in`.
 
 > `MarsPlot` handles many errors by itself. It reports errors both in the terminal and in the generated figures. To by-pass this behavior (when debugging), use the  `--debug` option with `MarsPlot` which will raise standard Python errors.
+
+## Accessing CAP librareis from FV3_utils.py
+
+## Loading fort.11 files into Python for you Analysis
+
+## Read fortran binaries by hand in Python
 
 
 
