@@ -81,7 +81,7 @@ MarsPull.py -id ACTIVECLDS -f fort.11_0720 fort.11_0723
 `MarsFiles` provides several tools for file manipulations, including code designed to create binned, averaged, and time-shifted files from MGCM output. The `-fv3` flag is used to convert fort.11 binaries to the Netcdf data format (you can select one or more of the file format listed below):
 
 ```bash
-(amesGCM3)>$ MarsFiles.py fort.11** -fv3 fixed average daily diurn
+(amesGCM3)>$ MarsFiles.py fort.11* -fv3 fixed average daily diurn
 ```
 
 These are the file formats that `MarsFiles` can create from the fort.11 MGCM output files.
