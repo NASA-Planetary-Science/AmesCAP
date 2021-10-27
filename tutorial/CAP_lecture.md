@@ -26,6 +26,8 @@ and
 
 These executables and their commonly-used functions are illustrated in the cheat sheet below in the order in which they are most often used. You should feel free to reference during and after the tutorial.
 
+# Cheat sheet
+
 ![Figure 3. Quick Guide to Using CAP](./tutorial_images/Cheat_Sheet.png)
 
 CAP is designed to be modular. For example, a user could post-process and plot MGCM output exclusively with CAP or a user could employ their own post-processing routine and then use CAP to plot the data. Users are free to selectively integrate CAP into their own analysis routine to the extent they see fit.
@@ -33,6 +35,7 @@ CAP is designed to be modular. For example, a user could post-process and plot M
 <!-- TOC titleSize:2 tabSpaces:2 depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 skip:0 title:1 charForUnorderedList:* -->
 ## Table of Contents
 * [Introducing the Community Analysis Pipeline (CAP)](#introducing-the-community-analysis-pipeline-cap)
+* [Cheat sheet](#cheat-sheet)
 * [The big question... How do I do this? >  <span style="color:red">Ask for help!  </span>](#the-big-question-how-do-i-do-this---span-stylecolorredask-for-help--span)
 * [1. `MarsPull.py` - Downloading Raw MGCM Output](#1-marspullpy---downloading-raw-mgcm-output)
 * [2. `MarsFiles.py` - Reducing the Files](#2-marsfilespy---reducing-the-files)
@@ -45,6 +48,7 @@ CAP is designed to be modular. For example, a user could post-process and plot M
   * [Make a 1D-plot](#make-a-1d-plot)
   * [Access simulation in a different directory](#access-simulation-in-a-different-directory)
   * [Element-wise operations](#element-wise-operations)
+  * [Change projections](#change-projections)
   * [Debugging](#debugging)
 * [Accessing CAP libraries from FV3_utils.py](#accessing-cap-libraries-from-fv3utilspy)
 * [Loading fort.11 files into Python for you Analysis](#loading-fort11-files-into-python-for-you-analysis)
@@ -73,7 +77,7 @@ Use the `--help` (`-h` for short) option on any executable to display documentat
 MarsPull.py -id INERTCLDS -ls 255 285
 MarsPull.py -id ACTIVECLDS -f fort.11_0720 fort.11_0723
 ```
-
+[Back to Top](#cheat-sheet)
 ***
 
 # 2. `MarsFiles.py` - Reducing the Files
@@ -105,24 +109,19 @@ These are the file formats that `MarsFiles` can create from the fort.11 MGCM out
 |diurn**_tidal** |tidally-decomposed files into  harmonics|
 |daily**_to_average**  **_to_diurn** |custom re-binning of daily files|
 
-
-
-![Figure X. MarsFiles options](./tutorial_images/MarsFiles_diurn.png)
-*3pm surface temperature before (left) and after (right) processing a diurn file with MarsFile*
-
-- `MarsFiles` can concatenate like-files together on the time dimension. `MarsFiles` can also be used to perform basic tidal analyses (temporal and spatial filtering, diurnal tides and their harmonics).
-
-- `MarsFiles` can be used  to apply high-, low-, and band-pass filters to netCDF files using the syntax:
+- `MarsFiles` can concatenate like-files together on the time dimension using the `-combine` (`-c`) flag.
 
 ```bash
-(amesGCM3)>$ MarsFiles.py file.nc -hpf --high_pass_filter sol_min          
-(amesGCM3)>$ MarsFiles.py file.nc -lpf --low_pass_filter  sol_max          
-(amesGCM3)>$ MarsFiles.py file.nc -bpf --band_pass_filter sol_min sol max  
+> 07180.atmos_average.nc  07190.atmos_average.nc  07200.atmos_average.nc # 3 files with 10 days of output each
+(amesGCM3)>$ MarsFiles.py *atmos_average.nc -c
+> 07180.atmos_average.nc  # 1 file with 30 days of output
 ```
 
-Where `sol_min` and `sol_max` are the minimum and maximum number of days in a filtering period, respectively.
+![Figure X. MarsFiles options](./tutorial_images/MarsFiles_diurn.png)
+*3pm surface temperature before (left) and after (right) processing a diurn file with MarsFile to uniform local time*
 
 
+[Back to Top](#cheat-sheet)
 ***
 
 # 3. `MarsVars.py` - Performing Variable Operations
@@ -178,7 +177,7 @@ The `help` (`-h`) option provides information on available variables and needed 
 |zdiff |-zdiff |vertical differentiation (e.g. compute gradients)|
 |zonal_detrend |-zd | zonally detrend a variable|
 
-
+[Back to Top](#cheat-sheet)
 ***
 
 # 4. `MarsInterp.py` - Interpolating the Vertical Grid
@@ -250,6 +249,7 @@ You can use these by calling `MarsInterp` with the `-level` (`-l`) argument foll
 ```bash
 (amesGCM3)>$ MarsInterp.py  00000.atmos_average.nc -t pstd -l  p44
 ```
+[Back to Top](#cheat-sheet)
 ***
 
 # 5. `MarsPlot.py` - Plotting the Results
@@ -419,7 +419,7 @@ Main Variable  = [atmos_diurn_plevs_T@2.dst_mass_micro{tod = 15}]*1.e6 # dust pp
 #                [filename@N.variable{dimension = X}]*Y
 ```
 
-
+## Change projections
 
 
 ***
@@ -436,5 +436,5 @@ Main Variable  = [atmos_diurn_plevs_T@2.dst_mass_micro{tod = 15}]*1.e6 # dust pp
 
 
 
-
+[Back to Top](#cheat-sheet)
 ***

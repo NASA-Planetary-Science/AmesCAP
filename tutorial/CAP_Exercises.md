@@ -4,32 +4,36 @@
 <!-- TOC titleSize:2 tabSpaces:2 depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 skip:0 title:1 charForUnorderedList:* -->
 ## Table of Contents
 * [Practical: Using the Community Analysis Pipeline (CAP)](#practical-using-the-community-analysis-pipeline-cap)
-  * [1. Retrieve Data](#1-retrieving-data)
-    * [1.1 Download MGCM output](#11-use-marspullpy-to-download-mgcm-output)
+  * [Activate CAP](#activate-cap)
+  * [1. Retrieving Data](#1-retrieving-data)
+    * [1.1 Use `MarsPull.py` to download MGCM output](#11-use-marspullpy-to-download-mgcm-output)
   * [2. File Manipulations](#2-file-manipulations)
-      * [2.1 `fort.11` to `netCDF` Conversion](#21-convert-the-fort11-files-into-netcdf-files-for-compatibility-with-cap)
-      * [2.2 Interpolate `atmos_average` to standard pressure](#22-interpolate-atmos_average-to-standard-pressure-coordinates)
-      * [2.3 Add `msf` to `atmos_average_pstd`](#23-add-mass-stream-function-msf-to-atmos_average_pstd)
-      * [2.4 Add `rho` and `zfull` to `atmos_average`](#24-add-density-rho-and-mid-point-altitude-zfull-to-atmos_average)
-      * [2.5 Interpolate `atmos_average` to standard altitude](#25-interpolate-atmos_average-to-standard-altitude)
-      * [2.6 Time-Shift & Pressure-Interpolate the Diurn File](#26-use-marsfiles-to-time-shift-the-diurn-file-then-pressure-interpolate-the-file-with-marsinterp)
-      * [2.7 Apply a Low-Pass Filter (`-lpf`) to the `atmos_daily` File](#27-Apply-a-low-pass-filter--lpf-to-the-surface-pressure-ps-and-temperature-ts-in-the-atmos_daily-file)
-      * [2.8 Vertical Differentiation](#28-estimate-the-magnitude-of-the-wind-shear-using-cap)
-      * [2.9 Column Integration](#29-calculate-the-column-integrated-dust-water-ice-and-water-vapor-mixing-ratios-in-the-atmos_daily-file)
-      * [2.10 Determine the Minimum, Mean, and Maximum Near-Surface Temperatures](#210-display-the-values-of-pfull-then-display-the-minimum-mean-and-maximum-near-surface-temperatures-temp-over-the-globe)
-  * [Break!](#break)
+    * [2.1 Convert the `fort.11` files into `netCDF` files for compatibility with CAP](#21-convert-the-fort11-files-into-netcdf-files-for-compatibility-with-cap)
+    * [2.2 Interpolate `atmos_average` to standard pressure coordinates](#22-interpolate-atmosaverage-to-standard-pressure-coordinates)
+    * [2.3 Add mass stream function (`msf`) to `atmos_average_pstd`](#23-add-mass-stream-function-msf-to-atmosaveragepstd)
+    * [2.4 Add density (`rho`) and mid-point altitude (`zfull`) to `atmos_average`](#24-add-density-rho-and-mid-point-altitude-zfull-to-atmosaverage)
+    * [2.5 Interpolate `atmos_average` to standard altitude](#25-interpolate-atmosaverage-to-standard-altitude)
+    * [2.6 Use `MarsFiles` to time-shift the `diurn` file, then pressure-interpolate the file with `MarsInterp`](#26-use-marsfiles-to-time-shift-the-diurn-file-then-pressure-interpolate-the-file-with-marsinterp)
+    * [2.7 Apply a low-pass filter (`-lpf`) to the surface pressure (`ps`) and temperature (`ts`) in the `atmos_daily` file](#27-apply-a-low-pass-filter--lpf-to-the-surface-pressure-ps-and-temperature-ts-in-the-atmosdaily-file)
+    * [2.8 Estimate the magnitude of the wind shear using CAP](#28-estimate-the-magnitude-of-the-wind-shear-using-cap)
+    * [2.9 Calculate the column-integrated dust, water ice, and water vapor mixing ratios in the `atmos_daily` file](#29-calculate-the-column-integrated-dust-water-ice-and-water-vapor-mixing-ratios-in-the-atmosdaily-file)
+    * [2.10 Display the values of `pfull`, then display the minimum, mean, and maximum near-surface temperatures `temp` over the globe](#210-display-the-values-of-pfull-then-display-the-minimum-mean-and-maximum-near-surface-temperatures-temp-over-the-globe)
+    * [Navigate to the `/ACTIVECLDS` directory and complete Steps 2.1, 2.2, and 2.5 before continuing](#navigate-to-the-activeclds-directory-and-complete-steps-21-22-and-25-before-continuing)
+* [Break!](#break)
   * [3. Plotting Routines](#3-plotting-routines)
-      * [3.1 Global Map: Surface Albedo and Topography](#31-create-a-global-map-of-surface-albedo-alb-with-topography-zsurf-contoured-on-top)
-      * [3.2 Zonal Mean Zonal Wind Cross-Section: RIC](#32-plot-the-zonal-mean-zonal-wind-cross-section-at-ls270-using-altitude-as-the-vertical-coordinate)
-      * [3.3 Zonal Mean Zonal Wind Cross-Section: RAC](#33-add-the-same-plot-for-the-rac-case-to-the-same-page)
-      * [3.4 Overplot Temperatures](#34-overplot-temperature-in-solid-contours)
-      * [3.5 Four Global Maps on One Page: `lon X lat`](#35-plot-the-following-four-global-maps-lon-x-lat-on-a-new-page)
-      * [3.6 Four Global Maps on One Page: `time X lat`](#36-plot-the-following-four-time-x-lat-variables-at-150-e-longitude-on-a-new-page)
-      * [3.7 Four Global Maps on One Page: `time X lev`](#37-plot-the-following-four-time-x-lev-variables-at-150-e-longitude-averaged-over-all-latitudes-on-a-new-page)
-      * [3.8 Two Cross-Sections on One Page](#38-plot-the-following-two-cross-sections-lat-x-lev-on-the-same-page)
-      * [3.9 Zonal Mean Temperatures: RIC and RAC](#39-plot-zonal-mean-temperature-from-the-ric-and-rac-cases)
-      * [3.10 1D Temperature Profiles](#310-generate-two-1d-temperature-profiles-temp-from-the-ric-case)
-      * [3.11 Tidal Analysis](#311-plot-the-filtered-and-unfiltered-surface-pressure-over-a-20-sol-period)
+    * [3.1 Create a global map of surface albedo (`alb`) with topography (`zsurf`) contoured on top](#31-create-a-global-map-of-surface-albedo-alb-with-topography-zsurf-contoured-on-top)
+    * [3.2 Plot the zonal mean zonal wind cross-section at Ls=270° using altitude as the vertical coordinate](#32-plot-the-zonal-mean-zonal-wind-cross-section-at-ls270-using-altitude-as-the-vertical-coordinate)
+    * [3.3 Add the same plot for the RAC case to the same page](#33-add-the-same-plot-for-the-rac-case-to-the-same-page)
+    * [3.4 Overplot temperature in solid contours](#34-overplot-temperature-in-solid-contours)
+    * [3.5 Plot the following four global maps (`lon X lat`) on a new page](#35-plot-the-following-four-global-maps-lon-x-lat-on-a-new-page)
+    * [3.6 Plot the following four `time X lat` variables at 150° E longitude on a new page](#36-plot-the-following-four-time-x-lat-variables-at-150-e-longitude-on-a-new-page)
+    * [3.7 Plot the following four `time X lev` variables at 150° E longitude, averaged over all latitudes, on a new page](#37-plot-the-following-four-time-x-lev-variables-at-150-e-longitude-averaged-over-all-latitudes-on-a-new-page)
+    * [3.8 Plot the following two cross-sections (`lat X lev`) on the same page](#38-plot-the-following-two-cross-sections-lat-x-lev-on-the-same-page)
+    * [3.9 Plot zonal mean temperature from the RIC and RAC cases](#39-plot-zonal-mean-temperature-from-the-ric-and-rac-cases)
+    * [3.10 Generate two 1D temperature profiles (`temp`) from the RIC case](#310-generate-two-1d-temperature-profiles-temp-from-the-ric-case)
+      * [**NOTE:** You do not use `HOLD ON` and `HOLD OFF` to overplot 1D plots. `HOLD` is always for drawing separate plots on the same page](#note-you-do-not-use-hold-on-and-hold-off-to-overplot-1d-plots-hold-is-always-for-drawing-separate-plots-on-the-same-page)
+    * [3.11 Plot the filtered and unfiltered surface pressure over a 20-sol period](#311-plot-the-filtered-and-unfiltered-surface-pressure-over-a-20-sol-period)
+  * [That's a Wrap!](#thats-a-wrap)
 <!-- /TOC -->
 
 ***
@@ -43,6 +47,8 @@
 3. `MarsVars.py` Performing variable operations
 4. `MarsInterp.py` Interpolating the vertical grid
 5. `MarsPlot.py` Visualizing the MGCM output
+
+![Figure X. Quick Guide to Using CAP](./tutorial_images/Cheat_Sheet.png)
 
 When learning to use CAP, it is useful to divide these functions into three categories and explore them in order:
 
@@ -115,7 +121,7 @@ Then, navigate to the `/ACTIVECLDS` directory and do the same for the RAC case. 
 
 After retrieving the `fort.11` files from the data portal, we can process the data using CAP. CAP's post-processing capabilities include interpolating and regridding data to different vertical coordinate systems, adding derived variables to the files, and converting between filetypes, just to name a few examples.
 
-The following exercises are designed to demonstrate how CAP can be used for post-processing MGCM output. You should follow along using the files in your `/INERTCLDS` and `/ACTIVECLDS` directories. 
+The following exercises are designed to demonstrate how CAP can be used for post-processing MGCM output. You should follow along using the files in your `/INERTCLDS` and `/ACTIVECLDS` directories.
 
 **After post-processing these files, we will use them to make plots with `MarsPlot` so do *not* delete anything!**
 
@@ -624,7 +630,7 @@ Add `temp` as the second variable on the plots you created in 3.2 and 3.3:
 > <<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
 > > 2nd Variable     = atmos_average_zstd.temp
 > (etc)
-> 
+>
 > <<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
 > > 2nd Variable     = atmos_average_zstd@2.temp
 > (etc)
@@ -650,23 +656,23 @@ Source all of the variables from the `atmos_daily` file in `/INERTCLDS`. Plot th
 
 ```python
 > HOLD ON
-> 
+>
 > <<<<<<| Plot 2D lon X lat = True |>>>>>>
 > Title    = Surface CO2 Ice (g/m2)
 > (etc)
-> 
+>
 > <<<<<<| Plot 2D lon X lat = True |>>>>>>
 > Title    = Surface Temperature (K)
 > (etc)
-> 
+>
 > <<<<<<| Plot 2D lon X lat = True |>>>>>>
 > Title    = Surface Wind Speed (m/s)
 > (etc)
-> 
+>
 > <<<<<<| Plot 2D lon X lat = True |>>>>>>
 > Title    = Diabatic Heating Rate (K/sol)
 > (etc)
-> 
+>
 > HOLD OFF
 ```
 
@@ -698,23 +704,23 @@ Source all of the variables from the `atmos_daily` file in `/INERTCLDS`. The gen
 
 ```python
 > HOLD ON
-> 
+>
 > <<<<<<| Plot 2D time X lat = True |>>>>>>
 > Title    = 150 E Surface Temperature (K)
 > (etc)
-> 
+>
 > <<<<<<| Plot 2D time X lat = True |>>>>>>
 > Title    = 150 E Column Integrated Dust Mass (kg/m2)
 > (etc)
-> 
+>
 > <<<<<<| Plot 2D time X lat = True |>>>>>>
 > Title    = 150 E Column Integrated Water Ice Mass (kg/m2)
 > (etc)
-> 
+>
 > <<<<<<| Plot 2D time X lat = True |>>>>>>
 > Title    = 150 E Column Integrated Water Vapor Mass (kg/m2)
 > (etc)
-> 
+>
 > HOLD OFF
 ```
 
@@ -743,23 +749,23 @@ Source all of the variables from the `atmos_average_pstd` file in `/INERTCLDS`. 
 
 ```python
 > HOLD ON
-> 
+>
 > <<<<<<| Plot 2D time X lev = True |>>>>>>
 > Title    = 150 E Temperature (K)
 > (etc)
-> 
+>
 > <<<<<<| Plot 2D time X lev = True |>>>>>>
 > Title    = 150 E Dust Mass (kg/kg)
 > (etc)
-> 
+>
 > <<<<<<| Plot 2D time X lev = True |>>>>>>
 > Title    = 150 E Water Ice Mass (kg/kg)
 > (etc)
-> 
+>
 > <<<<<<| Plot 2D time X lev = True |>>>>>>
 > Title    = 150 E Water Vapor Mass (kg/kg)
 > (etc)
-> 
+>
 > HOLD OFF
 ```
 
@@ -815,7 +821,7 @@ Save `Custom.in` and pass it to `MarsPlot`.
 
 ***
 
-### 3.10 Generate two 1D temperature profiles (`temp`) from the RIC case 
+### 3.10 Generate two 1D temperature profiles (`temp`) from the RIC case
 
 Both thermal profiles are at `50°N, 150°E` and Ls=270°, one at 3 AM and the other at 3 PM.
 
@@ -825,9 +831,9 @@ There should be two lines on one plot: the thermal profile at 3 AM and the therm
 > <<<<<<| Plot 1D = True |>>>>>>
 > Main Variable    = var1
 > (etc)
-> 
+>
 > ADD LINE
-> 
+>
 > <<<<<<| Plot 1D = True |>>>>>>
 > Main Variable    = var2
 > (etc)

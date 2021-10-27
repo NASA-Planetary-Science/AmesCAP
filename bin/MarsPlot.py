@@ -116,7 +116,6 @@ def main():
     global Ncdf_num         #host the simulation timestamps
     global objectList      #contains all figure object
     global customFileIN    #template name
-    global simulation_name #ref simulation
     global levels;levels=21 #number of contour for 2D plots
     global my_dpi;my_dpi=96.        #pixel per inch for figure output
     global label_size;label_size=12 #Label size for title, xlabel, ylabel
@@ -210,7 +209,6 @@ def main():
 
 
         #print('MarsPlot is running...')
-        simulation_name=input_paths[0].split('/')[-2]
         #Make a ./plots folder in the current directory if it does not exist
         dir_plot_present=os.path.exists(output_path+'/'+'plots')
         if not dir_plot_present:
@@ -1826,7 +1824,7 @@ class Fig_2D(object):
             out=np.append(self.layout,self.subID)
         if self.subID==1:
             fig= plt.figure(facecolor='white',figsize=(width_inch, height_inch)) #create figure if 1st panel, 1.4 is ratio (16:9 screen would be 1.77)
-            #plt.suptitle(simulation_name)
+
 
         ax = plt.subplot(out[0],out[1],out[2]) #nrow,ncol,subID
         ax.patch.set_color('.1') #Nan are grey
@@ -2848,7 +2846,6 @@ class Fig_1D(object):
         
         if self.subID==1 and not self.addLine:
             fig= plt.figure(facecolor='white',figsize=(width_inch, height_inch)) #create figure if 1st panel
-            #plt.suptitle(simulation_name) #TODO remove
         if not self.addLine:
             ax = plt.subplot(out[0],out[1],out[2]) #nrow,ncol,subID
         else:
