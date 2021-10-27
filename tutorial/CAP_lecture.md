@@ -46,9 +46,9 @@ CAP is designed to be modular. For example, a user could post-process and plot M
   * [Access simulation in a different directory](#access-simulation-in-a-different-directory)
   * [Element-wise operations](#element-wise-operations)
   * [Debugging](#debugging)
-  * [Accessing CAP librareis from FV3_utils.py](#accessing-cap-librareis-from-fv3utilspy)
-  * [Loading fort.11 files into Python for you Analysis](#loading-fort11-files-into-python-for-you-analysis)
-  * [Read fortran binaries by hand in Python](#read-fortran-binaries-by-hand-in-python)
+* [Accessing CAP libraries from FV3_utils.py](#accessing-cap-libraries-from-fv3utilspy)
+* [Loading fort.11 files into Python for you Analysis](#loading-fort11-files-into-python-for-you-analysis)
+* [Read fortran binaries by hand in Python](#read-fortran-binaries-by-hand-in-python)
 <!-- /TOC -->
 
 ***
@@ -212,6 +212,8 @@ The following `type` (`-t` flag) of vertical interpolation are supported:
 |_zstd | standard altitude [m]   |  -7000m
 |_zagl | standard altitude above ground level [m]   | 0 m
 
+***
+
 **Use of custom vertical grids**
 
 It is also possible for the users to specify the layers for the interpolation. This is done by editing a **hidden** file `.amesgcm_profile`(note the dot '`.`) in your home directory.  
@@ -221,7 +223,7 @@ For the first use, you will need  to copy a template of `amesgcm_profile` to you
 ```bash
 (amesGCM3)>$ cp ~/amesGCM3/mars_templates/amesgcm_profile ~/.amesgcm_profile # Note the dot '.' !!!
 ```
-You can open `~/.amesgcm_profile` wiht any text editor:
+You can open `~/.amesgcm_profile` with any text editor:
 
 ```
 > <<<<<<<<<<<<<<| Pressure definitions for pstd |>>>>>>>>>>>>>
@@ -421,11 +423,11 @@ Main Variable  = [atmos_diurn_plevs_T@2.dst_mass_micro{tod = 15}]*1.e6 # dust pp
 
 > `MarsPlot` handles many errors by itself. It reports errors both in the terminal and in the generated figures. To by-pass this behavior (when debugging), use the  `--debug` option with `MarsPlot` which will raise standard Python errors.
 
-## Accessing CAP librareis from FV3_utils.py
+# Accessing CAP libraries from FV3_utils.py
 
-## Loading fort.11 files into Python for you Analysis
+# Loading fort.11 files into Python for you Analysis
 
-## Read fortran binaries by hand in Python
+# Read fortran binaries by hand in Python
 
 
 
