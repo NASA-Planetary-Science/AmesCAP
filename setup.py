@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='amesgcm',
-      version='0.1',
+      version='0.2',
       description='Analysis pipeline for the NASA Ames MGCM',
       url='http://github.com/alex-kling/amesgcm',
       author='Mars Climate Modeling Center',

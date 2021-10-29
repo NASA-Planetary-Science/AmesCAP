@@ -41,7 +41,7 @@ except Exception as exception:
 #                  ARGUMENTS PARSER
 #======================================================
 
-global current_version;current_version=3.1
+global current_version;current_version=3.2
 parser = argparse.ArgumentParser(description="""\033[93mAnalysis Toolkit for the Ames GCM, V%s\033[00m """%(current_version),
                                 formatter_class=argparse.RawTextHelpFormatter)
 
