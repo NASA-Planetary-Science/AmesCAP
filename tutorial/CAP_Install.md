@@ -431,6 +431,7 @@ First, check whether you already have `ghostscript` on your machine. Open a term
 ```
 
 If `ghostscript` is not installed, follow the directions on the `ghostscript` [website](https://www.ghostscript.com/download.html) to install it.
+> If `gs -version` returns a 'command not found error' but you are able to locate the `gs` executable  on your system (e.g. /opt/local/bin/gs) you may need to add that specific directory (e.g. /opt/local/bin/) to your search $PATH as done for Python and pip in Step 1
 
 
 
