@@ -3,7 +3,7 @@
 
 <!-- TOC titleSize:2 tabSpaces:2 depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 skip:0 title:1 charForUnorderedList:* -->
 ## Table of Contents
-* [Practical: The Community Analysis Pipeline (CAP)](#the-community-analysis-pipeline-cap)
+* [Practical: The Community Analysis Pipeline (CAP)](#practical-the-community-analysis-pipeline-cap)
   * [1. Retrieving Data](#1-retrieving-data)
     * [1.1 Download MGCM output](#11-download-mgcm-output-with-marspullpy)
   * [2. File Manipulations](#2-file-manipulations)
@@ -15,11 +15,11 @@
       * [2.6 Time-Shift & Pressure-Interpolate the Diurn File](#26-time-shift-and-pressure-interpolate-the-diurn-file)
       * [2.7 Apply a Low-Pass Filter (`-lpf`) to the `daily` File](#27-Apply-a-low-pass-filter--lpf-to-the-surface-pressure-ps-and-temperature-ts-in-the-daily-file)
       * [2.8 Vertical Differentiation](#28-estimate-the-magnitude-of-the-wind-shear-using-cap)
-      * [2.9 Column Integration](#29-calculate-the-column-integrated-dust-water-ice-and-water-vapor-mixing-ratios-in-the-atmos_daily-file)
+      * [2.9 Column Integration](#29-calculate-the-column-integrated-dust-water-ice-and-water-vapor-mixing-ratios-in-the-daily-file)
       * [2.10 Determine the Minimum, Mean, and Maximum Near-Surface Temperatures](#210-display-the-values-of-pfull-then-display-the-minimum-mean-and-maximum-near-surface-temperatures-temp-over-the-globe)
-      * [2.1b ACTIVECLDS `fort.11` to `netCDF` Conversion](21b-for-activeclds-convert-fort11-files-into-netcdf-files)
-      * [2.2b ACTIVECLDS Interpolate `atmos_average` to standard pressure](22b-for-activeclds-interpolate-atmos_average-to-standard-pressure)
-      * [2.5b ACTIVECLDS Interpolate `atmos_average` to standard altitude](25b-for-activeclds-interpolate-atmos_average-to-standard-altitude)
+      * [2.1b (`/ACTIVECLDS`) `fort.11` to `netCDF` Conversion](#21b-for-/activeclds-convert-fort11-files-into-netcdf-files)
+      * [2.2b (`/ACTIVECLDS`) Interpolate `atmos_average` to standard pressure](#22b-for-/activeclds-interpolate-atmos_average-to-standard-pressure)
+      * [2.5b (`/ACTIVECLDS`) Interpolate `atmos_average` to standard altitude](#25b-for-/activeclds-interpolate-atmos_average-to-standard-altitude)
   * [Break!](#break)
   * [3. Plotting Routines](#3-plotting-routines)
       * [3.1 Global Map: Surface Albedo and Topography](#31-create-a-global-map-of-surface-albedo-alb-with-topography-zsurf-contoured-on-top)
@@ -32,7 +32,7 @@
       * [3.8 Two Cross-Sections on One Page](#38-plot-the-following-two-cross-sections-lat-x-lev-on-the-same-page)
       * [3.9 Zonal Mean Temperatures: RIC and RAC](#39-plot-zonal-mean-temperature-from-the-ric-and-rac-cases)
       * [3.10 1D Temperature Profiles](#310-generate-two-1d-temperature-profiles-temp-from-the-ric-case)
-      * [3.11 Tidal Analysis](#311-plot-the-filtered-and-unfiltered-surface-pressure-over-a-20-sol-period)
+      * [3.11 Tidal Analysis](#311-plot-the-1d-filtered-and-unfiltered-surface-pressure-over-a-20-sol-period)
 <!-- /TOC -->
 
 ***
