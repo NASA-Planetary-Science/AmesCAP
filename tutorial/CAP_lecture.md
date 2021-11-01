@@ -31,25 +31,7 @@ These executables and their commonly-used functions are illustrated in the cheat
 
 CAP is designed to be modular. For example, a user could post-process and plot MGCM output exclusively with CAP or a user could employ their own post-processing routine and then use CAP to plot the data. Users are free to selectively integrate CAP into their own analysis routine to the extent they see fit.
 
-<!-- TOC titleSize:2 tabSpaces:2 depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 skip:0 title:1 charForUnorderedList:* -->
-## Table of Contents
-* [Introducing the Community Analysis Pipeline (CAP)](#introducing-the-community-analysis-pipeline-cap)
-* [Cheat sheet](#cheat-sheet)
-* [The big question... How do I do this? >  <span style="color:red">Ask for help!  </span>](#the-big-question-how-do-i-do-this---span-stylecolorredask-for-help--span)
-* [1. `MarsPull.py` - Downloading Raw MGCM Output](#1-marspullpy---downloading-raw-mgcm-output)
-* [2. `MarsFiles.py` - Reducing the Files](#2-marsfilespy---reducing-the-files)
-* [3. `MarsVars.py` - Performing Variable Operations](#3-marsvarspy---performing-variable-operations)
-* [4. `MarsInterp.py` - Interpolating the Vertical Grid](#4-marsinterppy---interpolating-the-vertical-grid)
-* [5. `MarsPlot.py` - Plotting the Results](#5-marsplotpy---plotting-the-results)
-* [MarsPlot.py:  How to?](#marsplotpy--how-to)
-  * [Disable or add a new plot](#disable-or-add-a-new-plot)
-  * [Customize Plots](#customize-plots)
-  * [Make a 1D-plot](#make-a-1d-plot)
-  * [Access simulation in a different directory](#access-simulation-in-a-different-directory)
-  * [Element-wise operations](#element-wise-operations)
-  * [Change projections](#change-projections)
-  * [Debugging](#debugging)
-<!-- /TOC -->
+
 
 ***
 # The big question... How do I do this? >  <span style="color:red">Ask for help!  </span>
@@ -263,7 +245,7 @@ The following figure shows the three components of MarsPlot:
 
 The default template, Custom.in, can be created by passing the `-template` argument to `MarsPlot`. Custom.in is pre-populated to draw two plots on one page: a topographical plot from the fixed file and a cross-section of the zonal wind from the average file. Creating the template and passing it into `MarsPlot` creates a PDF containing the plots:
 
-```bash
+```
 (amesGCM3)>$ MarsPlot.py -template
 > /path/to/simulation/run_name/history/Custom.in was created
 (amesGCM3)>$
@@ -281,17 +263,44 @@ Let's remind ourselves that in order to create such plots from a **multi-dimensi
 
 
 ![Figure 4. MarsPlot cross section](./tutorial_images/cross_sections.png)
+
 *A refresher on cross-section for multi-dimensional datasets*
 
-To make the process of generating multiple plots as **streamlined** as possible, the free dimensions are set by default using day-to-day decisions from a climate modeler's perspective:  
+The data selection process to make any particular cross section is shown in the decision tree below. If an effort to make the process of generating multiple plots as **streamlined** as possible, MarsPlot selects a number of default settings for the user.
+
+```
+1.     Which simulation                                              ┌─
+    (e.g. ACTIVECLDS directory)                                      │  DEFAULT    1. ref> is current directory
+          │                                                          │  SETTINGS
+          └── 2.   Which XXXXX epoch                                 │             2. latest XXXXX.fixed in directory
+               (e.g. 00668, 07180)                                   └─
+                   │                                                 ┌─
+                   └── 3.   Which type of file                       │
+                        (e.g. diurn, average_pstd)                   │   USER      3. provided by user
+                            │                                        │ PROVIDES
+                            └── 4.   Which variable                  │             4. provided by user
+                                  (e.g. temp, ucomp)                 └─
+                                    │                                ┌─
+                                    └── 5. Which dimensions          │             5. see rule table below
+                                       (e.g lat =0°,Ls =270°)        │  DEFAULT
+                                           │                         │  SETTINGS
+                                           └── 6. plot customization │             6. default settings
+                                                  (e.g. colormap)    └─              
+
+```
+
+The free dimensions are set by default using day-to-day decisions from a climate modeler's perspective:
+
 
 |Free dimension|Statement for default setting|Implementation|
 |--|------|---------------|
 |time |"*I am interested in the most recent events*"                             |time = Nt (last timestep)|
 |level|"*I am more interested in the surface than any other vertical layer*"       |level = sfc|
 |latitude  |"*If I have to pick a particular latitude, I would rather look at the equator*" |lat=0 (equator)|
-|longitude  |"*I am more interested in a zonal average than any particular longitude*"      |lon=all (average over all value)|
-|time of day| "*Ok, this one is arbitrarily set to 3pm =15hr. However if I use a diurn file, I  have a specific time of day in mind*"   |tod=15 |
+|longitude  |"*I am more interested in a zonal average than any particular longitude*"      |lon=all (average over all values)|
+|time of day| "*3pm =15hr Ok, this one is arbitrary. However if I use a diurn file, I  have a specific time of day in mind*"   |tod=15 |
+
+*Rule table for the default setting of the free dimensions*
 
 In practice, these cases cover 99% of the work typically done so whenever a setting is left to default (`= None` in MarsPlot's syntax) this is what is being used. This allows to considerably streamline the data selection process.
 
@@ -309,7 +318,32 @@ Contours Var 2 = None
 Axis Options  : lon = [None,None] | lat = [None,None] | cmap = jet | scale = lin | proj = cart
 
 ```
-In the example above, we are plotting the air temperature field `temp` from the *atmos_average.nc* file as a lon/lat map. `temp` is a 4D field *(time, level, lat, lon)* but since we left the time (`Ls 0-360`) and altitude (`Level [Pa/m]`) unspecified (i.e. set to `None`) MarsPlot  will show us the *last timestep* in the file and the layer immediately adjacent to the *surface*. Similarly, MarsPlot will generate a *default title* for the figure with the variable's name (temperature), unit ([K]), selected dimensions (last timestep, at the surface), and makes educated choices for the range of the colormap, axis limits etc ... All those options are customizable, if desired.  Finally, note the option of adding a secondary variable as **solid contours**. For example, one may set `2nd Variable = fixed.zsurf` to plot the topography (`zsurf`) from the matching *fixed.nc* file.
+In the example above, we are plotting the air temperature field `temp` from the *atmos_average.nc* file as a lon/lat map. `temp` is a 4D field *(time, level, lat, lon)* but since we left the time (`Ls 0-360`) and altitude (`Level [Pa/m]`) unspecified (i.e. set to `None`) MarsPlot  will show us the *last timestep* in the file and the layer immediately adjacent to the *surface*. Similarly, MarsPlot will generate a *default title* for the figure with the variable's name (`temperature`), unit (`[K]`), selected dimensions (`last timestep, at the surface`), and makes educated choices for the range of the colormap, axis limits etc ... All those options are customizable, if desired.  Finally, note the option of adding a secondary variable as **solid contours**. For example, one may set `2nd Variable = fixed.zsurf` to plot the topography (`zsurf`) from the matching *XXXXX.fixed.nc* file.
+
+To wrap-up (the use of `{}` to overwrite default settings is discussed later on), the following two working expressions are strictly equivalent for `Main Variable` (shaded contours) or `2nd Variable` (solid contours) fields:
+
+```python
+                     variable                                        variable
+                        │                     SIMPLIFY TO               │
+00668.atmos_average@1.temp{lev=1000;ls=270}     >>>      atmos_average.temp
+  │         │       │              │                           │
+epoch  file type simulation    free dimensions             file type
+                 directory
+```
+
+
+|Accepted input |Meaning| Example|
+|--         |-       |--|
+|`None` |Use default settings from the rule table below| `Ls 0-360 = None`|
+|`value`|  Return index closest to requested value in figure's unit |`Level [Pa/m]  = 50 ` (50 Pa)|
+|`Val Min, Val Max`| Return the averages between two values |`Lon +/-180 = -30,30`|
+|`all`| `all` is a special keyword that return the average over all values in file |`Latitude       = all`
+
+*Accepted values for the `Ls 0-360`, `Level [Pa/m]` ,`Lon +/-180` and `Latitude` free dimensions*
+
+> The time of day (`tod`) in diurn files is always specified using brackets`{}`, e.g. : `Main Variable = atmos_diurn.temp{tod=15,18}` for the average between 3pm and 6pm. This has allowed to streamlined all templates by not including the *time of day* free dimension, which is specific to diurn files.
+
+
 
 # MarsPlot.py:  How to?
 ## Disable or add a new plot
@@ -325,25 +359,27 @@ Code blocks is set to `= True` instruct `MarsPlot` to draw those plots. Other te
 <<<<<| Plot 1D            = True |>>>>> # Any 1D Plot Type (Dimension x Variable)
 ```
 
-The settings for each plot may vary but every plot requires at least the following inputs:
+## Adjust the color range  and colormap
+
+`Cmin, Cmax` (and `Contours Var 2`) are how the contours are set for the shaded (and solid) contours. If only two values are included, MarsPlot use 24 contours spaced between the max and min values. If more than two values are provided, MarsPlot will use those individual contours.
 
 ```python
-Title          = Temperature            # Plot title
 Main Variable  = atmos_average.temp     # filename.variable *REQUIRED
 Cmin, Cmax     = 240,290                # Colorbar limits (minimum, maximum)
 2nd Variable   = atmos_average.ucomp    # Overplot U winds
-Contours Var 2 = 0,100,200              # List of contours for 2nd Variable
+Contours Var 2 = -200,-100,100,200      # List of contours for 2nd Variable or CMIN, CMAX
+Axis Options  : Ls = [None,None] | lat = [None,None] | cmap = jet |scale = lin
 ```
 
-Some plots require these inputs:
+Note the option of setting the contour spacing linearly `scale = lin` or logarithmically (`scale = log`) if the range of values spans multiple order of magnitudes.
 
-```python
-# dimensions that might be required:
-Ls 0-360       = 180      # The time at which to plot the variable
-Level [Pa/m]   = 50       # The level at which to plot the variable
-Lon +/-180     = -90      # The Longitude at which to plot the variable
-Latitude       = 50       # The Latitude at which to plot the variable
-```
+The default colormap `cmap = jet` may be changed using any Matplotlib colormaps. A selections of those are listed below:
+
+![Figure 4. MarsPlot workflow](./tutorial_images/all_colormaps.png)
+
+Finally, note the use of the `_r` suffix (reverse) to reverse the order of the colormaps listed in the figure above. From example, using `cmap = jet_r` would have colors panning from *red* > *blue* instead of *blue* > *red*
+
+*Supported colormap in Marsplot. The figure was generated using code from [the scipy webpage](https://scipy-lectures.org/intro/matplotlib/auto_examples/options/plot_colormaps.html) .*
 
 ## Customize Plots
 `Axis Options` specify the axes limits, colormap, linestyle and color for 1D-plots, projection for certain plots :

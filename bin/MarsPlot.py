@@ -1881,7 +1881,7 @@ class Fig_2D_lon_lat(Fig_2D):
 
     #make_template is calling method from the parent class
     def make_template(self):
-        super(Fig_2D_lon_lat, self).make_template('Plot 2D lon X lat','Ls 0-360','Level [Pa/m]','lon','lat')
+        super(Fig_2D_lon_lat, self).make_template('Plot 2D lon X lat','Ls 0-360','Level Pa/m','lon','lat')
 
     def get_topo_2D(self,varfull,plot_type):
 
