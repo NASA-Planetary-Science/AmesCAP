@@ -76,7 +76,7 @@ Let's begin with a review of the data retrieval process you performed when insta
 
 
 
-*(Table of Contents)[#table-of-contents]*
+*[Table of Contents](#table-of-contents)*
 ***
 
 ## 1. Retrieving Data
