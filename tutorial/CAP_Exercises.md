@@ -63,9 +63,15 @@ As always with CAP, you must activate the `amesGCM3` virtual environment to acce
 (local)>$ source ~/amesGCM3/bin/activate      # bash
 (local)>$ source ~/amesGCM3/bin/activate.csh  # csh/tcsh
 # ................... OR ...................
-(local)>$ source ~/amesGCM3/scripts/activate  # Windows
+(local)>$ source ~/amesGCM3/Scripts/activate  # Windows
 ```
-Your prompt should change to confirm you're in the virtual environment. Confirm that CAP's executibles are accessible by typing: 
+Your prompt should change to confirm you're in the virtual environment. Before continuing, make sure you're using the most up-to-date version of CAP by running:
+
+```bash
+(amesGCM3)>$ pip install git+https://github.com/alex-kling/amesgcm.git --upgrade
+```
+
+Then, confirm that CAP's executibles are accessible by typing: 
 
 ```bash
 (amesGCM3)>$ MarsPull.py -h
@@ -188,7 +194,6 @@ Our directory now contains **four** `netCDF` files in addition to the `fort.11` 
 
 
 #### *[(Return to Top)](#table-of-contents)*
-
 ***
 
 ### 2.2 Interpolate `atmos_average` to standard pressure coordinates
@@ -316,6 +321,7 @@ Use the inspect (`MarsPlot.py -i`) function to confirm that:
 
 The time-shift function is part of `MarsFiles` and pressure-interpolating is, as we know, part of `MarsInterp`. We'll start by pressure-interpolating the file, **but note that these functions can be used in either order.**
 
+
 The `diurn` file is organized by time-of-day assuming **universal time** beginning at the Martian prime meridian. Time-shifting the file converts the file to **uniform local time**, which is useful for comparing MGCM output to observations from satellites in fixed local time orbit, for example. Time-shifting can only be done on the `diurn` files because these contain a local time dimension (`ltst`).
 
 For this exercise, include only the surface pressure (`ps`), surface temperature (`ts`), and atmospheric temperature (`temp`) variables. This will minimize file size and processing time.
@@ -349,7 +355,6 @@ After time-shifting and pressure-interpolating, `/INERTCLDS` should contain thre
 
 
 #### *[(Return to Top)](#table-of-contents)*
-
 ***
 
 ### 2.7 Apply a low-pass filter (`-lpf`) to the surface pressure (`ps`) and temperature (`ts`) in the `daily` file
@@ -595,7 +600,6 @@ The template is called `Custom.in`. We will edit `Custom.in` to create various p
 If you use vim, you just have to be familiar with copying and pasting in the terminal. You will also benefit from opening another terminal from which to run command-line calls.
 
 
-
 Open `Custom.in` in your preferred text editor, for example:
 
 ```bash
@@ -643,7 +647,6 @@ You can rename `Custom.in` and still pass it to `MarsPlot` successfully. If the 
 ```
 
 #### *[(Return to Top)](#table-of-contents)*
-
 ***
 
 Those are the basics of plotting with CAP. We'll create several plots in exercises 3.1-3.11 below. Begin by deleting `myplots.in` and `myplots.pdf` (if you have them), and then create a new `Custom.in` template:
@@ -699,7 +702,6 @@ Open `Diagnostics.pdf` and check to make sure it contains a global map of surfac
 
 
 #### *[(Return to Top)](#table-of-contents)*
-
 ***
 
 ### 3.2 Plot the zonal mean zonal wind cross-section at Ls=270° using altitude as the vertical coordinate
@@ -734,7 +736,6 @@ First, point `MarsPlot` to the `/ACTIVECLDS` directory. Do this by editing the `
 
 Then, edit `Main Variable` in the duplicate template so that the `atmos_average_zstd` file in `/ACTIVECLDS` is sourced:
 
-
 ```python
 > Main Variable  = atmos_average_zstd@2.ucomp
 ```
@@ -748,7 +749,6 @@ Save `Custom.in` and pass it to `MarsPlot`. View `Diagnostics.pdf` to see the re
 
 
 #### *[(Return to Top)](#table-of-contents)*
-
 ***
 
 ### 3.4 Overplot temperature in solid contours
@@ -822,6 +822,7 @@ For the surface wind speed plot:
   - Constrain the Y axis limits to the northern hemisphere
   - Constrain the X axis limits to the western hemisphere
   - Draw contours at 1, 10, and 20, m/s *(add a second variable!)*
+
 
 
 
@@ -1011,5 +1012,4 @@ Please submit feedback to Alex Kling: alexandre.m.kling@nasa.gov
 
 
 #### *[(Return to Top)](#table-of-contents)*
-
 ***
