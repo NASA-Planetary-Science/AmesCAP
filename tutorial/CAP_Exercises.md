@@ -101,7 +101,7 @@ Your prompt should change to confirm you're in the virtual environment. Before c
 (amesGCM3)>$ pip install git+https://github.com/alex-kling/amesgcm.git --upgrade
 ```
 
-Then, confirm that CAP's executibles are accessible by typing:
+Then, confirm that CAP's executables are accessible by typing:
 
 ```bash
 (amesGCM3)>$ MarsPull.py -h
