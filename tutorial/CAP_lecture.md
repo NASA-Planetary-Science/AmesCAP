@@ -10,9 +10,20 @@ CAP is a toolkit designed to simplify the post-processing of MGCM output. CAP is
 
 ![Figure 1. The Typical Pipeline](./tutorial_images/Typical_Pipeline.png)
 
-Such a process requires that users be familiar with Fortran files and be able to write (or provide) script(s) to perform file manipulations and create plots. At best, this effort is cumbersome. At worst, it excludes users who lack access to (or knowledge of how to write) post-processing scripts and/or Fortran code. CAP standardizes the post-processing effort by providing executibles that can perform file manipulations and create diagnostic plots from the command line. This enables users of almost any skill level to post-process and plot MGCM data (Figure 2).
+Such a process requires that users be familiar with Fortran files and be able to write (or provide) script(s) to perform file manipulations and create plots. CAP standardizes the post-processing effort by providing executables that can perform file manipulations and create diagnostic plots from the command line. This enables users of almost any skill level to post-process and plot MGCM data (Figure 2).
 
 ![Figure 2. The New Pipeline (CAP)](./tutorial_images/CAP.png)
+
+
+As a foreword, we will list a few design characteristic of CAP:
+
+* CAP is written in **Python**, an open-source programming language with extensive scientific libraries available
+* CAP is installed within a Python **virtual environment**, which provides cross-platform support (MacOS, Linux and Windows), robust version control (packages updated within the main Python distribution will not affect CAP), and is not intrusive as it disappears when deactivated
+* CAP is composed of a **set of libraries** (functions), callable from a user's own scripts and a collection of **five executables**, which  allows for efficient processing of model outputs from the command-line.
+* CAP uses the **netCDF4 data format**, which is widely use in the climate modeling community and self-descriptive (meaning that a file contains  explicit information about its content in term of variables names, units etc...)
+* CAP uses a convention for output formatting inherited from the GFDL Finite­-Volume Cubed-Sphere Dynamical Core, referred here as  "**FV3 format**": outputs may be binned and averaged in time in various ways for analysis.  
+*  CAP long-term goal is to offer **multi-model support**. At the time of the writing, both the NASA Ames Legacy GCM and the NASA Ames GCM with the FV3 dynamical core are  supported. Efforts are underway to offer functionality to others Global Climate Models (e.g. eMARS, LMD, MarsWRF).
+
 
 Specifically, CAP consists of five executables:
 
@@ -377,7 +388,7 @@ The default colormap `cmap = jet` may be changed using any Matplotlib colormaps.
 
 ![Figure 4. MarsPlot workflow](./tutorial_images/all_colormaps.png)
 
-Finally, note the use of the `_r` suffix (reverse) to reverse the order of the colormaps listed in the figure above. From example, using `cmap = jet_r` would have colors panning from *red* > *blue* instead of *blue* > *red*
+Finally, note the use of the `_r` suffix (reverse) to reverse the order of the colormaps listed in the figure above. From example, using `cmap = jet` would have colors spanning from *blue* > *red*  and `cmap = jet_r` *red* > *blue* instead
 
 *Supported colormap in Marsplot. The figure was generated using code from [the scipy webpage](https://scipy-lectures.org/intro/matplotlib/auto_examples/options/plot_colormaps.html) .*
 
