@@ -1024,7 +1024,7 @@ def make_template():
         customFileIN.write(lh+"""> 'line' sets the line style:  '-r' (solid red), '--g' (dashed green), '-ob' (solid & blue markers)\n""")
         customFileIN.write(lh+"""> 'scale' sets the color mapping:  'lin' (linear) or 'log' (logarithmic) For 'log', Cmin,Cmax are typically expected \n""")
         customFileIN.write(lh+"""> 'proj' sets the projection: Cylindrical options are 'cart' (cartesian), 'robin'  (Robinson), 'moll' (Mollweide) \n""")
-        customFileIN.write(lh+""">                             Azimutal   options are 'Npole' (north pole), 'Spole' (south pole), 'ortho' (Orthographic)  \n""")
+        customFileIN.write(lh+""">                             Azimuthal   options are 'Npole' (north pole), 'Spole' (south pole), 'ortho' (Orthographic)  \n""")
         customFileIN.write(lh+""">  Azimutal projections accept customization arguments: 'Npole lat_max', 'Spole lat_min' , 'ortho lon_center, lat_center' \n""")
         customFileIN.write(lh+"""KEYWORDS:\n""")
         customFileIN.write(lh+"""> 'HOLD ON' [blocks of figures] 'HOLD OFF' groups the figures as a multi-panel page  \n""")
@@ -2020,7 +2020,7 @@ class Fig_2D_lon_lat(Fig_2D):
                         plt.text(xl,yl,lab_txt, fontsize=label_size-self.nPan*label_factor)
 
                 if projfull[0:5] in ['Npole','Spole','ortho']:
-                    #Common to all azimutal projections
+                    #Common to all azimuthal projections
                     lon180_original=lon180.copy()
                     var,lon180=add_cyclic(var,lon180)
                     if add_topo:zsurf,_=add_cyclic(zsurf,lon180_original)
