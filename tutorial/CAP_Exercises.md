@@ -932,17 +932,17 @@ Save `Custom.in` and pass it to `MarsPlot`.
 
 ### 3.10 Generate two 1D temperature profiles (`temp`) from the RIC case 
 
-Call `temp` from the `diurn_T_pstd` file, which is the time-shifted and pressure-interpolated version of the hourly file. Draw the 3 AM and 3 PM thermal profiles at `50°N, 150°E` at Ls=270°. 3 AM is index=`3`, 3 PM is index=`15`, so `Main Variable` will be set as:
+Call `temp` from the `atmos_diurn_T_pstd` file, which is the time-shifted and pressure-interpolated version of the hourly file. Draw the 3 AM and 3 PM thermal profiles at `50°N, 150°E` at Ls=270°. 3 AM is index=`3`, 3 PM is index=`15`, so `Main Variable` will be set as:
 
 ```python
-> Main Variable    = diurn_T_pstd.temp{ tod=3 }
+> Main Variable    = atmos_diurn_T_pstd.temp{ tod=3 }
 #                        filename.var{  tod=X }
 ```
 
 and
 
 ```python
-> Main Variable    = diurn_T_pstd.temp{tod=15}
+> Main Variable    = atmos_diurn_T_pstd.temp{tod=15}
 ```
 
 You will have to specify `Level [Pa/m]` as the Y axis:
