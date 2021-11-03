@@ -371,6 +371,8 @@ This created `07180.atmos_daily_lpf.nc` containing only `ps`, `ts`, and their re
 
 
 
+#### *[(Return to Top)](#table-of-contents)*
+***
 
 ### 2.8 Estimate the magnitude of the wind shear using CAP
 
@@ -404,7 +406,8 @@ Using the inspect (`MarsPlot.py -i`) function, we can see the new variables in t
 
 
 
-
+#### *[(Return to Top)](#table-of-contents)*
+***
 
 ### 2.9 Calculate the column-integrated dust, water ice, and water vapor mixing ratios in the `daily` file
 
@@ -443,7 +446,8 @@ Using the inspect (`MarsPlot.py -i`) function, we can see the new variables in t
 
 
 
-
+#### *[(Return to Top)](#table-of-contents)*
+***
 
 ### 2.10 Display the values of `pfull`, then display the minimum, mean, and maximum near-surface temperatures `temp` over the globe
 
@@ -496,6 +500,8 @@ and... that's it for post-processing the data in the RIC simulation!
 
 Before moving on to plotting, we need to repeat some of these steps for the RAC simulation. Feel free to repeat all of Steps 2.1-2.10 for the RAC case if you like, but **you are only required to repeat Steps 2.1, 2.2, and 2.5** for this tutorial. For simplicity, we've summarized these steps here:
 
+***
+
 ### 2.1b (for `/ACTIVECLDS`) Convert `fort.11` files into `netCDF` files
 
 In the `/ACTIVECLDS` directory, use `MarsFiles` to convert from `fort.11` to `netCDF`, and then concatenate the files along their `time` axes:
@@ -517,6 +523,8 @@ In the `/ACTIVECLDS` directory, use `MarsFiles` to convert from `fort.11` to `ne
 > 07180.atmos_daily.nc    fort.11_0722
 ```
 
+***
+
 ### 2.2b (for `/ACTIVECLDS`) Interpolate `atmos_average` to standard pressure
 
 Use `MarsInterp`'s' `--type` (`-t`) command to create `07180.atmos_average_pstd.nc`.:
@@ -525,6 +533,7 @@ Use `MarsInterp`'s' `--type` (`-t`) command to create `07180.atmos_average_pstd.
 (amesGCM3)>$ MarsInterp.py 07180.atmos_average.nc -t pstd
 ```
 
+***
 
 ### 2.5b (for `/ACTIVECLDS`) Interpolate `atmos_average` to standard altitude
 
@@ -542,27 +551,21 @@ Your `/ACTIVECLDS` directory should now contain the fort.11 files and six `netCD
 > 07180.atmos_diurn.nc    fort.11_0719                   fort.11_0723
 > 07180.atmos_daily.nc    fort.11_0720
 ```
-
-
-
-
 #### *[(Return to Top)](#table-of-contents)*
 ***
+
+
 
 # Break!
 Once you've completed Step 2, you are welcome to take a 15 minute break from the tutorial. 
 
 You can use this time to catch up if you haven't completed Steps 1 and/or 2 already, but we highly encourage you to step away from your machine for these 15 minutes.
 
-
-
-
-
-
-
-
 #### *[(Return to Top)](#table-of-contents)*
 ***
+
+
+
 
 ## 3. Plotting Routines
 
