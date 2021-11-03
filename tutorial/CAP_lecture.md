@@ -15,14 +15,14 @@ Such a process requires that users be familiar with Fortran files and be able to
 ![Figure 2. The New Pipeline (CAP)](./tutorial_images/CAP.png)
 
 
-As a foreword, we will list a few design characteristic of CAP:
+As a foreword, we will list a few design characteristics of CAP:
 
 * CAP is written in **Python**, an open-source programming language with extensive scientific libraries available
 * CAP is installed within a Python **virtual environment**, which provides cross-platform support (MacOS, Linux and Windows), robust version control (packages updated within the main Python distribution will not affect CAP), and is not intrusive as it disappears when deactivated
 * CAP is composed of a **set of libraries** (functions), callable from a user's own scripts and a collection of **five executables**, which  allows for efficient processing of model outputs from the command-line.
 * CAP uses the **netCDF4 data format**, which is widely use in the climate modeling community and self-descriptive (meaning that a file contains  explicit information about its content in term of variables names, units etc...)
 * CAP uses a convention for output formatting inherited from the GFDL Finite­-Volume Cubed-Sphere Dynamical Core, referred here as  "**FV3 format**": outputs may be binned and averaged in time in various ways for analysis.  
-*  CAP long-term goal is to offer **multi-model support**. At the time of the writing, both the NASA Ames Legacy GCM and the NASA Ames GCM with the FV3 dynamical core are  supported. Efforts are underway to offer functionality to others Global Climate Models (e.g. eMARS, LMD, MarsWRF).
+*  CAP long-term goal is to offer **multi-model support**. At the time of the writing, both the NASA Ames Legacy GCM and the NASA Ames GCM with the FV3 dynamical core are  supported. Efforts are underway to offer compatibility to others Global Climate Models (e.g. eMARS, LMD, MarsWRF).
 
 
 Specifically, CAP consists of five executables:
@@ -42,7 +42,31 @@ These executables and their commonly-used functions are illustrated in the cheat
 
 CAP is designed to be modular. For example, a user could post-process and plot MGCM output exclusively with CAP or a user could employ their own post-processing routine and then use CAP to plot the data. Users are free to selectively integrate CAP into their own analysis routine to the extent they see fit.
 
-
+<!-- TOC titleSize:2 tabSpaces:2 depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 skip:0 title:1 charForUnorderedList:* -->
+## Table of Contents
+* [Introducing the Community Analysis Pipeline (CAP)](#introducing-the-community-analysis-pipeline-cap)
+* [Cheat sheet](#cheat-sheet)
+* [The big question... How do I do this? >  <span style="color:red">Ask for help!  </span>](#the-big-question-how-do-i-do-this---span-stylecolorredask-for-help--span)
+* [1. `MarsPull.py` - Downloading Raw MGCM Output](#1-marspullpy---downloading-raw-mgcm-output)
+* [2. `MarsFiles.py` - Reducing the Files](#2-marsfilespy---reducing-the-files)
+* [3. `MarsVars.py` - Performing Variable Operations](#3-marsvarspy---performing-variable-operations)
+* [4. `MarsInterp.py` - Interpolating the Vertical Grid](#4-marsinterppy---interpolating-the-vertical-grid)
+* [5. `MarsPlot.py` - Plotting the Results](#5-marsplotpy---plotting-the-results)
+* [MarsPlot.py:  How to?](#marsplotpy--how-to)
+  * [Disable or add a new plot](#disable-or-add-a-new-plot)
+  * [Adjust the color range  and colormap](#adjust-the-color-range--and-colormap)
+  * [Make a 1D-plot](#make-a-1d-plot)
+  * [Customize 1D plots](#customize-1d-plots)
+  * [Put multiple plots on the same page](#put-multiple-plots-on-the-same-page)
+  * [Put multiple 1D-plots on the same page](#put-multiple-1d-plots-on-the-same-page)
+  * [Use a different epoch](#use-a-different-epoch)
+  * [Access simulation in a different directory](#access-simulation-in-a-different-directory)
+  * [Overwrite the free dimensions.](#overwrite-the-free-dimensions)
+  * [Element-wise operations](#element-wise-operations)
+  * [Commenting out and speed-up processing](#commenting-out-and-speed-up-processing)
+  * [Change projections](#change-projections)
+  * [Debugging](#debugging)
+<!-- /TOC -->
 
 ***
 # The big question... How do I do this? >  <span style="color:red">Ask for help!  </span>
@@ -331,7 +355,7 @@ Axis Options  : lon = [None,None] | lat = [None,None] | cmap = jet | scale = lin
 ```
 In the example above, we are plotting the air temperature field `temp` from the *atmos_average.nc* file as a lon/lat map. `temp` is a 4D field *(time, level, lat, lon)* but since we left the time (`Ls 0-360`) and altitude (`Level [Pa/m]`) unspecified (i.e. set to `None`) MarsPlot  will show us the *last timestep* in the file and the layer immediately adjacent to the *surface*. Similarly, MarsPlot will generate a *default title* for the figure with the variable's name (`temperature`), unit (`[K]`), selected dimensions (`last timestep, at the surface`), and makes educated choices for the range of the colormap, axis limits etc ... All those options are customizable, if desired.  Finally, note the option of adding a secondary variable as **solid contours**. For example, one may set `2nd Variable = fixed.zsurf` to plot the topography (`zsurf`) from the matching *XXXXX.fixed.nc* file.
 
-To wrap-up (the use of `{}` to overwrite default settings is discussed later on), the following two working expressions are strictly equivalent for `Main Variable` (shaded contours) or `2nd Variable` (solid contours) fields:
+To wrap-up (the use of `{}` to overwrite default settings is discussed later on), the following two working expressions are strictly equivalent for `Main Variable = ` (shaded contours) or `2nd Variable = ` (solid contours) fields:
 
 ```python
                      variable                                        variable
@@ -341,6 +365,7 @@ To wrap-up (the use of `{}` to overwrite default settings is discussed later on)
 epoch  file type simulation    free dimensions             file type
                  directory
 ```
+These are the four type of accepted entries for the free dimensions:
 
 
 |Accepted input |Meaning| Example|
@@ -350,13 +375,24 @@ epoch  file type simulation    free dimensions             file type
 |`Val Min, Val Max`| Return the averages between two values |`Lon +/-180 = -30,30`|
 |`all`| `all` is a special keyword that return the average over all values in file |`Latitude       = all`
 
-*Accepted values for the `Ls 0-360`, `Level [Pa/m]` ,`Lon +/-180` and `Latitude` free dimensions*
+*Accepted values for the `Ls 0-360`, `Level [Pa/m]` ,`Lon +/-180`, `Latitude` and time of day free dimensions*
 
 > The time of day (`tod`) in diurn files is always specified using brackets`{}`, e.g. : `Main Variable = atmos_diurn.temp{tod=15,18}` for the average between 3pm and 6pm. This has allowed to streamlined all templates by not including the *time of day* free dimension, which is specific to diurn files.
 
 
 
 # MarsPlot.py:  How to?
+
+This section discusses MarsPlot capabilities. Note that a compact version of these instructions is present as comment at the very top of a new `Custom.in` and can be used as a quick reference:
+```python
+===================== |MarsPlot V3.2|===================
+# QUICK REFERENCE:
+# > Find the matching  template for the desired plot type. Do not edit any labels left of any '=' sign
+# > Duplicate/remove any of the <<<< blocks>>>>, skip by setting <<<< block = False >>>>
+# > 'True', 'False' and 'None' are capitalized. Do not use quotes '' anywhere in this file
+etc...
+```
+
 ## Disable or add a new plot
 Code blocks is set to `= True` instruct `MarsPlot` to draw those plots. Other templates in `Custom.in` are set to `= False` by default, which instructs `MarsPlot` to skip those plots. In total, `MarsPlot` is equipped to create seven plot types:
 
@@ -392,36 +428,16 @@ Finally, note the use of the `_r` suffix (reverse) to reverse the order of the c
 
 *Supported colormap in Marsplot. The figure was generated using code from [the scipy webpage](https://scipy-lectures.org/intro/matplotlib/auto_examples/options/plot_colormaps.html) .*
 
-## Customize Plots
-`Axis Options` specify the axes limits, colormap, linestyle and color for 1D-plots, projection for certain plots :
-
-```python
-# Axis Options for 2D plots may include:
-Lat         = [0,90]        # Latitude range for axes limits
-Level[Pa/m] = [600,10]      # Level range for axes limits
-sols        = [None,None]   # Sol range for axes limits
-Lon +/-180  = [-180,180]    # Longitude range for axes limits
-cmap        = jet           # Python colormap to use
-scale       = lin           # Color map style ([lin]ear, [log]arithmic)
-proj        = cart          # Projection ([cart]esian, [robin]son, [moll]weide, [Npole], [Spole], [ortho]graphic)
-# Axis Options for 1D plots may include:
-
- lat,lon+/-180,[Pa/m],sols = [None,None] # range for X or Y axes limit
- var = [None,None]                       # range for displayed variables
- linestyle = -                           # Line style following matplotlib convention'-r' (solid red), '--g' (dashed green), '-ob' (solid & blue markers)
- axlabel = None                          # Change the default name for the axis
-```
-
-
-
 
 ***
 ## Make a 1D-plot
 The 1D plot template is different from the others in a few key ways:
 
-- Instead of `Title`, the template requires a `Legend`. When overploting several 1D variables on top of one another, the legend option will label them insetad of changing the plot title.
+- Instead of `Title`, the template requires a `Legend`. When overploting several 1D variables on top of one another, the legend option will label them instead of changing the plot title.
 - There is an additional `linestyle` axis option for the 1D plot.
-- There is also a `Diurnal` option. The `Diurnal` input can only be `None` or `AXIS`, since there is syntax for selecting a specific time of day. The `AXIS` label tells `MarsPlot` which dimension serves as the X axis. `Main Variable` will dictate the Y axis.
+- There is also a `Diurnal` option. The `Diurnal` input can only be `None` or `AXIS`, since there is syntax for selecting a specific time of day using parenthesis (e.g. `atmos_diurn.temp{tod=15}`) The `AXIS` label tells `MarsPlot` which dimension serves as the X axis. `Main Variable` will dictate the Y axis.
+
+> Some plots like vertical profiles and latitude plots use instead Y as the primary axis and plot the variable on the X axis
 
 ```python
 <<<<<<<<<<<<<<| Plot 1D = True |>>>>>>>>>>>>>
@@ -434,18 +450,82 @@ Level [Pa/m]   = None                   #       values as before. However,
 Diurnal  [hr]  = None                   #   ** Diurnal can ONLY be AXIS or None **
 ```
 
+## Customize 1D plots
+`Axis Options` specify the axes limits, and linestyle  1D-plot:
 
+|1D plot option |Usage| Example|
+|----|----|----|
+|`lat,lon+/-180,[Pa/m],sols = [None,None]` |range for X or Y axes limit depending on the plot type|`lat,lon+/-180,[Pa/m],sols = [1000,0.1]`|
+ |`var = [None,None]`                     | range for the plotted variable on the other axis | `var = [120,250]`|
+ |`linestyle = - `                         |Line style following matplotlib's convention| `linestyle = -ob` (solid line & blue circular markers)|
+ |`axlabel = None`                          | Change the default name for the axis| `axlabel = New Temperature [K]`
 
+Here is a sample of colors, linestyles and marker styles that can be used in 1D-plots
+
+![Figure 4. MarsPlot workflow](./tutorial_images/linestyles.png)
+
+*Supported colormap in Marsplot. This figure was also generated using code from [scipy-lectures.org](https://scipy-lectures.org)]*
 
 ***
+## Put multiple plots on the same page
 
+You can sandwich any number of plots between the `HOLD ON` and `HOLd OFF` keywords to group figures on the same page.
+
+```
+> HOLD ON
+>
+> <<<<<<| Plot 2D lon X lat = True |>>>>>>
+> Title    = Surface CO2 Ice (g/m2)
+> .. (etc) ..
+>
+> <<<<<<| Plot 2D lon X lat = True |>>>>>>
+> Title    = Surface Wind Speed (m/s)
+> .. (etc) ..
+>
+> HOLD OFF
+```
+Note that Custom.in comes with two plots pre-loaded on the same page.
+***
+## Put multiple 1D-plots on the same page
+
+Similarly adding the `ADD LINE` keywords between two (or more) templates can be used to place multiple 1D plot on the same figure.
+
+```
+> <<<<<<| Plot 1D = True |>>>>>>
+> Main Variable    = var1
+> .. (etc) ..
+>
+> ADD LINE
+>
+> <<<<<<| Plot 1D = True |>>>>>>
+> Main Variable    = var2
+> .. (etc) ..
+```
+
+> Note that if you combine `HOLD ON/HOLD OFF` and `ADD LINE` to add a 1D figure with several sub-plots on a multi-figure page, the 1D plot has to be the LAST (and only 1D-figure with sub-plots) on that page.
+***
+## Use a different epoch
+
+If you have run a GCM simulation for a long time, you may have several files of the same type, e.g. :
+
+```
+00000.fixed.nc          00100.fixed.nc         00200.fixed.nc         00300.fixed.nc
+00000.atmos_average.nc  00100.atmos_average.nc 00200.atmos_average.nc 00300.atmos_average.nc
+```
+By default MarsPlot counts the `fixed` files in the directory and run the analysis on the last set of files, `00300.fixed.nc` and `00300.atmos_average.nc` in our example. Even though you may specify the epoch for each plot (e.g. `Main Variable  = 00200.atmos_average.temp` for the file starting at 200 sols), it is more convenient to leave the epoch out of the Custom.in and instead pass the `-date` argument to MarsPlot.
+
+```bash
+MarsPlot.py Custom.in -d 200
+```
+
+> `-date` also accepts a range of sols, e.g. `MarsPlot.py Custom.in -d 100 300` which will run the plotting routine across multiple files.
 There are several other plot customizations you can use:
 
 * When two or more blocks are sandwiched between a `HOLD ON` and `HOLD OFF`, `MarsPlot` will draw the plots on the same page.
-* Plots are created on a standard page (8.5 x 11 inches) in landscape mode, but can be drawn in portrait mode as well.
+
 * Plots can be saved as images instead of PDFs by specifying your preferred filetype (PNG, EPS, etc.) when passing the `--output` (`-o`) argument to `MarsPlot`.
 * When creating 1D plots of data spanning multiple years, you can overplot consecutive years by calling `--stack_year` (`-sy`) when submitting the template to `MarsPlot`.
-* Specify which MGCM output file to use when plotting by passing the `--date` (`-d`) argument to `MarsPlot` followed by the 5-digit file prefix corresponding to the file you want to use. Alternatively, add the prefix to the filename in the template (e.g. `Main Variable = 00000.fixed.thin`).
+
 
 
 
@@ -460,8 +540,8 @@ ref> None
 3>
 =======================================================
 ```
-
-To access a variable from a file in another directory, just point to the correct simulation when calling `Main Variable`:
+Only 3 simulations have place holders but you can add additional ones if you would like (e.g. `4> ...` )
+To access a variable from a file in another directory, just point to the correct simulation when calling `Main Variable` using the `@` character:
 
 ```python
 Main Variable  = XXXXX.filename@N.variable`
@@ -469,20 +549,46 @@ Main Variable  = XXXXX.filename@N.variable`
 
 Where `N` is the number in `<<< Simulations >>>` corresponding the the correct path.
 
+## Overwrite the free dimensions.
+
+By default, MarsPlot uses the free dimensions provided in each template (`Ls 0-360` and `Level [Pa/m]` in the example below) to reduce the data for both the `Main Variable` and the `2nd Variable`. You can overwrite this behavior by using parenthesis `{}`, containing a list of specific free dimensions separated by semi-colons `;` The free dimensions within the `{}` parenthesis will be the last one selected. In the example below,  `Main Variable` (shaded contours) will use a solar longitude of 270° and a pressure of 10 Pa, but the `2nd Variable` (solid contours) will use the average of solar longitudes between 90° and 180° and a pressure of 50 Pa.
+
+```python
+<<<<<<<<<<<<<<| Plot 2D lon X lat = True |>>>>>>>>>>>>>
+...
+Main Variable  = atmos_average
+...
+Ls 0-360       = 270
+Level [Pa/m]   = 10
+2nd Variable   = atmos_average{ls=90,180;lev=50}
+```
+
 ## Element-wise operations
-The `Main Variable` input also accepts variable operations and time-of-day selections like so:
 
-```python
-Main Variable  = [filename.variable]*1000  # multiply all values by 1000
-Main Variable  = filename.variable{tod = 20}  # select the 20th hour of the day
+You can encompass variables between square brackets `[]` to perform element-wise operations, which is useful to compare simulations, apply scaling etc... MarsPlot will first load each variables encompassed with the brackets, and then apply the algebraic expression outside the `[]` before plotting.
+
+These are examples of potential applications:
+
+
+```
+ > Main Variable  = [fixed.zsurf]/(10.**3)                            (convert topography from [m] to [km])
+ > Main Variable  = [atmos_average.taudust_IR]/[atmos_average.ps]*610 (normalize the dust opacity)     
+ > Main Variable  = [atmos_average.temp]-[atmos_average@2.temp]       (temp. difference between ref simu and simu 2)
+ > Main Variable  = [atmos_average.temp]-[atmos_average.temp{lev=10}] (temp. difference between the default (near surface) and the 10 Pa level
 ```
 
-At minimum, `Main Variable` requires `filename.variable` for input, but the above syntax can be combined in several ways allowing for greater plot customization. For example, to plot dust mixing ratio from the diurnal file in simulation #3 at 3 PM local time, the input is:
+## Commenting out and speed-up processing
 
-```python
-Main Variable  = [atmos_diurn_plevs_T@2.dst_mass_micro{tod = 15}]*1.e6 # dust ppm
-#                [filename@N.variable{dimension = X}]*Y
+Comments are preceded by `#`, following python's convention. Each `<<<<| block |>>>>` must stay integral so comments may be inserted between templates but not within a template.
+
+
+You will notice the `START` key word at the very beginning of the template.
 ```
+=======================================================
+START
+```
+This instructs MarsPlot to start parsing templates at this point. If you are already happy with multiple plots, you can move the `START` keyword down in the Custom.in to skip those first plots instead of setting those to `<<<<| Plot  = False |>>>>` individually. When you are done with your analysis, move `START` back to the top to generate a pdf with all the plots.
+
 
 ## Change projections
 
