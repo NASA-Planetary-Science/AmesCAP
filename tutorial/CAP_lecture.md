@@ -65,6 +65,8 @@ CAP is designed to be modular. For example, a user could post-process and plot M
   * [Element-wise operations](#element-wise-operations)
   * [Commenting out and speed-up processing](#commenting-out-and-speed-up-processing)
   * [Change projections](#change-projections)
+  * [Figure format, size](#figure-format-size)
+  * [Access CAP libraries and make your own plots](#access-cap-libraries-and-make-your-own-plots)
   * [Debugging](#debugging)
 <!-- /TOC -->
 
@@ -469,7 +471,7 @@ Here is a sample of colors, linestyles and marker styles that can be used in 1D-
 ***
 ## Put multiple plots on the same page
 
-You can sandwich any number of plots between the `HOLD ON` and `HOLd OFF` keywords to group figures on the same page.
+You can sandwich any number of plots between the `HOLD ON` and `HOLD OFF` keywords to group figures on the same page.
 
 ```
 > HOLD ON
@@ -484,6 +486,9 @@ You can sandwich any number of plots between the `HOLD ON` and `HOLd OFF` keywor
 >
 > HOLD OFF
 ```
+
+By default, MarsPlot will use a default layout for the plots, this can be modified by adding the desired number of lines and number of columns, separated by a comma: `HOLD ON 4 ,3` will organize the figure with a 4 -lines and 3-column layout.
+
 Note that Custom.in comes with two plots pre-loaded on the same page.
 ***
 ## Put multiple 1D-plots on the same page
@@ -502,7 +507,7 @@ Similarly adding the `ADD LINE` keywords between two (or more) templates can be 
 > .. (etc) ..
 ```
 
-> Note that if you combine `HOLD ON/HOLD OFF` and `ADD LINE` to add a 1D figure with several sub-plots on a multi-figure page, the 1D plot has to be the LAST (and only 1D-figure with sub-plots) on that page.
+> Note that if you combine `HOLD ON/HOLD OFF` and `ADD LINE` to create a 1D figure with several sub-plots on a **multi-figure page**, the 1D plot has to be the LAST (and only 1D-figure with sub-plots) on that page.
 ***
 ## Use a different epoch
 
@@ -549,9 +554,10 @@ Main Variable  = XXXXX.filename@N.variable`
 
 Where `N` is the number in `<<< Simulations >>>` corresponding the the correct path.
 
+***
 ## Overwrite the free dimensions.
 
-By default, MarsPlot uses the free dimensions provided in each template (`Ls 0-360` and `Level [Pa/m]` in the example below) to reduce the data for both the `Main Variable` and the `2nd Variable`. You can overwrite this behavior by using parenthesis `{}`, containing a list of specific free dimensions separated by semi-colons `;` The free dimensions within the `{}` parenthesis will be the last one selected. In the example below,  `Main Variable` (shaded contours) will use a solar longitude of 270° and a pressure of 10 Pa, but the `2nd Variable` (solid contours) will use the average of solar longitudes between 90° and 180° and a pressure of 50 Pa.
+By default, MarsPlot uses the free dimensions provided in each template (`Ls 0-360` and `Level [Pa/m]` in the example below) to reduce the data for both the `Main Variable` and the `2nd Variable`. You can overwrite this behavior by using parenthesis `{}`, containing a list of specific free dimensions separated by semi-colons `;` The free dimensions within the `{}` parenthesis will ultimately be the last one selected. In the example below,  `Main Variable` (shaded contours) will use a solar longitude of 270° and a pressure of 10 Pa, but the `2nd Variable` (solid contours) will use the average of solar longitudes between 90° and 180° and a pressure of 50 Pa.
 
 ```python
 <<<<<<<<<<<<<<| Plot 2D lon X lat = True |>>>>>>>>>>>>>
@@ -576,21 +582,109 @@ These are examples of potential applications:
  > Main Variable  = [atmos_average.temp]-[atmos_average@2.temp]       (temp. difference between ref simu and simu 2)
  > Main Variable  = [atmos_average.temp]-[atmos_average.temp{lev=10}] (temp. difference between the default (near surface) and the 10 Pa level
 ```
-
+***
 ## Commenting out and speed-up processing
 
-Comments are preceded by `#`, following python's convention. Each `<<<<| block |>>>>` must stay integral so comments may be inserted between templates but not within a template.
-
+Comments are preceded by `#`, following python's convention. Each `<<<<| block |>>>>` must stay integral so comments may be inserted between templates or comment all lines of the template (which is why it is generally easier to simply set the `<<<<| block = False |>>>>`) but not within a template.
 
 You will notice the `START` key word at the very beginning of the template.
 ```
 =======================================================
 START
 ```
-This instructs MarsPlot to start parsing templates at this point. If you are already happy with multiple plots, you can move the `START` keyword down in the Custom.in to skip those first plots instead of setting those to `<<<<| Plot  = False |>>>>` individually. When you are done with your analysis, move `START` back to the top to generate a pdf with all the plots.
+This instructs MarsPlot to start parsing templates at this point. If you are already happy with multiple plots, you can move the `START` keyword further down in the Custom.in to skip those first plots instead of setting those to `<<<<| Plot  = False |>>>>` individually. When you are done with your analysis, move `START` back to the top to generate a pdf with all the plots.
 
+Similarly, you can use the keyword `STOP` (which is not initially present in Custom.in) to stop the parsing of templates. In this case, the only plots processed would be the ones between `START` and `STOP`.
 
+***
 ## Change projections
+
+For `Plot 2D lon X lat` figures, MarsPlot supports 3 types of cylindrical projections : `cart` (cartesian), `robin` (robinson), `moll` (mollweide), and 3 types of azimuthal projections: `Npole` (north polar), `Spole` (south polar) and `ortho` (orthographic).
+
+![Figure 4. MarsPlot workflow](./tutorial_images/projections.png)
+*(Top) cylindral projection `cart`, `robin` and `moll`. (Bottom) azimuthal projections `Npole`, `Spole` and `ortho`*
+
+The azimuthal projections accept optional arguments as follows:
+```
+`Npole lat_max`
+`Spole lat_min`
+`ortho lon_center, lat_center`
+```
+
+***
+## Figure format, size
+
+As shown in the `-help` documentation of MarsPlot, the output format for the figure is chosen using the `--output` (`-o`) flag between *pdf* (default, requires the ghostscript software), *png*, or *eps*.
+
+The `-pw` (pixel width) flag can be use to change the  page width from its default value of 2000 pixels.
+
+The `--vertical` (`-vert`) can be use to make the pages vertical instead of horizontal
+
+***
+## Access CAP libraries and make your own plots
+
+CAP libraries are located (and documented) in `FV3_utils.py`. Spectral utilities are located in `Spectral_utils.py`,  classes to parse fortran binaries and generate netCDf files are located in `Ncdf_wrapper.py`
+
+The following code demonstrate how one can access CAP libraries and make plots for its own analysis:
+
+```python3
+#======================= Import python packages ================================
+import numpy as np                          # for array operations
+import matplotlib.pyplot as plt             # python plotting library
+from netCDF4 import Dataset                 # to read .nc files
+#===============================================================================
+
+# Open a fixed.nc file, read some variables and close it.
+f_fixed=Dataset('/path_to_file/00000.fixed.nc','r')
+lon=f_fixed.variables['lon'][:]
+lat=f_fixed.variables['lat'][:]
+zsurf=f_fixed.variables['zsurf'][:]  
+f_fixed.close()
+
+# Open a dataset and read the 'variables' attribute from the NETCDF FILE
+f_average_pstd=Dataset('/path_to_file/00000.atmos_average_pstd.nc','r')
+vars_list     =f_average_pstd.variables.keys()
+print('The variables in the atmos files are: ',vars_list)
+
+# Read the 'shape' and 'units' attribute from the temperature VARIABLE
+Nt,Nz,Ny,Nx = f_average_pstd.variables['temp'].shape
+units_txt   = f_average_pstd.variables['temp'].units
+print('The data dimensions are Nt,Nz,Ny,Nx=',Nt,Nz,Ny,Nx)
+# Read the pressure, time, and the temperature for an equatorial cross section
+pstd       = f_average_pstd.variables['pstd'][:]   
+areo       = f_average_pstd.variables['areo'][0] #solar longitude for the 1st timestep
+temp       = f_average_pstd.variables['temp'][0,:,18,:] #time, press, lat, lon
+f_average_pstd.close()
+
+# Get the latitude of the cross section.
+lat_cross=lat[18]
+
+# Example of accessing  functions from the Ames Pipeline if we wanted to plot
+# the data  in a different coordinate system  (0>360 instead of +/-180 )
+#----
+from amesgcm.FV3_utils import lon180_to_360,shiftgrid_180_to_360
+lon360=lon180_to_360(lon)
+temp360=shiftgrid_180_to_360(lon,temp)
+
+# Define some contours for plotting
+conts= np.linspace(150,250,32)
+
+#Create a figure with the data
+plt.close('all')
+ax=plt.subplot(111)
+plt.contourf(lon,pstd,temp,conts,cmap='jet',extend='both')
+plt.colorbar()
+# Axis labeling
+ax.invert_yaxis()
+ax.set_yscale("log")
+plt.xlabel('Longitudes')
+plt.ylabel('Pressure [Pa]')
+plt.title('Temperature [%s] at Ls %03i, lat= %.2f '%(units_txt,areo,lat_cross))
+plt.show()
+```
+will produce the following image:
+
+![](../docs/demo_figure.png)
 
 
 ***
