@@ -4,40 +4,36 @@
 <!-- TOC titleSize:2 tabSpaces:2 depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 skip:0 title:1 charForUnorderedList:* -->
 ## Table of Contents
 * [Practical: The Community Analysis Pipeline (CAP)](#practical-the-community-analysis-pipeline-cap)
-  * [Begin by Activating CAP](#begin-by-activating-cap)
   * [1. Retrieving Data](#1-retrieving-data)
-    * [1.1 Download MGCM Output with `MarsPull.py`](#11-download-mgcm-output-with-marspullpy)
-      * [Skip this if you have done it already!](#skip-this-if-you-have-done-it-already)
-      * [If you have any `fort.11` files **other than the ones listed above** in **either** directory, **delete** them.](#if-you-have-any-fort11-files-other-than-the-ones-listed-above-in-either-directory-delete-them)
+    * [1.1 Download MGCM output](#11-download-mgcm-output-with-marspullpy)
   * [2. File Manipulations](#2-file-manipulations)
-    * [2.1 Convert the `fort.11` files into `netCDF` files](#21-convert-the-fort11-files-into-netcdf-files)
-    * [2.2 Interpolate `atmos_average` to standard pressure coordinates](#22-interpolate-atmosaverage-to-standard-pressure-coordinates)
-    * [2.3 Add mass stream function (`msf`) to the pressure-interpolated file](#23-add-mass-stream-function-msf-to-the-pressure-interpolated-file)
-    * [2.4 Add density (`rho`) and mid-point altitude (`zfull`) to `atmos_average`](#24-add-density-rho-and-mid-point-altitude-zfull-to-atmosaverage)
-    * [2.5 Interpolate `atmos_average` to standard altitude](#25-interpolate-atmosaverage-to-standard-altitude)
-    * [2.6 Time-shift and pressure-interpolate the `diurn` file](#26-time-shift-and-pressure-interpolate-the-diurn-file)
-    * [2.7 Apply a low-pass filter (`-lpf`) to the surface pressure (`ps`) and temperature (`ts`) in the `daily` file](#27-apply-a-low-pass-filter--lpf-to-the-surface-pressure-ps-and-temperature-ts-in-the-daily-file)
-    * [2.8 Estimate the magnitude of the wind shear using CAP](#28-estimate-the-magnitude-of-the-wind-shear-using-cap)
-    * [2.9 Calculate the column-integrated dust, water ice, and water vapor mixing ratios in the `daily` file](#29-calculate-the-column-integrated-dust-water-ice-and-water-vapor-mixing-ratios-in-the-daily-file)
-    * [2.10 Display the values of `pfull`, then display the minimum, mean, and maximum near-surface temperatures `temp` over the globe](#210-display-the-values-of-pfull-then-display-the-minimum-mean-and-maximum-near-surface-temperatures-temp-over-the-globe)
-    * [2.1b (for `/ACTIVECLDS`) Convert `fort.11` files into `netCDF` files](#21b-for-activeclds-convert-fort11-files-into-netcdf-files)
-    * [2.2b (for `/ACTIVECLDS`) Interpolate `atmos_average` to standard pressure](#22b-for-activeclds-interpolate-atmosaverage-to-standard-pressure)
-    * [2.5b (for `/ACTIVECLDS`) Interpolate `atmos_average` to standard altitude](#25b-for-activeclds-interpolate-atmosaverage-to-standard-altitude)
-* [Break!](#break)
+      * [2.1 `fort.11` to `netCDF` Conversion](#21-convert-the-fort11-files-into-netcdf-files)
+      * [2.2 Interpolate `atmos_average` to standard pressure](#22-interpolate-atmos_average-to-standard-pressure-coordinates)
+      * [2.3 Add `msf` to `atmos_average_pstd`](#23-add-mass-stream-function-msf-to-the-pressure-interpolated-file)
+      * [2.4 Add `rho` and `zfull` to `atmos_average`](#24-add-density-rho-and-mid-point-altitude-zfull-to-atmos_average)
+      * [2.5 Interpolate `atmos_average` to standard altitude](#25-interpolate-atmos_average-to-standard-altitude)
+      * [2.6 Time-Shift & Pressure-Interpolate the Diurn File](#26-time-shift-and-pressure-interpolate-the-diurn-file)
+      * [2.7 Apply a Low-Pass Filter (`-lpf`) to the `daily` File](#27-Apply-a-low-pass-filter--lpf-to-the-surface-pressure-ps-and-temperature-ts-in-the-daily-file)
+      * [2.8 Vertical Differentiation](#28-estimate-the-magnitude-of-the-wind-shear-using-cap)
+      * [2.9 Column Integration](#29-calculate-the-column-integrated-dust-water-ice-and-water-vapor-mixing-ratios-in-the-daily-file)
+      * [2.10 Determine the Minimum, Mean, and Maximum Near-Surface Temperatures](#210-display-the-values-of-pfull-then-display-the-minimum-mean-and-maximum-near-surface-temperatures-temp-over-the-globe)
+      * [2.1b (`/ACTIVECLDS`) `fort.11` to `netCDF` Conversion](#21b-for-activeclds-convert-fort11-files-into-netcdf-files)
+      * [2.2b (`/ACTIVECLDS`) Interpolate `atmos_average` to standard pressure](#22b-for-activeclds-interpolate-atmos_average-to-standard-pressure)
+      * [2.5b (`/ACTIVECLDS`) Interpolate `atmos_average` to standard altitude](#25b-for-activeclds-interpolate-atmos_average-to-standard-altitude)
+  * [Optional: Download the answer key for Step 2](#optional-download-the-answer-key-for-step-2)
+  * [Break!](#break)
   * [3. Plotting Routines](#3-plotting-routines)
-    * [3.1 Create a global map of surface albedo (`alb`) with topography (`zsurf`) contoured on top](#31-create-a-global-map-of-surface-albedo-alb-with-topography-zsurf-contoured-on-top)
-    * [3.2 Plot the zonal mean zonal wind cross-section at Ls=270° using altitude as the vertical coordinate](#32-plot-the-zonal-mean-zonal-wind-cross-section-at-ls270-using-altitude-as-the-vertical-coordinate)
-    * [3.3 Add the same plot for the RAC case to the same page](#33-add-the-same-plot-for-the-rac-case-to-the-same-page)
-    * [3.4 Overplot temperature in solid contours](#34-overplot-temperature-in-solid-contours)
-    * [3.5 Plot the surface CO2 ice content in g/m2 and compute and plot surface wind speed from the U and V winds](#35-plot-the-surface-co2-ice-content-in-gm2-and-compute-and-plot-surface-wind-speed-from-the-u-and-v-winds)
-    * [3.6 Make the following changes to the plots you created in 3.5](#36-make-the-following-changes-to-the-plots-you-created-in-35)
-    * [3.7 Create the following zonal mean `time X lat` plots on a new page](#37-create-the-following-zonal-mean-time-x-lat-plots-on-a-new-page)
-    * [3.8 Plot the following two cross-sections (`lat X lev`) on the same page](#38-plot-the-following-two-cross-sections-lat-x-lev-on-the-same-page)
-    * [3.9 Plot zonal mean temperature from the RIC and RAC cases](#39-plot-zonal-mean-temperature-from-the-ric-and-rac-cases)
-    * [3.10 Generate two 1D temperature profiles (`temp`) from the RIC case](#310-generate-two-1d-temperature-profiles-temp-from-the-ric-case)
-      * [**NOTE:** You do not use `HOLD ON` and `HOLD OFF` to overplot 1D plots. `HOLD` is always for drawing separate plots on the same page](#note-you-do-not-use-hold-on-and-hold-off-to-overplot-1d-plots-hold-is-always-for-drawing-separate-plots-on-the-same-page)
-    * [3.11 Plot the 1D filtered and unfiltered surface pressure over a 20-sol period](#311-plot-the-1d-filtered-and-unfiltered-surface-pressure-over-a-20-sol-period)
-  * [That's a Wrap!](#thats-a-wrap)
+      * [3.1 Global Map: Surface Albedo and Topography](#31-create-a-global-map-of-surface-albedo-alb-with-topography-zsurf-contoured-on-top)
+      * [3.2 Zonal Mean Zonal Wind Cross-Section: RIC](#32-plot-the-zonal-mean-zonal-wind-cross-section-at-ls270-using-altitude-as-the-vertical-coordinate)
+      * [3.3 Zonal Mean Zonal Wind Cross-Section: RAC](#33-add-the-same-plot-for-the-rac-case-to-the-same-page)
+      * [3.4 Overplot Temperatures](#34-overplot-temperature-in-solid-contours)
+      * [3.5 Surface Ice & Winds: `lon X lat`](#35-plot-the-surface-co2-ice-content-in-gm2-and-compute-and-plot-surface-wind-speed-from-the-u-and-v-winds)
+      * [3.6 Surface Ice & Winds: Improvements](#36-make-the-following-changes-to-the-plots-you-created-in-35)
+      * [3.7 Four Global Maps on One Page: `time X lat`](#37-create-the-following-zonal-mean-time-x-lat-plots-on-a-new-page)
+      * [3.8 Two Cross-Sections on One Page](#38-plot-the-following-two-cross-sections-lat-x-lev-on-the-same-page)
+      * [3.9 Zonal Mean Temperatures: RIC and RAC](#39-plot-zonal-mean-temperature-from-the-ric-and-rac-cases)
+      * [3.10 1D Temperature Profiles](#310-generate-two-1d-temperature-profiles-temp-from-the-ric-case)
+      * [3.11 Tidal Analysis](#311-plot-the-1d-filtered-and-unfiltered-surface-pressure-over-a-20-sol-period)
 <!-- /TOC -->
 
 ***
@@ -69,7 +65,6 @@ As always with CAP, you must activate the `amesGCM3` virtual environment to acce
 (local)>$ source ~/amesGCM3/bin/activate.csh  # csh/tcsh
 # ................... OR ...................
 (local)>$ source ~/amesGCM3/Scripts/activate  # Windows
-(local)>$ conda activate amesGCM3             # If you have used conda
 ```
 Your prompt should change to confirm you're in the virtual environment. Before continuing, make sure you're using the most up-to-date version of CAP by running:
 
@@ -77,7 +72,7 @@ Your prompt should change to confirm you're in the virtual environment. Before c
 (amesGCM3)>$ pip install git+https://github.com/alex-kling/amesgcm.git --upgrade
 ```
 
-Then, confirm that CAP's executables are accessible by typing:
+Then, confirm that CAP's executables are accessible by typing: 
 
 ```bash
 (amesGCM3)>$ MarsPull.py -h
@@ -88,7 +83,7 @@ Let's begin with a review of the data retrieval process you performed when insta
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ## 1. Retrieving Data
@@ -98,9 +93,9 @@ Let's begin with a review of the data retrieval process you performed when insta
 
 `MarsPull` is used to access and download MGCM output files from the [MCMC Data portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php). During the installation, you were asked to:
 
-1. Create a directory called `CAP_Tutorial/`
-2. Create two subdirectories: `/INERTCLDS` and `/ACTIVECLDS`
-3. Use `MarsPull` to download several `fort.11` files into each.
+1. Create a directory called `/CAP_Tutorial`
+2. Create two subdirectories: `/INERTCLDS` and `/ACTIVECLDS` 
+3. Use `MarsPull` to download several `fort.11` files into each. 
 
 In each subdirectory, `MarsPull` was used to retrieve files from the corresponding simulation on the data portal:
 
@@ -119,12 +114,12 @@ You should have the following 5 `fort.11` files in each directory:
 > fort.11_0719 fort.11_0720 fort.11_0721 fort.11_0722 fort.11_0723
 ```
 
-#### If you have any `fort.11` files **other than the ones listed above** in **either** directory, **delete** them.
+#### If you have any `fort.11` files **other than the ones listed above** in **either** directory, **delete** them. 
 
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ## 2. File Manipulations
@@ -144,7 +139,7 @@ Begin in the `/INERTCLDS` directory and complete exercises 2.1-2.10:
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 2.1 Convert the `fort.11` files into `netCDF` files
@@ -199,7 +194,7 @@ Our directory now contains **four** `netCDF` files in addition to the `fort.11` 
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 2.2 Interpolate `atmos_average` to standard pressure coordinates
@@ -221,7 +216,7 @@ A new pressure-interpolated file called `07180.atmos_average_pstd.nc` was create
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 2.3 Add mass stream function (`msf`) to the pressure-interpolated file
@@ -261,7 +256,7 @@ We can see that `vcomp` is a variable in the file and therefore `msf` can be der
 **`MarsPlot.py -i` works on any netCDF file, not just the ones created with CAP!**
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 2.4 Add density (`rho`) and mid-point altitude (`zfull`) to `atmos_average`
@@ -281,7 +276,7 @@ Density (`rho`) is derived from pressure (`pfull`) and temperature (`temp`), and
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 ### 2.5 Interpolate `atmos_average` to standard altitude
 
@@ -320,7 +315,7 @@ Use the inspect (`MarsPlot.py -i`) function to confirm that:
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 2.6 Time-shift and pressure-interpolate the `diurn` file
@@ -344,9 +339,9 @@ This created a new file ending in `_T.nc` and containing only `ts`, `ps`, `temp`
 (amesGCM3)>$ MarsInterp.py 07180.atmos_diurn_T.nc -t pstd
 ```
 
-This should take just over a minute.
+This should take just over a minute. 
 
-> **Note:** Interpolating large files (such as `daily` or `diurn` files) with CAP can take a long time because the code is written in Python. That's why we are only including three variables (`ps`, `ts`, and `temp`) in this particular demonstration.
+> **Note:** Interpolating large files (such as `daily` or `diurn` files) with CAP can take a long time because the code is written in Python. That's why we are only including three variables (`ps`, `ts`, and `temp`) in this particular demonstration. 
 
 After time-shifting and pressure-interpolating, `/INERTCLDS` should contain three `diurn` files:
 
@@ -360,7 +355,7 @@ After time-shifting and pressure-interpolating, `/INERTCLDS` should contain thre
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 2.7 Apply a low-pass filter (`-lpf`) to the surface pressure (`ps`) and temperature (`ts`) in the `daily` file
@@ -377,7 +372,9 @@ This created `07180.atmos_daily_lpf.nc` containing only `ps`, `ts`, and their re
 
 
 
-*[(Return to Top)](#table-of-contents)*
+
+
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 2.8 Estimate the magnitude of the wind shear using CAP
@@ -412,8 +409,11 @@ Using the inspect (`MarsPlot.py -i`) function, we can see the new variables in t
 
 
 
-*[(Return to Top)](#table-of-contents)*
+
+
+#### *[(Return to Top)](#table-of-contents)*
 ***
+
 
 ### 2.9 Calculate the column-integrated dust, water ice, and water vapor mixing ratios in the `daily` file
 
@@ -452,8 +452,11 @@ Using the inspect (`MarsPlot.py -i`) function, we can see the new variables in t
 
 
 
-*[(Return to Top)](#table-of-contents)*
+
+
+#### *[(Return to Top)](#table-of-contents)*
 ***
+
 
 ### 2.10 Display the values of `pfull`, then display the minimum, mean, and maximum near-surface temperatures `temp` over the globe
 
@@ -499,12 +502,13 @@ The minimum, mean, and maximum values of a variable are computed and displayed i
 > __________________________|_______________|_______________|_______________|
 ```
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
-and... that's it for post-processing the data in the RIC simulation!
+and... that's it for post-processing the data in the RIC simulation! 
 
 Before moving on to plotting, we need to repeat some of these steps for the RAC simulation. Feel free to repeat all of Steps 2.1-2.10 for the RAC case if you like, but **you are only required to repeat Steps 2.1, 2.2, and 2.5** for this tutorial. For simplicity, we've summarized these steps here:
+
 
 ***
 
@@ -539,6 +543,7 @@ Use `MarsInterp`'s' `--type` (`-t`) command to create `07180.atmos_average_pstd.
 (amesGCM3)>$ MarsInterp.py 07180.atmos_average.nc -t pstd
 ```
 
+
 ***
 
 ### 2.5b (for `/ACTIVECLDS`) Interpolate `atmos_average` to standard altitude
@@ -557,25 +562,87 @@ Your `/ACTIVECLDS` directory should now contain the fort.11 files and six `netCD
 > 07180.atmos_diurn.nc    fort.11_0719                   fort.11_0723
 > 07180.atmos_daily.nc    fort.11_0720
 ```
-*[(Return to Top)](#table-of-contents)*
+
+
+
+
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
+
+# Optional: Download the answer key for Step 2
+
+1. Download `KEY.zip`
+2. **Double-click** `KEY.zip` to unzip the file (do not do this from the command line) -> this should create a `KEY/` directory
+4. Open a terminal and run the command:
+
+```bash
+(amesGCM3)>$ path/to/KEY/Step2_Check.sh
+```
+> **Note:** any permission errors can be fixed by running:
+>```bash
+>(amesGCM3)>$ chmod 766 path/to/KEY/Step2_Check.sh
+>```
+
+`Step2_Check.sh` will prompt you for the path to your `/CAP_Tutorial` directory:
+
+```bash
+# INDEPENDENT OF YOUR SHELL:
+path/to/KEY/Step2_Check.sh
+> Please type the path to the directory containing CAP_Tutorial, i.e. /Users/username: 
+>
+/Users/username/path/to/directory
+>
+> Looking in /Users/username/path/to/directory for CAP_Tutorial 
+```
+
+When the script is done checking your answers, it will notify you which (if any) files or variables are missing from Step 2. Go back to the Step listed and redo them!
+
+If you are really stuck, you can run this shell script that will do all of Step 2 for you. This ensures you can follow along with the plotting routines in Step 3.
+
+To run the answer key, type in your terminal:
+
+```bash
+(amesGCM3)>$ path/to/KEY/KEY.sh
+```
+
+This will again ask for the path to `/CAP_Tutorial`:
+
+```bash
+path/to/KEY/KEY.sh
+> Please type the path to the directory containing CAP_Tutorial, i.e. /Users/username: 
+>
+/Users/username/path/to/directory
+>
+> Looking in /Users/username/path/to/directory for CAP_Tutorial 
+```
+
+> **Note:** Optionally, you can move `KEY.in` to your `/CAP_Tutorial/INERTCLDS` directory and `KEY.sh` will do all of Step 2 **AND Step 3** for you.
+
+
+
+#### *[(Return to Top)](#table-of-contents)*
+***
 
 
 # Break!
-Once you've completed Step 2, you are welcome to take a 15 minute break from the tutorial.
+Once you've completed Step 2, you are welcome to take a 15 minute break from the tutorial. 
 
 You can use this time to catch up if you haven't completed Steps 1 and/or 2 already, but we highly encourage you to step away from your machine for these 15 minutes.
 
-*[(Return to Top)](#table-of-contents)*
+
+
+
+
+
+
+
+#### *[(Return to Top)](#table-of-contents)*
 ***
-
-
-
 
 ## 3. Plotting Routines
 
-Time to practice plotting MGCM output with CAP!
+Time to practice plotting MGCM output with CAP! 
 
 CAP's plotting routine is `MarsPlot`, which can create several plot types:
 
@@ -589,14 +656,14 @@ CAP's plotting routine is `MarsPlot`, which can create several plot types:
 | Time v level         |`Plot 2D time x lev`  |
 | Any 1-D line plot    |`Plot 1D`             |
 
-`MarsPlot` is customizable. Options include:
-- PDF or image format
+`MarsPlot` is customizable. Options include: 
+- PDF or image format 
 - Landscape or portrait mode
 - 1+ plots per page
 - Overplotting is supported
 - Adjustible axes dimensions, colormaps, map projections, contour levels, etc.
 
-**Plotting with CAP requires passing a template to `MarsPlot`.**
+**Plotting with CAP requires passing a template to `MarsPlot`.** 
 
 Create the default template by typing:
 
@@ -604,7 +671,7 @@ Create the default template by typing:
 (amesGCM3)>$ MarsPlot.py -template
 ```
 
-The template is called `Custom.in`. We will edit `Custom.in` to create various plots. **We highly recommend using a text editor that opens `Custom.in` in its own window.** Some options include: gvim, sublime text, atom, and pyzo.
+The template is called `Custom.in`. We will edit `Custom.in` to create various plots. **We highly recommend using a text editor that opens `Custom.in` in its own window.** Some options include: gvim, sublime text, atom, and pyzo. 
 
 If you use vim, you just have to be familiar with copying and pasting in the terminal. You will also benefit from opening another terminal from which to run command-line calls.
 
@@ -626,7 +693,7 @@ By default, `Custom.in` is set to create the two plots shown above: a global top
 > <<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
 ```
 
-When set to `True` (as it is here), `MarsPlot` will draw that plot. If `False`, `MarsPlot` will skip that plot.
+When set to `True` (as it is here), `MarsPlot` will draw that plot. If `False`, `MarsPlot` will skip that plot. 
 
 The variable to be plotted is `Main Variable`, which requires the variable name and the file containing it as input:
 
@@ -655,7 +722,7 @@ You can rename `Custom.in` and still pass it to `MarsPlot` successfully. If the 
 > "/username/CAP_Tutorial/INERTCLDS/myplots.pdf" was generated
 ```
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 Those are the basics of plotting with CAP. We'll create several plots in exercises 3.1-3.11 below. Begin by deleting `myplots.in` and `myplots.pdf` (if you have them), and then create a new `Custom.in` template:
@@ -670,17 +737,17 @@ Those are the basics of plotting with CAP. We'll create several plots in exercis
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 3.1 Create a global map of surface albedo (`alb`) with topography (`zsurf`) contoured on top
 
 Open `Custom.in` in your preferred text editor and make the following changes:
 
-- Set the `Plot 2D lat X lev` to `False` so that `MarsPlot` does not draw it
-- On `Plot 2D lon X lat`, set `Main Variable` to albedo (`alb`), which is located in the `fixed` file. Albedo will be color-filled.
-- Set `2nd Variable` to topography (`zsurf`), also located in the `fixed` file. Topography will appear as solid contours.
-- Set the `Title` to reflect the variable(s) being plotted
+- Set `Plot 2D lat X lev` to `False` so that `MarsPlot` does not draw it
+- On `Plot 2D lon X lat`, set `Main Variable` to albedo (`alb`), which is located in the `fixed` file. Albedo will be color-filled contours.
+- Set `2nd Variable` to topography (`zsurf`), also located in the `fixed` file. Topography will be solid contours.
+- Set the `Title` to reflect the variable(s) being plotted (we like to set the title to reflect the exercise being plotted)
 
 Here is what your template should look like:
 
@@ -710,12 +777,15 @@ Open `Diagnostics.pdf` and check to make sure it contains a global map of surfac
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 3.2 Plot the zonal mean zonal wind cross-section at Ls=270° using altitude as the vertical coordinate
 
-`Custom.in` should still be open in your text editor.
+`Custom.in` should still be open in your text editor. If not, open it again.
+
+To use altitude as the vertical coordinate, source the variable from the altitude-interpolated file: `atmos_average_zstd`.
+
 - Set the `2D lat X lev` template to `True`
 - Change `Main Variable` to point to `ucomp` stored in the `atmos_average_zstd` file
 - Set `Ls` to 270°
@@ -727,14 +797,14 @@ Save `Custom.in`, and pass it to `MarsPlot`. Again, view `Diagnostics.pdf` to se
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 3.3 Add the same plot for the RAC case to the same page
 
 > **Tip:** Copy and paste the `lat x lev` plot you made in 3.2 so that you have two identical templates.
 
-First, point `MarsPlot` to the `/ACTIVECLDS` directory. Do this by editing the `<<<<<<< Simulations <<<<<<<` section so that `2>` points to `/ACTIVECLDS` like so:
+Point `MarsPlot` to the `/ACTIVECLDS` directory. Do this by editing the `<<<<<<< Simulations <<<<<<<` section so that `2>` points to `/ACTIVECLDS` like so:
 
 ```python
 > <<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>
@@ -743,7 +813,7 @@ First, point `MarsPlot` to the `/ACTIVECLDS` directory. Do this by editing the `
 > 3>
 ```
 
-Then, edit `Main Variable` in the duplicate template so that the `atmos_average_zstd` file in `/ACTIVECLDS` is sourced:
+Edit `Main Variable` in the duplicate template so that the `atmos_average_zstd` file in `/ACTIVECLDS` is sourced:
 
 ```python
 > Main Variable  = atmos_average_zstd@2.ucomp
@@ -757,18 +827,18 @@ Save `Custom.in` and pass it to `MarsPlot`. View `Diagnostics.pdf` to see the re
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 3.4 Overplot temperature in solid contours
 
-Add `temp` as the second variable on the plots you created in 3.2 and 3.3:
+Add `temp` as the `2nd Variable` in the plots you created in 3.2 and 3.3:
 
 ```python
 > <<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
 > > 2nd Variable     = atmos_average_zstd.temp
 > .. (etc) ..
->
+> 
 > <<<<<<<<<<<<<<| Plot 2D lat X lev = True |>>>>>>>>>>>>>
 > > 2nd Variable     = atmos_average_zstd@2.temp
 > .. (etc) ..
@@ -779,40 +849,45 @@ Save `Custom.in` and pass it to `MarsPlot`. View `Diagnostics.pdf` to see the re
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 3.5 Plot the surface CO2 ice content in g/m2 and compute and plot surface wind speed from the U and V winds
 
 These will be `lon X lat` plots. Both require variable operations using square brackets `[]`. Plot the results at Ls=270°. Source all of the variables from the `atmos_daily` file in `/INERTCLDS`.
 
-- Surface CO2 Ice (`snow`): Convert kg/m2 -> g/m2. Set the plot area to between 50 °N and 90 °N.
+Surface CO2 Ice (`snow`): 
+- Convert kg/m2 -> g/m2
+- Set the plot area to between 50 °N and 90 °N.
 
- Using square brackets:
+Using square brackets, `Main Variable` is set (and units converted) like:
 ```python
 Main Variable  = [atmos_daily.snow]*1000
 ```
 
-- Surface Wind Speed (`sqrt(u^2 + v^2)`): Call both `ucomp` and `vcomp` under `Main Variable`.
+Surface Wind Speed (`sqrt(u^2 + v^2)`): 
+- Call both `ucomp` and `vcomp` under `Main Variable`
 
- Using square brackets:
+ Using square brackets, `Main Variable` is set (and computed) like:
 ```python
 Main Variable  = sqrt([atmos_daily.ucomp]**2+[atmos_daily.vcomp]**2)
 ```
 
-Use `HOLD ON` and `HOLD OFF` again. You can use this syntax multiple times in the same template. The general format will be:
+Use `HOLD ON` and `HOLD OFF` again. You can use this syntax multiple times in the same template. 
+
+The general format will be:
 
 ```python
 > HOLD ON
->
+> 
 > <<<<<<| Plot 2D lon X lat = True |>>>>>>
 > Title    = Surface CO2 Ice (g/m2)
 > .. (etc) ..
->
+> 
 > <<<<<<| Plot 2D lon X lat = True |>>>>>>
 > Title    = Surface Wind Speed (m/s)
 > .. (etc) ..
->
+> 
 > HOLD OFF
 ```
 
@@ -823,58 +898,72 @@ Name the plots accordingly. Save `Custom.in` and pass it to `MarsPlot`. You shou
 
 ### 3.6 Make the following changes to the plots you created in 3.5
 
-For the surface CO2 ice plot:
-  - Set the Y axis limits to 60-90 N
+For the **surface CO2 ice** plot: 
   - Set the projection type to `Npole`
+  - Change the Y axis limits to 60-90 N
 
-For the surface wind speed plot:
+For the **surface wind speed** plot:
+  - Draw contours at 1, 10, and 20, m/s *(add a second variable!)*
   - Constrain the Y axis limits to the northern hemisphere
   - Constrain the X axis limits to the western hemisphere
-  - Draw contours at 1, 10, and 20, m/s *(add a second variable!)*
+
+**Hint:** we set the latitude range in the previous plot by editing `lat` in `Axis Options`:
+
+```python
+Axis Options  : lon = [None,None] | lat = [50,90] | cmap = jet | scale = lin | proj = cart
+```
+
+but this only works for cylindrical projections (cartesian `cart`, Robinson `robin`, Mollweide `moll` ). 
+
+When you choose an azimutal projection (North polar `Npole`, South polar `Spole`, orthographic `ortho`), you set the **bounding latitude** by adding an argument *after* specifying the projection:
+
+```python
+Axis Options  : lon = [None,None] | lat = [None,None] | cmap = jet | scale = lin | proj = Npole 60
+```
+
+For each azimutal projection, acceptable arguments are: `proj = Npole lat_max`, `proj = Spole lat_min`, and `proj = ortho lon_center lat_center`.
 
 
-
-
-
-
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 
 
 ### 3.7 Create the following zonal mean `time X lat` plots on a new page
 
+Source all of the variables from the `atmos_daily` file in `/INERTCLDS`:
+
 - Surface Temperature (`ts`). Set the colormap to `nipy_spectral`.
 - Column dust mass (`dst_mass_col`). Set the colormap to `Spectral_r`.
 - Column water ice mass (`ice_mass_col`). Set the colormap to `Spectral_r`.
 - Column water vapor mass (`vap_mass_col`). Set the colormap to `Spectral_r`.
 
-> **NOTE:** set the colormap in `Axis Options`:
+> **NOTE:** set the colormap (`cmap`) in `Axis Options`:
 >```python
 >Axis Options  : sols = [None,None] | lat = [None,None] | cmap = nipy_spectral |scale = lin
 >```
 
-Source all of the variables from the `atmos_daily` file in `/INERTCLDS`. The general format will be:
+The general format will look like:
 
 ```python
 > HOLD ON
->
+> 
 > <<<<<<| Plot 2D time X lat = True |>>>>>>
 > Title    = Zonal Mean Surface Temperature (K)
 > .. (etc) ..
->
+> 
 > <<<<<<| Plot 2D time X lat = True |>>>>>>
 > Title    = Zonal Mean Column Integrated Dust Mass (kg/m2)
 > .. (etc) ..
->
+> 
 > <<<<<<| Plot 2D time X lat = True |>>>>>>
 > Title    = Zonal Mean Column Integrated Water Ice Mass (kg/m2)
 > .. (etc) ..
->
+> 
 > <<<<<<| Plot 2D time X lat = True |>>>>>>
 > Title    = 1Zonal Mean Column Integrated Water Vapor Mass (kg/m2)
 > .. (etc) ..
->
+> 
 > HOLD OFF
 ```
 
@@ -885,20 +974,20 @@ Name the plots accordingly. Save `Custom.in` and pass it to `MarsPlot`.
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 3.8 Plot the following two cross-sections (`lat X lev`) on the same page
 
-Zonal mean mass streamfunction (`msf`) at Ls=270°
-  - Change the colormap from `jet` to `RdBu_r`
+**Zonal mean mass streamfunction (`msf`) at Ls=270°**
   - Force symmetrical contouring by setting the colorbar's minimum and maximum values to -150 and 150
-  - Adjust the Y axis limits to 1,000-1 Pa
   - Overplot solid contours at `-100,-50,-10,-5,5,10,50,100` *(Hint: set both `Main Variable` and `2nd Variable` to `msf`)*
+  - Adjust the Y axis limits to 1,000-1 Pa
+  - Change the colormap from `jet` to `RdBu_r`
 
-Zonal mean temperature (`temp`) at Ls=270°
-  - Source from the same pressure-interpolated file
-  - Overplot the zonal mean zonal wind (`ucomp`)
+**Zonal mean temperature (`temp`) at Ls=270°**
+  - Source `temp` from the same pressure-interpolated file you sourced `msf` from
+  - Overplot (`2nd Variable`) the zonal mean zonal wind (`ucomp`)
   - Adjust the Y axis limits to 1,000-1 Pa
   - Set the colormap to `jet`
 
@@ -908,24 +997,24 @@ Don't forget to use `HOLD ON` and `HOLD OFF` and to name your plots accordingly.
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 3.9 Plot zonal mean temperature from the RIC and RAC cases
 
-Create both plots at Ls=270° from the `atmos_average_pstd` file, then create a difference plot.
+Create the plots at Ls=270° from the `atmos_average_pstd` file, then create a difference plot.
 
-Make use of `HOLD ON` and `HOLD OFF` again here. Copy and paste a `lat x lev` template three times. For the difference plot, you'll need to use `@N` to point to the `/ACTIVECLDS` directory and use square brackets to subtract one variable from the other:
+Make use of `HOLD ON` and `HOLD OFF` again here. Copy and paste a `lat x lev` template, edit the first plot, then copy and paste that two more times. For the difference plot, you'll need subtract the two `temp` variables from one another, so make use of `@N` to point to the `/ACTIVECLDS` directory and square brackets `[]` to subtract one variable from the other:
 
 ```python
 > Main Variable  = [atmos_average_pstd.temp]-[atmos_average_pstd@2.temp]
 ```
 
-- Set the minimum and maximum contour-fill intervals to 130 and 250, respectively, on the RIC and RAC plots
-- Set the colormap to `RdBu` for the difference plot
-- Set the minimum and maximum contour-fill intervals to -15 and 15, respectively, on the difference plot
-- For all three plots, set the vertical range to 1,000-1 Pa
-- Set proper titles
+- On the RIC & RAC plots: set the minimum and maximum contour-fill interval (`Cmin,Cmax`) to 130 and 250 (K)
+- On the difference plot: set the colormap to `RdBu`
+- On the difference plot: set the minimum and maximum contour-fill interval (`Cmin,Cmax`) -15 and 15 (K)
+- On all three plots: set the vertical range to 1,000 - 1 Pa
+- On all three plots: set proper titles
 
 Save `Custom.in` and pass it to `MarsPlot`.
 
@@ -933,29 +1022,31 @@ Save `Custom.in` and pass it to `MarsPlot`.
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
-### 3.10 Generate two 1D temperature profiles (`temp`) from the RIC case
+### 3.10 Generate two 1D temperature profiles (`temp`) from the RIC case 
 
-Call `temp` from the `atmos_diurn_T_pstd` file, which is the time-shifted and pressure-interpolated version of the hourly file. Draw the 3 AM and 3 PM thermal profiles at `50°N, 150°E` at Ls=270°. 3 AM is index=`3`, 3 PM is index=`15`, so `Main Variable` will be set as:
+Draw the 3 AM and 3 PM thermal profiles at `50°N, 150°E` at Ls=270°. Call `temp` from the `atmos_diurn_T_pstd` file, which is the time-shifted and pressure-interpolated version of the diurn file. 3 AM is index=`3`, 3 PM is index=`15`, so `Main Variable` will be set as:
 
 ```python
 > Main Variable    = atmos_diurn_T_pstd.temp{ tod=3 }
 #                        filename.var{  tod=X }
 ```
 
-and
+for the 3 AM line, and
 
 ```python
 > Main Variable    = atmos_diurn_T_pstd.temp{tod=15}
 ```
 
-You will have to specify `Level [Pa/m]` as the Y axis:
+for the 3 PM line. You will have to specify `Level [Pa/m]` as the other axis:
 
 ```python
 > Level [Pa/m]     = AXIS
 ```
+
+> Note that when you specify level as the AXIS, MarsPlot automatically reverses the axes to draw a vertical profile of the requested variable.
 
 Fnally, change the Y axis limits from `None` to `1000,1` Pa:
 
@@ -963,15 +1054,15 @@ Fnally, change the Y axis limits from `None` to `1000,1` Pa:
 > lat,lon+/-180,[Pa/m],sols = [1000,1]
 ```
 
-To draw two lines on one axes, use `ADD LINE`:
+As a reminder, to draw two lines on one axes, use `ADD LINE`:
 
 ```python
 > <<<<<<| Plot 1D = True |>>>>>>
 > Main Variable    = var1
 > .. (etc) ..
->
+> 
 > ADD LINE
->
+> 
 > <<<<<<| Plot 1D = True |>>>>>>
 > Main Variable    = var2
 > .. (etc) ..
@@ -986,18 +1077,18 @@ Save `Custom.in` and pass it to `MarsPlot`. View `Diagnostics.pdf`.
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 ### 3.11 Plot the 1D filtered and unfiltered surface pressure over a 20-sol period
 
-Here we're asked to compare surface pressure `ps` from the orginal file (`atmos_daily`) to the surface pressure that we time-filtered in exercise 2.6 (`atmos_daily_lpf`).
+Compare the unfiltered surface pressure `ps`, which is the original variable in the orginal daily file (`atmos_daily`), to the filtered surface pressure, which is the time-filtered variable created when we applied a low-pass filter to the daily file (`atmos_daily_lpf`) in exercise 2.6, at 50°N and 150°E.
 
-- Both are 1D plots so use `ADD LINE` to plot on the same axes
-- Use `ps` from `atmos_daily.nc` and `atmos_daily_lpf.nc`
-- Since we need to choose a location, set `Latitude = 50` and `Lon +/-180 = 150`
-- Under `Axis Options`, set the X axis range to (`Ls = [260, 280]`)
-- Under `Axis Options`, set the Y axis range to (`var = [860,980]` Pa)
+- Both are 1D plots. Use `ADD LINE` to plot on the same axes
+- Use `ps` from `atmos_daily` and `atmos_daily_lpf`
+- Set `Latitude = 50` and `Lon +/-180 = 150`
+- To show a 20-sol period: under `Axis Options`, set the X axis range to (`Ls = [260, 280]`)
+- Narrow the Y axis range: under `Axis Options`, set the Y axis range to (`var = [860,980]` Pa)
 
 Save `Custom.in` and pass it to `MarsPlot`. View `Diagnostics.pdf`.
 
@@ -1005,7 +1096,7 @@ Save `Custom.in` and pass it to `MarsPlot`. View `Diagnostics.pdf`.
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
 
 
@@ -1020,5 +1111,5 @@ Please submit feedback to Alex Kling: alexandre.m.kling@nasa.gov
 
 
 
-*[(Return to Top)](#table-of-contents)*
+#### *[(Return to Top)](#table-of-contents)*
 ***
