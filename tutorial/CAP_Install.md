@@ -230,7 +230,7 @@ Open a terminal window, activate the virtual environment, and untar the file:
 (amesGCM3)>$ cd amesgcm-master
 (amesGCM3)>$ pip install .
 ```
-> Please follow the instructions to upgrade pip if recommended during that steps.
+> Please follow the instructions to upgrade pip if recommended during that steps. Instructions relevant the *conda* package manager are listed at the end of this section
 
 That's it! CAP is installed in `amesGCM3` and you can see the `MarsXXXX.py` executables stored in `~/amesGCM3/bin/`:
 

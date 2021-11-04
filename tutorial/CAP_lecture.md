@@ -337,7 +337,7 @@ The free dimensions are set by default using day-to-day decisions from a climate
 |longitude  |"*I am more interested in a zonal average than any particular longitude*"      |lon=all (average over all values)|
 |time of day| "*3pm =15hr Ok, this one is arbitrary. However if I use a diurn file, I  have a specific time of day in mind*"   |tod=15 |
 
-*Rule table for the default setting of the free dimensions*
+*Rule table for the default settings of the free dimensions*
 
 In practice, these cases cover 99% of the work typically done so whenever a setting is left to default (`= None` in MarsPlot's syntax) this is what is being used. This allows to considerably streamline the data selection process.
 
@@ -374,7 +374,7 @@ These are the four type of accepted entries for the free dimensions:
 |--         |-       |--|
 |`None` |Use default settings from the rule table below| `Ls 0-360 = None`|
 |`value`|  Return index closest to requested value in figure's unit |`Level [Pa/m]  = 50 ` (50 Pa)|
-|`Val Min, Val Max`| Return the averages between two values |`Lon +/-180 = -30,30`|
+|`Val Min, Val Max`| Return the average between two values |`Lon +/-180 = -30,30`|
 |`all`| `all` is a special keyword that return the average over all values in file |`Latitude       = all`
 
 *Accepted values for the `Ls 0-360`, `Level [Pa/m]` ,`Lon +/-180`, `Latitude` and time of day free dimensions*
@@ -524,11 +524,9 @@ MarsPlot.py Custom.in -d 200
 ```
 
 > `-date` also accepts a range of sols, e.g. `MarsPlot.py Custom.in -d 100 300` which will run the plotting routine across multiple files.
+
 There are several other plot customizations you can use:
 
-* When two or more blocks are sandwiched between a `HOLD ON` and `HOLD OFF`, `MarsPlot` will draw the plots on the same page.
-
-* Plots can be saved as images instead of PDFs by specifying your preferred filetype (PNG, EPS, etc.) when passing the `--output` (`-o`) argument to `MarsPlot`.
 * When creating 1D plots of data spanning multiple years, you can overplot consecutive years by calling `--stack_year` (`-sy`) when submitting the template to `MarsPlot`.
 
 
@@ -602,23 +600,22 @@ Similarly, you can use the keyword `STOP` (which is not initially present in Cus
 For `Plot 2D lon X lat` figures, MarsPlot supports 3 types of cylindrical projections : `cart` (cartesian), `robin` (robinson), `moll` (mollweide), and 3 types of azimuthal projections: `Npole` (north polar), `Spole` (south polar) and `ortho` (orthographic).
 
 ![Figure 4. MarsPlot workflow](./tutorial_images/projections.png)
-*(Top) cylindral projection `cart`, `robin` and `moll`. (Bottom) azimuthal projections `Npole`, `Spole` and `ortho`*
+*(Top) cylindrical projection `cart`, `robin` and `moll`. (Bottom) azimuthal projections `Npole`, `Spole` and `ortho`*
 
 The azimuthal projections accept optional arguments as follows:
+
 ```
-`Npole lat_max`
-`Spole lat_min`
-`ortho lon_center, lat_center`
+proj = Npole lat_max
+proj = Spole lat_min
+proj = ortho lon_center, lat_center
 ```
 
 ***
 ## Figure format, size
 
-As shown in the `-help` documentation of MarsPlot, the output format for the figure is chosen using the `--output` (`-o`) flag between *pdf* (default, requires the ghostscript software), *png*, or *eps*.
-
-The `-pw` (pixel width) flag can be use to change the  page width from its default value of 2000 pixels.
-
-The `--vertical` (`-vert`) can be use to make the pages vertical instead of horizontal
+* As shown in the `-help` documentation of MarsPlot, the output format for the figure is chosen using the `--output` (`-o`) flag between *pdf* (default, requires the ghostscript software), *png*, or *eps*.
+* The `-pw` (pixel width) flag can be use to change the  page width from its default value of 2000 pixels.
+* The `--vertical` (`-vert`) can be use to make the pages vertical instead of horizontal
 
 ***
 ## Access CAP libraries and make your own plots
