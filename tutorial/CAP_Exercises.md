@@ -579,16 +579,15 @@ Your `/ACTIVECLDS` directory should now contain the fort.11 files and six `netCD
 ```bash
 (amesGCM3)>$ path/to/KEY/Step2_Check.sh
 ```
-> **Note:** any permission errors can be fixed by running:
->```bash
->(amesGCM3)>$ chmod 766 path/to/KEY/Step2_Check.sh
->```
+ **Note:** any permission errors can be fixed by running:
+```bash
+(amesGCM3)>$ chmod 766 path/to/KEY/Step2_Check.sh
+```
 
 `Step2_Check.sh` will prompt you for the path to your `/CAP_Tutorial` directory:
 
 ```bash
-# INDEPENDENT OF YOUR SHELL:
-path/to/KEY/Step2_Check.sh
+(amesGCM3)>$ path/to/KEY/Step2_Check.sh
 > Please type the path to the directory containing CAP_Tutorial, i.e. /Users/username: 
 >
 /Users/username/path/to/directory
@@ -609,7 +608,7 @@ To run the answer key, type in your terminal:
 This will again ask for the path to `/CAP_Tutorial`:
 
 ```bash
-path/to/KEY/KEY.sh
+(amesGCM3)>$ path/to/KEY/KEY.sh
 > Please type the path to the directory containing CAP_Tutorial, i.e. /Users/username: 
 >
 /Users/username/path/to/directory
