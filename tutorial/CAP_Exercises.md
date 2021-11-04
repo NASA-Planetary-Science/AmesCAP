@@ -20,7 +20,7 @@
       * [2.1b (`/ACTIVECLDS`) `fort.11` to `netCDF` Conversion](#21b-for-activeclds-convert-fort11-files-into-netcdf-files)
       * [2.2b (`/ACTIVECLDS`) Interpolate `atmos_average` to standard pressure](#22b-for-activeclds-interpolate-atmos_average-to-standard-pressure)
       * [2.5b (`/ACTIVECLDS`) Interpolate `atmos_average` to standard altitude](#25b-for-activeclds-interpolate-atmos_average-to-standard-altitude)
-  * [Optional: Download the answer key for Step 2](#optional-download-the-answer-key-for-step-2)
+  * [Optional: Download the Answer Key for Step 2](#optional-download-the-answer-key-for-step-2)
   * [Break!](#break)
   * [3. Plotting Routines](#3-plotting-routines)
       * [3.1 Global Map: Surface Albedo and Topography](#31-create-a-global-map-of-surface-albedo-alb-with-topography-zsurf-contoured-on-top)
@@ -570,9 +570,9 @@ Your `/ACTIVECLDS` directory should now contain the fort.11 files and six `netCD
 ***
 
 
-# Optional: Download the answer key for Step 2
+# Optional: Download the Answer Key for Step 2
 
-1. Download `KEY.zip`
+1. Download `KEY.zip` from the CAP tutorial GitHub page [here](https://github.com/alex-kling/amesgcm/tree/master/tutorial).
 2. **Double-click** `KEY.zip` to unzip the file (do not do this from the command line) -> this should create a `KEY/` directory
 4. Open a terminal and run the command:
 
