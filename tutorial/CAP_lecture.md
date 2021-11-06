@@ -173,23 +173,22 @@ The `help` (`-h`) option provides information on available variables and needed 
 
 # 4. `MarsInterp.py` - Interpolating the Vertical Grid
 
-Native MGCM output files use pressure as the vertical coordinate (`pfull`), which means the geometric height and pressure level of an atmospheric layer varies based on location.
+Native MGCM output files use a terrain-following pressure coordinate as the vertical coordinate (`pfull`), which means the geometric heights and the actual mid-layer pressure of atmospheric layers vary based on the location (i.e. between adjacent grid points). In order to do any rigorous spatial averaging, it is therefore necessary to interpolate each vertical column to a same (standard) pressure grid (`_pstd` grid):
 
 ![Figure X. MarsInterp](./tutorial_images/MarsInterp.png)
 
 *Pressure interpolation from the reference pressure grid to a standard pressure grid*
 
-
-Climate data is usually analyzed on a standardized grid, however, and it is often necessary to interpolate the files to standard pressure coordinates. The `-type` (`-t`) argument in `MarsInterp` can interpolate files for you:
+`MarsInterp` is used to perform the vertical interpolation from *reference* (`pfull`) layers to *standard* (`pstd`) layers:
 
 ```bash
-(amesGCM3)>$ MarsInterp.py  00000.atmos_average.nc -t pstd
+(amesGCM3)>$ MarsInterp.py  00000.atmos_average.nc
 ```
 
 An inspection of the file shows that the pressure level axis which was `pfull` (30 layers) has been replaced by a standard pressure coordinate `pstd` (36 layers), and all 3- and 4-dimensional variables reflect the new shape:
 
 ```bash
-(amesGCM3)>$ MarsInterp.py  00000.atmos_average.nc -t pstd
+(amesGCM3)>$ MarsInterp.py  00000.atmos_average.nc
 (amesGCM3)>$ MarsVars.py 00000.atmos_average_pstd.nc
 >
 > ===================DIMENSIONS==========================
@@ -199,11 +198,11 @@ An inspection of the file shows that the pressure level axis which was `pfull` (
 > temp           : ('time', 'pstd', 'lat', 'lon')= (4, 36, 180, 360), temperature  [K]
 ```
 
-The following `type` (`-t` flag) of vertical interpolation are supported:
+`MarsInterp` support 3 types of vertical interpolation, which may be selected by using the `--type` (`-t` for short) flag:
 
 | file type | description | low-level value in a deep crater
 |-----------|-----------|--------|
-|_pstd | standard pressure [Pa]  |  1000Pa
+|_pstd | standard pressure [Pa] (default) |  1000Pa
 |_zstd | standard altitude [m]   |  -7000m
 |_zagl | standard altitude above ground level [m]   | 0 m
 
@@ -211,9 +210,9 @@ The following `type` (`-t` flag) of vertical interpolation are supported:
 
 **Use of custom vertical grids**
 
-It is also possible for the users to specify the layers for the interpolation. This is done by editing a **hidden** file `.amesgcm_profile`(note the dot '`.`) in your home directory.  
+`MarsInterp` uses default grids for each of the interpolation listed above but it is possible for the user to specify the layers for the interpolation. This is done by editing a **hidden** file `.amesgcm_profile`(note the dot '`.`) in your home directory.  
 
-For the first use, you will need  to copy a template of `amesgcm_profile` to your /home directory:
+For the first use, you will need to copy a template of `amesgcm_profile` to your /home directory:
 
 ```bash
 (amesGCM3)>$ cp ~/amesGCM3/mars_templates/amesgcm_profile ~/.amesgcm_profile # Note the dot '.' !!!
@@ -235,7 +234,7 @@ You can open `~/.amesgcm_profile` with any text editor:
 ```
 In the example above, the user custom-defined two vertical grids, one with 44 levels (named `p44`) and one with a single layer at 50 Pa =0.5mbar(named `phalf_mb`)
 
-You can use these by calling `MarsInterp` with the `-level` (`-l`) argument followed by the name of the new grid in `amesgcm_profile`.
+You can use these by calling `MarsInterp` with the `-level` (`-l`) argument followed by the name of the new grid defined in `.amesgcm_profile`.
 
 ```bash
 (amesGCM3)>$ MarsInterp.py  00000.atmos_average.nc -t pstd -l  p44
@@ -704,7 +703,7 @@ will produce the following image:
 ***
 ## Debugging
 `MarsPlot` is designed to make plotting MGCM output easier and faster so it handles missing data and many errors by itself. It reports errors both in the terminal and in the generated figures. To by-pass this behavior (when debugging), use the  `--debug` option with `MarsPlot` which will raise standard Python errors and stop the execution. One thing to always look for are typo/syntax errors in the template so you may want to cross-check your current plot against a pristine (empty) template.
-> Note that the errors raised with the `--debug` flag may reference to `MarsPlot` internal classes so it may not always be self-explanatory.
+> Note that the errors raised with the `--debug` flag may reference to `MarsPlot` internal classes so they may not always be self-explanatory.
 
 
 
