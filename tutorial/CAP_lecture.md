@@ -79,6 +79,7 @@ MarsPull.py -id ACTIVECLDS -f fort.11_0720 fort.11_0723
 ```
 
 These are the file formats that `MarsFiles` can create from the fort.11 MGCM output files.
+
 **Primary files**
 
 | File name | Description                                    |Timesteps for 10 sols x 16 output/sol           |Ratio to daily file (430Mb)|
@@ -99,7 +100,7 @@ These are the file formats that `MarsFiles` can create from the fort.11 MGCM out
 |diurn**_tidal** |tidally-decomposed files into  harmonics|
 |daily**_to_average**  **_to_diurn** |custom re-binning of daily files|
 
-- `MarsFiles` can concatenate like-files together on the time dimension using the `-combine` (`-c`) flag.
+- `MarsFiles` can concatenate like-files together along the time dimension using the `-combine` (`-c`) flag.
 
 ```bash
 > 07180.atmos_average.nc  07190.atmos_average.nc  07200.atmos_average.nc # 3 files with 10 days of output each
@@ -108,7 +109,7 @@ These are the file formats that `MarsFiles` can create from the fort.11 MGCM out
 ```
 
 ![Figure X. MarsFiles options](./tutorial_images/MarsFiles_diurn.png)
-*3pm surface temperature before (left) and after (right) processing a diurn file with MarsFile to uniform local time*
+*3pm surface temperature before (left) and after (right) processing a diurn file with MarsFile to uniform local time (`diurn_T.nc`)*
 
 
 [Back to Top](#cheat-sheet)
@@ -116,7 +117,7 @@ These are the file formats that `MarsFiles` can create from the fort.11 MGCM out
 
 # 3. `MarsVars.py` - Performing Variable Operations
 
-`MarsVars` provides several tools relating to variable operations such as adding and removing variables and performing column integrations. With no other arguments, passing a file to `MarsVars` displays file content much like `ncdump`:
+`MarsVars` provides several tools relating to variable operations such as adding and removing variables, and performing column integrations. With no other arguments, passing a file to `MarsVars` displays file content, much like `ncdump`:
 
 ```bash
 (amesGCM3)>$ MarsVars.py 00000.atmos_average.nc
@@ -342,7 +343,7 @@ To wrap-up (the use of `{}` to overwrite default settings is discussed later on)
 epoch  file type simulation    free dimensions             file type
                  directory
 ```
-These are the four type of accepted entries for the free dimensions:
+These are the four types of accepted entries for the free dimensions:
 
 
 |Accepted input |Meaning| Example|
@@ -485,7 +486,7 @@ Here is a sample of colors, linestyles and marker styles that can be used in 1D-
 
 ![Figure 4. MarsPlot workflow](./tutorial_images/linestyles.png)
 
-*Supported colormap in Marsplot. This figure was also generated using code from [scipy-lectures.org](https://scipy-lectures.org)]*
+*Supported colormap in MarsPlot. This figure was also generated using code from [scipy-lectures.org](https://scipy-lectures.org)]*
 
 ***
 ## Put multiple plots on the same page
@@ -506,7 +507,7 @@ You can sandwich any number of plots between the `HOLD ON` and `HOLD OFF` keywor
 > HOLD OFF
 ```
 
-By default, MarsPlot will use a default layout for the plots, this can be modified by adding the desired number of lines and number of columns, separated by a comma: `HOLD ON 4 ,3` will organize the figure with a 4 -lines and 3-column layout.
+By default, MarsPlot will use a default layout for the plots, this can be modified by adding the desired number of lines and number of columns, separated by a comma: `HOLD ON 4,3` will organize the figure with a 4 -lines and 3-column layout.
 
 Note that Custom.in comes with two plots pre-loaded on the same page.
 ***
@@ -544,16 +545,13 @@ MarsPlot.py Custom.in -d 200
 
 > `-date` also accepts a range of sols, e.g. `MarsPlot.py Custom.in -d 100 300` which will run the plotting routine across multiple files.
 
-There are several other plot customizations you can use:
-
-* When creating 1D plots of data spanning multiple years, you can overplot consecutive years by calling `--stack_year` (`-sy`) when submitting the template to `MarsPlot`.
-
+When creating 1D plots of data spanning multiple years, you can overplot consecutive years on top of the other instead of sequentially by calling `--stack_year` (`-sy`) when submitting the template to `MarsPlot`.
 
 
 
 ***
 ## Access simulation in a different directory
-The final plot-related functionality in `MarsPlot` is the simulation list, which allows you to point `MarsPlot` to different directories containing the MGCM output:
+At the beginning of `MarsPlot` is the `<<< Simulations >>>` block which, is used to point `MarsPlot` to different directories containing MGCM outputs. When set to `None`, `ref>` (the simulation directory number `@1`, optional in the templates) refers to the **current** directory:
 
 ```python
 <<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>
@@ -563,7 +561,7 @@ ref> None
 =======================================================
 ```
 Only 3 simulations have place holders but you can add additional ones if you would like (e.g. `4> ...` )
-To access a variable from a file in another directory, just point to the correct simulation when calling `Main Variable` using the `@` character:
+To access a variable from a file in another directory, just point to the correct simulation when calling `Main Variable` (or `2nd Variable`) using the `@` character:
 
 ```python
 Main Variable  = XXXXX.filename@N.variable`
@@ -600,7 +598,7 @@ These are examples of potential applications:
  > Main Variable  = [atmos_average.temp]-[atmos_average.temp{lev=10}] (temp. difference between the default (near surface) and the 10 Pa level
 ```
 ***
-## Commenting out and speed-up processing
+## Code comments and speed-up processing
 
 Comments are preceded by `#`, following python's convention. Each `<<<<| block |>>>>` must stay integral so comments may be inserted between templates or comment all lines of the template (which is why it is generally easier to simply set the `<<<<| block = False |>>>>`) but not within a template.
 
@@ -624,9 +622,9 @@ For `Plot 2D lon X lat` figures, MarsPlot supports 3 types of cylindrical projec
 The azimuthal projections accept optional arguments as follows:
 
 ```
-proj = Npole lat_max
-proj = Spole lat_min
-proj = ortho lon_center, lat_center
+proj = Npole lat_max                   # effectively zoom in/out on the North pole
+proj = Spole lat_min                   # effectively zoom in/out on the South pole
+proj = ortho lon_center, lat_center    # rotate the globe
 ```
 
 ***
@@ -706,7 +704,7 @@ will produce the following image:
 ***
 ## Debugging
 `MarsPlot` is designed to make plotting MGCM output easier and faster so it handles missing data and many errors by itself. It reports errors both in the terminal and in the generated figures. To by-pass this behavior (when debugging), use the  `--debug` option with `MarsPlot` which will raise standard Python errors and stop the execution. One thing to always look for are typo/syntax errors in the template so you may want to cross-check your current plot against a pristine (empty) template.
-> Note that the errors raised with the `--debug` flag may reference to `MarsPlot` internal classes so it may not also be self-explanatory.
+> Note that the errors raised with the `--debug` flag may reference to `MarsPlot` internal classes so it may not always be self-explanatory.
 
 
 
