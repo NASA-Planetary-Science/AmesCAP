@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/Users/cbatters/amesGCM3/bin/python3
 
 #Load generic Python Modules
 import argparse #parse arguments
@@ -1024,7 +1024,7 @@ def make_template():
         customFileIN.write(lh+"""> 'line' sets the line style:  '-r' (solid red), '--g' (dashed green), '-ob' (solid & blue markers)\n""")
         customFileIN.write(lh+"""> 'scale' sets the color mapping:  'lin' (linear) or 'log' (logarithmic) For 'log', Cmin,Cmax are typically expected \n""")
         customFileIN.write(lh+"""> 'proj' sets the projection: Cylindrical options are 'cart' (cartesian), 'robin'  (Robinson), 'moll' (Mollweide) \n""")
-        customFileIN.write(lh+""">                             Azimuthal   options are 'Npole' (north pole), 'Spole' (south pole), 'ortho' (Orthographic)  \n""")
+        customFileIN.write(lh+""">                             Azimutal   options are 'Npole' (north pole), 'Spole' (south pole), 'ortho' (Orthographic)  \n""")
         customFileIN.write(lh+""">  Azimutal projections accept customization arguments: 'Npole lat_max', 'Spole lat_min' , 'ortho lon_center, lat_center' \n""")
         customFileIN.write(lh+"""KEYWORDS:\n""")
         customFileIN.write(lh+"""> 'HOLD ON' [blocks of figures] 'HOLD OFF' groups the figures as a multi-panel page  \n""")
@@ -1629,6 +1629,8 @@ class Fig_2D(object):
         add_fdim=False
         if not self.fdim_txt.strip():add_fdim=True
 
+        var_thin=False
+
         #------------------------Time of Day ----------------------------
         # For diurn files, select data on the time of day axis and update dimensions
         # so the resulting variable is the same as atmos_average and atmos_daily file.
@@ -1688,24 +1690,37 @@ class Fig_2D(object):
            or dim_info==('time', 'pstd', 'lat', 'lon')
            or dim_info==('time', 'zstd', 'lat', 'lon')
            or dim_info==('time', 'zagl', 'lat', 'lon')
-           or dim_info==('time', 'zgrid', 'lat', 'lon')):
+           or dim_info==('time', 'zgrid', 'lat', 'lon')
+           #======static, thin=======
+           or dim_info==('zgrid','lat','lon')):
 
             if dim_info[1] in ['pfull','level','pstd']:  self.vert_unit='Pa'
-            if dim_info[1] in ['zagl','zstd']:  self.vert_unit='m'
+            if dim_info[1] in ['zagl','zstd','zgrid']:   self.vert_unit='m'
+            if dim_info[0] in ['zgrid']:
+                self.vert_unit='m'
+                var_thin=True
 
             #Initialize dimensions
-            levs=f.variables[dim_info[1]][:] #dim_info[1] is either pfull, level, pstd, zstd,zagl or zgrid
-            zi=np.arange(0,len(levs))
-            t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
-            #For diurn file, change time_of_day(time,24,1) to time_of_day(time) at midnight UT
-            if f_type=='diurn'and len(Ls.shape)>1:Ls=np.squeeze(Ls[:,0])
-            t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
+            if var_thin==True:
+                levs=f.variables[dim_info[0]][:] #dim_info[0] is zgrid
+                zi=np.arange(0,len(levs))
+            elif var_thin==False:
+                levs=f.variables[dim_info[1]][:] #dim_info[1] is either pfull, level, pstd, zstd, zagl, or zgrid
+                zi=np.arange(0,len(levs))
+                t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
+                #For diurn file, change time_of_day(time,24,1) to time_of_day(time) at midnight UT
+                if f_type=='diurn'and len(Ls.shape)>1:Ls=np.squeeze(Ls[:,0])
+                t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
 
             if plot_type=='2D_lon_lat':
-                ti,temp_txt =get_time_index(fdim1,Ls)
-                if add_fdim:self.fdim_txt+=temp_txt
-                zi,temp_txt =get_level_index(fdim2,levs)
-                if add_fdim:self.fdim_txt+=temp_txt
+                if var_thin==True:
+                    zi,temp_txt =get_level_index(fdim2,levs)
+                    if add_fdim:self.fdim_txt+=temp_txt
+                elif var_thin==False:
+                    ti,temp_txt =get_time_index(fdim1,Ls)
+                    if add_fdim:self.fdim_txt+=temp_txt
+                    zi,temp_txt =get_level_index(fdim2,levs)
+                    if add_fdim:self.fdim_txt+=temp_txt
 
             if plot_type=='2D_time_lat':
                 loni,temp_txt =get_lon_index(fdim1,lon)
@@ -1714,17 +1729,24 @@ class Fig_2D(object):
                 if add_fdim:self.fdim_txt+=temp_txt
 
             if plot_type=='2D_lat_lev':
-                ti,temp_txt =get_time_index(fdim1,Ls)
-                if add_fdim:self.fdim_txt+=temp_txt
-                loni,temp_txt =get_lon_index(fdim2,lon)
-                if add_fdim:self.fdim_txt+=temp_txt
+                if var_thin==True:
+                    loni,temp_txt =get_lon_index(fdim2,lon)
+                    if add_fdim:self.fdim_txt+=temp_txt
+                elif var_thin==False:
+                    ti,temp_txt =get_time_index(fdim1,Ls)
+                    if add_fdim:self.fdim_txt+=temp_txt
+                    loni,temp_txt =get_lon_index(fdim2,lon)
+                    if add_fdim:self.fdim_txt+=temp_txt
 
             if plot_type=='2D_lon_lev':
-                ti,temp_txt =get_time_index(fdim1,Ls)
-                if add_fdim:self.fdim_txt+=temp_txt
-                lati,temp_txt =get_lat_index(fdim2,lat)
-                if add_fdim:self.fdim_txt+=temp_txt
-
+                if var_thin==True:
+                    lati,temp_txt =get_lat_index(fdim2,lat)
+                    if add_fdim:self.fdim_txt+=temp_txt
+                elif var_thin==False:
+                    ti,temp_txt =get_time_index(fdim1,Ls)
+                    if add_fdim:self.fdim_txt+=temp_txt
+                    lati,temp_txt =get_lat_index(fdim2,lat)
+                    if add_fdim:self.fdim_txt+=temp_txt
 
             if plot_type=='2D_time_lev':
                 lati,temp_txt =get_lat_index(fdim1,lat)
@@ -1745,6 +1767,10 @@ class Fig_2D(object):
                 var=f.variables[var_name][ti,todi,zi,lati,loni].reshape(len(np.atleast_1d(ti)),len(np.atleast_1d(todi)),\
                      len(np.atleast_1d(zi)),len(np.atleast_1d(lati)),len(np.atleast_1d(loni)))
                 var=np.nanmean(var,axis=1)
+            elif var_thin==True:
+                var=f.variables[var_name][zi,lati,loni].reshape(len(np.atleast_1d(zi)),\
+                                                                len(np.atleast_1d(lati)),\
+                                                                len(np.atleast_1d(loni)))
             else:
                 var=f.variables[var_name][ti,zi,lati,loni].reshape(len(np.atleast_1d(ti)),\
                                                                 len(np.atleast_1d(zi)),\
@@ -1755,12 +1781,17 @@ class Fig_2D(object):
 
 
             #(u'time', u'pfull', u'lat', u'lon')
-            if plot_type=='2D_lon_lat': return  lon,   lat,  np.nanmean(np.nanmean(var,axis=1),axis=0),var_info
-            if plot_type=='2D_time_lat':return t_stack,lat,  np.nanmean(np.nanmean(var,axis=1),axis=2).T,var_info #transpose
-            if plot_type=='2D_lat_lev':return  lat, levs,    np.nanmean(np.nanmean(var,axis=3),axis=0),var_info
-            if plot_type=='2D_lon_lev':return  lon, levs,    np.nanmean(np.average(var,weights=w,axis=2),axis=0),var_info
-            if plot_type=='2D_time_lev':return t_stack,levs, np.nanmean(np.average(var,weights=w,axis=2),axis=2).T,var_info #transpose
-            if plot_type=='2D_lon_time':  return lon,t_stack,np.nanmean(np.average(var,weights=w,axis=2),axis=1),var_info
+            if var_thin==True:
+                if plot_type=='2D_lon_lat': return  lon,   lat,  np.nanmean(var,axis=0),var_info
+                if plot_type=='2D_lat_lev':return  lat, levs,    np.nanmean(var,axis=2),var_info
+                if plot_type=='2D_lon_lev':return  lon, levs,    np.nanmean(var,weights=w,axis=1),var_info
+            else:
+                if plot_type=='2D_lon_lat': return  lon,   lat,  np.nanmean(np.nanmean(var,axis=1),axis=0),var_info
+                if plot_type=='2D_time_lat':return t_stack,lat,  np.nanmean(np.nanmean(var,axis=1),axis=2).T,var_info #transpose
+                if plot_type=='2D_lat_lev':return  lat, levs,    np.nanmean(np.nanmean(var,axis=3),axis=0),var_info
+                if plot_type=='2D_lon_lev':return  lon, levs,    np.nanmean(np.average(var,weights=w,axis=2),axis=0),var_info
+                if plot_type=='2D_time_lev':return t_stack,levs, np.nanmean(np.average(var,weights=w,axis=2),axis=2).T,var_info #transpose
+                if plot_type=='2D_lon_time':  return lon,t_stack,np.nanmean(np.average(var,weights=w,axis=2),axis=1),var_info
 
 
 
@@ -2020,7 +2051,7 @@ class Fig_2D_lon_lat(Fig_2D):
                         plt.text(xl,yl,lab_txt, fontsize=label_size-self.nPan*label_factor)
 
                 if projfull[0:5] in ['Npole','Spole','ortho']:
-                    #Common to all azimuthal projections
+                    #Common to all azimutal projections
                     lon180_original=lon180.copy()
                     var,lon180=add_cyclic(var,lon180)
                     if add_topo:zsurf,_=add_cyclic(zsurf,lon180_original)
@@ -2795,7 +2826,7 @@ class Fig_1D(object):
             or dim_info==('time',tod_dim_name,'zgrid', 'lat', 'lon')):
     
                 if dim_info[1] in ['pfull','level','pstd']:  self.vert_unit='Pa'
-                if dim_info[1] in ['zagl','zstd']:  self.vert_unit='m'
+                if dim_info[1] in ['zagl','zstd','zgrid']:  self.vert_unit='m'
     
                 #Initialize dimensions
                 levs=f.variables[dim_info[2]][:]
