@@ -348,9 +348,9 @@ These are the four types of accepted entries for the free dimensions:
 |Accepted input |Meaning| Example|
 |--         |-       |--|
 |`None` |Use default settings from the rule table below| `Ls 0-360 = None`|
-|`value`|  Return index closest to requested value in figure's unit |`Level [Pa/m]  = 50 ` (50 Pa)|
+|`value`|  Return index closest to requested value in the figure'sunit |`Level [Pa/m]  = 50 ` (50 Pa)|
 |`Val Min, Val Max`| Return the average between two values |`Lon +/-180 = -30,30`|
-|`all`| `all` is a special keyword that return the average over all values in file |`Latitude       = all`
+|`all`| `all` is a special keyword that return the average over all values along that dimension |`Latitude       = all`
 
 *Accepted values for the `Ls 0-360`, `Level [Pa/m]` ,`Lon +/-180`, `Latitude` and time of day free dimensions*
 

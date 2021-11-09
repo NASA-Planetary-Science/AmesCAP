@@ -186,6 +186,7 @@ Depending on the answer, you can now activate the virtual environment with one o
 (local)>$ source amesGCM3/bin/activate          # bash
 (local)>$ source amesGCM3/bin/activate.csh      # csh/tcsh
 (local)>$ source amesGCM3/Scripts/activate.csh  # Cygwin/Windows
+(local)>$ conda amesGCM3/bin/activate           # if you used conda
 ```
 
 > In Cygwin/Windows, the `/bin` directory may be named `/Scripts`.
@@ -215,22 +216,27 @@ There is therefore no need to reference the full paths while **inside** the virt
 
 ## 2. Installing CAP
 
-Now we can download and install CAP in `amesGCM3`. CAP was provided to you in the tarfile `amesgcm-master.zip` that was sent along with these instructions. Download `amesgcm-master.zip`. You can leave the file in `Downloads/`, or,  if you encounter any permission issue, move it to a temporary location like your `/home` or `/Desktop` directories. 
+Now we can download and install CAP in `amesGCM3`. CAP was provided to you in the tarfile `amesgcm-master.zip` that was sent along with these instructions. Download `amesgcm-master.zip`. You can leave the file in `Downloads/`, or,  if you encounter any permission issue, move it to a temporary location like your `/home` or `/Desktop` directories.
 
 ### Using `pip`
 
-Open a terminal window, activate the virtual environment, and untar the file:
+Open a terminal window, activate the virtual environment, and untar the file or install from the github:
 
 ```bash
 (local)>$ source ~/amesGCM3/bin/activate          # bash
 (local)>$ source ~/amesGCM3/bin/activate.csh      # cshr/tsch
 (local)>$ source ~/amesGCM3/Scripts/activate.csh  #  Cygwin/Windows
-(amesGCM3)>$
+(local)>$ conda amesGCM3/bin/activate             # if you used conda
+# FROM AN ARCHIVE:
 (amesGCM3)>$ tar -xf amesgcm-master.zip
 (amesGCM3)>$ cd amesgcm-master
 (amesGCM3)>$ pip install .
+# OR FROM THE GITHUB:
+(amesGCM3)>$ pip install git+https://github.com/alex-kling/amesgcm.git
 ```
 > Please follow the instructions to upgrade pip if recommended during that steps. Instructions relevant the *conda* package manager are listed at the end of this section
+
+
 
 That's it! CAP is installed in `amesGCM3` and you can see the `MarsXXXX.py` executables stored in `~/amesGCM3/bin/`:
 
@@ -253,9 +259,10 @@ Double check that the paths to the executables are correctly set in your termina
 then reactivating the virtual environment:
 
 ```bash
-(local)>$ source ~/amesGCM3/bin/activate     # bash
-(local)>$ source ~/amesGCM3/bin/activate.csh # csh/tsch
-(local)>$ source ~/amesGCM3/Scripts/activate.csh
+(local)>$ source ~/amesGCM3/bin/activate          # bash
+(local)>$ source ~/amesGCM3/bin/activate.csh      # csh/tsch
+(local)>$ source ~/amesGCM3/Scripts/activate.csh  # cygwin
+(local)>$ conda amesGCM3/bin/activate             # if you used conda
 ```
 
 and checking the documentation for any CAP executable using the `--help` option:
@@ -324,10 +331,13 @@ Activate the virtual environment, then install CAP:
 ```bash
 (local)>$ conda activate amesGCM3
 (amesGCM3)>$ conda install pip
+# FROM AN ARCHIVE:
 (amesGCM3)>$ cd ~/Downloads
 (amesGCM3)>$ tar -xf CAP_tarball.zip
 (amesGCM3)>$ cd amesgcm-master
 (amesGCM3)>$ pip install .
+# OR FROM THE GITHUB:
+(amesGCM3)>$ pip install git+https://github.com/alex-kling/amesgcm.git
 ```
 
 The source code will be installed in:
