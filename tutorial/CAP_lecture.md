@@ -347,7 +347,7 @@ These are the four types of accepted entries for the free dimensions:
 
 |Accepted input |Meaning| Example|
 |--         |-       |--|
-|`None` |Use default settings from the rule table below| `Ls 0-360 = None`|
+|`None` |Use default settings from the rule table above| `Ls 0-360 = None`|
 |`value`|  Return index closest to requested value in the figure'sunit |`Level [Pa/m]  = 50 ` (50 Pa)|
 |`Val Min, Val Max`| Return the average between two values |`Lon +/-180 = -30,30`|
 |`all`| `all` is a special keyword that return the average over all values along that dimension |`Latitude       = all`
@@ -447,7 +447,7 @@ The default colormap `cmap = jet` may be changed using any Matplotlib colormaps.
 
 Finally, note the use of the `_r` suffix (reverse) to reverse the order of the colormaps listed in the figure above. From example, using `cmap = jet` would have colors spanning from *blue* > *red*  and `cmap = jet_r` *red* > *blue* instead
 
-*Supported colormap in Marsplot. The figure was generated using code from [the scipy webpage](https://scipy-lectures.org/intro/matplotlib/auto_examples/options/plot_colormaps.html) .*
+*Supported colormaps in Marsplot. The figure was generated using code from [the scipy webpage](https://scipy-lectures.org/intro/matplotlib/auto_examples/options/plot_colormaps.html) .*
 
 
 ***
@@ -485,7 +485,7 @@ Here is a sample of colors, linestyles and marker styles that can be used in 1D-
 
 ![Figure 4. MarsPlot workflow](./tutorial_images/linestyles.png)
 
-*Supported colormap in MarsPlot. This figure was also generated using code from [scipy-lectures.org](https://scipy-lectures.org)]*
+*Supported styles for 1D plots. This figure was also generated using code from [scipy-lectures.org](https://scipy-lectures.org)*
 
 ***
 ## Put multiple plots on the same page
@@ -512,7 +512,7 @@ Note that Custom.in comes with two plots pre-loaded on the same page.
 ***
 ## Put multiple 1D-plots on the same page
 
-Similarly adding the `ADD LINE` keywords between two (or more) templates can be used to place multiple 1D plot on the same figure.
+Similarly adding the `ADD LINE` keywords between two (or more) templates can be used to place multiple 1D plots on the same figure.
 
 ```
 > <<<<<<| Plot 1D = True |>>>>>>
@@ -576,13 +576,13 @@ By default, MarsPlot uses the free dimensions provided in each template (`Ls 0-3
 ```python
 <<<<<<<<<<<<<<| Plot 2D lon X lat = True |>>>>>>>>>>>>>
 ...
-Main Variable  = atmos_average
+Main Variable  = atmos_average.var
 ...
 Ls 0-360       = 270
 Level [Pa/m]   = 10
-2nd Variable   = atmos_average{ls=90,180;lev=50}
+2nd Variable   = atmos_average.var{ls=90,180;lev=50}
 ```
-
+> Keywords for the dimensions are `ls`, `lev`, `lon`, `lat` and `tod`. Accepted entries are `Value` (closest), `Valmin,Valmax` (average between two values) and `all` (average over all values)
 ## Element-wise operations
 
 You can encompass variables between square brackets `[]` to perform element-wise operations, which is useful to compare simulations, apply scaling etc... MarsPlot will first load each variables encompassed with the brackets, and then apply the algebraic expression outside the `[]` before plotting.
@@ -606,7 +606,7 @@ You will notice the `START` key word at the very beginning of the template.
 =======================================================
 START
 ```
-This instructs MarsPlot to start parsing templates at this point. If you are already happy with multiple plots, you can move the `START` keyword further down in the Custom.in to skip those first plots instead of setting those to `<<<<| Plot  = False |>>>>` individually. When you are done with your analysis, move `START` back to the top to generate a pdf with all the plots.
+This instructs MarsPlot to start parsing templates at this point. If you are already happy with multiple plots, you can move the `START` keyword further down in the Custom.in to skip those first plots instead of setting those to `<<<<| Plot  = False |>>>>` individually. When you are done with your analysis, simply move `START` back to the top to generate a pdf with all the plots.
 
 Similarly, you can use the keyword `STOP` (which is not initially present in Custom.in) to stop the parsing of templates. In this case, the only plots processed would be the ones between `START` and `STOP`.
 
