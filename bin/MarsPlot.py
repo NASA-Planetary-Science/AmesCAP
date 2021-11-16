@@ -1,4 +1,4 @@
-#!/Users/cbatters/amesGCM3/bin/python3
+#!/usr/bin/env python
 
 #Load generic Python Modules
 import argparse #parse arguments
@@ -118,8 +118,8 @@ def main():
     global customFileIN    #template name
     global levels;levels=21 #number of contour for 2D plots
     global my_dpi;my_dpi=96.        #pixel per inch for figure output
-    global label_size;label_size=12 #Label size for title, xlabel, ylabel
-    global label_factor;label_factor=1/2# reduce the font size as the  number of pannel increases size 
+    global label_size;label_size=18 #Label size for title, xlabel, ylabel
+    global label_factor;label_factor=1/16# reduce the font size as the  number of pannel increases size 
     global width_inch; #pixel width for saving figure
     global height_inch; #pixel width for saving figure
     global vertical_page;vertical_page=parser.parse_args().vertical #vertical pages instead of horizonal for saving figure
@@ -1024,8 +1024,8 @@ def make_template():
         customFileIN.write(lh+"""> 'line' sets the line style:  '-r' (solid red), '--g' (dashed green), '-ob' (solid & blue markers)\n""")
         customFileIN.write(lh+"""> 'scale' sets the color mapping:  'lin' (linear) or 'log' (logarithmic) For 'log', Cmin,Cmax are typically expected \n""")
         customFileIN.write(lh+"""> 'proj' sets the projection: Cylindrical options are 'cart' (cartesian), 'robin'  (Robinson), 'moll' (Mollweide) \n""")
-        customFileIN.write(lh+""">                             Azimutal   options are 'Npole' (north pole), 'Spole' (south pole), 'ortho' (Orthographic)  \n""")
-        customFileIN.write(lh+""">  Azimutal projections accept customization arguments: 'Npole lat_max', 'Spole lat_min' , 'ortho lon_center, lat_center' \n""")
+        customFileIN.write(lh+""">                             Azimuthal   options are 'Npole' (north pole), 'Spole' (south pole), 'ortho' (Orthographic)  \n""")
+        customFileIN.write(lh+""">  Azimuthal projections accept customization arguments: 'Npole lat_max', 'Spole lat_min' , 'ortho lon_center, lat_center' \n""")
         customFileIN.write(lh+"""KEYWORDS:\n""")
         customFileIN.write(lh+"""> 'HOLD ON' [blocks of figures] 'HOLD OFF' groups the figures as a multi-panel page  \n""")
         customFileIN.write(lh+"""  (Optional: use 'HOLD ON 2,3' to force a 2 lines 3 column layout) \n""")
@@ -2051,7 +2051,7 @@ class Fig_2D_lon_lat(Fig_2D):
                         plt.text(xl,yl,lab_txt, fontsize=label_size-self.nPan*label_factor)
 
                 if projfull[0:5] in ['Npole','Spole','ortho']:
-                    #Common to all azimutal projections
+                    #Common to all azimuthal projections
                     lon180_original=lon180.copy()
                     var,lon180=add_cyclic(var,lon180)
                     if add_topo:zsurf,_=add_cyclic(zsurf,lon180_original)
@@ -2156,7 +2156,7 @@ class Fig_2D_lon_lat(Fig_2D):
                         X,Y=mollweide2cart(LAT,LON)
 
                     if projfull[0:5] in ['Npole','Spole','ortho']:
-                        #Common to all azimutal projections
+                        #Common to all azimuthal projections
                         var2,lon180=add_cyclic(var2,lon180)
                         lon_lat_custom=None #Initialization
                         lat_b=None
