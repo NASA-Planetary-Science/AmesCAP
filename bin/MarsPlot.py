@@ -23,7 +23,7 @@ try:
     from netCDF4 import Dataset, MFDataset
     from numpy import sqrt, exp, max, mean, min, log, log10,sin,cos,abs
     from matplotlib.colors import LogNorm
-    from matplotlib.ticker import LogFormatter
+    from matplotlib.ticker import (LogFormatter, NullFormatter, LogFormatterSciNotation)
 
 except ImportError as error_msg:
     prYellow("Error while importing modules")
@@ -1492,7 +1492,14 @@ def prep_file(var_name,file_type,simuID,sol_array):
     dim_info=f.variables[var_name].dimensions
     dims=f.variables[var_name].shape
     return f, var_info,dim_info, dims
-    
+
+class CustomTicker(LogFormatterSciNotation):
+    def __call__(self, x, pos=None):
+        if x<0:
+            return LogFormatterSciNotation.__call__(self,x, pos=None)
+        else:
+            return "{x:g}".format(x=x)
+
 #======================================================
 #                  FIGURE DEFINITIONS
 #======================================================
@@ -2292,6 +2299,8 @@ class Fig_2D_lat_lev(Fig_2D):
             if self.vert_unit=='Pa':
                 ax.set_yscale("log")
                 ax.invert_yaxis()
+                ax.yaxis.set_major_formatter(CustomTicker())
+                ax.yaxis.set_minor_formatter(NullFormatter())
                 ylabel_txt='Pressure [Pa]'
             else:
                 ylabel_txt='Altitude [m]'
@@ -2340,6 +2349,8 @@ class Fig_2D_lon_lev(Fig_2D):
             if self.vert_unit=='Pa':
                 ax.set_yscale("log")
                 ax.invert_yaxis()
+                ax.yaxis.set_major_formatter(CustomTicker())
+                ax.yaxis.set_minor_formatter(NullFormatter())
                 ylabel_txt='Pressure [Pa]'
             else:
                 ylabel_txt='Altitude [m]'
@@ -2403,6 +2414,8 @@ class Fig_2D_time_lev(Fig_2D):
             if self.vert_unit=='Pa':
                 ax.set_yscale("log")
                 ax.invert_yaxis()
+                ax.yaxis.set_major_formatter(CustomTicker())
+                ax.yaxis.set_minor_formatter(NullFormatter())
                 ylabel_txt='Pressure [Pa]'
             else:
                 ylabel_txt='Altitude [m]'
@@ -2986,7 +2999,7 @@ class Fig_1D(object):
 
             if self.plot_type=='1D_lev':
 
-                plt.plot(var,xdata,self.axis_opt1,lw=2,label=txt_label)
+                plt.plot(var,xdata,self.axis_opt1,lw=4,label=txt_label)
                 
                 #Label is provided
                 if self.axis_opt2:
@@ -2994,10 +3007,11 @@ class Fig_1D(object):
                 else:    
                     plt.xlabel(var_info,fontsize=label_size-self.nPan*label_factor)
 
-
                 if self.vert_unit=='Pa':
                     ax.set_yscale("log")
                     ax.invert_yaxis()
+                    ax.yaxis.set_major_formatter(CustomTicker())
+                    ax.yaxis.set_minor_formatter(NullFormatter())
                     ylabel_txt='Pressure [Pa]'
                 else:
                     ylabel_txt='Altitude [m]'
