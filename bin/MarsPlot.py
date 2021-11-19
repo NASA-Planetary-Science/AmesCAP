@@ -1,4 +1,4 @@
-#!/Users/cbatters/amesGCM3/bin/python3
+#!/usr/bin/env python3
 
 #Load generic Python Modules
 import argparse #parse arguments
