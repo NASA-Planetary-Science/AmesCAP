@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/Users/cbatters/amesGCM3/bin/python3
 
 #Load generic Python Modules
 import argparse #parse arguments
@@ -23,7 +23,7 @@ try:
     from netCDF4 import Dataset, MFDataset
     from numpy import sqrt, exp, max, mean, min, log, log10,sin,cos,abs
     from matplotlib.colors import LogNorm
-    from matplotlib.ticker import LogFormatter
+    from matplotlib.ticker import (LogFormatter, NullFormatter, LogFormatterSciNotation)
 
 except ImportError as error_msg:
     prYellow("Error while importing modules")
@@ -36,6 +36,7 @@ except Exception as exception:
     print(exception.__class__.__name__ + ": ", exception)
     exit()
 
+degr = u"\N{DEGREE SIGN}"
 
 #======================================================
 #                  ARGUMENTS PARSER
@@ -119,7 +120,9 @@ def main():
     global levels;levels=21 #number of contour for 2D plots
     global my_dpi;my_dpi=96.        #pixel per inch for figure output
     global label_size;label_size=18 #Label size for title, xlabel, ylabel
-    global label_factor;label_factor=1/16# reduce the font size as the  number of pannel increases size 
+    global title_size;title_size=24 #Label size for title, xlabel, ylabel
+    global label_factor;label_factor=1/50# reduce the font size as the  number of pannel increases size 
+    global title_factor;title_factor=1/100
     global width_inch; #pixel width for saving figure
     global height_inch; #pixel width for saving figure
     global vertical_page;vertical_page=parser.parse_args().vertical #vertical pages instead of horizonal for saving figure
@@ -1492,7 +1495,14 @@ def prep_file(var_name,file_type,simuID,sol_array):
     dim_info=f.variables[var_name].dimensions
     dims=f.variables[var_name].shape
     return f, var_info,dim_info, dims
-    
+
+class CustomTicker(LogFormatterSciNotation):
+    def __call__(self, x, pos=None):
+        if x<0:
+            return LogFormatterSciNotation.__call__(self,x, pos=None)
+        else:
+            return "{x:g}".format(x=x)
+
 #======================================================
 #                  FIGURE DEFINITIONS
 #======================================================
@@ -1797,9 +1807,9 @@ class Fig_2D(object):
 
     def make_title(self,var_info,xlabel,ylabel):
         if self.title:
-            plt.title(self.title,fontsize=label_size-self.nPan*label_factor)
+            plt.title(self.title,fontsize=title_size-self.nPan*title_factor)
         else:
-            plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=label_size-self.nPan*label_factor) #we remove the first coma ',' of fdim_txt to print to the new line
+            plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=title_size-self.nPan*title_factor) #we remove the first coma ',' of fdim_txt to print to the new line
         plt.xlabel(xlabel,fontsize=label_size-self.nPan*label_factor)
         plt.ylabel(ylabel,fontsize=label_size-self.nPan*label_factor)
 
@@ -1815,7 +1825,7 @@ class Fig_2D(object):
         else:
             cbar=plt.colorbar(orientation='horizontal',aspect=50)
 
-        cbar.ax.tick_params(labelsize=label_size-self.nPan*label_factor) #shrink the colorbar label as the number of subplot increase
+        cbar.ax.tick_params(labelsize=title_size-self.nPan*title_factor) #shrink the colorbar label as the number of subplot increase
 
     def return_norm_levs(self):
         norm =None
@@ -2204,9 +2214,9 @@ class Fig_2D_lon_lat(Fig_2D):
 
 
                 if self.title:
-                    plt.title(self.title,fontsize=label_size-self.nPan*label_factor)
+                    plt.title(self.title,fontsize=title_size-self.nPan*title_factor)
                 else:
-                    plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=label_size-self.nPan*label_factor) #we remove the first coma ',' of fdim_txt to print to the new line
+                    plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=title_size-self.nPan*title_factor) #we remove the first coma ',' of fdim_txt to print to the new line
 
 
             self.success=True
@@ -2249,11 +2259,14 @@ class Fig_2D_time_lat(Fig_2D):
             Ls_ticks = [item for item in ax.get_xticks()]
             labels = [item for item in ax.get_xticklabels()]
 
-
-            for i in range(0,len(Ls_ticks)):
-                id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                labels[i]='Ls %g\nsol %i'%(np.mod(Ls_ticks[i],360.),tim[id])
-
+            if tim[0] != (9.969209968386869e+36):
+                for i in range(0,len(Ls_ticks)):
+                    id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                    labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
+            else:
+                for i in range(0,len(Ls_ticks)):
+                    id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                    labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
             ax.set_xticklabels(labels)
 
@@ -2292,6 +2305,8 @@ class Fig_2D_lat_lev(Fig_2D):
             if self.vert_unit=='Pa':
                 ax.set_yscale("log")
                 ax.invert_yaxis()
+                ax.yaxis.set_major_formatter(CustomTicker())
+                ax.yaxis.set_minor_formatter(NullFormatter())
                 ylabel_txt='Pressure [Pa]'
             else:
                 ylabel_txt='Altitude [m]'
@@ -2340,6 +2355,8 @@ class Fig_2D_lon_lev(Fig_2D):
             if self.vert_unit=='Pa':
                 ax.set_yscale("log")
                 ax.invert_yaxis()
+                ax.yaxis.set_major_formatter(CustomTicker())
+                ax.yaxis.set_minor_formatter(NullFormatter())
                 ylabel_txt='Pressure [Pa]'
             else:
                 ylabel_txt='Altitude [m]'
@@ -2391,9 +2408,14 @@ class Fig_2D_time_lev(Fig_2D):
             labels = [item for item in ax.get_xticklabels()]
 
 
-            for i in range(0,len(Ls_ticks)):
-                id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                labels[i]='Ls %g\nsol %i'%(np.mod(Ls_ticks[i],360.),tim[id])
+            if tim[0] < 9.e+36:
+                for i in range(0,len(Ls_ticks)):
+                    id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                    labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
+            else:
+                for i in range(0,len(Ls_ticks)):
+                    id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                    labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
 
             ax.set_xticklabels(labels)
@@ -2403,6 +2425,8 @@ class Fig_2D_time_lev(Fig_2D):
             if self.vert_unit=='Pa':
                 ax.set_yscale("log")
                 ax.invert_yaxis()
+                ax.yaxis.set_major_formatter(CustomTicker())
+                ax.yaxis.set_minor_formatter(NullFormatter())
                 ylabel_txt='Pressure [Pa]'
             else:
                 ylabel_txt='Altitude [m]'
@@ -2449,10 +2473,14 @@ class Fig_2D_lon_time(Fig_2D):
             Ls_ticks = [item for item in ax.get_yticks()]
             labels = [item for item in ax.get_yticklabels()]
 
-
-            for i in range(0,len(Ls_ticks)):
-                id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                labels[i]='Ls %g\nsol %i'%(np.mod(Ls_ticks[i],360.),tim[id])
+            if tim[0] < 9.e+36:
+                for i in range(0,len(Ls_ticks)):
+                    id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                    labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
+            else:
+                for i in range(0,len(Ls_ticks)):
+                    id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                    labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
             ax.set_yticklabels(labels)
 
@@ -2506,23 +2534,25 @@ class Fig_1D(object):
 
     def make_template(self):
         customFileIN.write("<<<<<<<<<<<<<<| Plot 1D = {0} |>>>>>>>>>>>>>\n".format(self.doPlot))
-        customFileIN.write("Legend         = %s\n"%(self.legend))             #1
-        customFileIN.write("Main Variable  = %s\n"%(self.varfull))            #2
-        customFileIN.write("Ls 0-360       = {0}\n".format(self.t))           #3
-        customFileIN.write("Latitude       = {0}\n".format(self.lat))         #4
-        customFileIN.write("Lon +/-180     = {0}\n".format(self.lon))         #5
-        customFileIN.write("Level [Pa/m]   = {0}\n".format(self.lev))         #6
-        customFileIN.write("Diurnal  [hr]  = {0}\n".format(self.hour))        #7
+        customFileIN.write("Title          = %s\n"%(self.title))              #1
+        customFileIN.write("Legend         = %s\n"%(self.legend))             #2
+        customFileIN.write("Main Variable  = %s\n"%(self.varfull))            #3
+        customFileIN.write("Ls 0-360       = {0}\n".format(self.t))           #4
+        customFileIN.write("Latitude       = {0}\n".format(self.lat))         #5
+        customFileIN.write("Lon +/-180     = {0}\n".format(self.lon))         #6
+        customFileIN.write("Level [Pa/m]   = {0}\n".format(self.lev))         #7
+        customFileIN.write("Diurnal  [hr]  = {0}\n".format(self.hour))        #8
         customFileIN.write("Axis Options  : lat,lon+/-180,[Pa/m],Ls = [None,None] | var = [None,None] | linestyle = - | axlabel = None \n")#7
 
     def read_template(self):
-        self.legend= rT('char')             #1
-        self.varfull=rT('char')             #2
-        self.t=rT('float')                  #3
-        self.lat=rT('float')                #4
-        self.lon=rT('float')                #5
-        self.lev=rT('float')                #6
-        self.hour=rT('float')               #7
+        self.title= rT('char')              #1
+        self.legend= rT('char')             #2
+        self.varfull=rT('char')             #3
+        self.t=rT('float')                  #4
+        self.lat=rT('float')                #5
+        self.lon=rT('float')                #6
+        self.lev=rT('float')                #7
+        self.hour=rT('float')               #8
         self.Dlim,self.Vlim,self.axis_opt1,self.axis_opt2,_=read_axis_options(customFileIN.readline())     #7
 
         self.plot_type=self.get_plot_type()
@@ -2556,7 +2586,8 @@ class Fig_1D(object):
                 t_req,lat_req,lon_req,lev_req,ftod_req= self.t,self.lat,self.lon,self.lev,self.ftod
             sol_array,filetype,var,simuID=split_varfull(varfull)
             xdata,var,var_info=self.read_NCDF_1D(var,filetype,simuID,sol_array,plot_type,t_req,lat_req,lon_req,lev_req,ftod_req)
-
+            leg_text = '%s'%(var_info)
+            varlabel = '%s'%(var_info)
         else:
             VAR=[]
             # Extract individual variables and prepare for execution
@@ -2581,10 +2612,12 @@ class Fig_1D(object):
                 sol_array,filetype,var,simuID=split_varfull(varfull_list[i])
                 xdata,temp,var_info=self.read_NCDF_1D(var,filetype,simuID,sol_array,plot_type,t_list[i],lat_list[i],lon_list[i],lev_list[i],ftod_list[i])
                 VAR.append(temp)
+            leg_text = '%s %s%s'%(var, var_info.split(" ")[-1], expression_exec.split("]")[-1])
+            varlabel = '%s'%(var)
             var_info=varfull
             var=eval(expression_exec)
 
-        return xdata,var,var_info
+        return xdata,var,var_info,leg_text,varlabel
 
     def read_NCDF_1D(self,var_name,file_type,simuID,sol_array,plot_type,t_req,lat_req,lon_req,lev_req,ftod_req):
         '''
@@ -2908,31 +2941,36 @@ class Fig_1D(object):
                 plt.savefig(self.fig_name,dpi=my_dpi )
                 if out_format!="pdf":print("Saved:" +self.fig_name)
 
-
     def do_plot(self):
         #create figure
         ax=self.fig_init()
 
-
         try:    #try to do the figure, will return the error otherwise
 
-            xdata,var,var_info=self.data_loader_1D(self.varfull,self.plot_type)
+            xdata,var,var_info,leg_text,varlabel=self.data_loader_1D(self.varfull,self.plot_type)
 
             if self.legend:
                 txt_label=self.legend
             else:
-                txt_label=var_info+'\n'+self.fdim_txt[1:]#we remove the first coma ',' of fdim_txt to print to the new line
+                if self.nPan > 1:
+                    txt_label=leg_text
+                else:
+                    txt_label=None
 
+            if self.title:
+                plt.title(self.title,fontsize=title_size-self.nPan*title_factor)
+            else:
+                plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=label_size-self.nPan*title_size) #we remove the first coma ',' of fdim_txt to print to the new line
 
             if self.plot_type=='1D_lat':
 
-                plt.plot(var,xdata,self.axis_opt1,lw=2,label=txt_label)
+                plt.plot(var,xdata,self.axis_opt1,lw=4,label=txt_label)
                 plt.ylabel('Latitude',fontsize=label_size-self.nPan*label_factor)
                 #Label is provided
                 if self.axis_opt2:
                     plt.xlabel(self.axis_opt2,fontsize=label_size-self.nPan*label_factor)
                 else:    
-                    plt.xlabel(var_info,fontsize=label_size-self.nPan*label_factor)
+                    plt.xlabel(varlabel,fontsize=label_size-self.nPan*label_factor)
 
                 ax.yaxis.set_major_locator(MultipleLocator(15))
                 ax.yaxis.set_minor_locator(MultipleLocator(5))
@@ -2942,13 +2980,13 @@ class Fig_1D(object):
             if self.plot_type=='1D_lon':
                 lon180,var=shift_data(xdata,var)
 
-                plt.plot(lon180,var,self.axis_opt1,lw=2,label=txt_label)
+                plt.plot(lon180,var,self.axis_opt1,lw=4,label=txt_label)
                 plt.xlabel('Longitude',fontsize=label_size-self.nPan*label_factor)
                 #Label is provided
                 if self.axis_opt2:
                     plt.ylabel(self.axis_opt2,fontsize=label_size-self.nPan*label_factor)
                 else:    
-                    plt.ylabel(var_info,fontsize=label_size-self.nPan*label_factor)
+                    plt.ylabel(varlabel,fontsize=label_size-self.nPan*label_factor)
 
                 ax.xaxis.set_major_locator(MultipleLocator(30))
                 ax.xaxis.set_minor_locator(MultipleLocator(10))
@@ -2961,13 +2999,13 @@ class Fig_1D(object):
                 # If simulations cover different years, those can be stacked instead of continueous
                 if parser.parse_args().stack_year:Ls=np.mod(Ls,360)
 
-                plt.plot(Ls,var,self.axis_opt1,lw=2,label=txt_label)
+                plt.plot(Ls,var,self.axis_opt1,lw=4,label=txt_label)
                 
                 #Label is provided
                 if self.axis_opt2:
                     plt.ylabel(self.axis_opt2,fontsize=label_size-self.nPan*label_factor)
                 else:    
-                    plt.ylabel(var_info,fontsize=label_size-self.nPan*label_factor)
+                    plt.ylabel(varlabel,fontsize=label_size-self.nPan*label_factor)
                 
                 #Axis formatting
                 if self.Vlim:plt.ylim(self.Vlim)
@@ -2978,26 +3016,33 @@ class Fig_1D(object):
                 Ls_ticks = [item for item in ax.get_xticks()]
                 labels = [item for item in ax.get_xticklabels()]
 
-                for i in range(0,len(Ls_ticks)):
-                    id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                    labels[i]='Ls %g\nsol %i'%(np.mod(Ls_ticks[i],360.),tim[id])
+                if tim[0] < 9.e+36:
+                    for i in range(0,len(Ls_ticks)):
+                        id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                        labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
+                else:
+                    for i in range(0,len(Ls_ticks)):
+                        id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                        labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
                 ax.set_xticklabels(labels)
 
             if self.plot_type=='1D_lev':
 
-                plt.plot(var,xdata,self.axis_opt1,lw=2,label=txt_label)
+                plt.plot(var,xdata,self.axis_opt1,lw=4,label=txt_label)
                 
                 #Label is provided
                 if self.axis_opt2:
                     plt.xlabel(self.axis_opt2,fontsize=label_size-self.nPan*label_factor)
                 else:    
-                    plt.xlabel(var_info,fontsize=label_size-self.nPan*label_factor)
+                    plt.xlabel(varlabel,fontsize=label_size-self.nPan*label_factor)
 
 
                 if self.vert_unit=='Pa':
                     ax.set_yscale("log")
                     ax.invert_yaxis()
+                    ax.yaxis.set_major_formatter(CustomTicker())
+                    ax.yaxis.set_minor_formatter(NullFormatter())
                     ylabel_txt='Pressure [Pa]'
                 else:
                     ylabel_txt='Altitude [m]'
@@ -3008,14 +3053,14 @@ class Fig_1D(object):
                 if self.Vlim:plt.xlim(self.Vlim)
                 
             if self.plot_type=='1D_diurn':
-                plt.plot(xdata,var,self.axis_opt1,lw=2,label=txt_label)
+                plt.plot(xdata,var,self.axis_opt1,lw=4,label=txt_label)
                 plt.xlabel('Time [hr]',fontsize=label_size-self.nPan*label_factor)
                 
                 #Label is provided
                 if self.axis_opt2:
                     plt.ylabel(self.axis_opt2,fontsize=label_size-self.nPan*label_factor)
                 else:    
-                    plt.ylabel(var_info,fontsize=label_size-self.nPan*label_factor)
+                    plt.ylabel(varlabel,fontsize=label_size-self.nPan*label_factor)
                 
                 ax.xaxis.set_major_locator(MultipleLocator(4))
                 ax.xaxis.set_minor_locator(MultipleLocator(1))
@@ -3029,13 +3074,14 @@ class Fig_1D(object):
             #====comon labelling====
             plt.xticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
             plt.yticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
-            plt.legend(fontsize=label_size-self.nPan*label_factor)
+            plt.legend(fontsize=title_size-self.nPan*title_factor)
             plt.grid(True)
 
 
             self.success=True
         except Exception as e: #Return the error
             self.exception_handler(e,ax)
+        plt.tight_layout()
         self.fig_save()
 
 #======================================================
