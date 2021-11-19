@@ -2500,6 +2500,7 @@ class Fig_1D(object):
     # Parent class for 1D figures
     def __init__(self,varfull='atmos_average.ts',doPlot=True):
 
+        self.title=None
         self.legend=None
         self.varfull=varfull
         self.t='AXIS' #default value for AXIS
