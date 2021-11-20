@@ -6,7 +6,7 @@
 
 module purge
 module load python3/3.7.0 gcc/8.2
-module load comp-intel/2018.3.222 #2018.0.128 #2020.4.304 
+module load comp-intel/2018.3.222
 module load hdf5/1.8.18_serial 
 module load hdf4/4.2.12 
 module load netcdf/4.4.1.1_serial
