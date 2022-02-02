@@ -2596,14 +2596,15 @@ class Fig_1D(object):
         
         # Time of day is always the 2nd dimension, i.e. dim_info[1]
         
-        #Note: This step is skipped if the file is of type '1D_diurn'
-        if f_type=='diurn' and dim_info[1][:11]=='time_of_day' and not plot_type=='1D_diurn':
+        #Note: This step is performed only if the file is of type 'atmos_diurn', and the requested the plot  is 1D_lat, 1D_lev or 1D_time
+        if (f_type=='diurn' and dim_info[1][:11]=='time_of_day') and not plot_type=='1D_diurn':
             tod=f.variables[dim_info[1]][:]
             todi,temp_txt =get_tod_index(ftod_req,tod)
             # Update dim_info from ('time','time_of_day_XX, 'lat', 'lon') to  ('time', 'lat', 'lon')
             # OR ('time','time_of_day_XX, 'pfull','lat', 'lon') to  ('time', 'pfull','lat', 'lon') etc...
             dim_info=(dim_info[0],)+dim_info[2:]
             if add_fdim:self.fdim_txt+=temp_txt
+            
             
             
         #======static======= , ignore level and time dimension
@@ -2625,9 +2626,9 @@ class Fig_1D(object):
         #~~~~This section is for 1D_time, 1D_lat, 1D_lon and 1D_lev only~~~~
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         if not plot_type=='1D_diurn':
-            
             #======time,lat,lon=======
-            if f.variables[var_name].dimensions==(u'time', u'lat', u'lon'):
+            if dim_info==(u'time', u'lat', u'lon'):
+                
             #Initialize dimension
                 t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
                 #For diurn file, change time_of_day(time,24,1) to time_of_day(time) at midnight UT
@@ -2662,7 +2663,7 @@ class Fig_1D(object):
     
                 w=area_weights_deg(var.shape,lat[lati])
                 
-    
+                
                 #Return data
                 if plot_type=='1D_lat': return lat,    np.nanmean(np.nanmean(var,axis=2),axis=0),var_info
                 if plot_type=='1D_lon': return lon,    np.nanmean(np.average(var,weights=w,axis=1),axis=0),var_info

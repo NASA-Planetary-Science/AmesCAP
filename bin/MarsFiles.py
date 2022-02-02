@@ -118,7 +118,7 @@ parser.add_argument('-include','--include',nargs='+',
 parser.add_argument('-e','--ext',type=str,default=None,
                  help="""> Append an extension _ext.nc to the output file instead of replacing any existing file \n"""
                       """>  Usage: MarsFiles.py ****.atmos.average.nc [actions] -ext B \n"""
-                      """   This will produce   ****.atmos.average.nc files     \n""")                                                 
+                      """   This will produce   ****.atmos.average_B.nc files     \n""")                                                 
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
 
