@@ -3038,7 +3038,6 @@ class Fig_1D(object):
                 else:    
                     plt.xlabel(varlabel,fontsize=label_size-self.nPan*label_factor)
 
-
                 if self.vert_unit=='Pa':
                     ax.set_yscale("log")
                     ax.invert_yaxis()
