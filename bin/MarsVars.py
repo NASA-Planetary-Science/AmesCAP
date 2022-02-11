@@ -44,35 +44,41 @@ parser.add_argument('-add','--add', nargs='+',default=[],
                  help='Add a new variable to file  \n'
                       '> Usage: MarsVars ****.atmos.average.nc -add rho\n'
                       '\033[96mON NATIVE FILES:\n'
-                      'rho        (density)                         Req. [ps,temp] \n'
-                      'theta      (pot. temperature)                Req. [ps,temp] \n'
-                      'pfull3D    (pressure at layer midpoint)      Req. [ps,temp] \n' 
-                      'DP         (layer pressure thickness)        Req. [ps,temp] \n' 
-                      'zfull      (altitude AGL)                    Req. [ps,temp] \n'       
-                      'DZ         (layer altitude thickness)        Req. [ps,temp] \n'                
-                      'w          (vertical winds)                  Req. [ps,temp,omega] \n'
-                      'wdir       (wind direction)                  Req. [ucomp,vcomp] \n'
-                      'wspeed     (wind magnitude)                  Req. [ucomp,vcomp] \n'
-                      'N          (Brunt Vaisala freq)              Req. [ps,temp] \n'
-                      'Ri         (Richardson number)               Req. [ps,temp] \n'
-                      'Tco2       (CO2 condensation temperature)    Req. [ps,temp] \n'
-                      'scorer_wl  (Scorer horizontal wavelength)    Req. [ps,temp,ucomp] \n'
-                      'div        (divergence)                      Req. [ucomp,vcomp] \n'
-                      'curl       (relative vorticity)              Req. [ucomp,vcomp] \n'
-                      'fn         (frontogenesis)                   Req. [ucomp,vcomp,theta] \n'
+                      'rho              (density)                         Req. [ps,temp] \n'
+                      'theta            (pot. temperature)                Req. [ps,temp] \n'
+                      'pfull3D          (pressure at layer midpoint)      Req. [ps,temp] \n' 
+                      'DP               (layer pressure thickness)        Req. [ps,temp] \n' 
+                      'zfull            (altitude AGL)                    Req. [ps,temp] \n'       
+                      'DZ               (layer altitude thickness)        Req. [ps,temp] \n'                
+                      'w                (vertical winds)                  Req. [ps,temp,omega] \n'
+                      'wdir             (wind direction)                  Req. [ucomp,vcomp] \n'
+                      'wspeed           (wind magnitude)                  Req. [ucomp,vcomp] \n'
+                      'N                (Brunt Vaisala freq)              Req. [ps,temp] \n'
+                      'Ri               (Richardson number)               Req. [ps,temp] \n'
+                      'Tco2             (CO2 condensation temperature)    Req. [ps,temp] \n'
+                      'scorer_wl        (Scorer horizontal wavelength)    Req. [ps,temp,ucomp] \n'
+                      'div              (divergence)                      Req. [ucomp,vcomp] \n'
+                      'curl             (relative vorticity)              Req. [ucomp,vcomp] \n'
+                      'fn               (frontogenesis)                   Req. [ucomp,vcomp,theta] \n'
+                      'dzTau            (dust extinction rate)            Req. [dst_mass_micro,temp] \n'
+                      'izTau            (ice extinction rate)             Req. [ice_mass_micro,temp] \n'
+                      'dst_mass_micro   (dust mixing ratio)               Req. [dzTau,temp] \n'
+                      'ice_mass_micro   (ice mixing ratio)                Req. [izTau,temp] \n'
+                      'Vg_sed           (sedimentation rate)              Req. [dst_mass_micro,dst_num_micro,temp] \n'
+                      'w_net            (net vertical winds (w-Vg_sed))   Req. [w,Vg_sed] \n'
                       ' \nNOTE:                    \n'
                       '     Some support on interpolated files, in particular if pfull3D \n'
                       '         and zfull are added before interpolation to _pstd, _zagl, _zstd. \n'
                       '\033[00m\n' 
                       '\033[93mON INTERPOLATED FILES :                                     \n'
-                      'msf        (mass stream function)              Req. [vcomp] \n'
-                      'ep         (wave potential energy)             Req. [temp] \n'
-                      'ek         (wave kinetic energy)               Req. [ucomp,vcomp] \n'
-                      'mx         (vertical flux of zonal momentum)   Req. [ucomp,w] \n' 
-                      'my         (vertical flux of merid. momentum)  Req. [vcomp,w]  \n'
-                      'ax         (zonal wave-mean flow forcing)      Req. [ucomp,w,rho]  \n'
-                      'ay         (merid. wave-mean flow forcing)     Req. [ucomp,w,rho]  \n'
-                      'tp_t       (norm. temperature perturbation)    Req. [temp]  \n'
+                      'msf              (mass stream function)              Req. [vcomp] \n'
+                      'ep               (wave potential energy)             Req. [temp] \n'
+                      'ek               (wave kinetic energy)               Req. [ucomp,vcomp] \n'
+                      'mx               (vertical flux of zonal momentum)   Req. [ucomp,w] \n' 
+                      'my               (vertical flux of merid. momentum)  Req. [vcomp,w]  \n'
+                      'ax               (zonal wave-mean flow forcing)      Req. [ucomp,w,rho]  \n'
+                      'ay               (merid. wave-mean flow forcing)     Req. [ucomp,w,rho]  \n'
+                      'tp_t             (norm. temperature perturbation)    Req. [temp]  \n'
                       '\033[00m')  
 
 
@@ -106,30 +112,36 @@ parser.add_argument('--debug',  action='store_true', help='Debug flag: release t
 #=====================================================================
 # This is the list of supported variable to add: short name, longname, units
 #=====================================================================
-VAR= {'rho'       :['density (added postprocessing)','kg/m3'],
-      'theta'     :['potential temperature (added postprocessing)','K'],
-      'w'         :['vertical wind (added postprocessing)','m/s'],    
-      'pfull3D'   :['pressure at layer midpoint (added postprocessing)','Pa'], 
-      'DP'        :['layer thickness (added postprocessing)','Pa'],   
-      'zfull'     :['altitude  AGL at layer midpoint (added postprocessing)','m'],
-      'DZ'        :['layer thickness (added postprocessing)','m'],      
-      'wdir'      :['wind direction (added postprocessing)','deg'],
-      'wspeed'    :['wind speed (added postprocessing)','m/s'],
-      'N'         :['Brunt Vaisala frequency (added postprocessing)','rad/s'],   
-      'Ri'        :['Richardson number (added postprocessing)','none'], 
-      'Tco2'      :['condensation temerature of CO2  (added postprocessing)','K'],
-      'div'       :['divergence of the wind field  (added postprocessing)','Hz'],
-      'curl'      :['relative vorticity for the wind field  (added postprocessing)','Hz'],
-      'scorer_wl' :['Scorer horizontal wavelength L=2.pi/sqrt(l**2)   (added postprocessing)','m'],
-      'msf'       :['mass stream function  (added postprocessing)','1.e8 x kg/s'],
-      'ep'        :['wave potential energy (added postprocessing)','J/kg'],
-      'ek'        :['wave kinetic energy (added postprocessing)','J/kg'] ,
-      'mx'        :['vertical flux of zonal momentum (added postprocessing)','J/kg'] ,
-      'my'        :['vertical flux of merididional momentum(added postprocessing)','J/kg'] ,
-      'ax'        :['zonal wave-mean flow forcing (added postprocessing)','m/s/s'] ,
-      'ay'        :['meridional wave-mean flow forcing (added postprocessing)','m/s/s'] ,
-      'tp_t'      :['normalized temperature perturbation (added postprocessing)','None'],
-      'fn'        :['frontogenesis (added postprocessing)','K m-1 s-1'],
+VAR= {'rho'             :['density (added postprocessing)', 'kg/m3'],
+      'theta'           :['potential temperature (added postprocessing)', 'K'],
+      'w'               :['vertical wind (added postprocessing)', 'm/s'],    
+      'pfull3D'         :['pressure at layer midpoint (added postprocessing)', 'Pa'], 
+      'DP'              :['layer thickness (added postprocessing)', 'Pa'],   
+      'zfull'           :['altitude  AGL at layer midpoint (added postprocessing)', 'm'],
+      'DZ'              :['layer thickness (added postprocessing)', 'm'],      
+      'wdir'            :['wind direction (added postprocessing)', 'deg'],
+      'wspeed'          :['wind speed (added postprocessing)', 'm/s'],
+      'N'               :['Brunt Vaisala frequency (added postprocessing)', 'rad/s'],   
+      'Ri'              :['Richardson number (added postprocessing)', 'none'], 
+      'Tco2'            :['condensation temerature of CO2  (added postprocessing)', 'K'],
+      'div'             :['divergence of the wind field  (added postprocessing)', 'Hz'],
+      'curl'            :['relative vorticity for the wind field  (added postprocessing)', 'Hz'],
+      'scorer_wl'       :['Scorer horizontal wavelength L=2.pi/sqrt(l**2)   (added postprocessing)', 'm'],
+      'msf'             :['mass stream function  (added postprocessing)', '1.e8 x kg/s'],
+      'ep'              :['wave potential energy (added postprocessing)', 'J/kg'],
+      'ek'              :['wave kinetic energy (added postprocessing)', 'J/kg'] ,
+      'mx'              :['vertical flux of zonal momentum (added postprocessing)', 'J/kg'] ,
+      'my'              :['vertical flux of merididional momentum(added postprocessing)', 'J/kg'] ,
+      'ax'              :['zonal wave-mean flow forcing (added postprocessing)', 'm/s/s'] ,
+      'ay'              :['meridional wave-mean flow forcing (added postprocessing)', 'm/s/s'] ,
+      'tp_t'            :['normalized temperature perturbation (added postprocessing)', 'None'],
+      'fn'              :['frontogenesis (added postprocessing)', 'K m-1 s-1'],
+      'dzTau'           :['dust extinction rate (added postprocessing)', 'km-1'],
+      'izTau'           :['ice extinction rate (added postprocessing)', 'km-1'],
+      'dst_mass_micro'  :['dust mixing ratio (added postprocessing)', 'kg/kg'],
+      'ice_mass_micro'  :['ice mixing ratio (added postprocessing)', 'kg/kg'],
+      'Vg_sed'          :['sedimentation rate (added postprocessing)', 'm/s'],
+      'w_net'           :['w-Vg_sed (added postprocessing)', 'm/s'],
           }                                                                                                       
 #=====================================================================
 #=====================================================================
@@ -138,31 +150,128 @@ VAR= {'rho'       :['density (added postprocessing)','kg/m3'],
 
 #Fill values for NaN Do not use np.NaN as this would raise issue when running runpinterp
 fill_value=0.
+
 #===Define constants=========
-rgas = 189.  # J/(kg-K) => m2/(s2 K)
-g    = 3.72  # m/s2
-R=    8.314  # J/ mol. K
-Cp   = 735.0 #J/K
-M_co2 =0.044 # kg/mol
-N=0.01       #rad/s  This is used for the Ep calculation
+global rgas, psrf, Tpole, g, R, Rd, rho_air, rho_dst, rho_ice, Qext_dst, Qext_ice, n0, S0, T0,\
+    Cp, Na, amu, amu_co2, mass_co2, sigma, M_co2, N, C_dst, C_ice
+
+
+rgas        = 189.  # J/(kg-K) => m2/(s2 K)
+psrf        = 610.                # Surface P             Pa (kg/ms^2)
+Tpole       = 150.                # Temp at pole          K
+g           = 3.72  # m/s2
+R           = 8.314  # J/ mol. K
+Rd          = 192.0     # J kg-1 K-1
+rho_air     = psrf/(rgas*Tpole)  # Air Density           kg/m^3
+rho_dst     = 2500.             # Particle Density      kg/m^3
+#rho_dst     = 3000      # kg m-3,                                               Kleinbohl et al. 2009
+rho_ice     = 900       # kg m-3,                                               Heavens et al. 2010
+Qext_dst    = 0.35      #                   dust extinction efficiency (MCS),   Kleinbohl et al. 2009
+Qext_ice    = 0.773     #                   ice extinction efficiency (MCS),    Heavens et al. 2010
+Reff_dst    = 1.06      # micron,           effective dust particle radius,     Kleinbohl et al. 2009
+Reff_ice    = 1.41      # micron,           effective ice particle radius,      Heavens et al. 2010
+n0          = 1.37*1.e-5          # Sutherland's law      N-s/m^2
+S0          = 222                 # Sutherland's law      K
+T0          = 273.15              # Sutherland's law      K
+Cp          = 735.0 #J/K
+Na          = 6.022*1.e23         # Avogadro's            per mol
+Kb          = R/Na            # Boltzmann Constant    (m^2kg/s^2K)
+amu         = 1.66054*1.e-27      # Atomic Mass Unit      kg/amu
+amu_co2     = 44.0                # Molecular Mass of CO2 amu
+mass_co2    = amu_co2*amu        # mass 1 CO2 particle   kg
+sigma       = 0.63676             # gives an effective variance of 0.5 for dust
+M_co2       = 0.044 # kg/mol
+N           = 0.01 #rad/s  This is used for the Ep calculation
+C_dst       = (4/3)*(rho_dst/Qext_dst)*Reff_dst     # 12114.286 (m-2)
+C_ice       = (4/3)*(rho_ice/Qext_ice)*Reff_ice     # 2188.874  (m-2)
+
 #===========================
 
 def compute_p_3D(ps,ak,bk,shape_out):
     """
-    Retunr the 3D pressure field at the layer midpoint. 
+    Return the 3D pressure field at the layer midpoint. 
     *** NOTE***
     The shape_out argument ensures that, when time=1 (one timestep) results are returned as (1,lev,lat,lon), not (lev,lat,lon)
     """
     p_3D= fms_press_calc(ps,ak,bk,lev_type='full')
     p_3D=p_3D.transpose(lev_T)# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
-    return p_3D.reshape(shape_out)  
-    
+    return p_3D.reshape(shape_out)
+
+# =====================================================================
+
 def compute_rho(p_3D,temp):
     """
     Return the density in [kg/m3]
     """
     return p_3D/(rgas*temp)
-    
+
+# =====================================================================
+
+def compute_xzTau(q, temp, lev, const, f_type):
+    """
+    Return dust or ice extinction in [km-1]
+    Adapted from Heavens et al. 2011, observations by MCS (JGR)
+    """
+    if f_type == 'diurn':
+        PT    = np.repeat(lev, (q.shape[0] * q.shape[1] * q.shape[3] * q.shape[4]))
+        PT    = np.reshape(PT, (q.shape[2],  q.shape[0],  q.shape[1],  q.shape[3],   q.shape[4]))
+        P     = PT.transpose((1,2,0,3,4))       # (lev, tim, tod, lat, lon) -> (tim, tod, lev, lat, lon)
+    else:
+        PT    = np.repeat(lev, (q.shape[0] * q.shape[2] * q.shape[3]))
+        PT    = np.reshape(PT, (q.shape[1],  q.shape[0],  q.shape[2],  q.shape[3]))
+        P     = PT.transpose(lev_T)       # (lev, tim, lat, lon) -> (tim, lev, lat, lon)
+
+    rho_z   = P/(Rd*temp)
+    xzTau   = (rho_z*(q*1.e6)/const)*1000 # q: kg/kg -> ppm (mg/kg), xzTau: m-1 -> km-1
+    return xzTau
+
+# =====================================================================
+
+def compute_mmr(xTau, temp, lev, const, f_type):
+    """
+    Return dust or ice mixing ratio [kg/kg]
+    Adapted from Heavens et al. 2011, observations by MCS (JGR)
+    """
+    if f_type == 'diurn':
+        PT    = np.repeat(lev, (xTau.shape[0] * xTau.shape[1] * xTau.shape[3] * xTau.shape[4]))
+        PT    = np.reshape(PT, (xTau.shape[2],  xTau.shape[0],  xTau.shape[1],  xTau.shape[3],   xTau.shape[4]))
+        P     = PT.transpose((1,2,0,3,4))       # (lev, tim, tod, lat, lon) -> (tim, tod, lev, lat, lon)
+    else:
+        PT    = np.repeat(lev, (xTau.shape[0] * xTau.shape[2] * xTau.shape[3]))
+        PT    = np.reshape(PT, (xTau.shape[1],  xTau.shape[0],  xTau.shape[2],  xTau.shape[3]))
+        P     = PT.transpose(lev_T)       # (lev, tim, lat, lon) -> (tim, lev, lat, lon)
+
+    rho_z = P/(Rd*temp)
+    q     = (const*(xTau/1000)/rho_z)/1.e6 # xTau: km-1 -> m-1; q: ppm -> kg/kg
+    return q
+
+# =====================================================================
+def compute_Vg_sed(xTau, nTau, temp):
+    """
+    Return sedimentation rate for dust
+    """
+    r0     = (((3.*xTau) / (4.*np.pi*rho_dst*nTau))**(1/3) * np.exp(-3*(sigma**2)/2))
+    Rp     = r0*np.exp(3.5*sigma**2)
+    c      = (2/9)*rho_dst*(Rp)**2*g
+    eta    = n0*((temp/T0)**(3/2))*((T0+S0)/(temp+S0))
+    v      = np.sqrt((3*Kb*temp)/mass_co2)
+    mfp    = 2*eta/(rho_air*v)
+    Kn     = mfp/Rp
+    alpha  = 1.246+0.42*np.exp(-0.87/Kn)
+    Vg     = c*(1+alpha*Kn)/eta
+    print('computing')
+    return Vg
+
+# =====================================================================
+def compute_w_net(Vg, wvar):
+    """
+    Return net vertical wind: w - sedimentation rate (Vg_sed)
+    """
+    w_net = np.subtract(wvar,Vg)
+    return w_net
+
+# =====================================================================
+
 def compute_theta(p_3D,ps,temp,f_type):
     """
     Return the potential temperature in [K]
@@ -199,7 +308,7 @@ def compute_zhalf(ps,ak,bk,temp):
     return zhalf
 
 def compute_DZ_full_pstd(pstd,temp,ftype='average'):
-    '''
+    """
     Return the distance between two layers  mid-point from the standard pressure levels
 
     Args:
@@ -220,7 +329,7 @@ def compute_DZ_full_pstd(pstd,temp,ftype='average'):
     --- 1 ---            --------  p_full = p_std   v
     --- 0 --- SFC        ========  p_half 
                         / / / / 
-    '''               
+    """               
     rgas = 189.  # J/(kg-K) => m2/(s2 K)  
     g    = 3.72  # m/s2   
     if ftype=='diurn':
@@ -344,7 +453,7 @@ def main():
     #Check if an operation is requested, otherwise print file content.
     if not (add_list or zdiff_list or zdetrend_list or remove_list or col_list or extract_list): 
         print_fileContent(file_list[0])
-        prYellow(''' ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var' ''')
+        prYellow(""" ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var' """)
         exit() #Exit cleanly
         
     #For all the files    
@@ -440,6 +549,7 @@ def main():
                      
                     #These are often needed so we will calculate once here
                     if interp_type=='pfull':
+                        lev  = fileNC.variables['pfull'][:]
                         ps=fileNC.variables['ps'][:]
                         p_3D=compute_p_3D(ps,ak,bk,shape_out)
                     
@@ -455,7 +565,43 @@ def main():
                         try:
                             p_3D=fileNC.variables['pfull3D'][:]
                         except:
-                            pass    
+                            pass
+                            
+                    if ivar == 'dzTau':
+                        if 'dst_mass_micro' in fileNC.variables.keys():
+                            q = fileNC.variables['dst_mass_micro'][:]
+                        elif 'dst_mass' in fileNC.variables.keys():
+                            q = fileNC.variables['dst_mass'][:]
+                        OUT = compute_xzTau(q, temp, lev, C_dst, f_type)
+
+                    if ivar == 'izTau':
+                        if 'ice_mass_micro' in fileNC.variables.keys():
+                            q = fileNC.variables['ice_mass_micro'][:]
+                        elif 'ice_mass' in fileNC.variables.keys():
+                            q = fileNC.variables['ice_mass'][:]
+                        OUT = compute_xzTau(q, temp, lev, C_ice, f_type)
+
+                    if ivar == 'dst_mass_micro':
+                        xTau = fileNC.variables['dzTau'][:]
+                        OUT = compute_mmr(xTau, temp, lev, C_dst, f_type)
+
+                    if ivar == 'ice_mass_micro':
+                        xTau = fileNC.variables['izTau'][:]
+                        OUT = compute_mmr(xTau, temp, lev, C_ice, f_type)
+
+                    if ivar == 'Vg_sed':
+                        if 'dst_mass_micro' in fileNC.variables.keys():
+                            xTau = fileNC.variables['dst_mass_micro'][:]
+                            nTau = fileNC.variables['dst_num_micro'][:]
+                        elif 'dst_mass' in fileNC.variables.keys():
+                            xTau = fileNC.variables['dst_mass'][:]
+                            nTau = fileNC.variables['dst_num'][:]
+                        OUT = compute_Vg_sed(xTau, nTau, temp)
+
+                    if ivar == 'w_net':
+                        Vg = fileNC.variables['Vg_sed'][:]
+                        wvar = fileNC.variables['w'][:]
+                        OUT = compute_w_net(Vg, wvar)
                     
                     if ivar=='pfull3D': OUT=p_3D
                     if ivar=='DP':      OUT=compute_DP_3D(ps,ak,bk,shape_out)
@@ -693,7 +839,7 @@ def main():
         #=================================================================
         #=============  Column  integration   ============================
         #=================================================================
-        '''
+        """
                           z_top
                           ⌠
         We have col=      ⌡ var rho dz  with dp/dz=-rho g => rho dz = -dp/g
@@ -703,7 +849,7 @@ def main():
              >  col = \       
                       /__ (var dp/g)  
                         p_top
-        ''' 
+        """ 
         #ak and bk are needed to derive the distance between layer pfull
         if col_list:
             name_fixed=ifile[0:5]+'.fixed.nc'
