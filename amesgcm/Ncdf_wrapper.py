@@ -398,7 +398,7 @@ class Fort(object):
         
         #Perform day average and log new time axis
         time_in=self.variables['time']
-        time_out=daily_to_average(varIN=fort_var,dt_in=time_in[1]-time_in[0],nday=day_average,trim=True)
+        time_out=daily_to_average(varIN=time_in,dt_in=time_in[1]-time_in[0],nday=day_average,trim=True)
         Log.log_axis1D(variable_name='time',DATAin=time_out,dim_name='time',longname_txt=time_in.long_name,units_txt=time_in.units,cart_txt='T')
         
         #Log static variables 

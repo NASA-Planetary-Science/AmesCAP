@@ -9,7 +9,7 @@ import warnings #Suppress certain errors when dealing with NaN arrays
 
 
 from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR,mass_stream,zonal_detrend,spherical_div,spherical_curl,frontogenesis
-from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type,filter_vars,find_fixedfile
+from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type,filter_vars
 from amesgcm.Ncdf_wrapper import Ncdf
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
@@ -60,10 +60,6 @@ parser.add_argument('-add','--add', nargs='+',default=[],
                       'div        (divergence)                      Req. [ucomp,vcomp] \n'
                       'curl       (relative vorticity)              Req. [ucomp,vcomp] \n'
                       'fn         (frontogenesis)                   Req. [ucomp,vcomp,theta] \n'
-                      'dzTau            (dust extinction rate)              Req. [dst_mass_micro,temp] \n'
-                      'izTau            (ice extinction rate)               Req. [ice_mass_micro,temp] \n'
-                      'dst_mass_micro   (dust mixing ratio)                 Req. [dzTau,temp] \n'
-                      'ice_mass_micro   (ice mixing ratio)                  Req. [izTau,temp] \n'
                       ' \nNOTE:                    \n'
                       '     Some support on interpolated files, in particular if pfull3D \n'
                       '         and zfull are added before interpolation to _pstd, _zagl, _zstd. \n'
@@ -134,10 +130,6 @@ VAR= {'rho'       :['density (added postprocessing)','kg/m3'],
       'ay'        :['meridional wave-mean flow forcing (added postprocessing)','m/s/s'] ,
       'tp_t'      :['normalized temperature perturbation (added postprocessing)','None'],
       'fn'        :['frontogenesis (added postprocessing)','K m-1 s-1'],
-      'dzTau'           :['dust extinction rate (added postprocessing)','km-1'],
-      'izTau'           :['ice extinction rate (added postprocessing)','km-1'],
-      'dst_mass_micro'  :['dust mixing ratio (added postprocessing)','kg/kg'],
-      'ice_mass_micro'  :['ice mixing ratio (added postprocessing)','kg/kg'],
           }                                                                                                       
 #=====================================================================
 #=====================================================================
@@ -150,18 +142,9 @@ fill_value=0.
 rgas = 189.  # J/(kg-K) => m2/(s2 K)
 g    = 3.72  # m/s2
 R=    8.314  # J/ mol. K
-Rd          = 192.0     # J kg-1 K-1
-rho_dst     = 3000      # kg m-3,                                               Kleinbohl et al. 2009
-rho_ice     = 900       # kg m-3,                                               Heavens et al. 2010
-Qext_dst    = 0.35      #                   dust extinction efficiency (MCS),   Kleinbohl et al. 2009
-Qext_ice    = 0.773     #                   ice extinction efficiency (MCS),    Heavens et al. 2010
-Reff_dst    = 1.06      # micron,           effective dust particle radius,     Kleinbohl et al. 2009
-Reff_ice    = 1.41      # micron,           effective ice particle radius,      Heavens et al. 2010
 Cp   = 735.0 #J/K
 M_co2 =0.044 # kg/mol
 N=0.01       #rad/s  This is used for the Ep calculation
-C_dst       = (4/3)*(rho_dst/Qext_dst)*Reff_dst     # 12114.286 (m-2)
-C_ice       = (4/3)*(rho_ice/Qext_ice)*Reff_ice     # 2188.874  (m-2)
 #===========================
 
 def compute_p_3D(ps,ak,bk,shape_out):
@@ -179,47 +162,7 @@ def compute_rho(p_3D,temp):
     Return the density in [kg/m3]
     """
     return p_3D/(rgas*temp)
-
-
-def compute_xzTau(q, temp, lev, const, f_type):
-    '''
-    Return dust or ice extinction in [km-1]
-    Adapted from Heavens et al. 2011, observations by MCS (JGR)
-    '''
-    if f_type == 'diurn':
-        PT    = np.repeat(lev, (q.shape[0] * q.shape[1] * q.shape[3] * q.shape[4]))
-        PT    = np.reshape(PT, (q.shape[2],  q.shape[0],  q.shape[1],  q.shape[3],   q.shape[4]))
-        P     = PT.transpose((1,2,0,3,4))       # (lev, tim, tod, lat, lon) -> (tim, tod, lev, lat, lon)
-    else:
-        PT    = np.repeat(lev, (q.shape[0] * q.shape[2] * q.shape[3]))
-        PT    = np.reshape(PT, (q.shape[1],  q.shape[0],  q.shape[2],  q.shape[3]))
-        P     = PT.transpose(lev_T)       # (lev, tim, lat, lon) -> (tim, lev, lat, lon)
-
-    rho_z   = P/(Rd*temp)
-    xzTau   = (rho_z*(q*1.e6)/const)*1000 # q: kg/kg -> ppm (mg/kg), xzTau: m-1 -> km-1
-    return xzTau
-
-# =====================================================================
-
-def compute_mmr(xTau, temp, lev, const, f_type):
-    '''
-    Return dust or ice mixing ratio [kg/kg]
-    Adapted from Heavens et al. 2011, observations by MCS (JGR)
-    '''
-    if f_type == 'diurn':
-        PT    = np.repeat(lev, (xTau.shape[0] * xTau.shape[1] * xTau.shape[3] * xTau.shape[4]))
-        PT    = np.reshape(PT, (xTau.shape[2],  xTau.shape[0],  xTau.shape[1],  xTau.shape[3],   xTau.shape[4]))
-        P     = PT.transpose((1,2,0,3,4))       # (lev, tim, tod, lat, lon) -> (tim, tod, lev, lat, lon)
-    else:
-        PT    = np.repeat(lev, (xTau.shape[0] * xTau.shape[2] * xTau.shape[3]))
-        PT    = np.reshape(PT, (xTau.shape[1],  xTau.shape[0],  xTau.shape[2],  xTau.shape[3]))
-        P     = PT.transpose(lev_T)       # (lev, tim, lat, lon) -> (tim, lev, lat, lon)
-
-    rho_z = P/(Rd*temp)
-    q     = (const*(xTau/1000)/rho_z)/1.e6 # xTau: km-1 -> m-1; q: ppm -> kg/kg
-    return q
-
-
+    
 def compute_theta(p_3D,ps,temp,f_type):
     """
     Return the potential temperature in [K]
@@ -460,7 +403,7 @@ def main():
         
         #If the list is not empty, load ak and bk for pressure calculation, those are always needed.
         if add_list: 
-            name_fixed=find_fixedfile(None,ifile)
+            name_fixed=ifile[0:5]+'.fixed.nc'
             f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=f_fixed.variables['pk'][:]
@@ -497,7 +440,6 @@ def main():
                      
                     #These are often needed so we will calculate once here
                     if interp_type=='pfull':
-                        lev  = fileNC.variables['pfull'][:]
                         ps=fileNC.variables['ps'][:]
                         p_3D=compute_p_3D(ps,ak,bk,shape_out)
                     
@@ -513,29 +455,7 @@ def main():
                         try:
                             p_3D=fileNC.variables['pfull3D'][:]
                         except:
-                            pass
-                            
-                    if ivar == 'dzTau':
-                        if 'dst_mass_micro' in fileNC.variables.keys():
-                            q = fileNC.variables['dst_mass_micro'][:]
-                        elif 'dst_mass' in fileNC.variables.keys():
-                            q = fileNC.variables['dst_mass'][:]
-                        OUT = compute_xzTau(q, temp, lev, C_dst, f_type)
-
-                    if ivar == 'izTau':
-                        if 'ice_mass_micro' in fileNC.variables.keys():
-                            q = fileNC.variables['ice_mass_micro'][:]
-                        elif 'ice_mass' in fileNC.variables.keys():
-                            q = fileNC.variables['ice_mass'][:]
-                        OUT = compute_xzTau(q, temp, lev, C_ice, f_type)
-
-                    if ivar == 'dst_mass_micro':
-                        xTau = fileNC.variables['dzTau'][:]
-                        OUT = compute_mmr(xTau, temp, lev, C_dst, f_type)
-
-                    if ivar == 'ice_mass_micro':
-                        xTau = fileNC.variables['izTau'][:]
-                        OUT = compute_mmr(xTau, temp, lev, C_ice, f_type)
+                            pass    
                     
                     if ivar=='pfull3D': OUT=p_3D
                     if ivar=='DP':      OUT=compute_DP_3D(ps,ak,bk,shape_out)
@@ -670,7 +590,7 @@ def main():
         
         #ak and bk are needed to derive the distance between layer pfull
         if zdiff_list: 
-            name_fixed=find_fixedfile(None,ifile)
+            name_fixed=ifile[0:5]+'.fixed.nc'
             f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=np.array(f_fixed.variables['pk'])
@@ -786,7 +706,7 @@ def main():
         ''' 
         #ak and bk are needed to derive the distance between layer pfull
         if col_list:
-            name_fixed=find_fixedfile(None,ifile)
+            name_fixed=ifile[0:5]+'.fixed.nc'
             f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
             variableNames = f_fixed.variables.keys();
             ak=np.array(f_fixed.variables['pk'])

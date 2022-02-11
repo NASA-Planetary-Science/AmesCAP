@@ -1,6 +1,33 @@
 ![](./tutorial_images/Tutorial_Banner_Final.png)
 
-
+<!-- TOC titleSize:2 tabSpaces:2 depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 skip:0 title:1 charForUnorderedList:* -->
+## Table of Contents
+* [Introducing the Community Analysis Pipeline (CAP)](#introducing-the-community-analysis-pipeline-cap)
+* [Cheat sheet](#cheat-sheet)
+* [The big question... How do I do this? >  <span style="color:red">Ask for help!  </span>](#the-big-question-how-do-i-do-this---span-stylecolorredask-for-help--span)
+* [1. `MarsPull.py` - Downloading Raw MGCM Output](#1-marspullpy---downloading-raw-mgcm-output)
+* [2. `MarsFiles.py` - Reducing the Files](#2-marsfilespy---reducing-the-files)
+* [3. `MarsVars.py` - Performing Variable Operations](#3-marsvarspy---performing-variable-operations)
+* [4. `MarsInterp.py` - Interpolating the Vertical Grid](#4-marsinterppy---interpolating-the-vertical-grid)
+* [5. `MarsPlot.py` - Plotting the Results](#5-marsplotpy---plotting-the-results)
+* [MarsPlot.py:  How to?](#marsplotpy--how-to)
+  * [Inspect the content of netCDF files](#inspect-the-content-of-netcdf-files)
+  * [Disable or add a new plot](#disable-or-add-a-new-plot)
+  * [Adjust the color range  and colormap](#adjust-the-color-range--and-colormap)
+  * [Make a 1D-plot](#make-a-1d-plot)
+  * [Customize 1D plots](#customize-1d-plots)
+  * [Put multiple plots on the same page](#put-multiple-plots-on-the-same-page)
+  * [Put multiple 1D-plots on the same page](#put-multiple-1d-plots-on-the-same-page)
+  * [Use a different epoch](#use-a-different-epoch)
+  * [Access simulation in a different directory](#access-simulation-in-a-different-directory)
+  * [Overwrite the free dimensions.](#overwrite-the-free-dimensions)
+  * [Element-wise operations](#element-wise-operations)
+  * [Code comments and speed-up processing](#code-comments-and-speed-up-processing)
+  * [Change projections](#change-projections)
+  * [Figure format, size](#figure-format-size)
+  * [Access CAP libraries and make your own plots](#access-cap-libraries-and-make-your-own-plots)
+  * [Debugging](#debugging)
+<!-- /TOC -->
 
 ***
 

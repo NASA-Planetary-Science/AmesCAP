@@ -227,7 +227,7 @@ def FV3_file_type(fNcdf):
         fNcdf: an (open) Netcdf file object 
     Return:
        f_type (string): 'fixed', 'contineous', or 'diurn'
-       interp_type (string): 'pfull','pstd','zstd','zagl','zgrid'
+       interp_type (string): 'pfull','pstd','zstd','zagl'
     '''
     #Get the full path from the file
     fullpath=get_Ncdf_path(fNcdf)
@@ -259,7 +259,6 @@ def FV3_file_type(fNcdf):
     if 'pstd'  in dims: interp_type='pstd'
     if 'zstd'  in dims: interp_type='zstd'
     if 'zagl'  in dims: interp_type='zagl'
-    if 'zgrid' in dims: interp_type='zgrid'
     return f_type,interp_type
 
 def alt_FV3path(fullpaths,alt,test_exist=True):
