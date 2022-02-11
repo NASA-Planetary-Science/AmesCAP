@@ -234,9 +234,13 @@ def main():
         fnew.copy_all_dims_from_Ncfile(fNcdf,exclude_dim=['pfull'])
         fnew.add_dim_with_content(interp_type,lev_in,longname_txt,units_txt) #Add new vertical dimension
         
-        
-        fnew.copy_Ncaxis_with_content(fNcdf.variables['lon'])
-        fnew.copy_Ncaxis_with_content(fNcdf.variables['lat'])
+        if 'tile' in ifile:
+            fnew.copy_Ncaxis_with_content(fNcdf.variables['grid_xt'])
+            fnew.copy_Ncaxis_with_content(fNcdf.variables['grid_yt'])
+        else:
+            fnew.copy_Ncaxis_with_content(fNcdf.variables['lon'])
+            fnew.copy_Ncaxis_with_content(fNcdf.variables['lat'])
+
         fnew.copy_Ncaxis_with_content(fNcdf.variables['time'])
     
         if do_diurn:fnew.copy_Ncaxis_with_content(fNcdf.variables[tod_name])
@@ -245,7 +249,8 @@ def main():
         compute_indices=True    
         for ivar in var_list: 
             if (fNcdf.variables[ivar].dimensions==('time','pfull', 'lat', 'lon') or
-             fNcdf.variables[ivar].dimensions==('time',tod_name,'pfull', 'lat', 'lon')):
+             fNcdf.variables[ivar].dimensions==('time',tod_name,'pfull', 'lat', 'lon') or
+             fNcdf.variables[ivar].dimensions==('time','pfull', 'grid_yt', 'grid_xt')):
                 if compute_indices:
                     prCyan("Computing indices ...")
                     index=find_n(L_3D_P,lev_in,reverse_input=need_to_reverse)
@@ -258,15 +263,19 @@ def main():
                     varOUT=vinterp(varIN.transpose(permut),L_3D_P,     
                                    lev_in,type_int=interp_technic,reverse_input=need_to_reverse,
                                    masktop=True,index=index).transpose(permut)
-                if not do_diurn:                   
-                    fnew.log_variable(ivar,varOUT,('time',interp_type, 'lat', 'lon'),
-                                      fNcdf.variables[ivar].long_name,fNcdf.variables[ivar].units)
+                if not do_diurn:
+                    if 'tile' in ifile:
+                        fnew.log_variable(ivar,varOUT,('time',interp_type, 'grid_yt', 'grid_xt'),
+                                          fNcdf.variables[ivar].long_name,fNcdf.variables[ivar].units)
+                    else:
+                        fnew.log_variable(ivar,varOUT,('time',interp_type, 'lat', 'lon'),
+                                          fNcdf.variables[ivar].long_name,fNcdf.variables[ivar].units)
                 else:
                     fnew.log_variable(ivar,varOUT,('time',tod_name,interp_type, 'lat', 'lon'),
                                       fNcdf.variables[ivar].long_name,fNcdf.variables[ivar].units)                      
             else:
                 
-                if  ivar not in ['time','pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl',tod_name]:
+                if  ivar not in ['time','pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl',tod_name,'grid_xt','grid_yt']:
                     #print("\r Copying over: %s..."%(ivar), end='')
                     prCyan("Copying over: %s..."%(ivar))
                     fnew.copy_Ncvar(fNcdf.variables[ivar]) 
