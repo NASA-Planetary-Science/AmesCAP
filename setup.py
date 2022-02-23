@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
-setup(name='amesgcmcb',
+setup(name='amesgcm',
       version='0.2',
-      description='Analysis pipeline for the NASA Ames MGCM - working repository',
-      url='http://github.com/falconstryker/amesgcm',
+      description='Analysis pipeline for the NASA Ames MGCM',
+      url='http://github.com/alex-kling/amesgcm',
       author='Mars Climate Modeling Center',
-      author_email='cmlbatterson@gmail.com',
+      author_email='alexandre.m.kling@nasa.gov',
       license='TBD',
       scripts=['bin/MarsPull.py','bin/MarsInterp.py','bin/MarsPlot.py','bin/MarsVars.py','bin/MarsFiles.py','bin/MarsViewer.py'],
       install_requires=['requests','netCDF4','numpy','matplotlib','scipy'],
