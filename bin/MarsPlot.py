@@ -2265,14 +2265,6 @@ class Fig_2D_time_lat(Fig_2D):
             for i in range(0,len(Ls_ticks)):
                 id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
                 labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
-            # if tim[0] != (9.969209968386869e+36):
-            #     for i in range(0,len(Ls_ticks)):
-            #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-            #         labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
-            # else:
-            #     for i in range(0,len(Ls_ticks)):
-            #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-            #         labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
             ax.set_xticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
@@ -2418,14 +2410,6 @@ class Fig_2D_time_lev(Fig_2D):
             for i in range(0,len(Ls_ticks)):
                 id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
                 labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
-            # if tim[0] < 9.e+36:
-            #     for i in range(0,len(Ls_ticks)):
-            #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-            #         labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
-            # else:
-            #     for i in range(0,len(Ls_ticks)):
-            #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-            #         labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
             if self.Xlim:
                 idmin=np.argmin(np.abs(tim-self.Xlim[0]))
@@ -2482,14 +2466,6 @@ class Fig_2D_lon_time(Fig_2D):
             for i in range(0,len(Ls_ticks)):
                 id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
                 labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
-            # if tim[0] < 9.e+36:
-            #     for i in range(0,len(Ls_ticks)):
-            #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-            #         labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
-            # else:
-            #     for i in range(0,len(Ls_ticks)):
-            #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-            #         labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
             ax.set_yticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
@@ -3029,14 +3005,6 @@ class Fig_1D(object):
                 for i in range(0,len(Ls_ticks)):
                     id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
                     labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
-                # if tim[0] < 9.e+36:
-                #     for i in range(0,len(Ls_ticks)):
-                #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                #         labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
-                # else:
-                #     for i in range(0,len(Ls_ticks)):
-                #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                #         labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
                 ax.set_xticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
