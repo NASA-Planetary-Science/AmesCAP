@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/Users/cbatters/amesGCM3/bin/python
 
 #Load generic Python Modules
 import argparse #parse arguments
@@ -121,8 +121,9 @@ def main():
     global my_dpi;my_dpi=96.        #pixel per inch for figure output
     global label_size;label_size=18 #Label size for title, xlabel, ylabel
     global title_size;title_size=24 #Label size for title, xlabel, ylabel
-    global label_factor;label_factor=1/50# reduce the font size as the  number of pannel increases size 
-    global title_factor;title_factor=1/100
+    global label_factor;label_factor=3/10# reduce the font size as the  number of pannel increases size 
+    global tick_factor;tick_factor=1/2
+    global title_factor;title_factor=10/12
     global width_inch; #pixel width for saving figure
     global height_inch; #pixel width for saving figure
     global vertical_page;vertical_page=parser.parse_args().vertical #vertical pages instead of horizonal for saving figure
@@ -189,7 +190,7 @@ def main():
         if parser.parse_args().date: #a date single date or a range is provided
             # first check if the value provided is the right type
             try:
-                bound=np.asarray(parser.parse_args().date).astype(np.float)
+                bound=np.asarray(parser.parse_args().date).astype(float)
             except Exception as e:
                 prRed('*** Syntax Error***')
                 prRed("""Please use:   'MarsPlot Custom.in -d XXXX [YYYY] -o out' """)
@@ -282,7 +283,7 @@ def main():
             output_pdf='"'+output_pdf+'"'
             #command to make a multipage pdf out of the the individual figures using ghost scritp.
             # Also remove the temporary files when done
-            cmd_txt='gs.bin -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -dEPSCrop -sOutputFile='+output_pdf+' '+all_fig
+            cmd_txt='gs -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -dEPSCrop -sOutputFile='+output_pdf+' '+all_fig
             try:
                 #Test the ghost scrit and remove command, exit otherwise--
                 subprocess.check_call(cmd_txt,shell=True, stdout=fdump, stderr=fdump)
@@ -645,8 +646,8 @@ def filter_input(txt,typeIn='char'):
             #if typeIn=='char': answ.append(txt.split(',')[i].strip())
             if typeIn=='char': answ= txt
               #====
-            if typeIn=='float':answ.append(np.float(txt.split(',')[i].strip()))
-            if typeIn=='int':  answ.append(np.int(txt.split(',')[i].strip()))
+            if typeIn=='float':answ.append(float(txt.split(',')[i].strip()))
+            if typeIn=='int':  answ.append(int(txt.split(',')[i].strip()))
             if typeIn=='bool': answ.append(txt.split(',')[i].strip()=='True')
         return answ
     else:
@@ -661,12 +662,12 @@ def filter_input(txt,typeIn='char'):
             elif txt=='AXIS':
                 answ= -88888.
             else:
-                answ= np.float(txt)
+                answ= float(txt)
         if typeIn=='int':
             if txt=='all':
                 answ= -99999
             else:
-                answ=  np.int(txt)
+                answ=  int(txt)
   #would be True is text matches
         return answ
 
@@ -722,7 +723,7 @@ def read_axis_options(axis_options_txt):
             Xaxis=None
             break
         else:
-            Xaxis.append(np.float(txt.split(',')[i].strip()))
+            Xaxis.append(float(txt.split(',')[i].strip()))
     #Yaxis: get bound
     txt=list_txt[1].split('=')[1].replace('[','').replace(']','')
     Yaxis=[]
@@ -731,7 +732,7 @@ def read_axis_options(axis_options_txt):
             Yaxis=None
             break
         else:
-            Yaxis.append(np.float(txt.split(',')[i].strip()))
+            Yaxis.append(float(txt.split(',')[i].strip()))
     #Line or colormap
     custom_line1=list_txt[2].split('=')[1].strip()
     custom_line2=None
@@ -1115,9 +1116,9 @@ def namelist_parser(Custom_file):
 
     customFileIN=open(Custom_file,'r')
     #===Get version in the header====
-    version=np.float(customFileIN.readline().split('|')[1].strip().split('V')[1].strip())
+    version=(float((customFileIN.readline()).split('|')[1].strip().split('V')[1].strip()))
     # Check if the main versions are compatible,  (1.1 and 1.2 are OK but not 1.0 and 2.0)
-    if np.int(version)!=np.int(current_version):
+    if int(version)!=int(current_version):
          prYellow('*** Warning ***')
          prYellow('Using MarsPlot V%s but Custom.in template is depreciated (using V%s)'%(current_version,version))
          prYellow('***************')
@@ -1330,7 +1331,7 @@ def get_Ncdf_num():
     list_dir=os.listdir(input_paths[0])
     avail_fixed = [k for k in list_dir if '.fixed.nc' in k] #e.g. '00350.fixed.nc', '00000.fixed.nc'
     list_num = [item[0:5] for item in avail_fixed]          #remove .fixed.nc, e.g. '00350', '00000'
-    Ncdf_num=np.sort(np.asarray(list_num).astype(np.float)) # transform to array, e.g. [0, 350]
+    Ncdf_num=np.sort(np.asarray(list_num).astype(float)) # transform to array, e.g. [0, 350]
     if Ncdf_num.size==0:Ncdf_num= None 
     #    print("No XXXXX.fixed.nc detected in "+input_paths[0])
     #    raise SystemExit #Exit cleanly
@@ -1803,13 +1804,14 @@ class Fig_2D(object):
                 if plot_type=='2D_time_lev':return t_stack,levs, np.nanmean(np.average(var,weights=w,axis=2),axis=2).T,var_info #transpose
                 if plot_type=='2D_lon_time':  return lon,t_stack,np.nanmean(np.average(var,weights=w,axis=2),axis=1),var_info
 
-
+    def plot_dimensions(self):
+        prYellow(f'{self.ax.get_position()}')
 
     def make_title(self,var_info,xlabel,ylabel):
         if self.title:
-            plt.title(self.title,fontsize=title_size-self.nPan*title_factor)
+            plt.title(self.title,fontsize=title_size-self.nPan*title_factor,wrap=True)
         else:
-            plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=title_size-self.nPan*title_factor) #we remove the first coma ',' of fdim_txt to print to the new line
+            plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=title_size-self.nPan*title_factor,wrap=True) #we remove the first coma ',' of fdim_txt to print to the new line
         plt.xlabel(xlabel,fontsize=label_size-self.nPan*label_factor)
         plt.ylabel(ylabel,fontsize=label_size-self.nPan*label_factor)
 
@@ -1818,14 +1820,14 @@ class Fig_2D(object):
         if self.axis_opt2 =='log':
             formatter = LogFormatter(10, labelOnlyBase=False)
             if self.range:
-                cbar=plt.colorbar(ticks=levs,orientation='horizontal',aspect=50,format=formatter)
+                cbar=plt.colorbar(ticks=levs,orientation='horizontal',aspect=30,format=formatter)
             else:
-                cbar=plt.colorbar(orientation='horizontal',aspect=50,format=formatter)
+                cbar=plt.colorbar(orientation='horizontal',aspect=30,format=formatter)
 
         else:
-            cbar=plt.colorbar(orientation='horizontal',aspect=50)
+            cbar=plt.colorbar(orientation='horizontal',aspect=30)
 
-        cbar.ax.tick_params(labelsize=title_size-self.nPan*title_factor) #shrink the colorbar label as the number of subplot increase
+        cbar.ax.tick_params(labelsize=label_size-self.nPan*label_factor) #shrink the colorbar label as the number of subplot increase
 
     def return_norm_levs(self):
         norm =None
@@ -2003,8 +2005,8 @@ class Fig_2D_lon_lat(Fig_2D):
                 ax.xaxis.set_minor_locator(MultipleLocator(10))
                 ax.yaxis.set_major_locator(MultipleLocator(15))
                 ax.yaxis.set_minor_locator(MultipleLocator(5))
-                plt.xticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
-                plt.yticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
+                plt.xticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
+                plt.yticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
             #-------------------------------------------------------------------
             #                      Special projections
             #--------------------------------------------------------------------
@@ -2259,23 +2261,27 @@ class Fig_2D_time_lat(Fig_2D):
             Ls_ticks = [item for item in ax.get_xticks()]
             labels = [item for item in ax.get_xticklabels()]
 
-            if tim[0] != (9.969209968386869e+36):
-                for i in range(0,len(Ls_ticks)):
-                    id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                    labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
-            else:
-                for i in range(0,len(Ls_ticks)):
-                    id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                    labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
-            ax.set_xticklabels(labels)
+            for i in range(0,len(Ls_ticks)):
+                id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
+            # if tim[0] != (9.969209968386869e+36):
+            #     for i in range(0,len(Ls_ticks)):
+            #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+            #         labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
+            # else:
+            #     for i in range(0,len(Ls_ticks)):
+            #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+            #         labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
+
+            ax.set_xticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
             super(Fig_2D_time_lat, self).make_title(var_info,'','Latitude') #no 'Time' label as it is obvious
 
             ax.yaxis.set_major_locator(MultipleLocator(15))
             ax.yaxis.set_minor_locator(MultipleLocator(5))
-            plt.xticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
-            plt.yticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
+            plt.xticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
+            plt.yticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
             self.success=True
 
@@ -2320,8 +2326,8 @@ class Fig_2D_lat_lev(Fig_2D):
 
             ax.xaxis.set_major_locator(MultipleLocator(15))
             ax.xaxis.set_minor_locator(MultipleLocator(5))
-            plt.xticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
-            plt.yticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
+            plt.xticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
+            plt.yticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
 
             self.success=True
@@ -2368,8 +2374,8 @@ class Fig_2D_lon_lev(Fig_2D):
 
             ax.xaxis.set_major_locator(MultipleLocator(30))
             ax.xaxis.set_minor_locator(MultipleLocator(10))
-            plt.xticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
-            plt.yticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
+            plt.xticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
+            plt.yticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
             self.success=True
         except Exception as e: #Return the error
@@ -2396,32 +2402,6 @@ class Fig_2D_time_lev(Fig_2D):
                 super(Fig_2D_time_lev, self).solid_contour(Ls, pfull,var2,self.contour2)
                 var_info+=" (& "+var_info2+")"
 
-
-            #Axis formatting
-            if self.Xlim:
-                idmin=np.argmin(np.abs(tim-self.Xlim[0]))
-                idmax=np.argmin(np.abs(tim-self.Xlim[1]))
-                plt.xlim([Ls[idmin],Ls[idmax]])
-            if self.Ylim:plt.ylim(self.Ylim)
-
-            Ls_ticks = [item for item in ax.get_xticks()]
-            labels = [item for item in ax.get_xticklabels()]
-
-
-            if tim[0] < 9.e+36:
-                for i in range(0,len(Ls_ticks)):
-                    id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                    labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
-            else:
-                for i in range(0,len(Ls_ticks)):
-                    id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                    labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
-
-
-            ax.set_xticklabels(labels)
-            plt.xticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
-            plt.yticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
-
             if self.vert_unit=='Pa':
                 ax.set_yscale("log")
                 ax.invert_yaxis()
@@ -2431,7 +2411,33 @@ class Fig_2D_time_lev(Fig_2D):
             else:
                 ylabel_txt='Altitude [m]'
 
+            #Axis formatting
+            Ls_ticks = [item for item in ax.get_xticks()]
+            labels = [item for item in ax.get_xticklabels()]
+
+            for i in range(0,len(Ls_ticks)):
+                id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
+            # if tim[0] < 9.e+36:
+            #     for i in range(0,len(Ls_ticks)):
+            #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+            #         labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
+            # else:
+            #     for i in range(0,len(Ls_ticks)):
+            #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+            #         labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
+
+            if self.Xlim:
+                idmin=np.argmin(np.abs(tim-self.Xlim[0]))
+                idmax=np.argmin(np.abs(tim-self.Xlim[1]))
+                plt.xlim([Ls[idmin],Ls[idmax]])
+            if self.Ylim:plt.ylim(self.Ylim)
+
             super(Fig_2D_time_lev, self).make_title(var_info,'',ylabel_txt)
+
+            plt.xticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
+            ax.set_xticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
+            plt.yticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
             self.success=True
         except Exception as e: #Return the error
@@ -2473,23 +2479,26 @@ class Fig_2D_lon_time(Fig_2D):
             Ls_ticks = [item for item in ax.get_yticks()]
             labels = [item for item in ax.get_yticklabels()]
 
-            if tim[0] < 9.e+36:
-                for i in range(0,len(Ls_ticks)):
-                    id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                    labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
-            else:
-                for i in range(0,len(Ls_ticks)):
-                    id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                    labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
+            for i in range(0,len(Ls_ticks)):
+                id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
+            # if tim[0] < 9.e+36:
+            #     for i in range(0,len(Ls_ticks)):
+            #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+            #         labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
+            # else:
+            #     for i in range(0,len(Ls_ticks)):
+            #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+            #         labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
-            ax.set_yticklabels(labels)
+            ax.set_yticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
             ax.xaxis.set_major_locator(MultipleLocator(30))
             ax.xaxis.set_minor_locator(MultipleLocator(10))
 
             super(Fig_2D_lon_time, self).make_title(var_info,'Longitude','')
-            plt.xticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
-            plt.yticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
+            plt.xticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
+            plt.yticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
             self.success=True
         except Exception as e: #Return the error
@@ -3017,16 +3026,19 @@ class Fig_1D(object):
                 Ls_ticks = [item for item in ax.get_xticks()]
                 labels = [item for item in ax.get_xticklabels()]
 
-                if tim[0] < 9.e+36:
-                    for i in range(0,len(Ls_ticks)):
-                        id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                        labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
-                else:
-                    for i in range(0,len(Ls_ticks)):
-                        id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                        labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
+                for i in range(0,len(Ls_ticks)):
+                    id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                    labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
+                # if tim[0] < 9.e+36:
+                #     for i in range(0,len(Ls_ticks)):
+                #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                #         labels[i]='L$_s=$%g%s\nsol %i'%(np.mod(Ls_ticks[i],360.),degr,tim[id])
+                # else:
+                #     for i in range(0,len(Ls_ticks)):
+                #         id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                #         labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
-                ax.set_xticklabels(labels)
+                ax.set_xticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
             if self.plot_type=='1D_lev':
 
@@ -3072,8 +3084,8 @@ class Fig_1D(object):
 
 
             #====comon labelling====
-            plt.xticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
-            plt.yticks(fontsize=label_size-self.nPan*label_factor, rotation=0)
+            plt.xticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
+            plt.yticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
             plt.legend(fontsize=title_size-self.nPan*title_factor)
             plt.grid(True)
 
