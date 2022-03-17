@@ -1809,9 +1809,9 @@ class Fig_2D(object):
 
     def make_title(self,var_info,xlabel,ylabel):
         if self.title:
-            plt.title(self.title,fontsize=title_size-self.nPan*title_factor,wrap=True)
+            plt.title(self.title,fontsize=title_size-self.nPan*title_factor,wrap=False)
         else:
-            plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=title_size-self.nPan*title_factor,wrap=True) #we remove the first coma ',' of fdim_txt to print to the new line
+            plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=title_size-self.nPan*title_factor,wrap=False) #we remove the first coma ',' of fdim_txt to print to the new line
         plt.xlabel(xlabel,fontsize=label_size-self.nPan*label_factor)
         plt.ylabel(ylabel,fontsize=label_size-self.nPan*label_factor)
 
@@ -2264,11 +2264,11 @@ class Fig_2D_time_lat(Fig_2D):
 
             for i in range(0,len(Ls_ticks)):
                 id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
+                labels[i]='%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
             ax.set_xticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
-            super(Fig_2D_time_lat, self).make_title(var_info,'','Latitude') #no 'Time' label as it is obvious
+            super(Fig_2D_time_lat, self).make_title(var_info,'Areocentric Longitude [L$_s$]','Latitude')
 
             ax.yaxis.set_major_locator(MultipleLocator(15))
             ax.yaxis.set_minor_locator(MultipleLocator(5))
@@ -2409,7 +2409,7 @@ class Fig_2D_time_lev(Fig_2D):
 
             for i in range(0,len(Ls_ticks)):
                 id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
+                labels[i]='%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
             if self.Xlim:
                 idmin=np.argmin(np.abs(tim-self.Xlim[0]))
@@ -2465,14 +2465,14 @@ class Fig_2D_lon_time(Fig_2D):
 
             for i in range(0,len(Ls_ticks)):
                 id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
+                labels[i]='%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
             ax.set_yticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
             ax.xaxis.set_major_locator(MultipleLocator(30))
             ax.xaxis.set_minor_locator(MultipleLocator(10))
 
-            super(Fig_2D_lon_time, self).make_title(var_info,'Longitude','')
+            super(Fig_2D_lon_time, self).make_title(var_info,'Longitude','Areocentric Longitude [L$_s$]')
             plt.xticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
             plt.yticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
@@ -2986,7 +2986,8 @@ class Fig_1D(object):
                 if parser.parse_args().stack_year:Ls=np.mod(Ls,360)
 
                 plt.plot(Ls,var,self.axis_opt1,lw=4,label=txt_label)
-                
+                plt.xlabel('Areocentric Longitude [L$_s$]',fontsize=label_size-self.nPan*label_factor)
+
                 #Label is provided
                 if self.axis_opt2:
                     plt.ylabel(self.axis_opt2,fontsize=label_size-self.nPan*label_factor)
@@ -3004,7 +3005,7 @@ class Fig_1D(object):
 
                 for i in range(0,len(Ls_ticks)):
                     id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
-                    labels[i]='L$_s=$%g%s'%(np.mod(Ls_ticks[i],360.),degr)
+                    labels[i]='%g%s'%(np.mod(Ls_ticks[i],360.),degr)
 
                 ax.set_xticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
