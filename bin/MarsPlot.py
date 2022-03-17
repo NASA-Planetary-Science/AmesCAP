@@ -2417,7 +2417,7 @@ class Fig_2D_time_lev(Fig_2D):
                 plt.xlim([Ls[idmin],Ls[idmax]])
             if self.Ylim:plt.ylim(self.Ylim)
 
-            super(Fig_2D_time_lev, self).make_title(var_info,'',ylabel_txt)
+            super(Fig_2D_time_lev, self).make_title(var_info,'Areocentric Longitude [L$_s$]',ylabel_txt)
 
             plt.xticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
             ax.set_xticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
