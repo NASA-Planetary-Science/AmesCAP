@@ -1810,9 +1810,15 @@ class Fig_2D(object):
 
     def make_title(self,var_info,xlabel,ylabel):
         if self.title:
-            plt.title(self.title,fontsize=title_size-self.nPan*title_factor,wrap=False)
+            if '{' in self.title:
+                fs = int(remove_whitespace((self.title).split("=")[1].split("}")[0]))
+                title_text = ((self.title).split("{")[0]).title()
+                plt.title(title_text,fontsize=fs-self.nPan*title_factor,wrap=False)
+            else:
+                plt.title((self.title).title(),fontsize=title_size-self.nPan*title_factor)
         else:
-            plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=title_size-self.nPan*title_factor,wrap=False) #we remove the first coma ',' of fdim_txt to print to the new line
+            plt.title(var_info.title(),fontsize=title_size-self.nPan*title_factor,wrap=False)
+
         plt.xlabel(xlabel,fontsize=label_size-self.nPan*label_factor)
         plt.ylabel(ylabel,fontsize=label_size-self.nPan*label_factor)
 
@@ -2215,11 +2221,10 @@ class Fig_2D_lon_lat(Fig_2D):
 
                     var_info+=" (& "+var_info2+")"
 
-
                 if self.title:
-                    plt.title(self.title,fontsize=title_size-self.nPan*title_factor)
+                    plt.title((self.title).title(),fontsize=title_size-self.nPan*title_factor)
                 else:
-                    plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=title_size-self.nPan*title_factor) #we remove the first coma ',' of fdim_txt to print to the new line
+                    plt.title(var_info.title(),fontsize=title_size-self.nPan*title_factor,wrap=False)
 
 
             self.success=True
@@ -2950,7 +2955,16 @@ class Fig_1D(object):
                     txt_label=leg_text
                 else:
                     txt_label=None
-
+            
+            if self.title:
+                if '{' in self.title:
+                    fs = int(remove_whitespace((self.title).split("=")[1].split("}")[0]))
+                    title_text = ((self.title).split("{")[0]).title()
+                    plt.title(title_text,fontsize=fs-self.nPan*title_factor,wrap=False)
+                else:
+                    plt.title((self.title).title(),fontsize=title_size-self.nPan*title_factor)
+            else:
+                plt.title(var_info.title(),fontsize=title_size-self.nPan*title_factor,wrap=False)
 
             if self.plot_type=='1D_lat':
 
