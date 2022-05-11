@@ -13,6 +13,8 @@ import shutil
 import subprocess
 import numpy as np
 from netCDF4 import Dataset
+import warnings #Suppress certain errors when dealing with NaN arrays
+
 
 
 #===========
@@ -109,6 +111,12 @@ parser.add_argument('-rs','--regrid_source',nargs='+',
                  help=""" Reggrid  GCMs or observation files using another netcdf file (time,lev,lat,lon) grid structure  \n"""
                       """>  Both source(s) and target files should be vertically-interpolated to a standard grid (e.g. zstd, zagl, pstd)\n"""
                       """>  Usage: MarsInterp.py ****.atmos.average_pstd.nc -rs simu2/00668.atmos_average_pstd.nc \n""") 
+                                                        
+                                                        
+parser.add_argument('-za','--zonal_avg', action='store_true',
+        help="""Apply zonal averaging to any type of files \n"""
+            """> Usage: MarsFiles.py *.atmos_diurn.nc -za \n"""
+            """ \n""") 
                                                              
 parser.add_argument('-include','--include',nargs='+',
                      help="""For data reduction, filtering, time-shift, only include listed variables. Dimensions and 1D variables are always included \n"""
@@ -824,10 +832,64 @@ def main():
                 elif varNcf.dimensions[-2:]==('lat', 'lon'): #Ignore variables like  'time_bounds', 'scalar_axis' or 'grid_xt_bnds'...
                     prCyan("Regridding: %s..."%(ivar))
                     var_OUT=regrid_Ncfile(varNcf,f_in,fNcdf_t)        
-                    fnew.log_variable(ivar,var_OUT,varNcf.dimensions,varNcf.long_name,varNcf.units)
+                    fnew.log_variable(ivar,var_OUT,varNcf.dimensions,varNcf.long_name,varNcf.units) #TODO this time_of_day_24 to time_of_day_4
             fnew.close()
             fNcdf_t.close()
-        f_in    
+      
+      
+    #===========================================================================
+    #=======================  Zonal averaging    ===============================
+    #===========================================================================
+    elif parser.parse_args().zonal_avg: 
+       
+        for filei in file_list:
+            #Add path unless full path is provided
+            if not ('/' in filei):
+                fullnameIN = path2data + '/' + filei
+            else:
+                fullnameIN=filei
+            fullnameOUT = fullnameIN[:-3]+'_zonal_avg'+'.nc'
+            
+            #Append extension, in any:
+            if parser.parse_args().ext:fullnameOUT=fullnameOUT[:-3]+'_'+parser.parse_args().ext+'.nc'
+            
+            fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            var_list = filter_vars(fdaily,parser.parse_args().include) # get all variables
+            
+            lon_in=fdaily.variables['lon'][:]
+            
+            fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
+            #Copy all dims but time from the old file to the new file
+            fnew.copy_all_dims_from_Ncfile(fdaily,exclude_dim=['lon'])
+            
+
+            #----- Add one new dimension for the longitude, size 1 -----
+            fnew.add_dim_with_content('lon',[lon_in.mean()],longname_txt="longitude",units_txt="degrees_E",cart_txt='X')
+
+            #Loop over all variables in file
+            for ivar in var_list:
+                varNcf     = fdaily.variables[ivar]
+                
+                if 'lon' in varNcf.dimensions and ivar not in ['lon','grid_xt_bnds','grid_yt_bnds']:     
+                    prCyan("Processing: %s ..."%(ivar))
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore", category=RuntimeWarning)
+                        var_out=np.nanmean(varNcf[:],axis=-1)[...,np.newaxis]
+                        fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
+                else:
+                    if  ivar in ['pfull', 'lat','phalf','pk','bk','pstd','zstd','zagl']:
+                        prCyan("Copying axis: %s..."%(ivar))
+                        fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
+                    elif ivar in ['grid_xt_bnds','grid_yt_bnds', 'lon']:
+                        pass 
+                        
+                        
+                    else: 
+                        prCyan("Copying var: %s..."%(ivar))   
+                        fnew.copy_Ncvar(fdaily.variables[ivar]) 
+            fnew.close()  
+      
+       
     else:
         prRed("""Error: no action requested: use 'MarsFiles *nc --fv3 --combine, --tshift, --bin_average, --bin_diurn etc ...'""")    
 
