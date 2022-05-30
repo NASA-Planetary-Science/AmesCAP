@@ -54,7 +54,7 @@ parser.add_argument('-add','--add', nargs='+',default=[],
                       'wdir       (wind direction)                  Req. [ucomp,vcomp] \n'
                       'wspeed     (wind magnitude)                  Req. [ucomp,vcomp] \n'
                       'N          (Brunt Vaisala freq)              Req. [ps,temp] \n'
-                      'Ri         (Richardson number)               Req. [ps,temp] \n'
+                      'Ri         (Richardson number)               Req. [ps,temp,ucomp,vcomp] \n'
                       'Tco2       (CO2 condensation temperature)    Req. [ps,temp] \n'
                       'scorer_wl  (Scorer horizontal wavelength)    Req. [ps,temp,ucomp] \n'
                       'div        (divergence)                      Req. [ucomp,vcomp] \n'
