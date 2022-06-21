@@ -442,12 +442,12 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
             intType='lin'
         elif zaxis_in=='pstd':
             intType='log'  
-        var_OUT=axis_interp(var_OUT, lev_in,lev_t, pos_axis, reverse_input=reverse_input, type=intType)
+        var_OUT=axis_interp(var_OUT, lev_in,lev_t, pos_axis, reverse_input=reverse_input, type_int=intType)
         
     #STEP 3: Linear interpolation in Ls
     if 'time' in VAR_Ncdf.dimensions:
         pos_axis=0
-        var_OUT=axis_interp(var_OUT, np.squeeze(areo_in)%360,np.squeeze(areo_t)%360, pos_axis, reverse_input=False, type='lin')   
+        var_OUT=axis_interp(var_OUT, np.squeeze(areo_in)%360,np.squeeze(areo_t)%360, pos_axis, reverse_input=False, type_int='lin')   
         
     #STEP 4: Linear interpolation in time of day  
     #TODO the interpolation scheme is not cyclic. 
@@ -460,8 +460,8 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
         tod_name_t=find_tod_in_diurn(file_Nc_target)
         tod_in=file_Nc_in.variables[tod_name_in][:]
         tod_t=file_Nc_target.variables[tod_name_t][:]
-        var_OUT=axis_interp(var_OUT, tod_in,tod_t, pos_axis, reverse_input=False, type='lin')  
-       
+        var_OUT=axis_interp(var_OUT, tod_in,tod_t, pos_axis, reverse_input=False, type_int='lin')  
+    
     return var_OUT   
 
 

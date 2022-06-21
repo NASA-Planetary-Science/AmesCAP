@@ -442,7 +442,7 @@ __________________________|_______________|_______________|_______________|
 
 ***
 ## Disable or add a new plot
-Code blocks is set to `= True` instruct `MarsPlot` to draw those plots. Other templates in `Custom.in` are set to `= False` by default, which instructs `MarsPlot` to skip those plots. In total, `MarsPlot` is equipped to create seven plot types:
+Code blocks set to `= True` instruct `MarsPlot` to draw those plots. Other templates in `Custom.in` are set to `= False` by default, which instructs `MarsPlot` to skip those plots. In total, `MarsPlot` is equipped to create seven plot types:
 
 ```python
 <<<<<| Plot 2D lon X lat  = True |>>>>>
