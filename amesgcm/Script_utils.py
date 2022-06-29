@@ -241,8 +241,6 @@ def FV3_file_type(fNcdf):
     f_type='contineous'
     interp_type='unknown'
     tod_name='n/a'
-    
-    # Note: 'to_average' is for files re-binned by MarsFile.py
 
     #If 'time' is not a dimension, assume it is a 'fixed' file
     if 'time' not in fNcdf.dimensions.keys():f_type='fixed'
@@ -384,10 +382,12 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
     Args:
         VAR_Ncdf: A netCDF4 variable OBJECT, e.g. 'f_in.variables['temp']' from the source file
         file_Nc_in: The opened netcdf file object  for that input variable, e.g f_in=Dataset('fname','r')
-        file_Nc_target: Anopened netcdf file object  for the target grid t e.g f_out=Dataset('fname','r')  
+        file_Nc_target: An opened netcdf file object  for the target grid t e.g f_out=Dataset('fname','r')  
     Returns:
         VAR_OUT: the VALUES of VAR_Ncdf[:], interpolated on the grid for the target file. 
-    while the closest points in the vertical are a few 10's -100's meter in the PBL, which would results in excessive weighting in the vertical.
+    
+    *** Note***
+    While the KDTree interpolation can handle a 3D dataset (lon/lat/lev instead of just 2D lon/lat) , the grid points in the vertical are just a few 10's -100's meter in the PBL vs few 10'-100's km in the horizontal. This would results in excessive weighting in the vertical, which is why the vertical dimension is handled separately.
     '''
     from amesgcm.FV3_utils import interp_KDTree, axis_interp
     ftype_in,zaxis_in=FV3_file_type(file_Nc_in)
@@ -451,12 +451,8 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
     #STEP 4: Linear interpolation in time of day  
     #TODO the interpolation scheme is not cyclic. 
     #> If Available diurn times  are 04 10 16 22 and requested time is 23, value is left to zero  and not interpololated from 22 and 04 times as it should
-    # if requesting 
     if ftype_in =='diurn':
         pos_axis=1
-        
-        tod_name_in=find_tod_in_diurn(file_Nc_in)
-        tod_name_t=find_tod_in_diurn(file_Nc_target)
         tod_in=file_Nc_in.variables[tod_name_in][:]
         tod_t=file_Nc_target.variables[tod_name_t][:]
         var_OUT=axis_interp(var_OUT, tod_in,tod_t, pos_axis, reverse_input=False, type_int='lin')  
