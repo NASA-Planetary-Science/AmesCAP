@@ -283,7 +283,7 @@ def main():
             output_pdf='"'+output_pdf+'"'
             #command to make a multipage pdf out of the the individual figures using ghost scritp.
             # Also remove the temporary files when done
-            cmd_txt='gs -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -dEPSCrop -sOutputFile='+output_pdf+' '+all_fig
+            cmd_txt='gs.bin -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -dEPSCrop -sOutputFile='+output_pdf+' '+all_fig
             try:
                 #Test the ghost script and remove command, exit otherwise--
                 subprocess.check_call(cmd_txt,shell=True, stdout=fdump, stderr=fdump)
