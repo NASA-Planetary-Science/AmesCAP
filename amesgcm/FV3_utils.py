@@ -97,7 +97,7 @@ def fms_Z_calc(psfc,ak,bk,T,topo=0.,lev_type='full'):
     
     
     *NOTE* 
-        Expends tp the time dimension using topo=np.repeat(zsurf[np.newaxis,:],ps.shape[0],axis=0)
+        Expends topp to the time dimension using topo=np.repeat(zsurf[np.newaxis,:],ps.shape[0],axis=0)
     
         Calculation is derived from ./atmos_cubed_sphere_mars/Mars_phys.F90:
         We have dp/dz = -rho g => dz= dp/(-rho g) and rho= p/(r T)  => dz=rT/g *(-dp/p) 
@@ -2009,7 +2009,7 @@ def ref_atmosphere_Mars_PTD(Zi):
     
 def press_to_alt_atmosphere_Mars(Pi):
     '''
-    Return the altitude in m as a function of pressur from the analytical calculations derived above.
+    Return the altitude in m as a function of pressure from the analytical calculations derived above.
     Args:
         Pi (float or 1D array): input pressure in Pa (must be <=610 Pa)
     Return:
