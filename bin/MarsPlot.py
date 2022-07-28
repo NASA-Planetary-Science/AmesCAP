@@ -124,6 +124,8 @@ def main():
     global label_factor;label_factor=3/10# reduce the font size as the  number of pannel increases size
     global tick_factor;tick_factor=1/2
     global title_factor;title_factor=10/12
+    global label_size;label_size=12 #Label size for title, xlabel, ylabel
+    global label_factor;label_factor=1/2# reduce the font size as the  number of pannel increases size
     global width_inch; #pixel width for saving figure
     global height_inch; #pixel width for saving figure
     global vertical_page;vertical_page=parser.parse_args().vertical #vertical pages instead of horizonal for saving figure
@@ -201,7 +203,7 @@ def main():
             #If one or multiple  XXXXX.fixed.nc files are found, use the last one
             if bound is not None :bound=bound[-1]
         #-----
-        
+
         #Initialization
         Ncdf_num=get_Ncdf_num() #Get all timestamps in directory
 
@@ -252,7 +254,7 @@ def main():
             #Construct list of figures----
 
             all_fig=' '
-            for figID in fig_list:                                          
+            for figID in fig_list:
                 #Add outer quotes(" ") to deal with white space in Windows, e.g. '"/Users/my folder/Diagnostics.pdf"'
                 figID='"'+figID+'"'
                 all_fig+=figID+' '
@@ -261,10 +263,10 @@ def main():
             try:
                 if parser.parse_args().do:
                     basename=parser.parse_args().do[0]
-                else:    
+                else:
                     input_file=output_path+'/'+parser.parse_args().custom_file.name
                     basename=input_file.split('/')[-1].split('.')[0].strip() #get the input file name, e.g "Custom_01" or
-                
+
             except: #Special case where no Custom.in is provided
                 basename='Custom'
 
@@ -278,12 +280,19 @@ def main():
             #name is different use it
             else:
                 output_pdf=fig_name=output_path+'/'+basename+'.pdf' #same name as input file
-                
-            #Also add outer quote to the output pdf    
+
+            #Also add outer quote to the output pdf
             output_pdf='"'+output_pdf+'"'
             #command to make a multipage pdf out of the the individual figures using ghost scritp.
             # Also remove the temporary files when done
             cmd_txt='gs.bin -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -dEPSCrop -sOutputFile='+output_pdf+' '+all_fig
+            cmd_txt='gs -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -dEPSCrop -sOutputFile='+output_pdf+' '+all_fig
+            #=======ON NAS, the ghostscript executable has been renamed 'gs.bin'. If the above fail, we will also try this one========
+            try:
+                subprocess.check_call(cmd_txt,shell=True, stdout=fdump, stderr=fdump)
+            except subprocess.CalledProcessError:
+                cmd_txt='gs.bin -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -dEPSCrop -sOutputFile='+output_pdf+' '+all_fig
+            #================
             try:
                 #Test the ghost script and remove command, exit otherwise--
                 subprocess.check_call(cmd_txt,shell=True, stdout=fdump, stderr=fdump)
@@ -554,10 +563,10 @@ def get_time_index(Ls_query_360,Ls):
         txt_time: text descriptor for the extracted solar longitudes
     *** Note that the keyword 'all' is passed as -99999 by the rT() functions
     '''
-    
+
     #Special case where the file has only one timestep, transform Ls to array:
     if len(np.atleast_1d(Ls))==1:Ls=np.array([Ls])
-    
+
     Nt=len(Ls)
     Ls_query_360=np.array(Ls_query_360)
 
@@ -746,7 +755,7 @@ def read_axis_options(axis_options_txt):
         custom_line2=list_txt[3].split('=')[1].strip()
         custom_line3=list_txt[4].split('=')[1].strip()
         if custom_line2.strip()=='None':custom_line2=None
-        if custom_line3.strip()=='None':custom_line3=None   
+        if custom_line3.strip()=='None':custom_line3=None
     return Xaxis, Yaxis,custom_line1,custom_line2,custom_line3
 
 
@@ -777,9 +786,9 @@ def split_varfull(varfull):
         filetypeID=varfull.split('.')[1].strip() #file and ID
         var=varfull.split('.')[2].strip()        #variable name
     # Split filename and simulation ID
-    
+
     if '@' in filetypeID:
-        filetype=filetypeID.split('@')[0].strip()  
+        filetype=filetypeID.split('@')[0].strip()
         simuID=int(filetypeID.split('@')[1].strip() )-1 #simulation ID  starts at zero in the code
     else: #no digit, i.e reference simulation
         simuID=0
@@ -1180,13 +1189,13 @@ def namelist_parser(Custom_file):
         if line.strip()[0:7]=='HOLD ON':
             holding=True
             subplotID=1
-            
+
             #Get layout info
             if ',' in line: # layout is provided, e.g. 'HOLD ON 2,3'
                 tmp= line.split('ON')[-1].strip()  # this returns '2,3' as a  string
                 layout=[int(tmp.split(',')[0]),int(tmp.split(',')[1])] #This returns [2,3]
             else:
-                layout=None    
+                layout=None
         #adding a 1D plot to an existing line plot
         if line.strip()=='ADD LINE':
             addLine=True
@@ -1225,14 +1234,14 @@ def namelist_parser(Custom_file):
                     #We are not holding: there is a single panel per page and we reset the page counter
                     panelList.append(1)
                     subplotList.append(1)
-                    npage=nobj 
-                    layout=None 
-                    
+                    npage=nobj
+                    layout=None
+
                 if layout:
                     layoutList.append(layout)
-                else:    
+                else:
                     layoutList.append(None)
-                
+
                 #====================
 
                 if addLine:
@@ -1270,7 +1279,7 @@ def namelist_parser(Custom_file):
             holding=False
             subplotID=1
             npage=nobj
-            
+
 
 
     #Make sure we are not still holding figures
@@ -1352,6 +1361,8 @@ def get_Ncdf_num():
     list_num = [item[0:5] for item in avail_fixed]          #remove .fixed.nc, e.g. '00350', '00000'
     Ncdf_num=np.sort(np.asarray(list_num).astype(float)) # transform to array, e.g. [0, 350]
     if Ncdf_num.size==0:Ncdf_num= None 
+    Ncdf_num=np.sort(np.asarray(list_num).astype(np.float)) # transform to array, e.g. [0, 350]
+    if Ncdf_num.size==0:Ncdf_num= None
     #    print("No XXXXX.fixed.nc detected in "+input_paths[0])
     #    raise SystemExit #Exit cleanly
     return Ncdf_num
@@ -1413,7 +1424,7 @@ def path_to_template(custom_name):
          If file not found, try shared directory
     '''
     local_dir=sys.prefix+'/mars_templates'
-    
+
     #---
     custom_name=custom_name[0] #convert the 1-element list to a string
     if custom_name[-3:]!='.in':  custom_name=custom_name+'.in'#add extension if not provided
@@ -1486,7 +1497,7 @@ def prep_file(var_name,file_type,simuID,sol_array):
     if os.path.isfile(input_paths[simuID]+'/'+file_type+'.nc'):
             file_has_sol_number=False
     # If the file does NOT exist, append sol number as provided by MarsPlot Custom.in -d sol or last file in directory
-    else: 
+    else:
         file_has_sol_number=True
         # Two options here: first a file number is explicitly provided in the varfull, e.g. 00668.atmos_average.nc
         if sol_array != [None]:
@@ -1506,11 +1517,11 @@ def prep_file(var_name,file_type,simuID,sol_array):
         check_file_tape(file_list[i],abort=False)
     #We know the files exist on tape, now open it with MFDataset if an aggregation dimension is detected
     try:
-        f=MFDataset(file_list, 'r') 
+        f=MFDataset(file_list, 'r')
     except IOError:
         #This IOError should be :'master dataset ***.nc does not have a aggregation dimension', we will use Dataset otherwise
-        f=Dataset(file_list[0], 'r')    
-                  
+        f=Dataset(file_list[0], 'r')
+
     var_info=getattr(f.variables[var_name],'long_name','')+' ['+ getattr(f.variables[var_name],'units','')+']'
     dim_info=f.variables[var_name].dimensions
     dims=f.variables[var_name].shape
@@ -1551,7 +1562,7 @@ class Fig_2D(object):
         #Multi panel
         self.nPan=1
         self.subID=1
-        self.layout = None # e.g. [2,3], used only if 'HOLD ON 2,3' is used 
+        self.layout = None # e.g. [2,3], used only if 'HOLD ON 2,3' is used
         #Annotation for free dimensions
         self.fdim_txt=''
         self.success=False
@@ -1975,7 +1986,7 @@ class Fig_2D_lon_lat(Fig_2D):
             varfull_list=get_list_varfull(varfull)
             f=get_list_varfull(varfull)
             sol_array,filetype,var,simuID=split_varfull(varfull_list[0])
-        
+
         # If requesting a lat/lon plot for 00668.atmos_average.nc, try to find matching  00668.fixed.nc
         try:
             f, var_info,dim_info, dims=prep_file('zsurf','fixed',simuID,sol_array)
@@ -1996,15 +2007,15 @@ class Fig_2D_lon_lat(Fig_2D):
             lon,lat,var,var_info=super(Fig_2D_lon_lat, self).data_loader_2D(self.varfull,self.plot_type)
             lon180,var=shift_data(lon,var)
             #Try to get topo if a matching XXXXX.fixed.nc file exist
-            
+
             # Try to get topography is matching file
             try :
                 surf=self.get_topo_2D(self.varfull,self.plot_type)
                 _,zsurf=shift_data(lon,zsurf)
                 add_topo=True
             except:
-                add_topo=False   
-                
+                add_topo=False
+
 
             projfull=self.axis_opt3
             #------------------------------------------------------------------------
@@ -2531,7 +2542,7 @@ class Fig_1D(object):
         self.nPan=1
         self.subID=1
         self.addLine=False
-        self.layout = None # e.g. [2,3], used only if 'HOLD ON 2,3' is used 
+        self.layout = None # e.g. [2,3], used only if 'HOLD ON 2,3' is used
         #Annotation for free dimensions
         self.fdim_txt=''
         self.success=False
@@ -2650,7 +2661,7 @@ class Fig_1D(object):
 
         f, var_info,dim_info, dims=prep_file(var_name,file_type,simuID,sol_array)
 
-        
+
         #Get the file type ('fixed','diurn', 'average', 'daily') and interpolation type (pfull, zstd etc...)
         f_type,interp_type=FV3_file_type(f)
 
@@ -2666,14 +2677,14 @@ class Fig_1D(object):
 
 
         #------------------------Time of Day ----------------------------
-        # For diurn files, we will select data on the time-of-day axis and update dimensions 
+        # For diurn files, we will select data on the time-of-day axis and update dimensions
         # so the resulting variable is the same as atmos_average and atmos_daily file.
         # This simplifies the logic a bit so all atmos_daily, atmos_average and atmos_diurn are treated the same when
-        # the request is 1D-time, 1D_lon, 1D_lat, and 1D_lev. Naturally the plot type '1D_diurn' will be an exeception so the following 
-        # lines should be skipped if that is the case. 
-        
+        # the request is 1D-time, 1D_lon, 1D_lat, and 1D_lev. Naturally the plot type '1D_diurn' will be an exeception so the following
+        # lines should be skipped if that is the case.
+
         # Time of day is always the 2nd dimension, i.e. dim_info[1]
-        
+
         #Note: This step is performed only if the file is of type 'atmos_diurn', and the requested the plot  is 1D_lat, 1D_lev or 1D_time
         if (f_type=='diurn' and dim_info[1][:11]=='time_of_day') and not plot_type=='1D_diurn':
             tod=f.variables[dim_info[1]][:]
@@ -2682,9 +2693,9 @@ class Fig_1D(object):
             # OR ('time','time_of_day_XX, 'pfull','lat', 'lon') to  ('time', 'pfull','lat', 'lon') etc...
             dim_info=(dim_info[0],)+dim_info[2:]
             if add_fdim:self.fdim_txt+=temp_txt
-            
-            
-            
+
+
+
         #======static======= , ignore level and time dimension
         if dim_info==(u'lat', u'lon'):
             if plot_type=='1D_lat':
@@ -2699,20 +2710,20 @@ class Fig_1D(object):
 
             if plot_type=='1D_lat': return  lat, np.nanmean(var,axis=1),var_info
             if plot_type=='1D_lon': return  lon, np.average(var,weights=w,axis=0),var_info
-        
+
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         #~~~~This section is for 1D_time, 1D_lat, 1D_lon and 1D_lev only~~~~
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         if not plot_type=='1D_diurn':
             #======time,lat,lon=======
             if dim_info==(u'time', u'lat', u'lon'):
-                
+
             #Initialize dimension
                 t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
                 #For diurn file, change time_of_day(time,24,1) to time_of_day(time) at midnight UT
                 if f_type=='diurn'and len(Ls.shape)>1:Ls=np.squeeze(Ls[:,0])
                 t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
-    
+
                 if plot_type=='1D_lat':
                     ti,temp_txt =get_time_index(t_req,Ls)
                     if add_fdim:self.fdim_txt+=temp_txt
@@ -2728,8 +2739,8 @@ class Fig_1D(object):
                     if add_fdim:self.fdim_txt+=temp_txt
                     lati,temp_txt =get_lat_index(lat_req,lat)
                     if add_fdim:self.fdim_txt+=temp_txt
-                
-    
+
+
                 if f_type=='diurn':
                     var=f.variables[var_name][ti,todi,lati,loni].reshape(len(np.atleast_1d(ti)),len(np.atleast_1d(todi)),\
                         len(np.atleast_1d(lati)),len(np.atleast_1d(loni)))
@@ -2738,16 +2749,16 @@ class Fig_1D(object):
                     var=f.variables[var_name][ti,lati,loni].reshape(len(np.atleast_1d(ti)),len(np.atleast_1d(lati)),len(np.atleast_1d(loni)))
 
                 f.close()
-    
+
                 w=area_weights_deg(var.shape,lat[lati])
-                
-                
+
+
                 #Return data
                 if plot_type=='1D_lat': return lat,    np.nanmean(np.nanmean(var,axis=2),axis=0),var_info
                 if plot_type=='1D_lon': return lon,    np.nanmean(np.average(var,weights=w,axis=1),axis=0),var_info
                 if plot_type=='1D_time':return t_stack,np.nanmean(np.average(var,weights=w,axis=1),axis=1),var_info
-    
-    
+
+
             #======time,level,lat,lon=======
             if   (dim_info==(u'time', u'pfull', u'lat', u'lon')
             or dim_info==(u'time', u'level', u'lat', u'lon')
@@ -2755,7 +2766,7 @@ class Fig_1D(object):
             or dim_info==(u'time', u'zstd', u'lat', u'lon')
             or dim_info==(u'time', u'zagl', u'lat', u'lon')
             or dim_info==(u'time', u'zgrid', u'lat', u'lon')):
-    
+
                 if dim_info[1] in ['pfull','level','pstd']:  self.vert_unit='Pa'
                 if dim_info[1] in ['zagl','zstd','zgrid']:  self.vert_unit='m'
     
@@ -2766,7 +2777,7 @@ class Fig_1D(object):
                 #For diurn file, change time_of_day(time,24,1) to time_of_day(time) at midnight UT
                 if f_type=='diurn'and len(Ls.shape)>1:Ls=np.squeeze(Ls[:,0])
                 t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
-    
+
                 if plot_type=='1D_lat':
                     ti,temp_txt =get_time_index(t_req,Ls)
                     if add_fdim:self.fdim_txt+=temp_txt
@@ -2774,7 +2785,7 @@ class Fig_1D(object):
                     if add_fdim:self.fdim_txt+=temp_txt
                     zi,temp_txt =get_level_index(lev_req,levs)
                     if add_fdim:self.fdim_txt+=temp_txt
-    
+
                 if plot_type=='1D_lon':
                     lati,temp_txt =get_lat_index(lat_req,lat)
                     if add_fdim:self.fdim_txt+=temp_txt
@@ -2782,7 +2793,7 @@ class Fig_1D(object):
                     if add_fdim:self.fdim_txt+=temp_txt
                     zi,temp_txt =get_level_index(lev_req,levs)
                     if add_fdim:self.fdim_txt+=temp_txt
-    
+
                 if plot_type=='1D_time':
                     loni,temp_txt =get_lon_index(lon_req,lon)
                     if add_fdim:self.fdim_txt+=temp_txt
@@ -2790,7 +2801,7 @@ class Fig_1D(object):
                     if add_fdim:self.fdim_txt+=temp_txt
                     zi,temp_txt =get_level_index(lev_req,levs)
                     if add_fdim:self.fdim_txt+=temp_txt
-    
+
                 if plot_type=='1D_lev':
                     ti,temp_txt =get_time_index(t_req,Ls)
                     if add_fdim:self.fdim_txt+=temp_txt
@@ -2798,11 +2809,11 @@ class Fig_1D(object):
                     if add_fdim:self.fdim_txt+=temp_txt
                     loni,temp_txt =get_lon_index(lon_req,lon)
                     if add_fdim:self.fdim_txt+=temp_txt
-    
-                #Fix for new netcdf4 version: get array elements instead of manipulation the variable   
-                # It used to be var= f.variables[var_name] 
 
-    
+                #Fix for new netcdf4 version: get array elements instead of manipulation the variable
+                # It used to be var= f.variables[var_name]
+
+
                 #If diurn, we will do the tod averaging first.
                 if f_type=='diurn':
                     var=f.variables[var_name][ti,todi,zi,lati,loni].reshape(len(np.atleast_1d(ti)),len(np.atleast_1d(todi)),\
@@ -2815,56 +2826,56 @@ class Fig_1D(object):
                                                                     len(np.atleast_1d(loni))]
                     var=f.variables[var_name][ti,zi,lati,loni].reshape(reshape_shape)
                 f.close()
-    
+
                 w=area_weights_deg(var.shape,lat[lati])
-                
-    
+
+
                 #(u'time', u'pfull', u'lat', u'lon')
                 if plot_type=='1D_lat': return lat,    np.nanmean(np.nanmean(np.nanmean(var,axis=3),axis=1),axis=0),var_info
                 if plot_type=='1D_lon': return lon,    np.nanmean(np.nanmean(np.average(var,weights=w,axis=2),axis=1),axis=0),var_info
                 if plot_type=='1D_time':return t_stack,np.nanmean(np.nanmean(np.average(var,weights=w,axis=2),axis=2),axis=1),var_info
                 if plot_type=='1D_lev': return levs,   np.nanmean(np.nanmean(np.average(var,weights=w,axis=2),axis=2),axis=0),var_info
-        
+
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         #~~~~~~~~~~~~~This section is for 1D_diurn, only~~~~~~~~~~~~~~~~~~~~
-        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~        
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         else:
             #Find name of tod variable, it could be 'time_of_day_16', or 'time_of_day_24'
             tod_dim_name=find_tod_in_diurn(f)
             tod=f.variables[tod_dim_name][:]
             todi=np.arange(0,len(tod))
-            
-    
+
+
             #======time,lat,lon=======
             if f.variables[var_name].dimensions==('time',tod_dim_name ,'lat', 'lon'):
-                
+
             #Initialize dimension
                 t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
                 #For diurn file, change time_of_day(time,24,1) to time_of_day(time) at midnight UT
                 if f_type=='diurn'and len(Ls.shape)>1:Ls=np.squeeze(Ls[:,0])
                 t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
-                            
+
                 loni,temp_txt =get_lon_index(lon_req,lon)
                 if add_fdim:self.fdim_txt+=temp_txt
                 lati,temp_txt =get_lat_index(lat_req,lat)
                 if add_fdim:self.fdim_txt+=temp_txt
                 ti,temp_txt =get_time_index(t_req,Ls)
                 if add_fdim:self.fdim_txt+=temp_txt
-   
+
                 reshape_shape=[len(np.atleast_1d(ti)),len(np.atleast_1d(tod)),\
                         len(np.atleast_1d(lati)),len(np.atleast_1d(loni))]
-               
-                #Broadcast dimensions before extraction. This is a 'new' requirement for numpy  
+
+                #Broadcast dimensions before extraction. This is a 'new' requirement for numpy
                 var=f.variables[var_name][ti,:,lati,loni].reshape(reshape_shape)
                 f.close()
-    
+
                 w=area_weights_deg(var.shape,lat[lati])
-                #Return data 
+                #Return data
                 #('time','time_of_day','lat', u'lon')
                 return tod, np.nanmean(np.nanmean(np.average(var,weights=w,axis=2),axis=2),axis=0),var_info
 
-    
-    
+
+
             #======time,level,lat,lon=======
             if   (dim_info==('time', tod_dim_name,'pfull','lat', 'lon')
             or dim_info==('time',tod_dim_name,'level', 'lat', 'lon')
@@ -2872,18 +2883,18 @@ class Fig_1D(object):
             or dim_info==('time',tod_dim_name,'zstd', 'lat', 'lon')
             or dim_info==('time',tod_dim_name,'zagl', 'lat', 'lon')
             or dim_info==('time',tod_dim_name,'zgrid', 'lat', 'lon')):
-    
+
                 if dim_info[1] in ['pfull','level','pstd']:  self.vert_unit='Pa'
                 if dim_info[1] in ['zagl','zstd','zgrid']:  self.vert_unit='m'
     
                 #Initialize dimensions
                 levs=f.variables[dim_info[2]][:]
-         
+
                 t=f.variables['time'][:];Ls=np.squeeze(f.variables['areo'][:]);ti=np.arange(0,len(t))
                 #For diurn file, change time_of_day(time,24,1) to time_of_day(time) at midnight UT
                 if f_type=='diurn'and len(Ls.shape)>1:Ls=np.squeeze(Ls[:,0])
                 t_stack=np.vstack((t,Ls)) #stack the time and ls array as one variable
-                 
+
                 ti,temp_txt =get_time_index(t_req,Ls)
                 if add_fdim:self.fdim_txt+=temp_txt
                 lati,temp_txt =get_lat_index(lat_req,lat)
@@ -2895,17 +2906,17 @@ class Fig_1D(object):
 
                 reshape_shape=[len(np.atleast_1d(ti)),len(np.atleast_1d(tod)),len(np.atleast_1d(zi)),\
                         len(np.atleast_1d(lati)),len(np.atleast_1d(loni))]
-               
+
                 var=f.variables[var_name][ti,:,zi,lati,loni].reshape(reshape_shape)
                 f.close()
-    
+
                 w=area_weights_deg(var.shape,lat[lati])
-                
-    
+
+
                 #('time','time_of_day', 'pfull', 'lat', 'lon')
 
                 return tod,   np.nanmean(np.nanmean(np.nanmean(np.average(var,weights=w,axis=3),axis=3),axis=2),axis=0),var_info
-   
+
 
 
     def exception_handler(self,e,ax):
@@ -2916,13 +2927,13 @@ class Fig_1D(object):
             bbox=dict(boxstyle="round",ec=(1., 0.5, 0.5),fc=(1., 0.8, 0.8),),\
             transform=ax.transAxes,wrap=True,fontsize=16)
 
-    def fig_init(self):         
+    def fig_init(self):
         #create figure
         if self.layout is None : #No layout is specified
             out=fig_layout(self.subID,self.nPan,vertical_page)
         else:
             out=np.append(self.layout,self.subID)
-        
+
         if self.subID==1 and not self.addLine:
             fig= plt.figure(facecolor='white',figsize=(width_inch, height_inch)) #create figure if 1st panel
         if not self.addLine:
@@ -3030,6 +3041,14 @@ class Fig_1D(object):
                 else:    
                     plt.ylabel(varlabel,fontsize=label_size-self.nPan*label_factor)
                 
+                plt.plot(Ls,var,self.axis_opt1,lw=2,label=txt_label)
+
+                #Label is provided
+                if self.axis_opt2:
+                    plt.ylabel(self.axis_opt2,fontsize=label_size-self.nPan*label_factor)
+                else:
+                    plt.ylabel(var_info,fontsize=label_size-self.nPan*label_factor)
+
                 #Axis formatting
                 if self.Vlim:plt.ylim(self.Vlim)
 
@@ -3053,6 +3072,13 @@ class Fig_1D(object):
                     plt.xlabel(self.axis_opt2,fontsize=label_size-self.nPan*label_factor)
                 else:    
                     plt.xlabel(varlabel,fontsize=label_size-self.nPan*label_factor)
+                plt.plot(var,xdata,self.axis_opt1,lw=2,label=txt_label)
+
+                #Label is provided
+                if self.axis_opt2:
+                    plt.xlabel(self.axis_opt2,fontsize=label_size-self.nPan*label_factor)
+                else:
+                    plt.xlabel(var_info,fontsize=label_size-self.nPan*label_factor)
 
 
                 if self.vert_unit=='Pa':
@@ -3068,21 +3094,24 @@ class Fig_1D(object):
 
                 if self.Dlim:plt.ylim(self.Dlim)
                 if self.Vlim:plt.xlim(self.Vlim)
-                
+
             if self.plot_type=='1D_diurn':
                 plt.plot(xdata,var,self.axis_opt1,lw=3,ms=7,label=txt_label)
                 plt.xlabel('Time [hr]',fontsize=label_size-self.nPan*label_factor)
-                
+
                 #Label is provided
                 if self.axis_opt2:
                     plt.ylabel(self.axis_opt2,fontsize=label_size-self.nPan*label_factor)
                 else:    
                     plt.ylabel(varlabel,fontsize=label_size-self.nPan*label_factor)
                 
+                else:
+                    plt.ylabel(var_info,fontsize=label_size-self.nPan*label_factor)
+
                 ax.xaxis.set_major_locator(MultipleLocator(4))
                 ax.xaxis.set_minor_locator(MultipleLocator(1))
                 plt.xlim([0,24]) #by default, set xdim to 0-24, this may be overwritten
-                
+
                 #Axis formatting
                 if self.Dlim:plt.xlim(self.Dlim)
                 if self.Vlim:plt.ylim(self.Vlim)
