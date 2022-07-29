@@ -578,19 +578,22 @@ def filter_vars(fNcdf,include_list=None,giveExclude=False):
         out_list=  exclude_list     
     return  out_list
 
-def find_fixedfile(filepath,flist):
+
+def find_fixedfile(filepath, flist):
     '''
-    Batterson, Sep 13 2021
+    Batterson, Updated May 11 2022
     Args:
         filepath = path to FV3 out files
-        flist = names of FV3 data files in use
-    Returns :
-        Path (including filename) to fixed file corresponding to the FV3 data file being used:
+        flist    = list with the name of FV3 data file in use, i.e.
+                   ['atmos_average.tile6.nc']
+    Returns:
+        Path (including filename) to fixed file corresponding to the
+        FV3 data file being used:
 
             DDDDD.atmos_average.nc  -> DDDDD.fixed.nc
             atmos_average.tileX.nc  -> fixed.tileX.nc
 
-            * variations of these work too *
+            *variations of these work too*
 
             DDDDD.atmos_average_plevs.nc            -> DDDDD.fixed.nc
             DDDDD.atmos_average_plevs_custom.nc     -> DDDDD.fixed.nc
@@ -598,40 +601,32 @@ def find_fixedfile(filepath,flist):
             atmos_average.tileX_plevs_custom.nc     -> fixed.tileX.nc
             atmos_average_custom.tileX_plevs.nc     -> fixed.tileX.nc
 
-            * NOTE: changes to the date portion (DDDDD) of the name will throw an error.
+            * NOTE: changes to the date portion (DDDDD) of the name
+            will throw an error.
     '''
     
     import os
-    
-    if filepath != None:
-        if 'tile' in flist:
-            if os.path.exists(filepath+'/'+'fixed.tile'+flist.split('tile')[1][0]+'.nc'):
-                name_fixed =  filepath+'/'+'fixed.tile'+flist.split('tile')[1][0]+'.nc'
-            else:
-                pass
-        elif int(flist.split('.')[0]):
-            if os.path.exists(filepath+'/'+flist.split('.')[0]+'.fixed.nc'):
-                name_fixed  = filepath+'/'+flist.split('.')[0]+'.fixed.nc'
-            else:
-                pass
-        else:
-            raise FileNotFoundError(f'Fixed file does not exist in {filepath}')
-    elif filepath == None:
-        if 'tile' in flist:
-            if os.path.exists('fixed.tile'+flist.split('tile')[1][0]+'.nc'):
-                name_fixed =  'fixed.tile'+flist.split('tile')[1][0]+'.nc'
-            else:
-                pass
-        elif int(flist.split('.')[0]):
-            if os.path.exists(flist.split('.')[0]+'.fixed.nc'):
-                name_fixed  = flist.split('.')[0]+'.fixed.nc'
-            else:
-                pass
-        else:
-            raise FileNotFoundError(f'Fixed file does not exist in {filepath}')
 
-    return  name_fixed
-        
+    try:
+        if 'tile' in flist:
+            if os.path.exists(filepath + '/fixed.tile' \
+                              + flist.split('tile')[1][0] + '.nc'):
+                name_fixed =  filepath + '/fixed.tile' \
+                              + flist.split('tile')[1][0] + '.nc'
+        else:
+            if os.path.exists(filepath + '/' \
+                              + flist.split('.')[0] + '.fixed.nc'):
+                name_fixed  = filepath + '/' \
+                              + flist.split('.')[0] + '.fixed.nc'
+
+        return(name_fixed)
+
+    except:
+        raise FileNotFoundError('Fixed file does not exist in '\
+                                + filepath + ' make sure the fixed '\
+                                'file you are referencing matches the '\
+                                'FV3 filetype (i.e. fixed.tileX.nc '\
+                                'for operations on tile X)')        
 def wbr_cmap():
     '''
     Returns a color map that goes from white>blue>green>yellow>red or 'wbr'
