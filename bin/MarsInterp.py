@@ -61,6 +61,9 @@ parser.add_argument('-e','--ext',type=str,default=None,
                  help="""> Append an extension _ext.nc to the output file instead of replacing any existing file \n"""
                       """>  Usage: MarsInterp.py ****.atmos.average.nc -ext B \n"""
                       """   This will produce   ****.atmos.average_pstd_B.nc files     \n""")
+
+parser.add_argument('-g','--grid',action='store_true',
+                 help="""> Output grid to standard output \n""")
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
 
@@ -89,6 +92,7 @@ def main():
     file_list=parser.parse_args().input_file
     interp_type=parser.parse_args().type   #e.g.  'pstd'
     custom_level=parser.parse_args().level #e.g.  'p44'
+    grid_out=parser.parse_args().grid
 
     #The fixed file is needed if pk, bk are not available in the requested file, or
     # to load the topography is zstd output is requested
@@ -158,6 +162,10 @@ def main():
                     60000,70000,80000,90000,100000,110000])
     else:
         prRed("Interpolation type '%s' is not supported, use  'pstd','zstd' or 'zagl'"%(interp_type))
+        exit()
+
+    if grid_out:
+        print(*lev_in)
         exit()
 
     #For all the files
