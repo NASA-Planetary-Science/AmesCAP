@@ -2420,6 +2420,15 @@ class Fig_2D_time_lev(Fig_2D):
 
 
             #Axis formatting
+            if self.vert_unit=='Pa':
+                ax.set_yscale("log")
+                ax.invert_yaxis()
+                ax.yaxis.set_major_formatter(CustomTicker())
+                ax.yaxis.set_minor_formatter(NullFormatter())
+                ylabel_txt='Pressure [Pa]'
+            else:
+                ylabel_txt='Altitude [m]'
+
             if self.Xlim:
                 idmin=np.argmin(np.abs(tim-self.Xlim[0]))
                 idmax=np.argmin(np.abs(tim-self.Xlim[1]))
@@ -2437,15 +2446,6 @@ class Fig_2D_time_lev(Fig_2D):
 
             plt.xticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
             plt.yticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
-
-            if self.vert_unit=='Pa':
-                ax.set_yscale("log")
-                ax.invert_yaxis()
-                ax.yaxis.set_major_formatter(CustomTicker())
-                ax.yaxis.set_minor_formatter(NullFormatter())
-                ylabel_txt='Pressure [Pa]'
-            else:
-                ylabel_txt='Altitude [m]'
 
             super(Fig_2D_time_lev, self).make_title(var_info,'Areocentric Longitude [L$_s$]',ylabel_txt)
 
