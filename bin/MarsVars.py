@@ -66,6 +66,28 @@ parser.add_argument('-add','--add', nargs='+',default=[],
                       'ice_mass_micro   (ice mixing ratio)                Req. [izTau,temp] \n'
                       'Vg_sed           (sedimentation rate)              Req. [dst_mass_micro,dst_num_micro,temp] \n'
                       'w_net            (net vertical winds (w-Vg_sed))   Req. [w,Vg_sed] \n'
+                      'rho        (density)                         Req. [ps,temp] \n'
+                      'theta      (pot. temperature)                Req. [ps,temp] \n'
+                      'pfull3D    (pressure at layer midpoint)      Req. [ps,temp] \n'
+                      'DP         (layer pressure thickness)        Req. [ps,temp] \n'
+                      'zfull      (altitude AGL)                    Req. [ps,temp] \n'
+                      'DZ         (layer altitude thickness)        Req. [ps,temp] \n'
+                      'w          (vertical winds)                  Req. [ps,temp,omega] \n'
+                      'wdir       (wind direction)                  Req. [ucomp,vcomp] \n'
+                      'wspeed     (wind magnitude)                  Req. [ucomp,vcomp] \n'
+                      'N          (Brunt Vaisala freq)              Req. [ps,temp] \n'
+                      'Ri         (Richardson number)               Req. [ps,temp,ucomp,vcomp] \n'
+                      'Tco2       (CO2 condensation temperature)    Req. [ps,temp] \n'
+                      'scorer_wl  (Scorer horizontal wavelength)    Req. [ps,temp,ucomp] \n'
+                      'div        (divergence)                      Req. [ucomp,vcomp] \n'
+                      'curl       (relative vorticity)              Req. [ucomp,vcomp] \n'
+                      'fn         (frontogenesis)                   Req. [ucomp,vcomp,theta] \n'
+                      'dzTau      (dust extinction rate)            Req. [dst_mass(_micro),temp] \n'
+                      'izTau      (ice extinction rate)             Req. [ice_mass(_micro),temp] \n'
+                      'dst_mass   (dust mixing ratio)               Req. [dzTau,temp] \n'
+                      'ice_mass   (ice mixing ratio)                Req. [izTau,temp] \n'
+                      'Vg_sed     (sedimentation rate)              Req. [dst_mass(_micro),dst_num(_micro),temp] \n'
+                      'w_net      (net vertical winds (w-Vg_sed))   Req. [w,Vg_sed] \n'
                       ' \nNOTE:                    \n'
                       '     Some support on interpolated files, in particular if pfull3D \n'
                       '         and zfull are added before interpolation to _pstd, _zagl, _zstd. \n'
@@ -107,6 +129,18 @@ parser.add_argument('-extract','--extract', nargs='+',default=[],
                  help='Extract variable(s) to a new  _extract.nc file \n'
                       '> Usage: MarsVars ****.atmos.average.nc -extract ps ts \n')                                          
 
+parser.add_argument('-edit','--edit' ,default=None,
+                    help="""Edit a variable name, longname, units, or scale the values\n"""
+                        """> Use jointly with -rename -longname -unit or -multiply flags \n"""
+                        """> Usage: MarsFiles.py *.atmos_average.nc --edit temp -rename airtemp \n"""
+                        """> Usage: MarsFiles.py *.atmos_average.nc --edit ps -multiply 0.01 -longname 'new pressure' -unit 'mbar' \n"""
+                        """ \n""")
+parser.add_argument('-rename','--rename',type=str,default=None,help=argparse.SUPPRESS) # used jointly with --edit
+parser.add_argument('-longname','--longname',type=str,default=None,help=argparse.SUPPRESS) # used jointly with --edit
+parser.add_argument('-unit','--unit',type=str,default=None,help=argparse.SUPPRESS) # used jointly with --edit
+parser.add_argument('-multiply','--multiply',type=float,default=None,help=argparse.SUPPRESS) # used jointly with --edit
+
+
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
 #=====================================================================
@@ -143,6 +177,37 @@ VAR= {'rho'             :['density (added postprocessing)', 'kg/m3'],
       'Vg_sed'          :['sedimentation rate (added postprocessing)', 'm/s'],
       'w_net'           :['w-Vg_sed (added postprocessing)', 'm/s'],
           }                                                                                                       
+VAR= {'rho'       :['density (added postprocessing)','kg/m3'],
+      'theta'     :['potential temperature (added postprocessing)','K'],
+      'w'         :['vertical wind (added postprocessing)','m/s'],
+      'pfull3D'   :['pressure at layer midpoint (added postprocessing)','Pa'],
+      'DP'        :['layer thickness (added postprocessing)','Pa'],
+      'zfull'     :['altitude  AGL at layer midpoint (added postprocessing)','m'],
+      'DZ'        :['layer thickness (added postprocessing)','m'],
+      'wdir'      :['wind direction (added postprocessing)','deg'],
+      'wspeed'    :['wind speed (added postprocessing)','m/s'],
+      'N'         :['Brunt Vaisala frequency (added postprocessing)','rad/s'],
+      'Ri'        :['Richardson number (added postprocessing)','none'],
+      'Tco2'      :['condensation temerature of CO2  (added postprocessing)','K'],
+      'div'       :['divergence of the wind field  (added postprocessing)','Hz'],
+      'curl'      :['relative vorticity for the wind field  (added postprocessing)','Hz'],
+      'scorer_wl' :['Scorer horizontal wavelength L=2.pi/sqrt(l**2)   (added postprocessing)','m'],
+      'msf'       :['mass stream function  (added postprocessing)','1.e8 x kg/s'],
+      'ep'        :['wave potential energy (added postprocessing)','J/kg'],
+      'ek'        :['wave kinetic energy (added postprocessing)','J/kg'] ,
+      'mx'        :['vertical flux of zonal momentum (added postprocessing)','J/kg'] ,
+      'my'        :['vertical flux of merididional momentum(added postprocessing)','J/kg'] ,
+      'ax'        :['zonal wave-mean flow forcing (added postprocessing)','m/s/s'] ,
+      'ay'        :['meridional wave-mean flow forcing (added postprocessing)','m/s/s'] ,
+      'tp_t'      :['normalized temperature perturbation (added postprocessing)','None'],
+      'fn'        :['frontogenesis (added postprocessing)','K m-1 s-1'],
+      'dzTau'     :['dust extinction rate (added postprocessing)', 'm-1'],
+      'izTau'     :['ice extinction rate (added postprocessing)', 'm-1'],
+      'dst_mass'  :['dust mixing ratio (added postprocessing)', 'kg/kg'],
+      'ice_mass'  :['ice mixing ratio (added postprocessing)', 'kg/kg'],
+      'Vg_sed'    :['sedimentation rate (added postprocessing)', 'm/s'],
+      'w_net'     :['w-Vg_sed (added postprocessing)', 'm/s'],
+      }
 #=====================================================================
 #=====================================================================
 #=====================================================================
@@ -165,17 +230,33 @@ Rd          = 192.0     # J kg-1 K-1
 rho_air     = psrf/(rgas*Tpole)  # Air Density           kg/m^3
 rho_dst     = 2500.             # Particle Density      kg/m^3
 #rho_dst     = 3000      # kg m-3,                                               Kleinbohl et al. 2009
+rgas = 189.  # J/(kg-K) => m2/(s2 K)
+g    = 3.72  # m/s2
+R=    8.314  # J/ mol. K
+Cp   = 735.0 #J/K
+M_co2 =0.044 # kg/mol
+N=0.01       #rad/s  This is used for the Ep calculation
+
+#--- MMR-----
+rho_dst     = 3000.             # Particle Density      kg/m^3
 rho_ice     = 900       # kg m-3,                                               Heavens et al. 2010
 Qext_dst    = 0.35      #                   dust extinction efficiency (MCS),   Kleinbohl et al. 2009
 Qext_ice    = 0.773     #                   ice extinction efficiency (MCS),    Heavens et al. 2010
 Reff_dst    = 1.06      # micron,           effective dust particle radius,     Kleinbohl et al. 2009
 Reff_ice    = 1.41      # micron,           effective ice particle radius,      Heavens et al. 2010
+C_dst       = (4/3)*(rho_dst/Qext_dst)*Reff_dst     # 12114.286 (m-2)
+C_ice       = (4/3)*(rho_ice/Qext_ice)*Reff_ice     # 2188.874  (m-2)
+#----Sedimentation rates calculation----
+psrf        = 610.                # Surface P             Pa (kg/ms^2)
+Tpole       = 150.                # Temp at pole          K
+rho_air     = psrf/(rgas*Tpole)   # Air Density           kg/m^3
 n0          = 1.37*1.e-5          # Sutherland's law      N-s/m^2
 S0          = 222                 # Sutherland's law      K
 T0          = 273.15              # Sutherland's law      K
 Cp          = 735.0 #J/K
 Na          = 6.022*1.e23         # Avogadro's            per mol
 Kb          = R/Na            # Boltzmann Constant    (m^2kg/s^2K)
+Kb          = R/Na               # Boltzmann Constant    (m^2kg/s^2K)
 amu         = 1.66054*1.e-27      # Atomic Mass Unit      kg/amu
 amu_co2     = 44.0                # Molecular Mass of CO2 amu
 mass_co2    = amu_co2*amu        # mass 1 CO2 particle   kg
@@ -184,6 +265,7 @@ M_co2       = 0.044 # kg/mol
 N           = 0.01 #rad/s  This is used for the Ep calculation
 C_dst       = (4/3)*(rho_dst/Qext_dst)*Reff_dst     # 12114.286 (m-2)
 C_ice       = (4/3)*(rho_ice/Qext_ice)*Reff_ice     # 2188.874  (m-2)
+
 
 #===========================
 
@@ -435,9 +517,56 @@ def compute_WMFF(MF,rho,lev,interp_type):
         return g* darr_dz
     else: #With zagl and zstd, levs are already in meters so we already computed du/dz 
         return -1/rho*darr_dz
+        
+
+def compute_xzTau(q, temp, p_3D, const):
+    """
+    Return dust or ice extinction in [km-1]
+    Adapted from Heavens et al. 2011, observations by MCS (JGR)
+    """
+    rho_z   = compute_rho(p_3D,temp)
+    xzTau   = (rho_z*(q*1.e6)/const)# q: kg/kg -> ppm (mg/kg), xzTau
+    return xzTau
 
 filepath=os.getcwd()
 
+
+def compute_mmr(xTau, temp, p_3D, const):
+    """
+    Return dust or ice mixing ratio [kg/kg]
+    Adapted from Heavens et al. 2011, observations by MCS (JGR)
+    """
+
+    rho_z = compute_rho(p_3D,temp)
+    q     = (const*(xTau)/rho_z)/1.e6  # q: ppm -> kg/kg
+    return q
+
+
+def compute_Vg_sed(xTau, nTau, temp):
+    """
+    Return sedimentation rate for dust
+    """
+    r0     = (((3.*xTau) / (4.*np.pi*rho_dst*nTau))**(1/3) * np.exp(-3*(sigma**2)/2))
+    Rp     = r0*np.exp(3.5*sigma**2)
+    c      = (2/9)*rho_dst*(Rp)**2*g
+    eta    = n0*((temp/T0)**(3/2))*((T0+S0)/(temp+S0))
+    v      = np.sqrt((3*Kb*temp)/mass_co2)
+    mfp    = 2*eta/(rho_air*v)
+    Kn     = mfp/Rp
+    alpha  = 1.246+0.42*np.exp(-0.87/Kn)
+    Vg     = c*(1+alpha*Kn)/eta
+    return Vg
+
+def compute_w_net(Vg, wvar):
+    """
+    Return net vertical wind: w - sedimentation rate (Vg_sed)
+    """
+    w_net = np.subtract(wvar,Vg)
+    return w_net
+
+       
+        
+        
 def main():
     #load all the .nc files
     file_list=parser.parse_args().input_file
@@ -447,6 +576,7 @@ def main():
     col_list=parser.parse_args().col
     remove_list=parser.parse_args().remove
     extract_list=parser.parse_args().extract
+    edit_var=parser.parse_args().edit
     debug =parser.parse_args().debug
     
     # The fixed file is needed if pk, bk are not available in the 
@@ -461,6 +591,9 @@ def main():
     if not (add_list or zdiff_list or zdetrend_list or remove_list or col_list or extract_list): 
         print_fileContent(file_list[0])
         prYellow(""" ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var' """)
+    if not (add_list or zdiff_list or zdetrend_list or remove_list or col_list or extract_list or dp_to_dz_list or dz_to_dp_list or edit_var):
+        print_fileContent(file_list[0])
+        prYellow(''' ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-dp_to_dz var', '-rm var' '-edit var' ''')
         exit() #Exit cleanly
         
     #For all the files    
@@ -504,7 +637,6 @@ def main():
         if extract_list: 
             f_IN=Dataset(ifile, 'r', format='NETCDF4_CLASSIC')
             exclude_list = filter_vars(f_IN,parser.parse_args().extract,giveExclude=True) # variable to exclude
-            print()
             ifile_tmp=ifile[:-3]+'_extract.nc'
             Log=Ncdf(ifile_tmp,'Edited in postprocessing')
             Log.copy_all_dims_from_Ncfile(f_IN)
@@ -513,6 +645,8 @@ def main():
             Log.close()
             prCyan(ifile+' was created')                
  
+
+
         #=================================================================
         #=======================Add action================================
         #=================================================================
@@ -670,6 +804,50 @@ def main():
                         OUT=frontogenesis(ucomp,vcomp,theta,lon,lat,R=3400*1000.,spacing='regular')  
                                           
                     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     
+                        OUT=frontogenesis(ucomp,vcomp,theta,lon,lat,R=3400*1000.,spacing='regular')
+
+                    if ivar == 'dzTau':
+                        if 'dst_mass_micro' in fileNC.variables.keys():
+                            q = fileNC.variables['dst_mass_micro'][:]
+                        elif 'dst_mass' in fileNC.variables.keys():
+                            q = fileNC.variables['dst_mass'][:]
+                        else:
+                            prYellow("""***Error*** dst_mass or dst_mass_micro not present in file""")  
+                        OUT = compute_xzTau(q, temp, p_3D, C_dst, f_type)
+
+                    if ivar == 'izTau':
+                        if 'ice_mass_micro' in fileNC.variables.keys():
+                            q = fileNC.variables['ice_mass_micro'][:]
+                        elif 'ice_mass' in fileNC.variables.keys():
+                            q = fileNC.variables['ice_mass'][:]
+                        else:
+                            prYellow("""***Error*** ice_mass or ice_mass_micro not present in file""")    
+                        OUT = compute_xzTau(q, temp, p_3D, C_ice, f_type)
+
+                    if ivar == 'dst_mass':
+                        xTau = fileNC.variables['dzTau'][:]
+                        OUT = compute_mmr(xTau, temp, p_3D, C_dst)
+
+                    if ivar == 'ice_mass':
+                        xTau = fileNC.variables['izTau'][:]
+                        OUT = compute_mmr(xTau, temp, p_3D, C_ice)
+
+                    if ivar == 'Vg_sed':
+                        if 'dst_mass_micro' in fileNC.variables.keys():
+                            xTau = fileNC.variables['dst_mass_micro'][:]
+                            nTau = fileNC.variables['dst_num_micro'][:]
+                        elif 'dst_mass' in fileNC.variables.keys():
+                            xTau = fileNC.variables['dst_mass'][:]
+                            nTau = fileNC.variables['dst_num'][:]
+                        else:    
+                            prYellow("""***Error*** dst_mass or dst_mass_micro not present in file""")    
+                        OUT = compute_Vg_sed(xTau, nTau, temp)
+
+                    if ivar == 'w_net':
+                        Vg = fileNC.variables['Vg_sed'][:]
+                        wvar = fileNC.variables['w'][:]
+                        OUT = compute_w_net(Vg, wvar)
+                    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     #~~~~~~~~~~~~~~~   Interpolated files ~~~~~~~~~~~~~~~~~~~
                     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
                     
@@ -918,6 +1096,46 @@ def main():
                         prYellow("""Delete existing variable %s with 'MarsVars %s -rm %s'"""%(icol+'_col',ifile,icol+'_col'))            
 
              
+                        prYellow("""Delete existing variable %s with 'MarsVars %s -rm %s'"""%(icol+'_col',ifile,icol+'_col'))
+
+        if edit_var:
+            f_IN=Dataset(ifile, 'r', format='NETCDF4_CLASSIC')
+            ifile_tmp=ifile[:-3]+'_tmp.nc'
+            Log=Ncdf(ifile_tmp,'Edited in postprocessing')
+            Log.copy_all_dims_from_Ncfile(f_IN)
+            #Copy all variable but this one
+            Log.copy_all_vars_from_Ncfile(f_IN,exclude_var=edit_var)
+            #Read value, longname, units, name, and log new variable
+            var_Ncdf=f_IN.variables[edit_var]
+            
+            name_txt=edit_var
+            vals= var_Ncdf[:]
+            dim_out=var_Ncdf.dimensions 
+            longname_txt=getattr(var_Ncdf,'long_name','')
+            units_txt=getattr(var_Ncdf,'units','')
+            cart_txt=getattr(var_Ncdf,'cartesian_axis','')
+            
+            if parser.parse_args().rename:  name_txt=parser.parse_args().rename
+            if parser.parse_args().longname:longname_txt=parser.parse_args().longname
+            if parser.parse_args().unit:    units_txt=parser.parse_args().unit
+            if parser.parse_args().multiply:vals*=parser.parse_args().multiply
+            
+            if cart_txt == '':
+                Log.log_variable(name_txt,vals,dim_out,longname_txt,units_txt)
+            else:
+                Log.log_axis1D(name_txt,vals,dim_out,longname_txt,units_txt,cart_txt)
+                    
+            f_IN.close()
+            Log.close()
+            
+            #Rename the new file
+            cmd_txt='mv '+ifile_tmp+' '+ifile
+            subprocess.call(cmd_txt,shell=True)
+            
+            prCyan(ifile+' was updated')
+            
+            
+            
 if __name__ == '__main__':
     main()        
 #

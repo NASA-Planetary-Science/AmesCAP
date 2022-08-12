@@ -617,6 +617,15 @@ def find_fixedfile(filepath, flist):
                                 'FV3 filetype (i.e. fixed.tileX.nc '\
                                 'for operations on tile X)')
 
+
+        return(name_fixed)
+
+    except:
+        raise FileNotFoundError('Fixed file does not exist in '\
+                                + filepath + ' make sure the fixed '\
+                                'file you are referencing matches the '\
+                                'FV3 filetype (i.e. fixed.tileX.nc '\
+                                'for operations on tile X)')        
 def wbr_cmap():
     '''
     Returns a color map that goes from white>blue>green>yellow>red or 'wbr'
