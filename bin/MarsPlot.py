@@ -283,7 +283,7 @@ def main():
             output_pdf='"'+output_pdf+'"'
             #command to make a multipage pdf out of the the individual figures using ghost scritp.
             # Also remove the temporary files when done
-            cmd_txt='gs -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -dEPSCrop -sOutputFile='+output_pdf+' '+all_fig
+            cmd_txt='gs.bin -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -dEPSCrop -sOutputFile='+output_pdf+' '+all_fig
             try:
                 #Test the ghost scrit and remove command, exit otherwise--
                 subprocess.check_call(cmd_txt,shell=True, stdout=fdump, stderr=fdump)
@@ -2421,7 +2421,15 @@ class Fig_2D_time_lev(Fig_2D):
                 super(Fig_2D_time_lev, self).solid_contour(Ls, pfull,var2,self.contour2)
                 var_info+=" (& "+var_info2+")"
 
-
+            if self.vert_unit=='Pa':
+                ax.set_yscale("log")
+                ax.invert_yaxis()
+                ax.yaxis.set_major_formatter(CustomTicker())
+                ax.yaxis.set_minor_formatter(NullFormatter())
+                ylabel_txt='Pressure [Pa]'
+            else:
+                ylabel_txt='Altitude [m]'
+            
             #Axis formatting
             if self.Xlim:
                 idmin=np.argmin(np.abs(tim-self.Xlim[0]))
