@@ -99,8 +99,9 @@ parser.add_argument('-no_trend','--no_trend',action='store_true',help=argparse.S
 
 parser.add_argument('-tidal','--tidal',nargs='+',type=int,
                     help="""Tide analyis on diurn files: extract diurnal and its harmonics \n"""
-                         """> Usage: MarsFiles.py *.atmos_diurn.nc 4  (extract 4 harmonics, N=1 is diurnal, N=2 semi diurnal...)  \n"""
-                         """>        MarsFiles.py *.atmos_diurn.nc 6  --include ps temp --reconstruct (reconstruct the first 6 harmonics) \n"""
+                         """> Usage: MarsFiles.py *.atmos_diurn.nc -tidal 4  (extract 4 harmonics, N=1 is diurnal, N=2 semi diurnal...)  \n"""
+                         """>        MarsFiles.py *.atmos_diurn.nc -tidal 6  --include ps temp --reconstruct (reconstruct the first 6 harmonics) \n"""
+                         """>        MarsFiles.py *.atmos_diurn.nc -tidal 6  --include ps --normalize (provides amplitude in [%]) \n"""
                         """\033[00m""")
 parser.add_argument('-reconstruct','--reconstruct',action='store_true',help=argparse.SUPPRESS) #this flag is used jointly with --tidal
 parser.add_argument('-norm','--normalize',action='store_true',help=argparse.SUPPRESS)          #this flag is used jointly with --tidal
@@ -310,11 +311,42 @@ def main():
             if zaxis in fdiurn.dimensions.keys():
                 fnew.copy_Ncaxis_with_content(fdiurn.variables[zaxis])
 
-            fnew.copy_Ncaxis_with_content(fdiurn.variables['time'])
-            fnew.copy_Ncaxis_with_content(fdiurn.variables[tod_name])
-            #Only copy areo if existing in the original file:
-            if 'areo' in  fdiurn.variables.keys():
-                fnew.copy_Ncvar(fdiurn.variables['areo'])
+            #Copy some dimensions from the old file to the new file
+            if target_list is None:
+                # Same input local times are used as target, we use the old axis as-is
+                tod_orig=np.array(fdiurn.variables[tod_name_in])
+                tod_name_out=tod_name_in
+                fnew.copy_Ncaxis_with_content(fdiurn.variables[tod_name_in])
+                #tod_in=np.array(fdiurn.variables[tod_name_in])
+                tod_in = None
+                #Only copy areo if existing in the original file:
+                if 'areo' in  fdiurn.variables.keys():fnew.copy_Ncvar(fdiurn.variables['areo'])
+            else:
+
+                tod_orig=np.array(fdiurn.variables[tod_name_in])
+                #Copy all dims but time_of_day. Update time_of_day array
+                #fnew.copy_all_dims_from_Ncfile(fdiurn,exclude_dim=tod_name_in)
+                tod_in=target_list
+                tod_name_out='time_of_day_%02i'%(len(tod_in))
+                fnew.add_dim_with_content(tod_name_out,tod_in,longname_txt="time of day",units_txt='[hours since 0000-00-00 00:00:00]',cart_txt='')
+
+                #create areo variable with the new size
+                areo_in=fdiurn.variables['areo'][:]
+                areo_shape=areo_in.shape
+                dims_out=fdiurn.variables['areo'].dimensions
+
+                areo_shape=(areo_shape[0],len(tod_in),areo_shape[2])#update shape with new time_of_day
+                dims_out=(dims_out[0],tod_name_out,dims_out[2])
+                areo_out=np.zeros(areo_shape)
+                #For new tod in, e.g [3,15]
+                for ii in range(len(tod_in)):
+                    #Get the closest tod index in the input arrau
+                    it=np.argmin(np.abs(tod_in[ii]-tod_orig))
+                    areo_out[:,ii,0]=areo_in[:,it,0]
+
+                fnew.add_dim_with_content('scalar_axis',[0],longname_txt="none",units_txt='none')
+                fnew.log_variable('areo',areo_out,dims_out,'areo','degrees')
+
 
             # read 4D field and do time shift
             tod_in=np.array(fdiurn.variables[tod_name])
@@ -738,7 +770,8 @@ def main():
             for ivar in var_list:
                 varNcf     = fdiurn.variables[ivar]
                 varIN=varNcf[:]
-                var_unit=varNcf.units
+                var_unit=getattr(varNcf,'units','')
+
                 if tod_name in varNcf.dimensions and ivar not in [tod_name,'areo'] and len(varNcf.shape)>2 :
                     prCyan("Processing: %s ..."%(ivar))
 
