@@ -102,6 +102,7 @@ parser.add_argument('-tidal','--tidal',nargs='+',type=int,
                     help="""Tide analyis on diurn files: extract diurnal and its harmonics \n"""
                          """> Usage: MarsFiles.py *.atmos_diurn.nc -tidal 4  (extract 4 harmonics, N=1 is diurnal, N=2 semi diurnal...)  \n"""
                          """>        MarsFiles.py *.atmos_diurn.nc -tidal 6  --include ps temp --reconstruct (reconstruct the first 6 harmonics) \n"""
+                         """>        MarsFiles.py *.atmos_diurn.nc -tidal 6  --include ps --normalize (provides amplitude in [%]) \n"""
                         """\033[00m""")
 parser.add_argument('-reconstruct','--reconstruct',action='store_true',help=argparse.SUPPRESS) #this flag is used jointly with --tidal
 parser.add_argument('-norm','--normalize',action='store_true',help=argparse.SUPPRESS)          #this flag is used jointly with --tidal
@@ -354,7 +355,7 @@ def main():
                     #Get the closest tod index in the input arrau
                     it=np.argmin(np.abs(tod_in[ii]-tod_orig))
                     areo_out[:,ii,0]=areo_in[:,it,0]
-   
+
                 fnew.add_dim_with_content('scalar_axis',[0],longname_txt="none",units_txt='none')
                 fnew.log_variable('areo',areo_out,dims_out,'areo','degrees')
 
@@ -782,10 +783,8 @@ def main():
             for ivar in var_list:
                 varNcf     = fdiurn.variables[ivar]
                 varIN=varNcf[:]
-                try:
-                    var_unit=varNcf.units
-                except:
-                    var_unit=None
+                var_unit=getattr(varNcf,'units','')
+
                 if tod_name in varNcf.dimensions and ivar not in [tod_name,'areo'] and len(varNcf.shape)>2 :
                     prCyan("Processing: %s ..."%(ivar))
 

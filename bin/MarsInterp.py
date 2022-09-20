@@ -63,7 +63,9 @@ parser.add_argument('-e','--ext',type=str,default=None,
                       """   This will produce   ****.atmos.average_pstd_B.nc files     \n""")
 
 parser.add_argument('-g','--grid',action='store_true',
-                 help="""> Output grid to standard output \n""")
+                 help="""> Output current grid information to standard output. This will not run the interpolation"""
+                      """>  Usage: MarsInterp.py ****.atmos.average.nc -t pstd -l p44 -g  \n""")
+
 parser.add_argument('--debug',  action='store_true', help='Debug flag: release the exceptions')
 
 
@@ -164,6 +166,7 @@ def main():
         prRed("Interpolation type '%s' is not supported, use  'pstd','zstd' or 'zagl'"%(interp_type))
         exit()
 
+    #Only print grid content and exit the code
     if grid_out:
         print(*lev_in)
         exit()
