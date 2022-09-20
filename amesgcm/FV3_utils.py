@@ -94,6 +94,11 @@ def fms_Z_calc(psfc,ak,bk,T,topo=0.,lev_type='full'):
     ---Nk-1---           --------  z_full
     --- Nk --- SFC       ========  z_half
                         / / / / /
+    
+    
+    *NOTE* 
+        Expends tp the time dimension using topo=np.repeat(zsurf[np.newaxis,:],ps.shape[0],axis=0)
+    
 
 
     *NOTE*
@@ -220,12 +225,14 @@ def find_n0(Lfull_IN,Llev_OUT,reverse_input=False):
             n[i,j]=np.argmin(np.abs(Lfull_IN[:,j]-Llev_OUT[i]))
             if Lfull_IN[n[i,j],j]>Llev_OUT[i]:n[i,j]=n[i,j]-1
     return n
-
-def find_n(X_IN,X_OUT,reverse_input=False,modulo=None):
+#=========================================================================================
+def find_n(X_IN,X_OUT,reverse_input=False):
     '''
     Map  the closest index from a 1D input array to a ND output array just below the input  values.
     Args:
         X_IN (float or 1D array)  :source level [Pa] or [m]
+        X_OUT (ND  array)        : desired pressure [pa] or altitude [m] at full levels, level dimension is FIRST 
+        reverse_input (boolean)  : if input array is decreasing, e.g if z(0)=120 km, z(N)=0km (which is typical) or if your input data is p(0)=1000Pa, p(N)=0Pa (which is uncommon with FV3)
         X_OUT (ND  array)        : desired pressure [pa] or altitude [m] at full levels, level dimension is FIRST
         reverse_input (boolean)  : if inout array is decreasing, e.g if z(0)=120 km, z(N)=0km (which is typical) or if your input data is p(0)=1000Pa, p(N)=0Pa
     Returns:
@@ -236,6 +243,8 @@ def find_n(X_IN,X_OUT,reverse_input=False,modulo=None):
        |x|x| > |x|   |x| > |x|      |x| > |x|x|    |x|x|  >  |x|x|
        |x|x|   |x|   |x|   |x|      |x|   |x|x|    |x|x|     |x|x|  (case 4, must have same
        |x|x|   |x|   |x|   |x|      |x|   |x|x|    |x|x|     |x|x|  (# of elements along the other dimensions)
+       
+       *** Note on cyclic values ***
 
        *** Note ***
        Cyclic array are handled naturally (e.g. time of day 0.5 ..23.5 > 0.5) or longitudes 0 >... 359 >0
@@ -2011,7 +2020,7 @@ def ref_atmosphere_Mars_PTD(Zi):
 
 def press_to_alt_atmosphere_Mars(Pi):
     '''
-    Return the altitude in m as a function of pressure from the analytical calculations derived above.
+    Return the altitude in m as a function of pressur from the analytical calculations derived above.
     Args:
         Pi (float or 1D array): input pressure in Pa (must be <=610 Pa)
     Return:
