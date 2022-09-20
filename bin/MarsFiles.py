@@ -782,7 +782,10 @@ def main():
             for ivar in var_list:
                 varNcf     = fdiurn.variables[ivar]
                 varIN=varNcf[:]
-                var_unit=varNcf.units
+                try:
+                    var_unit=varNcf.units
+                except:
+                    var_unit=None
                 if tod_name in varNcf.dimensions and ivar not in [tod_name,'areo'] and len(varNcf.shape)>2 :
                     prCyan("Processing: %s ..."%(ivar))
 
