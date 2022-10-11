@@ -118,8 +118,11 @@ def main():
     global customFileIN    #template name
     global levels;levels=21 #number of contour for 2D plots
     global my_dpi;my_dpi=96.        #pixel per inch for figure output
-    global label_size;label_size=12 #Label size for title, xlabel, ylabel
-    global label_factor;label_factor=1/2# reduce the font size as the  number of pannel increases size
+    global label_size;label_size=18 #Label size for title, xlabel, ylabel
+    global title_size;title_size=24 #Label size for title, xlabel, ylabel
+    global label_factor;label_factor=3/10# reduce the font size as the  number of pannel increases size
+    global tick_factor;tick_factor=1/2
+    global title_factor;title_factor=10/12
     global width_inch; #pixel width for saving figure
     global height_inch; #pixel width for saving figure
     global vertical_page;vertical_page=parser.parse_args().vertical #vertical pages instead of horizonal for saving figure
