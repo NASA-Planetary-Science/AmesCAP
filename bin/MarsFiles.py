@@ -13,8 +13,6 @@ import shutil
 import subprocess
 import numpy as np
 from netCDF4 import Dataset
-import warnings #Suppress certain errors when dealing with NaN arrays
-
 
 
 #===========
@@ -49,11 +47,12 @@ parser.add_argument('-c','--combine', action='store_true',
                         """> Works with Legacy, fixed, average, daily and diuRn files\n"""
                         """ \n""")
 
-parser.add_argument('-t','--tshift', nargs='?',const=999, type=str,
-        help="""Apply timeshift of atmos_diurn files only \n"""
-             """Can also process vertically interpolated diurn files (e.g. ***_diurn_pstd.nc) \n"""
-            """> Usage: MarsFiles.py *.atmos_diurn.nc --tshift  (use input local times in file as target)\n"""
-            """>        MarsFiles.py *.atmos_diurn.nc --tshift  '3. 15.' (with list in quotes '': specify target local times) \n"""
+parser.add_argument('-t','--tshift', action='store_true',
+        help="""Apply timeshift of atmos_diurn files\n"""
+            """> Usage: MarsFiles.py *.atmos_diurn.nc --tshift \n"""
+            """> Works with diurn files only, \n"""
+            """> Can also process vertically interpolated diurn files \n"""
+            """>      e.g. ***_diurn_P.nc \n"""
             """ \n""")
 
 parser.add_argument('-ba','--bin_average',nargs='?',const=5, type=int, #Default is 5 sols
@@ -111,12 +110,6 @@ parser.add_argument('-rs','--regrid_source',nargs='+',
                  help=""" Reggrid  GCMs or observation files using another netcdf file (time,lev,lat,lon) grid structure  \n"""
                       """>  Both source(s) and target files should be vertically-interpolated to a standard grid (e.g. zstd, zagl, pstd)\n"""
                       """>  Usage: MarsInterp.py ****.atmos.average_pstd.nc -rs simu2/00668.atmos_average_pstd.nc \n""")
-
-
-parser.add_argument('-za','--zonal_avg', action='store_true',
-        help="""Apply zonal averaging to any type of files \n"""
-            """> Usage: MarsFiles.py *.atmos_diurn.nc -za \n"""
-            """ \n""")
 
 parser.add_argument('-include','--include',nargs='+',
                      help="""For data reduction, filtering, time-shift, only include listed variables. Dimensions and 1D variables are always included \n"""
@@ -289,12 +282,6 @@ def main():
 #================= Tshift implementation by Victoria H. ===========================
 #===============================================================================
     elif parser.parse_args().tshift:
-        #target_list holds the target local times
-        if parser.parse_args().tshift==999:
-            target_list=None
-        else:
-            target_list=np.fromstring(parser.parse_args().tshift, dtype=float, sep=' ')
-
         for filei in file_list:
             #Add path unless full path is provided
             if not ('/' in filei):
@@ -309,16 +296,17 @@ def main():
 
             fdiurn = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
             fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
+            #Copy some dimensions from the old file to the new file
+            fnew.copy_all_dims_from_Ncfile(fdiurn)
 
             #find time of day variable name
-            tod_name_in=find_tod_in_diurn(fdiurn)
+            tod_name=find_tod_in_diurn(fdiurn)
             _,zaxis=FV3_file_type(fdiurn)
 
             # Copy some variables from the old file to the new file
             fnew.copy_Ncaxis_with_content(fdiurn.variables['lon'])
             fnew.copy_Ncaxis_with_content(fdiurn.variables['lat'])
-            fnew.copy_Ncaxis_with_content(fdiurn.variables['time'])
-            fnew.copy_Ncaxis_with_content(fdiurn.variables['scalar_axis'])
+
             #Only create a vertical axis if the original file contains 3D fields
             if zaxis in fdiurn.dimensions.keys():
                 fnew.copy_Ncaxis_with_content(fdiurn.variables[zaxis])
@@ -361,6 +349,7 @@ def main():
 
 
             # read 4D field and do time shift
+            tod_in=np.array(fdiurn.variables[tod_name])
             longitude = np.array(fdiurn.variables['lon'])
             var_list = filter_vars(fdiurn,parser.parse_args().include) # get all variables
 
@@ -368,27 +357,25 @@ def main():
                 prCyan("Processing: %s ..."%(ivar))
                 varIN = fdiurn.variables[ivar][:]
                 vkeys = fdiurn.variables[ivar].dimensions
-                long_name_txt=getattr(fdiurn.variables[ivar],'long_name','')
-                units_txt=getattr(fdiurn.variables[ivar],'units','')
                 if (len(vkeys) == 4):
                     ilat = vkeys.index('lat')
                     ilon = vkeys.index('lon')
                     itime = vkeys.index('time')
-                    itod = vkeys.index(tod_name_in)
+                    itod = vkeys.index(tod_name)
                     newvar = np.transpose(varIN,(ilon,ilat,itime,itod))
-                    newvarOUT = tshift(newvar,longitude,tod_orig,timex=tod_in)
+                    newvarOUT = tshift(newvar,lon=longitude,timex=tod_in)
                     varOUT = np.transpose(newvarOUT, (2,3,1,0))
-                    fnew.log_variable(ivar,varOUT,['time',tod_name_out,'lat','lon'],long_name_txt,units_txt)
+                    fnew.log_variable(ivar,varOUT,['time',tod_name,'lat','lon'],fdiurn.variables[ivar].long_name,fdiurn.variables[ivar].units)
                 if (len(vkeys) == 5):
                     ilat = vkeys.index('lat')
                     ilon = vkeys.index('lon')
                     iz  = vkeys.index(zaxis)
                     itime = vkeys.index('time')
-                    itod = vkeys.index(tod_name_in)
+                    itod = vkeys.index(tod_name)
                     newvar = np.transpose(varIN,(ilon,ilat,iz,itime,itod))
-                    newvarOUT = tshift(newvar,longitude,tod_orig,timex=tod_in)
+                    newvarOUT = tshift(newvar,lon=longitude,timex=tod_in)
                     varOUT = np.transpose(newvarOUT,(3,4,2,1,0))
-                    fnew.log_variable(ivar,varOUT,['time',tod_name_out,zaxis,'lat','lon'],long_name_txt,units_txt)
+                    fnew.log_variable(ivar,varOUT,['time',tod_name,zaxis,'lat','lon'],fdiurn.variables[ivar].long_name,fdiurn.variables[ivar].units)
             fnew.close()
             fdiurn.close()
 
@@ -870,64 +857,10 @@ def main():
                 elif varNcf.dimensions[-2:]==('lat', 'lon'): #Ignore variables like  'time_bounds', 'scalar_axis' or 'grid_xt_bnds'...
                     prCyan("Regridding: %s..."%(ivar))
                     var_OUT=regrid_Ncfile(varNcf,f_in,fNcdf_t)
-                    fnew.log_variable(ivar,var_OUT,varNcf.dimensions,varNcf.long_name,varNcf.units) #TODO this time_of_day_24 to time_of_day_4
+                    fnew.log_variable(ivar,var_OUT,varNcf.dimensions,varNcf.long_name,varNcf.units)
             fnew.close()
             fNcdf_t.close()
-
-
-    #===========================================================================
-    #=======================  Zonal averaging    ===============================
-    #===========================================================================
-    elif parser.parse_args().zonal_avg:
-
-        for filei in file_list:
-            #Add path unless full path is provided
-            if not ('/' in filei):
-                fullnameIN = path2data + '/' + filei
-            else:
-                fullnameIN=filei
-            fullnameOUT = fullnameIN[:-3]+'_zonal_avg'+'.nc'
-
-            #Append extension, in any:
-            if parser.parse_args().ext:fullnameOUT=fullnameOUT[:-3]+'_'+parser.parse_args().ext+'.nc'
-
-            fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
-            var_list = filter_vars(fdaily,parser.parse_args().include) # get all variables
-
-            lon_in=fdaily.variables['lon'][:]
-
-            fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
-            #Copy all dims but time from the old file to the new file
-            fnew.copy_all_dims_from_Ncfile(fdaily,exclude_dim=['lon'])
-
-
-            #----- Add one new dimension for the longitude, size 1 -----
-            fnew.add_dim_with_content('lon',[lon_in.mean()],longname_txt="longitude",units_txt="degrees_E",cart_txt='X')
-
-            #Loop over all variables in file
-            for ivar in var_list:
-                varNcf     = fdaily.variables[ivar]
-
-                if 'lon' in varNcf.dimensions and ivar not in ['lon','grid_xt_bnds','grid_yt_bnds']:
-                    prCyan("Processing: %s ..."%(ivar))
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("ignore", category=RuntimeWarning)
-                        var_out=np.nanmean(varNcf[:],axis=-1)[...,np.newaxis]
-                        fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
-                else:
-                    if  ivar in ['pfull', 'lat','phalf','pk','bk','pstd','zstd','zagl']:
-                        prCyan("Copying axis: %s..."%(ivar))
-                        fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
-                    elif ivar in ['grid_xt_bnds','grid_yt_bnds', 'lon']:
-                        pass
-
-
-                    else:
-                        prCyan("Copying var: %s..."%(ivar))
-                        fnew.copy_Ncvar(fdaily.variables[ivar])
-            fnew.close()
-
-
+        f_in
     else:
         prRed("""Error: no action requested: use 'MarsFiles *nc --fv3 --combine, --tshift, --bin_average, --bin_diurn etc ...'""")
 
