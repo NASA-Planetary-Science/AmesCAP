@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # The functions below allow to print in different color
 def prCyan(skk):        print("\033[96m{}\033[00m".format(skk))
