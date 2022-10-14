@@ -39,7 +39,7 @@ parser.add_argument('-fv3','--fv3', nargs='+',
                         """                         'average': 5 sol averages  \n"""
                         """                         'daily'  : 5 sol contineuous  \n"""
                         """                         'diurn'  : 5 sol average for each time of the day \n"""
-                        """\033[00m""")
+                        """\n""")
 
 parser.add_argument('-c','--combine', action='store_true',
                     help="""Combine a sequence of similar files as a single file\n"""
@@ -59,14 +59,14 @@ parser.add_argument('-ba','--bin_average',nargs='?',const=5, type=int, #Default 
                     help="""Bin FV3's 'atmos_daily' files as 'atmos_average' Usefull after computation of high-level fields \n"""
                         """> Usage: MarsFiles.py *.atmos_daily.nc -ba          (default, bin 5 days)\n"""
                         """>        MarsFiles.py *.atmos_daily_pstd.nc -ba 10  (bin 10 days)\n"""
-                        """\033[00m""")
+                        """\n""")
 
 parser.add_argument('-bd','--bin_diurn', action='store_true',
                     help="""Bin FV3's 'atmos_daily' files as 'atmos_diurn' May be used jointly with --bin_average\n"""
                         """> Usage: MarsFiles.py *.atmos_daily.nc -bd             (default, 5 days bin) \n"""
                         """>        MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 10 (bin 10 days)\n"""
                         """>        MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 1  (no binning, similar to raw Legacy output)\n"""
-                        """\033[00m""")
+                        """\n""")
 
 
 parser.add_argument('-hpf','--high_pass_filter',nargs='+',type=float,
@@ -76,7 +76,7 @@ parser.add_argument('-hpf','--high_pass_filter',nargs='+',type=float,
                          """     (-lpf)  --low_pass_filter  sol_max          \n"""
                          """     (-bpf)  --band_pass_filter sol_min sol max  \n"""
                          """> Usage: MarsFiles.py *.atmos_daily.nc -bpf 0.5 10. --no_trend    \n"""
-                        """\033[00m""")
+                        """\n""")
 
 parser.add_argument('-lpf','--low_pass_filter', nargs='+',type=float,help=argparse.SUPPRESS) #same as  --hpf but without the instructions
 parser.add_argument('-bpf','--band_pass_filter', nargs='+',help=argparse.SUPPRESS) #same as --hpf but without the instructions
@@ -92,7 +92,7 @@ parser.add_argument('-no_trend','--no_trend',action='store_true',help=argparse.S
 #                          """     (-lpk)  --low_pass_zonal  kmax          \n"""
 #                          """     (-bpk)  --band_pass_zonal kmin kmax  \n"""
 #                          """> Usage: MarsFiles.py *.atmos_daily.nc -lpk 20 --no_trend    \n"""
-#                         """\033[00m""")
+#                         """\n""")
 # parser.add_argument('-lpk','--low_pass_zonal', nargs='+',type=int,help=argparse.SUPPRESS) #same as  --hpf but without the instructions
 # parser.add_argument('-bpk','--band_pass_zonal', nargs='+',help=argparse.SUPPRESS) #same as --hpf but without the instructions
 
@@ -101,8 +101,8 @@ parser.add_argument('-tidal','--tidal',nargs='+',type=int,
                     help="""Tide analyis on diurn files: extract diurnal and its harmonics \n"""
                          """> Usage: MarsFiles.py *.atmos_diurn.nc -tidal 4  (extract 4 harmonics, N=1 is diurnal, N=2 semi diurnal...)  \n"""
                          """>        MarsFiles.py *.atmos_diurn.nc -tidal 6  --include ps temp --reconstruct (reconstruct the first 6 harmonics) \n"""
-                         """>        MarsFiles.py *.atmos_diurn.nc -tidal 6  --include ps --normalize (provides amplitude in [%]) \n"""
-                        """\033[00m""")
+                         """>        MarsFiles.py *.atmos_diurn.nc -tidal 6  --include ps --normalize (provides amplitude in [%%]) \n"""
+                        """\n""")
 parser.add_argument('-reconstruct','--reconstruct',action='store_true',help=argparse.SUPPRESS) #this flag is used jointly with --tidal
 parser.add_argument('-norm','--normalize',action='store_true',help=argparse.SUPPRESS)          #this flag is used jointly with --tidal
 
@@ -114,7 +114,7 @@ parser.add_argument('-rs','--regrid_source',nargs='+',
 parser.add_argument('-include','--include',nargs='+',
                      help="""For data reduction, filtering, time-shift, only include listed variables. Dimensions and 1D variables are always included \n"""
                          """> Usage: MarsFiles.py *.atmos_daily.nc -ba --include ps ts ucomp    \n"""
-                         """\033[00m""")
+                         """\n""")
 
 parser.add_argument('-e','--ext',type=str,default=None,
                  help="""> Append an extension _ext.nc to the output file instead of replacing any existing file \n"""
