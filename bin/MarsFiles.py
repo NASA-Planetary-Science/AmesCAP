@@ -102,7 +102,7 @@ parser.add_argument('-tidal','--tidal',nargs='+',type=int,
                          """> Usage: MarsFiles.py *.atmos_diurn.nc -tidal 4  (extract 4 harmonics, N=1 is diurnal, N=2 semi diurnal...)  \n"""
                          """>        MarsFiles.py *.atmos_diurn.nc -tidal 6  --include ps temp --reconstruct (reconstruct the first 6 harmonics) \n"""
                          """>        MarsFiles.py *.atmos_diurn.nc -tidal 6  --include ps --normalize (provides amplitude in [%%]) \n"""
-                        """\n""")
+                        """\033[00m""")
 parser.add_argument('-reconstruct','--reconstruct',action='store_true',help=argparse.SUPPRESS) #this flag is used jointly with --tidal
 parser.add_argument('-norm','--normalize',action='store_true',help=argparse.SUPPRESS)          #this flag is used jointly with --tidal
 
