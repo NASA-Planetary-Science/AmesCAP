@@ -281,6 +281,8 @@ or using **full** paths:
 
 If the pipeline is installed correctly, `--help` will display documentation and command-line arguments for `MarsPlot` in the terminal.
 
+> If the `Mars*.py` executables are NOT present in the `~/amesGCM3/bin/` directory of the virtual environment (`/amesGCM3/Scripts/` on Cygwin) and if a message displays that `amesgcm` is `Successfully built` but not  `Successfully installed`, you may want to make sure that CAP is not already present in the native python distribution, that is in `~/anaconda3/lib/python3.7/site-packages/` or `~/anaconda3/bin/`. (This can happen is one installs CAP with `pip` before creating the virtual environment first). Because on Step 2 we created the virtual environment using the `--system-site-packages`, python will consider that `amesgcm` is already installed when creating the virtual environment, which can create confusion. If that is the case, you can run  `pip uninstall amesgcm` OUTSIDE the virtual environment start over at Step 2. 
+
 This completes the one-time installation of CAP in your virtual environment, `amesGCM3`, which now looks like:
 
 ```
