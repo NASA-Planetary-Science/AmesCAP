@@ -355,8 +355,11 @@ def main():
 
             for ivar in var_list:
                 prCyan("Processing: %s ..."%(ivar))
-                varIN = fdiurn.variables[ivar][:]
-                vkeys = fdiurn.variables[ivar].dimensions
+                var_Ncdf     = fdiurn.variables[ivar]
+                varIN = var_Ncdf[:]
+                vkeys = var_Ncdf.dimensions
+                longname_txt=getattr(var_Ncdf,'long_name','')
+                units_txt=getattr(var_Ncdf,'units','')
                 if (len(vkeys) == 4):
                     ilat = vkeys.index('lat')
                     ilon = vkeys.index('lon')
@@ -365,7 +368,7 @@ def main():
                     newvar = np.transpose(varIN,(ilon,ilat,itime,itod))
                     newvarOUT = tshift(newvar,lon=longitude,timex=tod_in)
                     varOUT = np.transpose(newvarOUT, (2,3,1,0))
-                    fnew.log_variable(ivar,varOUT,['time',tod_name,'lat','lon'],fdiurn.variables[ivar].long_name,fdiurn.variables[ivar].units)
+                    fnew.log_variable(ivar,varOUT,['time',tod_name,'lat','lon'],longname_txt,units_txt)
                 if (len(vkeys) == 5):
                     ilat = vkeys.index('lat')
                     ilon = vkeys.index('lon')
@@ -375,7 +378,7 @@ def main():
                     newvar = np.transpose(varIN,(ilon,ilat,iz,itime,itod))
                     newvarOUT = tshift(newvar,lon=longitude,timex=tod_in)
                     varOUT = np.transpose(newvarOUT,(3,4,2,1,0))
-                    fnew.log_variable(ivar,varOUT,['time',tod_name,zaxis,'lat','lon'],fdiurn.variables[ivar].long_name,fdiurn.variables[ivar].units)
+                    fnew.log_variable(ivar,varOUT,['time',tod_name,zaxis,'lat','lon'],longname_txt,units_txt)
             fnew.close()
             fdiurn.close()
 
@@ -427,12 +430,14 @@ def main():
 
             #Loop over all variables in file
             for ivar in var_list:
-                varNcf     = fdaily.variables[ivar]
+                var_Ncdf     = fdaily.variables[ivar]
 
-                if 'time' in varNcf.dimensions :
+                if 'time' in var_Ncdf.dimensions :
                     prCyan("Processing: %s ..."%(ivar))
-                    var_out=daily_to_average(varNcf[:],dt_in,nday)
-                    fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
+                    var_out=daily_to_average(var_Ncdf[:],dt_in,nday)
+                    longname_txt=getattr(var_Ncdf,'long_name','')
+                    units_txt=getattr(var_Ncdf,'units','')
+                    fnew.log_variable(ivar,var_out,var_Ncdf.dimensions,longname_txt,units_txt)
                 else:
                     if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl']:
                         prCyan("Copying axis: %s..."%(ivar))
@@ -494,16 +499,19 @@ def main():
             #Loop over all variables in file
             for ivar in var_list:
 
-                varNcf     = fdaily.variables[ivar]
+                var_Ncdf     = fdaily.variables[ivar]
 
                 #If time is the dimension (but not just a time array)
-                if 'time' in varNcf.dimensions and ivar!='time':
+                if 'time' in var_Ncdf.dimensions and ivar!='time':
                     prCyan("Processing: %s ..."%(ivar))
-                    dims_in=varNcf.dimensions
+                    dims_in=var_Ncdf.dimensions
                     dims_out=(dims_in[0],)+(tod_name,)+dims_in[1:]
-                    var_out=daily_to_diurn(varNcf[:],time_in[0:iperday])
+                    var_out=daily_to_diurn(var_Ncdf[:],time_in[0:iperday])
                     if nday!=1:var_out=daily_to_average(var_out,1.,nday) #dt is 1 sol between two diurn timestep
-                    fnew.log_variable(ivar,var_out,dims_out,varNcf.long_name,varNcf.units)
+
+                    longname_txt=getattr(var_Ncdf,'long_name','')
+                    units_txt=getattr(var_Ncdf,'units','')
+                    fnew.log_variable(ivar,var_out,dims_out,longname_txt,units_txt)
 
                 else:
 
@@ -590,12 +598,14 @@ def main():
 
             #Loop over all variables in file
             for ivar in var_list:
-                varNcf     = fdaily.variables[ivar]
+                var_Ncdf     = fdaily.variables[ivar]
 
-                if 'time' in varNcf.dimensions and ivar not in ['time','areo'] :
+                if 'time' in var_Ncdf.dimensions and ivar not in ['time','areo'] :
                     prCyan("Processing: %s ..."%(ivar))
-                    var_out=zeroPhi_filter(varNcf[:], btype, low_highcut, fs,axis=0,order=4,no_trend=parser.parse_args().no_trend)
-                    fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
+                    var_out=zeroPhi_filter(var_Ncdf[:], btype, low_highcut, fs,axis=0,order=4,no_trend=parser.parse_args().no_trend)
+                    longname_txt=getattr(var_Ncdf,'long_name','')
+                    units_txt=getattr(var_Ncdf,'units','')
+                    fnew.log_variable(ivar,var_out,var_Ncdf.dimensions,longname_txt,units_txt)
                 else:
                     if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl']:
                         prCyan("Copying axis: %s..."%(ivar))
@@ -689,24 +699,24 @@ def main():
     #
     #         #Loop over all variables in file
     #         for ivar in var_list:
-    #             varNcf     = fname.variables[ivar]
+    #             var_Ncdf     = fname.variables[ivar]
     #
-    #             if ('lat' in varNcf.dimensions) and ('lon' in varNcf.dimensions):
+    #             if ('lat' in var_Ncdf.dimensions) and ('lon' in var_Ncdf.dimensions):
     #                 prCyan("Processing: %s ..."%(ivar))
     #
     #                 # Step 1 : detrend the data
-    #                 TREND=get_trend_2D(varNcf[:],LON,LAT,'wmean')
+    #                 TREND=get_trend_2D(var_Ncdf[:],LON,LAT,'wmean')
     #                 # Step 2 : calculate spherical harmonic coefficients
-    #                 COEFF,PSD=zonal_decomposition(varNcf[:]-TREND)
+    #                 COEFF,PSD=zonal_decomposition(var_Ncdf[:]-TREND)
     #                 # Step 3 : Recompose the variable out of the coefficients
-    #                 VAR_filtered=zonal_construct(COEFF,varNcf[:].shape,btype=btype,low_highcut=low_highcut)
+    #                 VAR_filtered=zonal_construct(COEFF,var_Ncdf[:].shape,btype=btype,low_highcut=low_highcut)
     #                 #Step 4: add the trend, if request
     #                 if parser.parse_args().no_trend:
     #                     var_out=VAR_filtered
     #                 else:
     #                     var_out=VAR_filtered+TREND
     #
-    #                 fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
+    #                 fnew.log_variable(ivar,var_out,var_Ncdf.dimensions,var_Ncdf.long_name,var_Ncdf.units)
     #             else:
     #                 if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time']:
     #                     prCyan("Copying axis: %s..."%(ivar))
@@ -768,31 +778,32 @@ def main():
 
             #Loop over all variables in file
             for ivar in var_list:
-                varNcf     = fdiurn.variables[ivar]
-                varIN=varNcf[:]
-                var_unit=getattr(varNcf,'units','')
+                var_Ncdf     = fdiurn.variables[ivar]
+                varIN=var_Ncdf[:]
+                units_txt=getattr(var_Ncdf,'units','')
+                longname_txt=getattr(var_Ncdf,'long_name','')
 
-                if tod_name in varNcf.dimensions and ivar not in [tod_name,'areo'] and len(varNcf.shape)>2 :
+                if tod_name in var_Ncdf.dimensions and ivar not in [tod_name,'areo'] and len(var_Ncdf.shape)>2 :
                     prCyan("Processing: %s ..."%(ivar))
 
                     # Normalize the data
                     if parser.parse_args().normalize:
                         norm=np.mean(varIN,axis=1)[:,np.newaxis,...] #normalize and reshape array along the time_of_day dimension
                         varIN=100*(varIN-norm)/norm
-                        var_unit='% of diurnal mean'
+                        units_txt='% of diurnal mean'
 
                     amp,phas=diurn_extract(varIN.swapaxes(0,1),N,tod_in,lon)
                     if parser.parse_args().reconstruct:
                         VARN=reconstruct_diurn(amp,phas,tod_in,lon,sumList=[])
                         for nn in range(N):
-                            fnew.log_variable("%s_N%i"%(ivar,nn+1),VARN[nn,...].swapaxes(0,1),varNcf.dimensions,"harmonic N=%i for %s"%(nn+1,varNcf.long_name),var_unit)
+                            fnew.log_variable("%s_N%i"%(ivar,nn+1),VARN[nn,...].swapaxes(0,1),var_Ncdf.dimensions,"harmonic N=%i for %s"%(nn+1,longname_txt),units_txt)
 
                     else:
                         #Update the dimensions
-                        new_dim=list(varNcf.dimensions)
+                        new_dim=list(var_Ncdf.dimensions)
                         new_dim[1]='time_of_day_%i'%(N)
-                        fnew.log_variable("%s_amp"%(ivar),amp.swapaxes(0,1),new_dim,"tidal amplitude for %s"%(varNcf.long_name),var_unit)
-                        fnew.log_variable("%s_phas"%(ivar),phas.swapaxes(0,1),new_dim,"tidal phase for %s"%(varNcf.long_name),'hr')
+                        fnew.log_variable("%s_amp"%(ivar),amp.swapaxes(0,1),new_dim,"tidal amplitude for %s"%(longname_txt),units_txt)
+                        fnew.log_variable("%s_phas"%(ivar),phas.swapaxes(0,1),new_dim,"tidal phase for %s"%(longname_txt),'hr')
 
                 elif  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time']:
                         prCyan("Copying axis: %s..."%(ivar))
@@ -809,9 +820,9 @@ def main():
                             #Copy areo
                             for xx in range(N):areo_new[:,xx,:]=areo[:,0,:]
                             #Update the dimensions
-                            new_dim=list(varNcf.dimensions)
+                            new_dim=list(var_Ncdf.dimensions)
                             new_dim[1]='time_of_day_%i'%(N)
-                            fnew.log_variable(ivar,areo_new,new_dim,varNcf.long_name,varNcf.units)
+                            fnew.log_variable(ivar,areo_new,new_dim,longname_txt,units_txt)
 
             fnew.close()
 
@@ -850,14 +861,16 @@ def main():
 
             #Loop over all variables in file
             for ivar in var_list:
-                varNcf     = f_in.variables[ivar]
+                var_Ncdf     = f_in.variables[ivar]
+                longname_txt=getattr(var_Ncdf,'long_name','')
+                units_txt=getattr(var_Ncdf,'units','')
                 if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time','areo']:
                         prCyan("Copying axis: %s..."%(ivar))
                         fnew.copy_Ncaxis_with_content(fNcdf_t.variables[ivar])
-                elif varNcf.dimensions[-2:]==('lat', 'lon'): #Ignore variables like  'time_bounds', 'scalar_axis' or 'grid_xt_bnds'...
+                elif var_Ncdf.dimensions[-2:]==('lat', 'lon'): #Ignore variables like  'time_bounds', 'scalar_axis' or 'grid_xt_bnds'...
                     prCyan("Regridding: %s..."%(ivar))
-                    var_OUT=regrid_Ncfile(varNcf,f_in,fNcdf_t)
-                    fnew.log_variable(ivar,var_OUT,varNcf.dimensions,varNcf.long_name,varNcf.units)
+                    var_OUT=regrid_Ncfile(var_Ncdf,f_in,fNcdf_t)
+                    fnew.log_variable(ivar,var_OUT,var_Ncdf.dimensions,longname_txt,units_txt)
             fnew.close()
             fNcdf_t.close()
         f_in
