@@ -19,7 +19,7 @@ from netCDF4 import Dataset
 from amesgcm.Ncdf_wrapper import Ncdf, Fort
 from amesgcm.FV3_utils import tshift,daily_to_average,daily_to_diurn,get_trend_2D
 #from amesgcm.FV3_utils import regrid_Ncfile #regrid source
-from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn,FV3_file_type,filter_vars,regrid_Ncfile
+from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn,FV3_file_type,filter_vars,regrid_Ncfile,get_longname_units
 #==========
 
 
@@ -358,8 +358,7 @@ def main():
                 var_Ncdf     = fdiurn.variables[ivar]
                 varIN = var_Ncdf[:]
                 vkeys = var_Ncdf.dimensions
-                longname_txt=getattr(var_Ncdf,'long_name','')
-                units_txt=getattr(var_Ncdf,'units','')
+                longname_txt,units_txt=get_longname_units(fdiurn,ivar)
                 if (len(vkeys) == 4):
                     ilat = vkeys.index('lat')
                     ilon = vkeys.index('lon')
@@ -435,8 +434,7 @@ def main():
                 if 'time' in var_Ncdf.dimensions :
                     prCyan("Processing: %s ..."%(ivar))
                     var_out=daily_to_average(var_Ncdf[:],dt_in,nday)
-                    longname_txt=getattr(var_Ncdf,'long_name','')
-                    units_txt=getattr(var_Ncdf,'units','')
+                    longname_txt,units_txt=get_longname_units(fdaily,ivar)
                     fnew.log_variable(ivar,var_out,var_Ncdf.dimensions,longname_txt,units_txt)
                 else:
                     if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl']:
@@ -508,9 +506,7 @@ def main():
                     dims_out=(dims_in[0],)+(tod_name,)+dims_in[1:]
                     var_out=daily_to_diurn(var_Ncdf[:],time_in[0:iperday])
                     if nday!=1:var_out=daily_to_average(var_out,1.,nday) #dt is 1 sol between two diurn timestep
-
-                    longname_txt=getattr(var_Ncdf,'long_name','')
-                    units_txt=getattr(var_Ncdf,'units','')
+                    longname_txt,units_txt=get_longname_units(fdaily,ivar)
                     fnew.log_variable(ivar,var_out,dims_out,longname_txt,units_txt)
 
                 else:
@@ -603,8 +599,7 @@ def main():
                 if 'time' in var_Ncdf.dimensions and ivar not in ['time','areo'] :
                     prCyan("Processing: %s ..."%(ivar))
                     var_out=zeroPhi_filter(var_Ncdf[:], btype, low_highcut, fs,axis=0,order=4,no_trend=parser.parse_args().no_trend)
-                    longname_txt=getattr(var_Ncdf,'long_name','')
-                    units_txt=getattr(var_Ncdf,'units','')
+                    longname_txt,units_txt=get_longname_units(fdaily,ivar)
                     fnew.log_variable(ivar,var_out,var_Ncdf.dimensions,longname_txt,units_txt)
                 else:
                     if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl']:
@@ -780,8 +775,7 @@ def main():
             for ivar in var_list:
                 var_Ncdf     = fdiurn.variables[ivar]
                 varIN=var_Ncdf[:]
-                units_txt=getattr(var_Ncdf,'units','')
-                longname_txt=getattr(var_Ncdf,'long_name','')
+                longname_txt,units_txt=get_longname_units(fdiurn,ivar)
 
                 if tod_name in var_Ncdf.dimensions and ivar not in [tod_name,'areo'] and len(var_Ncdf.shape)>2 :
                     prCyan("Processing: %s ..."%(ivar))
@@ -862,8 +856,8 @@ def main():
             #Loop over all variables in file
             for ivar in var_list:
                 var_Ncdf     = f_in.variables[ivar]
-                longname_txt=getattr(var_Ncdf,'long_name','')
-                units_txt=getattr(var_Ncdf,'units','')
+                longname_txt,units_txt=get_longname_units(f_in,ivar)
+
                 if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time','areo']:
                         prCyan("Copying axis: %s..."%(ivar))
                         fnew.copy_Ncaxis_with_content(fNcdf_t.variables[ivar])
@@ -1006,12 +1000,10 @@ def do_avg_vars(histfile,newf,avgtime,avgtod,Nday=5):
         vshape= npvar.shape
         ntod  = histfile.dimensions['ntod']
 
-        longname_txt=getattr(histfile.variables[vname],'long_name','')
+        longname_txt,units_txt=get_longname_units(histfile,vname)
 
         #On some files like the LegacyGCM_Ls*** on the NAS dataportal, the attribute 'long_name' may be mispelled 'longname'
         if longname_txt=='':longname_txt=getattr(histfile.variables[vname],'longname','')
-
-        units_txt=getattr(histfile.variables[vname],'units','')
 
         if avgtod:
             newdims  = replace_dims(dims,True)

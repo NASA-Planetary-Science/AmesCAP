@@ -9,7 +9,7 @@ import warnings #Suppress certain errors when dealing with NaN arrays
 
 
 from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR,mass_stream,zonal_detrend,spherical_div,spherical_curl,frontogenesis
-from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type,filter_vars,find_fixedfile
+from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type,filter_vars,find_fixedfile,get_longname_units
 from amesgcm.Ncdf_wrapper import Ncdf
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
@@ -782,8 +782,9 @@ def main():
                     lev_T= [1,0,2,3] # [tim,lev, lat, lon]
                 try:
                     var=fileNC.variables[idiff][:]
-                    newUnits=fileNC.variables[idiff].units[:-2]+'/m]' #remove the last ']' to update units, e.g turn '[kg]' to '[kg/m]'
-                    newLong_name='vertical gradient of '+fileNC.variables[idiff].long_name
+                    longname_txt,units_txt=get_longname_units(fileNC,idiff)
+                    newUnits=units_txt[:-2]+'/m]' #remove the last ']' to update units, e.g turn '[kg]' to '[kg/m]'
+                    newLong_name='vertical gradient of '+longname_txt
                     #---temp and ps are always needed---
                     dim_out=fileNC.variables['temp'].dimensions #get dimension
                     if interp_type=='pfull':
@@ -842,14 +843,14 @@ def main():
 
                 try:
                     var=fileNC.variables[izdetrend][:]
-                    newUnits=fileNC.variables[izdetrend].units
-                    newLong_name='zonal perturbation of '+fileNC.variables[izdetrend].long_name
+                    longname_txt,units_txt=get_longname_units(fileNC,izdetrend)
+                    newLong_name='zonal perturbation of '+longname_txt
                     dim_out=fileNC.variables[izdetrend].dimensions #get dimension
 
                     #Log the variable
                     var_Ncdf = fileNC.createVariable(izdetrend+'_p','f4',dim_out)
                     var_Ncdf.long_name=newLong_name
-                    var_Ncdf.units=   newUnits
+                    var_Ncdf.units=   units_txt
                     var_Ncdf[:]=  zonal_detrend(var)
                     fileNC.close()
 
@@ -896,9 +897,9 @@ def main():
 
                 try:
                     var=fileNC.variables[icol][:]
-                    #prRed(fileNC.variables[icol].units+'|')
-                    newUnits=fileNC.variables[icol].units[:-3]+'/m2' # turn 'kg/kg'> to 'kg/m2'
-                    newLong_name='column integration of '+fileNC.variables[icol].long_name
+                    longname_txt,units_txt=get_longname_units(fileNC,icol)
+                    newUnits=units_txt[:-3]+'/m2' # turn 'kg/kg'> to 'kg/m2'
+                    newLong_name='column integration of '+longname_txt
 
                     #---temp and ps are always needed---
                     dim_in=fileNC.variables['temp'].dimensions #get dimension

@@ -629,6 +629,23 @@ def find_fixedfile(filepath, flist):
 
         return(name_fixed)
 
+def get_longname_units(fNcdf,varname):
+    '''
+    Return the 'long_name' and 'units'  attributes of a netcdf variable.
+    If the attributes are not present, this function will return blank strings instead of raising an error
+    Args:
+        fNcdf: an opened netcdf file
+        varname:  A variable to extract the attribute from (e.g. 'ucomp')
+    Return:
+        longname_txt : long_name attribute, e.g. 'zonal winds'
+        units_txt    : units attribute, e.g. [m/s]
+
+    *** NOTE***
+    Some functions in MarsVars edit the units, e.g. turn [kg]  to [kg/m], therefore the empty string is made 4
+    characters in length ('    ' instead of '') to allow for editing by editing units_txt[:-2] for example
+    '''
+    return getattr(fNcdf.variables[varname],'long_name','    '), getattr(fNcdf.variables[varname],'units','    ')
+
 def wbr_cmap():
     '''
     Returns a color map that goes from white>blue>green>yellow>red or 'wbr'
