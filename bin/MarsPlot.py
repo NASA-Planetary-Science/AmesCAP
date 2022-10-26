@@ -42,7 +42,7 @@ degr = u"\N{DEGREE SIGN}"
 #                  ARGUMENTS PARSER
 #======================================================
 
-global current_version;current_version=3.2
+global current_version;current_version=3.3
 parser = argparse.ArgumentParser(description="""\033[93mAnalysis Toolkit for the Ames GCM, V%s\033[00m """%(current_version),
                                 formatter_class=argparse.RawTextHelpFormatter)
 
