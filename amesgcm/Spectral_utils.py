@@ -4,7 +4,6 @@
 import numpy as np
 from amesgcm.Script_utils import prYellow,prCyan,prRed,prGreen
 from amesgcm.FV3_utils import area_weights_deg
-import pyshtools
 try:
     from scipy.signal import butter,filtfilt,detrend
 except ImportError as error_msg:

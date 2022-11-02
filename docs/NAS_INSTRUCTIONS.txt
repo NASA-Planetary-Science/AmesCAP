@@ -22,7 +22,7 @@ python3.7 -m venv --system-site-packages amesGCM-dev
 #______________________________________________________________________________________________
 #               CSH/TSCH                         |               BASH
 #________________________________________________|_____________________________________________
-source amesGCM-dev/bin/activate.csh                 |     source amesGCM-dev/bin/activate
+source amesGCM-dev/bin/activate.csh              |     source amesGCM-dev/bin/activate
 #----------------------------------------------------------------------------------------------
 
 pip install cftime==1.0.3.4
