@@ -283,9 +283,15 @@ def main():
             output_pdf='"'+output_pdf+'"'
             #command to make a multipage pdf out of the the individual figures using ghost scritp.
             # Also remove the temporary files when done
-            cmd_txt='gs.bin -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -dEPSCrop -sOutputFile='+output_pdf+' '+all_fig
+            cmd_txt='gs -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -dEPSCrop -sOutputFile='+output_pdf+' '+all_fig
+            #=======ON NAS, the ghostscript executable has been renamed 'gs.bin'. If the above fail, we will also try this one========
             try:
-                #Test the ghost scrit and remove command, exit otherwise--
+                subprocess.check_call(cmd_txt,shell=True, stdout=fdump, stderr=fdump)
+            except subprocess.CalledProcessError:
+                cmd_txt='gs.bin -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -dEPSCrop -sOutputFile='+output_pdf+' '+all_fig
+            #================
+            try:
+                #Test the ghost script and remove command, exit otherwise--
                 subprocess.check_call(cmd_txt,shell=True, stdout=fdump, stderr=fdump)
                 #Execute the commands now
                 subprocess.call(cmd_txt,shell=True, stdout=fdump, stderr=fdump) #run ghostscript to merge the pdf
@@ -1840,7 +1846,7 @@ class Fig_2D(object):
                 plt.title(self.title,fontsize=title_size-self.nPan*title_factor)
         else:
             # if title was not provided
-            plt.title(var_info,fontsize=title_size-self.nPan*title_factor,wrap=False)
+            plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=title_size-self.nPan*title_factor,wrap=False)
 
         plt.xlabel(xlabel,fontsize=label_size-self.nPan*label_factor)
         plt.ylabel(ylabel,fontsize=label_size-self.nPan*label_factor)
@@ -2246,7 +2252,7 @@ class Fig_2D_lon_lat(Fig_2D):
                 if self.title:
                     plt.title((self.title),fontsize=title_size-self.nPan*title_factor)
                 else:
-                    plt.title(var_info,fontsize=title_size-self.nPan*title_factor,wrap=False)
+                    plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=title_size-self.nPan*title_factor,wrap=False)
 
 
             self.success=True
@@ -2292,10 +2298,11 @@ class Fig_2D_time_lat(Fig_2D):
 
             for i in range(0,len(Ls_ticks)):
                 id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                #labels[i]='Ls %g\nsol %i'%(np.mod(Ls_ticks[i],360.),tim[id]) # alex's version with sol beneath
                 labels[i]='%g%s'%(np.mod(Ls_ticks[i],360.),degr)
             ax.set_xticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
-            super(Fig_2D_time_lat, self).make_title(var_info,'Areocentric Longitude [L$_s$]','Latitude')
+            super(Fig_2D_time_lat, self).make_title(var_info,'L$_s$','Latitude')
 
             ax.yaxis.set_major_locator(MultipleLocator(15))
             ax.yaxis.set_minor_locator(MultipleLocator(5))
@@ -2443,13 +2450,23 @@ class Fig_2D_time_lev(Fig_2D):
 
             for i in range(0,len(Ls_ticks)):
                 id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                #labels[i]='Ls %g\nsol %i'%(np.mod(Ls_ticks[i],360.),tim[id]) # alex's version with sol beneath
                 labels[i]='%g%s'%(np.mod(Ls_ticks[i],360.),degr)
             ax.set_xticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
             plt.xticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
             plt.yticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
-            super(Fig_2D_time_lev, self).make_title(var_info,'Areocentric Longitude [L$_s$]',ylabel_txt)
+            if self.vert_unit=='Pa':
+                ax.set_yscale("log")
+                ax.invert_yaxis()
+                ax.yaxis.set_major_formatter(CustomTicker())
+                ax.yaxis.set_minor_formatter(NullFormatter())
+                ylabel_txt='Pressure [Pa]'
+            else:
+                ylabel_txt='Altitude [m]'
+
+            super(Fig_2D_time_lev, self).make_title(var_info,'L$_s$',ylabel_txt)
 
             self.success=True
         except Exception as e: #Return the error
@@ -2494,13 +2511,14 @@ class Fig_2D_lon_time(Fig_2D):
 
             for i in range(0,len(Ls_ticks)):
                 id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                #labels[i]='Ls %g\nsol %i'%(np.mod(Ls_ticks[i],360.),tim[id]) # alex's version with sol beneath
                 labels[i]='%g%s'%(np.mod(Ls_ticks[i],360.),degr)
             ax.set_xticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
             ax.xaxis.set_major_locator(MultipleLocator(30))
             ax.xaxis.set_minor_locator(MultipleLocator(10))
 
-            super(Fig_2D_lon_time, self).make_title(var_info,'Longitude','Areocentric Longitude [L$_s$]')
+            super(Fig_2D_lon_time, self).make_title(var_info,'Longitude','L$_s$')
             plt.xticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
             plt.yticks(fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
@@ -2972,6 +2990,7 @@ class Fig_1D(object):
                 txt_label=self.legend
             else:
                 #txt_label=var_info+'\n'+self.fdim_txt[1:]#we remove the first coma ',' of fdim_txt to print to the new line
+                # ============ CB
                 if self.nPan > 1:
                     txt_label=leg_text
                 else:
@@ -2985,8 +3004,9 @@ class Fig_1D(object):
                 else:
                     plt.title((self.title),fontsize=title_size-self.nPan*title_factor)
             else:
-                plt.title(var_info,fontsize=title_size-self.nPan*title_factor,wrap=False)
-
+                plt.title(var_info+'\n'+self.fdim_txt[1:],fontsize=title_size-self.nPan*title_factor,wrap=False)
+                # ============ CB
+            
             if self.plot_type=='1D_lat':
 
                 plt.plot(var,xdata,self.axis_opt1,lw=3,ms=7,label=txt_label)
@@ -3043,6 +3063,7 @@ class Fig_1D(object):
 
                 for i in range(0,len(Ls_ticks)):
                     id=np.argmin(np.abs(Ls-Ls_ticks[i])) #find tmstep closest to this tick
+                    #labels[i]='Ls %g\nsol %i'%(np.mod(Ls_ticks[i],360.),tim[id]) # alex's version with sol beneath
                     labels[i]='%g%s'%(np.mod(Ls_ticks[i],360.),degr)
                 ax.set_xticklabels(labels,fontsize=label_size-self.nPan*tick_factor, rotation=0)
 
