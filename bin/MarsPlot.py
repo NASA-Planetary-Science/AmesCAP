@@ -2994,7 +2994,8 @@ class Fig_1D(object):
                 if self.nPan > 1:
                     txt_label=leg_text
                 else:
-                    txt_label=None
+                    #txt_label=None
+                    txt_label=var_info+'\n'+self.fdim_txt[1:]#we remove the first coma ',' of fdim_txt to print to the new line
             
             if self.title:
                 if '{' in self.title:
