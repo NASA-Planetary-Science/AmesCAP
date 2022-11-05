@@ -99,6 +99,15 @@ parser.add_argument('-zd','--zonal_detrend', nargs='+',default=[],
                       """> Usage: MarsVars ****.atmos.average.nc -zd ucomp \n"""
                       """ \n""")
 
+parser.add_argument('-dp_to_dz','--dp_to_dz', nargs='+',default=[],
+                 help="""Convert aerosols opacities [op/Pa] to [op/m] (-dp_to_dz) and [op/m] to [op/Pa] (-dp_to_dz) \n"""
+                      """Req. [DP,DZ] \n"""
+                      """A new a variable  var_dp_to_dz will be added to the file \n"""
+                      """> Usage: MarsVars ****.atmos.average.nc -dp_to_dz opacity \n"""
+                      """  Use -dz_to_dp to convert from [op/m] to [op/Pa]\n""")
+
+parser.add_argument('-dz_to_dp','--dz_to_dp', nargs='+',default=[],help=argparse.SUPPRESS) #same as  --hpf but without the instructions
+
 parser.add_argument('-rm','--remove', nargs='+',default=[],
                  help='Remove any variable from the file  \n'
                       '> Usage: MarsVars ****.atmos.average.nc -rm rho theta \n')
@@ -455,6 +464,8 @@ def main():
     add_list=parser.parse_args().add
     zdiff_list=parser.parse_args().zdiff
     zdetrend_list=parser.parse_args().zonal_detrend
+    dp_to_dz_list=parser.parse_args().dp_to_dz
+    dz_to_dp_list=parser.parse_args().dz_to_dp
     col_list=parser.parse_args().col
     remove_list=parser.parse_args().remove
     extract_list=parser.parse_args().extract
@@ -470,9 +481,9 @@ def main():
     global lev_T_out #reshape in zfull, zhalf calculation
 
     #Check if an operation is requested, otherwise print file content.
-    if not (add_list or zdiff_list or zdetrend_list or remove_list or col_list or extract_list or edit_var):
+    if not (add_list or zdiff_list or zdetrend_list or remove_list or col_list or extract_list or dp_to_dz_list or dz_to_dp_list or edit_var):
         print_fileContent(file_list[0])
-        prYellow(""" ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-rm var', '-edit var'  """)
+        prYellow(''' ***Notice***  No operation requested, use '-add var',  '-zdiff var','-zd var', '-col var', '-dp_to_dz var', '-rm var' '-edit var' ''')
         exit() #Exit cleanly
 
     #For all the files
@@ -785,6 +796,9 @@ def main():
                     longname_txt,units_txt=get_longname_units(fileNC,idiff)
                     newUnits=units_txt[:-2]+'/m]' #remove the last ']' to update units, e.g turn '[kg]' to '[kg/m]'
                     newLong_name='vertical gradient of '+longname_txt
+                    # alex's version:
+                    #newUnits=getattr(fileNC.variables[idiff],'units','')[:-2]+'/m]' #remove the last ']' to update units, e.g turn '[kg]' to '[kg/m]'
+                    #newLong_name='vertical gradient of '+getattr(fileNC.variables[idiff],'long_name','')
                     #---temp and ps are always needed---
                     dim_out=fileNC.variables['temp'].dimensions #get dimension
                     if interp_type=='pfull':
@@ -846,11 +860,15 @@ def main():
                     longname_txt,units_txt=get_longname_units(fileNC,izdetrend)
                     newLong_name='zonal perturbation of '+longname_txt
                     dim_out=fileNC.variables[izdetrend].dimensions #get dimension
+                    # alex's version
+                    #newUnits=getattr(fileNC.variables[izdetrend],'units','')
+                    #newLong_name='zonal perturbation of '+getattr(fileNC.variables[izdetrend],'long_name','')
 
                     #Log the variable
                     var_Ncdf = fileNC.createVariable(izdetrend+'_p','f4',dim_out)
                     var_Ncdf.long_name=newLong_name
                     var_Ncdf.units=   units_txt
+                    #var_Ncdf.units=   newUnits # alex's version
                     var_Ncdf[:]=  zonal_detrend(var)
                     fileNC.close()
 
@@ -860,6 +878,70 @@ def main():
                     if str(exception)=='NetCDF: String match to name in use':
                         prYellow("""***Error*** Variable already exists""")
                         prYellow("""Delete existing variable %s with 'MarsVars %s -rm %s'"""%('d_dz_'+idiff,ifile,'d_dz_'+idiff))
+
+
+        #=================================================================
+        #======= Opacity conversion from dp_to_dz and dz_to_dp ===========
+        #=================================================================
+
+        #dp_to_dz
+        for idp_to_dz in dp_to_dz_list:
+            fileNC=Dataset(ifile, 'a', format='NETCDF4_CLASSIC')
+            f_type,interp_type=FV3_file_type(fileNC)
+            if idp_to_dz not in fileNC.variables.keys():
+                prRed("dp_to_dz error: variable '%s' is not present in %s"%(idp_to_dz, ifile))
+                fileNC.close()
+            else:
+                print('Converting: %s...'%(idp_to_dz))
+
+                try:
+                    var=fileNC.variables[idp_to_dz][:]
+                    newUnits=getattr(fileNC.variables[idp_to_dz],'units','')+'/m'
+                    newLong_name=getattr(fileNC.variables[idp_to_dz],'long_name','')+' rescaled to meters-1'
+                    dim_out=fileNC.variables[idp_to_dz].dimensions #get dimension
+
+                    #Log the variable
+                    var_Ncdf = fileNC.createVariable(idp_to_dz+'_dp_to_dz','f4',dim_out)
+                    var_Ncdf.long_name=newLong_name
+                    var_Ncdf.units=   newUnits
+                    var_Ncdf[:]=  var*fileNC.variables['DP'][:]/fileNC.variables['DZ'][:]
+                    fileNC.close()
+
+                    print('%s: \033[92mDone\033[00m'%(idp_to_dz+'_dp_to_dz'))
+                except Exception as exception:
+                    if debug:raise
+                    if str(exception)=='NetCDF: String match to name in use':
+                        prYellow("""***Error*** Variable already exists""")
+                        prYellow("""Delete existing variable %s with 'MarsVars %s -rm %s'"""%(idp_to_dz+'_dp_to_dz',ifile,idp_to_dz+'_dp_to_dz'))
+       #dz_to_dp
+        for idz_to_dp in dz_to_dp_list:
+            fileNC=Dataset(ifile, 'a', format='NETCDF4_CLASSIC')
+            f_type,interp_type=FV3_file_type(fileNC)
+            if idz_to_dp not in fileNC.variables.keys():
+                prRed("dz_to_dp error: variable '%s' is not present in %s"%(idz_to_dp, ifile))
+                fileNC.close()
+            else:
+                print('Converting: %s...'%(idz_to_dp))
+
+                try:
+                    var=fileNC.variables[idz_to_dp][:]
+                    newUnits=getattr(fileNC.variables[idz_to_dp],'units','')+'/m'
+                    newLong_name=getattr(fileNC.variables[idz_to_dp],'long_name','')+' rescaled to Pa-1'
+                    dim_out=fileNC.variables[idz_to_dp].dimensions #get dimension
+
+                    #Log the variable
+                    var_Ncdf = fileNC.createVariable(idz_to_dp+'_dz_to_dp','f4',dim_out)
+                    var_Ncdf.long_name=newLong_name
+                    var_Ncdf.units=   newUnits
+                    var_Ncdf[:]=  var*fileNC.variables['DZ'][:]/fileNC.variables['DP'][:]
+                    fileNC.close()
+
+                    print('%s: \033[92mDone\033[00m'%(idz_to_dp+'_dz_to_dp'))
+                except Exception as exception:
+                    if debug:raise
+                    if str(exception)=='NetCDF: String match to name in use':
+                        prYellow("""***Error*** Variable already exists""")
+                        prYellow("""Delete existing variable %s with 'MarsVars.py %s -rm %s'"""%(idp_to_dz+'_dp_to_dz',ifile,idp_to_dz+'_dp_to_dz'))
 
 
         #=================================================================
@@ -900,6 +982,9 @@ def main():
                     longname_txt,units_txt=get_longname_units(fileNC,icol)
                     newUnits=units_txt[:-3]+'/m2' # turn 'kg/kg'> to 'kg/m2'
                     newLong_name='column integration of '+longname_txt
+                    #alex's version
+                    #newUnits=getattr(fileNC.variables[icol],'units','')[:-3]+'/m2' # turn 'kg/kg'> to 'kg/m2'
+                    #newLong_name='column integration of '+getattr(fileNC.variables[icol],'long_name','')
 
                     #---temp and ps are always needed---
                     dim_in=fileNC.variables['temp'].dimensions #get dimension
