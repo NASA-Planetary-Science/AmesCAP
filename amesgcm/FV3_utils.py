@@ -226,15 +226,13 @@ def find_n0(Lfull_IN,Llev_OUT,reverse_input=False):
             if Lfull_IN[n[i,j],j]>Llev_OUT[i]:n[i,j]=n[i,j]-1
     return n
 #=========================================================================================
-def find_n(X_IN,X_OUT,reverse_input=False):
+def find_n(X_IN,X_OUT,reverse_input=False,modulo=None):
     '''
     Map  the closest index from a 1D input array to a ND output array just below the input  values.
     Args:
         X_IN (float or 1D array)  :source level [Pa] or [m]
         X_OUT (ND  array)        : desired pressure [pa] or altitude [m] at full levels, level dimension is FIRST 
         reverse_input (boolean)  : if input array is decreasing, e.g if z(0)=120 km, z(N)=0km (which is typical) or if your input data is p(0)=1000Pa, p(N)=0Pa (which is uncommon with FV3)
-        X_OUT (ND  array)        : desired pressure [pa] or altitude [m] at full levels, level dimension is FIRST
-        reverse_input (boolean)  : if inout array is decreasing, e.g if z(0)=120 km, z(N)=0km (which is typical) or if your input data is p(0)=1000Pa, p(N)=0Pa
     Returns:
         n:    index for the level(s) where the pressure is just below plev.
         Case  1:     Case 2:      Case 3:        Case 4:
@@ -2020,7 +2018,7 @@ def ref_atmosphere_Mars_PTD(Zi):
 
 def press_to_alt_atmosphere_Mars(Pi):
     '''
-    Return the altitude in m as a function of pressur from the analytical calculations derived above.
+    Return the altitude in m as a function of pressure from the analytical calculations derived above.
     Args:
         Pi (float or 1D array): input pressure in Pa (must be <=610 Pa)
     Return:

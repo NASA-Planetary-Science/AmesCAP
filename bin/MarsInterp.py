@@ -274,20 +274,26 @@ def main():
                     varOUT=vinterp(varIN.transpose(permut),L_3D_P,     
                                    lev_in,type_int=interp_technic,reverse_input=need_to_reverse,
                                    masktop=True,index=index).transpose(permut)
+                
+                long_name_txt=getattr(fNcdf.variables[ivar],'long_name','')
+                units_txt=getattr(fNcdf.variables[ivar],'units','')
+                #long_name_txt=fNcdf.variables[ivar].long_name
+                #units_txt=fNcdf.variables[ivar].units)
+
                 if not do_diurn:
                     if 'tile' in ifile:
                         fnew.log_variable(ivar,varOUT,('time',interp_type, 'grid_yt', 'grid_xt'),
-                                        fNcdf.variables[ivar].long_name,fNcdf.variables[ivar].units)
+                                        long_name_txt,units_txt)
                     else:
                         fnew.log_variable(ivar,varOUT,('time',interp_type, 'lat', 'lon'),
-                                        fNcdf.variables[ivar].long_name,fNcdf.variables[ivar].units)
+                                        long_name_txt,units_txt)
                 else:
                     if 'tile' in ifile:
                         fnew.log_variable(ivar,varOUT,('time',tod_name,interp_type, 'grid_yt', 'grid_xt'),
-                                      fNcdf.variables[ivar].long_name,fNcdf.variables[ivar].units)
+                                      long_name_txt,units_txt)
                     else:
                         fnew.log_variable(ivar,varOUT,('time',tod_name,interp_type, 'lat', 'lon'),
-                                      fNcdf.variables[ivar].long_name,fNcdf.variables[ivar].units)
+                                      long_name_txt,units_txt)
             else:
                 
                 if  ivar not in ['time','pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl',tod_name,'grid_xt','grid_yt']:

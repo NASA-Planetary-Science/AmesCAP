@@ -432,9 +432,16 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
     #Get array elements
     var_OUT=VAR_Ncdf[:]
 
-    #STEP 1: Lat/lon interpolation always performed unless target lon and lat are identical
+    #STEP 1: Lat/lon interpolation are always performed unless target lon and lat are identical
     if not (np.all(lat_in==lat_t) and np.all(lon_in==lon_t)) :
-        var_OUT=interp_KDTree(var_OUT,lat_in,lon_in,lat_t,lon_t) #lon/lat
+        #Special case if input longitudes is 1 element (slice or zonal average). We only interpolate on the latitude axis 
+        if len(np.atleast_1d(lon_in))==1:
+            var_OUT=axis_interp(var_OUT, lat_in,lat_t,axis=-2, reverse_input=False, type_int='lin')
+        #Special case if input latitude is 1 element (slice or medidional average) We only interpolate on the longitude axis     
+        elif len(np.atleast_1d(lat_in))==1:
+            var_OUT=axis_interp(var_OUT, lon_in,lon_t,axis=-1, reverse_input=False, type_int='lin')
+        else:#Bi-directional interpolation    
+            var_OUT=interp_KDTree(var_OUT,lat_in,lon_in,lat_t,lon_t) #lon/lat
 
     #STEP 2: Linear or log interpolation if there is a vertical axis
     if zaxis_in in VAR_Ncdf.dimensions:
@@ -461,8 +468,12 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
     #STEP 4: Linear interpolation in time of day
     #TODO the interpolation scheme is not cyclic.
     #> If Available diurn times  are 04 10 16 22 and requested time is 23, value is left to zero  and not interpololated from 22 and 04 times as it should
+    # if requesting 
     if ftype_in =='diurn':
         pos_axis=1
+        
+        tod_name_in=find_tod_in_diurn(file_Nc_in)
+        tod_name_t=find_tod_in_diurn(file_Nc_target)
         tod_in=file_Nc_in.variables[tod_name_in][:]
         tod_t=file_Nc_target.variables[tod_name_t][:]
         var_OUT=axis_interp(var_OUT, tod_in,tod_t, pos_axis, reverse_input=False, type_int='lin')
