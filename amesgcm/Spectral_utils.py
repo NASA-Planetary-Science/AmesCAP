@@ -204,8 +204,8 @@ def space_time(lon,timex, varIN,kmx,tmx):
     argx= lon * 2*np.pi/360  #nomalize longitude array
     rnorm= 2./len(argx)
 
-    arg= timex * 2* np.pi
-    rnormt= 2./len(arg)
+    arg= timex * 2* np.pi #If timex = [0/24,1/24, 2/24,.. 1] arg cycles for m [0,2 Pi]
+    rnormt= 2./len(arg)  #Nyquist cut off.
 
     #
     for kk in range(0,kmx):
@@ -255,7 +255,7 @@ def space_time(lon,timex, varIN,kmx,tmx):
     phasew= np.reshape( phasew,  (kmx,tmx)+dim_sup_id )
     phasee= np.reshape( phasee,  (kmx,tmx)+dim_sup_id )
 
-    #TODO implement zonal mean: zamp,zphas,stamp,stphs
+    #TODO implement zonal mean: zamp,zphas,(standing wave k=0, zonally averaged) stamp,stphs (stationay component ktime=0)
     '''
     #  varIN= reshape( varIN, dims );
 
