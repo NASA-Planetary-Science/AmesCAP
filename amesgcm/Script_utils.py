@@ -590,7 +590,7 @@ def filter_vars(fNcdf,include_list=None,giveExclude=False):
 
 def find_fixedfile(filepath, flist):
     '''
-    Batterson, Updated May 11 2022
+    Batterson, Updated by Alex Nov 29 2022
     Args:
         filepath = path to FV3 out files
         flist    = list with the name of FV3 data file in use, i.e.
@@ -610,35 +610,16 @@ def find_fixedfile(filepath, flist):
             atmos_average.tileX_plevs_custom.nc     -> fixed.tileX.nc
             atmos_average_custom.tileX_plevs.nc     -> fixed.tileX.nc
 
-            * NOTE: changes to the date portion (DDDDD) of the name
-            will throw an error.
     '''
+    #Try the 'tile' or 'standard' version of the fixed files
+    if 'tile' in flist:
+        name_fixed= filepath + '/fixed.tile'+flist.split('tile')[1][0] + '.nc'
+    else:
+        name_fixed=filepath + '/'+ flist.split('.')[0] + '.fixed.nc' 
+    #If neither is found set-up a default name    
+    if not  os.path.exists(name_fixed): name_fixed='FixedFileNotFound'
+    return name_fixed
 
-    import os
-
-    try:
-        if 'tile' in flist:
-            if os.path.exists(filepath + '/fixed.tile' \
-                              + flist.split('tile')[1][0] + '.nc'):
-                name_fixed =  filepath + '/fixed.tile' \
-                              + flist.split('tile')[1][0] + '.nc'
-        else:
-            if os.path.exists(filepath + '/' \
-                              + flist.split('.')[0] + '.fixed.nc'):
-                name_fixed  = filepath + '/' \
-                              + flist.split('.')[0] + '.fixed.nc'
-
-        return(name_fixed)
-
-    except:
-        raise FileNotFoundError('Fixed file does not exist in '\
-                                + filepath + ' make sure the fixed '\
-                                'file you are referencing matches the '\
-                                'FV3 filetype (i.e. fixed.tileX.nc '\
-                                'for operations on tile X)')
-
-
-        return(name_fixed)
 
 def get_longname_units(fNcdf,varname):
     '''
