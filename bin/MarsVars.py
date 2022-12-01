@@ -9,7 +9,7 @@ import warnings #Suppress certain errors when dealing with NaN arrays
 
 
 from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR,mass_stream,zonal_detrend,spherical_div,spherical_curl,frontogenesis
-from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type,filter_vars,find_fixedfile,get_longname_units
+from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type,filter_vars,find_fixedfile,get_longname_units,pk_bk_loader
 from amesgcm.Ncdf_wrapper import Ncdf
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
@@ -207,13 +207,13 @@ C_ice       = (4/3)*(rho_ice/Qext_ice)*Reff_ice     # 2188.874  (m-2)
 
 #===========================
 
-def compute_p_3D(ps,ak,bk,shape_out):
+def compute_p_3D(ps,pk,bk,shape_out):
     """
     Return the 3D pressure field at the layer midpoint.
     *** NOTE***
     The shape_out argument ensures that, when time=1 (one timestep) results are returned as (1,lev,lat,lon), not (lev,lat,lon)
     """
-    p_3D= fms_press_calc(ps,ak,bk,lev_type='full')
+    p_3D= fms_press_calc(ps,pk,bk,lev_type='full')
     p_3D=p_3D.transpose(lev_T)# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
     return p_3D.reshape(shape_out)
 
@@ -309,21 +309,21 @@ def compute_theta(p_3D,ps,temp,f_type):
 def compute_w(rho,omega):
     return -omega/(rho*g)
 
-def compute_zfull(ps,ak,bk,temp):
+def compute_zfull(ps,pk,bk,temp):
     """
     Compute the altitude AGL in [m]
     """
     dim_out=temp.shape
-    zfull=fms_Z_calc(ps,ak,bk,temp.transpose(lev_T),topo=0.,lev_type='full') # (lev, time, tod, lat,lon)
+    zfull=fms_Z_calc(ps,pk,bk,temp.transpose(lev_T),topo=0.,lev_type='full') # (lev, time, tod, lat,lon)
     zfull=zfull.transpose(lev_T_out)# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon] # temp: [tim,tod,lev,lat,lon,lev] ->[lev,time, tod,lat, lon]
     return zfull
 
-def compute_zhalf(ps,ak,bk,temp):
+def compute_zhalf(ps,pk,bk,temp):
     """
     Compute the altitude AGL in [m]
     """
     dim_out=temp.shape
-    zhalf=fms_Z_calc(ps,ak,bk,temp.transpose(lev_T),topo=0.,lev_type='half') # temp: [tim,lev,lat,lon,lev] ->[lev,time, lat, lon]
+    zhalf=fms_Z_calc(ps,pk,bk,temp.transpose(lev_T),topo=0.,lev_type='half') # temp: [tim,lev,lat,lon,lev] ->[lev,time, lat, lon]
     zhalf=zhalf.transpose(lev_T_out)# p_3D [lev+1,tim,lat,lon] ->[tim, lev+1, lat, lon]
     return zhalf
 
@@ -402,21 +402,21 @@ def compute_scorer(N,ucomp,zfull):
     scorer2= N**2/ucomp**2 -1./ucomp*dudz2
     return 2*np.pi/np.sqrt(scorer2)
 
-def compute_DP_3D(ps,ak,bk,shape_out):
+def compute_DP_3D(ps,pk,bk,shape_out):
     """
     Compute the thickness of a layer in [Pa]
     """
-    p_half3D= fms_press_calc(ps,ak,bk,lev_type='half') #[lev,tim,lat,lon]
+    p_half3D= fms_press_calc(ps,pk,bk,lev_type='half') #[lev,tim,lat,lon]
     DP_3D=p_half3D[1:,...,]- p_half3D[0:-1,...]
     DP_3D=DP_3D.transpose(lev_T)# p_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
     out=DP_3D.reshape(shape_out)
     return out
 
-def compute_DZ_3D(ps,ak,bk,temp,shape_out):
+def compute_DZ_3D(ps,pk,bk,temp,shape_out):
     """
     Compute the thickness of a layer in [Pa]
     """
-    z_half3D= fms_Z_calc(ps,ak,bk,temp.transpose(lev_T),topo=0.,lev_type='half')
+    z_half3D= fms_Z_calc(ps,pk,bk,temp.transpose(lev_T),topo=0.,lev_type='half')
     DZ_3D=z_half3D[0:-1,...]-z_half3D[1:,...,] #Note the reverse order as Z decreases with increasing levels
     DZ_3D=DZ_3D.transpose(lev_T)# DZ_3D [lev,tim,lat,lon] ->[tim, lev, lat, lon]
     out=DZ_3D.reshape(shape_out)
@@ -472,11 +472,6 @@ def main():
     edit_var=parser.parse_args().edit
     debug =parser.parse_args().debug
 
-    # The fixed file is needed if pk, bk are not available in the
-    # requested file, or to load the topography is zstd output is
-    # requested
-    name_fixed=find_fixedfile(filepath,file_list[0])
-
     global lev_T #an array to swap vertical axis first and back: [1,0,2,3] for [time,lev,lat,lon], and [2,1,0,3,4]for [tim, tod,lev, lat, lon]
     global lev_T_out #reshape in zfull, zhalf calculation
 
@@ -498,6 +493,7 @@ def main():
         if remove_list:
             cmd_txt='ncks --version'
             try:
+                print('ncks is available, using external')
                 #If ncks is available, use it:--
                 subprocess.check_call(cmd_txt,shell=True,stdout=open(os.devnull, "w"), stderr=open(os.devnull, "w"))
                 for ivar in remove_list:
@@ -540,16 +536,8 @@ def main():
         #=======================Add action================================
         #=================================================================
 
-        #If the list is not empty, load ak and bk for pressure calculation, those are always needed.
-        if add_list:
-            name_fixed=find_fixedfile(filepath,ifile)
-            #name_fixed=ifile[0:5]+'.fixed.nc'
-            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
-            variableNames = f_fixed.variables.keys();
-            ak=f_fixed.variables['pk'][:]
-            bk=f_fixed.variables['bk'][:]
-            f_fixed.close()
-        #----
+        #If the list is not empty, load pk and bk for pressure calculation, those are always needed.
+
             #----Check if the variable is currently supported---
         for ivar in add_list:
             if ivar not in VAR.keys():
@@ -559,6 +547,8 @@ def main():
                 try:
                     fileNC=Dataset(ifile, 'a', format='NETCDF4_CLASSIC')
                     f_type,interp_type=FV3_file_type(fileNC)
+                    #Load pk and bk for pressure calculation, those are often needed.
+                    if interp_type=='pfull':pk,bk=pk_bk_loader(fileNC)
                     #---temp and ps are always needed---
                     dim_out=fileNC.variables['temp'].dimensions #get dimension
                     temp=fileNC.variables['temp'][:]
@@ -582,7 +572,7 @@ def main():
                     if interp_type=='pfull':
                         lev  = fileNC.variables['pfull'][:]
                         ps=fileNC.variables['ps'][:]
-                        p_3D=compute_p_3D(ps,ak,bk,shape_out)
+                        p_3D=compute_p_3D(ps,pk,bk,shape_out)
 
                     #If using 'pstd', calculating the 3D pressure field is easy
                     elif interp_type=='pstd':
@@ -635,7 +625,7 @@ def main():
                         OUT = compute_w_net(Vg, wvar)
 
                     if ivar=='pfull3D': OUT=p_3D
-                    if ivar=='DP':      OUT=compute_DP_3D(ps,ak,bk,shape_out)
+                    if ivar=='DP':      OUT=compute_DP_3D(ps,pk,bk,shape_out)
                     if ivar=='rho':
                         OUT=compute_rho(p_3D,temp)
                     if ivar=='theta':
@@ -645,8 +635,8 @@ def main():
                         rho=compute_rho(p_3D,temp)
                         OUT=compute_w(rho,omega)
 
-                    if ivar=='zfull': OUT=compute_zfull(ps,ak,bk,temp) #TODO not with _pstd
-                    if ivar=='DZ': OUT=compute_DZ_3D(ps,ak,bk,temp,shape_out)
+                    if ivar=='zfull': OUT=compute_zfull(ps,pk,bk,temp) #TODO not with _pstd
+                    if ivar=='DZ': OUT=compute_DZ_3D(ps,pk,bk,temp,shape_out)
 
                     if ivar=='wspeed' or ivar=='wdir':
                         ucomp=fileNC.variables['ucomp'][:]
@@ -657,12 +647,12 @@ def main():
 
                     if ivar=='N':
                         theta=compute_theta(p_3D,ps,temp,f_type)
-                        zfull=compute_zfull(ps,ak,bk,temp)  #TODO not with _pstd
+                        zfull=compute_zfull(ps,pk,bk,temp)  #TODO not with _pstd
                         OUT=compute_N(theta,zfull)
 
                     if ivar=='Ri':
                         theta=compute_theta(p_3D,ps,temp,f_type)
-                        zfull=compute_zfull(ps,ak,bk,temp) #TODO not with _pstd
+                        zfull=compute_zfull(ps,pk,bk,temp) #TODO not with _pstd
                         N=compute_N(theta,zfull)
 
                         ucomp=fileNC.variables['ucomp'][:]
@@ -676,17 +666,13 @@ def main():
                     if ivar=='scorer_wl':
                         ucomp=fileNC.variables['ucomp'][:]
                         theta=compute_theta(p_3D,ps,temp,f_type)
-                        zfull=compute_zfull(ps,ak,bk,temp)
+                        zfull=compute_zfull(ps,pk,bk,temp)
                         N=compute_N(theta,zfull)
                         OUT=compute_scorer(N,ucomp,zfull)
 
                     if ivar in ['div','curl','fn']:
-                        if 'tile' in name_fixed:
-                            lat=fileNC.variables['grid_yt'][:]
-                            lon=fileNC.variables['grid_xt'][:]
-                        else:
-                            lat=fileNC.variables['lat'][:]
-                            lon=fileNC.variables['lon'][:]
+                        lat=fileNC.variables['lat'][:]
+                        lon=fileNC.variables['lon'][:]
                         ucomp=fileNC.variables['ucomp'][:]
                         vcomp=fileNC.variables['vcomp'][:]
 
@@ -769,19 +755,13 @@ def main():
         #=============Vertical Differentiation action=====================
         #=================================================================
 
-        #ak and bk are needed to derive the distance between layer pfull
-        if zdiff_list:
-            name_fixed=find_fixedfile(filepath,ifile)
-            #name_fixed=ifile[0:5]+'.fixed.nc'
-            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
-            variableNames = f_fixed.variables.keys();
-            ak=np.array(f_fixed.variables['pk'])
-            bk=np.array(f_fixed.variables['bk'])
-            f_fixed.close()
 
         for idiff in zdiff_list:
             fileNC=Dataset(ifile, 'a', format='NETCDF4_CLASSIC')
             f_type,interp_type=FV3_file_type(fileNC)
+
+            if interp_type=='pfull':pk,bk=pk_bk_loader(fileNC)
+
             if idiff not in fileNC.variables.keys():
                 prRed("zdiff error: variable '%s' is not present in %s"%(idiff, ifile))
                 fileNC.close()
@@ -804,7 +784,7 @@ def main():
                     if interp_type=='pfull':
                         temp=fileNC.variables['temp'][:]
                         ps=fileNC.variables['ps'][:]
-                        zfull=fms_Z_calc(ps,ak,bk,temp.transpose(lev_T),topo=0.,lev_type='full') #z is first axis
+                        zfull=fms_Z_calc(ps,pk,bk,temp.transpose(lev_T),topo=0.,lev_type='full') #z is first axis
                         # atmos_average: zfull= (lev, time, lat, lon)
                         # atmos_diurn :   zfull= (lev, tod, time, lat, lon)
                         #differentiate the variable with respect to z:
@@ -958,19 +938,12 @@ def main():
                       /__ (var dp/g)
                         p_top
         """
-        #ak and bk are needed to derive the distance between layer pfull
-        if col_list:
-            name_fixed=find_fixedfile(filepath,ifile)
-            #name_fixed=ifile[0:5]+'.fixed.nc'
-            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
-            variableNames = f_fixed.variables.keys();
-            ak=np.array(f_fixed.variables['pk'])
-            bk=np.array(f_fixed.variables['bk'])
-            f_fixed.close()
 
         for icol in col_list:
             fileNC=Dataset(ifile, 'a') #, format='NETCDF4_CLASSIC
             f_type,interp_type=FV3_file_type(fileNC)
+            if interp_type=='pfull':pk,bk=pk_bk_loader(fileNC)
+
             if icol not in fileNC.variables.keys():
                 prRed("column integration error: variable '%s' is not present in %s"%(icol, ifile))
                 fileNC.close()
@@ -1001,7 +974,7 @@ def main():
                         lev_axis=1
 
                     ps=fileNC.variables['ps'][:]
-                    DP=compute_DP_3D(ps,ak,bk,shape_in)
+                    DP=compute_DP_3D(ps,pk,bk,shape_in)
                     out=np.sum(var*DP/g,axis=lev_axis)
 
                     #Log the variable

@@ -229,6 +229,29 @@ def get_Ncdf_path(fNcdf):
     if not fname_out: fname_out=getattr(fNcdf,'filepath')() #Regular Dataset
     return fname_out
 
+def extract_path_basename(filename):
+    '''
+    Return the path and basename of a file. If only the filename is provided, assume it is the current directory
+    Args:
+        filename: e.g. 'XXXXX.fixed.nc', './history/XXXXX.fixed.nc' or '/home/user/history/XXXXX.fixed.nc'
+    Returns:
+        filepath : '/home/user/history/XXXXX.fixed.nc' in all the cases above
+        basename:   XXXXX.fixed.nc in all the cases above
+
+    ***NOTE***
+    This routine does not check for file existence and only operates on the provided input string.
+    '''
+    #Get the filename without the path
+    if '/' in filename or '\\' in filename :
+        filepath,basename=os.path.split(filename)
+    else:
+        filepath=os.getcwd()
+        basename=    filename
+
+    # Is the home ('~') symbol is included, expend the user path
+    if '~' in filepath:filepath=  os.path.expanduser(filepath)
+    return filepath,basename
+
 def FV3_file_type(fNcdf):
     '''
     Return the type of output files:
@@ -434,13 +457,13 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
 
     #STEP 1: Lat/lon interpolation are always performed unless target lon and lat are identical
     if not (np.all(lat_in==lat_t) and np.all(lon_in==lon_t)) :
-        #Special case if input longitudes is 1 element (slice or zonal average). We only interpolate on the latitude axis 
+        #Special case if input longitudes is 1 element (slice or zonal average). We only interpolate on the latitude axis
         if len(np.atleast_1d(lon_in))==1:
             var_OUT=axis_interp(var_OUT, lat_in,lat_t,axis=-2, reverse_input=False, type_int='lin')
-        #Special case if input latitude is 1 element (slice or medidional average) We only interpolate on the longitude axis     
+        #Special case if input latitude is 1 element (slice or medidional average) We only interpolate on the longitude axis
         elif len(np.atleast_1d(lat_in))==1:
             var_OUT=axis_interp(var_OUT, lon_in,lon_t,axis=-1, reverse_input=False, type_int='lin')
-        else:#Bi-directional interpolation    
+        else:#Bi-directional interpolation
             var_OUT=interp_KDTree(var_OUT,lat_in,lon_in,lat_t,lon_t) #lon/lat
 
     #STEP 2: Linear or log interpolation if there is a vertical axis
@@ -468,10 +491,10 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
     #STEP 4: Linear interpolation in time of day
     #TODO the interpolation scheme is not cyclic.
     #> If Available diurn times  are 04 10 16 22 and requested time is 23, value is left to zero  and not interpololated from 22 and 04 times as it should
-    # if requesting 
+    # if requesting
     if ftype_in =='diurn':
         pos_axis=1
-        
+
         tod_name_in=find_tod_in_diurn(file_Nc_in)
         tod_name_t=find_tod_in_diurn(file_Nc_target)
         tod_in=file_Nc_in.variables[tod_name_in][:]
@@ -588,16 +611,14 @@ def filter_vars(fNcdf,include_list=None,giveExclude=False):
         out_list=  exclude_list
     return  out_list
 
-def find_fixedfile(filepath, flist):
+def find_fixedfile(filename):
     '''
     Batterson, Updated by Alex Nov 29 2022
     Args:
-        filepath = path to FV3 out files
-        flist    = list with the name of FV3 data file in use, i.e.
-                   ['atmos_average.tile6.nc']
+        filename   =  name of FV3 data file in use, i.e.
+                   'atmos_average.tile6.nc'
     Returns:
-        Path (including filename) to fixed file corresponding to the
-        FV3 data file being used:
+        name_fixed: fullpath to correspnding fixed file
 
             DDDDD.atmos_average.nc  -> DDDDD.fixed.nc
             atmos_average.tileX.nc  -> fixed.tileX.nc
@@ -611,12 +632,13 @@ def find_fixedfile(filepath, flist):
             atmos_average_custom.tileX_plevs.nc     -> fixed.tileX.nc
 
     '''
+    filepath,fname=extract_path_basename(filename)
     #Try the 'tile' or 'standard' version of the fixed files
-    if 'tile' in flist:
-        name_fixed= filepath + '/fixed.tile'+flist.split('tile')[1][0] + '.nc'
+    if 'tile' in fname:
+        name_fixed= filepath + '/fixed.tile'+fname.split('tile')[1][0] + '.nc'
     else:
-        name_fixed=filepath + '/'+ flist.split('.')[0] + '.fixed.nc' 
-    #If neither is found set-up a default name    
+        name_fixed=filepath + '/'+ fname.split('.')[0] + '.fixed.nc'
+    #If neither is found set-up a default name
     if not  os.path.exists(name_fixed): name_fixed='FixedFileNotFound'
     return name_fixed
 
@@ -935,3 +957,47 @@ def replace_dims(Ncvar_dim,vert_dim_name=None):
                 dims_out[ii]=vert_dim_name
 
     return tuple(dims_out)
+
+def pk_bk_loader(fNcdf):
+    '''
+    Return the pk and bk. First look in the current netcdf file.
+    If not found, this routine will check the XXXXX.fixed.nc in the same directory and then in the XXXXX.fixed.tileX.nc files if present
+    Args:
+        fNcdf: an opened netcdf file
+    Returns:
+        pk,bk : the pk, bk
+    ***NOTE***
+
+    There are cases when it is convenient to load the  pk, bk once at the begining of the files in MarsVars.py,
+    However the pk, bk may not be used at all in the calculation. This is the case with MarsVars.py XXXXX.armos_average_psd.nc --add msf (whic operates
+
+
+    '''
+    #First try to read pk and bk in the current netcdf file:
+    allvars=fNcdf.variables.keys()
+
+    #Get Netcdf file and path (for debugging)
+    Ncdf_name=get_Ncdf_path(fNcdf) #netcdf file
+    filepath,fname=extract_path_basename(Ncdf_name)
+    fullpath_name=os.path.join(filepath,fname)
+    #---
+    if 'pk' in allvars and 'bk' in allvars:
+        pk=np.array(fNcdf.variables['pk'])
+        bk=np.array(fNcdf.variables['bk'])
+        print('pk bk in file')
+    else:
+        try:
+            name_fixed=find_fixedfile(fullpath_name)
+            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
+            pk=np.array(f_fixed.variables['pk'])
+            bk=np.array(f_fixed.variables['bk'])
+            f_fixed.close()
+        except:
+            prRed('Fixed file does not exist in '\
+                            + filepath + ' make sure the fixed '\
+                            'file you are referencing matches the '\
+                            'FV3 filetype (i.e. fixed.tileX.nc '\
+                            'for operations on tile X)')
+            exit()
+
+    return pk,bk

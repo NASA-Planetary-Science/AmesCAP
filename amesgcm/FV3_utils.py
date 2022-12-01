@@ -539,6 +539,9 @@ def layers_mid_point_to_boundary(pfull,sfc_val):
 
     Though the product-log function is available in python, we use an approximation for portability
     (e.g. Appendix in Kling et al. 2020, Icarus)
+
+    This was tested on a L30 simulation:
+    The value of phalf are reconstruted from pfull with a max error of 100*(phalh-phalf_reconstruct)/phalf < 0.4% at the top.
     '''
 
     def lambertW_approx(x):

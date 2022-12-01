@@ -10,7 +10,7 @@ import re         # string matching module to handle time_of_day_XX
 
 from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,vinterp,find_n,polar2XYZ,interp_KDTree,axis_interp
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-from amesgcm.Script_utils import section_content_amesgcm_profile,find_tod_in_diurn,filter_vars,find_fixedfile
+from amesgcm.Script_utils import section_content_amesgcm_profile,find_tod_in_diurn,filter_vars,find_fixedfile,pk_bk_loader
 from amesgcm.Ncdf_wrapper import Ncdf
 
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
@@ -96,10 +96,6 @@ def main():
     custom_level=parser.parse_args().level #e.g.  'p44'
     grid_out=parser.parse_args().grid
 
-    #The fixed file is needed if pk, bk are not available in the requested file, or
-    # to load the topography is zstd output is requested 
-    name_fixed=find_fixedfile(filepath,file_list[0])
-    
     # PRELIMINARY DEFINITIONS
     #===========================pstd============================================
     if interp_type=='pstd':
@@ -137,6 +133,10 @@ def main():
                     6000,7000,8000,9000,10000,12000,14000,16000,18000,
                     20000,25000,30000,35000,40000,45000,50000,55000,
                     60000,70000,80000,90000,100000])
+
+        #The fixed file is needed if pk, bk are not available in the requested file, or
+        # to load the topography is zstd output is requested                     
+        name_fixed=find_fixedfile(file_list[0])
         try:
             f_fixed=Dataset(name_fixed,'r')
             zsurf=f_fixed.variables['zsurf'][:]    
@@ -189,17 +189,7 @@ def main():
         # Load pk and bk and ps for 3D pressure field calculation. 
         # We will read the pk and bk for each file in case the vertical resolution is changed.
          
-        try:
-            #First try to read pk and bk in the file
-            pk=np.array(fNcdf.variables['pk'])
-            bk=np.array(fNcdf.variables['bk'])
-        except:
-            #If pk and bk are not available in the file, try the matching XXXXX.fixed.nc
-            name_fixed=find_fixedfile(filepath,ifile)
-            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')  
-            pk=np.array(f_fixed.variables['pk'])
-            bk=np.array(f_fixed.variables['bk'])  
-            f_fixed.close()
+        pk,bk=pk_bk_loader(fNcdf)
             
         ps=np.array(fNcdf.variables['ps'])
 
