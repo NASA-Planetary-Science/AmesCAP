@@ -26,7 +26,7 @@ from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn,FV3_fil
 #======================================================
 #                  ARGUMENTS PARSER
 #======================================================
-parser = argparse.ArgumentParser(description="""\033[93m MarsFiles files manager. Used to convert Legacy GCM to FV3 format \n \033[00m""",
+parser = argparse.ArgumentParser(description="""\033[93m MarsFiles files manager. Used to alter file format \n \033[00m""",
                                 formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('input_file', nargs='+',
@@ -447,7 +447,7 @@ def main():
                     var_out=daily_to_average(varNcf[:],dt_in,nday)
                     longname_txt,units_txt=get_longname_units(fdaily,ivar)
                     fnew.log_variable(ivar,var_out,varNcf.dimensions,longname_txt,units_txt)
-                    
+
                 else:
                     if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl']:
                         prCyan("Copying axis: %s..."%(ivar))
@@ -883,7 +883,7 @@ def main():
                     fnew.log_variable(ivar,var_OUT,varNcf.dimensions,varNcf.long_name,varNcf.units)
             fnew.close()
             fNcdf_t.close()
-    
+
     #===========================================================================
     #=======================  Zonal averaging    ===============================
     #===========================================================================

@@ -553,7 +553,6 @@ def layers_mid_point_to_boundary(pfull,sfc_val):
     phalf[N]=sfc_val
 
     for i in range(N,0,-1):
-        print(i)
         B = phalf[i]-pfull[i-1]*np.log(phalf[i])
         phalf[i-1]=-pfull[i-1]*lambertW_approx(-np.exp(-B/pfull[i-1])/pfull[i-1])
 
