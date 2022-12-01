@@ -94,11 +94,11 @@ def fms_Z_calc(psfc,ak,bk,T,topo=0.,lev_type='full'):
     ---Nk-1---           --------  z_full
     --- Nk --- SFC       ========  z_half
                         / / / / /
-    
-    
-    *NOTE* 
+
+
+    *NOTE*
         Expends tp the time dimension using topo=np.repeat(zsurf[np.newaxis,:],ps.shape[0],axis=0)
-    
+
 
 
     *NOTE*
@@ -231,7 +231,7 @@ def find_n(X_IN,X_OUT,reverse_input=False,modulo=None):
     Map  the closest index from a 1D input array to a ND output array just below the input  values.
     Args:
         X_IN (float or 1D array)  :source level [Pa] or [m]
-        X_OUT (ND  array)        : desired pressure [pa] or altitude [m] at full levels, level dimension is FIRST 
+        X_OUT (ND  array)        : desired pressure [pa] or altitude [m] at full levels, level dimension is FIRST
         reverse_input (boolean)  : if input array is decreasing, e.g if z(0)=120 km, z(N)=0km (which is typical) or if your input data is p(0)=1000Pa, p(N)=0Pa (which is uncommon with FV3)
     Returns:
         n:    index for the level(s) where the pressure is just below plev.
@@ -241,7 +241,7 @@ def find_n(X_IN,X_OUT,reverse_input=False,modulo=None):
        |x|x| > |x|   |x| > |x|      |x| > |x|x|    |x|x|  >  |x|x|
        |x|x|   |x|   |x|   |x|      |x|   |x|x|    |x|x|     |x|x|  (case 4, must have same
        |x|x|   |x|   |x|   |x|      |x|   |x|x|    |x|x|     |x|x|  (# of elements along the other dimensions)
-       
+
        *** Note on cyclic values ***
 
        *** Note ***
@@ -505,6 +505,59 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int='lin',modulo=
         var_OUT[k,:]=var_IN[n,...]*alpha+(1-alpha)*var_IN[np1,...]
 
     return   np.moveaxis(var_OUT,0,axis)
+
+def layers_mid_point_to_boundary(pfull,sfc_val):
+    '''
+    A general description for the layer boundaries is p_half= ps*bk +pk
+    This routine convert  p_full or bk, the coordinate  of the layer MIDPOINTS into the coordinate of the layers
+    BOUNDARIES, p_half. The surface value must be provided    [A. Kling, 2022]
+
+    Args:
+        p_full : 1D array of presure/sigma values for the layers's MIDPOINTS, INCREASING with N (e.g. [0.01... 720] or [0.001.. 1])
+        sfc_val : the surface value for the lowest layer's boundary p_half[N], e.g. sfc_val=720Pa or sfc_val=1. for sigma coordinates
+    Returns:
+        p_half: the pressure at the layers boundaries, the size is N+1
+
+    ***NOTE***
+
+    --- 0 --- TOP        ========  p_half
+    --- 1 ---
+                         --------  p_full
+
+                         ========  p_half
+    ---Nk-1---           --------  p_full
+    --- Nk --- SFC       ========  p_half
+                        / / / / /
+    We have pfull[N]= (phalf[N]-phalf[N-1])/np.log(phalf[N]/phalf[N-1])
+
+    => phalf[N-1]- pfull[N] log(phalf[N-1])= phalf[N]-pfull[N] log(phalf[N]) . We want to solve for phalf[N-1]=X
+          v                v                             v
+          X      - pfull[N]       log(X)   =             B
+
+    ==> X= - pfull[N] W{-exp(-B/pfull[N])/pfull[N]}  with B = phalf[N] - pfull[N] log(phalf[N]) (known at N)
+    and W the product-log (Lambert)   function
+
+    Though the product-log function is available in python, we use an approximation for portability
+    (e.g. Appendix in Kling et al. 2020, Icarus)
+    '''
+
+    def lambertW_approx(x):
+    # Internal function. Uniform approximation for the product log-function
+        A = 2.344;B = 0.8842; C = 0.9294; D = 0.5106; E =-1.213
+        y=np.sqrt(2*np.e*x+2)
+        return (2*np.log(1+B*y)-np.log(1+C*np.log(1+D*y))+E)/(1+1./(2*np.log(1+B*y)+2*A))
+
+
+    N=len(pfull)
+    phalf=np.zeros(N+1)
+    phalf[N]=sfc_val
+
+    for i in range(N,0,-1):
+        print(i)
+        B = phalf[i]-pfull[i-1]*np.log(phalf[i])
+        phalf[i-1]=-pfull[i-1]*lambertW_approx(-np.exp(-B/pfull[i-1])/pfull[i-1])
+
+    return phalf
 
 
 def polar2XYZ(lon, lat, alt,Re=3400*10**3): #radian
