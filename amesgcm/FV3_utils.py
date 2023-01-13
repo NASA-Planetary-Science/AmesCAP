@@ -668,7 +668,7 @@ def sfc_area_deg(lon1,lon2,lat1,lat2,R=3390000.):
 
 def area_meridional_cells_deg(lat_c,dlon,dlat,normalize=False,R=3390000.):
     '''
-    Return area of invidual cells for a medidional band of thickness dlon
+    Return area of invidual cells for a meridional band of thickness dlon
     S= Int[R**2 dlon cos(lat) dlat]
     with  sin(a)-sin(b)=2 cos((a+b)/2)sin((a+b)/2)
     >>> S= 2 R**2 dlon 2 cos(lat)sin(dlat/2)         _________lat+dlat/2
@@ -2277,3 +2277,112 @@ def robin2cart(LAT,LON):
     return X,Y
 
 #===================== (End projections section) ================================
+def sol2ls(jld,cummulative=False):
+    """
+    Return the solar longitude Ls as a function of the sol number. Sol 0 is spring equinox.
+    Args:
+        jld [float or 1D array]: sol number after perihelion
+        cummulative [bool]     : if True, result is cummulative Ls 0>360>720 etc..
+
+    Returns:
+        Ls: The corresponding solar longitude Ls
+    """
+
+    # constants
+    year= 668.0          	#  This is in martian days  ie sols
+    zero_date  =  488.      	#  time of perihelion passage
+    equinox = 180      	    #  day of northern equinox:  (for 668 sol year)
+    small_value=  1.0e-7
+    pi=np.math.pi
+    degrad= pi/180.0
+
+    jld=np.array(jld).astype(float).reshape(len(np.atleast_1d(jld))) #if jld is a scalar, reshape as a 1-element arra
+
+    #=============================================================================
+    #===Internal function 1 : calculate Ls with 0>360 using a numerical solver====
+    #=============================================================================
+    def sol2ls_mod(jld):
+        '''
+        Based on Tanguys' aerols.py
+        Also useful link: http://www.jgiesen.de/kepler/kepler.html
+        '''
+        # Specify orbit eccentricity and angle of planets's inclination
+
+        ec = .093    #  orbit eccentricity
+        er = ( (1.0+ec)/(1.0-ec) )**0.5
+
+        #Initialize working arrays
+        w,rad,als,areols,MY=[np.zeros_like(jld) for _ in range(0,5)]
+
+        # date= days since last perihelion passage
+        date = jld - zero_date
+
+        # determine true anomaly at equinox:  eq
+
+        qq = 2.0 * pi * equinox / year   # qq is the mean anomaly
+        e = 1.0
+        diff= 1.0
+        while (diff > small_value):
+            ep = e - (e-ec*np.math.sin(e)-qq) / (1.0-ec*np.cos(e))
+            diff= abs( ep-e )
+            e = ep
+
+        eq1 = 2.0 * np.math.atan( er * np.math.tan(0.5*e) )
+
+        # determine true anomaly at current date:  w
+
+        for i in range(0,len(jld)):
+            e= 1.0
+            diff= 1.0
+            em = 2. * pi * date[i] / year
+            while (diff > small_value):
+                ep = e - (e - ec * np.sin(e) - em) / (1.0 - ec * np.cos(e))
+                diff= abs( ep-e)
+                e = ep
+            w[i] = 2.0 * np.math.atan( er * np.math.tan(0.5*e))
+
+        als= w - eq1            #    Aerocentric Longitude
+        areols= als/degrad
+        areols[areols< 0.]+= 360.
+        return areols
+
+    #=============================================================================
+    #===Internal function 2 : calculate cumulative Ls with 0>720 cumulative=======
+    #=============================================================================
+
+    def sol2ls_cum(jld):
+        '''
+        Calculate cumulative Ls.
+        Contineous solar longitude Ls_c =0-359- 361.. 720  are obtained by adding +360 to the Ls at every equinox based on the sol number.
+        Since sol2ls function uses a numerical solver, the equinox may return either 359.9999 or 0.0001. +360 should only be added in the later case to mitigate outlier points.
+
+        For those edges cases where Ls is close to 359.9, the routine calculate again the Ls at a later time (say 1 sols) to check for outlier points.
+        '''
+        #Calculate cummulative Ls using sol2ls function() and adding +360 for every mars year
+        areols,MY=[np.zeros_like(jld) for _ in range(0,2)]
+        date = jld - zero_date
+        MY=(date-equinox)//(year)+1 #MY=(date-equinox)//(year)
+        Ls_mod=sol2ls_mod(jld)
+        Ls_cum=Ls_mod+MY*360.
+
+        #Check indexes where the returned Ls is close to 360.
+        index=np.where(Ls_mod>=359.9)[0] #The [0] turns tuple from np.where into a list
+
+        for ii in index:
+            jld_plus1=jld[ii]+1.#compute Ls one day after (arbitrary length)
+            Ls_plus1=sol2ls(jld_plus1)
+            date_plus1 = jld_plus1 - zero_date
+            MY_plus1=(date_plus1-equinox)//(668.)+1 #Compute MY
+            Ls_cum_plus1=Ls_plus1+MY_plus1*360.   #Cummulative Ls 1 day after.
+            #If things are smooth the Ls should go from [359>361]. If it reads [359>721], we need to update the MY for those indices
+            diff=Ls_cum_plus1-Ls_cum[ii] #difference between two consecutive Ls, should be small unless Ls_cum was too big at the first place
+            if diff<0:MY[ii]-=1
+        #Recompute one more more time with updated MY
+        Ls_cum=Ls_mod+MY*360.
+        return  Ls_cum
+
+    if cummulative:
+        return sol2ls_cum(jld)
+    else:
+        return sol2ls_mod(jld)
+#====End sol 2 Ls function====
