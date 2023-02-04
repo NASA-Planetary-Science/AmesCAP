@@ -6,7 +6,6 @@ import os       #access operating systems function
 import subprocess #run command
 import sys       #system command
 
-
 #==============
 from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple
 from amesgcm.Script_utils import print_fileContent,print_varContent,FV3_file_type,find_tod_in_diurn
