@@ -119,8 +119,8 @@ parser.add_argument('-extract','--extract', nargs='+',default=[],
 parser.add_argument('-edit','--edit' ,default=None,
                     help="""Edit a variable name, longname, units, or scale the values\n"""
                         """> Use jointly with -rename -longname -unit or -multiply flags \n"""
-                        """> Usage: MarsFiles.py *.atmos_average.nc --edit temp -rename airtemp \n"""
-                        """> Usage: MarsFiles.py *.atmos_average.nc --edit ps -multiply 0.01 -longname 'new pressure' -unit 'mbar' \n"""
+                        """> Usage: MarsVars.py *.atmos_average.nc --edit temp -rename airtemp \n"""
+                        """> Usage: MarsVars.py *.atmos_average.nc --edit ps -multiply 0.01 -longname 'new pressure' -unit 'mbar' \n"""
                         """ \n""")
 
 parser.add_argument('-rename','--rename',type=str,default=None,help=argparse.SUPPRESS) # used jointly with --edit
