@@ -216,7 +216,7 @@ There is therefore no need to reference the full paths while **inside** the virt
 
 ## 2. Installing CAP
 
-Now we can download and install CAP in `amesCAP`. CAP was provided to you in the tarfile `amesgcm-master.zip` that was sent along with these instructions. Download `amesgcm-master.zip`. You can leave the file in `Downloads/`, or,  if you encounter any permission issue, move it to a temporary location like your `/home` or `/Desktop` directories.
+Now we can download and install CAP in `amesCAP`. CAP was provided to you in the tarfile `AmesCAP-master.zip` that was sent along with these instructions. Download `AmesCAP-master.zip`. You can leave the file in `Downloads/`, or,  if you encounter any permission issue, move it to a temporary location like your `/home` or `/Desktop` directories.
 
 ### Using `pip`
 
@@ -228,8 +228,8 @@ Open a terminal window, activate the virtual environment, and untar the file or 
 (local)>$ source ~/amesCAP/Scripts/activate.csh  #  Cygwin/Windows
 (local)>$ conda amesCAP/bin/activate             # if you used conda
 # FROM AN ARCHIVE:
-(amesCAP)>$ tar -xf amesgcm-master.zip
-(amesCAP)>$ cd amesgcm-master
+(amesCAP)>$ tar -xf AmesCAP-master.zip
+(amesCAP)>$ cd AmesCAP-master
 (amesCAP)>$ pip install .
 # OR FROM THE GITHUB:
 (amesCAP)>$ pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
@@ -248,7 +248,7 @@ That's it! CAP is installed in `amesCAP` and you can see the `MarsXXXX.py` execu
 > MarsPlot.py      activate         easy_install-3.8          pip              python3
 ```
 
-> Shall you need to modify any code, note that when you access the `Mars` tools above, those are **not** executed from the `amesgcm-master/` folder in your `/Downloads` directory, but instead from the `amesCAP` virtual environment where they were installed by pip. You can safely move amesgcm-master.zip and the amesgcm-master directory to a different location on your system.
+> Shall you need to modify any code, note that when you access the `Mars` tools above, those are **not** executed from the `AmesCAP-master/` folder in your `/Downloads` directory, but instead from the `amesCAP` virtual environment where they were installed by pip. You can safely move AmesCAP-master.zip and the AmesCAP-master directory to a different location on your system.
 
 Double check that the paths to the executables are correctly set in your terminal by exiting the virtual environment:
 
@@ -281,7 +281,7 @@ or using **full** paths:
 
 If the pipeline is installed correctly, `--help` will display documentation and command-line arguments for `MarsPlot` in the terminal.
 
-> If you have either purposely or accidentally installed the `amesgcm` package on top of your main python distribution (e.g. in `~/anaconda3/lib/python3.7/site-packages/` or `~/anaconda3/bin/`) BEFORE setting-up the `amesCAP` virtual environment, the `Mars*.py` executables may not be present in the `~/amesCAP/bin/` directory of the virtual environment (`~/amesCAP/Scripts/` on Cygwin). Because on Step 2 we created the virtual environment using the `--system-site-packages` flag, python will consider that `amesgcm` is already installed when creating the new virtual environment and pull the code from that location, which may change the structure of the `~/amesCAP/bin` directory within the virtual environment. If that is the case, the recommended approach is to exit the virtual environment (`deactivate`), run `pip uninstall amesgcm` to remove CAP from the main python distribution, and start over at Step 2.
+> If you have either purposely or accidentally installed the `amescap` package on top of your main python distribution (e.g. in `~/anaconda3/lib/python3.7/site-packages/` or `~/anaconda3/bin/`) BEFORE setting-up the `amesCAP` virtual environment, the `Mars*.py` executables may not be present in the `~/amesCAP/bin/` directory of the virtual environment (`~/amesCAP/Scripts/` on Cygwin). Because on Step 2 we created the virtual environment using the `--system-site-packages` flag, python will consider that `amescap` is already installed when creating the new virtual environment and pull the code from that location, which may change the structure of the `~/amesCAP/bin` directory within the virtual environment. If that is the case, the recommended approach is to exit the virtual environment (`deactivate`), run `pip uninstall amescap` to remove CAP from the main python distribution, and start over at Step 2.
 
 This completes the one-time installation of CAP in your virtual environment, `amesCAP`, which now looks like:
 
@@ -302,14 +302,14 @@ amesCAP/
 │   └── python3.7
 │       └── site-packages
 │           ├── netCDF4
-│           └── amesgcm
+│           └── amescap
 │               ├── FV3_utils.py
 │               ├── Ncdf_wrapper.py
 │               └── Script_utils.py
 ├── mars_data
 │   └── Legacy.fixed.nc
 └── mars_templates
-    ├──amesgcm_profile
+    ├──amescap_profile
     └── legacy.in
 ```
 
@@ -335,8 +335,8 @@ Activate the virtual environment, then install CAP:
 (amesCAP)>$ conda install pip
 # FROM AN ARCHIVE:
 (amesCAP)>$ cd ~/Downloads
-(amesCAP)>$ tar -xf CAP_tarball.zip
-(amesCAP)>$ cd amesgcm-master
+(amesCAP)>$ tar -xf AmesCAP-master.zip
+(amesCAP)>$ cd AmesCAP-master
 (amesCAP)>$ pip install .
 # OR FROM THE GITHUB:
 (amesCAP)>$ pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
@@ -378,7 +378,7 @@ To permanently remove CAP, activate the virtual environment and run the `uninsta
 (local)>$ source amesCAP/bin/activate          # bash
 (local)>$ source amesCAP/bin/activate.csh      # csh/tcsh
 (local)>$ source amesCAP/Scripts/activate.csh  # Cygwin/Windows
-(amesCAP)>$ pip uninstall amesgcm
+(amesCAP)>$ pip uninstall amescap
 ```
 
 You may also delete the `amesCAP` virtual environment directory at any time. This will uninstall CAP, remove the virtual environment from your machine, and will not affect your main Python distribution.
