@@ -8,9 +8,9 @@ import sys       #system command
 import warnings #Suppress certain errors when dealing with NaN arrays
 
 
-from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR,mass_stream,zonal_detrend,spherical_div,spherical_curl,frontogenesis
-from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type,filter_vars,find_fixedfile,get_longname_units,pk_bk_loader
-from amesgcm.Ncdf_wrapper import Ncdf
+from amescap.FV3_utils import fms_press_calc,fms_Z_calc,dvar_dh,cart_to_azimut_TR,mass_stream,zonal_detrend,spherical_div,spherical_curl,frontogenesis
+from amescap.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent,FV3_file_type,filter_vars,find_fixedfile,get_longname_units,pk_bk_loader
+from amescap.Ncdf_wrapper import Ncdf
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
     import matplotlib
@@ -21,7 +21,7 @@ try:
 except ImportError as error_msg:
     prYellow("Error while importing modules")
     prYellow('Your are using python '+str(sys.version_info[0:3]))
-    prYellow('Please, source your virtual environment');prCyan('    source amesGCM3/bin/activate \n')
+    prYellow('Please, source your virtual environment');prCyan('    source amesCAP/bin/activate \n')
     print("Error was: "+ error_msg.message)
     exit()
 

@@ -1,7 +1,7 @@
 import numpy as np
 from netCDF4 import Dataset,MFDataset
 from scipy.io import FortranFile
-from amesgcm.FV3_utils import daily_to_average, daily_to_diurn
+from amescap.FV3_utils import daily_to_average, daily_to_diurn
 import os
 
 #=========================================================================

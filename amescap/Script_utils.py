@@ -422,7 +422,7 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
     *** Note***
     While the KDTree interpolation can handle a 3D dataset (lon/lat/lev instead of just 2D lon/lat) , the grid points in the vertical are just a few 10's -100's meter in the PBL vs few 10'-100's km in the horizontal. This would results in excessive weighting in the vertical, which is why the vertical dimension is handled separately.
     '''
-    from amesgcm.FV3_utils import interp_KDTree, axis_interp
+    from amescap.FV3_utils import interp_KDTree, axis_interp
     ftype_in,zaxis_in=FV3_file_type(file_Nc_in)
     ftype_t,zaxis_t=FV3_file_type(file_Nc_target)
 
@@ -535,9 +535,9 @@ def progress(k,Nmax):
     sys.stdout.flush()
 
 
-def section_content_amesgcm_profile(section_ID):
+def section_content_amescap_profile(section_ID):
     '''
-    Execude code section in /home/user/.amesgcm_profile
+    Execude code section in /home/user/.amescap_profile
     Args:
         section_ID: string defining the section to loa, e.g 'Pressure definitions for pstd'
     Returns
@@ -545,7 +545,7 @@ def section_content_amesgcm_profile(section_ID):
     '''
     import os
     import numpy as np
-    input_file=os.environ['HOME']+'/.amesgcm_profile'
+    input_file=os.environ['HOME']+'/.amescap_profile'
     try:
         f=open(input_file, "r")
         contents=''
@@ -567,7 +567,7 @@ def section_content_amesgcm_profile(section_ID):
     except FileNotFoundError:
         prRed("Error: %s config file not found "%(input_file))
         prYellow("To use this feature, create a hidden config file from the template in your home directory with:")
-        prCyan("    cp amesGCM3/mars_templates/amesgcm_profile  ~/.amesgcm_profile")
+        prCyan("    cp amesCAP/mars_templates/amescap_profile  ~/.amescap_profile")
         exit()
     except Exception as exception: #Return the error
         prRed('Error')

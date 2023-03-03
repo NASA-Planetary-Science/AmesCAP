@@ -24,7 +24,7 @@ except ImportError as error_msg:
 	print("Error was: "+ error_msg.message)
 	exit()
 
-from amesgcm.pdf2image import convert_from_bytes
+from amescap.pdf2image import convert_from_bytes
 
 def get_ansi_color_code(r, g, b):
 	if r == g and g == b:

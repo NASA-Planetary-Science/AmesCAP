@@ -7,11 +7,11 @@ import subprocess #run command
 import sys       #system command
 
 #==============
-from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple
-from amesgcm.Script_utils import print_fileContent,print_varContent,FV3_file_type,find_tod_in_diurn
-from amesgcm.Script_utils import wbr_cmap,rjw_cmap,dkass_temp_cmap,dkass_dust_cmap
-from amesgcm.FV3_utils import lon360_to_180,lon180_to_360,UT_LTtxt,area_weights_deg
-from amesgcm.FV3_utils import add_cyclic,azimuth2cart,mollweide2cart,robin2cart,ortho2cart
+from amescap.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple
+from amescap.Script_utils import print_fileContent,print_varContent,FV3_file_type,find_tod_in_diurn
+from amescap.Script_utils import wbr_cmap,rjw_cmap,dkass_temp_cmap,dkass_dust_cmap
+from amescap.FV3_utils import lon360_to_180,lon180_to_360,UT_LTtxt,area_weights_deg
+from amescap.FV3_utils import add_cyclic,azimuth2cart,mollweide2cart,robin2cart,ortho2cart
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
     import matplotlib
@@ -75,7 +75,7 @@ parser.add_argument('--template','-template', action='store_true',
 parser.add_argument('-temp','--temp', action='store_true',help=argparse.SUPPRESS) #same as --template but without the instructions
 
 parser.add_argument('-do','--do', nargs=1,type=str,default=None, #sys.stdin
-                             help='(Re)-use a template file my_custom.in. First search in ~/amesGCM3/mars_templates/,\n'
+                             help='(Re)-use a template file my_custom.in. First search in ~/amesCAP/mars_templates/,\n'
                                  '                                                then in /u/mkahre/MCMC/analysis/working/shared_templates/ \n'
                                   '> Usage: MarsPlot -do my_custom [other options]')
 

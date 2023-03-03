@@ -16,10 +16,9 @@ from netCDF4 import Dataset
 import warnings #Suppress certain errors when dealing with NaN arrays
 
 #===========
-from amesgcm.Ncdf_wrapper import Ncdf, Fort
-from amesgcm.FV3_utils import tshift,daily_to_average,daily_to_diurn,get_trend_2D
-#from amesgcm.FV3_utils import regrid_Ncfile #regrid source
-from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn,FV3_file_type,filter_vars,regrid_Ncfile,get_longname_units
+from amescap.Ncdf_wrapper import Ncdf, Fort
+from amescap.FV3_utils import tshift,daily_to_average,daily_to_diurn,get_trend_2D
+from amescap.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn,FV3_file_type,filter_vars,regrid_Ncfile,get_longname_units
 #==========
 
 
@@ -539,7 +538,7 @@ def main():
 
 
         # This functions requires scipy > 1.2.0 , so we only import the package here if needed
-        from amesgcm.Spectral_utils import zeroPhi_filter
+        from amescap.Spectral_utils import zeroPhi_filter
 
         if parser.parse_args().high_pass_filter:
             btype='high';out_ext='_hpf';nsol=np.asarray(parser.parse_args().high_pass_filter).astype(float)
@@ -629,7 +628,7 @@ def main():
     # elif parser.parse_args().high_pass_zonal or parser.parse_args().low_pass_zonal or parser.parse_args().band_pass_zonal:
     #
     #     # This functions requires scipy > 1.2.0 , so we only import the package here if needed
-    #     from amesgcm.Spectral_utils import zonal_decomposition, zonal_construct
+    #     from amescap.Spectral_utils import zonal_decomposition, zonal_construct
     #     #Load the module
     #     #init_shtools()
     #
@@ -737,7 +736,7 @@ def main():
     #========================  Tidal analysis =========================
     #===========================================================================
     elif parser.parse_args().tidal:
-        from amesgcm.Spectral_utils import diurn_extract,reconstruct_diurn
+        from amescap.Spectral_utils import diurn_extract,reconstruct_diurn
         N=parser.parse_args().tidal[0]
         if len(np.atleast_1d(N))!=1:
             prRed('***Error*** N must be only one value')
@@ -999,7 +998,7 @@ def make_FV3_files(fpath,typelistfv3,renameFV3=True,cwd=None):
 
                 sgm =histfile.variables['sgm']
                 pk[0]=0.08/2 #[AK] changed pk[0]=.08 to pk[0]=.08/2, otherwise phalf[0] would be greater than phalf[1]
-                #*** NOTE that pk in amesGCM/mars_data/Legacy.fixed.nc was also updated***
+                #*** NOTE that pk in amesCAP/mars_data/Legacy.fixed.nc was also updated***
                 for z in range(num):
                     bk[z+1] = sgm[2*z+2]
                 phalf[:]=pk[:]+pref*bk[:] # output in  Pa

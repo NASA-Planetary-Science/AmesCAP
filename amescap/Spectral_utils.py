@@ -2,8 +2,8 @@
 #   This files contains wave analysis routine. Note the dependencies on scipy.signal
 #===================================================================================
 import numpy as np
-from amesgcm.Script_utils import prYellow,prCyan,prRed,prGreen
-from amesgcm.FV3_utils import area_weights_deg
+from amescap.Script_utils import prYellow,prCyan,prRed,prGreen
+from amescap.FV3_utils import area_weights_deg
 try:
     from scipy.signal import butter,filtfilt,detrend
 except ImportError as error_msg:
