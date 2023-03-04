@@ -10,7 +10,7 @@ import re         # string matching module to handle time_of_day_XX
 
 from amescap.FV3_utils import fms_press_calc,fms_Z_calc,vinterp,find_n,polar2XYZ,interp_KDTree,axis_interp
 from amescap.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-from amescap.Script_utils import section_content_amescap_profile,find_tod_in_diurn,filter_vars,find_fixedfile,pk_bk_loader
+from amescap.Script_utils import section_content_amescap_profile,find_tod_in_diurn,filter_vars,find_fixedfile,ak_bk_loader
 from amescap.Ncdf_wrapper import Ncdf
 
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
@@ -134,7 +134,7 @@ def main():
                     20000,25000,30000,35000,40000,45000,50000,55000,
                     60000,70000,80000,90000,100000])
 
-        #The fixed file is needed if pk, bk are not available in the requested file, or
+        #The fixed file is needed if ak, bk are not available in the requested file, or
         # to load the topography is zstd output is requested
         name_fixed=find_fixedfile(file_list[0])
         try:
@@ -186,10 +186,10 @@ def main():
         #=================================================================
 
         fNcdf=Dataset(ifile, 'r', format='NETCDF4_CLASSIC')
-        # Load pk and bk and ps for 3D pressure field calculation.
-        # We will read the pk and bk for each file in case the vertical resolution is changed.
+        # Load ak and bk and ps for 3D pressure field calculation.
+        # We will read the ak and bk for each file in case the vertical resolution is changed.
 
-        pk,bk=pk_bk_loader(fNcdf)
+        ak,bk=ak_bk_loader(fNcdf)
 
         ps=np.array(fNcdf.variables['ps'])
 
@@ -209,11 +209,11 @@ def main():
         # Suppress divided by zero error ==
         with np.errstate(divide='ignore', invalid='ignore'):
             if interp_type=='pstd':
-                L_3D_P= fms_press_calc(ps,pk,bk,lev_type='full') #permuted by default, e.g lev is first
+                L_3D_P= fms_press_calc(ps,ak,bk,lev_type='full') #permuted by default, e.g lev is first
 
             elif interp_type=='zagl':
                 temp=fNcdf.variables['temp'][:]
-                L_3D_P= fms_Z_calc(ps,pk,bk,temp.transpose(permut),topo=0.,lev_type='full')
+                L_3D_P= fms_Z_calc(ps,ak,bk,temp.transpose(permut),topo=0.,lev_type='full')
 
             elif interp_type=='zstd':
                 temp=fNcdf.variables['temp'][:]
@@ -222,7 +222,7 @@ def main():
                 if do_diurn:
                     zflat=np.repeat(zflat[:,np.newaxis,:,:],ps.shape[1],axis=1)
 
-                L_3D_P= fms_Z_calc(ps,pk,bk,temp.transpose(permut),topo=zflat,lev_type='full')
+                L_3D_P= fms_Z_calc(ps,ak,bk,temp.transpose(permut),topo=zflat,lev_type='full')
 
 
         fnew = Ncdf(newname,'Pressure interpolation using MarsInterp.py')
@@ -286,7 +286,7 @@ def main():
                                       long_name_txt,units_txt)
             else:
 
-                if  ivar not in ['time','pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl',tod_name,'grid_xt','grid_yt']:
+                if  ivar not in ['time','pfull', 'lat', 'lon','phalf','ak','pk','bk','pstd','zstd','zagl',tod_name,'grid_xt','grid_yt']:
                     #print("\r Copying over: %s..."%(ivar), end='')
                     prCyan("Copying over: %s..."%(ivar))
                     fnew.copy_Ncvar(fNcdf.variables[ivar])

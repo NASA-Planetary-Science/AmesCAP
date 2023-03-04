@@ -958,18 +958,20 @@ def replace_dims(Ncvar_dim,vert_dim_name=None):
 
     return tuple(dims_out)
 
-def pk_bk_loader(fNcdf):
+def ak_bk_loader(fNcdf):
     '''
-    Return the pk and bk. First look in the current netcdf file.
+    Return the ak and bk. First look in the current netcdf file.
     If not found, this routine will check the XXXXX.fixed.nc in the same directory and then in the XXXXX.fixed.tileX.nc files if present
     Args:
         fNcdf: an opened netcdf file
     Returns:
-        pk,bk : the pk, bk
+        ak,bk : the ak, bk values
     ***NOTE***
 
+    This routine will look for both 'ak' and 'pk'.
+
     There are cases when it is convenient to load the  pk, bk once at the begining of the files in MarsVars.py,
-    However the pk, bk may not be used at all in the calculation. This is the case with MarsVars.py XXXXX.armos_average_psd.nc --add msf (whic operates
+    However the pk, bk may not be used at all in the calculation. This is the case with MarsVars.py XXXXX.atmos_average_psd.nc --add msf (which operates on the _pstd.nc file)
 
 
     '''
@@ -980,18 +982,29 @@ def pk_bk_loader(fNcdf):
     Ncdf_name=get_Ncdf_path(fNcdf) #netcdf file
     filepath,fname=extract_path_basename(Ncdf_name)
     fullpath_name=os.path.join(filepath,fname)
-    #---
-    if 'pk' in allvars and 'bk' in allvars:
-        pk=np.array(fNcdf.variables['pk'])
+    #Check for ak first, then pk
+
+    if ('pk' in allvars or 'ak' in allvars) and 'bk' in allvars:
+        if 'ak' in allvars:
+            ak=np.array(fNcdf.variables['ak'])
+        else:
+            ak=np.array(fNcdf.variables['pk'])
         bk=np.array(fNcdf.variables['bk'])
-        print('pk bk in file')
+        print('ak bk in file')
+
     else:
         try:
             name_fixed=find_fixedfile(fullpath_name)
             f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
-            pk=np.array(f_fixed.variables['pk'])
+            allvars=f_fixed.variables.keys()
+            #Check for ak firdt, then pk
+            if 'ak' in allvars:
+                ak=np.array(f_fixed.variables['ak'])
+            else:
+                ak=np.array(f_fixed.variables['pk'])
             bk=np.array(f_fixed.variables['bk'])
             f_fixed.close()
+            print('pk bk in fixed file')
         except:
             prRed('Fixed file does not exist in '\
                             + filepath + ' make sure the fixed '\
@@ -1000,4 +1013,4 @@ def pk_bk_loader(fNcdf):
                             'for operations on tile X)')
             exit()
 
-    return pk,bk
+    return ak,bk
