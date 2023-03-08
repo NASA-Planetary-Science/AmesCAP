@@ -1,0 +1,4 @@
+requests
+netCDF4
+numpy
+matplotlib

@@ -1,7 +1,7 @@
 import numpy as np
 from netCDF4 import Dataset,MFDataset
 from scipy.io import FortranFile
-from amesgcm.FV3_utils import daily_to_average, daily_to_diurn
+from amescap.FV3_utils import daily_to_average, daily_to_diurn
 import os
 
 #=========================================================================
@@ -118,7 +118,7 @@ class Ncdf(object):
         self.var_dict[variable_name].units=units_txt
         self.var_dict[variable_name][:]=DATAin
 
-    #Example: Log.add_dim_with_content('lon',lon_array,'longitudes','degree','X')
+    #Example: Log.log_axis1D('areo',areo,'time','degree','T')
     def log_axis1D(self,variable_name,DATAin,dim_name,longname_txt="",units_txt="",cart_txt=""):
         if variable_name not in self.var_dict.keys():
             self._def_axis1D(variable_name,dim_name,longname_txt,units_txt,cart_txt)
@@ -671,8 +671,8 @@ class Fort(object):
             self._log_var('vcomp','meridional wind','m/s',('time','pfull','lat','lon'))
             self._log_var('ts','surface temperature','K',('time','lat','lon'))
             self._log_var('snow','surface amount of CO2 ice on the ground','kg/m2',('time','lat','lon'))
-            self._log_var('stressx','zonal component of surface stress','N/m2',('time','lat','lon'))
-            self._log_var('stressy','merdional component of surface stress','N/m2',('time','lat','lon'))
+            self._log_var('stressx','zonal component of surface stress','kg/m2',('time','lat','lon'))
+            self._log_var('stressy','merdional component of surface stress','kg/m2',('time','lat','lon'))
             self._log_var('tstrat','stratosphere temperature','K',('time','lat','lon'))
             self._log_var('tausurf','visible dust optical depth at the surface.','none',('time','lat','lon'))
             self._log_var('ssun','solar energy absorbed by the atmosphere','W/m2',('time','lat','lon'))

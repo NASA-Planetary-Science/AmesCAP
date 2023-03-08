@@ -8,10 +8,10 @@ import sys        # system command
 import time       # monitor interpolation time
 import re         # string matching module to handle time_of_day_XX
 
-from amesgcm.FV3_utils import fms_press_calc,fms_Z_calc,vinterp,find_n,polar2XYZ,interp_KDTree,axis_interp
-from amesgcm.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
-from amesgcm.Script_utils import section_content_amesgcm_profile,find_tod_in_diurn,filter_vars,find_fixedfile
-from amesgcm.Ncdf_wrapper import Ncdf
+from amescap.FV3_utils import fms_press_calc,fms_Z_calc,vinterp,find_n,polar2XYZ,interp_KDTree,axis_interp
+from amescap.Script_utils import check_file_tape,prYellow,prRed,prCyan,prGreen,prPurple, print_fileContent
+from amescap.Script_utils import section_content_amescap_profile,find_tod_in_diurn,filter_vars,find_fixedfile,ak_bk_loader
+from amescap.Ncdf_wrapper import Ncdf
 
 #=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
 try:
@@ -47,8 +47,8 @@ parser.add_argument('-t','--type',type=str,default='pstd',
                       """          MarsInterp.py ****.atmos.average.nc -t zstd \n""")
 
 parser.add_argument('-l','--level',type=str,default=None,
-                 help=""">  Layers ID as defined in your personal ~/.amesgcm_profile hidden file \n"""
-                      """"(For 1st time set-up, copy \033[96mcp ~/amesGCM3/mars_templates/amesgcm_profile ~/.amesgcm_profile\033[00m )   \n"""
+                 help=""">  Layers ID as defined in your personal ~/.amescap_profile hidden file \n"""
+                      """"(For 1st time set-up, copy \033[96mcp ~/amesCAP/mars_templates/amescap_profile ~/.amescap_profile\033[00m )   \n"""
                       """>  Usage: MarsInterp.py ****.atmos.average.nc -t pstd -l p44 \n"""
                       """          MarsInterp.py ****.atmos.average.nc -t zstd -l phalf_mb  \n""")
 
@@ -96,10 +96,6 @@ def main():
     custom_level=parser.parse_args().level #e.g.  'p44'
     grid_out=parser.parse_args().grid
 
-    #The fixed file is needed if pk, bk are not available in the requested file, or
-    # to load the topography is zstd output is requested
-    name_fixed=find_fixedfile(filepath,file_list[0])
-
     # PRELIMINARY DEFINITIONS
     #===========================pstd============================================
     if interp_type=='pstd':
@@ -108,7 +104,7 @@ def main():
         need_to_reverse=False
         interp_technic='log'
         if custom_level:
-            content_txt=section_content_amesgcm_profile('Pressure definitions for pstd')
+            content_txt=section_content_amescap_profile('Pressure definitions for pstd')
             #print(content_txt)
             exec(content_txt) #load all variables in that section
             lev_in=eval('np.array('+custom_level+')') #copy requested variable
@@ -127,7 +123,7 @@ def main():
         need_to_reverse=True
         interp_technic='lin'
         if custom_level:
-            content_txt=section_content_amesgcm_profile('Altitude definitions for zstd')
+            content_txt=section_content_amescap_profile('Altitude definitions for zstd')
             exec(content_txt) #load all variables in that section
             lev_in=eval('np.array('+custom_level+')') #copy requested variable
         else:
@@ -137,6 +133,10 @@ def main():
                     6000,7000,8000,9000,10000,12000,14000,16000,18000,
                     20000,25000,30000,35000,40000,45000,50000,55000,
                     60000,70000,80000,90000,100000])
+
+        #The fixed file is needed if ak, bk are not available in the requested file, or
+        # to load the topography is zstd output is requested
+        name_fixed=find_fixedfile(file_list[0])
         try:
             f_fixed=Dataset(name_fixed,'r')
             zsurf=f_fixed.variables['zsurf'][:]
@@ -152,7 +152,7 @@ def main():
         need_to_reverse=True
         interp_technic='lin'
         if custom_level:
-            content_txt=section_content_amesgcm_profile('Altitude definitions for zagl')
+            content_txt=section_content_amescap_profile('Altitude definitions for zagl')
             #print(content_txt)
             exec(content_txt) #load all variables in that section
             lev_in=eval('np.array('+custom_level+')') #copy requested variable
@@ -165,7 +165,6 @@ def main():
     else:
         prRed("Interpolation type '%s' is not supported, use  'pstd','zstd' or 'zagl'"%(interp_type))
         exit()
-
     #Only print grid content and exit the code
     if grid_out:
         print(*lev_in)
@@ -187,20 +186,10 @@ def main():
         #=================================================================
 
         fNcdf=Dataset(ifile, 'r', format='NETCDF4_CLASSIC')
-        # Load pk and bk and ps for 3D pressure field calculation.
-        # We will read the pk and bk for each file in case the vertical resolution is changed.
+        # Load ak and bk and ps for 3D pressure field calculation.
+        # We will read the ak and bk for each file in case the vertical resolution is changed.
 
-        try:
-            #First try to read pk and bk in the file
-            pk=np.array(fNcdf.variables['pk'])
-            bk=np.array(fNcdf.variables['bk'])
-        except:
-            #If pk and bk are not available in the file, try the matching XXXXX.fixed.nc
-            name_fixed=find_fixedfile(filepath,ifile)
-            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
-            pk=np.array(f_fixed.variables['pk'])
-            bk=np.array(f_fixed.variables['bk'])
-            f_fixed.close()
+        ak,bk=ak_bk_loader(fNcdf)
 
         ps=np.array(fNcdf.variables['ps'])
 
@@ -220,11 +209,11 @@ def main():
         # Suppress divided by zero error ==
         with np.errstate(divide='ignore', invalid='ignore'):
             if interp_type=='pstd':
-                L_3D_P= fms_press_calc(ps,pk,bk,lev_type='full') #permuted by default, e.g lev is first
+                L_3D_P= fms_press_calc(ps,ak,bk,lev_type='full') #permuted by default, e.g lev is first
 
             elif interp_type=='zagl':
                 temp=fNcdf.variables['temp'][:]
-                L_3D_P= fms_Z_calc(ps,pk,bk,temp.transpose(permut),topo=0.,lev_type='full')
+                L_3D_P= fms_Z_calc(ps,ak,bk,temp.transpose(permut),topo=0.,lev_type='full')
 
             elif interp_type=='zstd':
                 temp=fNcdf.variables['temp'][:]
@@ -233,7 +222,7 @@ def main():
                 if do_diurn:
                     zflat=np.repeat(zflat[:,np.newaxis,:,:],ps.shape[1],axis=1)
 
-                L_3D_P= fms_Z_calc(ps,pk,bk,temp.transpose(permut),topo=zflat,lev_type='full')
+                L_3D_P= fms_Z_calc(ps,ak,bk,temp.transpose(permut),topo=zflat,lev_type='full')
 
 
         fnew = Ncdf(newname,'Pressure interpolation using MarsInterp.py')
@@ -246,8 +235,13 @@ def main():
         fnew.add_dim_with_content(interp_type,lev_in,longname_txt,units_txt) #Add new vertical dimension
 
 
-        fnew.copy_Ncaxis_with_content(fNcdf.variables['lon'])
-        fnew.copy_Ncaxis_with_content(fNcdf.variables['lat'])
+        if 'tile' in ifile:
+            fnew.copy_Ncaxis_with_content(fNcdf.variables['grid_xt'])
+            fnew.copy_Ncaxis_with_content(fNcdf.variables['grid_yt'])
+        else:
+            fnew.copy_Ncaxis_with_content(fNcdf.variables['lon'])
+            fnew.copy_Ncaxis_with_content(fNcdf.variables['lat'])
+
         fnew.copy_Ncaxis_with_content(fNcdf.variables['time'])
 
         if do_diurn:fnew.copy_Ncaxis_with_content(fNcdf.variables[tod_name])
@@ -256,7 +250,8 @@ def main():
         compute_indices=True
         for ivar in var_list:
             if (fNcdf.variables[ivar].dimensions==('time','pfull', 'lat', 'lon') or
-             fNcdf.variables[ivar].dimensions==('time',tod_name,'pfull', 'lat', 'lon')):
+             fNcdf.variables[ivar].dimensions==('time',tod_name,'pfull', 'lat', 'lon') or
+             fNcdf.variables[ivar].dimensions==('time','pfull', 'grid_yt', 'grid_xt')):
                 if compute_indices:
                     prCyan("Computing indices ...")
                     index=find_n(L_3D_P,lev_in,reverse_input=need_to_reverse)
@@ -272,16 +267,26 @@ def main():
 
                 long_name_txt=getattr(fNcdf.variables[ivar],'long_name','')
                 units_txt=getattr(fNcdf.variables[ivar],'units','')
+                #long_name_txt=fNcdf.variables[ivar].long_name
+                #units_txt=fNcdf.variables[ivar].units)
 
                 if not do_diurn:
-                    fnew.log_variable(ivar,varOUT,('time',interp_type, 'lat', 'lon'),
-                                      long_name_txt,units_txt)
+                    if 'tile' in ifile:
+                        fnew.log_variable(ivar,varOUT,('time',interp_type, 'grid_yt', 'grid_xt'),
+                                        long_name_txt,units_txt)
+                    else:
+                        fnew.log_variable(ivar,varOUT,('time',interp_type, 'lat', 'lon'),
+                                        long_name_txt,units_txt)
                 else:
-                    fnew.log_variable(ivar,varOUT,('time',tod_name,interp_type, 'lat', 'lon'),
+                    if 'tile' in ifile:
+                        fnew.log_variable(ivar,varOUT,('time',tod_name,interp_type, 'grid_yt', 'grid_xt'),
+                                      long_name_txt,units_txt)
+                    else:
+                        fnew.log_variable(ivar,varOUT,('time',tod_name,interp_type, 'lat', 'lon'),
                                       long_name_txt,units_txt)
             else:
 
-                if  ivar not in ['time','pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl',tod_name]:
+                if  ivar not in ['time','pfull', 'lat', 'lon','phalf','ak','pk','bk','pstd','zstd','zagl',tod_name,'grid_xt','grid_yt']:
                     #print("\r Copying over: %s..."%(ivar), end='')
                     prCyan("Copying over: %s..."%(ivar))
                     fnew.copy_Ncvar(fNcdf.variables[ivar])

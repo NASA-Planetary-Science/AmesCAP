@@ -15,20 +15,17 @@ import numpy as np
 from netCDF4 import Dataset
 import warnings #Suppress certain errors when dealing with NaN arrays
 
-
-
 #===========
-from amesgcm.Ncdf_wrapper import Ncdf, Fort
-from amesgcm.FV3_utils import tshift,daily_to_average,daily_to_diurn,get_trend_2D
-#from amesgcm.FV3_utils import regrid_Ncfile #regrid source
-from amesgcm.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn,FV3_file_type,filter_vars,regrid_Ncfile
+from amescap.Ncdf_wrapper import Ncdf, Fort
+from amescap.FV3_utils import tshift,daily_to_average,daily_to_diurn,get_trend_2D
+from amescap.Script_utils import prYellow,prCyan,prRed,find_tod_in_diurn,FV3_file_type,filter_vars,regrid_Ncfile,get_longname_units
 #==========
 
 
 #======================================================
 #                  ARGUMENTS PARSER
 #======================================================
-parser = argparse.ArgumentParser(description="""\033[93m MarsFiles files manager. Used to convert Legacy GCM to FV3 format \n \033[00m""",
+parser = argparse.ArgumentParser(description="""\033[93m MarsFiles files manager. Used to alter file format \n \033[00m""",
                                 formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('input_file', nargs='+',
@@ -111,7 +108,6 @@ parser.add_argument('-rs','--regrid_source',nargs='+',
                  help=""" Reggrid  GCMs or observation files using another netcdf file (time,lev,lat,lon) grid structure  \n"""
                       """>  Both source(s) and target files should be vertically-interpolated to a standard grid (e.g. zstd, zagl, pstd)\n"""
                       """>  Usage: MarsInterp.py ****.atmos.average_pstd.nc -rs simu2/00668.atmos_average_pstd.nc \n""")
-
 
 parser.add_argument('-za','--zonal_avg', action='store_true',
         help="""Apply zonal averaging to any type of files \n"""
@@ -309,6 +305,8 @@ def main():
 
             fdiurn = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
             fnew = Ncdf(fullnameOUT) # define a Ncdf object from the Ncdf wrapper module
+            #Copy some dimensions from the old file to the new file
+            fnew.copy_all_dims_from_Ncfile(fdiurn)
 
             #find time of day variable name
             tod_name_in=find_tod_in_diurn(fdiurn)
@@ -319,6 +317,7 @@ def main():
             fnew.copy_Ncaxis_with_content(fdiurn.variables['lat'])
             fnew.copy_Ncaxis_with_content(fdiurn.variables['time'])
             fnew.copy_Ncaxis_with_content(fdiurn.variables['scalar_axis'])
+
             #Only create a vertical axis if the original file contains 3D fields
             if zaxis in fdiurn.dimensions.keys():
                 fnew.copy_Ncaxis_with_content(fdiurn.variables[zaxis])
@@ -366,10 +365,10 @@ def main():
 
             for ivar in var_list:
                 prCyan("Processing: %s ..."%(ivar))
-                varIN = fdiurn.variables[ivar][:]
-                vkeys = fdiurn.variables[ivar].dimensions
-                long_name_txt=getattr(fdiurn.variables[ivar],'long_name','')
-                units_txt=getattr(fdiurn.variables[ivar],'units','')
+                varNcf     = fdiurn.variables[ivar]
+                varIN = varNcf[:]
+                vkeys = varNcf.dimensions
+                longname_txt,units_txt=get_longname_units(fdiurn,ivar)
                 if (len(vkeys) == 4):
                     ilat = vkeys.index('lat')
                     ilon = vkeys.index('lon')
@@ -378,7 +377,7 @@ def main():
                     newvar = np.transpose(varIN,(ilon,ilat,itime,itod))
                     newvarOUT = tshift(newvar,longitude,tod_orig,timex=tod_in)
                     varOUT = np.transpose(newvarOUT, (2,3,1,0))
-                    fnew.log_variable(ivar,varOUT,['time',tod_name_out,'lat','lon'],long_name_txt,units_txt)
+                    fnew.log_variable(ivar,varOUT,['time',tod_name_out,'lat','lon'],longname_txt,units_txt)
                 if (len(vkeys) == 5):
                     ilat = vkeys.index('lat')
                     ilon = vkeys.index('lon')
@@ -388,7 +387,7 @@ def main():
                     newvar = np.transpose(varIN,(ilon,ilat,iz,itime,itod))
                     newvarOUT = tshift(newvar,longitude,tod_orig,timex=tod_in)
                     varOUT = np.transpose(newvarOUT,(3,4,2,1,0))
-                    fnew.log_variable(ivar,varOUT,['time',tod_name_out,zaxis,'lat','lon'],long_name_txt,units_txt)
+                    fnew.log_variable(ivar,varOUT,['time',tod_name_out,zaxis,'lat','lon'],longname_txt,units_txt)
             fnew.close()
             fdiurn.close()
 
@@ -445,7 +444,9 @@ def main():
                 if 'time' in varNcf.dimensions :
                     prCyan("Processing: %s ..."%(ivar))
                     var_out=daily_to_average(varNcf[:],dt_in,nday)
-                    fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
+                    longname_txt,units_txt=get_longname_units(fdaily,ivar)
+                    fnew.log_variable(ivar,var_out,varNcf.dimensions,longname_txt,units_txt)
+
                 else:
                     if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl']:
                         prCyan("Copying axis: %s..."%(ivar))
@@ -516,7 +517,8 @@ def main():
                     dims_out=(dims_in[0],)+(tod_name,)+dims_in[1:]
                     var_out=daily_to_diurn(varNcf[:],time_in[0:iperday])
                     if nday!=1:var_out=daily_to_average(var_out,1.,nday) #dt is 1 sol between two diurn timestep
-                    fnew.log_variable(ivar,var_out,dims_out,varNcf.long_name,varNcf.units)
+                    longname_txt,units_txt=get_longname_units(fdaily,ivar)
+                    fnew.log_variable(ivar,var_out,dims_out,longname_txt,units_txt)
 
                 else:
 
@@ -536,7 +538,7 @@ def main():
 
 
         # This functions requires scipy > 1.2.0 , so we only import the package here if needed
-        from amesgcm.Spectral_utils import zeroPhi_filter
+        from amescap.Spectral_utils import zeroPhi_filter
 
         if parser.parse_args().high_pass_filter:
             btype='high';out_ext='_hpf';nsol=np.asarray(parser.parse_args().high_pass_filter).astype(float)
@@ -608,7 +610,8 @@ def main():
                 if 'time' in varNcf.dimensions and ivar not in ['time','areo'] :
                     prCyan("Processing: %s ..."%(ivar))
                     var_out=zeroPhi_filter(varNcf[:], btype, low_highcut, fs,axis=0,order=4,no_trend=parser.parse_args().no_trend)
-                    fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
+                    longname_txt,units_txt=get_longname_units(fdaily,ivar)
+                    fnew.log_variable(ivar,var_out,varNcf.dimensions,longname_txt,units_txt)
                 else:
                     if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl']:
                         prCyan("Copying axis: %s..."%(ivar))
@@ -625,7 +628,7 @@ def main():
     # elif parser.parse_args().high_pass_zonal or parser.parse_args().low_pass_zonal or parser.parse_args().band_pass_zonal:
     #
     #     # This functions requires scipy > 1.2.0 , so we only import the package here if needed
-    #     from amesgcm.Spectral_utils import zonal_decomposition, zonal_construct
+    #     from amescap.Spectral_utils import zonal_decomposition, zonal_construct
     #     #Load the module
     #     #init_shtools()
     #
@@ -733,7 +736,7 @@ def main():
     #========================  Tidal analysis =========================
     #===========================================================================
     elif parser.parse_args().tidal:
-        from amesgcm.Spectral_utils import diurn_extract,reconstruct_diurn
+        from amescap.Spectral_utils import diurn_extract,reconstruct_diurn
         N=parser.parse_args().tidal[0]
         if len(np.atleast_1d(N))!=1:
             prRed('***Error*** N must be only one value')
@@ -783,6 +786,7 @@ def main():
             for ivar in var_list:
                 varNcf     = fdiurn.variables[ivar]
                 varIN=varNcf[:]
+                longname_txt,units_txt=get_longname_units(fdiurn,ivar)
                 var_unit=getattr(varNcf,'units','')
 
                 if tod_name in varNcf.dimensions and ivar not in [tod_name,'areo'] and len(varNcf.shape)>2 :
@@ -792,20 +796,21 @@ def main():
                     if parser.parse_args().normalize:
                         norm=np.mean(varIN,axis=1)[:,np.newaxis,...] #normalize and reshape array along the time_of_day dimension
                         varIN=100*(varIN-norm)/norm
+                        #units_txt='% of diurnal mean'
                         var_unit='% of diurnal mean'
 
                     amp,phas=diurn_extract(varIN.swapaxes(0,1),N,tod_in,lon)
                     if parser.parse_args().reconstruct:
                         VARN=reconstruct_diurn(amp,phas,tod_in,lon,sumList=[])
                         for nn in range(N):
-                            fnew.log_variable("%s_N%i"%(ivar,nn+1),VARN[nn,...].swapaxes(0,1),varNcf.dimensions,"harmonic N=%i for %s"%(nn+1,varNcf.long_name),var_unit)
+                            fnew.log_variable("%s_N%i"%(ivar,nn+1),VARN[nn,...].swapaxes(0,1),varNcf.dimensions,"harmonic N=%i for %s"%(nn+1,longname_txt),units_txt)
 
                     else:
                         #Update the dimensions
                         new_dim=list(varNcf.dimensions)
                         new_dim[1]='time_of_day_%i'%(N)
-                        fnew.log_variable("%s_amp"%(ivar),amp.swapaxes(0,1),new_dim,"tidal amplitude for %s"%(varNcf.long_name),var_unit)
-                        fnew.log_variable("%s_phas"%(ivar),phas.swapaxes(0,1),new_dim,"tidal phase for %s"%(varNcf.long_name),'hr')
+                        fnew.log_variable("%s_amp"%(ivar),amp.swapaxes(0,1),new_dim,"tidal amplitude for %s"%(longname_txt),units_txt)
+                        fnew.log_variable("%s_phas"%(ivar),phas.swapaxes(0,1),new_dim,"tidal phase for %s"%(longname_txt),'hr')
 
                 elif  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time']:
                         prCyan("Copying axis: %s..."%(ivar))
@@ -824,6 +829,7 @@ def main():
                             #Update the dimensions
                             new_dim=list(varNcf.dimensions)
                             new_dim[1]='time_of_day_%i'%(N)
+                            #fnew.log_variable(ivar,areo_new,new_dim,longname_txt,units_txt)
                             fnew.log_variable(ivar,areo_new,new_dim,varNcf.long_name,varNcf.units)
 
             fnew.close()
@@ -864,16 +870,18 @@ def main():
             #Loop over all variables in file
             for ivar in var_list:
                 varNcf     = f_in.variables[ivar]
+                longname_txt,units_txt=get_longname_units(f_in,ivar)
+
                 if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time','areo']:
                         prCyan("Copying axis: %s..."%(ivar))
                         fnew.copy_Ncaxis_with_content(fNcdf_t.variables[ivar])
                 elif varNcf.dimensions[-2:]==('lat', 'lon'): #Ignore variables like  'time_bounds', 'scalar_axis' or 'grid_xt_bnds'...
                     prCyan("Regridding: %s..."%(ivar))
                     var_OUT=regrid_Ncfile(varNcf,f_in,fNcdf_t)
-                    fnew.log_variable(ivar,var_OUT,varNcf.dimensions,varNcf.long_name,varNcf.units) #TODO this time_of_day_24 to time_of_day_4
+                    fnew.log_variable(ivar,var_OUT,varNcf.dimensions,longname_txt,units_txt)
+                    fnew.log_variable(ivar,var_OUT,varNcf.dimensions,varNcf.long_name,varNcf.units)
             fnew.close()
             fNcdf_t.close()
-
 
     #===========================================================================
     #=======================  Zonal averaging    ===============================
@@ -926,8 +934,6 @@ def main():
                         prCyan("Copying var: %s..."%(ivar))
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
-
-
     else:
         prRed("""Error: no action requested: use 'MarsFiles *nc --fv3 --combine, --tshift, --bin_average, --bin_diurn etc ...'""")
 
@@ -992,7 +998,7 @@ def make_FV3_files(fpath,typelistfv3,renameFV3=True,cwd=None):
 
                 sgm =histfile.variables['sgm']
                 pk[0]=0.08/2 #[AK] changed pk[0]=.08 to pk[0]=.08/2, otherwise phalf[0] would be greater than phalf[1]
-                #*** NOTE that pk in amesGCM/mars_data/Legacy.fixed.nc was also updated***
+                #*** NOTE that pk in amesCAP/mars_data/Legacy.fixed.nc was also updated***
                 for z in range(num):
                     bk[z+1] = sgm[2*z+2]
                 phalf[:]=pk[:]+pref*bk[:] # output in  Pa
@@ -1060,6 +1066,7 @@ def do_avg_vars(histfile,newf,avgtime,avgtod,Nday=5):
         vshape= npvar.shape
         ntod  = histfile.dimensions['ntod']
 
+        #longname_txt,units_txt=get_longname_units(histfile,vname)
         longname_txt=getattr(histfile.variables[vname],'long_name','')
 
         #On some files like the LegacyGCM_Ls*** on the NAS dataportal, the attribute 'long_name' may be mispelled 'longname'

@@ -15,9 +15,6 @@ try:
 
 except ImportError as error_msg:
     prYellow("Error while importing modules")
-    prYellow('Your are using python '+str(sys.version_info[0:3])+', recommend version is (2, 7, 12)' )
-    prYellow('Please load recommended version with:')
-    prCyan('        module load python/2.7.12\n')
     print("Error was: "+ error_msg.message)
     exit()
 
@@ -62,7 +59,7 @@ Ls_end=np.array([4,9,14,19,24,29,33,38,42,47,52,56,61,65,70,74,79,83,88,92,97,\
 202,208,214,221,227,233,240,246,253,259,266,272,279,285,291,297,304,310,316,\
 321,327,333,338,344,349,354,0])
 #====================================================================================
-    
+
 def download(url, filename):
     '''
     Save a file from a URL locally
@@ -70,7 +67,7 @@ def download(url, filename):
         URL: The URL to download, e.g   'https://data.nas.nasa.gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_Ls000_Ls004.nc'
         filename: The local filename e.g  '/lou/la4/akling/Data/LegacyGCM_Ls000_Ls004.nc'
     '''
-    
+
     _ , fname=os.path.split(filename)
     response = requests.get(url, stream=True)
     total = response.headers.get('content-length')
@@ -78,7 +75,7 @@ def download(url, filename):
     if response.status_code == 404:
         print('Error during download, error code is: ',response.status_code)
     else:
-        
+
         #If we have access to the size of the file, return progress bar
         if total is not None:
             with open(filename, 'wb') as f:
@@ -90,57 +87,57 @@ def download(url, filename):
                     done = int(50*downloaded/total)
                     sys.stdout.write('\r[{}{}]'.format('#' * done, '.' * (50-done)))
                     sys.stdout.flush()
-            sys.stdout.write('\n') 
+            sys.stdout.write('\n')
         else:
-            
+
             #Header is unknown yet, skip the use of a progress bar
             print('Downloading %s ...'%(fname))
             with open(local_file, 'wb')as f:
                 f.write(data.content)
-            print('%s Done'%(fname))           
-                
+            print('%s Done'%(fname))
+
 
 #======================================================
 #                  MAIN PROGRAM
 #======================================================
 def main():
-    
+
     #Original
     #URLbase="https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/"
     simu_ID=parser.parse_args().id
-    
+
     if simu_ID is None :
         prYellow("***Error*** simulation ID [-id --id] is required. See 'MarsPull.py -h' for help")
         exit()
-    
+
     URLbase='https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/'+simu_ID+'/'
-    
-    
+
+
     if parser.parse_args().ls :
         data_input=np.asarray(parser.parse_args().ls)
         if len(data_input)==1: #query only  the file that contains this Ls
             i_start=np.argmin(np.abs(Ls_ini-data_input))
             if data_input<Ls_ini[i_start]:i_start-=1
             i_request=np.arange(i_start,i_start+1)
-        
+
         elif len(data_input)==2: #start stop  is provided
             i_start=np.argmin(np.abs(Ls_ini-data_input[0]))
             if data_input[0]<Ls_ini[i_start]:i_start-=1
 
             i_end=np.argmin(np.abs(Ls_end-data_input[1]))
             if data_input[1]>Ls_end[i_end]:i_end+=1
-         
-            i_request=np.arange(i_start,i_end+1) 
+
+            i_request=np.arange(i_start,i_end+1)
 
         print('Saving  %i files in %s '%(len(i_request),saveDir))
         for ii in i_request:
-            #Legacy .nc files  
+            #Legacy .nc files
             if simu_ID=='ACTIVECLDS_NCDF':
                 fName='LegacyGCM_Ls%03d_Ls%03d.nc'%(Ls_ini[ii],Ls_end[ii])
-            #fort.11 files    
+            #fort.11 files
             else:
                 fName='fort.11_%04d'%(670+ii)
-                
+
             url = URLbase+fName
             filename=saveDir+fName
             #print('Downloading '+ fName+ '...')

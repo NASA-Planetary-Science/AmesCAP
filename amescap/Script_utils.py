@@ -4,18 +4,18 @@ import subprocess
 from netCDF4 import Dataset, MFDataset
 import numpy as np
 import re
-#=========================================================================   
+#=========================================================================
 #=========================Scripts utilities===============================
 #=========================================================================
 
 
 # The functions below allow to print in different color
-def prRed(skk): print("\033[91m{}\033[00m".format(skk)) 
-def prGreen(skk): print("\033[92m{}\033[00m".format(skk)) 
-def prCyan(skk): print("\033[96m{}\033[00m".format(skk)) 
-def prYellow(skk): print("\033[93m{}\033[00m".format(skk)) 
-def prPurple(skk): print("\033[95m{}\033[00m".format(skk)) 
-def prLightPurple(skk): print("\033[94m{}\033[00m".format(skk)) 
+def prRed(skk): print("\033[91m{}\033[00m".format(skk))
+def prGreen(skk): print("\033[92m{}\033[00m".format(skk))
+def prCyan(skk): print("\033[96m{}\033[00m".format(skk))
+def prYellow(skk): print("\033[93m{}\033[00m".format(skk))
+def prPurple(skk): print("\033[95m{}\033[00m".format(skk))
+def prLightPurple(skk): print("\033[94m{}\033[00m".format(skk))
 
 def MY_func(Ls_cont):
     '''
@@ -26,30 +26,30 @@ def MY_func(Ls_cont):
         MY : int the Mars year
     '''
     return (Ls_cont)//(360.)+1
- 
-def find_tod_in_diurn(fNcdf): 
+
+def find_tod_in_diurn(fNcdf):
     '''
-    Return the variable for the local time axis in diurn files. 
+    Return the variable for the local time axis in diurn files.
     Original implementation by Victoria H.
     Args:
-        fNcdf: an (open) Netcdf file object 
+        fNcdf: an (open) Netcdf file object
     Return:
         tod (string): 'time_of_day_16'or 'time_of_day_24'
     '''
     regex=re.compile('time_of_day.')
     varset=fNcdf.variables.keys()
-    return [string for string in varset if re.match(regex, string)][0] #Extract the 1st element of the list 
- 
+    return [string for string in varset if re.match(regex, string)][0] #Extract the 1st element of the list
 
-    
+
+
 def print_fileContent(fileNcdf):
     '''
     Print the content of a Netcdf file in a compact format. Variables are sorted by dimensions.
     Args:
         fileNcdf: full path to netcdf file
-    Returns: 
+    Returns:
         None (print in the terminal)
-    '''    
+    '''
     #Define Colors for printing
     def Green(skk): return"\033[92m{}\033[00m".format(skk)
     def Cyan(skk): return "\033[96m{}\033[00m".format(skk)
@@ -57,7 +57,7 @@ def print_fileContent(fileNcdf):
     def Purple(skk):return"\033[95m{}\033[00m".format(skk)
     if not os.path.isfile(fileNcdf):
         print(fileNcdf+' not found')
-    else:    
+    else:
         f=Dataset(fileNcdf, 'r')
         print("===================DIMENSIONS==========================")
         print(list(f.dimensions.keys()))
@@ -67,13 +67,13 @@ def print_fileContent(fileNcdf):
         all_dims=list() #initialize empty list
         for ivar in all_var:
             all_dims.append(f.variables[ivar].dimensions) #get all the variables dimensions
-        all_dims=set(all_dims) #filter duplicates (an object of type set() is an unordered collections of distinct objects 
+        all_dims=set(all_dims) #filter duplicates (an object of type set() is an unordered collections of distinct objects
         all_dims=sorted(all_dims,key=len) #sort dimensions by lenght, e.g ('lat') will come before ('lat','lon')
         var_done=list()
         for idim in all_dims:
             for ivar in all_var:
                 if f.variables[ivar].dimensions==idim :
-                    txt_dim=getattr(f.variables[ivar],'dimensions','') 
+                    txt_dim=getattr(f.variables[ivar],'dimensions','')
                     txt_shape=getattr(f.variables[ivar],'shape','')
                     txt_long_name=getattr(f.variables[ivar],'long_name','')
                     txt_units=getattr(f.variables[ivar],'units','')
@@ -90,7 +90,7 @@ def print_fileContent(fileNcdf):
         except:
             pass
         f.close()
-        print("=====================================================") 
+        print("=====================================================")
 
 def print_varContent(fileNcdf,list_varfull,print_stat=False):
     '''
@@ -100,16 +100,16 @@ def print_varContent(fileNcdf,list_varfull,print_stat=False):
         fileNcdf:      full path to netcdf file
         list_varfull:  list of variable names and optional slices, e.g ['lon' ,'ps[:,10,20]']
         print_stat:  if true, print min, mean and max instead of values
-    Returns: 
+    Returns:
         None (print in the terminal)
-    '''    
+    '''
     #Define Colors for printing
     def Cyan(skk): return "\033[96m{}\033[00m".format(skk)
     def Red(skk):  return "\033[91m{}\033[00m".format(skk)
     if not os.path.isfile(fileNcdf):
         print(fileNcdf+' not found')
-    else: 
-    
+    else:
+
         if print_stat:
             print(Cyan('__________________________________________________________________________'))
             print(Cyan('           VAR            |      MIN      |      MEAN     |      MAX      |'))
@@ -124,42 +124,51 @@ def print_varContent(fileNcdf,list_varfull,print_stat=False):
                 cmd_txt="""f.variables['"""+varname+"""']"""+slice
                 f=Dataset(fileNcdf, 'r')
                 var=eval(cmd_txt)
-                
+
                 if print_stat:
-                    Min=np.nanmin(var)   
+                    Min=np.nanmin(var)
                     Mean=np.nanmean(var)
                     Max=np.nanmax(var)
                     print(Cyan('%26s|%15g|%15g|%15g|'%(varfull,Min,Mean,Max)))
+                    if varname=='areo':
+                        # If variable is areo, also print the modulo
+                        print(Cyan('%17s(mod 360)|(%13g)|(%13g)|(%13g)|'%(varfull,np.nanmin(var%360),np.nanmean(var%360),np.nanmax(var%360))))
                 else:
-                    print(Cyan(varfull+'= '))
-                    print(Cyan(var))
-                    print(Cyan('______________________________________________________________________')) 
-            except: 
+                    if varname!='areo':
+                        print(Cyan(varfull+'= '))
+                        print(Cyan(var))
+                    else:
+                        #Special case for areo, also print modulo
+                        print(Cyan('areo (areo mod 360)='))
+                        for ii in var: print(ii,ii%360)
+
+                    print(Cyan('______________________________________________________________________'))
+            except:
                 if print_stat:
-                    print(Red('%26s|%15s|%15s|%15s|'%(varfull,'','','')))   
+                    print(Red('%26s|%15s|%15s|%15s|'%(varfull,'','','')))
                 else:
                     print(Red(varfull))
         #Last line for the table
         if print_stat:
-            print(Cyan('__________________________|_______________|_______________|_______________|'))           
+            print(Cyan('__________________________|_______________|_______________|_______________|'))
         f.close()
-        
-         
 
 
 
-def give_permission(filename): 
+
+
+def give_permission(filename):
     '''
     # NAS system only: set group permission to the file
     '''
     import subprocess
     import os
-    
+
     try:
         subprocess.check_call(['setfacl -v'],shell=True,stdout=open(os.devnull, "w"),stderr=open(os.devnull, "w")) #catch error and standard output
         cmd_txt='setfacl -R -m g:s0846:r '+filename
         subprocess.call(cmd_txt,shell=True)
-    except subprocess.CalledProcessError: 
+    except subprocess.CalledProcessError:
         pass
 
 def check_file_tape(fileNcdf,abort=False):
@@ -212,53 +221,75 @@ def get_Ncdf_path(fNcdf):
     Note that 'Dataset' and multi-files dataset (i.e. 'MFDataset') have different
     attributes for the path, hence the need for this function.
     Args:
-        fNcdf : Dataset or  MFDataset object          
+        fNcdf : Dataset or  MFDataset object
     Returns :
-        Path: string (list) for Dataset (MFDataset) 
+        Path: string (list) for Dataset (MFDataset)
     '''
     fname_out=getattr(fNcdf,'_files',False) #Only MFDataset has the_files attribute
     if not fname_out: fname_out=getattr(fNcdf,'filepath')() #Regular Dataset
     return fname_out
 
-def FV3_file_type(fNcdf): 
+def extract_path_basename(filename):
+    '''
+    Return the path and basename of a file. If only the filename is provided, assume it is the current directory
+    Args:
+        filename: e.g. 'XXXXX.fixed.nc', './history/XXXXX.fixed.nc' or '/home/user/history/XXXXX.fixed.nc'
+    Returns:
+        filepath : '/home/user/history/XXXXX.fixed.nc' in all the cases above
+        basename:   XXXXX.fixed.nc in all the cases above
+
+    ***NOTE***
+    This routine does not check for file existence and only operates on the provided input string.
+    '''
+    #Get the filename without the path
+    if '/' in filename or '\\' in filename :
+        filepath,basename=os.path.split(filename)
+    else:
+        filepath=os.getcwd()
+        basename=    filename
+
+    # Is the home ('~') symbol is included, expend the user path
+    if '~' in filepath:filepath=  os.path.expanduser(filepath)
+    return filepath,basename
+
+def FV3_file_type(fNcdf):
     '''
     Return the type of output files:
     Args:
-        fNcdf: an (open) Netcdf file object 
+        fNcdf: an (open) Netcdf file object
     Return:
        f_type (string): 'fixed', 'contineous', or 'diurn'
-       interp_type (string): 'pfull','pstd','zstd','zagl'
+       interp_type (string): 'pfull','pstd','zstd','zagl','zgrid'
     '''
     #Get the full path from the file
     fullpath=get_Ncdf_path(fNcdf)
     #If MFDataset, get the 1st file in the list
     if type(fullpath)==list:fullpath=fullpath[0]
-    
+
     #Get the filename without the path
     _,filename=os.path.split(fullpath)
-    
+
     #Initialize, assume the file is contineuous
     f_type='contineous'
     interp_type='unknown'
     tod_name='n/a'
-    
-    # Note: 'to_average' is for files re-binned by MarsFile.py
 
     #If 'time' is not a dimension, assume it is a 'fixed' file
     if 'time' not in fNcdf.dimensions.keys():f_type='fixed'
-    
+
     #If 'tod_name_XX' is present as a dimension, it is a diurn file (this is robust)
     try:
         tod_name=find_tod_in_diurn(fNcdf)
         if tod_name in fNcdf.dimensions.keys():f_type='diurn'
     except:
         pass
-        
+
     dims=fNcdf.dimensions.keys()
     if 'pfull' in dims: interp_type='pfull'
     if 'pstd'  in dims: interp_type='pstd'
     if 'zstd'  in dims: interp_type='zstd'
     if 'zagl'  in dims: interp_type='zagl'
+    if 'zgrid' in dims: interp_type='zgrid'
     return f_type,interp_type
 
 def alt_FV3path(fullpaths,alt,test_exist=True):
@@ -267,21 +298,21 @@ def alt_FV3path(fullpaths,alt,test_exist=True):
     return the raw or fixed file. Accept string or list as input
     Args:
         fullpaths : e.g '/u/path/00010.atmos_average_pstd.nc' or LIST
-            alt: alternative type 'raw' or 'fixed' 
-            test_exist=True test file existence on disk          
+            alt: alternative type 'raw' or 'fixed'
+            test_exist=True test file existence on disk
     Returns :
         Alternative path to raw or fixed file, e.g.
                     '/u/path/00010.atmos_average.nc'
-                    '/u/path/00010.fixed.nc' 
+                    '/u/path/00010.fixed.nc'
     '''
-    out_list=[] 
+    out_list=[]
     one_element=False
     #Convert as list for generality
     if type(fullpaths)==str:
         one_element=True
         fullpaths=[fullpaths]
-        
-    for fullpath in fullpaths:    
+
+    for fullpath in fullpaths:
         path, filename = os.path.split(fullpath)
         DDDDD=filename.split('.')[0] #Get the date
         ext=filename[-8:] #Get the extension
@@ -290,7 +321,7 @@ def alt_FV3path(fullpaths,alt,test_exist=True):
             if ext in ['_pstd.nc','_zstd.nc','_zagl.nc','plevs.nc']:
                 if ext =='plevs.nc':
                     file_raw=filename[0:-9]+'.nc'
-                else:   
+                else:
                     file_raw=filename[0:-8]+'.nc'
             else:
                 raise ValueError('In alt_FV3path(), FV3 file %s not recognized'%(filename))
@@ -299,46 +330,46 @@ def alt_FV3path(fullpaths,alt,test_exist=True):
             new_full_path=path+'/'+DDDDD+'.fixed.nc'
         if test_exist and not (os.path.exists(new_full_path)):
             raise ValueError('In alt_FV3path() %s does not exist '%(new_full_path))
-               
-        out_list.append(new_full_path)  
-    if one_element:out_list=out_list[0]  
+
+        out_list.append(new_full_path)
+    if one_element:out_list=out_list[0]
     return  out_list
-    
+
 def smart_reader(fNcdf,var_list,suppress_warning=False):
     """
-    Smarter alternative to using var=fNcdf.variables['var'][:] when handling PROCESSED files that also check 
+    Smarter alternative to using var=fNcdf.variables['var'][:] when handling PROCESSED files that also check
     matching XXXXX.atmos_average.nc (or daily...) and XXXXX.fixed.nc files
-    
+
     Args:
         fNcdf: Netcdf file object (i.e. already opened with Dataset or MFDataset)
         var_list: variable or list of variables, e.g 'areo' or ['pk','bk','areo']
-        suppress_warning: Suppress debug statement, useful if variable is not expected to be found in the file anyway  
+        suppress_warning: Suppress debug statement, useful if variable is not expected to be found in the file anyway
     Returns:
         out_list: variables content as singleton or values to unpack
-        
-    -------    
-    Example: 
-    
+
+    -------
+    Example:
+
     from netCDF4 import Dataset
-    
-    fNcdf=Dataset('/u/akling/FV3/00668.atmos_average_pstd.nc','r') 
-     
+
+    fNcdf=Dataset('/u/akling/FV3/00668.atmos_average_pstd.nc','r')
+
     ucomp= fNcdf.variables['ucomp'][:]   # << this is the regular way
-    vcomp= smart_reader(fNcdf,'vcomp')   # << this is exacly equivalent  
+    vcomp= smart_reader(fNcdf,'vcomp')   # << this is exacly equivalent
     pk,bk,areo= smart_reader(fNcdf,['pk','bk','areo'])  # this will get 'areo' from 00668.atmos_average.nc is not available in the original _pstd.nc file
                                                         # if pk and bk are absent from 0668.atmos_average.nc, it will also check 00668.fixed.n
     *** NOTE ***
         -Only the variables' content is returned, not the attributes
-    """  
-    
+    """
+
     #This out_list is for the variable
     out_list=[]
     one_element=False
     file_is_MF=False
-    
+
     Ncdf_path= get_Ncdf_path(fNcdf) #Return string (Dataset) or list (MFDataset)
     if type(Ncdf_path)==list:file_is_MF=True
-    
+
     #For generality convert to list if only one variable is provided, e.g 'areo'>['areo']
     if type(var_list)==str:
         one_element=True
@@ -349,27 +380,27 @@ def smart_reader(fNcdf,var_list,suppress_warning=False):
         if ivar in fNcdf.variables.keys():
             out_list.append(fNcdf.variables[ivar][:])
         else:
-            full_path_try=alt_FV3path(Ncdf_path,alt='raw',test_exist=True) 
+            full_path_try=alt_FV3path(Ncdf_path,alt='raw',test_exist=True)
             if file_is_MF:
                 f_tmp=MFDataset(full_path_try,'r')
-            else:    
+            else:
                 f_tmp=Dataset(full_path_try,'r')
-                
+
             if ivar in f_tmp.variables.keys():
                 out_list.append(f_tmp.variables[ivar][:])
                 if not suppress_warning: print('**Warning*** Using variable %s in %s instead of original file(s)'%(ivar,full_path_try))
                 f_tmp.close()
-            else:    
+            else:
                 f_tmp.close()
-                full_path_try=alt_FV3path(Ncdf_path,alt='fixed',test_exist=True) 
+                full_path_try=alt_FV3path(Ncdf_path,alt='fixed',test_exist=True)
                 if file_is_MF:full_path_try=full_path_try[0]
-                
+
                 f_tmp=Dataset(full_path_try,'r')
                 if ivar in f_tmp.variables.keys():
                     out_list.append(f_tmp.variables[ivar][:])
                     f_tmp.close()
                     if not suppress_warning: print('**Warning*** Using variable %s in %s instead of original file(s)'%(ivar,full_path_try))
-                else: 
+                else:
                     print('***ERROR*** Variable %s not found in %s, NOR in raw output or fixed file'%(ivar,full_path_try))
                     print('            >>> Assigning  %s  to NaN'%(ivar))
                     f_tmp.close()
@@ -384,61 +415,63 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
     Args:
         VAR_Ncdf: A netCDF4 variable OBJECT, e.g. 'f_in.variables['temp']' from the source file
         file_Nc_in: The opened netcdf file object  for that input variable, e.g f_in=Dataset('fname','r')
-        file_Nc_target: Anopened netcdf file object  for the target grid t e.g f_out=Dataset('fname','r')  
+        file_Nc_target: An opened netcdf file object  for the target grid t e.g f_out=Dataset('fname','r')
     Returns:
-        VAR_OUT: the VALUES of VAR_Ncdf[:], interpolated on the grid for the target file. 
-    while the closest points in the vertical are a few 10's -100's meter in the PBL, which would results in excessive weighting in the vertical.
+        VAR_OUT: the VALUES of VAR_Ncdf[:], interpolated on the grid for the target file.
+
+    *** Note***
+    While the KDTree interpolation can handle a 3D dataset (lon/lat/lev instead of just 2D lon/lat) , the grid points in the vertical are just a few 10's -100's meter in the PBL vs few 10'-100's km in the horizontal. This would results in excessive weighting in the vertical, which is why the vertical dimension is handled separately.
     '''
-    from amesgcm.FV3_utils import interp_KDTree, axis_interp
+    from amescap.FV3_utils import interp_KDTree, axis_interp
     ftype_in,zaxis_in=FV3_file_type(file_Nc_in)
     ftype_t,zaxis_t=FV3_file_type(file_Nc_target)
-    
+
     #Sanity check
 
     if ftype_in !=ftype_t:
         print("""*** Warning*** in regrid_Ncfile, input file  '%s' and target file '%s' must have the same type"""%(ftype_in,ftype_t))
-        
+
     if zaxis_in!=zaxis_t:
         print("""*** Warning*** in regrid_Ncfile, input file  '%s' and target file '%s' must have the same vertical grid"""%(zaxis_in,zaxis_t))
-        
+
     if zaxis_in=='pfull' or zaxis_t=='pfull':
         print("""*** Warning*** in regrid_Ncfile, input file  '%s' and target file '%s' must be vertically interpolated"""%(zaxis_in,zaxis_t))
-        
-    
+
+
     #===Get target dimensions===
     lon_t=file_Nc_target.variables['lon'][:]
     lat_t=file_Nc_target.variables['lat'][:]
     if 'time' in VAR_Ncdf.dimensions:
         areo_t=file_Nc_target.variables['areo'][:]
-        time_t=file_Nc_target.variables['time'][:]  
-    
+        time_t=file_Nc_target.variables['time'][:]
+
     #===Get input dimensions===
     lon_in=file_Nc_in.variables['lon'][:]
     lat_in=file_Nc_in.variables['lat'][:]
     if 'time' in VAR_Ncdf.dimensions:
         areo_in=file_Nc_in.variables['areo'][:]
-        time_in=file_Nc_in.variables['time'][:] 
-    
+        time_in=file_Nc_in.variables['time'][:]
+
     #Get array elements
     var_OUT=VAR_Ncdf[:]
-    
+
     #STEP 1: Lat/lon interpolation are always performed unless target lon and lat are identical
     if not (np.all(lat_in==lat_t) and np.all(lon_in==lon_t)) :
-        #Special case if input longitudes is 1 element (slice or zonal average). We only interpolate on the latitude axis 
+        #Special case if input longitudes is 1 element (slice or zonal average). We only interpolate on the latitude axis
         if len(np.atleast_1d(lon_in))==1:
             var_OUT=axis_interp(var_OUT, lat_in,lat_t,axis=-2, reverse_input=False, type_int='lin')
-        #Special case if input latitude is 1 element (slice or medidional average) We only interpolate on the longitude axis     
+        #Special case if input latitude is 1 element (slice or medidional average) We only interpolate on the longitude axis
         elif len(np.atleast_1d(lat_in))==1:
             var_OUT=axis_interp(var_OUT, lon_in,lon_t,axis=-1, reverse_input=False, type_int='lin')
-        else:#Bi-directional interpolation    
+        else:#Bi-directional interpolation
             var_OUT=interp_KDTree(var_OUT,lat_in,lon_in,lat_t,lon_t) #lon/lat
-        
+
     #STEP 2: Linear or log interpolation if there is a vertical axis
     if zaxis_in in VAR_Ncdf.dimensions:
         pos_axis=VAR_Ncdf.dimensions.index(zaxis_in) #Get position: 'pstd' position is 1 in ('time', 'pstd', 'lat', 'lon')
         lev_in=file_Nc_in.variables[zaxis_in][:]
         lev_t=file_Nc_target.variables[zaxis_t][:]
-        #Check if the input need to be reverse, note thatwe are reusing find_n() function  which was designed for pressure interpolation 
+        #Check if the input need to be reverse, note thatwe are reusing find_n() function  which was designed for pressure interpolation
         #so the values are reverse if increasing upward (yes, this is counter intuituve)
         if lev_in[0]<lev_in[-1]:
             reverse_input=True
@@ -447,39 +480,39 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
         if zaxis_in in ['zagl','zstd'] :
             intType='lin'
         elif zaxis_in=='pstd':
-            intType='log'  
+            intType='log'
         var_OUT=axis_interp(var_OUT, lev_in,lev_t, pos_axis, reverse_input=reverse_input, type_int=intType)
-        
+
     #STEP 3: Linear interpolation in Ls
     if 'time' in VAR_Ncdf.dimensions:
         pos_axis=0
-        var_OUT=axis_interp(var_OUT, np.squeeze(areo_in)%360,np.squeeze(areo_t)%360, pos_axis, reverse_input=False, type_int='lin')   
-        
-    #STEP 4: Linear interpolation in time of day  
-    #TODO the interpolation scheme is not cyclic. 
+        var_OUT=axis_interp(var_OUT, np.squeeze(areo_in)%360,np.squeeze(areo_t)%360, pos_axis, reverse_input=False, type_int='lin')
+
+    #STEP 4: Linear interpolation in time of day
+    #TODO the interpolation scheme is not cyclic.
     #> If Available diurn times  are 04 10 16 22 and requested time is 23, value is left to zero  and not interpololated from 22 and 04 times as it should
-    # if requesting 
+    # if requesting
     if ftype_in =='diurn':
         pos_axis=1
-        
+
         tod_name_in=find_tod_in_diurn(file_Nc_in)
         tod_name_t=find_tod_in_diurn(file_Nc_target)
         tod_in=file_Nc_in.variables[tod_name_in][:]
         tod_t=file_Nc_target.variables[tod_name_t][:]
-        var_OUT=axis_interp(var_OUT, tod_in,tod_t, pos_axis, reverse_input=False, type_int='lin')  
-    
-    return var_OUT   
+        var_OUT=axis_interp(var_OUT, tod_in,tod_t, pos_axis, reverse_input=False, type_int='lin')
+
+    return var_OUT
 
 
 def progress(k,Nmax):
     """
-    Display a progress bar to monitor heavy calculations. 
+    Display a progress bar to monitor heavy calculations.
     Args:
         k: current iteration of the outer loop
         Nmax: max iteration of the outer loop
     Returns:
         Running... [#---------] 10.64 %
-    """  
+    """
     import sys
     from math import ceil #round yo the 2nd digit
     progress=float(k)/Nmax
@@ -502,9 +535,9 @@ def progress(k,Nmax):
     sys.stdout.flush()
 
 
-def section_content_amesgcm_profile(section_ID):
+def section_content_amescap_profile(section_ID):
     '''
-    Execude code section in /home/user/.amesgcm_profile
+    Execude code section in /home/user/.amescap_profile
     Args:
         section_ID: string defining the section to loa, e.g 'Pressure definitions for pstd'
     Returns
@@ -512,10 +545,10 @@ def section_content_amesgcm_profile(section_ID):
     '''
     import os
     import numpy as np
-    input_file=os.environ['HOME']+'/.amesgcm_profile'
+    input_file=os.environ['HOME']+'/.amescap_profile'
     try:
         f=open(input_file, "r")
-        contents='' 
+        contents=''
         rec=False
         while True:
             line = f.readline()
@@ -525,20 +558,20 @@ def section_content_amesgcm_profile(section_ID):
                 if line.split('|')[1].strip() ==section_ID:
                     rec=True
                     line = f.readline()
-            if rec : contents+=line                
-        f.close()     
+            if rec : contents+=line
+        f.close()
         if contents=='':
-            prRed("No content found for <<< %s >>> block"%(section_ID))     
+            prRed("No content found for <<< %s >>> block"%(section_ID))
         return contents
 
     except FileNotFoundError:
-        prRed("Error: %s config file not found "%(input_file)) 
-        prYellow("To use this feature, create a hidden config file from the template in your home directory with:") 
-        prCyan("    cp amesGCM3/mars_templates/amesgcm_profile  ~/.amesgcm_profile")      
+        prRed("Error: %s config file not found "%(input_file))
+        prYellow("To use this feature, create a hidden config file from the template in your home directory with:")
+        prCyan("    cp amesCAP/mars_templates/amescap_profile  ~/.amescap_profile")
         exit()
     except Exception as exception: #Return the error
         prRed('Error')
-        print(exception)  
+        print(exception)
 
 
 def filter_vars(fNcdf,include_list=None,giveExclude=False):
@@ -556,39 +589,36 @@ def filter_vars(fNcdf,include_list=None,giveExclude=False):
     var_list=fNcdf.variables.keys()
     #If no list is provided, return all variables:
     if include_list is None: return var_list
-    
+
     #Make sure the requested variables are present in file
-    input_list_filtered=[] 
+    input_list_filtered=[]
     for ivar in include_list:
         if ivar in var_list:
             input_list_filtered.append(ivar)
         else:
-            prYellow('***Warning***  In Script_utils/filter_vars(), variables %s not found in file'%(ivar))    
+            prYellow('***Warning***  In Script_utils/filter_vars(), variables %s not found in file'%(ivar))
     #Compute baseline variables, i.e. all dimensions, axis etc...
     baseline_var=[]
     for ivar in  var_list:
         if ivar =='areo' or (len(fNcdf.variables[ivar].dimensions))<=2 :
             baseline_var.append(ivar)
-    #Return the two lists   
+    #Return the two lists
     out_list=baseline_var+input_list_filtered
-    if giveExclude: 
+    if giveExclude:
         exclude_list= list(var_list)
         for ivar in out_list:
             exclude_list.remove(ivar)
-        out_list=  exclude_list     
+        out_list=  exclude_list
     return  out_list
 
-
-def find_fixedfile(filepath, flist):
+def find_fixedfile(filename):
     '''
-    Batterson, Updated May 11 2022
+    Batterson, Updated by Alex Nov 29 2022
     Args:
-        filepath = path to FV3 out files
-        flist    = list with the name of FV3 data file in use, i.e.
-                   ['atmos_average.tile6.nc']
+        filename   =  name of FV3 data file in use, i.e.
+                   'atmos_average.tile6.nc'
     Returns:
-        Path (including filename) to fixed file corresponding to the
-        FV3 data file being used:
+        name_fixed: fullpath to correspnding fixed file
 
             DDDDD.atmos_average.nc  -> DDDDD.fixed.nc
             atmos_average.tileX.nc  -> fixed.tileX.nc
@@ -601,32 +631,35 @@ def find_fixedfile(filepath, flist):
             atmos_average.tileX_plevs_custom.nc     -> fixed.tileX.nc
             atmos_average_custom.tileX_plevs.nc     -> fixed.tileX.nc
 
-            * NOTE: changes to the date portion (DDDDD) of the name
-            will throw an error.
     '''
-    
-    import os
+    filepath,fname=extract_path_basename(filename)
+    #Try the 'tile' or 'standard' version of the fixed files
+    if 'tile' in fname:
+        name_fixed= filepath + '/fixed.tile'+fname.split('tile')[1][0] + '.nc'
+    else:
+        name_fixed=filepath + '/'+ fname.split('.')[0] + '.fixed.nc'
+    #If neither is found set-up a default name
+    if not  os.path.exists(name_fixed): name_fixed='FixedFileNotFound'
+    return name_fixed
 
-    try:
-        if 'tile' in flist:
-            if os.path.exists(filepath + '/fixed.tile' \
-                              + flist.split('tile')[1][0] + '.nc'):
-                name_fixed =  filepath + '/fixed.tile' \
-                              + flist.split('tile')[1][0] + '.nc'
-        else:
-            if os.path.exists(filepath + '/' \
-                              + flist.split('.')[0] + '.fixed.nc'):
-                name_fixed  = filepath + '/' \
-                              + flist.split('.')[0] + '.fixed.nc'
 
-        return(name_fixed)
+def get_longname_units(fNcdf,varname):
+    '''
+    Return the 'long_name' and 'units'  attributes of a netcdf variable.
+    If the attributes are not present, this function will return blank strings instead of raising an error
+    Args:
+        fNcdf: an opened netcdf file
+        varname:  A variable to extract the attribute from (e.g. 'ucomp')
+    Return:
+        longname_txt : long_name attribute, e.g. 'zonal winds'
+        units_txt    : units attribute, e.g. [m/s]
 
-    except:
-        raise FileNotFoundError('Fixed file does not exist in '\
-                                + filepath + ' make sure the fixed '\
-                                'file you are referencing matches the '\
-                                'FV3 filetype (i.e. fixed.tileX.nc '\
-                                'for operations on tile X)')        
+    *** NOTE***
+    Some functions in MarsVars edit the units, e.g. turn [kg]  to [kg/m], therefore the empty string is made 4
+    characters in length ('    ' instead of '') to allow for editing by editing units_txt[:-2] for example
+    '''
+    return getattr(fNcdf.variables[varname],'long_name','    '), getattr(fNcdf.variables[varname],'units','    ')
+
 def wbr_cmap():
     '''
     Returns a color map that goes from white>blue>green>yellow>red or 'wbr'
@@ -636,59 +669,59 @@ def wbr_cmap():
     tmp_cmap [:,3]=1. #set alpha
 
     tmp_cmap[:,0:3]=np.array([[255,255,255],
-    [252,254,255], [250,253,255], [247,252,254], [244,251,254], [242,250,254], 
-    [239,249,254], [236,248,253], [234,247,253], [231,246,253], [229,245,253], 
-    [226,244,253], [223,243,252], [221,242,252], [218,241,252], [215,240,252], 
-    [213,239,252], [210,238,251], [207,237,251], [205,236,251], [202,235,251], 
-    [199,234,250], [197,233,250], [194,232,250], [191,231,250], [189,230,250], 
-    [186,229,249], [183,228,249], [181,227,249], [178,226,249], [176,225,249], 
-    [173,224,248], [170,223,248], [168,222,248], [165,221,248], [162,220,247], 
-    [157,218,247], [155,216,246], [152,214,245], [150,212,243], [148,210,242], 
-    [146,208,241], [143,206,240], [141,204,238], [139,202,237], [136,200,236], 
-    [134,197,235], [132,195,234], [129,193,232], [127,191,231], [125,189,230], 
-    [123,187,229], [120,185,228], [118,183,226], [116,181,225], [113,179,224], 
-    [111,177,223], [109,175,221], [106,173,220], [104,171,219], [102,169,218], 
-    [100,167,217], [ 97,165,215], [ 95,163,214], [ 93,160,213], [ 90,158,212], 
-    [ 88,156,211], [ 86,154,209], [ 83,152,208], [ 81,150,207], [ 79,148,206], 
-    [ 77,146,204], [ 72,142,202], [ 72,143,198], [ 72,144,195], [ 72,145,191], 
-    [ 72,146,188], [ 72,147,184], [ 72,148,181], [ 72,149,177], [ 72,150,173], 
-    [ 72,151,170], [ 72,153,166], [ 72,154,163], [ 72,155,159], [ 72,156,156], 
-    [ 72,157,152], [ 72,158,148], [ 72,159,145], [ 72,160,141], [ 72,161,138], 
-    [ 73,162,134], [ 73,163,131], [ 73,164,127], [ 73,165,124], [ 73,166,120], 
-    [ 73,167,116], [ 73,168,113], [ 73,169,109], [ 73,170,106], [ 73,172,102], 
-    [ 73,173, 99], [ 73,174, 95], [ 73,175, 91], [ 73,176, 88], [ 73,177, 84], 
-    [ 73,178, 81], [ 73,179, 77], [ 73,181, 70], [ 78,182, 71], [ 83,184, 71], 
-    [ 87,185, 72], [ 92,187, 72], [ 97,188, 73], [102,189, 74], [106,191, 74], 
-    [111,192, 75], [116,193, 75], [121,195, 76], [126,196, 77], [130,198, 77], 
-    [135,199, 78], [140,200, 78], [145,202, 79], [150,203, 80], [154,204, 80], 
-    [159,206, 81], [164,207, 81], [169,209, 82], [173,210, 82], [178,211, 83], 
-    [183,213, 84], [188,214, 84], [193,215, 85], [197,217, 85], [202,218, 86], 
-    [207,220, 87], [212,221, 87], [217,222, 88], [221,224, 88], [226,225, 89], 
-    [231,226, 90], [236,228, 90], [240,229, 91], [245,231, 91], [250,232, 92], 
-    [250,229, 91], [250,225, 89], [250,222, 88], [249,218, 86], [249,215, 85], 
-    [249,212, 84], [249,208, 82], [249,205, 81], [249,201, 80], [249,198, 78], 
-    [249,195, 77], [248,191, 75], [248,188, 74], [248,184, 73], [248,181, 71], 
-    [248,178, 70], [248,174, 69], [248,171, 67], [247,167, 66], [247,164, 64], 
-    [247,160, 63], [247,157, 62], [247,154, 60], [247,150, 59], [247,147, 58], 
-    [246,143, 56], [246,140, 55], [246,137, 53], [246,133, 52], [246,130, 51], 
-    [246,126, 49], [246,123, 48], [246,120, 47], [245,116, 45], [245,113, 44], 
-    [245,106, 41], [244,104, 41], [243,102, 41], [242,100, 41], [241, 98, 41], 
-    [240, 96, 41], [239, 94, 41], [239, 92, 41], [238, 90, 41], [237, 88, 41], 
-    [236, 86, 41], [235, 84, 41], [234, 82, 41], [233, 80, 41], [232, 78, 41], 
-    [231, 76, 41], [230, 74, 41], [229, 72, 41], [228, 70, 41], [228, 67, 40], 
-    [227, 65, 40], [226, 63, 40], [225, 61, 40], [224, 59, 40], [223, 57, 40], 
-    [222, 55, 40], [221, 53, 40], [220, 51, 40], [219, 49, 40], [218, 47, 40], 
-    [217, 45, 40], [217, 43, 40], [216, 41, 40], [215, 39, 40], [214, 37, 40], 
-    [213, 35, 40], [211, 31, 40], [209, 31, 40], [207, 30, 39], [206, 30, 39], 
-    [204, 30, 38], [202, 30, 38], [200, 29, 38], [199, 29, 37], [197, 29, 37], 
-    [195, 29, 36], [193, 28, 36], [192, 28, 36], [190, 28, 35], [188, 27, 35], 
-    [186, 27, 34], [185, 27, 34], [183, 27, 34], [181, 26, 33], [179, 26, 33], 
-    [178, 26, 32], [176, 26, 32], [174, 25, 31], [172, 25, 31], [171, 25, 31], 
-    [169, 25, 30], [167, 24, 30], [165, 24, 29], [164, 24, 29], [162, 23, 29], 
-    [160, 23, 28], [158, 23, 28], [157, 23, 27], [155, 22, 27], [153, 22, 27], 
+    [252,254,255], [250,253,255], [247,252,254], [244,251,254], [242,250,254],
+    [239,249,254], [236,248,253], [234,247,253], [231,246,253], [229,245,253],
+    [226,244,253], [223,243,252], [221,242,252], [218,241,252], [215,240,252],
+    [213,239,252], [210,238,251], [207,237,251], [205,236,251], [202,235,251],
+    [199,234,250], [197,233,250], [194,232,250], [191,231,250], [189,230,250],
+    [186,229,249], [183,228,249], [181,227,249], [178,226,249], [176,225,249],
+    [173,224,248], [170,223,248], [168,222,248], [165,221,248], [162,220,247],
+    [157,218,247], [155,216,246], [152,214,245], [150,212,243], [148,210,242],
+    [146,208,241], [143,206,240], [141,204,238], [139,202,237], [136,200,236],
+    [134,197,235], [132,195,234], [129,193,232], [127,191,231], [125,189,230],
+    [123,187,229], [120,185,228], [118,183,226], [116,181,225], [113,179,224],
+    [111,177,223], [109,175,221], [106,173,220], [104,171,219], [102,169,218],
+    [100,167,217], [ 97,165,215], [ 95,163,214], [ 93,160,213], [ 90,158,212],
+    [ 88,156,211], [ 86,154,209], [ 83,152,208], [ 81,150,207], [ 79,148,206],
+    [ 77,146,204], [ 72,142,202], [ 72,143,198], [ 72,144,195], [ 72,145,191],
+    [ 72,146,188], [ 72,147,184], [ 72,148,181], [ 72,149,177], [ 72,150,173],
+    [ 72,151,170], [ 72,153,166], [ 72,154,163], [ 72,155,159], [ 72,156,156],
+    [ 72,157,152], [ 72,158,148], [ 72,159,145], [ 72,160,141], [ 72,161,138],
+    [ 73,162,134], [ 73,163,131], [ 73,164,127], [ 73,165,124], [ 73,166,120],
+    [ 73,167,116], [ 73,168,113], [ 73,169,109], [ 73,170,106], [ 73,172,102],
+    [ 73,173, 99], [ 73,174, 95], [ 73,175, 91], [ 73,176, 88], [ 73,177, 84],
+    [ 73,178, 81], [ 73,179, 77], [ 73,181, 70], [ 78,182, 71], [ 83,184, 71],
+    [ 87,185, 72], [ 92,187, 72], [ 97,188, 73], [102,189, 74], [106,191, 74],
+    [111,192, 75], [116,193, 75], [121,195, 76], [126,196, 77], [130,198, 77],
+    [135,199, 78], [140,200, 78], [145,202, 79], [150,203, 80], [154,204, 80],
+    [159,206, 81], [164,207, 81], [169,209, 82], [173,210, 82], [178,211, 83],
+    [183,213, 84], [188,214, 84], [193,215, 85], [197,217, 85], [202,218, 86],
+    [207,220, 87], [212,221, 87], [217,222, 88], [221,224, 88], [226,225, 89],
+    [231,226, 90], [236,228, 90], [240,229, 91], [245,231, 91], [250,232, 92],
+    [250,229, 91], [250,225, 89], [250,222, 88], [249,218, 86], [249,215, 85],
+    [249,212, 84], [249,208, 82], [249,205, 81], [249,201, 80], [249,198, 78],
+    [249,195, 77], [248,191, 75], [248,188, 74], [248,184, 73], [248,181, 71],
+    [248,178, 70], [248,174, 69], [248,171, 67], [247,167, 66], [247,164, 64],
+    [247,160, 63], [247,157, 62], [247,154, 60], [247,150, 59], [247,147, 58],
+    [246,143, 56], [246,140, 55], [246,137, 53], [246,133, 52], [246,130, 51],
+    [246,126, 49], [246,123, 48], [246,120, 47], [245,116, 45], [245,113, 44],
+    [245,106, 41], [244,104, 41], [243,102, 41], [242,100, 41], [241, 98, 41],
+    [240, 96, 41], [239, 94, 41], [239, 92, 41], [238, 90, 41], [237, 88, 41],
+    [236, 86, 41], [235, 84, 41], [234, 82, 41], [233, 80, 41], [232, 78, 41],
+    [231, 76, 41], [230, 74, 41], [229, 72, 41], [228, 70, 41], [228, 67, 40],
+    [227, 65, 40], [226, 63, 40], [225, 61, 40], [224, 59, 40], [223, 57, 40],
+    [222, 55, 40], [221, 53, 40], [220, 51, 40], [219, 49, 40], [218, 47, 40],
+    [217, 45, 40], [217, 43, 40], [216, 41, 40], [215, 39, 40], [214, 37, 40],
+    [213, 35, 40], [211, 31, 40], [209, 31, 40], [207, 30, 39], [206, 30, 39],
+    [204, 30, 38], [202, 30, 38], [200, 29, 38], [199, 29, 37], [197, 29, 37],
+    [195, 29, 36], [193, 28, 36], [192, 28, 36], [190, 28, 35], [188, 27, 35],
+    [186, 27, 34], [185, 27, 34], [183, 27, 34], [181, 26, 33], [179, 26, 33],
+    [178, 26, 32], [176, 26, 32], [174, 25, 31], [172, 25, 31], [171, 25, 31],
+    [169, 25, 30], [167, 24, 30], [165, 24, 29], [164, 24, 29], [162, 23, 29],
+    [160, 23, 28], [158, 23, 28], [157, 23, 27], [155, 22, 27], [153, 22, 27],
     [151, 22, 26], [150, 22, 26], [146, 21, 25]])/255.
-    
-    return ListedColormap(tmp_cmap)  
+
+    return ListedColormap(tmp_cmap)
 
 def rjw_cmap():
     '''
@@ -713,8 +746,8 @@ def rjw_cmap():
        [255, 136,  64],[255, 124,  62],[255, 112,  60],[255, 100,  58],
        [255,  80,  46],[255,  60,  34],[255,  40,  23],[255,  20,  11],
        [255,   0,   0],[237,  17,   0]])/255.
-    return ListedColormap(tmp_cmap)    
-                 
+    return ListedColormap(tmp_cmap)
+
 def dkass_dust_cmap():
     '''
     Returns a color map that goes from yellow>orange>red>purple
@@ -723,7 +756,7 @@ def dkass_dust_cmap():
     from matplotlib.colors import ListedColormap,hex2color
     tmp_cmap = np.zeros((256,4))
     tmp_cmap [:,3]=1. #set alpha
-    
+
     dkass_cmap = ['#ffffa3','#fffea1','#fffc9f','#fffa9d','#fff99b',\
     '#fff799','#fff597','#fef395','#fef293','#fef091','#feee8f',\
     '#feec8d','#fdea8b','#fde989','#fde787','#fde584','#fce382',\
@@ -767,12 +800,12 @@ def dkass_dust_cmap():
     '#560d41','#550d3f','#540d3d','#530c3b','#520c39','#510c37',\
     '#500c35','#4f0b33','#4e0b30','#4d0b2e','#4d0a2c','#4c0a2a',\
     '#4b0a28','#4a0926','#490924','#480922','#470820']
-    
+
     RGB_T   = np.array([hex2color(x) for x in dkass_cmap])
-    tmp_cmap[:,0:3]=RGB_T 
+    tmp_cmap[:,0:3]=RGB_T
 
     return ListedColormap(tmp_cmap)
-    
+
 def dkass_temp_cmap():
     '''
     Returns a color map that goes from black>purple>blue>green>yellow>orange>red
@@ -781,7 +814,7 @@ def dkass_temp_cmap():
     from matplotlib.colors import ListedColormap,hex2color
     tmp_cmap = np.zeros((256,4))
     tmp_cmap [:,3]=1. #set alpha
-    
+
     dkass_cmap = ['#200000','#230104','#250208','#27040c','#290510',\
     '#2c0614','#2e0718','#30081c','#320a20','#350b24','#370c28',\
     '#390d2c','#3c0f30','#3e1034','#401138','#42123c','#451340',\
@@ -825,43 +858,43 @@ def dkass_temp_cmap():
     '#ff4000','#ff3c00','#ff3800','#ff3400','#ff3000','#ff2c00',\
     '#ff2800','#ff2400','#ff2000','#ff1c00','#ff1800','#ff1400',\
     '#ff1000','#ff0c00','#ff0800','#ff0400','#ff0000']
-    
+
     RGB_T   = np.array([hex2color(x) for x in dkass_cmap])
-    tmp_cmap[:,0:3]=RGB_T 
+    tmp_cmap[:,0:3]=RGB_T
 
     return ListedColormap(tmp_cmap)
-          
-#=========================================================================   
+
+#=========================================================================
 #=========================================================================
 #=========================================================================
 
 def pretty_print_to_fv_eta(var,varname,nperline=6):
     """
-    Print the ak or bk coefficients to copy paste in fv_eta.f90 
+    Print the ak or bk coefficients to copy paste in fv_eta.f90
     Args:
         data: ak or bk data
         varname: the variable name, 'a' or 'b'
         nperline:the number of elements per line
     Returns:
          The print statement ready to copy-paste in fv_eta.f90
-   
+
     """
     NLAY=len(var)-1
     import sys
     ni=0
     print('') #skip a line
-    
+
     #===========================================================
     #=====print the piece of code to copy/paste in fv_eta.f90===
     #===========================================================
-    
+
     #If a, print the variable definitions before the variable content
     if varname=='a':
         print('      real a%i(%i),b%i(%i)'%(NLAY,NLAY+1,NLAY,NLAY+1)  )
         print('')
-    
-    
-    
+
+
+
     #===Initialize the first line===
     print("data %s%i /      &"%(varname,NLAY))
     sys.stdout.write('    ') #first tab
@@ -869,22 +902,22 @@ def pretty_print_to_fv_eta(var,varname,nperline=6):
     for i in range(0,len(var)-1):
         sys.stdout.write('%16.10e, '%var[i])
         ni+=1
-        if ni==nperline: 
+        if ni==nperline:
             sys.stdout.write(' &\n    ')
             ni=0
-    #===last line===   
-    sys.stdout.write('%16.10e /\n'%var[NLAY])  
-    
+    #===last line===
+    sys.stdout.write('%16.10e /\n'%var[NLAY])
+
     #If b, print the code snippet after the displaying the variable
     if varname=='b':
         ks=0
         while var[ks]==0. :
             ks+=1
         print('')
-        
+
         #We remove 1 as it takes two boundary points to form one layer
-  
-        
+
+
         print('        case (%i)'%(NLAY))
         print('          ks = %i'%(ks-1))
         print('          do k=1,km+1')
@@ -892,7 +925,7 @@ def pretty_print_to_fv_eta(var,varname,nperline=6):
         print('            bk(k) = b%i(k)'%(NLAY))
         print('          enddo  ')
         print(' ')
-    
+
 
 def replace_dims(Ncvar_dim,vert_dim_name=None):
     '''
@@ -902,19 +935,19 @@ def replace_dims(Ncvar_dim,vert_dim_name=None):
         vert_dim_name(optional): 'pstd', 'zstd', or 'zagl' if the vertical dimensions is ambigeous
     Return:
         dims_out: updated dimensions matching FV3's naming convention
-        
+
     '''
     #Set input dictionary options that would be recognized as FV3 variables
     lat_dic=['lat','lats','latitudes','latitude']
     lon_dic=['lon','lon','longitude','longitudes']
     lev_dic=['pressure','altitude']
     areo_dic=['ls']
-    
+
     #Desired outputs
 
     dims_out=list(Ncvar_dim).copy()
     for ii,idim in enumerate(Ncvar_dim):
-        if idim in lat_dic: dims_out[ii]='lat' #Rename axis 
+        if idim in lat_dic: dims_out[ii]='lat' #Rename axis
         if idim in lon_dic: dims_out[ii]='lon'
         if idim in lev_dic:
             #Vertical coordinate: If no input is provided, assume it is standard pressure 'pstd'
@@ -922,5 +955,62 @@ def replace_dims(Ncvar_dim,vert_dim_name=None):
                 dims_out[ii]='pstd'
             else: #use provided dimension
                 dims_out[ii]=vert_dim_name
-                    
+
     return tuple(dims_out)
+
+def ak_bk_loader(fNcdf):
+    '''
+    Return the ak and bk. First look in the current netcdf file.
+    If not found, this routine will check the XXXXX.fixed.nc in the same directory and then in the XXXXX.fixed.tileX.nc files if present
+    Args:
+        fNcdf: an opened netcdf file
+    Returns:
+        ak,bk : the ak, bk values
+    ***NOTE***
+
+    This routine will look for both 'ak' and 'pk'.
+
+    There are cases when it is convenient to load the  pk, bk once at the begining of the files in MarsVars.py,
+    However the pk, bk may not be used at all in the calculation. This is the case with MarsVars.py XXXXX.atmos_average_psd.nc --add msf (which operates on the _pstd.nc file)
+
+
+    '''
+    #First try to read pk and bk in the current netcdf file:
+    allvars=fNcdf.variables.keys()
+
+    #Get Netcdf file and path (for debugging)
+    Ncdf_name=get_Ncdf_path(fNcdf) #netcdf file
+    filepath,fname=extract_path_basename(Ncdf_name)
+    fullpath_name=os.path.join(filepath,fname)
+    #Check for ak first, then pk
+
+    if ('pk' in allvars or 'ak' in allvars) and 'bk' in allvars:
+        if 'ak' in allvars:
+            ak=np.array(fNcdf.variables['ak'])
+        else:
+            ak=np.array(fNcdf.variables['pk'])
+        bk=np.array(fNcdf.variables['bk'])
+        print('ak bk in file')
+
+    else:
+        try:
+            name_fixed=find_fixedfile(fullpath_name)
+            f_fixed=Dataset(name_fixed, 'r', format='NETCDF4_CLASSIC')
+            allvars=f_fixed.variables.keys()
+            #Check for ak firdt, then pk
+            if 'ak' in allvars:
+                ak=np.array(f_fixed.variables['ak'])
+            else:
+                ak=np.array(f_fixed.variables['pk'])
+            bk=np.array(f_fixed.variables['bk'])
+            f_fixed.close()
+            print('pk bk in fixed file')
+        except:
+            prRed('Fixed file does not exist in '\
+                            + filepath + ' make sure the fixed '\
+                            'file you are referencing matches the '\
+                            'FV3 filetype (i.e. fixed.tileX.nc '\
+                            'for operations on tile X)')
+            exit()
+
+    return ak,bk
