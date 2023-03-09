@@ -12,16 +12,16 @@ import shutil
 import subprocess   # run command
 import numpy as np
 from netCDF4 import Dataset
-import warnings     # Suppress certain errors when dealing with NaN arrays
+import warnings     # suppress certain errors when dealing with NaN arrays
 
-# ===========
+# ==========
 from amescap.Ncdf_wrapper import Ncdf, Fort
 from amescap.FV3_utils import tshift, daily_to_average, daily_to_diurn, get_trend_2D
 from amescap.Script_utils import prYellow, prCyan, prRed, find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile, get_longname_units
 # ==========
 
 # ======================================================
-#                  ARGUMENTS PARSER
+#                  ARGUMENT PARSER
 # ======================================================
 parser = argparse.ArgumentParser(description="""\033[93m MarsFiles files manager. Used to alter file format. \n \033[00m""",
                                  formatter_class=argparse.RawTextHelpFormatter)

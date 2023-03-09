@@ -8,21 +8,24 @@ import sys        # system command
 import time       # monitor interpolation time
 import re         # string matching module to handle time_of_day_XX
 
+# ==========
 from amescap.FV3_utils import fms_press_calc, fms_Z_calc, vinterp, find_n, polar2XYZ, interp_KDTree, axis_interp
 from amescap.Script_utils import check_file_tape, prYellow, prRed, prCyan, prGreen, prPurple, print_fileContent
 from amescap.Script_utils import section_content_amescap_profile, find_tod_in_diurn, filter_vars, find_fixedfile, ak_bk_loader
 from amescap.Ncdf_wrapper import Ncdf
+# ==========
 
-# Attempt to import specific scientic modules that may or may not be included in the default Python installation on NAS
+# Attempt to import specific scientic modules that may or may not 
+# be included in the default Python installation on NAS.
 try:
     import matplotlib
-    matplotlib.use('Agg')  # Force matplotlib NOT to use any Xwindows backend
+    matplotlib.use('Agg') # Force matplotlib NOT to use any Xwindows backend
     import numpy as np
     from netCDF4 import Dataset, MFDataset
 
 except ImportError as error_msg:
     prYellow("Error while importing modules")
-    prYellow('Your are using python '+str(sys.version_info[0:3]))
+    prYellow('You are using Python version '+str(sys.version_info[0:3]))
     prYellow('Please source your virtual environment, e.g.:')
     prCyan('    source envPython3.7/bin/activate.csh \n')
     print("Error was: " + error_msg.message)
@@ -34,7 +37,7 @@ except Exception as exception:
     exit()
 
 # ======================================================
-#                  ARGUMENTS PARSER
+#                  ARGUMENT PARSER
 # ======================================================
 parser = argparse.ArgumentParser(description="""\033[93m MarsInterp, pressure interpolation on fixed layers\n \033[00m""",
                                  formatter_class=argparse.RawTextHelpFormatter)
