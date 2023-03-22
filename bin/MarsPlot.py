@@ -8,7 +8,7 @@ import sys        # system command
 
 # ==========
 from amescap.Script_utils import check_file_tape, prYellow, prRed, prCyan, prGreen, prPurple
-from amescap.Script_utils import print_fileContent, print_varContent, FV3_file_type, find_tod_in_diurn
+from amescap.Script_utils import section_content_amescap_profile, print_fileContent, print_varContent, FV3_file_type, find_tod_in_diurn
 from amescap.Script_utils import wbr_cmap, rjw_cmap, dkass_temp_cmap, dkass_dust_cmap
 from amescap.FV3_utils import lon360_to_180, lon180_to_360, UT_LTtxt, area_weights_deg
 from amescap.FV3_utils import add_cyclic, azimuth2cart, mollweide2cart, robin2cart, ortho2cart
@@ -116,41 +116,35 @@ parser.add_argument('--debug',  action='store_true',
 #                  MAIN PROGRAM
 # ======================================================
 def main():
-    global output_path
+    global output_path, input_paths, out_format, debug
     output_path     = os.getcwd()
-    global input_paths
+    out_format      = parser.parse_args().output
+    debug           = parser.parse_args().debug
     input_paths     = []
     input_paths.append(parser.parse_args().directory)
-    global out_format
-    out_format      = parser.parse_args().output
-    global debug
-    debug           = parser.parse_args().debug
+
     global Ncdf_num         # Hosts the simulation timestamps
     global objectList       # Contains all figure objects
     global customFileIN     # The Custom.in template name
-    global levels
+    
+    global levels, my_dpi, label_size, title_size, label_factor, tick_factor, title_factor
     levels          = 21    # Number of contours for 2D plots
-    global my_dpi
     my_dpi          = 96.   # Pixels per inch for figure output
-    global label_size
     label_size      = 18    # Label size for title, xlabel, and ylabel
-    global title_size
     title_size      = 24    # Label size for title, xlabel, and ylabel
-    global label_factor
     label_factor    = 3/10  # Reduces the font size as the number of panels increases
-    global tick_factor
     tick_factor     = 1/2
-    global title_factor
     title_factor    = 10/12
+    
     global width_inch       # Pixel width for saving figure
     global height_inch      # Pixel width for saving figure
     global vertical_page
     
     # Portrait instead of landscape format for figure pages
     vertical_page = parser.parse_args().vertical
-    global shared_dir
     
     # Directory containing shared templates
+    global shared_dir
     shared_dir = '/u/mkahre/MCMC/analysis/working/shared_templates'
 
     # Set figure dimensions
@@ -169,6 +163,17 @@ def main():
                   Fig_2D_time_lev('atmos_average_pstd.temp', False),
                   Fig_2D_lon_time('atmos_average.temp', False),
                   Fig_1D('atmos_average.temp', False)]
+    # =============================
+
+    # USER PREFERENCES - AXIS FORMATTING
+    # Check whether user requests sol in addition to Ls on time axis,
+    # and which longitude coordinates to use (-180-180 v 0-360)
+    # Default: Ls only, 0-360
+    content_txt = section_content_amescap_profile('MarsPlot.py Settings')
+    exec(content_txt)  # Load all variables in that section
+    global add_sol_time_axis, lon_coord_type
+    add_sol_time_axis = eval('np.array(add_sol_to_time_axis)') # Copy requested variable
+    lon_coord_type = eval('np.array(lon_coordinate)') # Copy requested variable
     # =============================
 
     # Group together the first two figures
@@ -621,7 +626,7 @@ def get_level_index(level_query, levs):
     return levi, txt_level
 
 
-def get_time_index(Ls_query_360, Ls):
+def get_time_index(Ls_query_360, LsDay):
     '''
     This function returns the indices that will extract data from the netcdf file from a range of solar longitudes [0-360].
     First try the Mars Year of the last timestep, then try the year before that. Use whichever Ls period is closest to the requested date.
@@ -635,16 +640,16 @@ def get_time_index(Ls_query_360, Ls):
     *** Note that the keyword 'all' is passed as -99999 by the rT() functions
     '''
 
-    # Special case where the file has only one timestep, transform Ls to array:
-    if len(np.atleast_1d(Ls)) == 1:
-        Ls = np.array([Ls])
+    # Special case where the file has only one timestep, transform LsDay to array:
+    if len(np.atleast_1d(LsDay)) == 1:
+        LsDay = np.array([LsDay])
 
-    Nt = len(Ls)
+    Nt = len(LsDay)
     Ls_query_360 = np.array(Ls_query_360)
 
     # If None, set to default (i.e.last timestep)
     if Ls_query_360.any() == None:
-        Ls_query_360 = np.mod(Ls[-1], 360.)
+        Ls_query_360 = np.mod(LsDay[-1], 360.)
 
     # If one time is provided
     if Ls_query_360.size == 1:
@@ -654,7 +659,7 @@ def get_time_index(Ls_query_360, Ls):
             txt_time = ', time avg'
         else:
             # Get the Mars Year of the last timestep in the file
-            MY_end = MY_func(Ls[-1])
+            MY_end = MY_func(LsDay[-1])
             if MY_end >= 1:
                 # Check if the desired Ls is available in this Mars Year
                 Ls_query = Ls_query_360+(MY_end-1) * \
@@ -662,17 +667,17 @@ def get_time_index(Ls_query_360, Ls):
             else:
                 Ls_query = Ls_query_360
             # If this time is greater than the last Ls, look one year back
-            if Ls_query > Ls[-1] and MY_end > 1:
+            if Ls_query > LsDay[-1] and MY_end > 1:
                 MY_end -= 1  # One year back
                 Ls_query = Ls_query_360+(MY_end-1)*360.
-            ti = np.argmin(np.abs(Ls_query-Ls))
-            txt_time = ', Ls= (MY%2i) %.2f' % (MY_end, np.mod(Ls[ti], 360.))
+            ti = np.argmin(np.abs(Ls_query-LsDay))
+            txt_time = ', Ls= (MY%2i) %.2f' % (MY_end, np.mod(LsDay[ti], 360.))
 
     # If a range of times are provided
     elif Ls_query_360.size == 2:
 
         # Get the Mars Year of the last timestep in the file
-        MY_last = MY_func(Ls[-1])
+        MY_last = MY_func(LsDay[-1])
         if MY_last >= 1:
             # Try the Mars Year of the last timestep
             Ls_query_last = Ls_query_360[1]+(MY_last-1)*360.
@@ -680,26 +685,26 @@ def get_time_index(Ls_query_360, Ls):
             Ls_query_last = Ls_query_360[1]
         # First consider the further end of the desired range
         # If this time is greater that the last Ls, look one year back
-        if Ls_query_last > Ls[-1] and MY_last > 1:
+        if Ls_query_last > LsDay[-1] and MY_last > 1:
             MY_last -= 1
             Ls_query_last = Ls_query_360[1] + \
                 (MY_last-1)*360.  # (MY starts at 1, not zero)
-        ti_last = np.argmin(np.abs(Ls_query_last-Ls))
+        ti_last = np.argmin(np.abs(Ls_query_last-LsDay))
         # Then get the first value for that Mars Year
         MY_beg = MY_last.copy()
         # Try the Mars Year of the last timestep
         Ls_query_beg = Ls_query_360[0]+(MY_beg-1)*360.
-        ti_beg = np.argmin(np.abs(Ls_query_beg-Ls))
+        ti_beg = np.argmin(np.abs(Ls_query_beg-LsDay))
 
         # If the start value is higher, search in the year before for ti_beg
         if ti_beg >= ti_last:
             MY_beg -= 1
             Ls_query_beg = Ls_query_360[0]+(MY_beg-1)*360.
-            ti_beg = np.argmin(np.abs(Ls_query_beg-Ls))
+            ti_beg = np.argmin(np.abs(Ls_query_beg-LsDay))
 
         ti = np.arange(ti_beg, ti_last+1)
 
-        Ls_bounds = [Ls[ti[0]], Ls[ti[-1]]]  # This is for display
+        Ls_bounds = [LsDay[ti[0]], LsDay[ti[-1]]]  # This is for display
         txt_time = ', Ls= avg [(MY%2i) %.2f <-> (MY%2i) %.2f]' % (MY_beg,
                                                                   np.mod(Ls_bounds[0], 360.), MY_last, np.mod(Ls_bounds[1], 360.))
 
@@ -1899,16 +1904,16 @@ class Fig_2D(object):
         if dim_info == ('time', 'lat', 'lon'):
             # Initialize dimension
             t = f.variables['time'][:]
-            Ls = np.squeeze(f.variables['areo'][:])
+            LsDay = np.squeeze(f.variables['areo'][:])
             ti = np.arange(0, len(t))
             # For 'diurn' file, change time_of_day(time, 24, 1) to time_of_day(time) at midnight UT
-            if f_type == 'diurn' and len(Ls.shape) > 1:
-                Ls = np.squeeze(Ls[:, 0])
+            if f_type == 'diurn' and len(LsDay.shape) > 1:
+                LsDay = np.squeeze(LsDay[:, 0])
             # Stack the 'time' and 'areo' array as one variable
-            t_stack = np.vstack((t, Ls))
+            t_stack = np.vstack((t, LsDay))
 
             if plot_type == '2D_lon_lat':
-                ti, temp_txt = get_time_index(fdim1, Ls)
+                ti, temp_txt = get_time_index(fdim1, LsDay)
             if plot_type == '2D_time_lat':
                 loni, temp_txt = get_lon_index(fdim1, lon)
             if plot_type == '2D_lon_time':
@@ -1965,13 +1970,13 @@ class Fig_2D(object):
                 levs = f.variables[dim_info[1]][:]
                 zi   = np.arange(0, len(levs))
                 t    = f.variables['time'][:]
-                Ls   = np.squeeze(f.variables['areo'][:])
+                LsDay   = np.squeeze(f.variables['areo'][:])
                 ti   = np.arange(0, len(t))
                 # For 'diurn' file, change time_of_day(time, 24, 1) to time_of_day(time) at midnight UT
-                if f_type == 'diurn' and len(Ls.shape) > 1:
-                    Ls = np.squeeze(Ls[:, 0])
+                if f_type == 'diurn' and len(LsDay.shape) > 1:
+                    LsDay = np.squeeze(LsDay[:, 0])
                 # Stack the 'time' and 'areo' arrays as one variable
-                t_stack = np.vstack((t, Ls))
+                t_stack = np.vstack((t, LsDay))
 
             if plot_type == '2D_lon_lat':
                 if var_thin == True:
@@ -1979,7 +1984,7 @@ class Fig_2D(object):
                     if add_fdim:
                         self.fdim_txt += temp_txt
                 elif var_thin == False:
-                    ti, temp_txt = get_time_index(fdim1, Ls)
+                    ti, temp_txt = get_time_index(fdim1, LsDay)
                     if add_fdim:
                         self.fdim_txt += temp_txt
                     zi, temp_txt = get_level_index(fdim2, levs)
@@ -2000,7 +2005,7 @@ class Fig_2D(object):
                     if add_fdim:
                         self.fdim_txt += temp_txt
                 elif var_thin == False:
-                    ti, temp_txt    = get_time_index(fdim1, Ls)
+                    ti, temp_txt    = get_time_index(fdim1, LsDay)
                     if add_fdim:
                         self.fdim_txt += temp_txt
                     loni, temp_txt  = get_lon_index(fdim2, lon)
@@ -2013,7 +2018,7 @@ class Fig_2D(object):
                     if add_fdim:
                         self.fdim_txt += temp_txt
                 elif var_thin == False:
-                    ti, temp_txt    = get_time_index(fdim1, Ls)
+                    ti, temp_txt    = get_time_index(fdim1, LsDay)
                     if add_fdim:
                         self.fdim_txt += temp_txt
                     lati, temp_txt  = get_lat_index(fdim2, lat)
@@ -2600,7 +2605,7 @@ class Fig_2D_time_lat(Fig_2D):
         # make_template calls method from the parent class
         super(Fig_2D_time_lat, self).make_template(
             'Plot 2D time X lat', 'Lon +/-180', 'Level [Pa/m]', 'Ls', 'lat')
-        #self.fdim1,  self.fdim2, self.Xlim,self.Ylim
+        #self.fdim1,  self.fdim2, self.Xlim, self.Ylim
 
     def do_plot(self):
         # Create figure
@@ -2609,35 +2614,37 @@ class Fig_2D_time_lat(Fig_2D):
 
             t_stack, lat, var, var_info = super(
                 Fig_2D_time_lat, self).data_loader_2D(self.varfull, self.plot_type)
-            tim = t_stack[0, :]
-            Ls = t_stack[1, :]
+            SolDay = t_stack[0, :]
+            LsDay = t_stack[1, :]
 
-            super(Fig_2D_time_lat, self).filled_contour(Ls, lat, var)
+            super(Fig_2D_time_lat, self).filled_contour(LsDay, lat, var)
 
             if self.varfull2:
                 _, _, var2, var_info2 = super(Fig_2D_time_lat, self).data_loader_2D(
                     self.varfull2, self.plot_type)
                 super(Fig_2D_time_lat, self).solid_contour(
-                    Ls, lat, var2, self.contour2)
+                    LsDay, lat, var2, self.contour2)
                 var_info += " (& "+var_info2+")"
 
             # Axis formatting
             if self.Xlim:
-                idmin = np.argmin(np.abs(tim-self.Xlim[0]))
-                idmax = np.argmin(np.abs(tim-self.Xlim[1]))
-                plt.xlim([Ls[idmin], Ls[idmax]])
+                idmin = np.argmin(np.abs(SolDay-self.Xlim[0]))
+                idmax = np.argmin(np.abs(SolDay-self.Xlim[1]))
+                plt.xlim([LsDay[idmin], LsDay[idmax]])
 
             if self.Ylim:
                 plt.ylim(self.Ylim[0], self.Ylim[1])
-
+            
             Ls_ticks = [item for item in ax.get_xticks()]
             labels = [item for item in ax.get_xticklabels()]
 
             for i in range(0, len(Ls_ticks)):
                 # Find timestep closest to this tick
-                id = np.argmin(np.abs(Ls-Ls_ticks[i]))
-                # labels[i]='Ls %g\nsol %i'%(np.mod(Ls_ticks[i],360.),tim[id]) # Alex's X axis ticklabels with 'sol' beneath
-                labels[i] = '%g%s' % (np.mod(Ls_ticks[i], 360.), degr)
+                id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
+                if add_sol_time_axis:
+                    labels[i] = '%g%s\nsol %i' % (np.mod(Ls_ticks[i], 360.), degr, SolDay[id])
+                else:
+                    labels[i] = '%g%s' % (np.mod(Ls_ticks[i], 360.), degr)
             ax.set_xticklabels(labels, fontsize=label_size -
                                self.nPan*tick_factor, rotation=0)
 
@@ -2776,22 +2783,22 @@ class Fig_2D_time_lev(Fig_2D):
 
             t_stack, pfull, var, var_info = super(
                 Fig_2D_time_lev, self).data_loader_2D(self.varfull, self.plot_type)
-            tim = t_stack[0, :]
-            Ls = t_stack[1, :]
-            super(Fig_2D_time_lev, self).filled_contour(Ls, pfull, var)
+            SolDay = t_stack[0, :]
+            LsDay = t_stack[1, :]
+            super(Fig_2D_time_lev, self).filled_contour(LsDay, pfull, var)
 
             if self.varfull2:
                 _, _, var2, var_info2 = super(Fig_2D_time_lev, self).data_loader_2D(
                     self.varfull2, self.plot_type)
                 super(Fig_2D_time_lev, self).solid_contour(
-                    Ls, pfull, var2, self.contour2)
+                    LsDay, pfull, var2, self.contour2)
                 var_info += " (& "+var_info2+")"
 
             # Axis formatting
             if self.Xlim:
-                idmin = np.argmin(np.abs(tim-self.Xlim[0]))
-                idmax = np.argmin(np.abs(tim-self.Xlim[1]))
-                plt.xlim([Ls[idmin], Ls[idmax]])
+                idmin = np.argmin(np.abs(SolDay-self.Xlim[0]))
+                idmax = np.argmin(np.abs(SolDay-self.Xlim[1]))
+                plt.xlim([LsDay[idmin], LsDay[idmax]])
             if self.Ylim:
                 plt.ylim(self.Ylim)
 
@@ -2800,9 +2807,12 @@ class Fig_2D_time_lev(Fig_2D):
 
             for i in range(0, len(Ls_ticks)):
                 # Find timestep closest to this tick
-                id = np.argmin(np.abs(Ls-Ls_ticks[i]))
-                # labels[i]='Ls %g\nsol %i'%(np.mod(Ls_ticks[i],360.),tim[id]) # Alex's X axis ticklabels with 'sol' beneath
-                labels[i] = '%g%s' % (np.mod(Ls_ticks[i], 360.), degr)
+                id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
+                if add_sol_time_axis:
+                    labels[i] = '%g%s\nsol %i' % (
+                        np.mod(Ls_ticks[i], 360.), degr, SolDay[id])
+                else:
+                    labels[i] = '%g%s' % (np.mod(Ls_ticks[i], 360.), degr)
             ax.set_xticklabels(labels, fontsize=label_size -
                                self.nPan*tick_factor, rotation=0)
 
@@ -2842,16 +2852,16 @@ class Fig_2D_lon_time(Fig_2D):
             lon, t_stack, var, var_info = super(
                 Fig_2D_lon_time, self).data_loader_2D(self.varfull, self.plot_type)
             lon180, var = shift_data(lon, var)
-            tim = t_stack[0, :]
-            Ls = t_stack[1, :]
-            super(Fig_2D_lon_time, self).filled_contour(lon180, Ls, var)
+            SolDay = t_stack[0, :]
+            LsDay = t_stack[1, :]
+            super(Fig_2D_lon_time, self).filled_contour(lon180, LsDay, var)
 
             if self.varfull2:
                 _, _, var2, var_info2 = super(Fig_2D_lon_time, self).data_loader_2D(
                     self.varfull2, self.plot_type)
                 _, var2 = shift_data(lon, var2)
                 super(Fig_2D_lon_time, self).solid_contour(
-                    lon180, Ls, var2, self.contour2)
+                    lon180, LsDay, var2, self.contour2)
                 var_info += " (& "+var_info2+")"
 
             # Axis formatting
@@ -2859,18 +2869,20 @@ class Fig_2D_lon_time(Fig_2D):
                 plt.xlim(self.Xlim)
             # Axis formatting
             if self.Ylim:
-                idmin = np.argmin(np.abs(tim-self.Ylim[0]))
-                idmax = np.argmin(np.abs(tim-self.Ylim[1]))
-                plt.ylim([Ls[idmin], Ls[idmax]])
+                idmin = np.argmin(np.abs(SolDay-self.Ylim[0]))
+                idmax = np.argmin(np.abs(SolDay-self.Ylim[1]))
+                plt.ylim([LsDay[idmin], LsDay[idmax]])
 
             Ls_ticks = [item for item in ax.get_yticks()]
             labels = [item for item in ax.get_yticklabels()]
 
             for i in range(0, len(Ls_ticks)):
                 # Find timestep closest to this tick
-                id = np.argmin(np.abs(Ls-Ls_ticks[i]))
-                # labels[i]='Ls %g\nsol %i'%(np.mod(Ls_ticks[i],360.),tim[id]) # Alex's X axis ticklabels with 'sol' beneath
-                labels[i] = '%g%s' % (np.mod(Ls_ticks[i], 360.), degr)
+                id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
+                if add_sol_time_axis:
+                    labels[i] = '%g%s\nsol %i' % (np.mod(Ls_ticks[i], 360.), degr, SolDay[id])
+                else:
+                    labels[i] = '%g%s' % (np.mod(Ls_ticks[i], 360.), degr)
             ax.set_xticklabels(labels, fontsize=label_size -
                                self.nPan*tick_factor, rotation=0)
 
@@ -3120,16 +3132,16 @@ class Fig_1D(object):
 
                 # Initialize dimension
                 t = f.variables['time'][:]
-                Ls = np.squeeze(f.variables['areo'][:])
+                LsDay = np.squeeze(f.variables['areo'][:])
                 ti = np.arange(0, len(t))
                 # For 'diurn' file, change 'time_of_day(time, 24, 1)' to 'time_of_day(time)' at midnight UT
-                if f_type == 'diurn' and len(Ls.shape) > 1:
-                    Ls = np.squeeze(Ls[:, 0])
+                if f_type == 'diurn' and len(LsDay.shape) > 1:
+                    LsDay = np.squeeze(LsDay[:, 0])
                 # Stack the 'time' and 'areo' arrays as one variable
-                t_stack = np.vstack((t, Ls))
+                t_stack = np.vstack((t, LsDay))
 
                 if plot_type == '1D_lat':
-                    ti, temp_txt = get_time_index(t_req, Ls)
+                    ti, temp_txt = get_time_index(t_req, LsDay)
                     if add_fdim:
                         self.fdim_txt += temp_txt
                     loni, temp_txt = get_lon_index(lon_req, lon)
@@ -3139,7 +3151,7 @@ class Fig_1D(object):
                     lati, temp_txt = get_lat_index(lat_req, lat)
                     if add_fdim:
                         self.fdim_txt += temp_txt
-                    ti, temp_txt = get_time_index(t_req, Ls)
+                    ti, temp_txt = get_time_index(t_req, LsDay)
                     if add_fdim:
                         self.fdim_txt += temp_txt
                 if plot_type == '1D_time':
@@ -3187,16 +3199,16 @@ class Fig_1D(object):
                 levs = f.variables[dim_info[1]][:]
                 zi = np.arange(0, len(levs))
                 t = f.variables['time'][:]
-                Ls = np.squeeze(f.variables['areo'][:])
+                LsDay = np.squeeze(f.variables['areo'][:])
                 ti = np.arange(0, len(t))
                 # For 'diurn' file, change 'time_of_day(time, 24, 1)' to 'time_of_day(time)' at midnight UT
-                if f_type == 'diurn' and len(Ls.shape) > 1:
-                    Ls = np.squeeze(Ls[:, 0])
+                if f_type == 'diurn' and len(LsDay.shape) > 1:
+                    LsDay = np.squeeze(LsDay[:, 0])
                 # Stack the 'time' and 'areo' arrays as one variable
-                t_stack = np.vstack((t, Ls))
+                t_stack = np.vstack((t, LsDay))
 
                 if plot_type == '1D_lat':
-                    ti, temp_txt = get_time_index(t_req, Ls)
+                    ti, temp_txt = get_time_index(t_req, LsDay)
                     if add_fdim:
                         self.fdim_txt += temp_txt
                     loni, temp_txt = get_lon_index(lon_req, lon)
@@ -3210,7 +3222,7 @@ class Fig_1D(object):
                     lati, temp_txt = get_lat_index(lat_req, lat)
                     if add_fdim:
                         self.fdim_txt += temp_txt
-                    ti, temp_txt = get_time_index(t_req, Ls)
+                    ti, temp_txt = get_time_index(t_req, LsDay)
                     if add_fdim:
                         self.fdim_txt += temp_txt
                     zi, temp_txt = get_level_index(lev_req, levs)
@@ -3229,7 +3241,7 @@ class Fig_1D(object):
                         self.fdim_txt += temp_txt
 
                 if plot_type == '1D_lev':
-                    ti, temp_txt = get_time_index(t_req, Ls)
+                    ti, temp_txt = get_time_index(t_req, LsDay)
                     if add_fdim:
                         self.fdim_txt += temp_txt
                     lati, temp_txt = get_lat_index(lat_req, lat)
@@ -3282,13 +3294,13 @@ class Fig_1D(object):
 
                 # Initialize dimension
                 t = f.variables['time'][:]
-                Ls = np.squeeze(f.variables['areo'][:])
+                LsDay = np.squeeze(f.variables['areo'][:])
                 ti = np.arange(0, len(t))
                 # For 'diurn' file, change 'time_of_day(time, 24, 1)' to 'time_of_day(time)' at midnight UT
-                if f_type == 'diurn' and len(Ls.shape) > 1:
-                    Ls = np.squeeze(Ls[:, 0])
+                if f_type == 'diurn' and len(LsDay.shape) > 1:
+                    LsDay = np.squeeze(LsDay[:, 0])
                 # Stack the 'time' and 'areo' arrays as one variable
-                t_stack = np.vstack((t, Ls))
+                t_stack = np.vstack((t, LsDay))
 
                 loni, temp_txt = get_lon_index(lon_req, lon)
                 if add_fdim:
@@ -3296,7 +3308,7 @@ class Fig_1D(object):
                 lati, temp_txt = get_lat_index(lat_req, lat)
                 if add_fdim:
                     self.fdim_txt += temp_txt
-                ti, temp_txt = get_time_index(t_req, Ls)
+                ti, temp_txt = get_time_index(t_req, LsDay)
                 if add_fdim:
                     self.fdim_txt += temp_txt
 
@@ -3330,15 +3342,15 @@ class Fig_1D(object):
                 levs = f.variables[dim_info[2]][:]
 
                 t = f.variables['time'][:]
-                Ls = np.squeeze(f.variables['areo'][:])
+                LsDay = np.squeeze(f.variables['areo'][:])
                 ti = np.arange(0, len(t))
                 # For 'diurn' file, change 'time_of_day(time, 24, 1)' to 'time_of_day(time)' at midnight UT
-                if f_type == 'diurn' and len(Ls.shape) > 1:
-                    Ls = np.squeeze(Ls[:, 0])
+                if f_type == 'diurn' and len(LsDay.shape) > 1:
+                    LsDay = np.squeeze(LsDay[:, 0])
                 # Stack the 'time' and 'areo' arrays as one variable
-                t_stack = np.vstack((t, Ls))
+                t_stack = np.vstack((t, LsDay))
 
-                ti, temp_txt = get_time_index(t_req, Ls)
+                ti, temp_txt = get_time_index(t_req, LsDay)
                 if add_fdim:
                     self.fdim_txt += temp_txt
                 lati, temp_txt = get_lat_index(lat_req, lat)
@@ -3501,13 +3513,13 @@ class Fig_1D(object):
                     plt.ylim(self.Vlim)
 
             if self.plot_type == '1D_time':
-                tim = xdata[0, :]
-                Ls = xdata[1, :]
+                SolDay = xdata[0, :]
+                LsDay = xdata[1, :]
                 # If simulations span different years, they can be stacked (overplotted)
                 if parser.parse_args().stack_year:
-                    Ls = np.mod(Ls, 360)
+                    LsDay = np.mod(LsDay, 360)
 
-                plt.plot(Ls, var, self.axis_opt1, lw=3, ms=7, label=txt_label)
+                plt.plot(LsDay, var, self.axis_opt1, lw=3, ms=7, label=txt_label)
 
                 # Label is provided
                 if self.axis_opt2:
@@ -3529,9 +3541,12 @@ class Fig_1D(object):
 
                 for i in range(0, len(Ls_ticks)):
                     # Find timestep closest to this tick
-                    id = np.argmin(np.abs(Ls-Ls_ticks[i]))
-                    # labels[i]='Ls %g\nsol %i'%(np.mod(Ls_ticks[i],360.),tim[id]) # Alex's X axis ticklabels with 'sol' beneath
-                    labels[i] = '%g%s' % (np.mod(Ls_ticks[i], 360.), degr)
+                    id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
+                    if add_sol_time_axis:
+                        labels[i] = '%g%s\nsol %i' % (
+                            np.mod(Ls_ticks[i], 360.), degr, SolDay[id])
+                    else:
+                        labels[i] = '%g%s' % (np.mod(Ls_ticks[i], 360.), degr)
                 ax.set_xticklabels(labels, fontsize=label_size -
                                    self.nPan*tick_factor, rotation=0)
 
