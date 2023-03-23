@@ -830,7 +830,7 @@ def main():
                             new_dim=list(varNcf.dimensions)
                             new_dim[1]='time_of_day_%i'%(N)
                             #fnew.log_variable(ivar,areo_new,new_dim,longname_txt,units_txt)
-                            fnew.log_variable(ivar,areo_new,new_dim,varNcf.long_name,varNcf.units)
+                            fnew.log_variable(ivar,areo_new,new_dim,longname_txt,var_unit)
 
             fnew.close()
 
@@ -879,7 +879,7 @@ def main():
                     prCyan("Regridding: %s..."%(ivar))
                     var_OUT=regrid_Ncfile(varNcf,f_in,fNcdf_t)
                     fnew.log_variable(ivar,var_OUT,varNcf.dimensions,longname_txt,units_txt)
-                    fnew.log_variable(ivar,var_OUT,varNcf.dimensions,varNcf.long_name,varNcf.units)
+
             fnew.close()
             fNcdf_t.close()
 
@@ -915,13 +915,13 @@ def main():
             #Loop over all variables in file
             for ivar in var_list:
                 varNcf     = fdaily.variables[ivar]
-
+                longname_txt,units_txt=get_longname_units(fdaily,ivar)
                 if 'lon' in varNcf.dimensions and ivar not in ['lon','grid_xt_bnds','grid_yt_bnds']:
                     prCyan("Processing: %s ..."%(ivar))
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore", category=RuntimeWarning)
                         var_out=np.nanmean(varNcf[:],axis=-1)[...,np.newaxis]
-                        fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
+                        fnew.log_variable(ivar,var_out,varNcf.dimensions,longname_txt,units_txt)
                 else:
                     if  ivar in ['pfull', 'lat','phalf','pk','bk','pstd','zstd','zagl']:
                         prCyan("Copying axis: %s..."%(ivar))
