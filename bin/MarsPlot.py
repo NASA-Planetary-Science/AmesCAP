@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+from warnings import filterwarnings
+filterwarnings('ignore', category = DeprecationWarning)
+
 # Load generic Python modules
 import argparse   # parse arguments
 import os         # access operating systems function
@@ -163,17 +166,7 @@ def main():
                   Fig_2D_time_lev('atmos_average_pstd.temp', False),
                   Fig_2D_lon_time('atmos_average.temp', False),
                   Fig_1D('atmos_average.temp', False)]
-    # =============================
 
-    # USER PREFERENCES - AXIS FORMATTING
-    # Check whether user requests sol in addition to Ls on time axis,
-    # and which longitude coordinates to use (-180-180 v 0-360)
-    # Default: Ls only, 0-360
-    content_txt = section_content_amescap_profile('MarsPlot.py Settings')
-    exec(content_txt)  # Load all variables in that section
-    global add_sol_time_axis, lon_coord_type
-    add_sol_time_axis = eval('np.array(add_sol_to_time_axis)') # Copy requested variable
-    lon_coord_type = eval('np.array(lon_coordinate)') # Copy requested variable
     # =============================
 
     # Group together the first two figures
@@ -370,6 +363,32 @@ def main():
 #                  DATA OPERATION UTILITIES
 # ======================================================
 
+# USER PREFERENCES - AXIS FORMATTING
+
+content_txt = section_content_amescap_profile('MarsPlot.py Settings')
+exec(content_txt)  # Load all variables in that section
+
+global add_sol_time_axis, lon_coord_type, include_NaNs
+
+# Whether to include sol in addition to Ls on time axis (default = Ls only):
+add_sol_time_axis = eval('np.array(add_sol_to_time_axis)')
+
+# Defines which longitude coordinates to use (-180-180 v 0-360; default = 0-360):
+lon_coord_type = eval('np.array(lon_coordinate)')
+
+# Defines whether means include NaNs ('True', np.mean) or ignore NaNs ('False', like np.nanmean). Default = False:
+include_NaNs = eval('np.array(show_NaN_in_slice)')
+
+
+def mean_func(arr, axis):
+    '''This function performs a mean over the selected axis, ignoring or including NaN values as specified by show_NaN_in_slice in amescap_profile'''
+    if include_NaNs:
+        print('including NaNs')
+        return np.mean(arr, axis=axis)
+    else:
+        print('ignoring NaNs')
+        return np.nanmean(arr, axis=axis)
+    
 def shift_data(lon, data):
     '''
     This function shifts the longitude and data from 0/360 to -180/+180.
@@ -1927,7 +1946,7 @@ class Fig_2D(object):
             if f_type == 'diurn':
                 var = f.variables[var_name][ti, todi, lati, loni].reshape(len(np.atleast_1d(ti)), len(np.atleast_1d(todi)),
                                                                           len(np.atleast_1d(lati)), len(np.atleast_1d(loni)))
-                var = np.nanmean(var, axis=1)
+                var = mean_func(var, axis=1)
             else:
                 var = f.variables[var_name][ti, lati, loni].reshape(
                     len(np.atleast_1d(ti)), len(np.atleast_1d(lati)), len(np.atleast_1d(loni)))
@@ -1937,10 +1956,10 @@ class Fig_2D(object):
             # Return data
             if plot_type == '2D_lon_lat':
                 # Time average
-                return lon, lat, np.nanmean(var, axis=0), var_info
+                return lon, lat, mean_func(var, axis=0), var_info
             if plot_type == '2D_time_lat':
                 # Transpose, X dimension must be in last column of variable
-                return t_stack, lat, np.nanmean(var, axis=2).T, var_info
+                return t_stack, lat, mean_func(var, axis=2).T, var_info
             if plot_type == '2D_lon_time':
                 return lon, t_stack, np.average(var, weights=w, axis=1), var_info
 
@@ -2045,7 +2064,7 @@ class Fig_2D(object):
             if f_type == 'diurn':
                 var = f.variables[var_name][ti, todi, zi, lati, loni].reshape(len(np.atleast_1d(ti)), len(np.atleast_1d(todi)),
                                                                               len(np.atleast_1d(zi)), len(np.atleast_1d(lati)), len(np.atleast_1d(loni)))
-                var = np.nanmean(var, axis=1)
+                var = mean_func(var, axis=1)
             elif var_thin == True:
                 var = f.variables[var_name][zi, lati, loni].reshape(len(np.atleast_1d(zi)),
                                                                     len(np.atleast_1d(
@@ -2064,26 +2083,26 @@ class Fig_2D(object):
             #(u'time', u'pfull', u'lat', u'lon')
             if var_thin == True:
                 if plot_type == '2D_lon_lat':
-                    return lon,   lat,  np.nanmean(var, axis=0), var_info
+                    return lon,   lat,  mean_func(var, axis=0), var_info
                 if plot_type == '2D_lat_lev':
-                    return lat, levs,    np.nanmean(var, axis=2), var_info
+                    return lat, levs,    mean_func(var, axis=2), var_info
                 if plot_type == '2D_lon_lev':
-                    return lon, levs,    np.nanmean(var, weights=w, axis=1), var_info
+                    return lon, levs,    mean_func(var, weights=w, axis=1), var_info
             else:
                 if plot_type == '2D_lon_lat':
-                    return lon,   lat,  np.nanmean(np.nanmean(var, axis=1), axis=0), var_info
+                    return lon,   lat,  mean_func(mean_func(var, axis=1), axis=0), var_info
                 if plot_type == '2D_time_lat':
                     # transpose
-                    return t_stack, lat,  np.nanmean(np.nanmean(var, axis=1), axis=2).T, var_info
+                    return t_stack, lat,  mean_func(mean_func(var, axis=1), axis=2).T, var_info
                 if plot_type == '2D_lat_lev':
-                    return lat, levs,    np.nanmean(np.nanmean(var, axis=3), axis=0), var_info
+                    return lat, levs,    mean_func(mean_func(var, axis=3), axis=0), var_info
                 if plot_type == '2D_lon_lev':
-                    return lon, levs,    np.nanmean(np.average(var, weights=w, axis=2), axis=0), var_info
+                    return lon, levs,    mean_func(np.average(var, weights=w, axis=2), axis=0), var_info
                 if plot_type == '2D_time_lev':
                     # transpose
-                    return t_stack, levs, np.nanmean(np.average(var, weights=w, axis=2), axis=2).T, var_info
+                    return t_stack, levs, mean_func(np.average(var, weights=w, axis=2), axis=2).T, var_info
                 if plot_type == '2D_lon_time':
-                    return lon, t_stack, np.nanmean(np.average(var, weights=w, axis=2), axis=1), var_info
+                    return lon, t_stack, mean_func(np.average(var, weights=w, axis=2), axis=1), var_info
 
     def plot_dimensions(self):
         prYellow(f'{self.ax.get_position()}')
@@ -3119,7 +3138,7 @@ class Fig_1D(object):
             w = area_weights_deg(var.shape, lat[lati])
 
             if plot_type == '1D_lat':
-                return lat, np.nanmean(var, axis=1), var_info
+                return lat, mean_func(var, axis=1), var_info
             if plot_type == '1D_lon':
                 return lon, np.average(var, weights=w, axis=0), var_info
 
@@ -3165,7 +3184,7 @@ class Fig_1D(object):
                 if f_type == 'diurn':
                     var = f.variables[var_name][ti, todi, lati, loni].reshape(len(np.atleast_1d(ti)), len(np.atleast_1d(todi)),
                                                                               len(np.atleast_1d(lati)), len(np.atleast_1d(loni)))
-                    var = np.nanmean(var, axis=1)
+                    var = mean_func(var, axis=1)
                 else:
                     var = f.variables[var_name][ti, lati, loni].reshape(
                         len(np.atleast_1d(ti)), len(np.atleast_1d(lati)), len(np.atleast_1d(loni)))
@@ -3176,11 +3195,11 @@ class Fig_1D(object):
 
                 # Return data
                 if plot_type == '1D_lat':
-                    return lat,    np.nanmean(np.nanmean(var, axis=2), axis=0), var_info
+                    return lat,    mean_func(mean_func(var, axis=2), axis=0), var_info
                 if plot_type == '1D_lon':
-                    return lon,    np.nanmean(np.average(var, weights=w, axis=1), axis=0), var_info
+                    return lon,    mean_func(np.average(var, weights=w, axis=1), axis=0), var_info
                 if plot_type == '1D_time':
-                    return t_stack, np.nanmean(np.average(var, weights=w, axis=1), axis=1), var_info
+                    return t_stack, mean_func(np.average(var, weights=w, axis=1), axis=1), var_info
 
             # ====== time, level, lat, lon =======
             if (dim_info == (u'time', u'pfull', u'lat', u'lon')
@@ -3258,7 +3277,7 @@ class Fig_1D(object):
                 if f_type == 'diurn':
                     var = f.variables[var_name][ti, todi, zi, lati, loni].reshape(len(np.atleast_1d(ti)), len(np.atleast_1d(todi)),
                                                                                   len(np.atleast_1d(zi)), len(np.atleast_1d(lati)), len(np.atleast_1d(loni)))
-                    var = np.nanmean(var, axis=1)
+                    var = mean_func(var, axis=1)
                 else:
                     reshape_shape = [len(np.atleast_1d(ti)),
                                      len(np.atleast_1d(zi)),
@@ -3272,13 +3291,13 @@ class Fig_1D(object):
 
                 #(u'time', u'pfull', u'lat', u'lon')
                 if plot_type == '1D_lat':
-                    return lat,    np.nanmean(np.nanmean(np.nanmean(var, axis=3), axis=1), axis=0), var_info
+                    return lat,    mean_func(mean_func(mean_func(var, axis=3), axis=1), axis=0), var_info
                 if plot_type == '1D_lon':
-                    return lon,    np.nanmean(np.nanmean(np.average(var, weights=w, axis=2), axis=1), axis=0), var_info
+                    return lon,    mean_func(mean_func(np.average(var, weights=w, axis=2), axis=1), axis=0), var_info
                 if plot_type == '1D_time':
-                    return t_stack, np.nanmean(np.nanmean(np.average(var, weights=w, axis=2), axis=2), axis=1), var_info
+                    return t_stack, mean_func(mean_func(np.average(var, weights=w, axis=2), axis=2), axis=1), var_info
                 if plot_type == '1D_lev':
-                    return levs,   np.nanmean(np.nanmean(np.average(var, weights=w, axis=2), axis=2), axis=0), var_info
+                    return levs,   mean_func(mean_func(np.average(var, weights=w, axis=2), axis=2), axis=0), var_info
 
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # ~~~~~~~~~~~~~ This Section is for 1D_diurn only ~~~~~~~~~~~~~~~~~~~
@@ -3323,7 +3342,7 @@ class Fig_1D(object):
                 w = area_weights_deg(var.shape, lat[lati])
                 # Return data
                 #('time','time_of_day','lat', u'lon')
-                return tod, np.nanmean(np.nanmean(np.average(var, weights=w, axis=2), axis=2), axis=0), var_info
+                return tod, mean_func(mean_func(np.average(var, weights=w, axis=2), axis=2), axis=0), var_info
 
             # ====== time, level, lat, lon =======
             if (dim_info == ('time', tod_dim_name, 'pfull', 'lat', 'lon')
@@ -3374,7 +3393,7 @@ class Fig_1D(object):
 
                 #('time','time_of_day', 'pfull', 'lat', 'lon')
 
-                return tod,   np.nanmean(np.nanmean(np.nanmean(np.average(var, weights=w, axis=3), axis=3), axis=2), axis=0), var_info
+                return tod,   mean_func(mean_func(mean_func(np.average(var, weights=w, axis=3), axis=3), axis=2), axis=0), var_info
 
     def exception_handler(self, e, ax):
         if debug:
