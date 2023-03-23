@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+from warnings import filterwarnings
+filterwarnings('ignore', category = DeprecationWarning)
+
 # Load generic Python modules
 import argparse   # parse arguments
 import os         # access operating systems function
@@ -163,17 +166,7 @@ def main():
                   Fig_2D_time_lev('atmos_average_pstd.temp', False),
                   Fig_2D_lon_time('atmos_average.temp', False),
                   Fig_1D('atmos_average.temp', False)]
-    # =============================
 
-    # USER PREFERENCES - AXIS FORMATTING
-    # Check whether user requests sol in addition to Ls on time axis,
-    # and which longitude coordinates to use (-180-180 v 0-360)
-    # Default: Ls only, 0-360
-    content_txt = section_content_amescap_profile('MarsPlot.py Settings')
-    exec(content_txt)  # Load all variables in that section
-    global add_sol_time_axis, lon_coord_type
-    add_sol_time_axis = eval('np.array(add_sol_to_time_axis)') # Copy requested variable
-    lon_coord_type = eval('np.array(lon_coordinate)') # Copy requested variable
     # =============================
 
     # Group together the first two figures
@@ -370,6 +363,32 @@ def main():
 #                  DATA OPERATION UTILITIES
 # ======================================================
 
+# USER PREFERENCES - AXIS FORMATTING
+
+content_txt = section_content_amescap_profile('MarsPlot.py Settings')
+exec(content_txt)  # Load all variables in that section
+
+global add_sol_time_axis, lon_coord_type, include_NaNs
+
+# Whether to include sol in addition to Ls on time axis (default = Ls only):
+add_sol_time_axis = eval('np.array(add_sol_to_time_axis)')
+
+# Defines which longitude coordinates to use (-180-180 v 0-360; default = 0-360):
+lon_coord_type = eval('np.array(lon_coordinate)')
+
+# Defines whether means include NaNs ('True', np.mean) or ignore NaNs ('False', like np.nanmean). Default = False:
+include_NaNs = eval('np.array(show_NaN_in_slice)')
+
+
+def mean_func(arr, axis):
+    '''This function performs a mean over the selected axis, ignoring or including NaN values as specified by show_NaN_in_slice in amescap_profile'''
+    if include_NaNs:
+        print('including NaNs')
+        return np.mean(arr, axis=axis)
+    else:
+        print('ignoring NaNs')
+        return np.nanmean(arr, axis=axis)
+    
 def shift_data(lon, data):
     '''
     This function shifts the longitude and data from 0/360 to -180/+180.
@@ -381,18 +400,23 @@ def shift_data(lon, data):
         data: shifted data
     Note: Use np.ma.hstack instead of np.hstack to keep the masked array properties.
     '''
-    lon_180 = lon.copy()
-    nlon = len(lon_180)
-    # For 1D plots: If 1D, reshape array
-    if len(data.shape) <= 1:
-        data = data.reshape(1, nlon)
-    
-    lon_180[lon_180 > 180] -= 360.
-    data = np.hstack((data[:, lon_180 < 0], data[:, lon_180 >= 0]))
-    lon_180 = np.append(lon_180[lon_180 < 0], lon_180[lon_180 >= 0])
-    # If 1D plot, squeeze array
-    if data.shape[0] == 1:
-        data = np.squeeze(data)
+    if lon_coord_type == 180:
+        lon_180 = lon.copy()
+        nlon = len(lon_180)
+        # For 1D plots: If 1D, reshape array
+        if len(data.shape) <= 1:
+            data = data.reshape(1, nlon)
+        
+        lon_180[lon_180 > 180] -= 360.
+        data = np.hstack((data[:, lon_180 < 0], data[:, lon_180 >= 0]))
+        lon_180 = np.append(lon_180[lon_180 < 0], lon_180[lon_180 >= 0])
+        # If 1D plot, squeeze array
+        if data.shape[0] == 1:
+            data = np.squeeze(data)
+    elif lon_coord_type == 360:
+        lon_180, data = lon, data
+    else:
+        raise ValueError('Longitude coordinate type invalid. Please specify "180" or "360" after lon_coordinate in amescap_profile.')
     return lon_180, data
 
 
@@ -1927,7 +1951,7 @@ class Fig_2D(object):
             if f_type == 'diurn':
                 var = f.variables[var_name][ti, todi, lati, loni].reshape(len(np.atleast_1d(ti)), len(np.atleast_1d(todi)),
                                                                           len(np.atleast_1d(lati)), len(np.atleast_1d(loni)))
-                var = np.nanmean(var, axis=1)
+                var = mean_func(var, axis=1)
             else:
                 var = f.variables[var_name][ti, lati, loni].reshape(
                     len(np.atleast_1d(ti)), len(np.atleast_1d(lati)), len(np.atleast_1d(loni)))
@@ -1937,10 +1961,10 @@ class Fig_2D(object):
             # Return data
             if plot_type == '2D_lon_lat':
                 # Time average
-                return lon, lat, np.nanmean(var, axis=0), var_info
+                return lon, lat, mean_func(var, axis=0), var_info
             if plot_type == '2D_time_lat':
                 # Transpose, X dimension must be in last column of variable
-                return t_stack, lat, np.nanmean(var, axis=2).T, var_info
+                return t_stack, lat, mean_func(var, axis=2).T, var_info
             if plot_type == '2D_lon_time':
                 return lon, t_stack, np.average(var, weights=w, axis=1), var_info
 
@@ -2045,7 +2069,7 @@ class Fig_2D(object):
             if f_type == 'diurn':
                 var = f.variables[var_name][ti, todi, zi, lati, loni].reshape(len(np.atleast_1d(ti)), len(np.atleast_1d(todi)),
                                                                               len(np.atleast_1d(zi)), len(np.atleast_1d(lati)), len(np.atleast_1d(loni)))
-                var = np.nanmean(var, axis=1)
+                var = mean_func(var, axis=1)
             elif var_thin == True:
                 var = f.variables[var_name][zi, lati, loni].reshape(len(np.atleast_1d(zi)),
                                                                     len(np.atleast_1d(
@@ -2064,26 +2088,26 @@ class Fig_2D(object):
             #(u'time', u'pfull', u'lat', u'lon')
             if var_thin == True:
                 if plot_type == '2D_lon_lat':
-                    return lon,   lat,  np.nanmean(var, axis=0), var_info
+                    return lon,   lat,  mean_func(var, axis=0), var_info
                 if plot_type == '2D_lat_lev':
-                    return lat, levs,    np.nanmean(var, axis=2), var_info
+                    return lat, levs,    mean_func(var, axis=2), var_info
                 if plot_type == '2D_lon_lev':
-                    return lon, levs,    np.nanmean(var, weights=w, axis=1), var_info
+                    return lon, levs,    mean_func(var, weights=w, axis=1), var_info
             else:
                 if plot_type == '2D_lon_lat':
-                    return lon,   lat,  np.nanmean(np.nanmean(var, axis=1), axis=0), var_info
+                    return lon,   lat,  mean_func(mean_func(var, axis=1), axis=0), var_info
                 if plot_type == '2D_time_lat':
                     # transpose
-                    return t_stack, lat,  np.nanmean(np.nanmean(var, axis=1), axis=2).T, var_info
+                    return t_stack, lat,  mean_func(mean_func(var, axis=1), axis=2).T, var_info
                 if plot_type == '2D_lat_lev':
-                    return lat, levs,    np.nanmean(np.nanmean(var, axis=3), axis=0), var_info
+                    return lat, levs,    mean_func(mean_func(var, axis=3), axis=0), var_info
                 if plot_type == '2D_lon_lev':
-                    return lon, levs,    np.nanmean(np.average(var, weights=w, axis=2), axis=0), var_info
+                    return lon, levs,    mean_func(np.average(var, weights=w, axis=2), axis=0), var_info
                 if plot_type == '2D_time_lev':
                     # transpose
-                    return t_stack, levs, np.nanmean(np.average(var, weights=w, axis=2), axis=2).T, var_info
+                    return t_stack, levs, mean_func(np.average(var, weights=w, axis=2), axis=2).T, var_info
                 if plot_type == '2D_lon_time':
-                    return lon, t_stack, np.nanmean(np.average(var, weights=w, axis=2), axis=1), var_info
+                    return lon, t_stack, mean_func(np.average(var, weights=w, axis=2), axis=1), var_info
 
     def plot_dimensions(self):
         prYellow(f'{self.ax.get_position()}')
@@ -2292,7 +2316,7 @@ class Fig_2D_lon_lat(Fig_2D):
         try:  # Try to create the figure, return error otherwise
             lon, lat, var, var_info = super(Fig_2D_lon_lat, self).data_loader_2D(
                 self.varfull, self.plot_type)
-            lon180, var = shift_data(lon, var)
+            lon_shift, var = shift_data(lon, var)
             # Try to get topography if a matching 'fixed' file exists
             try:
                 surf = self.get_topo_2D(self.varfull, self.plot_type)
@@ -2308,18 +2332,18 @@ class Fig_2D_lon_lat(Fig_2D):
             # ------------------------------------------------------------------------
             if projfull == 'cart':
 
-                super(Fig_2D_lon_lat, self).filled_contour(lon180, lat, var)
+                super(Fig_2D_lon_lat, self).filled_contour(lon_shift, lat, var)
                 # Add topography contour
                 if add_topo:
-                    plt.contour(lon180, lat, zsurf, 11, colors='k',
+                    plt.contour(lon_shift, lat, zsurf, 11, colors='k',
                                 linewidths=0.5, linestyles='solid')
 
                 if self.varfull2:
                     _, _, var2, var_info2 = super(Fig_2D_lon_lat, self).data_loader_2D(
                         self.varfull2, self.plot_type)
-                    lon180, var2 = shift_data(lon, var2)
+                    lon_shift, var2 = shift_data(lon, var2)
                     super(Fig_2D_lon_lat, self).solid_contour(
-                        lon180, lat, var2, self.contour2)
+                        lon_shift, lat, var2, self.contour2)
                     var_info += " (& "+var_info2+")"
 
                 if self.Xlim:
@@ -2359,7 +2383,7 @@ class Fig_2D_lon_lat(Fig_2D):
                 # ---------------------------------------------------------------
 
                 if projfull == 'robin':
-                    LON, LAT = np.meshgrid(lon180, lat)
+                    LON, LAT = np.meshgrid(lon_shift, lat)
                     X, Y = robin2cart(LAT, LON)
 
                     # Add meridans and parallelss
@@ -2373,7 +2397,7 @@ class Fig_2D_lon_lat(Fig_2D):
                         plt.text(xl, yl, lab_txt, fontsize=label_size-self.nPan*label_factor,
                                  verticalalignment='top', horizontalalignment='center')
                     for par in np.arange(-60, 90, 30):
-                        xg, yg = robin2cart(lon180*0+par, lon180)
+                        xg, yg = robin2cart(lon_shift*0+par, lon_shift)
                         plt.plot(xg, yg, ':k', lw=0.5)
                         xl, yl = robin2cart(par, 180)
                         lab_txt = format_lon_lat(par, 'lat')
@@ -2382,7 +2406,7 @@ class Fig_2D_lon_lat(Fig_2D):
                 # ---------------------------------------------------------------
 
                 if projfull == 'moll':
-                    LON, LAT = np.meshgrid(lon180, lat)
+                    LON, LAT = np.meshgrid(lon_shift, lat)
                     X, Y = mollweide2cart(LAT, LON)
                     # Add meridans and parallelss
                     for mer in np.arange(-180, 180, 30):
@@ -2396,7 +2420,7 @@ class Fig_2D_lon_lat(Fig_2D):
                                  verticalalignment='top', horizontalalignment='center')
 
                     for par in np.arange(-60, 90, 30):
-                        xg, yg = mollweide2cart(lon180*0+par, lon180)
+                        xg, yg = mollweide2cart(lon_shift*0+par, lon_shift)
                         xl, yl = mollweide2cart(par, 180)
                         lab_txt = format_lon_lat(par, 'lat')
                         plt.plot(xg, yg, ':k', lw=0.5)
@@ -2405,8 +2429,8 @@ class Fig_2D_lon_lat(Fig_2D):
 
                 if projfull[0:5] in ['Npole', 'Spole', 'ortho']:
                     # Common to all azimuthal projections
-                    lon180_original = lon180.copy()
-                    var, lon180 = add_cyclic(var, lon180)
+                    lon180_original = lon_shift.copy()
+                    var, lon_shift = add_cyclic(var, lon_shift)
                     if add_topo:
                         zsurf, _ = add_cyclic(zsurf, lon180_original)
                     lon_lat_custom = None  # Initialization
@@ -2426,7 +2450,7 @@ class Fig_2D_lon_lat(Fig_2D):
                     var = var[lat_bi:, :]
                     if add_topo:
                         zsurf = zsurf[lat_bi:, :]
-                    LON, LAT = np.meshgrid(lon180, lat)
+                    LON, LAT = np.meshgrid(lon_shift, lat)
                     X, Y = azimuth2cart(LAT, LON, 90, 0)
 
                     # Add meridans and parallels
@@ -2442,7 +2466,7 @@ class Fig_2D_lon_lat(Fig_2D):
                                  verticalalignment='top', horizontalalignment='center')
                     # Parallels start from 80N, every 10 degrees
                     for par in np.arange(80, lat.min(), -10):
-                        xg, yg = azimuth2cart(lon180*0+par, lon180, 90)
+                        xg, yg = azimuth2cart(lon_shift*0+par, lon_shift, 90)
                         plt.plot(xg, yg, ':k', lw=0.5)
                         xl, yl = azimuth2cart(par, 180, 90)
                         lab_txt = format_lon_lat(par, 'lat')
@@ -2456,7 +2480,7 @@ class Fig_2D_lon_lat(Fig_2D):
                     var = var[:lat_bi, :]
                     if add_topo:
                         zsurf = zsurf[:lat_bi, :]
-                    LON, LAT = np.meshgrid(lon180, lat)
+                    LON, LAT = np.meshgrid(lon_shift, lat)
                     X, Y = azimuth2cart(LAT, LON, -90, 0)
                     # Add meridans and parallels
                     for mer in np.arange(-180, 180, 30):
@@ -2471,7 +2495,7 @@ class Fig_2D_lon_lat(Fig_2D):
                                  verticalalignment='top', horizontalalignment='center')
                     # Parallels start from 80S, every 10 degrees
                     for par in np.arange(-80, lat.max(), 10):
-                        xg, yg = azimuth2cart(lon180*0+par, lon180, -90)
+                        xg, yg = azimuth2cart(lon_shift*0+par, lon_shift, -90)
                         plt.plot(xg, yg, ':k', lw=0.5)
                         xl, yl = azimuth2cart(par, 180, -90)
                         lab_txt = format_lon_lat(par, 'lat')
@@ -2483,7 +2507,7 @@ class Fig_2D_lon_lat(Fig_2D):
                     if not(lon_lat_custom is None):
                         lon_p = lon_lat_custom[0]
                         lat_p = lon_lat_custom[1]  # Bounding lat
-                    LON, LAT = np.meshgrid(lon180, lat)
+                    LON, LAT = np.meshgrid(lon_shift, lat)
                     X, Y, MASK = ortho2cart(LAT, LON, lat_p, lon_p)
                     # Mask opposite side of the planet
                     var = var*MASK
@@ -2496,7 +2520,7 @@ class Fig_2D_lon_lat(Fig_2D):
                         plt.plot(xg*maskg, yg, ':k', lw=0.5)
                     for par in np.arange(-60, 90, 30):
                         xg, yg, maskg = ortho2cart(
-                            lon180*0+par, lon180, lat_p, lon_p)
+                            lon_shift*0+par, lon_shift, lat_p, lon_p)
                         plt.plot(xg*maskg, yg, ':k', lw=0.5)
 
                 if self.range:
@@ -2518,19 +2542,19 @@ class Fig_2D_lon_lat(Fig_2D):
                 if self.varfull2:
                     lon, lat, var2, var_info2 = super(
                         Fig_2D_lon_lat, self).data_loader_2D(self.varfull2, self.plot_type)
-                    lon180, var2 = shift_data(lon, var2)
+                    lon_shift, var2 = shift_data(lon, var2)
 
                     if projfull == 'robin':
-                        LON, LAT = np.meshgrid(lon180, lat)
+                        LON, LAT = np.meshgrid(lon_shift, lat)
                         X, Y = robin2cart(LAT, LON)
 
                     if projfull == 'moll':
-                        LON, LAT = np.meshgrid(lon180, lat)
+                        LON, LAT = np.meshgrid(lon_shift, lat)
                         X, Y = mollweide2cart(LAT, LON)
 
                     if projfull[0:5] in ['Npole', 'Spole', 'ortho']:
                         # Common to all azithumal projections
-                        var2, lon180 = add_cyclic(var2, lon180)
+                        var2, lon_shift = add_cyclic(var2, lon_shift)
                         lon_lat_custom = None  # Initialization
                         lat_b = None
 
@@ -2547,7 +2571,7 @@ class Fig_2D_lon_lat(Fig_2D):
                         lat_bi, _ = get_lat_index(lat_b, lat)
                         lat = lat[lat_bi:]
                         var2 = var2[lat_bi:, :]
-                        LON, LAT = np.meshgrid(lon180, lat)
+                        LON, LAT = np.meshgrid(lon_shift, lat)
                         X, Y = azimuth2cart(LAT, LON, 90, 0)
                     if projfull[0:5] == 'Spole':
                         lat_b = -60
@@ -2556,7 +2580,7 @@ class Fig_2D_lon_lat(Fig_2D):
                         lat_bi, _ = get_lat_index(lat_b, lat)
                         lat = lat[:lat_bi]
                         var2 = var2[:lat_bi, :]
-                        LON, LAT = np.meshgrid(lon180, lat)
+                        LON, LAT = np.meshgrid(lon_shift, lat)
                         X, Y = azimuth2cart(LAT, LON, -90, 0)
 
                     if projfull[0:5] == 'ortho':
@@ -2565,7 +2589,7 @@ class Fig_2D_lon_lat(Fig_2D):
                         if not(lon_lat_custom is None):
                             lon_p = lon_lat_custom[0]
                             lat_p = lon_lat_custom[1]  # Bounding lat
-                        LON, LAT = np.meshgrid(lon180, lat)
+                        LON, LAT = np.meshgrid(lon_shift, lat)
                         X, Y, MASK = ortho2cart(LAT, LON, lat_p, lon_p)
                         # Mask opposite side of the planet
                         var2 = var2*MASK
@@ -2729,16 +2753,16 @@ class Fig_2D_lon_lev(Fig_2D):
 
             lon, pfull, var, var_info = super(
                 Fig_2D_lon_lev, self).data_loader_2D(self.varfull, self.plot_type)
-            lon180, var = shift_data(lon, var)
+            lon_shift, var = shift_data(lon, var)
 
-            super(Fig_2D_lon_lev, self).filled_contour(lon180, pfull, var)
+            super(Fig_2D_lon_lev, self).filled_contour(lon_shift, pfull, var)
 
             if self.varfull2:
                 _, _, var2, var_info2 = super(Fig_2D_lon_lev, self).data_loader_2D(
                     self.varfull2, self.plot_type)
                 _, var2 = shift_data(lon, var2)
                 super(Fig_2D_lon_lev, self).solid_contour(
-                    lon180, pfull, var2, self.contour2)
+                    lon_shift, pfull, var2, self.contour2)
                 var_info += " (& "+var_info2+")"
 
             if self.vert_unit == 'Pa':
@@ -2851,22 +2875,24 @@ class Fig_2D_lon_time(Fig_2D):
 
             lon, t_stack, var, var_info = super(
                 Fig_2D_lon_time, self).data_loader_2D(self.varfull, self.plot_type)
-            lon180, var = shift_data(lon, var)
+            lon_shift, var = shift_data(lon, var)
+            
             SolDay = t_stack[0, :]
             LsDay = t_stack[1, :]
-            super(Fig_2D_lon_time, self).filled_contour(lon180, LsDay, var)
+            super(Fig_2D_lon_time, self).filled_contour(lon_shift, LsDay, var)
 
             if self.varfull2:
                 _, _, var2, var_info2 = super(Fig_2D_lon_time, self).data_loader_2D(
                     self.varfull2, self.plot_type)
                 _, var2 = shift_data(lon, var2)
                 super(Fig_2D_lon_time, self).solid_contour(
-                    lon180, LsDay, var2, self.contour2)
+                    lon_shift, LsDay, var2, self.contour2)
                 var_info += " (& "+var_info2+")"
 
             # Axis formatting
             if self.Xlim:
                 plt.xlim(self.Xlim)
+            
             # Axis formatting
             if self.Ylim:
                 idmin = np.argmin(np.abs(SolDay-self.Ylim[0]))
@@ -2883,7 +2909,7 @@ class Fig_2D_lon_time(Fig_2D):
                     labels[i] = '%g%s\nsol %i' % (np.mod(Ls_ticks[i], 360.), degr, SolDay[id])
                 else:
                     labels[i] = '%g%s' % (np.mod(Ls_ticks[i], 360.), degr)
-            ax.set_xticklabels(labels, fontsize=label_size -
+            ax.set_yticklabels(labels, fontsize=label_size -
                                self.nPan*tick_factor, rotation=0)
 
             ax.xaxis.set_major_locator(MultipleLocator(30))
@@ -3119,7 +3145,7 @@ class Fig_1D(object):
             w = area_weights_deg(var.shape, lat[lati])
 
             if plot_type == '1D_lat':
-                return lat, np.nanmean(var, axis=1), var_info
+                return lat, mean_func(var, axis=1), var_info
             if plot_type == '1D_lon':
                 return lon, np.average(var, weights=w, axis=0), var_info
 
@@ -3165,7 +3191,7 @@ class Fig_1D(object):
                 if f_type == 'diurn':
                     var = f.variables[var_name][ti, todi, lati, loni].reshape(len(np.atleast_1d(ti)), len(np.atleast_1d(todi)),
                                                                               len(np.atleast_1d(lati)), len(np.atleast_1d(loni)))
-                    var = np.nanmean(var, axis=1)
+                    var = mean_func(var, axis=1)
                 else:
                     var = f.variables[var_name][ti, lati, loni].reshape(
                         len(np.atleast_1d(ti)), len(np.atleast_1d(lati)), len(np.atleast_1d(loni)))
@@ -3176,11 +3202,11 @@ class Fig_1D(object):
 
                 # Return data
                 if plot_type == '1D_lat':
-                    return lat,    np.nanmean(np.nanmean(var, axis=2), axis=0), var_info
+                    return lat,    mean_func(mean_func(var, axis=2), axis=0), var_info
                 if plot_type == '1D_lon':
-                    return lon,    np.nanmean(np.average(var, weights=w, axis=1), axis=0), var_info
+                    return lon,    mean_func(np.average(var, weights=w, axis=1), axis=0), var_info
                 if plot_type == '1D_time':
-                    return t_stack, np.nanmean(np.average(var, weights=w, axis=1), axis=1), var_info
+                    return t_stack, mean_func(np.average(var, weights=w, axis=1), axis=1), var_info
 
             # ====== time, level, lat, lon =======
             if (dim_info == (u'time', u'pfull', u'lat', u'lon')
@@ -3258,7 +3284,7 @@ class Fig_1D(object):
                 if f_type == 'diurn':
                     var = f.variables[var_name][ti, todi, zi, lati, loni].reshape(len(np.atleast_1d(ti)), len(np.atleast_1d(todi)),
                                                                                   len(np.atleast_1d(zi)), len(np.atleast_1d(lati)), len(np.atleast_1d(loni)))
-                    var = np.nanmean(var, axis=1)
+                    var = mean_func(var, axis=1)
                 else:
                     reshape_shape = [len(np.atleast_1d(ti)),
                                      len(np.atleast_1d(zi)),
@@ -3272,13 +3298,13 @@ class Fig_1D(object):
 
                 #(u'time', u'pfull', u'lat', u'lon')
                 if plot_type == '1D_lat':
-                    return lat,    np.nanmean(np.nanmean(np.nanmean(var, axis=3), axis=1), axis=0), var_info
+                    return lat,    mean_func(mean_func(mean_func(var, axis=3), axis=1), axis=0), var_info
                 if plot_type == '1D_lon':
-                    return lon,    np.nanmean(np.nanmean(np.average(var, weights=w, axis=2), axis=1), axis=0), var_info
+                    return lon,    mean_func(mean_func(np.average(var, weights=w, axis=2), axis=1), axis=0), var_info
                 if plot_type == '1D_time':
-                    return t_stack, np.nanmean(np.nanmean(np.average(var, weights=w, axis=2), axis=2), axis=1), var_info
+                    return t_stack, mean_func(mean_func(np.average(var, weights=w, axis=2), axis=2), axis=1), var_info
                 if plot_type == '1D_lev':
-                    return levs,   np.nanmean(np.nanmean(np.average(var, weights=w, axis=2), axis=2), axis=0), var_info
+                    return levs,   mean_func(mean_func(np.average(var, weights=w, axis=2), axis=2), axis=0), var_info
 
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # ~~~~~~~~~~~~~ This Section is for 1D_diurn only ~~~~~~~~~~~~~~~~~~~
@@ -3323,7 +3349,7 @@ class Fig_1D(object):
                 w = area_weights_deg(var.shape, lat[lati])
                 # Return data
                 #('time','time_of_day','lat', u'lon')
-                return tod, np.nanmean(np.nanmean(np.average(var, weights=w, axis=2), axis=2), axis=0), var_info
+                return tod, mean_func(mean_func(np.average(var, weights=w, axis=2), axis=2), axis=0), var_info
 
             # ====== time, level, lat, lon =======
             if (dim_info == ('time', tod_dim_name, 'pfull', 'lat', 'lon')
@@ -3374,7 +3400,7 @@ class Fig_1D(object):
 
                 #('time','time_of_day', 'pfull', 'lat', 'lon')
 
-                return tod,   np.nanmean(np.nanmean(np.nanmean(np.average(var, weights=w, axis=3), axis=3), axis=2), axis=0), var_info
+                return tod,   mean_func(mean_func(mean_func(np.average(var, weights=w, axis=3), axis=3), axis=2), axis=0), var_info
 
     def exception_handler(self, e, ax):
         if debug:
@@ -3491,9 +3517,9 @@ class Fig_1D(object):
                     plt.xlim(self.Vlim)
 
             if self.plot_type == '1D_lon':
-                lon180, var = shift_data(xdata, var)
+                lon_shift, var = shift_data(xdata, var)
 
-                plt.plot(lon180, var, self.axis_opt1,
+                plt.plot(lon_shift, var, self.axis_opt1,
                          lw=3, ms=7, label=txt_label)
                 plt.xlabel('Longitude', fontsize=label_size -
                            self.nPan*label_factor)
