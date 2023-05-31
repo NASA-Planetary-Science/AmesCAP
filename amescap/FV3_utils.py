@@ -11,7 +11,7 @@ def fms_press_calc(psfc, ak, bk, lev_type='full'):
     Returns the 3D pressure field from the surface pressure and the ak/bk coefficients.
 
     Args:
-        psfc:       the surface pressure in [Pa] or 
+        psfc:       the surface pressure in [Pa] or
                     an array of surface pressures (1D, 2D, or 3D if time dimension)
         ak:         1st vertical coordinate parameter
         bk:         2nd vertical coordinate parameter
@@ -60,12 +60,12 @@ def fms_press_calc(psfc, ak, bk, lev_type='full'):
             np.log(PRESS_h[:, 1]/PRESS_h[:, 0])
 
     # The rest of the column (i = 1 ... Nk).
-    # [2:] goes from the 3rd element to 'Nk' and 
+    # [2:] goes from the 3rd element to 'Nk' and
     # [1:-1] goes from the 2nd element to 'Nk-1'
     PRESS_f[:, 1:] = (PRESS_h[:, 2:]-PRESS_h[:, 1:-1]) / \
         np.log(PRESS_h[:, 2:]/PRESS_h[:, 1:-1])
 
-    # First, transpose PRESS(:, Nk) to PRESS(Nk, :), 
+    # First, transpose PRESS(:, Nk) to PRESS(Nk, :),
     # then reshape PRESS(Nk, :) to the original pressure shape PRESS(Nk, :, :, :) (resp. 'Nk-1')
 
     if lev_type == "full":
@@ -89,7 +89,7 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type='full'):
         bk:         2nd vertical coordinate parameter.
         T:          The air temperature profile. 1D array (for a single grid point),
                     N-dimensional array with VERTICAL AXIS FIRST.
-        topo:       The surface elevation. Same dimension as 'psfc'. If None is provided, 
+        topo:       The surface elevation. Same dimension as 'psfc'. If None is provided,
                     AGL is returned.
         lev_type:   "full" (layer midpoint) or "half" (layer interfaces). Defaults to "full".
     Returns:
@@ -115,7 +115,7 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type='full'):
             topo = np.repeat(zsurf[np.newaxis, :], ps.shape[0], axis = 0)
 
         Calculation is derived from ./atmos_cubed_sphere_mars/Mars_phys.F90:
-            (dp/dz = -rho g) => (dz = dp/(-rho g)) and 
+            (dp/dz = -rho g) => (dz = dp/(-rho g)) and
             (rho= p/(r T)) => (dz=rT/g * (-dp/p))
         Define log-pressure (u) as:
             u = ln(p)
@@ -135,14 +135,14 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type='full'):
     ------------------
     Z_f(k) = Z_f(k+1) + (0.5 DZ(k) + 0.5 DZ(k+1)) (previous altitude + half the thickness
                                                    of previous layer and half of current layer)
-           = Z_f(k+1) + DZ(k) + 0.5 (DZ(k+1) - DZ(k)) (Added '+0.5 DZ(k)-0.5 DZ(k)=0' and 
+           = Z_f(k+1) + DZ(k) + 0.5 (DZ(k+1) - DZ(k)) (Added '+0.5 DZ(k)-0.5 DZ(k)=0' and
                                                        re-organized the equation)
            = Z_h(k+1) + 0.5 (DZ(k+1) - DZ(k))
 
     The  specific heat ratio       γ  = cp/cv (cv = cp-R) => γ = cp/(cp-R) Also (γ-1)/γ=R/cp
     The dry adiabatic lapse rate   Γ  = g/cp => Γ = (gγ)/R
     The isentropic relation        T2 = T1(p2/p1)**(R/cp)
-    
+
     therefore, T_half[k+1]/Tfull[k] = (p_half[k+1]/p_full[k])**(R/Cp)            =====Thalf=====zhalf[k]  \
                                                                                                            \
                                                                                                             \
@@ -259,7 +259,7 @@ def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
     Args:
         X_IN (float or 1D array):   source level [Pa] or [m].
         X_OUT (ND array):           desired pressure [pa] or altitude [m] at layer midpoints. 'Level' dimension is FIRST.
-        reverse_input (boolean):    if input array is decreasing (e.g if z(0) = 120 km, z(N)=0km -- which is typical -- or 
+        reverse_input (boolean):    if input array is decreasing (e.g if z(0) = 120 km, z(N)=0km -- which is typical -- or
                                     data is p(0) = 1000Pa, p(N) = 0Pa -- which is uncommon in MGCM output
     Returns:
         n:    index for the level(s) where the pressure is just below 'plev'.

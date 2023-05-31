@@ -75,22 +75,10 @@ parser.add_argument('-hpf', '--high_pass_filter', nargs='+', type=float,
                     """\n""")
 
 parser.add_argument('-lpf', '--low_pass_filter', nargs='+', type=float,
-                    help="""Temporal filtering utilities: low-, high-, and band-pass filters \n"""
-                         """> Use '--no_trend' flag to compute amplitudes only (data is always detrended before filtering) \n"""
-                         """     (-hpf)  --high_pass_filter sol_min         \n"""
-                         """     (-lpf)  --low_pass_filter  sol_max         \n"""
-                         """     (-bpf)  --band_pass_filter sol_min sol max \n"""
-                         """> Usage: MarsFiles.py *.atmos_daily.nc -bpf 0.5 10. --no_trend \n"""
-                    """\n""")
+                    help=argparse.SUPPRESS)
 
 parser.add_argument('-bpf', '--band_pass_filter', nargs='+',
-                    help="""Temporal filtering utilities: low-, high-, and band-pass filters \n"""
-                         """> Use '--no_trend' flag to compute amplitudes only (data is always detrended before filtering) \n"""
-                         """     (-hpf)  --high_pass_filter sol_min         \n"""
-                         """     (-lpf)  --low_pass_filter  sol_max         \n"""
-                         """     (-bpf)  --band_pass_filter sol_min sol max \n"""
-                         """> Usage: MarsFiles.py *.atmos_daily.nc -bpf 0.5 10. --no_trend \n"""
-                    """\n""")
+                    help=argparse.SUPPRESS)
 
 parser.add_argument('-no_trend', '--no_trend', action='store_true',
                     help="""Temporal filtering utilities: low-, high-, and band-pass filters \n"""

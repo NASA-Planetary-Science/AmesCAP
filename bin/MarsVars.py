@@ -191,7 +191,7 @@ fill_value = 0.
 global rgas, psrf, Tpole, g, R, Rd, rho_air, rho_dst, rho_ice, Qext_dst, Qext_ice, n0, S0, T0,\
     Cp, Na, amu, amu_co2, mass_co2, sigma, M_co2, N, C_dst, C_ice
 
-rgas        = 189.              # Air Density                           J/(kg-K) (or m2/(s2 K))
+rgas        = 189.              # Cas cosntant for CO2                  J/(kg-K) (or m2/(s2 K))
 psrf        = 610.              # Mars Surface Pressure                 Pa (or kg/ms^2)
 Tpole       = 150.              # Polar Temperature                     K
 g           = 3.72              # Gravitational Constant for Mars       m/s2
@@ -227,7 +227,7 @@ def compute_p_3D(ps, ak, bk, shape_out):
     """
     Return the 3D pressure field at the layer midpoint.
     *** NOTE***
-    The shape_out argument ensures that when time = 1 (one timestep), results are returned 
+    The shape_out argument ensures that when time = 1 (one timestep), results are returned
     as (1, lev, lat, lon) not (lev, lat, lon)
     """
     p_3D = fms_press_calc(ps, ak, bk, lev_type='full')
@@ -350,7 +350,7 @@ def compute_zfull(ps, ak, bk, temp):
     dim_out = temp.shape
     zfull = fms_Z_calc(ps, ak, bk, temp.transpose(
         lev_T), topo=0., lev_type='full')  # (lev, time, tod, lat, lon)
-    # p_3D [lev, tim, lat, lon] -> [tim, lev, lat, lon] 
+    # p_3D [lev, tim, lat, lon] -> [tim, lev, lat, lon]
     # temp [tim, tod, lev, lat, lon, lev] -> [lev, time, tod,lat, lon]
     zfull = zfull.transpose(lev_T_out)
     return zfull
@@ -382,7 +382,7 @@ def compute_DZ_full_pstd(pstd, temp, ftype='average'):
         DZ_full_pstd: 3D array of thicknesses
 
     *** NOTE***
-    In this context, 'pfull' = 'pstd' with the layer interfaces defined somewhere 
+    In this context, 'pfull' = 'pstd' with the layer interfaces defined somewhere
     in between successive layers.
 
     --- Nk --- TOP       ========  phalf
@@ -415,7 +415,7 @@ def compute_DZ_full_pstd(pstd, temp, ftype='average'):
         np.log(pstd_b[1:, ...]/pstd_b[0:-1, ...])
 
     # There is nothing to differentiate the last layer with, so copy over the value at N-1.
-    # Note that unless you fine-tune the standard pressure levels to match the model top, 
+    # Note that unless you fine-tune the standard pressure levels to match the model top,
     # there is typically data missing in the last few layers. This is not a major issue.
 
     DZ_full_pstd[-1, ...] = DZ_full_pstd[-2, ...]
@@ -480,7 +480,7 @@ def compute_DZ_3D(ps, ak, bk, temp, shape_out):
 def compute_Ep(temp):
     """
     Returns the wave potential energy (Ep) in [J/kg].
-    Ep = 1/2 (g/N)**2 (T'/T)**2 
+    Ep = 1/2 (g/N)**2 (T'/T)**2
     """
     return 0.5*g**2*(zonal_detrend(temp)/(temp*N))**2
 
@@ -505,7 +505,7 @@ def compute_WMFF(MF, rho, lev, interp_type):
     Returns the zonal or meridional wave-mean flow forcing
     ax= -1/rho d(rho u'w')/dz in [m/s/s]
     ay= -1/rho d(rho v'w')/dz in [m/s/s]
-    
+
     For 'pstd':
         [du/dz = (du/dp).(dp/dz)] > [du/dz = -rho g (du/dp)] with dp/dz = -rho g
     """
@@ -540,8 +540,8 @@ def main():
     edit_var        = parser.parse_args().edit
     debug           = parser.parse_args().debug
 
-    # An array to swap vertical axis forward and backward: 
-    # [1, 0, 2, 3]    for [time, lev, lat, lon]      and 
+    # An array to swap vertical axis forward and backward:
+    # [1, 0, 2, 3]    for [time, lev, lat, lon]      and
     # [2, 1, 0, 3, 4] for [time, tod, lev, lat, lon]
     global lev_T
     global lev_T_out  # Reshape in 'zfull' and 'zhalf' calculation
@@ -672,7 +672,7 @@ def main():
                             p_3D = fileNC.variables['pfull3D'][:]
                         except:
                             pass
-                    
+
                     if ivar == 'dzTau':
                         if 'dst_mass_micro' in fileNC.variables.keys():
                             q = fileNC.variables['dst_mass_micro'][:]
@@ -694,7 +694,7 @@ def main():
                     if ivar == 'ice_mass_micro':
                         xTau = fileNC.variables['izTau'][:]
                         OUT = compute_mmr(xTau, temp, lev, C_ice, f_type)
-                    
+
                     if ivar == 'Vg_sed':
                         if 'dst_mass_micro' in fileNC.variables.keys():
                             xTau = fileNC.variables['dst_mass_micro'][:]
@@ -782,11 +782,11 @@ def main():
                     if ivar == 'div':
                         OUT = spherical_div(
                             ucomp, vcomp, lon, lat, R=3400*1000., spacing='regular')
-                        
+
                     if ivar == 'curl':
                         OUT = spherical_curl(
                             ucomp, vcomp, lon, lat, R=3400*1000., spacing='regular')
-                        
+
                     if ivar == 'fn':
                         theta = fileNC.variables['theta'][:]
                         OUT = frontogenesis(
@@ -813,7 +813,7 @@ def main():
                                 [1, 2, 3, 0]), lat, lev, type=interp_type).transpose([3, 0, 1, 2])
                             # [time, lev, lat, lon] -> [lev, lat, lon, time]  ->  [time, lev, lat, lon]
                             # (0 1 2 3) -> (1 2 3 0) -> (3 0 1 2)
-                    
+
                     if ivar == 'ep':
                         OUT = compute_Ep(temp)
 
@@ -865,7 +865,7 @@ def main():
                     fileNC.close()
 
                     print('%s: \033[92mDone\033[00m' % (ivar))
-                
+
                 except Exception as exception:
                     if debug:
                         raise
@@ -891,7 +891,7 @@ def main():
             else:
                 print('Differentiating: %s...' % (idiff))
                 if f_type == 'diurn':
-                    lev_T = [2, 1, 0, 3, 4]  
+                    lev_T = [2, 1, 0, 3, 4]
                 else:  # [time, lat, lon]
                     lev_T = [1, 0, 2, 3]  # [tim, lev, lat, lon]
                 try:
@@ -975,7 +975,7 @@ def main():
                     # Alex's version of the above (and below) lines:
                     #newUnits = getattr(fileNC.variables[izdetrend], 'units', '')
                     #newLong_name = 'zonal perturbation of ' + getattr(fileNC.variables[izdetrend], 'long_name', '')
-                    
+
                     # Get dimension
                     dim_out = fileNC.variables[izdetrend].dimensions
 
@@ -1037,7 +1037,7 @@ def main():
                         prYellow("""***Error*** Variable already exists in file.""")
                         prYellow("""Delete the existing variable %s with 'MarsVars %s -rm %s'""" %
                                  (idp_to_dz+'_dp_to_dz', ifile, idp_to_dz+'_dp_to_dz'))
-                        
+
        # ========= Case 2: dz_to_dp
         for idz_to_dp in dz_to_dp_list:
             fileNC = Dataset(ifile, 'a', format='NETCDF4_CLASSIC')
