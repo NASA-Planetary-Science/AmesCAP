@@ -4,6 +4,7 @@
 <<<<<<<<<<<<<<| MarsPlot.py Settings |>>>>>>>>>>>>>
 add_sol_to_time_axis = False  # If True, displays sol numbers below Ls values on axis
 lon_coordinate = 360          # 180 for -180->180 or 360 for 0->360
+show_NaN_in_slice = False      # True includes NaNs in slices (like np.mean), False ignores NaNs (like np.nanmean)
 
 <<<<<<<<<<<<<<| Pressure definitions for pstd |>>>>>>>>>>>>>
 
