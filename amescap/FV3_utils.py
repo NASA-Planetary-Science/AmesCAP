@@ -533,7 +533,6 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int='lin', modulo
 
     dimsIN = var_IN.shape
     dimsOUT = tuple(np.append(len(xi), dimsIN[1:]))
-    print(dimsOUT)
     var_OUT = np.zeros(dimsOUT)
 
     for k in range(0, len(index)):
@@ -2561,4 +2560,33 @@ def sol2ls(jld, cummulative=False):
         return sol2ls_cum(jld)
     else:
         return sol2ls_mod(jld)
-# ====End sol 2 Ls function====
+
+
+
+def ls2sols(Ls_in):
+    '''
+    Ls to sol converter.
+    Args:
+        Ls_in (float or 1D array) : Solar longitudes 0-360...720
+    Return:
+        sol: the corresponding sol number
+    ***NOTE***
+    This function simply uses a numerical solver on the sol2ls() function.
+    '''
+    #===Internal functions======
+    from scipy import optimize
+    def internal_func(Ls_in):
+        func_int = lambda x: sol2ls(x,cummulative=True)
+        errfunc = lambda x, y: func_int(x) - y # Distance to the target function
+        p0 = [0.] # Initial guess for the parameters
+        p1, success = optimize.leastsq(errfunc, p0[:], args=(Ls_in))
+        return  p1
+    Ls_in=np.array(Ls_in)
+    #=============================
+    if len(np.atleast_1d(Ls_in))==1:
+        return internal_func(Ls_in)[0]
+    else:
+        sol_all=[]
+        for ii in Ls_in:
+            sol_all.append(internal_func(ii)[0])
+        return   sol_all

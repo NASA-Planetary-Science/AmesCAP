@@ -127,7 +127,7 @@ def main():
          #==================================================================
          ak  = np.zeros(len(phalf))
          bk = np.zeros(len(phalf))
-         ak[0]=DS.P_TOP[0]
+         ak[-1]=DS.P_TOP[0]  #MarsWRF comes with pressure increasing with N
          bk[:]=DS.ZNW[0,:]
 
          #==================================================================
@@ -208,7 +208,7 @@ def main():
 
 
       #==================================================================
-      #========Create output file (common to all models==================
+      #========Create output file (common to all models)=================
       #==================================================================
       archive_coords = {
       'time':  ['time','days'],
@@ -240,7 +240,9 @@ def main():
       # check that vertical grid starts at toa with highest level at surface
       #==================================================================
       if DF.pfull[0] != DF.pfull.min(): # if toa, lev = 0 is surface then flip
-         DF=DF.isel(pfull=slice(None, None, -1)) # regrids DS based on pfull
+          DF=DF.isel(pfull=slice(None, None, -1)) # regrids DS based on pfull
+          DF=DF.isel(phalf=slice(None, None, -1)) #Also flip phalf,ak, bk
+
 
       #==================================================================
       # reorder dimensions
