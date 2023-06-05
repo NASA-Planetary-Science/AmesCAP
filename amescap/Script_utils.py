@@ -539,7 +539,7 @@ def section_content_amescap_profile(section_ID):
     '''
     Execude code section in /home/user/.amescap_profile
     Args:
-        section_ID: string defining the section to load, e.g 'Pressure definitions for pstd'
+        section_ID: string defining the section to loa, e.g 'Pressure definitions for pstd'
     Returns
         return line in that section as python code
     '''
