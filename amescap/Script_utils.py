@@ -567,7 +567,7 @@ def section_content_amescap_profile(section_ID):
     except FileNotFoundError:
         prRed("Error: %s config file not found "%(input_file))
         prYellow("To use this feature, create a hidden config file from the template in your home directory with:")
-        prCyan("    cp amesCAP/mars_templates/amescap_profile  ~/.amescap_profile")
+        prCyan("    cp AmesCAP/mars_templates/amescap_profile  ~/.amescap_profile")
         exit()
     except Exception as exception: #Return the error
         prRed('Error')

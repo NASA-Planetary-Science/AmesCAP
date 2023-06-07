@@ -210,97 +210,64 @@ def main():
     # ===========================================================================
     elif parser.parse_args().combine:
         prYellow('Using %s method for concatenation' % (cat_method))
-        # TODO Use ncks if it is available (not tested yet)
 
-        if cat_method == 'ncks':
-            subprocess.check_call('ncks --version', shell=True,
-                                  stdout=open(os.devnull, "w"), stderr=open(os.devnull, "w"))
-            # cat together the files
-            newfavg = "Ls"+lsmin+"_Ls"+lsmax+".atmos_average.nc"
-            newfdai = "Ls"+lsmin+"_Ls"+lsmax+".atmos_daily.nc"
-            newfdiu = "Ls"+lsmin+"_Ls"+lsmax+".atmos_diurn.nc"
-            tempdir = os.path.join(cwd, 'temp')
-            os.makedirs(tempdir, exist_ok=True)
-            os.chdir(tempdir)
-
-            catavg = "ncrcat ../*.atmos_average.nc "+"00000.atmos_average.nc"
-            catdai = "ncrcat ../*.atmos_daily.nc "+"00000.atmos_daily.nc"
-            catdiu = "ncrcat ../*.atmos_diurn.nc "+"00000.atmos_diurn.nc"
-            p = subprocess.Popen(catavg, universal_newlines=True, shell=True)
-            p.wait()
-            p = subprocess.Popen(catdai, universal_newlines=True, shell=True)
-            p.wait()
-            p = subprocess.Popen(catdiu, universal_newlines=True, shell=True)
-            p.wait()
-            os.chdir(cwd)
-            p = subprocess.run(
-                'rm -f Ls*.nc', universal_newlines=True, shell=True)
-            p = subprocess.run(
-                'mv temp/*.nc .', universal_newlines=True, shell=True)
-            p = subprocess.run(
-                'rm -rf temp/', universal_newlines=True, shell=True)
-            if do_1year:
-                a = make_FV3_files(hist1year, cwd)
-
-        # =================================
-        elif cat_method == 'internal':
-            # Get files to process
-            histlist = []
-            for filei in file_list:
-                # Add path unless full path is provided
-                if not ('/' in filei):
-                    histlist.append(path2data+'/'+filei)
-                else:
-                    histlist.append(filei)
-
-            fnum = len(histlist)
-            # Easy case: merging *****.fixed.nc means deleting all but the first file:
-            if file_list[0][5:] == '.fixed.nc' and fnum >= 2:
-                rm_cmd = 'rm -f '
-                for i in range(1, fnum):
-                    rm_cmd += ' '+histlist[i]
-                p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
-                prCyan('Cleaned all but '+file_list[0])
-                exit()
-
-            # =========
-            fnum = len(histlist)
-            prCyan('Merging %i files, starting with %s ...' %
-                   (fnum, file_list[0]))
-
-            # This section iexcludes any variable not listed after --include
-            if parser.parse_args().include:
-                f = Dataset(file_list[0], 'r')
-                exclude_list = filter_vars(f, parser.parse_args(
-                ).include, giveExclude=True)  # variable to exclude
-                f.close()
+        # Get files to process
+        histlist = []
+        for filei in file_list:
+            # Add path unless full path is provided
+            if not ('/' in filei):
+                histlist.append(path2data+'/'+filei)
             else:
-                exclude_list = []
+                histlist.append(filei)
 
-            # This creates a temporaty file ***_tmp.nc to work in
-            file_tmp = histlist[0][:-3]+'_tmp'+'.nc'
-            Log = Ncdf(file_tmp, 'Merged file')
-            Log.merge_files_from_list(histlist, exclude_var=exclude_list)
-            Log.close()
-
-            # ===== Delete the files that were combined ====
-
-            # Rename merged file LegacyGCM_LsINI_LsEND.nc or first files of the list (e.g 00010.atmos_average.nc)
-            if file_list[0][:12] == 'LegacyGCM_Ls':
-                ls_ini = file_list[0][12:15]
-                ls_end = file_list[-1][18:21]
-                fileout = 'LegacyGCM_Ls%s_Ls%s.nc' % (ls_ini, ls_end)
-            else:
-                fileout = histlist[0]
-
-            # Assemble 'remove' and 'move' commands to execute
+        fnum = len(histlist)
+        # Easy case: merging *****.fixed.nc means deleting all but the first file:
+        if file_list[0][5:] == '.fixed.nc' and fnum >= 2:
             rm_cmd = 'rm -f '
-            for ifile in histlist:
-                rm_cmd += ' '+ifile
-            cmd_txt = 'mv '+file_tmp+' '+fileout
+            for i in range(1, fnum):
+                rm_cmd += ' '+histlist[i]
             p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
-            p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
-            prCyan(fileout + ' was merged')
+            prCyan('Cleaned all but '+file_list[0])
+            exit()
+
+        # =========
+        fnum = len(histlist)
+        prCyan('Merging %i files, starting with %s ...' %
+                (fnum, file_list[0]))
+
+        # This section iexcludes any variable not listed after --include
+        if parser.parse_args().include:
+            f = Dataset(file_list[0], 'r')
+            exclude_list = filter_vars(f, parser.parse_args(
+            ).include, giveExclude=True)  # variable to exclude
+            f.close()
+        else:
+            exclude_list = []
+
+        # This creates a temporaty file ***_tmp.nc to work in
+        file_tmp = histlist[0][:-3]+'_tmp'+'.nc'
+        Log = Ncdf(file_tmp, 'Merged file')
+        Log.merge_files_from_list(histlist, exclude_var=exclude_list)
+        Log.close()
+
+        # ===== Delete the files that were combined ====
+
+        # Rename merged file LegacyGCM_LsINI_LsEND.nc or first files of the list (e.g 00010.atmos_average.nc)
+        if file_list[0][:12] == 'LegacyGCM_Ls':
+            ls_ini = file_list[0][12:15]
+            ls_end = file_list[-1][18:21]
+            fileout = 'LegacyGCM_Ls%s_Ls%s.nc' % (ls_ini, ls_end)
+        else:
+            fileout = histlist[0]
+
+        # Assemble 'remove' and 'move' commands to execute
+        rm_cmd = 'rm -f '
+        for ifile in histlist:
+            rm_cmd += ' '+ifile
+        cmd_txt = 'mv '+file_tmp+' '+fileout
+        p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
+        p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
+        prCyan(fileout + ' was merged')
 
 # ===============================================================================
 # ============= Time-Shifting Implementation by Victoria H. =====================

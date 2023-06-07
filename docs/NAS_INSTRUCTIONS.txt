@@ -2,8 +2,8 @@
 
 #==================================================
 #  AmesCAP Install on NAS
-#  Updated:     March 2023
-#  Last Editor: Batterson
+#  Updated:     June 2023
+#  Last Editor: Kling
 #==================================================
 
 # 1. Remove the AmesCAP virtual environment folder entirely:
@@ -11,37 +11,27 @@ rm -r AmesCAP # or whatever the name is for you
 
 # 2. Load the necessary modules:
 module purge
-module load gcc/8.2
-module load comp-intel/2018.3.222
-module load hdf5/1.8.18_serial
-module load hdf4/4.2.12
-module load netcdf/4.4.1.1_serial
-module load python3/3.7.0
+module load python3/3.9.12
 
-#  Set up some dependencies using the appropriate syntax for your shell:
-#______________________________________________________________________________________________
-#               CSH/TSCH                         |               BASH
-#________________________________________________|_____________________________________________
-setenv HDF5_DIR /nasa/hdf5/1.8.18_serial         |  export HDF5_DIR=/nasa/hdf5/1.8.18_serial
-#----------------------------------------------------------------------------------------------
+# 3. (Re)create the virtual environment
+python3.9 -m venv --system-site-packages AmesCAP
 
-# 4. (Re)create the virtual environment
-python3.7 -m venv --system-site-packages AmesCAP
-
-# 5. Activate the virtual environment using the appropriate syntax for your shell:
+# 4. Activate the virtual environment using the appropriate syntax for your shell:
 #______________________________________________________________________________________________
 #               CSH/TSCH                         |               BASH
 #________________________________________________|_____________________________________________
 source AmesCAP/bin/activate.csh                  |  source AmesCAP/bin/activate
 #----------------------------------------------------------------------------------------------
 
-# 6. Install these packages ~within~ the virtual environment:
+# 5. Install these packages ~within~ the virtual environment:
+
 pip install --upgrade pip
-pip install cftime==1.0.3.4
-pip install netCDF4==1.5.1.2
+pip install cmake
+pip install setuptools --upgrade
 
-# 7. Install CAP in the virtual environment:
-pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 
-# 8. Deactivate CAP with:
+# 6. Install CAP in the virtual environment:
+pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git@master-dev
+
+# 7. Deactivate CAP with:
 deactivate
