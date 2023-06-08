@@ -1,6 +1,4 @@
 import numpy as np
-from netCDF4 import Dataset
-import os           # access operating systems function
 import warnings     # suppress certain errors when dealing with NaN arrays
 
 # NOTE p_half = half-level = layer interfaces
