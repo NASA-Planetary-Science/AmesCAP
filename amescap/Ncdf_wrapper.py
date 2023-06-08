@@ -500,7 +500,7 @@ class Fort(object):
         Create dimensions axis from IM, JM after reading the header. Also compute vertical grid structure that includes
         sigma values at the layers' boundaries AND  at layers' midpoints for the radiation code. Total size is therefore 2*LM+2
         '''
-        JM=self.JM;IM=self.IM;LM=self.LM;NL=self.NL
+        JM=self.JM;IM=self.IM;LM=self.LM;NL=self.NL #JM=36, IM=60
         self.lat = -90.0 + (180.0/JM)*np.arange(1,JM+1)
         self.lon=-180.+(360./IM)*np.arange(1,IM+1)
 
@@ -542,48 +542,10 @@ class Fort(object):
         else: #Get values from existing array and append to it. Note that np.concatenate((x,y)) takes a tuple as argument.
             return np.append(self.variables[name_txt],new_array)
 
-    def _ra_2D(self,name_txt,Rec=None):
-        '''
-        _ra stands for 'Return array': Append single timesteps along the first (time) dimensions
-        Args:
-            name_txt : char, name of variables, e.g. 'temp'
-            Rec: Record to archive. if None, read directly in fortran binary.
-
-        '''
-        if Rec is None:
-            Rec=self.f.read_reals('f4').reshape(self.JM,self.IM, order='F')
-        #Set to pole point to value at N-1
-        Rec[-1,...]=Rec[-2,...]
-        #Add time axis to new data e.g. turn [lat,lon]to as [1,lat,lon]
-        new_shape=np.append([1],Rec.shape)
-        #First time that varialbe is encountered
-        if name_txt not in self.variables.keys():
-            return Rec.reshape(new_shape)
-        else: #Get values from existing array and append to it. Note that np.concatenate((x,y)) takes a tuple as argument.
-            return np.concatenate((self.variables[name_txt],Rec.reshape(new_shape)))
-
-    def _ra_3D_atmos(self,name_txt,Rec=None):
-        '''
-        _ra stands for 'Return array': Append single timesteps along the first (time) dimensions
-        '''
-        if Rec is None:
-            Rec=self.f.read_reals('f4').reshape(self.JM,self.IM, self.LM, order='F')
-        #Set to pole point to value at N-1
-        Rec[-1,...]=Rec[-2,...]
-        Rec=Rec.transpose([2,0,1])
-        #Add time axis to new data e.g. turn [lat,lon]to as [1,lat,lon]
-        new_shape=np.append([1],Rec.shape)
-        #First time that varialbe is encountered
-        if name_txt not in self.variables.keys():
-            return Rec.reshape(new_shape)
-        else: #Get values from existing array and append to it. Note that np.concatenate((x,y)) takes a tuple as argument.
-            return np.concatenate((self.variables[name_txt],Rec.reshape(new_shape)))
 
     def _log_var(self,name_txt,long_name,unit_txt,dimensions,Rec=None,scaling=None):
-        '''
 
-        '''
-        #No Record is provided, read from file
+        #No Record is provided, read directly from file. Note that this is reading only one timestep at the time!
         if Rec is None:
             if dimensions==('time','lat','lon'):
                 Rec=self.f.read_reals('f4').reshape(self.JM,self.IM, order='F')
@@ -593,14 +555,17 @@ class Fort(object):
                 Rec=self.f.read_reals('f4').reshape(self.JM,self.IM, self.NL, order='F')
             #If scaling, scale it!
             if scaling:Rec*=scaling
-        #Reorganize 3D vars
+
+
+        #Reorganize 2D and 3D vars from (lat,lon,lev) to (lev,lat,lon)
         if dimensions==('time','pfull','lat','lon') or dimensions==('time','zgrid','lat','lon'):Rec=Rec.transpose([2,0,1])
+
         #Set to pole point to value at N-1
         Rec[...,-1,:]=Rec[...,-2,:]
 
         #Add time axis to new data e.g. turn [lat,lon]to as [1,lat,lon]
         new_shape=np.append([1],Rec.shape)
-        #First time that varialbe is encountered
+        #First time that the variable is encountered
         if name_txt not in self.variables.keys():
             Rec=Rec.reshape(new_shape)
         else: #Get values from existing array and append to it. Note that np.concatenate((x,y)) takes a tuple as argument.
@@ -663,7 +628,7 @@ class Fort(object):
             #NC3=Rec[0]; NCYCLE=Rec[1]
 
             self.variables['nc3']=     self.Fort_var(self._ra_1D(Rec[0],'nc3')     ,'nc3','full COMP3 is done every nc3 time steps.','None',('time'))
-            self.variables['ncycle']=  self.Fort_var(self._ra_1D(Rec[0],'ncycle')  ,'ncycle','ncycle','none',('time'))
+            self.variables['ncycle']=  self.Fort_var(self._ra_1D(Rec[1],'ncycle')  ,'ncycle','ncycle','none',('time'))
 
             self._log_var('ps','surface pressure','Pa',('time','lat','lon'),scaling=100)
             self._log_var('temp','temperature','K',('time','pfull','lat','lon'))
@@ -705,19 +670,22 @@ class Fort(object):
             self._log_var('soil_temp','sub-surface soil temperature','K',('time','zgrid','lat','lon') ,Rec=Rec)
 
             #write(11) fuptopv, fdntopv, fupsurfv, fdnsurfv
+            #***NOTE*** the following read in fortran order, e.g. (IM,JM)>(60,36) and not (JM,IM)>(36,60) since we are not using the order='F' flag. These need to be transposed.
             Rec=self.f.read_record('({0},{1})f4'.format(self.IM,self.JM),'({0},{1})f4'.format(self.IM,self.JM),'({0},{1})f4'.format(self.IM,self.JM),'({0},{1})f4'.format(self.IM,self.JM))
 
-            self._log_var('fuptopv','upward visible flux at the top of the atmosphere','W/m2',('time','lat','lon'),Rec=Rec[0])
-            self._log_var('fdntopv','downward visible flux at the top of the atmosphere','W/m2',('time','lat','lon'),Rec=Rec[1])
-            self._log_var('fupsurfv','upward visible flux at the surface','W/m2',('time','lat','lon'),Rec=Rec[2])
-            self._log_var('fdnsurfv','downward visible flux at the surface','W/m2',('time','lat','lon'),Rec=Rec[3])
+            self._log_var('fuptopv','upward visible flux at the top of the atmosphere','W/m2',('time','lat','lon')  ,Rec=Rec[0].T)
+            self._log_var('fdntopv','downward visible flux at the top of the atmosphere','W/m2',('time','lat','lon'),Rec=Rec[1].T)
+            self._log_var('fupsurfv','upward visible flux at the surface','W/m2',('time','lat','lon')               ,Rec=Rec[2].T)
+            self._log_var('fdnsurfv','downward visible flux at the surface','W/m2',('time','lat','lon')             ,Rec=Rec[3].T)
 
             #write(11) fuptopir, fupsurfir, fdnsurfir
+
+            #***NOTE*** the following read in fortran order, e.g. (IM,JM)>(60,36) and not (JM,IM)>(36,60) since we are not using the order='F' flag. These need to be transposed.
             Rec=self.f.read_record('({0},{1})f4'.format(self.IM,self.JM),'({0},{1})f4'.format(self.IM,self.JM),'({0},{1})f4'.format(self.IM,self.JM))
 
-            self._log_var('fuptopir','upward IR flux at the top of the atmosphere','W/m2',('time','lat','lon'),Rec=Rec[0])
-            self._log_var('fupsurfir','upward IR flux at the surface','W/m2',('time','lat','lon'),Rec=Rec[1])
-            self._log_var('fdnsurfir','downward IR flux at the surface','W/m2',('time','lat','lon'),Rec=Rec[2])
+            self._log_var('fuptopir','upward IR flux at the top of the atmosphere','W/m2',('time','lat','lon'),Rec=Rec[0].T)
+            self._log_var('fupsurfir','upward IR flux at the surface','W/m2',('time','lat','lon'),Rec=Rec[1].T)
+            self._log_var('fdnsurfir','downward IR flux at the surface','W/m2',('time','lat','lon'),Rec=Rec[2].T)
 
             #write(11) surfalb
             self._log_var('surfalb','surface albedo in the visible, soil or H2O, CO2 ices if present','none',('time','lat','lon'))
