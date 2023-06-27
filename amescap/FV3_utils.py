@@ -2561,7 +2561,7 @@ def sol2ls(jld, cummulative=False):
 
 
 
-def ls2sols(Ls_in):
+def ls2sol(Ls_in):
     '''
     Ls to sol converter.
     Args:

@@ -563,10 +563,10 @@ def main():
         if remove_list:
             cmd_txt = 'ncks --version'
             try:
-                print('ncks is available. Using it.')
                 # If ncks is available, use it
                 subprocess.check_call(cmd_txt, shell=True, stdout=open(
                     os.devnull, "w"), stderr=open(os.devnull, "w"))
+                print('ncks is available. Using it.')
                 for ivar in remove_list:
                     print('Creating new file %s without %s:' % (ifile, ivar))
                     cmd_txt = 'ncks -C -O -x -v %s %s %s' % (
@@ -579,7 +579,7 @@ def main():
                               ": " + exception.message)
             except subprocess.CalledProcessError:
                 # ncks is not available, use internal method
-                print('ncks is NOT available. Using internal method instead.')
+                print('Using internal method instead.')
                 f_IN = Dataset(ifile, 'r', format='NETCDF4_CLASSIC')
                 ifile_tmp = ifile[:-3]+'_tmp'+'.nc'
                 Log = Ncdf(ifile_tmp, 'Edited postprocess')
@@ -909,10 +909,13 @@ def main():
                     # Get dimension
                     dim_out = fileNC.variables['temp'].dimensions
                     if interp_type == 'pfull':
-                        temp = fileNC.variables['temp'][:]
-                        ps = fileNC.variables['ps'][:]
-                        zfull = fms_Z_calc(ps, ak, bk, temp.transpose(
-                            lev_T), topo=0., lev_type='full')  # Z is the first axis
+                        if 'zfull' in fileNC.variables.keys():
+                            zfull = fileNC.variables['zfull'][:]
+                        else:
+                            temp = fileNC.variables['temp'][:]
+                            ps = fileNC.variables['ps'][:]
+                            zfull = fms_Z_calc(ps, ak, bk, temp.transpose(
+                                lev_T), topo=0., lev_type='full')  # Z is the first axis
                         # 'average' file: zfull = (lev, time, lat, lon)
                         # 'diurn' file:   zfull = (lev, tod, time, lat, lon)
                         # Differentiate the variable w.r.t. Z:
