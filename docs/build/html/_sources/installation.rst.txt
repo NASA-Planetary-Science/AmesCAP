@@ -32,6 +32,7 @@ If you have a **pre-existing** virtual environment holding CAP, we recommend you
 3. Install ``cftime`` and ``netCDF4``, and upgrade ``pip`` **within** the virtual environment:
 
 .. code-block:: bash
+    
     pip install cftime==1.0.3.4
     pip install netCDF4==1.6.1
     python3 -m pip install --upgrade pip

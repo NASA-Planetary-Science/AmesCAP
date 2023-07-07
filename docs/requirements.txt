@@ -1,0 +1,9 @@
+numpy
+matplotlib
+cftime==1.0.3.4
+netCDF4==1.6.1
+requests
+scipy
+cmake
+setuptools
+sphinx==6.2.1
