@@ -25,6 +25,7 @@ project = 'AmesCAP'
 copyright = '2023, Alex Kling, Courtney Batterson, & Victoria Hartwick (Mars Climate Modeling Center | NASA Ames Research Center)'
 author = 'Alex Kling, Courtney Batterson, & Victoria Hartwick (Mars Climate Modeling Center | NASA Ames Research Center)'
 release = '1.0'
+master_doc = 'index'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
