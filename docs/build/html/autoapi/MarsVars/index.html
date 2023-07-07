@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MarsVars &mdash; AmesCAP 1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="MarsViewer" href="../MarsViewer/index.html" />
+    <link rel="prev" title="MarsFiles" href="../MarsFiles/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            AmesCAP
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MarsPull/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPull</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MarsFiles/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsFiles</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsVars</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module Contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#functions">Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_p_3D"><code class="docutils literal notranslate"><span class="pre">compute_p_3D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_rho"><code class="docutils literal notranslate"><span class="pre">compute_rho()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_xzTau"><code class="docutils literal notranslate"><span class="pre">compute_xzTau()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_mmr"><code class="docutils literal notranslate"><span class="pre">compute_mmr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_Vg_sed"><code class="docutils literal notranslate"><span class="pre">compute_Vg_sed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_w_net"><code class="docutils literal notranslate"><span class="pre">compute_w_net()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_theta"><code class="docutils literal notranslate"><span class="pre">compute_theta()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_zfull"><code class="docutils literal notranslate"><span class="pre">compute_zfull()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_zhalf"><code class="docutils literal notranslate"><span class="pre">compute_zhalf()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_DZ_full_pstd"><code class="docutils literal notranslate"><span class="pre">compute_DZ_full_pstd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_N"><code class="docutils literal notranslate"><span class="pre">compute_N()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_Tco2"><code class="docutils literal notranslate"><span class="pre">compute_Tco2()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_scorer"><code class="docutils literal notranslate"><span class="pre">compute_scorer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_DP_3D"><code class="docutils literal notranslate"><span class="pre">compute_DP_3D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_DZ_3D"><code class="docutils literal notranslate"><span class="pre">compute_DZ_3D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_Ep"><code class="docutils literal notranslate"><span class="pre">compute_Ep()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_Ek"><code class="docutils literal notranslate"><span class="pre">compute_Ek()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_MF"><code class="docutils literal notranslate"><span class="pre">compute_MF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsVars.compute_WMFF"><code class="docutils literal notranslate"><span class="pre">compute_WMFF()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../MarsViewer/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsViewer</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MarsInterp/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsInterp</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MarsPlot/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPlot</span></code></a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">AmesCAP</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsVars</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/autoapi/MarsVars/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-MarsVars">
+<span id="marsvars"></span><h1><a class="reference internal" href="#module-MarsVars" title="MarsVars"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsVars</span></code></a><a class="headerlink" href="#module-MarsVars" title="Permalink to this heading"></a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading"></a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_p_3D" title="MarsVars.compute_p_3D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_p_3D</span></code></a>(ps, ak, bk, shape_out)</p></td>
+<td><p>Return the 3D pressure field at the layer midpoint.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_rho" title="MarsVars.compute_rho"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_rho</span></code></a>(p_3D, temp)</p></td>
+<td><p>Return the density in [kg/m3]</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_xzTau" title="MarsVars.compute_xzTau"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_xzTau</span></code></a>(q, temp, lev, const, f_type)</p></td>
+<td><p>Return dust or ice extinction in [km-1]</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_mmr" title="MarsVars.compute_mmr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_mmr</span></code></a>(xTau, temp, lev, const, f_type)</p></td>
+<td><p>Return dust or ice mixing ratio [kg/kg]</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_Vg_sed" title="MarsVars.compute_Vg_sed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_Vg_sed</span></code></a>(xTau, nTau, temp)</p></td>
+<td><p>Return sedimentation rate for dust</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_w_net" title="MarsVars.compute_w_net"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_w_net</span></code></a>(Vg, wvar)</p></td>
+<td><p>Return net vertical wind: w - sedimentation rate (Vg_sed)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_theta" title="MarsVars.compute_theta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_theta</span></code></a>(p_3D, ps, temp, f_type)</p></td>
+<td><p>Return the potential temperature in [K]</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_zfull" title="MarsVars.compute_zfull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_zfull</span></code></a>(ps, ak, bk, temp)</p></td>
+<td><p>Compute the altitude AGL in [m]</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_zhalf" title="MarsVars.compute_zhalf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_zhalf</span></code></a>(ps, ak, bk, temp)</p></td>
+<td><p>Compute the altitude AGL in [m]</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_DZ_full_pstd" title="MarsVars.compute_DZ_full_pstd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_DZ_full_pstd</span></code></a>(pstd, temp[, ftype])</p></td>
+<td><p>Return the distance between two layers  mid-point from the standard pressure levels</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_N" title="MarsVars.compute_N"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_N</span></code></a>(theta, zfull)</p></td>
+<td><p>Compute the Brunt Vaisala freqency in [rad/s]</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_Tco2" title="MarsVars.compute_Tco2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_Tco2</span></code></a>(P_3D, temp)</p></td>
+<td><p>Compute the frost point of CO2 in [K]</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_scorer" title="MarsVars.compute_scorer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_scorer</span></code></a>(N, ucomp, zfull)</p></td>
+<td><p>Compute the Scorer wavelenght in [m]</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_DP_3D" title="MarsVars.compute_DP_3D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_DP_3D</span></code></a>(ps, ak, bk, shape_out)</p></td>
+<td><p>Compute the thickness of a layer in [Pa]</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_DZ_3D" title="MarsVars.compute_DZ_3D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_DZ_3D</span></code></a>(ps, ak, bk, temp, shape_out)</p></td>
+<td><p>Compute the thickness of a layer in [Pa]</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_Ep" title="MarsVars.compute_Ep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_Ep</span></code></a>(temp)</p></td>
+<td><p>Return the wave potential energy: Ep= 1/2 (g/N)**2 (T'/T)**2 in [J/kg]</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_Ek" title="MarsVars.compute_Ek"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_Ek</span></code></a>(ucomp, vcomp)</p></td>
+<td><p>Return the wave kinetic energy: Ek= 1/2 (u'<a href="#id1"><span class="problematic" id="id2">**</span></a>2+v'<a href="#id3"><span class="problematic" id="id4">**</span></a>2) in[J/kg]</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_MF" title="MarsVars.compute_MF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_MF</span></code></a>(UVcomp, w)</p></td>
+<td><p>Return the zonal or meridional momentum fluxes u'w' or v'w'</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_WMFF" title="MarsVars.compute_WMFF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_WMFF</span></code></a>(MF, rho, lev, interp_type)</p></td>
+<td><p>Return the zonal or meridional wave-mean flow forcing ax= -1/rho d(rho u'w')/dz in [m/s/s]</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_p_3D">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_p_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ak</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape_out</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_p_3D" title="Permalink to this definition"></a></dt>
+<dd><p>Return the 3D pressure field at the layer midpoint.
+<strong>* NOTE*</strong>
+The shape_out argument ensures that, when time=1 (one timestep) results are returned as (1,lev,lat,lon), not (lev,lat,lon)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_rho">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_rho</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_3D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_rho" title="Permalink to this definition"></a></dt>
+<dd><p>Return the density in [kg/m3]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_xzTau">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_xzTau</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">const</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_xzTau" title="Permalink to this definition"></a></dt>
+<dd><p>Return dust or ice extinction in [km-1]
+Adapted from Heavens et al. 2011, observations by MCS (JGR)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_mmr">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_mmr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xTau</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">const</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_mmr" title="Permalink to this definition"></a></dt>
+<dd><p>Return dust or ice mixing ratio [kg/kg]
+Adapted from Heavens et al. 2011, observations by MCS (JGR)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_Vg_sed">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_Vg_sed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xTau</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nTau</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_Vg_sed" title="Permalink to this definition"></a></dt>
+<dd><p>Return sedimentation rate for dust</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_w_net">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_w_net</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Vg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wvar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_w_net" title="Permalink to this definition"></a></dt>
+<dd><p>Return net vertical wind: w - sedimentation rate (Vg_sed)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_theta">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_theta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_3D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_theta" title="Permalink to this definition"></a></dt>
+<dd><p>Return the potential temperature in [K]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_zfull">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_zfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ak</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_zfull" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the altitude AGL in [m]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_zhalf">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_zhalf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ak</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_zhalf" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the altitude AGL in [m]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_DZ_full_pstd">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_DZ_full_pstd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pstd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ftype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'average'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_DZ_full_pstd" title="Permalink to this definition"></a></dt>
+<dd><p>Return the distance between two layers  mid-point from the standard pressure levels</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>pstd: 1D  array of standard pressure in [Pa]
+temp : 3D array of temperature
+ftype: ‘daily’, ‘aveage’ or ‘diurn’</p>
+</dd>
+<dt>Returns:</dt><dd><p>DZ_full_pstd: 3D array of distancez  between adjacent layers</p>
+</dd>
+</dl>
+<p><strong>* NOTE*</strong>
+In this context p_full = p_std, with the half layers boundaries defined somewhere in between successive layers</p>
+<p>— Nk — TOP        ========  p_half
+— Nk-1 —</p>
+<blockquote>
+<div><dl>
+<dt>——–  p_full = p_std   ^</dt><dd><div class="line-block">
+<div class="line">DZ_full_pstd</div>
+</div>
+</dd>
+</dl>
+<p>========  p_half           |</p>
+</div></blockquote>
+<p>— 1 —            ——–  p_full = p_std   v
+— 0 — SFC        ========  p_half</p>
+<blockquote>
+<div><p>/ / / /</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_N">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_N</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zfull</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_N" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the Brunt Vaisala freqency in [rad/s]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_Tco2">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_Tco2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P_3D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_Tco2" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the frost point of CO2 in [K]
+From [Fannale 1982] Mars: The regolit-atmosphere cap system and climate change. Icarus</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_scorer">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_scorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ucomp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zfull</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_scorer" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the Scorer wavelenght in [m]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_DP_3D">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_DP_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ak</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape_out</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_DP_3D" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the thickness of a layer in [Pa]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_DZ_3D">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_DZ_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ak</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape_out</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_DZ_3D" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the thickness of a layer in [Pa]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_Ep">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_Ep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_Ep" title="Permalink to this definition"></a></dt>
+<dd><p>Return the wave potential energy: Ep= 1/2 (g/N)**2 (T’/T)**2 in [J/kg]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_Ek">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_Ek</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ucomp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vcomp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_Ek" title="Permalink to this definition"></a></dt>
+<dd><p>Return the wave kinetic energy: Ek= 1/2 (u’<a href="#id5"><span class="problematic" id="id6">**</span></a>2+v’<a href="#id7"><span class="problematic" id="id8">**</span></a>2) in[J/kg]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_MF">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_MF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UVcomp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_MF" title="Permalink to this definition"></a></dt>
+<dd><p>Return the zonal or meridional momentum fluxes u’w’ or v’w’</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_WMFF">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_WMFF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">MF</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_WMFF" title="Permalink to this definition"></a></dt>
+<dd><p>Return the zonal or meridional wave-mean flow forcing ax= -1/rho d(rho u’w’)/dz in [m/s/s]
+<strong>*NOTE*</strong>                                            ay= -1/rho d(rho v’w’)/dz in [m/s/s]
+For pstd, we have:</p>
+<blockquote>
+<div><p>du/dz= (du/dp).(dp/dz) &gt; du/dz=-rho g (du/dp) with dp/dz = -rho g</p>
+</div></blockquote>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../MarsFiles/index.html" class="btn btn-neutral float-left" title="MarsFiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../MarsViewer/index.html" class="btn btn-neutral float-right" title="MarsViewer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Alex Kling, Courtney Batterson, &amp; Victoria Hartwick (Mars Climate Modeling Center | NASA Ames Research Center).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
