@@ -54,6 +54,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-contents">Module Contents</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#classes">Classes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#functions">Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.mean_func"><code class="docutils literal notranslate"><span class="pre">mean_func()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#MarsPlot.shift_data"><code class="docutils literal notranslate"><span class="pre">shift_data()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#MarsPlot.MY_func"><code class="docutils literal notranslate"><span class="pre">MY_func()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#MarsPlot.get_lon_index"><code class="docutils literal notranslate"><span class="pre">get_lon_index()</span></code></a></li>
@@ -131,113 +132,122 @@
 <h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.shift_data" title="MarsPlot.shift_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shift_data</span></code></a>(lon, data)</p></td>
-<td><p>This function shift the longitude and data from a 0-&gt;360 to a -180/+180 grid.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.mean_func" title="MarsPlot.mean_func"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean_func</span></code></a>(arr, axis)</p></td>
+<td><p>This function performs a mean over the selected axis, ignoring or including NaN values as specified by show_NaN_in_slice in amescap_profile</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.MY_func" title="MarsPlot.MY_func"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MY_func</span></code></a>(Ls_cont)</p></td>
-<td><p>This function return the Mars Year</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.shift_data" title="MarsPlot.shift_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shift_data</span></code></a>(lon, data)</p></td>
+<td><p>This function shifts the longitude and data from 0/360 to -180/+180.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.get_lon_index" title="MarsPlot.get_lon_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_lon_index</span></code></a>(lon_query_180, lons)</p></td>
-<td><p>Given a range of requested longitudes, return the indexes to extract data from the netcdf file</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.MY_func" title="MarsPlot.MY_func"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MY_func</span></code></a>(Ls_cont)</p></td>
+<td><p>This function returns the Mars Year.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_lat_index" title="MarsPlot.get_lat_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_lat_index</span></code></a>(lat_query, lats)</p></td>
-<td><p>Given a range of requested latitudes, return the indexes to extract data from the netcdf file</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_lon_index" title="MarsPlot.get_lon_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_lon_index</span></code></a>(lon_query_180, lons)</p></td>
+<td><p>This function returns the indices that will extract data from the netcdf file from a range of <em>longitudes</em>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.get_tod_index" title="MarsPlot.get_tod_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_tod_index</span></code></a>(tod_query, tods)</p></td>
-<td><p>Given a range of requested time of day, return the indexes to extract data from the netcdf file</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.get_lat_index" title="MarsPlot.get_lat_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_lat_index</span></code></a>(lat_query, lats)</p></td>
+<td><p>This function returns the indices that will extract data from the netcdf file from a range of <em>latitudes</em>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_level_index" title="MarsPlot.get_level_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_level_index</span></code></a>(level_query, levs)</p></td>
-<td><p>Given a range of requested pressures (resp. depth for 'zgrid'), return the indexes to extract data from the netcdf file</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_tod_index" title="MarsPlot.get_tod_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_tod_index</span></code></a>(tod_query, tods)</p></td>
+<td><p>This function returns the indices that will extract data from the netcdf file from a range of <em>times of day</em>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.get_time_index" title="MarsPlot.get_time_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_time_index</span></code></a>(Ls_query_360, Ls)</p></td>
-<td><p>Given a range of requested solar longitude [0-360], return the indexes to extract data from the netcdf file.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.get_level_index" title="MarsPlot.get_level_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_level_index</span></code></a>(level_query, levs)</p></td>
+<td><p>This function returns the indices that will extract data from the netcdf file from a range of <em>pressures</em> (resp. depth for 'zgrid').</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.filter_input" title="MarsPlot.filter_input"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_input</span></code></a>(txt[, typeIn])</p></td>
-<td><p>Read Template for the type of data expected</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_time_index" title="MarsPlot.get_time_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_time_index</span></code></a>(Ls_query_360, LsDay)</p></td>
+<td><p>This function returns the indices that will extract data from the netcdf file from a range of solar longitudes [0-360].</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.rT" title="MarsPlot.rT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rT</span></code></a>([typeIn])</p></td>
-<td><p>Read Template for the type of data expected</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.filter_input" title="MarsPlot.filter_input"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_input</span></code></a>(txt[, typeIn])</p></td>
+<td><p>Read template for the type of data expected.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.read_axis_options" title="MarsPlot.read_axis_options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_axis_options</span></code></a>(axis_options_txt)</p></td>
-<td><p>Return axis customization options</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.rT" title="MarsPlot.rT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rT</span></code></a>([typeIn])</p></td>
+<td><p>Read template for the type of data expected.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.split_varfull" title="MarsPlot.split_varfull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_varfull</span></code></a>(varfull)</p></td>
-<td><p>Split  the varfull object into its different components.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.read_axis_options" title="MarsPlot.read_axis_options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_axis_options</span></code></a>(axis_options_txt)</p></td>
+<td><p>Return axis customization options.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.remove_whitespace" title="MarsPlot.remove_whitespace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_whitespace</span></code></a>(raw_input)</p></td>
-<td><p>Remove the white space inside an expression. This is different from the '.strip()' method that only remove white spaces at the edges of the string</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.split_varfull" title="MarsPlot.split_varfull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_varfull</span></code></a>(varfull)</p></td>
+<td><p>Split the 'varfull' object into its component parts.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.clean_comma_whitespace" title="MarsPlot.clean_comma_whitespace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clean_comma_whitespace</span></code></a>(raw_input)</p></td>
-<td><p>Remove the commas and white spaces inside an expression.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.remove_whitespace" title="MarsPlot.remove_whitespace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_whitespace</span></code></a>(raw_input)</p></td>
+<td><p>Remove whitespace inside an expression. This is different from the '.strip()' method,</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_list_varfull" title="MarsPlot.get_list_varfull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_list_varfull</span></code></a>(raw_input)</p></td>
-<td><p>Given an expression object with '[]' return the different variable needed</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.clean_comma_whitespace" title="MarsPlot.clean_comma_whitespace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clean_comma_whitespace</span></code></a>(raw_input)</p></td>
+<td><p>Remove the commas and whitespaces inside an expression.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.get_overwrite_dim_2D" title="MarsPlot.get_overwrite_dim_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_overwrite_dim_2D</span></code></a>(varfull_bracket, plot_type, ...)</p></td>
-<td><p>Given a single varfull object with '{}' return the new dimensions to overwrite the default dimensions</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.get_list_varfull" title="MarsPlot.get_list_varfull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_list_varfull</span></code></a>(raw_input)</p></td>
+<td><p>Given an expression object with '[]' return the variable needed.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_overwrite_dim_1D" title="MarsPlot.get_overwrite_dim_1D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_overwrite_dim_1D</span></code></a>(varfull_bracket, t_in, lat_in, ...)</p></td>
-<td><p>Given a single varfull object with '{}' return the new dimensions to overwrite the default dimensions</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_overwrite_dim_2D" title="MarsPlot.get_overwrite_dim_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_overwrite_dim_2D</span></code></a>(varfull_bracket, plot_type, ...)</p></td>
+<td><p>Given a single 'varfull' object with '{}', return the new dimensions that will overwrite the default dimensions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.fig_layout" title="MarsPlot.fig_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fig_layout</span></code></a>(subID, nPan[, vertical_page])</p></td>
-<td><p>Return figure layout</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.get_overwrite_dim_1D" title="MarsPlot.get_overwrite_dim_1D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_overwrite_dim_1D</span></code></a>(varfull_bracket, t_in, lat_in, ...)</p></td>
+<td><p>Given a single 'varfull' object with '{}', return the new dimensions that will overwrite the default dimensions</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.namelist_parser" title="MarsPlot.namelist_parser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">namelist_parser</span></code></a>(Custom_file)</p></td>
-<td><p>Parse a template</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.fig_layout" title="MarsPlot.fig_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fig_layout</span></code></a>(subID, nPan[, vertical_page])</p></td>
+<td><p>Returns figure layout.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.get_figure_header" title="MarsPlot.get_figure_header"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_figure_header</span></code></a>(line_txt)</p></td>
-<td><p>This function return the type of a figure and tells us if wanted</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.namelist_parser" title="MarsPlot.namelist_parser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">namelist_parser</span></code></a>(Custom_file)</p></td>
+<td><p>Parse a template.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.format_lon_lat" title="MarsPlot.format_lon_lat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_lon_lat</span></code></a>(lon_lat, type)</p></td>
-<td><p>Format latitude and longitude as labels, e.g. 30S , 30N, 45W, 45E</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_figure_header" title="MarsPlot.get_figure_header"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_figure_header</span></code></a>(line_txt)</p></td>
+<td><p>This function returns the type of figure, indicates that plotting is set to True.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.get_Ncdf_num" title="MarsPlot.get_Ncdf_num"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_Ncdf_num</span></code></a>()</p></td>
-<td><p>Get the sol numbers of all the netcdf files in directory</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.format_lon_lat" title="MarsPlot.format_lon_lat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_lon_lat</span></code></a>(lon_lat, type)</p></td>
+<td><p>Format latitude and longitude as labels (e.g. 30S, 30N, 45W, 45E)</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.select_range" title="MarsPlot.select_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_range</span></code></a>(Ncdf_num, bound)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_Ncdf_num" title="MarsPlot.get_Ncdf_num"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_Ncdf_num</span></code></a>()</p></td>
+<td><p>Get the sol numbers of all the netcdf files in the directory.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.select_range" title="MarsPlot.select_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_range</span></code></a>(Ncdf_num, bound)</p></td>
 <td><p>Args:</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.create_name" title="MarsPlot.create_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_name</span></code></a>(root_name)</p></td>
-<td><p>Create a file name based on its existence in the current directory.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.create_name" title="MarsPlot.create_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_name</span></code></a>(root_name)</p></td>
+<td><p>Modify desired file name if a file with that name already exists.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.path_to_template" title="MarsPlot.path_to_template"><code class="xref py py-obj docutils literal notranslate"><span class="pre">path_to_template</span></code></a>(custom_name)</p></td>
-<td><p>Create a file name based on its existence in the current directory.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.path_to_template" title="MarsPlot.path_to_template"><code class="xref py py-obj docutils literal notranslate"><span class="pre">path_to_template</span></code></a>(custom_name)</p></td>
+<td><p>Modify desired file name if a file with that name already exists.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.progress" title="MarsPlot.progress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">progress</span></code></a>(k, Nmax[, txt, success])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.progress" title="MarsPlot.progress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">progress</span></code></a>(k, Nmax[, txt, success])</p></td>
 <td><p>Display a progress bar to monitor heavy calculations.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.prep_file" title="MarsPlot.prep_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prep_file</span></code></a>(var_name, file_type, simuID, sol_array)</p></td>
-<td><p>Given the different information, open the file as a Dataset or MFDataset object.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.prep_file" title="MarsPlot.prep_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prep_file</span></code></a>(var_name, file_type, simuID, sol_array)</p></td>
+<td><p>Open the file as a Dataset or MFDataset object depending on its status on tape (Lou)</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.mean_func">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">mean_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.mean_func" title="Permalink to this definition"></a></dt>
+<dd><p>This function performs a mean over the selected axis, ignoring or including NaN values as specified by show_NaN_in_slice in amescap_profile</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.shift_data">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">shift_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.shift_data" title="Permalink to this definition"></a></dt>
-<dd><p>This function shift the longitude and data from a 0-&gt;360 to a -180/+180 grid.
+<dd><p>This function shifts the longitude and data from 0/360 to -180/+180.
 Args:</p>
 <blockquote>
-<div><p>lon: 1D array of longitude 0-&gt;360
-data: 2D array with last dimension being the longitude</p>
+<div><p>lon:  1D array of longitude (0/360)
+data: 2D array with last dimension = longitude</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>lon: 1D array of longitude -180/+180
+<dt>Returns:</dt><dd><p>lon:  1D array of longitude (-180/+180)
 data: shifted data</p>
 </dd>
 </dl>
-<p>Note: Use np.ma.hstack instead of np.hstack to keep the masked array properties</p>
+<p>Note: Use np.ma.hstack instead of np.hstack to keep the masked array properties.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.MY_func">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">MY_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ls_cont</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.MY_func" title="Permalink to this definition"></a></dt>
-<dd><p>This function return the Mars Year
+<dd><p>This function returns the Mars Year.
 Args:</p>
 <blockquote>
-<div><p>Ls_cont: solar longitude, contineuous</p>
+<div><p>Ls_cont: solar longitude (‘areo’), continuous</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>MY : int the Mars year</p>
+<dt>Returns:</dt><dd><p>MY: the Mars Year (integer)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -245,15 +255,15 @@ Args:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.get_lon_index">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_lon_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon_query_180</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lons</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_lon_index" title="Permalink to this definition"></a></dt>
-<dd><p>Given a range of requested longitudes, return the indexes to extract data from the netcdf file
+<dd><p>This function returns the indices that will extract data from the netcdf file from a range of <em>longitudes</em>.
 Args:</p>
 <blockquote>
-<div><p>lon_query_180: requested longitudes in -180/+180 units: value, [min, max] or None
-lons:          1D array of longitude in the native coordinates (0-&gt;360)</p>
+<div><p>lon_query_180: longitudes in -180/+180: value, [min, max], or None
+lons:          1D array of longitude in 0/360</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>loni: 1D array of file indexes
-txt_lon: text descriptor for the extracted longitudes</p>
+<dt>Returns:</dt><dd><p>loni:          1D array of file indices
+txt_lon:       text descriptor for the extracted longitudes</p>
 </dd>
 </dl>
 <p><a href="#id1"><span class="problematic" id="id2">**</span></a>* Note that the keyword ‘all’ is passed as -99999 by the rT() functions</p>
@@ -262,15 +272,15 @@ txt_lon: text descriptor for the extracted longitudes</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.get_lat_index">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_lat_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat_query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lats</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_lat_index" title="Permalink to this definition"></a></dt>
-<dd><p>Given a range of requested latitudes, return the indexes to extract data from the netcdf file
+<dd><p>This function returns the indices that will extract data from the netcdf file from a range of <em>latitudes</em>.
 Args:</p>
 <blockquote>
-<div><p>lat_query: requested latitudes -90/+90
-lats:      1D array of latitudes in the native coordinates</p>
+<div><p>lat_query: requested latitudes (-90/+90)
+lats:      1D array of latitudes</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>lati: 1D array of file indexes
-txt_lat: text descriptor for the extracted latitudes</p>
+<dt>Returns:</dt><dd><p>lati:      1D array of file indices
+txt_lat:   text descriptor for the extracted latitudes</p>
 </dd>
 </dl>
 <p><a href="#id3"><span class="problematic" id="id4">**</span></a>* Note that the keyword ‘all’ is passed as -99999 by the rT() functions</p>
@@ -279,15 +289,15 @@ txt_lat: text descriptor for the extracted latitudes</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.get_tod_index">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_tod_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tod_query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tods</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_tod_index" title="Permalink to this definition"></a></dt>
-<dd><p>Given a range of requested time of day, return the indexes to extract data from the netcdf file
+<dd><p>This function returns the indices that will extract data from the netcdf file from a range of <em>times of day</em>.
 Args:</p>
 <blockquote>
-<div><p>tod_query: requested time of day, 0-24
-tods:      1D array of time of days in the native coordinates</p>
+<div><p>tod_query: requested time of day (0-24)
+tods:      1D array of times of day</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>todi: 1D array of file indexes
-txt_tod: text descriptor for the extracted time of day</p>
+<dt>Returns:</dt><dd><p>todi:      1D array of file indices
+txt_tod:   text descriptor for the extracted time of day</p>
 </dd>
 </dl>
 <p><a href="#id5"><span class="problematic" id="id6">**</span></a>* Note that the keyword ‘all’ is passed as -99999 by the rT() functions</p>
@@ -296,15 +306,15 @@ txt_tod: text descriptor for the extracted time of day</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.get_level_index">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_level_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">levs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_level_index" title="Permalink to this definition"></a></dt>
-<dd><p>Given a range of requested pressures (resp. depth for ‘zgrid’), return the indexes to extract data from the netcdf file
+<dd><p>This function returns the indices that will extract data from the netcdf file from a range of <em>pressures</em> (resp. depth for ‘zgrid’).
 Args:</p>
 <blockquote>
-<div><p>level_query: requested  pressure in [Pa] (resp. depth in [m])
-levs:         1D array of levels in the native coordinates [Pa] (resp. [m])</p>
+<div><p>level_query: requested  pressure [Pa] (depth [m])
+levs:        1D array of levels in the native coordinates [Pa] ([m])</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>levi: 1D array of file indexes
-txt_lev: text descriptor for the extracted pressure (resp. depth)</p>
+<dt>Returns:</dt><dd><p>levi:        1D array of file indices
+txt_lev:     text descriptor for the extracted pressure (depth)</p>
 </dd>
 </dl>
 <p><a href="#id7"><span class="problematic" id="id8">**</span></a>* Note that the keyword ‘all’ is passed as -99999 by the rT() functions</p>
@@ -312,15 +322,15 @@ txt_lev: text descriptor for the extracted pressure (resp. depth)</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.get_time_index">
-<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_time_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ls_query_360</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_time_index" title="Permalink to this definition"></a></dt>
-<dd><p>Given a range of requested solar longitude [0-360], return the indexes to extract data from the netcdf file.
-First try the Mars year of the last timestep, then try the year before then picks whichever Ls period is closest to the requested date.</p>
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_time_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ls_query_360</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LsDay</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_time_index" title="Permalink to this definition"></a></dt>
+<dd><p>This function returns the indices that will extract data from the netcdf file from a range of solar longitudes [0-360].
+First try the Mars Year of the last timestep, then try the year before that. Use whichever Ls period is closest to the requested date.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>Ls_query_360: requested  solar longitudes
-Ls_c:         1D array of continueous solar longitudes</p>
+<dt>Args:</dt><dd><p>Ls_query_360: requested solar longitudes
+Ls_c:         1D array of continuous solar longitudes</p>
 </dd>
-<dt>Returns:</dt><dd><p>ti: 1D array of file indexes
-txt_time: text descriptor for the extracted solar longitudes</p>
+<dt>Returns:</dt><dd><p>ti:           1D array of file indices
+txt_time:     text descriptor for the extracted solar longitudes</p>
 </dd>
 </dl>
 <p><a href="#id9"><span class="problematic" id="id10">**</span></a>* Note that the keyword ‘all’ is passed as -99999 by the rT() functions</p>
@@ -329,14 +339,14 @@ txt_time: text descriptor for the extracted solar longitudes</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.filter_input">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">filter_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typeIn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'char'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.filter_input" title="Permalink to this definition"></a></dt>
-<dd><p>Read Template for the type of data expected
+<dd><p>Read template for the type of data expected.
 Args:</p>
 <blockquote>
-<div><p>txt: a string, typical the right-hand sign of an equal sign ‘3’, ‘3,4’, or ‘all’
+<div><p>txt:    string, typically from the right side of an equal sign in template ‘3’, ‘3,4’, or ‘all’
 typeIn: type of data expected: ‘char’, ‘float’, ‘int’, ‘bool’</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>out: float or 1D array [val1,val2] in the expected format</p>
+<dt>Returns:</dt><dd><p>out:    float or 1D array [val1, val2] in the expected format</p>
 </dd>
 </dl>
 </dd></dl>
@@ -344,13 +354,13 @@ typeIn: type of data expected: ‘char’, ‘float’, ‘int’, ‘bool’</p
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.rT">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">rT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typeIn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'char'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.rT" title="Permalink to this definition"></a></dt>
-<dd><p>Read Template for the type of data expected
+<dd><p>Read template for the type of data expected.
 Args:</p>
 <blockquote>
 <div><p>typeIn: type of data expected: ‘char’, ‘float’, ‘int’, ‘bool’</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>out: float or 1D array [val1,val2] in the expected format</p>
+<dt>Returns:</dt><dd><p>out:    float or 1D array [val1, val2] in the expected format</p>
 </dd>
 </dl>
 </dd></dl>
@@ -358,17 +368,17 @@ Args:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.read_axis_options">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">read_axis_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis_options_txt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.read_axis_options" title="Permalink to this definition"></a></dt>
-<dd><p>Return axis customization options
+<dd><p>Return axis customization options.
 Args:</p>
 <blockquote>
-<div><p>axis_options_txt: One liner string: ‘Axis Options  : lon = [5,8] | lat = [None,None] | cmap = jet | scale= lin | proj = cart’</p>
+<div><p>axis_options_txt: One line string = ‘Axis Options  : lon = [5,8] | lat = [None,None] | cmap = jet | scale= lin | proj = cart’</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>Xaxis: X-axis bounds as a numpy array or None if undedefined
-Yaxis: Y-axis bounds as a numpy array or None if undedefined
-custom_line1: string, i.e colormap (‘jet’, ‘nipy_spectral’) or line options, e.g ‘–r’ for dashed red
-custom_line2: lin or log
-custom_line3: None of string for projections, e.g ‘ortho -125,45’</p>
+<dt>Returns:</dt><dd><p>Xaxis:          X-axis bounds as a numpy array or None if undedefined
+Yaxis:          Y-axis bounds as a numpy array or None if undedefined
+custom_line1:   string, colormap (e.g. ‘jet’, ‘nipy_spectral’) or line options (e.g. ‘–r’ for dashed red)
+custom_line2:   linear (lin) or logarithmic (log) color scale
+custom_line3:   string, projection (e.g. ‘ortho -125,45’)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -376,19 +386,16 @@ custom_line3: None of string for projections, e.g ‘ortho -125,45’</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.split_varfull">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">split_varfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varfull</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.split_varfull" title="Permalink to this definition"></a></dt>
-<dd><p>Split  the varfull object into its different components.
+<dd><p>Split the ‘varfull’ object into its component parts.
 Args:</p>
 <blockquote>
-<div><dl class="simple">
-<dt>varfull: a varfull object, for example <a class="reference external" href="mailto:'atmos_average&#37;&#52;&#48;2&#46;zsurf">‘atmos_average<span>&#64;</span>2<span>&#46;</span>zsurf</a>’,</dt><dd><p><a class="reference external" href="mailto:'02400&#46;atmos_average&#37;&#52;&#48;2&#46;zsurf">‘02400<span>&#46;</span>atmos_average<span>&#64;</span>2<span>&#46;</span>zsurf</a>’</p>
-</dd>
-</dl>
+<div><p>varfull:    a ‘varfull’ object (e.g. <a class="reference external" href="mailto:'atmos_average&#37;&#52;&#48;2&#46;zsurf">‘atmos_average<span>&#64;</span>2<span>&#46;</span>zsurf</a>’, <a class="reference external" href="mailto:'02400&#46;atmos_average&#37;&#52;&#48;2&#46;zsurf">‘02400<span>&#46;</span>atmos_average<span>&#64;</span>2<span>&#46;</span>zsurf</a>’)</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>sol_array: a sol number e.g 2400 or None if none is provided
-filetype:  file type, i.e ‘atmos_average’
-var:       variable of interest, i.e ‘zsurf’
-simuID:    int, simulation ID = 2-1= 1 as Python indexes start at zero</p>
+<dt>Returns:</dt><dd><p>sol_array: a sol number (e.g. 2400) or None (if none is provided)
+filetype:  file type (i.e. ‘atmos_average’)
+var:       variable of interest (i.e. ‘zsurf’)
+simuID:    integer, simulation ID (Python indices start at zero so ID = 2 -&gt; 1)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -396,13 +403,14 @@ simuID:    int, simulation ID = 2-1= 1 as Python indexes start at zero</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.remove_whitespace">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">remove_whitespace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.remove_whitespace" title="Permalink to this definition"></a></dt>
-<dd><p>Remove the white space inside an expression. This is different from the ‘.strip()’ method that only remove white spaces at the edges of the string
+<dd><p>Remove whitespace inside an expression. This is different from the ‘.strip()’ method,
+which only removes whitespaces at the edges of a string.
 Args:</p>
 <blockquote>
-<div><p>raw_input: a string, e.g ‘[atmos_average.temp] +  2’</p>
+<div><p>raw_input:          a string, e.g. ‘[atmos_average.temp] +  2’</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>processed_input  the string without white spaces, e.g [atmos_average.temp]+2’</p>
+<dt>Returns:</dt><dd><p>processed_input:    the string without whitespaces, e.g. [atmos_average.temp] + 2’</p>
 </dd>
 </dl>
 </dd></dl>
@@ -410,13 +418,13 @@ Args:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.clean_comma_whitespace">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">clean_comma_whitespace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.clean_comma_whitespace" title="Permalink to this definition"></a></dt>
-<dd><p>Remove the commas and white spaces inside an expression.
+<dd><p>Remove the commas and whitespaces inside an expression.
 Args:</p>
 <blockquote>
-<div><p>raw_input: a string, e.g ‘lat=3. ,’</p>
+<div><p>raw_input:          a string (e.g. ‘lat=3. , lon=2,lev=10.’)</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>processed_input  the string without white spaces or commas e.g ‘lat=3.lon=2lev=10.’</p>
+<dt>Returns:</dt><dd><p>processed_input:    the string without whitespaces or commas (e.g. ‘lat=3.lon=2lev=10.’)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -424,13 +432,13 @@ Args:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.get_list_varfull">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_list_varfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_list_varfull" title="Permalink to this definition"></a></dt>
-<dd><p>Given an expression object with ‘[]’ return the different variable needed
+<dd><p>Given an expression object with ‘[]’ return the variable needed.
 Args:</p>
 <blockquote>
-<div><p>raw_input: a complex varfull object, for example ‘2*[atmos_average.temp]+[atmos_average2.ucomp]*1000’</p>
+<div><p>raw_input:  a complex ‘varfull’ object (e.g. ‘2*[atmos_average.temp]+[atmos_average2.ucomp]*1000’)</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>var_list  a list of variable to load, e.g [‘atmos_average.temp’, ‘atmos_average2.ucomp’]</p>
+<dt>Returns:</dt><dd><p>var_list:   a list of variables to load (e.g. [‘atmos_average.temp’, ‘atmos_average2.ucomp’])</p>
 </dd>
 </dl>
 </dd></dl>
@@ -438,32 +446,33 @@ Args:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.get_overwrite_dim_2D">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_overwrite_dim_2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varfull_bracket</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdim1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdim2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ftod</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_overwrite_dim_2D" title="Permalink to this definition"></a></dt>
-<dd><p>Given a single varfull object with ‘{}’ return the new dimensions to overwrite the default dimensions
+<dd><p>Given a single ‘varfull’ object with ‘{}’, return the new dimensions that will overwrite the default dimensions.
 Args:</p>
 <blockquote>
-<div><p>varfull_bracket: a  varfull object with any of the following atmos_average.temp{lev=10;ls=350;lon=155;lat=25} (brackets and semi-colons separated)
-plot_type: the type of plot</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>varfull: the varfull without brackets: e.g ‘atmos_average.temp’
-fdim_out1,fdim_out1,ftod_out: the dimensions to update</p>
+<div><dl class="simple">
+<dt>varfull_bracket:    a ‘varfull’ object with any of the following:</dt><dd><p>atmos_average.temp{lev=10;ls=350;lon=155;lat=25}
+(brackets and semi-colons separated)</p>
 </dd>
 </dl>
-<p>NOTE:
-2D_lon_lat:   fdim1=ls</p>
-<blockquote>
-<div><p>fdim2=lev</p>
+<p>plot_type:          the type of plot</p>
 </div></blockquote>
 <dl class="simple">
-<dt>2D_lat_lev: fdim1=ls</dt><dd><p>fdim2=lon</p>
+<dt>Returns:</dt><dd><p>varfull:            the ‘varfull’ without brackets (e.g. ‘atmos_average.temp’)
+fdim_out1,
+fdim_out1,
+ftod_out:           the dimensions to update</p>
 </dd>
-<dt>2D_time_lat: fdim1=lon</dt><dd><p>fdim2=lev</p>
+<dt>2D_lon_lat:  fdim1 = ls</dt><dd><p>fdim2 = lev</p>
 </dd>
-<dt>2D_lon_lev: fdim1=ls</dt><dd><p>fdim2=lat</p>
+<dt>2D_lat_lev:  fdim1 = ls</dt><dd><p>fdim2 = lon</p>
 </dd>
-<dt>2D_time_lev:fdim1=lat</dt><dd><p>fdim2=lon</p>
+<dt>2D_time_lat: fdim1 = lon</dt><dd><p>fdim2 = lev</p>
 </dd>
-<dt>2D_lon_time:  fdim1=lat</dt><dd><p>fdim2=lev</p>
+<dt>2D_lon_lev:  fdim1 = ls</dt><dd><p>fdim2 = lat</p>
+</dd>
+<dt>2D_time_lev: fdim1 = lat</dt><dd><p>fdim2 = lon</p>
+</dd>
+<dt>2D_lon_time: fdim1 = lat</dt><dd><p>fdim2 = lev</p>
 </dd>
 </dl>
 </dd></dl>
@@ -471,32 +480,36 @@ fdim_out1,fdim_out1,ftod_out: the dimensions to update</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.get_overwrite_dim_1D">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_overwrite_dim_1D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varfull_bracket</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lev_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ftod_in</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_overwrite_dim_1D" title="Permalink to this definition"></a></dt>
-<dd><p>Given a single varfull object with ‘{}’ return the new dimensions to overwrite the default dimensions
+<dd><p>Given a single ‘varfull’ object with ‘{}’, return the new dimensions that will overwrite the default dimensions
 Args:</p>
 <blockquote>
-<div><p>varfull_bracket: a  varfull object with any of the following atmos_average.temp{lev=10;ls=350;lon=155;lat=25;tod=15}
-t_in,lat_in,lon_in,lev_in,ftod_in: the variables as defined by self.t ,self.lat,self.lon,self.lev,self.ftod</p>
+<div><dl class="simple">
+<dt>varfull_bracket:    a ‘varfull’ object with any of the following:</dt><dd><p>atmos_average.temp{lev=10;ls=350;lon=155;lat=25;tod=15}</p>
+</dd>
+</dl>
+<p>t_in, lat_in,
+lon_in, lev_in,
+ftod_in:            the variables as defined by self.t, self.lat, self.lon, self.lev, self.ftod</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>varfull the varfull without brackets: e.g ‘atmos_average.temp’
+<dt>Returns:</dt><dd><p>‘varfull’ the ‘varfull’ without brackets: e.g. ‘atmos_average.temp’
 t_out,lat_out,lon_out,lev_out,ftod_out: the dimensions to update</p>
 </dd>
 </dl>
-<p>NOTE:</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.fig_layout">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">fig_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subID</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nPan</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertical_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.fig_layout" title="Permalink to this definition"></a></dt>
-<dd><p>Return figure layout
+<dd><p>Returns figure layout.
 Args:</p>
 <blockquote>
-<div><p>subID:    integer, current subplot number
-nPan : integer, number of panels desired on the figure, up to 64 (8x8 panel)
-vertical_page: if True, reverse the tuple for vertical layout</p>
+<div><p>subID:          integer, current subplot number
+nPan:           integer, number of panels desired on page (max = 64, 8x8)
+vertical_page:  if True, reverse the tuple for portrait format</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>out: tuple with approriate layout: plt.subplot(nrows=out[0],ncols=out[1],plot_number=out[2])</p>
+<dt>Returns:</dt><dd><p>out:            tuple, layout: plt.subplot(nrows = out[0], ncols = out[1], plot_number = out[2])</p>
 </dd>
 </dl>
 </dd></dl>
@@ -504,13 +517,13 @@ vertical_page: if True, reverse the tuple for vertical layout</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.namelist_parser">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">namelist_parser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Custom_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.namelist_parser" title="Permalink to this definition"></a></dt>
-<dd><p>Parse a template
+<dd><p>Parse a template.
 Args:</p>
 <blockquote>
 <div><p>Custom_file: full path to Custom.in file</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Actions:</dt><dd><p>Update  global variableFigLayout, objectList</p>
+<dt>Actions:</dt><dd><p>Update global variable, FigLayout, objectList</p>
 </dd>
 </dl>
 </dd></dl>
@@ -518,14 +531,14 @@ Args:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.get_figure_header">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_figure_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line_txt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_figure_header" title="Permalink to this definition"></a></dt>
-<dd><p>This function return the type of a figure and tells us if wanted
+<dd><p>This function returns the type of figure, indicates that plotting is set to True.
 Args:</p>
 <blockquote>
-<div><p>line_txt: string, figure header from Custom.in, i.e ‘&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;| Plot 2D lon X lat = True <a href="#id11"><span class="problematic" id="id12">|</span></a>&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;’</p>
+<div><p>line_txt: string, figure header from Custom.in (i.e.’&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;| Plot 2D lon X lat = True <a href="#id11"><span class="problematic" id="id12">|</span></a>&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;’)</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>figtype : string, figure type, i.e:  Plot 2D lon X lat
-boolPlot: boolean, is the plot wanted?</p>
+<dt>Returns:</dt><dd><p>figtype:  string, figure type (i.e  Plot 2D lon X lat)
+boolPlot: bool, False if plot skipped</p>
 </dd>
 </dl>
 </dd></dl>
@@ -533,14 +546,14 @@ boolPlot: boolean, is the plot wanted?</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.format_lon_lat">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">format_lon_lat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.format_lon_lat" title="Permalink to this definition"></a></dt>
-<dd><p>Format latitude and longitude as labels, e.g. 30S , 30N, 45W, 45E
+<dd><p>Format latitude and longitude as labels (e.g. 30S, 30N, 45W, 45E)
 Args:</p>
 <blockquote>
-<div><p>lon_lat (float): latitude or longitude +/-180
-type (string) : ‘lat’ or ‘lon’</p>
+<div><p>lon_lat (float): latitude or longitude (+180/-180)
+type (string):   ‘lat’ or ‘lon’</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>lon_lat_label : (string), formatted label</p>
+<dt>Returns:</dt><dd><p>lon_lat_label:   string, formatted label</p>
 </dd>
 </dl>
 </dd></dl>
@@ -548,8 +561,8 @@ type (string) : ‘lat’ or ‘lon’</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.get_Ncdf_num">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_Ncdf_num</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_Ncdf_num" title="Permalink to this definition"></a></dt>
-<dd><p>Get the sol numbers of all the netcdf files in directory
-This test is based on the existence of a least one  XXXXX.fixed.nc in the current directory.
+<dd><p>Get the sol numbers of all the netcdf files in the directory.
+This test is based on the presence of a least one ‘fixed’ file in the current directory.
 Args:</p>
 <blockquote>
 <div><p>None</p>
@@ -564,10 +577,10 @@ Args:</p>
 <dt class="sig sig-object py" id="MarsPlot.select_range">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">select_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ncdf_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bound</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.select_range" title="Permalink to this definition"></a></dt>
 <dd><dl class="simple">
-<dt>Args:</dt><dd><p>Ncdf_num:  a sorted array of sols
-bound: a integer representing a date (e.g. 0350) or an array containing the sol bounds (e.g [min max])</p>
+<dt>Args:</dt><dd><p>Ncdf_num:   a sorted array of sols
+bound:      integer, represents a date (e.g. 0350) or an array containing the sol bounds (e.g. [min max])</p>
 </dd>
-<dt>Returns:</dt><dd><p>Ncdf_num: a sorted array of sols within the prescribed bounds</p>
+<dt>Returns:</dt><dd><p>Ncdf_num:   a sorted array of sols within the bounds</p>
 </dd>
 </dl>
 </dd></dl>
@@ -575,13 +588,13 @@ bound: a integer representing a date (e.g. 0350) or an array containing the sol 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.create_name">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">create_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.create_name" title="Permalink to this definition"></a></dt>
-<dd><p>Create a file name based on its existence in the current directory.
+<dd><p>Modify desired file name if a file with that name already exists.
 Args:</p>
 <blockquote>
-<div><p>root_name: desired name for the file: “/path/custom.in” or “/path/figure.png”</p>
+<div><p>root_name:  desired name for the file (e.g.”/path/custom.in” or “/path/figure.png”)</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>new_name: new name if the file already exists: “/path/custom_01.in” or “/path/figure_01.png”</p>
+<dt>Returns:</dt><dd><p>new_name:   new name if the file already exists (e.g. “/path/custom_01.in” or “/path/figure_01.png”)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -589,16 +602,16 @@ Args:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.path_to_template">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">path_to_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">custom_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.path_to_template" title="Permalink to this definition"></a></dt>
-<dd><p>Create a file name based on its existence in the current directory.
+<dd><p>Modify desired file name if a file with that name already exists.
 Args:</p>
 <blockquote>
-<div><p>custom_name: custom file name, accepted formats are my_custom or my_custom.in</p>
+<div><p>custom_name:    Custom.in file name. Accepted formats are my_custom or my_custom.in</p>
 </div></blockquote>
-<dl>
-<dt>Returns:</dt><dd><p>full_path: full_path to /u/user/FV3/templates/my_custom.in</p>
-<blockquote>
-<div><p>If file not found, try shared directory</p>
-</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>full_path:      Full path to the template (e.g. /u/$USER/FV3/templates/my_custom.in)</dt><dd><p>If the file is not found, try the shared directory (/u/mkahre/MCMC…)</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -609,8 +622,8 @@ Args:</p>
 <dd><p>Display a progress bar to monitor heavy calculations.
 Args:</p>
 <blockquote>
-<div><p>k: current iteration of the outer loop
-Nmax: max iteration of the outer loop</p>
+<div><p>k:      current iteration of the outer loop
+Nmax:   max iteration of the outer loop</p>
 </div></blockquote>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Running… [#———] 10.64 %</p>
@@ -621,21 +634,21 @@ Nmax: max iteration of the outer loop</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.prep_file">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">prep_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simuID</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sol_array</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.prep_file" title="Permalink to this definition"></a></dt>
-<dd><p>Given the different information, open the file as a Dataset or MFDataset object.
-Note that the input arguments are typically extracted  from a varfull object, e.g.  ‘03340.atmos_average.ucomp’,
-not a file from those the existence on the disk is known beforehand
+<dd><p>Open the file as a Dataset or MFDataset object depending on its status on tape (Lou)
+Note that the input arguments are typically extracted from a ‘varfull’ object (e.g. ‘03340.atmos_average.ucomp’)
+and not from a file whose existence on the disk is known beforehand.
 Args:</p>
 <blockquote>
-<div><p>var_name: variable to extract, e.g. ‘ucomp’
-file_type: ‘fixed’, atmos_average_pstd
-simuID:    e.g 2 for 2nd simulation
-sol_array: e.g [3340,4008]</p>
+<div><p>var_name:   variable to extract (e.g. ‘ucomp’)
+file_type:  MGCM output file type (e.g. ‘average’ for atmos_average_pstd)
+simuID:     Simulation ID number (e.g. 2 for 2nd simulation)
+sol_array:  Date in file name (e.g. [3340,4008])</p>
 </div></blockquote>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>f: Dataset or MFDataset object
 var_info: longname and units
-dim_info: dimensions e.g (‘time’, ‘lat’,’lon’)
-dims:    shape of the array e.g [133,48,96]</p>
+dim_info: dimensions e.g. (‘time’, ‘lat’,’lon’)
+dims:    shape of the array e.g. [133,48,96]</p>
 </dd>
 </dl>
 </dd></dl>

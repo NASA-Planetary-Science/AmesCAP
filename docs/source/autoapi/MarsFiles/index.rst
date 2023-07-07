@@ -25,24 +25,25 @@ Functions
 
 .. py:function:: make_FV3_files(fpath, typelistfv3, renameFV3=True, cwd=None)
 
-   Make FV3-type atmos_average,atmos_daily,atmos_diurn
+   Make MGCM-like 'average', 'daily', and 'diurn' files.
    Args:
-       fpath     : full path to Legacy .nc files
-       typelistfv3: e.g['average', 'daily', 'diurn']
-       renameFV3 : rename files from Legacy_Lsxxx_Lsyyy.nc to XXXXX.atmos_average.nc folllowing FV3's convention
-       cwd       : output path
+       fpath       : full path to the Legacy netcdf files
+       typelistfv3 : MGCM-like file type: 'average', 'daily', or 'diurn'
+       renameFV3   : rename the files from Legacy_Lsxxx_Lsyyy.nc to XXXXX.atmos_average.nc following MGCM output conventions
+       cwd         : the output path
    Returns:
-       atmos_average,atmos_daily,atmos_diurn
+       atmos_average, atmos_daily, atmos_diurn
 
 
 .. py:function:: change_vname_longname_unit(vname, longname_txt, units_txt)
 
-   Update variables names, longname and units. This was designed specifically for LegacyCGM.nc files.
+   Update variable name, longname, and units.
+   This was designed specifically for LegacyCGM.nc files.
 
 
 .. py:function:: replace_dims(dims, todflag)
 
-   Function to replace dimensions with fv3 names and remove tod.
+   Function to replace dimensions with MGCM-like names and remove 'time_of_day'.
    This was designed specifically for LegacyCGM.nc files.
 
 
@@ -50,21 +51,21 @@ Functions
 
    Function to update dimensions.
    Args:
-       tup: dimensions as tuples, e.g. ('pfull','nlat','nlon')
-       idx      :  index:  axis of dimensions to update (e.g. ix=1  for 'nlat')
-       new_name:    new dimension's name (e.g. 'latitude')
+       tup      : the dimensions as tuples e.g. ('pfull', 'nlat', 'nlon')
+       idx      : index indicating axis with the dimensions to update (e.g. idx = 1  for 'nlat')
+       new_name : new dimension name (e.g. 'latitude')
 
 
 .. py:function:: ls2sol_1year(Ls_deg, offset=True, round10=True)
 
    Returns a sol number from the solar longitude.
    Args:
-       Ls_deg: solar longitude in degree
-       offset : if True, make year starts at Ls 0
+       Ls_deg  : solar longitude in degrees
+       offset  : if True, force year to start at Ls 0
        round10 : if True, round to the nearest 10 sols
    Returns:
-       Ds :sol number
+       Ds: sol number
    ***NOTE***
-   For the moment this is consistent with Ls 0->359.99, not for monotically increasing Ls
+   For the moment, this is consistent with Ls 0 -> 359.99, but not for monotically increasing Ls.
 
 

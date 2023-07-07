@@ -10,7 +10,7 @@ Installing CAP is done on the command line via ``git clone``. If you are install
 Installation on Local Computer
 ------------------------------
 
-If you have a pre-existing virtual environment holding CAP, we recommend you first remove the virtual environment folder entirely:
+If you have a **pre-existing** virtual environment holding CAP, we recommend you first remove the virtual environment folder entirely:
 
 .. code-block:: bash
     
@@ -64,7 +64,7 @@ This should show the "help" documentation for MarsPlot.
 Installation on NAS
 -------------------
 
-If you have a pre-existing virtual environment holding CAP, we recommend you first remove the virtual environment folder entirely:
+If you have a **pre-existing** virtual environment holding CAP, we recommend you first remove the virtual environment folder entirely:
 
 .. code-block:: bash
     
