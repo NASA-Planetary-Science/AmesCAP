@@ -26,6 +26,7 @@ copyright = '2023, Alex Kling, Courtney Batterson, & Victoria Hartwick (Mars Cli
 author = 'Alex Kling, Courtney Batterson, & Victoria Hartwick (Mars Climate Modeling Center | NASA Ames Research Center)'
 release = '1.0'
 master_doc = 'index'
+root_doc = 'index'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
