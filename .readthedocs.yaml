@@ -32,6 +32,4 @@ python:
   install:
    - requirements: docs/requirements.txt
    - method: pip
-     extra_requirements:
-      - setup
    system_packages: true
