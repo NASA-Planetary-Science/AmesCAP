@@ -16,7 +16,7 @@
 #
 import os
 import sys
-sys.path.insert(0, '/Users/cbatters/git/amescap-master-cb/AmesCAP/bin')
+sys.path.insert(0, os.path.abspath('../../bin'))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -41,7 +41,7 @@ extensions = [
 ]
 
 autoapi_type = 'python'
-autoapi_dirs = ['/Users/cbatters/git/amescap-master-cb/AmesCAP/bin']
+autoapi_dirs = ['../../bin']
 autoapi_add_toctree_entry = False
 autoapi_keep_files = True
 # autoapi_options = [ 'members', 'inherited-members', 'show-inheritance', 'show-inheritance-diagram', 'show-module-summary', 'imported-members' ]

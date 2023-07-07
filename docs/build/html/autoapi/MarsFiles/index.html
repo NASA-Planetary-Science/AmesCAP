@@ -100,13 +100,13 @@
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#MarsFiles.make_FV3_files" title="MarsFiles.make_FV3_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_FV3_files</span></code></a>(fpath, typelistfv3[, renameFV3, cwd])</p></td>
-<td><p>Make FV3-type atmos_average,atmos_daily,atmos_diurn</p></td>
+<td><p>Make MGCM-like 'average', 'daily', and 'diurn' files.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#MarsFiles.change_vname_longname_unit" title="MarsFiles.change_vname_longname_unit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_vname_longname_unit</span></code></a>(vname, longname_txt, units_txt)</p></td>
-<td><p>Update variables names, longname and units. This was designed specifically for LegacyCGM.nc files.</p></td>
+<td><p>Update variable name, longname, and units.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#MarsFiles.replace_dims" title="MarsFiles.replace_dims"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_dims</span></code></a>(dims, todflag)</p></td>
-<td><p>Function to replace dimensions with fv3 names and remove tod.</p></td>
+<td><p>Function to replace dimensions with MGCM-like names and remove 'time_of_day'.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#MarsFiles.replace_at_index" title="MarsFiles.replace_at_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_at_index</span></code></a>(tuple_dims, idx, new_name)</p></td>
 <td><p>Function to update dimensions.</p></td>
@@ -119,16 +119,16 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsFiles.make_FV3_files">
 <span class="sig-prename descclassname"><span class="pre">MarsFiles.</span></span><span class="sig-name descname"><span class="pre">make_FV3_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typelistfv3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renameFV3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFiles.make_FV3_files" title="Permalink to this definition"></a></dt>
-<dd><p>Make FV3-type atmos_average,atmos_daily,atmos_diurn
+<dd><p>Make MGCM-like ‘average’, ‘daily’, and ‘diurn’ files.
 Args:</p>
 <blockquote>
-<div><p>fpath     : full path to Legacy .nc files
-typelistfv3: e.g[‘average’, ‘daily’, ‘diurn’]
-renameFV3 : rename files from Legacy_Lsxxx_Lsyyy.nc to XXXXX.atmos_average.nc folllowing FV3’s convention
-cwd       : output path</p>
+<div><p>fpath       : full path to the Legacy netcdf files
+typelistfv3 : MGCM-like file type: ‘average’, ‘daily’, or ‘diurn’
+renameFV3   : rename the files from Legacy_Lsxxx_Lsyyy.nc to XXXXX.atmos_average.nc following MGCM output conventions
+cwd         : the output path</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>atmos_average,atmos_daily,atmos_diurn</p>
+<dt>Returns:</dt><dd><p>atmos_average, atmos_daily, atmos_diurn</p>
 </dd>
 </dl>
 </dd></dl>
@@ -136,13 +136,14 @@ cwd       : output path</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsFiles.change_vname_longname_unit">
 <span class="sig-prename descclassname"><span class="pre">MarsFiles.</span></span><span class="sig-name descname"><span class="pre">change_vname_longname_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longname_txt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units_txt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFiles.change_vname_longname_unit" title="Permalink to this definition"></a></dt>
-<dd><p>Update variables names, longname and units. This was designed specifically for LegacyCGM.nc files.</p>
+<dd><p>Update variable name, longname, and units.
+This was designed specifically for LegacyCGM.nc files.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsFiles.replace_dims">
 <span class="sig-prename descclassname"><span class="pre">MarsFiles.</span></span><span class="sig-name descname"><span class="pre">replace_dims</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">todflag</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFiles.replace_dims" title="Permalink to this definition"></a></dt>
-<dd><p>Function to replace dimensions with fv3 names and remove tod.
+<dd><p>Function to replace dimensions with MGCM-like names and remove ‘time_of_day’.
 This was designed specifically for LegacyCGM.nc files.</p>
 </dd></dl>
 
@@ -152,9 +153,9 @@ This was designed specifically for LegacyCGM.nc files.</p>
 <dd><p>Function to update dimensions.
 Args:</p>
 <blockquote>
-<div><p>tup: dimensions as tuples, e.g. (‘pfull’,’nlat’,’nlon’)
-idx      :  index:  axis of dimensions to update (e.g. ix=1  for ‘nlat’)
-new_name:    new dimension’s name (e.g. ‘latitude’)</p>
+<div><p>tup      : the dimensions as tuples e.g. (‘pfull’, ‘nlat’, ‘nlon’)
+idx      : index indicating axis with the dimensions to update (e.g. idx = 1  for ‘nlat’)
+new_name : new dimension name (e.g. ‘latitude’)</p>
 </div></blockquote>
 </dd></dl>
 
@@ -164,16 +165,16 @@ new_name:    new dimension’s name (e.g. ‘latitude’)</p>
 <dd><p>Returns a sol number from the solar longitude.
 Args:</p>
 <blockquote>
-<div><p>Ls_deg: solar longitude in degree
-offset : if True, make year starts at Ls 0
+<div><p>Ls_deg  : solar longitude in degrees
+offset  : if True, force year to start at Ls 0
 round10 : if True, round to the nearest 10 sols</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>Ds :sol number</p>
+<dt>Returns:</dt><dd><p>Ds: sol number</p>
 </dd>
 </dl>
 <p><strong>*NOTE*</strong>
-For the moment this is consistent with Ls 0-&gt;359.99, not for monotically increasing Ls</p>
+For the moment, this is consistent with Ls 0 -&gt; 359.99, but not for monotically increasing Ls.</p>
 </dd></dl>
 
 </section>
