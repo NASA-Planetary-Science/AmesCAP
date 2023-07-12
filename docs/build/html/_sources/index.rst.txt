@@ -5,7 +5,7 @@
 
 Welcome to AmesCAP's Documentation!
 ===================================
-**AmesCAP** is a Python library with executables that enable command-line interaction with netCDF files output by the `**Mars Global Climate Model (MGCM)** <https://github.com/nasa/AmesGCM>`_. The MGCM and AmesCAP are developed and maintained by the `**Mars Climate Modeling Center (MCMC)** <https://www.nasa.gov/mars-climate-modeling-center-ames>`_ at NASA's Ames Research Center in Mountain View, CA.
+**AmesCAP** is a Python library with executables that enable command-line interaction with netCDF files output by the `Mars Global Climate Model (MGCM) <https://github.com/nasa/AmesGCM>`_. The MGCM and AmesCAP are developed and maintained by the `Mars Climate Modeling Center (MCMC) <https://www.nasa.gov/mars-climate-modeling-center-ames>`_ at NASA's Ames Research Center in Mountain View, CA.
 
 .. note::
 
@@ -19,7 +19,7 @@ Welcome to AmesCAP's Documentation!
    :caption: Contents:
 
    installation
-   autoapi/MarsPull/index
+   autoapi/MarsPull
    autoapi/MarsFiles/index
    autoapi/MarsVars/index
    autoapi/MarsViewer/index
