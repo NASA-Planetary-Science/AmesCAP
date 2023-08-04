@@ -14,9 +14,9 @@ If you have a **pre-existing** virtual environment holding CAP, we recommend you
 
 .. code-block:: bash
     
-    rm -r amescap    # or whatever the name is for you
+    rm -r amescap    # change amescap to the name of your virtual environment
 
-1. (Re)create a virtual environment in which to hold CAP. Use your preferred installation of python when creating your virtual environment. Here, we create a virtual environment called ``amescap``:
+1. (Re)create a virtual environment in which to install CAP. Use your preferred installation of python when creating your virtual environment. Here, we create a virtual environment called ``amescap``:
 
 .. code-block:: bash
     
@@ -65,7 +65,9 @@ This should show the "help" documentation for MarsPlot.
 Installation on NAS
 -------------------
 
-If you have a **pre-existing** virtual environment holding CAP, we recommend you first remove the virtual environment folder entirely:
+These instructions are specific to installing CAP on Pleiades or Lou, NASA's supercomputers.
+
+If you have a **pre-existing** virtual environment for CAP, begin by removing the virtual environment directory and all of its subdirectories:
 
 .. code-block:: bash
     
