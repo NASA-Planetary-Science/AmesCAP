@@ -1,6 +1,6 @@
-.. AmesCAP documentation master file, created by
-   sphinx-quickstart on Fri Jul  7 10:35:15 2023.
-   You can adapt this file completely to your liking, but it should at least
+.. AmesCAP documentation master file, initially created by
+   sphinx-quickstart on Fri Jul 7 10:35:15 2023.
+   You can adapt this file completely to your liking, but it should
    contain the root `toctree` directive.
 
 Welcome to AmesCAP's Documentation!
