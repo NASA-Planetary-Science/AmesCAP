@@ -5,7 +5,7 @@
 
 Welcome to AmesCAP's Documentation!
 ===================================
-**AmesCAP** is the name of the reposistory hosting the Community Analysis Pipeline (CAP), a Python-based command-line tool that performs analysis and creates plots from netCDF files output by the `Mars Global Climate Model (MGCM) <https://github.com/nasa/AmesGCM>`_. The MGCM and AmesCAP are developed and maintained by the `Mars Climate Modeling Center (MCMC) <https://www.nasa.gov/mars-climate-modeling-center-ames>`_ at NASA's Ames Research Center in Mountain View, CA.
+**AmesCAP** is the name of the repository hosting the Community Analysis Pipeline (CAP), a Python-based command-line tool that performs analysis and creates plots from netCDF files output by the `Mars Global Climate Model (MGCM) <https://github.com/nasa/AmesGCM>`_. The MGCM and AmesCAP are developed and maintained by the `Mars Climate Modeling Center (MCMC) <https://www.nasa.gov/mars-climate-modeling-center-ames>`_ at NASA's Ames Research Center in Mountain View, CA.
 
 CAP is inspired by the need for increased access to MGCM output. MGCM data products are notoriously complex because the output files are typically tens of GB in size, hold multi-dimensional arrays on model-specific computational grids, and require post-processing in order to make the data usable in scientific, engineering, and educational applications. From simple command-line calls to CAP executables, users can access functions that pressure-interpolate, regrid, perform tidal analyses and time averages (e.g., diurnal, hourly, composite days), and derive secondary variables from the data in MGCM output files.
 
@@ -32,6 +32,7 @@ CAP is currently compatible with output from the MCMC’s `Legacy <https://githu
    autoapi/MarsViewer/index
    autoapi/MarsInterp/index
    autoapi/MarsPlot/index
+   examples
 
 
 Indices and tables
