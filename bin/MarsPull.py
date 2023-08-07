@@ -13,17 +13,16 @@ try:
     import numpy as np
     import argparse     # parse arguments
     import requests
-    import time
 
 except ImportError as error_msg:
     prYellow("Error while importing modules")
-    print("Error was: " + error_msg.message)
+    print(f"Error was: {error_msg.message}")
     exit()
 
 except Exception as exception:
     # output unexpected Exceptions
     print(exception, False)
-    print(exception.__class__.__name__ + ": " + exception.message)
+    print(f"{exception.__class__.__name__}: {exception.message}")
     exit()
 
 # ======================================================
@@ -47,22 +46,25 @@ parser.add_argument('-id', '--id', type=str,
                     "> Usage: MarsPull.py -id  INERTCLDS \n\n"))
 
 parser.add_argument('-ls', '--ls', nargs='+', type=float,
-                    help="Query data by solar longitude (Ls)\n"
-                    "> Usage: MarsPull.py -ls 90.\n"
-                    ">        MarsPull.py -ls [start] [stop] \n\n")
+                    help="Query data by solar longitude (Ls) - requires"
+                    " a simulation identifier (--id)\n"
+                    "> Usage: MarsPull.py -id ACTIVECLDS -ls 90.\n"
+                    ">        MarsPull.py -id ACTIVECLDS -ls [start] "
+                    "[stop] \n\n")
 
 parser.add_argument('-f', '--filename', nargs='+', type=str,
-                    help=("Query data by filename\n"
+                    help=("Query data by filename - requires"
+                    " a simulation identifier (--id)\n"
                     "> Usage: MarsPull.py -id ACTIVECLDS_NCDF -f "
                     "fort.11_0730 fort.11_0731"))
 
 # ======================================================
 #                  DEFINITIONS
 # ======================================================
-saveDir = os.getcwd() + '/'
+saveDir = (f"{os.getcwd()}/")
 
 # available files by Ls:
-Ls_ini = np.array([  0,   5,  10,  15,  19,  24,  29,  34,  38,  43,
+lsStart = np.array([  0,   5,  10,  15,  19,  24,  29,  34,  38,  43,
                     48,  52,  57,  61,  66,  70,  75,  79,  84,  88,
                     93,  97, 102, 106, 111, 116, 121, 125, 130, 135,
                    140, 146, 151, 156, 162, 167, 173, 179, 184, 190, 
@@ -70,7 +72,7 @@ Ls_ini = np.array([  0,   5,  10,  15,  19,  24,  29,  34,  38,  43,
                    260, 266, 273, 279, 286, 292, 298, 304, 310, 316,
                    322, 328, 333, 339, 344, 350, 355])
 
-Ls_end = np.array([  4,   9,  14,  19,  24,  29,  33,  38,  42,  47,
+lsEnd = np.array([  4,   9,  14,  19,  24,  29,  33,  38,  42,  47,
                     52,  56,  61,  65,  70,  74,  79,  83,  88,  92,
                     97, 101, 106, 111, 115, 120, 125, 130, 135, 140,
                    145, 150, 156, 161, 167, 172, 178, 184, 190, 196,
@@ -81,7 +83,13 @@ Ls_end = np.array([  4,   9,  14,  19,  24,  29,  33,  38,  42,  47,
 
 def download(url, filename):
     """
-    Downloads a file from a URL to the local computer.
+    Downloads a file from  https://data.nas.nasa.gov.
+    
+    The file to download is specified by appending the above URL with
+    the legacy gcm subdirectory + the filename. The filename can be 
+    provided by the user directly or determined based on the 
+    user-requested solar longitude (Ls). The simulation identifier (ID)
+    must always be provided.
     
     Parameters
     ----------
@@ -94,102 +102,111 @@ def download(url, filename):
     
     Raises
     ------
-    response.status_code
+    rsp.status_code
         A file-not-found error
     
+    Returns
+    -------
+    downloaded file
     """
 
-    _, fname = os.path.split(filename)
+    ### _, fname = os.path.split(filename)
+    
     # use a context manager to make an HTTP request and file
-    response = requests.get(url, stream=True)
+    rsp = requests.get(url, stream=True)
+    
     # get the total size, in bytes, from the response header
-    total_size = response.headers.get('content-length')
+    total_size = rsp.headers.get('content-length')
 
-    if response.status_code == 404:
-        print('File not found! Error code: ', response.status_code)
+    if rsp.status_code == 404:
+        print(f"File not found! Error code: {rsp.status_code}")
     
     else:
-        # if the header is found the file size is known. Return a
-        # progress bar
+        
+        # if the header is found, file size known. Return progress bar
         if total_size is not None:
             with open(filename, 'wb') as f:
                 downloaded = 0
                 if total_size:
-                    total_size = int(total_size)
+                    
                     # define the size of the chunk to iterate over (Mb)
                     chunk_size = max(int(total_size/1000), 1024*1024)
+                
                 # iterate over every chunk and calculate % of total_size
-                for i, data in enumerate(response.iter_content(chunk_size=chunk_size)):
-                    downloaded += len(data)
-                    f.write(data)
+                for chunk in rsp.iter_content(chunk_size=chunk_size):
+                    downloaded += len(chunk)
+                    f.write(chunk)
+                    
                     # calculate current %
-                    done = int(50*downloaded/total_size)
-                    c = i * chunk_size / total_size * 100
+                    status = int(50*downloaded/total_size)
+                    
                     # print progress to console then flush console
-                    sys.stdout.write('\r[{}{}]'.format(
-                        '#' * done, '.' * (50-done)))
-                    sys.stdout.flush()
-                    print(f"\r{round(c, 4)}%")
-                    print(f"\r{round(done, 4)}%")
-                    time.sleep(.1)
+                    sys.stdout.write('\r[{}{}]'.format('#' * status, '.' * (50 - status)))
                     sys.stdout.flush()
             sys.stdout.write('\n')
         
-        else:
-            # If the header is not found, skip the progressbar
-            print('Downloading %s ...' % (fname))
-            with open(local_file, 'wb')as f:
-                f.write(data.content)
-            print('%s Done' % (fname))
+        ## else:
+        ##     # If the header is not found, skip the progressbar
+        ##     print('Downloading %s ...' % (fname))
+        ##     with open(local_file, 'wb')as f:
+        ##         f.write(data.content)
+        ##     print('%s Done' % (fname))
 
 
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
 def main():
-    simu_ID = parser.parse_args().id
+    simID = parser.parse_args().id
 
-    if simu_ID is None:
+    if simID is None:
         prYellow(
-            "***Error*** simulation ID [-id, --id] is required. See 'MarsPull.py -h' for help.")
+            "***Error*** Simulation identifier [-id, --id] required."
+            "Use 'MarsPull.py -h' for additional help.")
         exit()
 
     URLbase = ("https://data.nas.nasa.gov/legacygcm/"
                "download_data_legacygcm.php?file=/legacygcmdata/"
-               + simu_ID + "/")
+               + simID + "/")
 
     if parser.parse_args().ls:
-        data_input = np.asarray(parser.parse_args().ls)
-        if len(data_input) == 1:  # Wuery only the file containing this Ls
-            i_start = np.argmin(np.abs(Ls_ini-data_input))
-            if data_input < Ls_ini[i_start]:
+        lsInput = np.asarray(parser.parse_args().ls)
+        
+        if len(lsInput) == 1:
+            # Query the file corresponding to this Ls
+            i_start = np.argmin(np.abs(lsStart-lsInput))
+            if lsInput < lsStart[i_start]:
                 i_start -= 1
+            
             i_request = np.arange(i_start, i_start+1)
 
-        elif len(data_input) == 2:  # start, stop is provided
-            i_start = np.argmin(np.abs(Ls_ini-data_input[0]))
-            if data_input[0] < Ls_ini[i_start]:
+        elif len(lsInput) == 2:
+            # Query the files between [start] & [stop], inclusive
+            i_start = np.argmin(np.abs(lsStart-lsInput[0]))
+            if lsInput[0] < lsStart[i_start]:
                 i_start -= 1
 
-            i_end = np.argmin(np.abs(Ls_end-data_input[1]))
-            if data_input[1] > Ls_end[i_end]:
+            i_end = np.argmin(np.abs(lsEnd-lsInput[1]))
+            if lsInput[1] > lsEnd[i_end]:
                 i_end += 1
 
             i_request = np.arange(i_start, i_end+1)
 
-        print('Saving  %i files in %s ' % (len(i_request), saveDir))
+        print(f"Saving {len(i_request)} files in {saveDir}")
         for ii in i_request:
             # Legacy .nc files
-            if simu_ID == 'ACTIVECLDS_NCDF':
-                fName = 'LegacyGCM_Ls%03d_Ls%03d.nc' % (Ls_ini[ii], Ls_end[ii])
+            if simID == 'ACTIVECLDS_NCDF':
+                fName = 'LegacyGCM_Ls%03d_Ls%03d.nc' % (lsStart[ii], lsEnd[ii])
             # fort.11 files
             else:
                 fName = 'fort.11_%04d' % (670+ii)
+                print(f"FILENAME = {fName}")
+                fName2 = f"fort.11_{(670+ii):.4d}"
+                print(f"FILENAME2 = {fName2}")
 
             url = URLbase+fName
-            filename = saveDir+fName
-            #print('Downloading '+ fName+ '...')
-            print('Downloading ' + url + '...')
+            filename = saveDir + fName
+            print(f"Downloading {url}...")
             download(url, filename)
 
     elif parser.parse_args().filename:
@@ -197,10 +214,10 @@ def main():
         for ff in f_input:
             url = URLbase+ff
             filename = saveDir+ff
-            print('Downloading ' + url + '...')  # ff
+            print(f"Downloading {url}...")
             download(url, filename)
     else:
-        prYellow('No data requested. Use -ls or -f to specify data to download.')
+        prYellow("No data requested. Use -ls or -f to specify data to download.")
 
 # ======================================================
 #                  END OF PROGRAM
