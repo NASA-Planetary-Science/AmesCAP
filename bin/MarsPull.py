@@ -93,40 +93,44 @@ def download(url, filename):
     
     Raises
     ------
-    req.status_code
+    response.status_code
         A file-not-found error
     
     """
 
     _, fname = os.path.split(filename)
-    req = requests.get(url, stream=True)
-    total = req.headers.get('content-length')
-    print(total)
+    # use a context manager to make an HTTP request and file
+    response = requests.get(url, stream=True)
+    # get the total size, in bytes, from the response header
+    total_size = response.headers.get('content-length')
 
-    if req.status_code == 404:
-        print('File not found! Error code: ', req.status_code)
+    if response.status_code == 404:
+        print('File not found! Error code: ', response.status_code)
     
     else:
         # if the header is found the file size is known. Return a
         # progress bar
-        if total is not None:
+        if total_size is not None:
             with open(filename, 'wb') as f:
                 downloaded = 0
-                if total:
-                    total = int(total)
+                if total_size:
+                    total_size = int(total_size)
                     # define the size of the chunk to iterate over (Mb)
-                    chunk_size = max(int(total/1000), 1024*1024)
-                # iterate over every chunk and calculate % of total
-                for data in req.iter_content(chunk_size=chunk_size):
+                    chunk_size = max(int(total_size/1000), 1024*1024)
+                # iterate over every chunk and calculate % of total_size
+                for i, data in enumerate(response.iter_content(chunk_size=chunk_size)):
                     downloaded += len(data)
                     f.write(data)
                     # calculate current %
-                    done = int(50*downloaded/total)
+                    done = int(50*downloaded/total_size)
+                    c = i * chunk_size / total_size * 100
                     # print progress to console then flush console
                     sys.stdout.write('\r[{}{}]'.format(
                         '#' * done, '.' * (50-done)))
+                    sys.stdout.write(f"\r{round(c, 4)}%")
                     sys.stdout.flush()
             sys.stdout.write('\n')
+        
         else:
             # If the header is not found, skip the progressbar
             print('Downloading %s ...' % (fname))
