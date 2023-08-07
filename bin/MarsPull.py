@@ -103,8 +103,7 @@ def download(url, filename):
     total = response.headers.get('content-length')
 
     if response.status_code == 404:
-        #print('Error during download. Error code: ', response.status_code)
-        return FileNotFoundError
+        print('File not found! Error code: ', response.status_code)
     
     else:
         # If the header is found, save the size of the file and return a
