@@ -13,6 +13,7 @@ try:
     import numpy as np
     import argparse     # parse arguments
     import requests
+    import time
 
 except ImportError as error_msg:
     prYellow("Error while importing modules")
@@ -112,22 +113,24 @@ def download(url, filename):
         # progress bar
         if total_size is not None:
             with open(filename, 'wb') as f:
-                downloaded = 0
+                # downloaded = 0
                 if total_size:
                     total_size = int(total_size)
                     # define the size of the chunk to iterate over (Mb)
                     chunk_size = max(int(total_size/1000), 1024*1024)
                 # iterate over every chunk and calculate % of total_size
                 for i, data in enumerate(response.iter_content(chunk_size=chunk_size)):
-                    downloaded += len(data)
+                    # downloaded += len(data)
                     f.write(data)
                     # calculate current %
-                    done = int(50*downloaded/total_size)
+                    # done = int(50*downloaded/total_size)
                     c = i * chunk_size / total_size * 100
                     # print progress to console then flush console
-                    sys.stdout.write('\r[{}{}]'.format(
-                        '#' * done, '.' * (50-done)))
+                    # sys.stdout.write('\r[{}{}]'.format(
+                    #     '#' * done, '.' * (50-done)))
+                    # sys.stdout.flush()
                     sys.stdout.write(f"\r{round(c, 4)}%")
+                    time.sleep(.1)
                     sys.stdout.flush()
             sys.stdout.write('\n')
         
