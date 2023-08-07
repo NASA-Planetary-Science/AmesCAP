@@ -109,21 +109,21 @@ def download(url, filename):
         # If the header is found, save the size of the file and return a
         # progress bar
         if total is not None:
-            with open(filename, 'wb') as f:
-                downloaded = 0
-                if total:
-                    total = int(total)
-                for data in response.iter_content(chunk_size=max(int(total/1000), 1024*1024)):
-                    downloaded += len(data)
-                    f.write(data)
-                    done = int(50*downloaded/total)
-                    sys.stdout.write('\r[{}{}]'.format(
-                        '#' * done, '.' * (50-done)))
-                    sys.stdout.flush()
-            sys.stdout.write('\n')
+            # with open(filename, 'wb') as f:
+            #     downloaded = 0
+            #     if total:
+            #         total = int(total)
+            #     for data in response.iter_content(chunk_size=max(int(total/1000), 1024*1024)):
+            #         downloaded += len(data)
+            #         f.write(data)
+            #         done = int(50*downloaded/total)
+            #         sys.stdout.write('\r[{}{}]'.format(
+            #             '#' * done, '.' * (50-done)))
+            #         sys.stdout.flush()
+            # sys.stdout.write('\n')
             from progressbar import ProgressBar
             progress = ProgressBar()
-            with progress(open(filename, 'wb')) as f:
+            with open(progress(filename, 'wb')) as f:
                 for data in response.iter_content(chunk_size=max(int(total/1000), 1024*1024)):
                     f.write(data)                
             
