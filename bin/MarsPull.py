@@ -34,14 +34,14 @@ parser = argparse.ArgumentParser(
                 formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('-id', '--id', type=str,
-                    help=("Query data by simulation identifier "
-                    "corresponding to a subdirectory of legacygcmdata/:"
-                    "033[96mhttps://data.nas.nasa.gov/legacygcm/"
-                    "data_legacygcm.php?dir=/legacygcmdata\033[00m"
-                    "Current options include:"
+                    help=("Query data by simulation identifier \n"
+                    "corresponding to a subdirectory of legacygcmdata/:\n"
+                    "\033[96mhttps://data.nas.nasa.gov/legacygcm/"
+                    "data_legacygcm.php?dir=/legacygcmdata\033[00m\n"
+                    "Current options include:\n"
                     "'\033[93mACTIVECLDS\033[00m', "
                     "'\033[93mINERTCLDS\033[00m', "
-                    "and '\033[93mACTIVECLDS_NCDF\033[00m'"
+                    "and '\033[93mACTIVECLDS_NCDF\033[00m'\n"
                     "> Usage: MarsPull.py -id  INERTCLDS \n"))
 
 parser.add_argument('-ls', '--ls', nargs='+', type=float,
