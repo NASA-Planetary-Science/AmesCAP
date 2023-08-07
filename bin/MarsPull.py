@@ -93,42 +93,42 @@ def download(url, filename):
     
     Raises
     ------
-    response.status_code
+    req.status_code
         A file-not-found error
     
     """
 
     _, fname = os.path.split(filename)
-    response = requests.get(url, stream=True)
-    total = response.headers.get('content-length')
+    req = requests.get(url, stream=True)
+    total = req.headers.get('content-length')
+    print(total)
 
-    if response.status_code == 404:
-        print('File not found! Error code: ', response.status_code)
+    if req.status_code == 404:
+        print('File not found! Error code: ', req.status_code)
     
     else:
-        # If the header is found, save the size of the file and return a
+        # if the header is found the file size is known. Return a
         # progress bar
         if total is not None:
-            # with open(filename, 'wb') as f:
-            #     downloaded = 0
-            #     if total:
-            #         total = int(total)
-            #     for data in response.iter_content(chunk_size=max(int(total/1000), 1024*1024)):
-            #         downloaded += len(data)
-            #         f.write(data)
-            #         done = int(50*downloaded/total)
-            #         sys.stdout.write('\r[{}{}]'.format(
-            #             '#' * done, '.' * (50-done)))
-            #         sys.stdout.flush()
-            # sys.stdout.write('\n')
-            from progressbar import ProgressBar
-            progress = ProgressBar()
-            with open(progress(filename, 'wb')) as f:
-                for data in response.iter_content(chunk_size=max(int(total/1000), 1024*1024)):
-                    f.write(data)                
-            
+            with open(filename, 'wb') as f:
+                downloaded = 0
+                if total:
+                    total = int(total)
+                    # define the size of the chunk to iterate over (Mb)
+                    chunk_size = max(int(total/1000), 1024*1024)
+                # iterate over every chunk and calculate % of total
+                for data in req.iter_content(chunk_size=chunk_size):
+                    downloaded += len(data)
+                    f.write(data)
+                    # calculate current %
+                    done = int(50*downloaded/total)
+                    # print progress to console then flush console
+                    sys.stdout.write('\r[{}{}]'.format(
+                        '#' * done, '.' * (50-done)))
+                    sys.stdout.flush()
+            sys.stdout.write('\n')
         else:
-            # If the header is unknown, skip the progress bar
+            # If the header is not found, skip the progressbar
             print('Downloading %s ...' % (fname))
             with open(local_file, 'wb')as f:
                 f.write(data.content)
