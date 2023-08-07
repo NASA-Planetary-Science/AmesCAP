@@ -129,7 +129,8 @@ def download(url, filename):
                     # sys.stdout.write('\r[{}{}]'.format(
                     #     '#' * done, '.' * (50-done)))
                     # sys.stdout.flush()
-                    sys.stdout.write(f"\r{round(c, 4)}%")
+                    # sys.stdout.write(f"\r{round(c, 4)}%")
+                    sys.stdout.write('\r[{}{}]'.format('#' * c, '.' * (i-c)))
                     time.sleep(.1)
                     sys.stdout.flush()
             sys.stdout.write('\n')
