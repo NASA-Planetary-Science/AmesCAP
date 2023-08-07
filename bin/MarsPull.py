@@ -42,18 +42,18 @@ parser.add_argument('-id', '--id', type=str,
                     "Current options include: "
                     "'\033[93mACTIVECLDS\033[00m', "
                     "'\033[93mINERTCLDS\033[00m', "
-                    "and '\033[93mACTIVECLDS_NCDF\033[00m'\n\n"
+                    "and '\033[93mACTIVECLDS_NCDF\033[00m'\n"
                     "> Usage: MarsPull.py -id  INERTCLDS \n\n"))
 
 parser.add_argument('-ls', '--ls', nargs='+', type=float,
-                    help="Query data by solar longitude (Ls)\n\n"
+                    help="Query data by solar longitude (Ls)\n"
                     "> Usage: MarsPull.py -ls 90.\n"
                     ">        MarsPull.py -ls [start] [stop] \n\n")
 
 parser.add_argument('-f', '--filename', nargs='+', type=str,
-                    help=("Query data by filename\n\n"
+                    help=("Query data by filename\n"
                     "> Usage: MarsPull.py -id ACTIVECLDS_NCDF -f "
-                    "fort.11_0870 fort.0880"))
+                    "fort.11_0730 fort.11_0731"))
 
 # ======================================================
 #                  DEFINITIONS
@@ -85,9 +85,11 @@ def download(url, filename):
     Parameters
     ----------
     URL: str
-        The URL to download (e.g 'https://data.nas.nasa.gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_Ls000_Ls004.nc')
+        The URL to download from. This is built from:
+        https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/
+        by appending the simulation ID to the end of the URL.
     filename: str
-        The local filename (e.g '/lou/la4/akling/Data/LegacyGCM_Ls000_Ls004.nc')
+        The name of the file to download
     
     Raises
     ------
@@ -101,7 +103,8 @@ def download(url, filename):
     total = response.headers.get('content-length')
 
     if response.status_code == 404:
-        print('Error during download. Error code: ', response.status_code)
+        #print('Error during download. Error code: ', response.status_code)
+        return FileNotFoundError
     
     else:
         # If the header is found, save the size of the file and return a
@@ -131,8 +134,6 @@ def download(url, filename):
 #                  MAIN PROGRAM
 # ======================================================
 def main():
-    # Original
-    # URLbase = "https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/"
     simu_ID = parser.parse_args().id
 
     if simu_ID is None:
@@ -140,7 +141,9 @@ def main():
             "***Error*** simulation ID [-id, --id] is required. See 'MarsPull.py -h' for help.")
         exit()
 
-    URLbase = 'https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/'+simu_ID+'/'
+    URLbase = ("https://data.nas.nasa.gov/legacygcm/"
+               "download_data_legacygcm.php?file=/legacygcmdata/"
+               + simu_ID + "/")
 
     if parser.parse_args().ls:
         data_input = np.asarray(parser.parse_args().ls)
