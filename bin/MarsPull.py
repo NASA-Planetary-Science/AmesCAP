@@ -130,7 +130,7 @@ def download(url, filename):
                         '#' * done, '.' * (50-done)))
                     sys.stdout.flush()
                     print(f"\r{round(c, 4)}%")
-                    print(f"\r{round(downloaded, 4)}%")
+                    print(f"\r{round(done, 4)}%")
                     time.sleep(.1)
                     sys.stdout.flush()
             sys.stdout.write('\n')
