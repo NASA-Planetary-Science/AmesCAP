@@ -1,4 +1,12 @@
 numpy
+argparse
+requests
+sys
+os
+time
+subprocess
+warnings
+xarray
 matplotlib
 cftime==1.0.3.4
 netCDF4==1.6.1
