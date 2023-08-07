@@ -121,6 +121,12 @@ def download(url, filename):
                         '#' * done, '.' * (50-done)))
                     sys.stdout.flush()
             sys.stdout.write('\n')
+            from progressbar import ProgressBar
+            progress = ProgressBar()
+            with progress(open(filename, 'wb')) as f:
+                for data in response.iter_content(chunk_size=max(int(total/1000), 1024*1024)):
+                    f.write(data)                
+            
         else:
             # If the header is unknown, skip the progress bar
             print('Downloading %s ...' % (fname))
