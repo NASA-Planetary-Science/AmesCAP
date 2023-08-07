@@ -125,7 +125,7 @@ def download(url, filename):
                     # calculate current %
                     done = int(50*downloaded/total_size)
                     c = i * chunk_size / total_size * 100
-                    print progress to console then flush console
+                    # print progress to console then flush console
                     sys.stdout.write('\r[{}{}]'.format(
                         '#' * done, '.' * (50-done)))
                     sys.stdout.flush()
