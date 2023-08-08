@@ -125,7 +125,6 @@ def download(fName, simID):
     URL = baseURL + fName
     
     filename = saveDir + fName
-    prCyan(f"Downloading {fName}...")
     
     # use a context manager to make an HTTP request and file
     rsp = requests.get(URL, stream=True)
@@ -135,6 +134,8 @@ def download(fName, simID):
 
     if rsp.status_code == 404:
         prYellow(f"File not found! Error code: {rsp.status_code}")
+    
+    prCyan(f"Downloading {fName}...")
     
     else:
         # download the data and show a progress bar
