@@ -134,11 +134,11 @@ def download(fName, simID):
 
     if rsp.status_code == 404:
         prYellow(f"File not found! Error code: {rsp.status_code}")
-    
-    prCyan(f"Downloading {fName}...")
-    
+        
     else:
         # download the data and show a progress bar
+        prCyan(f"Downloading {fName}...")
+        
         with open(filename, 'wb') as f:
             downloaded = 0
             if total_size:
