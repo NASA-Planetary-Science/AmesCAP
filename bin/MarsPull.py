@@ -64,6 +64,8 @@ parser.add_argument('-f', '--filename', nargs='+', type=str,
 # ======================================================
 #                  DEFINITIONS
 # ======================================================
+global saveDir, lsStart, lsEnd
+
 saveDir = (f"{os.getcwd()}/")
 
 # available files by Ls:
@@ -116,6 +118,15 @@ def download(URL, filename):
     The requested file(s), downloaded and saved to the current directory
     """
     
+    baseURL = ("https://data.nas.nasa.gov/legacygcm/"
+               "download_data_legacygcm.php?file=/legacygcmdata/"
+               + simID + "/")
+    
+    URL = baseURL + fName
+    
+    filename = saveDir + fName
+    prCyan(f"Downloading {fName}...")
+    
     # use a context manager to make an HTTP request and file
     rsp = requests.get(URL, stream=True)
     
@@ -161,9 +172,9 @@ def main():
                  "'MarsPull.py -h' for additional help.")
         exit()
 
-    baseURL = ("https://data.nas.nasa.gov/legacygcm/"
-               "download_data_legacygcm.php?file=/legacygcmdata/"
-               + simID + "/")
+    # baseURL = ("https://data.nas.nasa.gov/legacygcm/"
+    #            "download_data_legacygcm.php?file=/legacygcmdata/"
+    #            + simID + "/")
 
     if parser.parse_args().ls:
         # if the user input an ID and specified one or more Ls...
@@ -188,7 +199,7 @@ def main():
 
         numFiles = np.arange(i_start, i_end+1)
 
-        prCyan(f"Saving {len(numFiles)} file(s) in {saveDir}")
+        prCyan(f"Saving {len(numFiles)} file(s) to {saveDir}")
         
         for ii in numFiles:
             # netCDF files
@@ -198,27 +209,26 @@ def main():
             else:
                 fName = f"fort.11_{(670+ii):04d}"
 
-            URL = baseURL + fName
+            # URL = baseURL + fName
             
             # trigger the file download
-            filename = saveDir + fName
-            prCyan(f"Downloading {fName}...")
-            download(URL, filename)
+            # filename = saveDir + fName
+            # prCyan(f"Downloading {fName}...")
+            download(fName)
     
     elif parser.parse_args().filename:
         # if the user input an ID and a file name...
         fNameIN = np.asarray(parser.parse_args().filename)
         
-        prCyan(f"Saving 1 file in {saveDir}")
-        # TODO: add support for multiple filenames
-        
+        prCyan(f"Saving {len(fNameIN)} file(s) to {saveDir}")
+                
         for fName in fNameIN:
-            URL = baseURL + fName
+            # URL = baseURL + fName
 
             # trigger the file download
-            filename = saveDir + fName
-            prCyan(f"Downloading {fName}...")
-            download(URL, filename)
+            # filename = saveDir + fName
+            # prCyan(f"Downloading {fName}...")
+            download(fName)
     else:
         # if the user did not specify Ls or a file name...
         prYellow("No data requested. Use [-ls --ls] or [-f --filename]"
