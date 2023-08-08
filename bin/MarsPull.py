@@ -218,7 +218,8 @@ def main():
             print(f"Downloading {url}...")
             download(url, filename)
     else:
-        prYellow("No data requested. Use -ls or -f to specify data to download.")
+        prYellow("No data requested. Use [-ls --ls] or [-f --filename]"
+                 "with [-id --id] to specify a file to download.")
 
 # ======================================================
 #                  END OF PROGRAM
