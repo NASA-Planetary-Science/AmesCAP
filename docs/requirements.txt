@@ -1,8 +1,6 @@
 numpy
 argparse
 requests
-sys
-os
 time
 subprocess
 warnings
