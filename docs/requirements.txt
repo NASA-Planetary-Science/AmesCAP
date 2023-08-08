@@ -1,8 +1,6 @@
 numpy
 argparse
 requests
-subprocess
-warnings
 xarray
 matplotlib
 cftime==1.0.3.4
