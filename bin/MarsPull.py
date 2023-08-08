@@ -19,13 +19,13 @@ try:
 
 except ImportError as error_msg:
     prYellow("Error while importing modules")
-    print(f"Error was: {error_msg.message}")
+    prYellow(f"Error was: {error_msg.message}")
     exit()
 
 except Exception as exception:
     # output unexpected Exceptions
-    print(exception, False)
-    print(f"{exception.__class__.__name__}: {exception.message}")
+    prYellow(exception, False)
+    prYellow(f"{exception.__class__.__name__}: {exception.message}")
     exit()
 
 # ======================================================
@@ -123,7 +123,7 @@ def download(URL, filename):
     total_size = rsp.headers.get('content-length')
 
     if rsp.status_code == 404:
-        print(f"File not found! Error code: {rsp.status_code}")
+        prYellow(f"File not found! Error code: {rsp.status_code}")
     
     else:
         # download the data and show a progress bar
@@ -176,8 +176,6 @@ def main():
                 i_start -= 1
             i_end = i_start
             
-            # i_request = np.arange(i_start, i_start+1)
-
         elif len(lsIN) == 2:
             # if the user input a range of Ls...
             i_start = np.argmin(np.abs(lsStart-lsIN[0]))
@@ -188,11 +186,11 @@ def main():
             if lsIN[1] > lsEnd[i_end]:
                 i_end += 1
 
-        i_request = np.arange(i_start, i_end+1)
+        numFiles = np.arange(i_start, i_end+1)
 
-        prCyan(f"Saving {len(i_request)} files in {saveDir}")
+        prCyan(f"Saving {len(numFiles)} file(s) in {saveDir}")
         
-        for ii in i_request:
+        for ii in numFiles:
             # netCDF files
             if simID == 'ACTIVECLDS_NCDF':
                 fName = f"LegacyGCM_Ls{lsStart[ii]:03d}_Ls{lsEnd[ii]:03d}.nc"
@@ -201,20 +199,16 @@ def main():
                 fName = f"fort.11_{(670+ii):04d}"
 
             URL = baseURL + fName
-            # filename = saveDir + fName
-            # prCyan(f"Downloading {fName}...")
-            # download(URL, filename)
 
     elif parser.parse_args().filename:
         # if the user input an ID and a file name...
         fNameIN = np.asarray(parser.parse_args().filename)
         
+        prCyan(f"Saving 1 file in {saveDir}")
+        
         for fName in fNameIN:
             URL = baseURL + fName
-            # filename = saveDir + fName
-            # print(f"Downloading {fName}...")
-            # download(URL, filename)
-    
+        
     else:
         # if the user did not specify Ls or a file name...
         prYellow("No data requested. Use [-ls --ls] or [-f --filename]"
@@ -223,7 +217,7 @@ def main():
     
     # trigger the file download
     filename = saveDir + fName
-    print(f"Downloading {fName}...")
+    prCyan(f"Downloading {fName}...")
     download(URL, filename)
 
 # ======================================================
