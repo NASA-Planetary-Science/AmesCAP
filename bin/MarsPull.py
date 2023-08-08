@@ -199,26 +199,31 @@ def main():
                 fName = f"fort.11_{(670+ii):04d}"
 
             URL = baseURL + fName
-
+            
+            # trigger the file download
+            filename = saveDir + fName
+            prCyan(f"Downloading {fName}...")
+            download(URL, filename)
+    
     elif parser.parse_args().filename:
         # if the user input an ID and a file name...
         fNameIN = np.asarray(parser.parse_args().filename)
         
         prCyan(f"Saving 1 file in {saveDir}")
+        # TODO: add support for multiple filenames
         
         for fName in fNameIN:
             URL = baseURL + fName
-        
+
+            # trigger the file download
+            filename = saveDir + fName
+            prCyan(f"Downloading {fName}...")
+            download(URL, filename)
     else:
         # if the user did not specify Ls or a file name...
         prYellow("No data requested. Use [-ls --ls] or [-f --filename]"
                  "with [-id --id] to specify a file to download.")
         exit()
-    
-    # trigger the file download
-    filename = saveDir + fName
-    prCyan(f"Downloading {fName}...")
-    download(URL, filename)
 
 # ======================================================
 #                  END OF PROGRAM
