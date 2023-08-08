@@ -56,7 +56,7 @@ parser.add_argument('-ls', '--ls', nargs='+', type=float,
                     "[stop] \n\n")
 
 parser.add_argument('-f', '--filename', nargs='+', type=str,
-                    help=("Query data by filename - requires"
+                    help=("Query data by file name - requires"
                     " a simulation identifier (--id)\n"
                     "> Usage: MarsPull.py -id ACTIVECLDS_NCDF -f "
                     "fort.11_0730 fort.11_0731"))
@@ -84,7 +84,7 @@ lsEnd = np.array([  4,   9,  14,  19,  24,  29,  33,  38,  42,  47,
                    327, 333, 338, 344, 349, 354,   0])
 
 
-def download(url, filename):
+def download(URL, fileName):
     """
     Downloads a file from the MCMC Legacy GCM directory at 
     data.nas.nasa.gov
@@ -92,7 +92,7 @@ def download(url, filename):
     This function specifies the file to download by appending to the 
     URL the subdirectory, indicated by the user-specified 
     simulation identifier [-id --id], and the name of the file. The 
-    filename is either provided by the user directly using 
+    file name is either provided by the user directly using 
     [-f --filename] or determined based on the user-specified solar 
     longitude [-ls --ls].
     
@@ -103,7 +103,7 @@ def download(url, filename):
         https://data.nas.nasa.gov/mcmc/legacygcmdata
         by appending the simulation ID to the end of the URL.
     
-    filename: str
+    fileName: str
         The name of the file to download
     
     Raises
@@ -115,11 +115,9 @@ def download(url, filename):
     -------
     The requested file(s), downloaded and saved to the current directory
     """
-
-    ### _, fname = os.path.split(filename)
     
     # use a context manager to make an HTTP request and file
-    rsp = requests.get(url, stream=True)
+    rsp = requests.get(URL, stream=True)
     
     # get the total size, in bytes, from the response header
     total_size = rsp.headers.get('content-length')
@@ -129,7 +127,7 @@ def download(url, filename):
     
     else:
         # download the data and show a progress bar
-        with open(filename, 'wb') as f:
+        with open(fileName, 'wb') as f:
             downloaded = 0
             if total_size:
                 # convert total_size from str to int
@@ -146,7 +144,6 @@ def download(url, filename):
                 status = int(50*downloaded/total_size)
                 
                 # print progress to console then flush console
-                #sys.stdout.write('\r[{}{}]'.format('#' * status, '.' * (50 - status)))
                 sys.stdout.write(f"\r[{'#'*status}{'.'*(50-status)}]")
                 sys.stdout.flush()
         sys.stdout.write('\n')
@@ -158,62 +155,72 @@ def main():
     simID = parser.parse_args().id
 
     if simID is None:
-        prYellow("***Error*** [-id, --id] required. Use "
+        prYellow("***Error*** [-id, --id] is required. Use "
                  "'MarsPull.py -h' for additional help.")
         exit()
 
-    URLbase = ("https://data.nas.nasa.gov/legacygcm/"
+    baseURL = ("https://data.nas.nasa.gov/legacygcm/"
                "download_data_legacygcm.php?file=/legacygcmdata/"
                + simID + "/")
 
+    # if the user input an ID and specified one or more Ls...
     if parser.parse_args().ls:
-        lsInput = np.asarray(parser.parse_args().ls)
+        lsIN = np.asarray(parser.parse_args().ls)
         
-        if len(lsInput) == 1:
-            # Query the file corresponding to this Ls
-            i_start = np.argmin(np.abs(lsStart-lsInput))
-            if lsInput < lsStart[i_start]:
+        # if the user input one Ls...
+        if len(lsIN) == 1:
+            i_start = np.argmin(np.abs(lsStart-lsIN))
+            if lsIN < lsStart[i_start]:
                 i_start -= 1
             
             i_request = np.arange(i_start, i_start+1)
 
-        elif len(lsInput) == 2:
-            # Query the files between [start] & [stop], inclusive
-            i_start = np.argmin(np.abs(lsStart-lsInput[0]))
-            if lsInput[0] < lsStart[i_start]:
+        # if the user input a range of Ls...
+        elif len(lsIN) == 2:
+            i_start = np.argmin(np.abs(lsStart-lsIN[0]))
+            if lsIN[0] < lsStart[i_start]:
                 i_start -= 1
 
-            i_end = np.argmin(np.abs(lsEnd-lsInput[1]))
-            if lsInput[1] > lsEnd[i_end]:
+            i_end = np.argmin(np.abs(lsEnd-lsIN[1]))
+            if lsIN[1] > lsEnd[i_end]:
                 i_end += 1
 
             i_request = np.arange(i_start, i_end+1)
 
-        print(f"Saving {len(i_request)} files in {saveDir}")
+        prCyan(f"Saving {len(i_request)} files in {saveDir}")
+        
         for ii in i_request:
-            # netCDF filenames
+            # netCDF files
             if simID == 'ACTIVECLDS_NCDF':
                 fName = f"LegacyGCM_Ls{lsStart[ii]:03d}_Ls{lsEnd[ii]:03d}.nc"
-            # fort.11 filenames
+            # fort.11 files
             else:
                 fName = f"fort.11_{(670+ii):04d}"
-                print(f"FILENAME = {fName}")
 
-            url = URLbase+fName
-            filename = saveDir + fName
-            print(f"Downloading {url}...")
-            download(url, filename)
+            URL = baseURL + fName
+            # fileName = saveDir + fName
+            # prCyan(f"Downloading {fName}...")
+            # download(URL, fileName)
 
-    elif parser.parse_args().filename:
-        f_input = np.asarray(parser.parse_args().filename)
-        for ff in f_input:
-            url = URLbase+ff
-            filename = saveDir+ff
-            print(f"Downloading {url}...")
-            download(url, filename)
+    # if the user input an ID and a file name...
+    elif parser.parse_args().fileName:
+        fNameIN = np.asarray(parser.parse_args().fileName)
+        
+        for fName in fNameIN:
+            URL = baseURL + fName
+            # fileName = saveDir + fName
+            # print(f"Downloading {fName}...")
+            # download(URL, fileName)
+    
+    # if the user did not specify either Ls or a file name...
     else:
         prYellow("No data requested. Use [-ls --ls] or [-f --filename]"
                  "with [-id --id] to specify a file to download.")
+        exit()
+    
+    fileName = saveDir + fName
+    print(f"Downloading {fName}...")
+    download(URL, fileName)
 
 # ======================================================
 #                  END OF PROGRAM
