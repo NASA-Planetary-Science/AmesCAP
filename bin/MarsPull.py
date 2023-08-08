@@ -128,7 +128,8 @@ def download(url, filename):
             with open(filename, 'wb') as f:
                 downloaded = 0
                 if total_size:
-                    
+                    # convert total_size from str to int
+                    total_size = int(total_size)
                     # define the size of the chunk to iterate over (Mb)
                     chunk_size = max(int(total_size/1000), 1024*1024)
                 
