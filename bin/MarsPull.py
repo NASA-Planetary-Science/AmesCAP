@@ -86,7 +86,7 @@ lsEnd = np.array([  4,   9,  14,  19,  24,  29,  33,  38,  42,  47,
                    327, 333, 338, 344, 349, 354,   0])
 
 
-def download(URL, filename):
+def download(fName):
     """
     Downloads a file from the MCMC Legacy GCM directory at 
     data.nas.nasa.gov
