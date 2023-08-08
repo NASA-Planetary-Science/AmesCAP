@@ -147,7 +147,7 @@ def download(url, filename):
                 
                 # print progress to console then flush console
                 #sys.stdout.write('\r[{}{}]'.format('#' * status, '.' * (50 - status)))
-                sys.stdout.write(fr"\r[{'#'*status}{'.'*(50-status)}]")
+                sys.stdout.write(f"\r[{'#'*status}{'.'*(50-status)}]")
                 sys.stdout.flush()
         sys.stdout.write('\n')
 
