@@ -202,7 +202,7 @@ def main():
             else:
                 fName = 'fort.11_%04d' % (670+ii)
                 print(f"FILENAME = {fName}")
-                fName2 = f"fort.11_{(670+ii):.4d}"
+                fName2 = f"fort.11_{(670+ii):04d}"
                 print(f"FILENAME2 = {fName2}")
 
             url = URLbase+fName
