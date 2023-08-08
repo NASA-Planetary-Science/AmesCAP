@@ -1,4 +1,25 @@
 #!/usr/bin/env python3
+"""
+MarsPull
+
+The MarsPull executable is for querying data from the Mars Climate
+Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on
+the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
+
+The executable requires two arguments:
+[-id --id]      the simulation identifier, and
+[-ls --ls]      the desired solar longitude(s), OR
+[-f -filename]  the name(s) of the desired file(s)
+
+Third-party requirements:
+- numpy
+- argparse
+- requests
+
+List of functions:
+
+    * download - queries the requested file from the NAS Data Portal
+"""
 
 # make print statements appear in color
 def prCyan(skk): print("\033[96m{}\033[00m".format(skk))
@@ -100,12 +121,12 @@ def download(fName, simID):
     
     Parameters
     ----------
-    URL: str
-        The URL of the file to download. This is built from:
-        https://data.nas.nasa.gov/mcmc/legacygcmdata
-        by appending the simulation ID to the end of the URL.
+    simID: str
+        The simulation identifier, i.e., the name of the directory
+        to query at:
+        https://data.nas.nasa.gov/mcmc/data_legacygcm.php
     
-    filename: str
+    fName: str
         The name of the file to download
     
     Raises
