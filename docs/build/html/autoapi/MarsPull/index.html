@@ -97,22 +97,41 @@
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#MarsPull.download" title="MarsPull.download"><code class="xref py py-obj docutils literal notranslate"><span class="pre">download</span></code></a>(url, filename)</p></td>
-<td><p>Save a file from a URL locally.</p></td>
+<td><p>Downloads a file from  <a class="reference external" href="https://data.nas.nasa.gov">https://data.nas.nasa.gov</a>.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPull.download">
 <span class="sig-prename descclassname"><span class="pre">MarsPull.</span></span><span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPull.download" title="Permalink to this definition"></a></dt>
-<dd><p>Save a file from a URL locally.
-Args:</p>
-<blockquote>
-<div><dl class="simple">
-<dt>URL:        The URL to download</dt><dd><p>(e.g ‘<a class="reference external" href="https://data.nas.nasa.gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_Ls000_Ls004.nc">https://data.nas.nasa.gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_Ls000_Ls004.nc</a>’)</p>
+<dd><p>Downloads a file from  <a class="reference external" href="https://data.nas.nasa.gov">https://data.nas.nasa.gov</a>.</p>
+<p>The file to download is specified by appending the above URL with
+the legacy gcm subdirectory + the filename. The filename can be
+provided by the user directly or determined based on the
+user-requested solar longitude (Ls). The simulation identifier (ID)
+must always be provided.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h4>
+<dl class="simple">
+<dt>URL: str</dt><dd><p>The URL to download from. This is built from:
+<a class="reference external" href="https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/">https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/</a>
+by appending the simulation ID to the end of the URL.</p>
+</dd>
+<dt>filename: str</dt><dd><p>The name of the file to download</p>
 </dd>
 </dl>
-<p>filename:   The local filename (e.g ‘/lou/la4/akling/Data/LegacyGCM_Ls000_Ls004.nc’)</p>
-</div></blockquote>
+</section>
+<section id="raises">
+<h4>Raises<a class="headerlink" href="#raises" title="Permalink to this heading"></a></h4>
+<dl class="simple">
+<dt>rsp.status_code</dt><dd><p>A file-not-found error</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Permalink to this heading"></a></h4>
+<p>downloaded file</p>
+</section>
 </dd></dl>
 
 </section>

@@ -21,10 +21,30 @@ Functions
 
 .. py:function:: download(url, filename)
 
-   Save a file from a URL locally.
-   Args:
-       URL:        The URL to download 
-                   (e.g 'https://data.nas.nasa.gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_Ls000_Ls004.nc')
-       filename:   The local filename (e.g '/lou/la4/akling/Data/LegacyGCM_Ls000_Ls004.nc')
+   Downloads a file from  https://data.nas.nasa.gov.
+
+   The file to download is specified by appending the above URL with
+   the legacy gcm subdirectory + the filename. The filename can be 
+   provided by the user directly or determined based on the 
+   user-requested solar longitude (Ls). The simulation identifier (ID)
+   must always be provided.
+
+   Parameters
+   ----------
+   URL: str
+       The URL to download from. This is built from:
+       https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/
+       by appending the simulation ID to the end of the URL.
+   filename: str
+       The name of the file to download
+
+   Raises
+   ------
+   rsp.status_code
+       A file-not-found error
+
+   Returns
+   -------
+   downloaded file
 
 
