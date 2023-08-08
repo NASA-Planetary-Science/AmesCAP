@@ -84,7 +84,7 @@ lsEnd = np.array([  4,   9,  14,  19,  24,  29,  33,  38,  42,  47,
                    327, 333, 338, 344, 349, 354,   0])
 
 
-def download(URL, fileName):
+def download(URL, filename):
     """
     Downloads a file from the MCMC Legacy GCM directory at 
     data.nas.nasa.gov
@@ -103,7 +103,7 @@ def download(URL, fileName):
         https://data.nas.nasa.gov/mcmc/legacygcmdata
         by appending the simulation ID to the end of the URL.
     
-    fileName: str
+    filename: str
         The name of the file to download
     
     Raises
@@ -127,7 +127,7 @@ def download(URL, fileName):
     
     else:
         # download the data and show a progress bar
-        with open(fileName, 'wb') as f:
+        with open(filename, 'wb') as f:
             downloaded = 0
             if total_size:
                 # convert total_size from str to int
@@ -152,6 +152,8 @@ def download(URL, fileName):
 #                  MAIN PROGRAM
 # ======================================================
 def main():
+    # parse out the name of the file
+    
     simID = parser.parse_args().id
 
     if simID is None:
@@ -163,20 +165,21 @@ def main():
                "download_data_legacygcm.php?file=/legacygcmdata/"
                + simID + "/")
 
-    # if the user input an ID and specified one or more Ls...
     if parser.parse_args().ls:
+        # if the user input an ID and specified one or more Ls...
         lsIN = np.asarray(parser.parse_args().ls)
         
-        # if the user input one Ls...
         if len(lsIN) == 1:
+            # if the user input one Ls...
             i_start = np.argmin(np.abs(lsStart-lsIN))
             if lsIN < lsStart[i_start]:
                 i_start -= 1
+            i_end = i_start
             
-            i_request = np.arange(i_start, i_start+1)
+            # i_request = np.arange(i_start, i_start+1)
 
-        # if the user input a range of Ls...
         elif len(lsIN) == 2:
+            # if the user input a range of Ls...
             i_start = np.argmin(np.abs(lsStart-lsIN[0]))
             if lsIN[0] < lsStart[i_start]:
                 i_start -= 1
@@ -185,7 +188,7 @@ def main():
             if lsIN[1] > lsEnd[i_end]:
                 i_end += 1
 
-            i_request = np.arange(i_start, i_end+1)
+        i_request = np.arange(i_start, i_end+1)
 
         prCyan(f"Saving {len(i_request)} files in {saveDir}")
         
@@ -198,29 +201,30 @@ def main():
                 fName = f"fort.11_{(670+ii):04d}"
 
             URL = baseURL + fName
-            # fileName = saveDir + fName
+            # filename = saveDir + fName
             # prCyan(f"Downloading {fName}...")
-            # download(URL, fileName)
+            # download(URL, filename)
 
-    # if the user input an ID and a file name...
-    elif parser.parse_args().fileName:
-        fNameIN = np.asarray(parser.parse_args().fileName)
+    elif parser.parse_args().filename:
+        # if the user input an ID and a file name...
+        fNameIN = np.asarray(parser.parse_args().filename)
         
         for fName in fNameIN:
             URL = baseURL + fName
-            # fileName = saveDir + fName
+            # filename = saveDir + fName
             # print(f"Downloading {fName}...")
-            # download(URL, fileName)
+            # download(URL, filename)
     
-    # if the user did not specify either Ls or a file name...
     else:
+        # if the user did not specify Ls or a file name...
         prYellow("No data requested. Use [-ls --ls] or [-f --filename]"
                  "with [-id --id] to specify a file to download.")
         exit()
     
-    fileName = saveDir + fName
+    # trigger the file download
+    filename = saveDir + fName
     print(f"Downloading {fName}...")
-    download(URL, fileName)
+    download(URL, filename)
 
 # ======================================================
 #                  END OF PROGRAM
