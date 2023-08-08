@@ -7,6 +7,9 @@ import os         # access operating systems function
 # make print statements appear in color
 def prCyan(skk): print("\033[96m{}\033[00m".format(skk))
 def prYellow(skk): print("\033[93m{}\033[00m".format(skk))
+Cyan = "\033[96m"
+Yellow = "\033[93m"
+Default = "\033[00m"
 
 # try to import specific scientic modules
 try:
@@ -29,20 +32,20 @@ except Exception as exception:
 #                  ARGUMENT PARSER
 # ======================================================
 parser = argparse.ArgumentParser(
-    description=("""\033[93mUilities for accessing files on the MCMC 
-                NAS Data Portal \033[00m """), 
+    description=(f"{Yellow}Uilities for accessing files on the MCMC "
+                f"NAS Data Portal {Default}"), 
                 formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('-id', '--id', type=str,
                     help=("Query data by simulation identifier "
                     "corresponding to \n"
                     "a subdirectory of legacygcmdata/:\n"
-                    "\033[96mhttps://data.nas.nasa.gov/legacygcm/"
-                    "data_legacygcm.php?dir=/legacygcmdata\033[00m\n"
+                    f"{Cyan}https://data.nas.nasa.gov/legacygcm/"
+                    f"data_legacygcm.php?dir=/legacygcmdata{Default}\n"
                     "Current options include: "
-                    "'\033[93mACTIVECLDS\033[00m', "
-                    "'\033[93mINERTCLDS\033[00m', "
-                    "and '\033[93mACTIVECLDS_NCDF\033[00m'\n"
+                    f"'{Yellow}ACTIVECLDS{Default}', "
+                    f"'{Yellow}INERTCLDS{Default}', "
+                    f"and '{Yellow}ACTIVECLDS_NCDF{Default}'\n"
                     "> Usage: MarsPull.py -id  INERTCLDS \n\n"))
 
 parser.add_argument('-ls', '--ls', nargs='+', type=float,
@@ -161,9 +164,8 @@ def main():
     simID = parser.parse_args().id
 
     if simID is None:
-        prYellow(
-            "***Error*** Simulation identifier [-id, --id] required."
-            "Use 'MarsPull.py -h' for additional help.")
+        prYellow("***Error*** [-id, --id] required. Use "
+                 "'MarsPull.py -h' for additional help.")
         exit()
 
     URLbase = ("https://data.nas.nasa.gov/legacygcm/"
@@ -195,15 +197,13 @@ def main():
 
         print(f"Saving {len(i_request)} files in {saveDir}")
         for ii in i_request:
-            # Legacy .nc files
+            # netCDF filenames
             if simID == 'ACTIVECLDS_NCDF':
-                fName = 'LegacyGCM_Ls%03d_Ls%03d.nc' % (lsStart[ii], lsEnd[ii])
-            # fort.11 files
+                fName = f"LegacyGCM_Ls{lsStart[ii]:03d}_Ls{lsEnd[ii]:03d}.nc"
+            # fort.11 filenames
             else:
-                fName = 'fort.11_%04d' % (670+ii)
+                fName = f"fort.11_{(670+ii):04d}"
                 print(f"FILENAME = {fName}")
-                fName2 = f"fort.11_{(670+ii):04d}"
-                print(f"FILENAME2 = {fName2}")
 
             url = URLbase+fName
             filename = saveDir + fName
