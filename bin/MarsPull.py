@@ -86,7 +86,7 @@ lsEnd = np.array([  4,   9,  14,  19,  24,  29,  33,  38,  42,  47,
                    327, 333, 338, 344, 349, 354,   0])
 
 
-def download(fName):
+def download(fName, simID):
     """
     Downloads a file from the MCMC Legacy GCM directory at 
     data.nas.nasa.gov
@@ -214,7 +214,7 @@ def main():
             # trigger the file download
             # filename = saveDir + fName
             # prCyan(f"Downloading {fName}...")
-            download(fName)
+            download(fName, simID)
     
     elif parser.parse_args().filename:
         # if the user input an ID and a file name...
@@ -228,7 +228,7 @@ def main():
             # trigger the file download
             # filename = saveDir + fName
             # prCyan(f"Downloading {fName}...")
-            download(fName)
+            download(fName, simID)
     else:
         # if the user did not specify Ls or a file name...
         prYellow("No data requested. Use [-ls --ls] or [-f --filename]"
