@@ -7,17 +7,16 @@ Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on
 the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
 The executable requires two arguments:
-[-id --id]      the simulation identifier, and
-[-ls --ls]      the desired solar longitude(s), OR
-[-f -filename]  the name(s) of the desired file(s)
+    * [-id --id]      the simulation identifier, AND
+    * [-ls --ls]      the desired solar longitude(s), OR
+    * [-f -filename]  the name(s) of the desired file(s)
 
-Third-party requirements:
-- numpy
-- argparse
-- requests
+Third-party Requirements:
+    * numpy
+    * argparse
+    * requests
 
-List of functions:
-
+List of Functions:
     * download - queries the requested file from the NAS Data Portal
 """
 
@@ -29,8 +28,8 @@ Yellow = "\033[93m"
 Default = "\033[00m"
 
 # load generic Python modules
-import sys        # system command
-import os         # access operating systems function
+import sys  # system command
+import os   # access operating system functions
 
 # try to import specific scientic modules
 try:
@@ -53,7 +52,7 @@ except Exception as exception:
 #                  ARGUMENT PARSER
 # ======================================================
 parser = argparse.ArgumentParser(
-    description=(f"{Yellow}Uilities for accessing files on the MCMC "
+    description=(f"{Yellow}Uility for querying files on the MCMC "
                 f"NAS Data Portal {Default}"), 
                 formatter_class=argparse.RawTextHelpFormatter)
 
@@ -109,8 +108,8 @@ lsEnd = np.array([  4,   9,  14,  19,  24,  29,  33,  38,  42,  47,
 
 def download(fName, simID):
     """
-    Downloads a file from the MCMC Legacy GCM directory at 
-    data.nas.nasa.gov
+    Downloads a file from the MCMC Legacy GCM directory on the NAS Data
+    Portal (data.nas.nasa.gov).
     
     This function specifies the file to download by appending to the 
     URL the subdirectory, indicated by the user-specified 
@@ -121,12 +120,12 @@ def download(fName, simID):
     
     Parameters
     ----------
-    simID: str
+    simID : str
         The simulation identifier, i.e., the name of the directory
         to query at:
         https://data.nas.nasa.gov/mcmc/data_legacygcm.php
     
-    fName: str
+    fName : str
         The name of the file to download
     
     Raises

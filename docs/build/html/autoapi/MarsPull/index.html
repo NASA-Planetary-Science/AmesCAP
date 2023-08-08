@@ -90,35 +90,58 @@
              
   <section id="module-MarsPull">
 <span id="marspull"></span><h1><a class="reference internal" href="#module-MarsPull" title="MarsPull"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPull</span></code></a><a class="headerlink" href="#module-MarsPull" title="Permalink to this heading"></a></h1>
+<p>MarsPull</p>
+<p>The MarsPull executable is for querying data from the Mars Climate
+Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on
+the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.</p>
+<dl class="simple">
+<dt>The executable requires two arguments:</dt><dd><ul class="simple">
+<li><p>[-id –id]      the simulation identifier, AND</p></li>
+<li><p>[-ls –ls]      the desired solar longitude(s), OR</p></li>
+<li><p>[-f -filename]  the name(s) of the desired file(s)</p></li>
+</ul>
+</dd>
+<dt>Third-party Requirements:</dt><dd><ul class="simple">
+<li><p>numpy</p></li>
+<li><p>argparse</p></li>
+<li><p>requests</p></li>
+</ul>
+</dd>
+<dt>List of Functions:</dt><dd><ul class="simple">
+<li><p>download - queries the requested file from the NAS Data Portal</p></li>
+</ul>
+</dd>
+</dl>
 <section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading"></a></h2>
 <section id="functions">
 <h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPull.download" title="MarsPull.download"><code class="xref py py-obj docutils literal notranslate"><span class="pre">download</span></code></a>(url, filename)</p></td>
-<td><p>Downloads a file from data.nas.nasa.gov</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPull.download" title="MarsPull.download"><code class="xref py py-obj docutils literal notranslate"><span class="pre">download</span></code></a>(fName, simID)</p></td>
+<td><p>Downloads a file from the MCMC Legacy GCM directory on the NAS Data</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPull.download">
-<span class="sig-prename descclassname"><span class="pre">MarsPull.</span></span><span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPull.download" title="Permalink to this definition"></a></dt>
-<dd><p>Downloads a file from data.nas.nasa.gov</p>
+<span class="sig-prename descclassname"><span class="pre">MarsPull.</span></span><span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simID</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPull.download" title="Permalink to this definition"></a></dt>
+<dd><p>Downloads a file from the MCMC Legacy GCM directory on the NAS Data
+Portal (data.nas.nasa.gov).</p>
 <p>This function specifies the file to download by appending to the
 URL the subdirectory, indicated by the user-specified
 simulation identifier [-id –id], and the name of the file. The
-filename is either provided by the user directly using
+file name is either provided by the user directly using
 [-f –filename] or determined based on the user-specified solar
 longitude [-ls –ls].</p>
 <section id="parameters">
 <h4>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h4>
 <dl class="simple">
-<dt>URL: str</dt><dd><p>The URL of the file to download. This is built from:
-<a class="reference external" href="https://data.nas.nasa.gov/mcmc/legacygcmdata">https://data.nas.nasa.gov/mcmc/legacygcmdata</a>
-by appending the simulation ID to the end of the URL.</p>
+<dt>simID<span class="classifier">str</span></dt><dd><p>The simulation identifier, i.e., the name of the directory
+to query at:
+<a class="reference external" href="https://data.nas.nasa.gov/mcmc/data_legacygcm.php">https://data.nas.nasa.gov/mcmc/data_legacygcm.php</a></p>
 </dd>
-<dt>filename: str</dt><dd><p>The name of the file to download</p>
+<dt>fName<span class="classifier">str</span></dt><dd><p>The name of the file to download</p>
 </dd>
 </dl>
 </section>
