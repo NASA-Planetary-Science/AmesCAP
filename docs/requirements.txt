@@ -1,7 +1,6 @@
 numpy
 argparse
 requests
-time
 subprocess
 warnings
 xarray
