@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-# Load generic Python modules
-import sys        # system command
-import os         # access operating systems function
-
 # make print statements appear in color
 def prCyan(skk): print("\033[96m{}\033[00m".format(skk))
 def prYellow(skk): print("\033[93m{}\033[00m".format(skk))
@@ -11,11 +7,15 @@ Cyan = "\033[96m"
 Yellow = "\033[93m"
 Default = "\033[00m"
 
+# load generic Python modules
+import sys        # system command
+import os         # access operating systems function
+
 # try to import specific scientic modules
 try:
     import numpy as np
     import argparse     # parse arguments
-    import requests
+    import requests     # download data from site
 
 except ImportError as error_msg:
     prYellow("Error while importing modules")
@@ -86,7 +86,8 @@ lsEnd = np.array([  4,   9,  14,  19,  24,  29,  33,  38,  42,  47,
 
 def download(url, filename):
     """
-    Downloads a file from data.nas.nasa.gov
+    Downloads a file from the MCMC Legacy GCM directory at 
+    data.nas.nasa.gov
     
     This function specifies the file to download by appending to the 
     URL the subdirectory, indicated by the user-specified 
@@ -127,37 +128,28 @@ def download(url, filename):
         print(f"File not found! Error code: {rsp.status_code}")
     
     else:
-        
-        # if the header is found, file size known. Return progress bar
-        if total_size is not None:
-            with open(filename, 'wb') as f:
-                downloaded = 0
-                if total_size:
-                    # convert total_size from str to int
-                    total_size = int(total_size)
-                    # define the size of the chunk to iterate over (Mb)
-                    chunk_size = max(int(total_size/1000), 1024*1024)
+        # download the data and show a progress bar
+        with open(filename, 'wb') as f:
+            downloaded = 0
+            if total_size:
+                # convert total_size from str to int
+                total_size = int(total_size)
+                # define the size of the chunk to iterate over (Mb)
+                chunk_size = max(int(total_size/1000), 1024*1024)
+            
+            # iterate over every chunk and calculate % of total_size
+            for chunk in rsp.iter_content(chunk_size=chunk_size):
+                downloaded += len(chunk)
+                f.write(chunk)
                 
-                # iterate over every chunk and calculate % of total_size
-                for chunk in rsp.iter_content(chunk_size=chunk_size):
-                    downloaded += len(chunk)
-                    f.write(chunk)
-                    
-                    # calculate current %
-                    status = int(50*downloaded/total_size)
-                    
-                    # print progress to console then flush console
-                    sys.stdout.write('\r[{}{}]'.format('#' * status, '.' * (50 - status)))
-                    sys.stdout.flush()
-            sys.stdout.write('\n')
-        
-        ## else:
-        ##     # If the header is not found, skip the progressbar
-        ##     print('Downloading %s ...' % (fname))
-        ##     with open(local_file, 'wb')as f:
-        ##         f.write(data.content)
-        ##     print('%s Done' % (fname))
-
+                # calculate current %
+                status = int(50*downloaded/total_size)
+                
+                # print progress to console then flush console
+                #sys.stdout.write('\r[{}{}]'.format('#' * status, '.' * (50 - status)))
+                sys.stdout.write(fr'\r[{'#'*status}{'.'*(50 - status)}]')
+                sys.stdout.flush()
+        sys.stdout.write('\n')
 
 # ======================================================
 #                  MAIN PROGRAM
