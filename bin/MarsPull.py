@@ -18,8 +18,8 @@ try:
     import requests     # download data from site
 
 except ImportError as error_msg:
-    prYellow("Error while importing modules")
-    prYellow(f"Error was: {error_msg.message}")
+    prYellow("ERROR while importing modules")
+    prYellow(f"Error message is: {error_msg.message}")
     exit()
 
 except Exception as exception:
@@ -133,7 +133,8 @@ def download(fName, simID):
     total_size = rsp.headers.get('content-length')
 
     if rsp.status_code == 404:
-        prYellow(f"File not found! Error code: {rsp.status_code}")
+        prYellow(f"ERROR File not found! Error code: {rsp.status_code}")
+        exit()
         
     else:
         # download the data and show a progress bar
@@ -169,8 +170,8 @@ def main():
     simID = parser.parse_args().id
 
     if simID is None:
-        prYellow("***Error*** [-id, --id] is required. Use "
-                 "'MarsPull.py -h' for additional help.")
+        prYellow("ERROR [-id, --id] is required. Use 'MarsPull.py -h' "
+                 "for additional help.")
         exit()
 
     # baseURL = ("https://data.nas.nasa.gov/legacygcm/"
@@ -202,19 +203,16 @@ def main():
 
         prCyan(f"Saving {len(numFiles)} file(s) to {saveDir}")
         
-        for ii in numFiles:
+        for n in numFiles:
             # netCDF files
             if simID == 'ACTIVECLDS_NCDF':
-                fName = f"LegacyGCM_Ls{lsStart[ii]:03d}_Ls{lsEnd[ii]:03d}.nc"
+                fName = f"LegacyGCM_Ls{lsStart[n]:03d}_Ls{lsEnd[n]:03d}.nc"
+            
             # fort.11 files
             else:
-                fName = f"fort.11_{(670+ii):04d}"
-
-            # URL = baseURL + fName
+                fName = f"fort.11_{(670+n):04d}"
             
             # trigger the file download
-            # filename = saveDir + fName
-            # prCyan(f"Downloading {fName}...")
             download(fName, simID)
     
     elif parser.parse_args().filename:
@@ -224,16 +222,13 @@ def main():
         prCyan(f"Saving {len(fNameIN)} file(s) to {saveDir}")
                 
         for fName in fNameIN:
-            # URL = baseURL + fName
-
             # trigger the file download
-            # filename = saveDir + fName
-            # prCyan(f"Downloading {fName}...")
             download(fName, simID)
     else:
         # if the user did not specify Ls or a file name...
-        prYellow("No data requested. Use [-ls --ls] or [-f --filename]"
-                 "with [-id --id] to specify a file to download.")
+        prYellow("ERROR No data requested. Use [-ls --ls] or "
+                 "[-f --filename] with [-id --id] to specify a file to "
+                 "download.")
         exit()
 
 # ======================================================
