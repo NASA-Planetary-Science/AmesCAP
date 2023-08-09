@@ -55,7 +55,7 @@ parser.add_argument('-my', '--marsyear', nargs = '+', type = float,
                     f"MY=0 for sol=0-667, MY=1 for sol=668-1335 etc.\n"
                     f"> Usage: MarsCalendar.py -ls 350 -my 2\n\n"))
 
-parser.add_argument('-cum', '--cumulative', action = 'store_true',
+parser.add_argument('-cum', '--cum', action = 'store_true',
                     help = (f"Return Ls in a cummulative form. \n"
                     f"Example: instead of Ls=0-360, Ls can be 0-720\n"
                     f"> Usage: MarsCalendar.py -sol 670 -cum\n\n"))
@@ -83,9 +83,9 @@ def parse_array(numIN):
 # ======================================================
 
 def main():
-    if parser.parse_args().my:
+    if parser.parse_args().marsyear:
         # load in user-specified Mars year, if any. Default = 0
-        MY = np.asarray(parser.parse_args().my).astype(float)
+        MY = np.asarray(parser.parse_args().marsyear).astype(float)
     
     if parser.parse_args().cum:
         # set Ls to cumulative, if requested
