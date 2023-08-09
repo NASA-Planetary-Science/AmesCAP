@@ -24,7 +24,7 @@ import argparse     # parse arguments
 import numpy as np
 
 # load amesCAP modules
-from amescap.FV3_utils import sol2ls, Ls2sol
+from amescap.FV3_utils import sol2ls, ls2sol
 
 # ======================================================
 #                  ARGUMENT PARSER
@@ -87,7 +87,7 @@ def main():
     if parser.parse_args().ls:
         # if [-Ls --Ls] is input
         txt_multi='   Ls    |    Sol    '
-        result = Ls2sol(in_array)
+        result = ls2sol(in_array)
         
     else:
         # if [-Ls --Ls] is excluded
