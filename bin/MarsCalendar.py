@@ -35,7 +35,7 @@ parser = argparse.ArgumentParser(
                  f"from areols.py {Default}"),
     formatter_class = argparse.RawTextHelpFormatter)
 
-parser.add_argument('-sol', '--sol' nargs = '+', type = float,
+parser.add_argument('-sol', '--sol', nargs = '+', type = float,
                     help = ("Input sol number. Required. Can either be "
                     "one sol or a range with an increment "
                     "(start stop step)\n"
