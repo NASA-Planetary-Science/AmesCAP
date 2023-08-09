@@ -102,8 +102,8 @@ def main():
         arrayOUT = sol2ls(arrayIN, cummulative = cum)
 
     # if scalar, turn as float
-    # if len(np.atleast_1d(arrayOUT)) == 1:
-        # arrayOUT = float(arrayOUT)
+    if len(np.atleast_1d(arrayOUT)) == 1:
+        arrayOUT = [arrayOUT]
     
     # print arrayIN and corresponding arrayOUT
     print(txt_multi)
