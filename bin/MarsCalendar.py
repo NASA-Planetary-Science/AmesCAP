@@ -63,17 +63,17 @@ parser.add_argument('-cum', action = 'store_true',
 
 def parse_array(numIN):
     if len(numIN) == 1:
-        in_array = numIN
+        arrayIN = numIN
 
     elif len(numIN) == 3:
         start, stop, step = numIN[0], numIN[1], numIN[2]
-        in_array = np.arange(start, stop, step)
+        arrayIN = np.arange(start, stop, step)
 
     else:
         prRed("ERROR either [-ls --ls] or [-sol --sol] are required. "
                 "See 'MarsCalendar.py -h' for additional help.")
         exit()
-    return(in_array)
+    return(arrayIN)
 
 # ======================================================
 #                  MAIN PROGRAM
@@ -81,7 +81,7 @@ def parse_array(numIN):
 
 def main():
     # load in user-specified Mars year, if any. Default = 0
-    my = np.asarray(parser.parse_args().my).astype(float)
+    MY = np.asarray(parser.parse_args().my).astype(float)
     cum = False
     # set Ls to cumulative, if requested
     if parser.parse_args().cum:
@@ -91,26 +91,26 @@ def main():
         # if [-Ls --Ls] is input, return sol
         numIN = np.asarray(parser.parse_args().ls).astype(float)
         txt_multi='   Ls    |    Sol    '
-        in_array = parse_array(numIN)
-        result = ls2sol(in_array)
+        arrayIN = parse_array(numIN)
+        arrayOUT = ls2sol(arrayIN)
         
     elif parser.parse_args().sol:
         # if [-sol --sol] is input, return Ls
         numIN = np.asarray(parser.parse_args().sol).astype(float)
         txt_multi='    SOL    |    Ls    '
-        in_array = parse_array(numIN)
-        result = sol2ls(in_array, cummulative = cum)
+        arrayIN = parse_array(numIN)
+        arrayOUT = sol2ls(arrayIN, cummulative = cum)
 
     # if scalar, turn as float
-    if len(np.atleast_1d(result)) == 1:
-        result = float(result)
+    if len(np.atleast_1d(arrayOUT)) == 1:
+        arrayOUT = float(arrayOUT)
     
-    #Display data
+    # print arrayIN and corresponding arrayOUT
     print(txt_multi)
     print('-----------------------')
-    for i in range(0, len(in_array)):
-        print(' %7.2f   |    %7.3f  '%(in_array[i],result[i]+my*668.))
-        print(f" {in_array[i]:.2f}   |    {(result[i]+my*668.):.3f}  ")
+    for i in range(0, len(arrayIN)):
+        #print(' %7.2f   |    %7.3f  '%(arrayIN[i],arrayOUT[i]+MY*668.))
+        print(f" {arrayIN[i]:.2f}   |    {(arrayOUT[i]+MY*668.):.3f}  ")
 
 # ======================================================
 #                  END OF PROGRAM
