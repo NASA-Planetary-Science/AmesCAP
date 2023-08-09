@@ -1,47 +1,48 @@
 #!/usr/bin/env python3
+"""
+The MarsPlot executable is for ...
 
+The executable requires x arguments:
+    * [-x --x]      define
+
+Third-party Requirements:
+    * numpy
+    * argparse
+    * requests
+
+List of Functions:
+    * x
+"""
+
+# make print statements appear in color
+from amescap.Script_utils import prYellow, prRed, prCyan, prPurple
+
+# load generic Python modules
+import argparse     # parse arguments
+import os           # access operating system function
+import subprocess   # run command-line command
+import sys          # system command
+import numpy as np
 from warnings import filterwarnings
-filterwarnings('ignore', category = DeprecationWarning)
+import matplotlib
+import matplotlib.pyplot as plt
+from netCDF4 import Dataset, MFDataset
+from numpy import sqrt, exp, max, mean, min, log, log10, sin, cos, abs
+from matplotlib.ticker import (
+    LogFormatter, NullFormatter, LogFormatterSciNotation, MultipleLocator)
+from matplotlib.colors import LogNorm
 
-# Load generic Python modules
-import argparse   # parse arguments
-import os         # access operating systems function
-import subprocess # run command
-import sys        # system command
-
-# ==========
-from amescap.Script_utils import check_file_tape, prYellow, prRed, prCyan, prGreen, prPurple
+# load amesCAP modules
+from amescap.Script_utils import check_file_tape
 from amescap.Script_utils import section_content_amescap_profile, print_fileContent, print_varContent, FV3_file_type, find_tod_in_diurn
 from amescap.Script_utils import wbr_cmap, rjw_cmap, dkass_temp_cmap, dkass_dust_cmap
 from amescap.FV3_utils import lon360_to_180, lon180_to_360, UT_LTtxt, area_weights_deg
 from amescap.FV3_utils import add_cyclic, azimuth2cart, mollweide2cart, robin2cart, ortho2cart
-# ==========
 
-# Attempt to import specific scientic modules that may or may not
-# be included in the default Python installation on NAS.
-try:
-    import matplotlib
-    matplotlib.use('Agg')  # Force matplotlib NOT to use any Xwindows backend
-    import matplotlib.pyplot as plt
-    import numpy as np
-    from matplotlib.ticker import (
-        LogFormatter, NullFormatter, LogFormatterSciNotation, MultipleLocator)  # Format ticks
-    from netCDF4 import Dataset, MFDataset
-    from numpy import sqrt, exp, max, mean, min, log, log10, sin, cos, abs
-    from matplotlib.colors import LogNorm
-    from matplotlib.ticker import LogFormatter
-
-except ImportError as error_msg:
-    prYellow("Error while importing modules")
-    prYellow('You are using Python version '+str(sys.version_info[0:3]))
-    prYellow('Please source your virtual environment, e.g.:')
-    prCyan('    source envPython3.7/bin/activate.csh \n')
-    print("Error was: " + error_msg.message)
-    exit()
-except Exception as exception:
-    # Output unexpected Exceptions.
-    print(exception.__class__.__name__ + ": ", exception)
-    exit()
+# ignore deprecation warnings
+filterwarnings('ignore', category = DeprecationWarning)
+matplotlib.use('Agg')   # Force matplotlib NOT to load an 
+                        # Xwindows backend
 
 degr = u"\N{DEGREE SIGN}"
 global current_version
@@ -50,8 +51,9 @@ current_version = 3.3
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
-parser = argparse.ArgumentParser(description="""\033[93mAnalysis Toolkit for the MGCM, V%s\033[00m """ % (current_version),
-                                 formatter_class=argparse.RawTextHelpFormatter)
+parser = argparse.ArgumentParser(
+    description="""\033[93mAnalysis Toolkit for the MGCM, V%s\033[00m """ % (current_version),
+    formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('custom_file', nargs='?', type=argparse.FileType('r'), default=None,  # sys.stdin
                     help='Use optional input file Custom.in to create the graphs. \n'
@@ -3639,7 +3641,6 @@ class Fig_1D(object):
         except Exception as e:  # Return the error
             self.exception_handler(e, ax)
         self.fig_save()
-
 
 # ======================================================
 #                  END OF PROGRAM

@@ -1,12 +1,29 @@
 #!/usr/bin/env python3
+"""
+The MarsFormat executable is for ...
 
-#Load generic Python Modules
+The executable requires x arguments:
+    * [-x --x]      define
+
+Third-party Requirements:
+    * numpy
+    * argparse
+    * requests
+
+List of Functions:
+    * x
+"""
+
+# make print statements appear in color
+from amescap.Script_utils import prCyan
+
+# load generic Python modules
 import argparse   # parse arguments
 import numpy as np
 import xarray as xr
-from netCDF4 import Dataset
 import os
-from amescap.Script_utils import prCyan,prRed
+
+# load amesCAP modules
 from amescap.FV3_utils import layers_mid_point_to_boundary
 
 xr.set_options(keep_attrs=True)
@@ -16,8 +33,13 @@ xr.set_options(keep_attrs=True)
 # Routine to Transform Model Input (variable names, dimension names, array order)
 # to expected configuration CAP
 
-parser = argparse.ArgumentParser(description="""\033[93m fit2FV3.py  Used to convert model output to FV3 format  \n \033[00m""",
-                                formatter_class=argparse.RawTextHelpFormatter)
+# ======================================================
+#                  ARGUMENT PARSER
+# ======================================================
+
+parser = argparse.ArgumentParser(
+   description="""\033[93m fit2FV3.py  Used to convert model output to FV3 format  \n \033[00m""",
+   formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('input_file', nargs='+',  # sys.stdin
                     help='***.nc file or list of ***.nc files ')
@@ -36,6 +58,10 @@ parser.add_argument('-marswrf', '--marswrf', nargs='+',
 
 parser.add_argument('-legacy', '--legacy', nargs='+',
                     help=argparse.SUPPRESS)
+
+# ======================================================
+#                  MAIN PROGRAM
+# ======================================================
 
 def main():
    path2data = os.getcwd()
@@ -277,5 +303,10 @@ def main():
       #==================================================================
       DF.to_netcdf(fullnameOUT)
       prCyan(fullnameOUT +' was created')
+
+# ======================================================
+#                  END OF PROGRAM
+# ======================================================
+
 if __name__ == '__main__':
     main()

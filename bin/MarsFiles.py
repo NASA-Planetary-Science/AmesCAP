@@ -1,30 +1,43 @@
 #!/usr/bin/env python3
+"""
+The MarsFiles executable is for ...
 
-# Assumes the companion scripts are in the same directory
-# Load generic Python Modules
+The executable requires x arguments:
+    * [-x --x]      define
+
+Third-party Requirements:
+    * numpy
+    * argparse
+    * requests
+
+List of Functions:
+    * x
+"""
+# make print statements appear in color
+from amescap.Script_utils import prYellow, prCyan, prRed
+
+# load generic Python Modules
 import argparse     # parse arguments
-import sys          # system command
-import getopt
-import os           # access operating systems function
-import re           # string matching module to handle time_of_day_XX
-import glob
-import shutil
-import subprocess   # run command
+import sys          # system commands
+import os           # access operating system functions
+import subprocess   # run command-line command
 import numpy as np
 from netCDF4 import Dataset
-import warnings     # suppress certain errors when dealing with NaN arrays
+import warnings     # suppress errors triggered by NaNs
 
-# ==========
+# load amesCAP modules
 from amescap.Ncdf_wrapper import Ncdf, Fort
-from amescap.FV3_utils import tshift, daily_to_average, daily_to_diurn, get_trend_2D
-from amescap.Script_utils import prYellow, prCyan, prRed, find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile, get_longname_units
-# ==========
+from amescap.FV3_utils import tshift, daily_to_average, daily_to_diurn
+from amescap.Script_utils import find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile, get_longname_units
+
 
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
-parser = argparse.ArgumentParser(description="""\033[93m MarsFiles files manager. Used to alter file format. \n \033[00m""",
-                                 formatter_class=argparse.RawTextHelpFormatter)
+
+parser = argparse.ArgumentParser(
+    description="""\033[93m MarsFiles files manager. Used to alter file format. \n \033[00m""",
+    formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('input_file', nargs='+',
                     help='***.nc file or list of ***.nc files ')
@@ -136,6 +149,10 @@ parser.add_argument('-e', '--ext', type=str, default=None,
                     """   This will produce ****.atmos.average_B.nc files \n""")
 parser.add_argument('--debug',  action='store_true',
                     help='Debug flag: release the exceptions')
+
+# ======================================================
+#                  MAIN PROGRAM
+# ======================================================
 
 # Use ncks or internal method to concatenate files
 # cat_method='ncks'
@@ -1355,6 +1372,10 @@ def ls2sol_1year(Ls_deg, offset=True, round10=True):
     if round:
         Ds = np.round(Ds, -1)  # -1 means round to the nearest 10
     return Ds
+
+# ======================================================
+#                  END OF PROGRAM
+# ======================================================
 
 if __name__ == "__main__":
     main()

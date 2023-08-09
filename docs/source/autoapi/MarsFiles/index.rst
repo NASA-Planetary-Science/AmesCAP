@@ -1,9 +1,23 @@
-:orphan:
-
 :py:mod:`MarsFiles`
 ===================
 
 .. py:module:: MarsFiles
+
+.. autoapi-nested-parse::
+
+   The MarsFiles executable is for ...
+
+   The executable requires x arguments:
+       * [-x --x]      define
+
+   Third-party Requirements:
+       * numpy
+       * argparse
+       * requests
+
+   List of Functions:
+       * x
+
 
 
 Module Contents

@@ -5,8 +5,6 @@
 
 .. autoapi-nested-parse::
 
-   MarsPull
-
    The MarsPull executable is for querying data from the Mars Climate
    Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on
    the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.

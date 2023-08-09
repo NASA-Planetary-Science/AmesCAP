@@ -81,12 +81,31 @@
              
   <section id="module-MarsViewer">
 <span id="marsviewer"></span><h1><a class="reference internal" href="#module-MarsViewer" title="MarsViewer"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsViewer</span></code></a><a class="headerlink" href="#module-MarsViewer" title="Permalink to this heading"></a></h1>
+<p>The MarsViewer executable is for …</p>
 <p>Alex 11/29/18
 This is a pure-Python implementation of a primitive image viewer.
 It is designed to display an image preview in the terminal where accessing NAS through
 X11 is not possible or is slow. Supported formats are PNG, EPS, and PDF.</p>
 <p>Adapted from:
 <a class="reference external" href="https://github.com/Belval/pdf2image">https://github.com/Belval/pdf2image</a></p>
+<dl class="simple">
+<dt>The executable requires two arguments:</dt><dd><ul class="simple">
+<li><p>[-id –id]      the simulation identifier, AND</p></li>
+<li><p>[-ls –ls]      the desired solar longitude(s), OR</p></li>
+<li><p>[-f -filename]  the name(s) of the desired file(s)</p></li>
+</ul>
+</dd>
+<dt>Third-party Requirements:</dt><dd><ul class="simple">
+<li><p>numpy</p></li>
+<li><p>argparse</p></li>
+<li><p>requests</p></li>
+</ul>
+</dd>
+<dt>List of Functions:</dt><dd><ul class="simple">
+<li><p>download - queries the requested file from the NAS Data Portal</p></li>
+</ul>
+</dd>
+</dl>
 </section>
 
 

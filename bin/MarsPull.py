@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 """
-MarsPull
-
 The MarsPull executable is for querying data from the Mars Climate
 Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on
 the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
@@ -21,40 +19,26 @@ List of Functions:
 """
 
 # make print statements appear in color
-def prCyan(skk): print("\033[96m{}\033[00m".format(skk))
-def prYellow(skk): print("\033[93m{}\033[00m".format(skk))
+from amescap.Script_utils import prYellow, prCyan
 Cyan = "\033[96m"
 Yellow = "\033[93m"
 Default = "\033[00m"
 
 # load generic Python modules
-import sys  # system command
-import os   # access operating system functions
-
-# try to import specific scientic modules
-try:
-    import numpy as np
-    import argparse     # parse arguments
-    import requests     # download data from site
-
-except ImportError as error_msg:
-    prYellow("ERROR while importing modules")
-    prYellow(f"Error message is: {error_msg.message}")
-    exit()
-
-except Exception as exception:
-    # output unexpected Exceptions
-    prYellow(exception, False)
-    prYellow(f"{exception.__class__.__name__}: {exception.message}")
-    exit()
+import sys          # system commands
+import os           # access operating system functions
+import numpy as np
+import argparse     # parse arguments
+import requests     # download data from site
 
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
+
 parser = argparse.ArgumentParser(
-    description=(f"{Yellow}Uility for querying files on the MCMC "
+    description = (f"{Yellow}Uility for querying files on the MCMC "
                 f"NAS Data Portal {Default}"), 
-                formatter_class=argparse.RawTextHelpFormatter)
+    formatter_class = argparse.RawTextHelpFormatter)
 
 parser.add_argument('-id', '--id', type=str,
                     help=("Query data by simulation identifier "
@@ -79,11 +63,12 @@ parser.add_argument('-f', '--filename', nargs='+', type=str,
                     help=("Query data by file name - requires"
                     " a simulation identifier (--id)\n"
                     "> Usage: MarsPull.py -id ACTIVECLDS_NCDF -f "
-                    "fort.11_0730 fort.11_0731"))
+                    "fort.11_0730 fort.11_0731 \n\n"))
 
 # ======================================================
 #                  DEFINITIONS
 # ======================================================
+
 global saveDir, lsStart, lsEnd
 
 saveDir = (f"{os.getcwd()}/")
@@ -184,6 +169,7 @@ def download(fName, simID):
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
+
 def main():
     # parse out the name of the file
     
