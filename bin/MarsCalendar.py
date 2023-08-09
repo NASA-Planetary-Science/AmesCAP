@@ -102,7 +102,7 @@ def main():
     print(txt_multi)
     print('-----------------------')
     for i in range(0, len(in_array)):
-        print(' %7.2f   |    %7.3f  '%(in_array[i],result[i]+my*668.))
+        print(f" {in_array[i]: .2f} | {(result[i]+my*668.): .3f}")
 
 # ======================================================
 #                  END OF PROGRAM
