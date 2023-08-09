@@ -83,9 +83,8 @@ def parse_array(numIN):
 # ======================================================
 
 def main():
-    if parser.parse_args().marsyear:
-        # load in user-specified Mars year, if any. Default = 0
-        MY = np.asarray(parser.parse_args().marsyear).astype(float)
+    # load in user-specified Mars year, if any. Default = 0
+    MY = np.asarray(parser.parse_args().marsyear).astype(float)
     
     if parser.parse_args().cum:
         # set Ls to cumulative, if requested
