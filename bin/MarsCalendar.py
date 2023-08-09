@@ -91,7 +91,7 @@ def main():
         
     else:
         # if [-Ls --Ls] is excluded
-        txt_multi='    SOL    |    Ls    '
+        txt_multi='    Sol    |    Ls    '
         result = sol2ls(in_array, cummulative = cum)
 
     # if scalar, turn as float
@@ -101,8 +101,9 @@ def main():
     #Display data
     print(txt_multi)
     print('-----------------------')
+    print(in_array)
     for i in range(0, len(in_array)):
-        print(f" {in_array[i]: .2f} | {(result[i]+my*668.): .3f}")
+        print(f" {in_array[i]:.2f} | {(result[i]+my*668.):.3f}")
 
 # ======================================================
 #                  END OF PROGRAM
