@@ -1,15 +1,36 @@
 #!/usr/bin/env python
-from amescap.FV3_utils import sol2ls,ls2sol
-from amescap.Script_utils import prYellow,prRed
-import argparse #parsing arguments
+"""
+The MarsCalendar executable is for ...
+
+The executable requires x arguments:
+    * [-x --x]      define
+
+Third-party Requirements:
+    * numpy
+    * argparse
+    * requests
+
+List of Functions:
+    * x
+"""
+
+# load generic Python modules
+import argparse     # parse arguments
 import numpy as np
 
+# load amesCAP modules
+from amescap.FV3_utils import sol2ls,ls2sol
+from amescap.Script_utils import prRed
 
-parser = argparse.ArgumentParser(description='Gives the solar longitude from a SOL or a SOL array (start stop, step), adapted from areols.py',
-                                formatter_class=argparse.RawTextHelpFormatter)
+# ======================================================
+#                  ARGUMENT PARSER
+# ======================================================
+parser = argparse.ArgumentParser(
+    description = 'Gives the solar longitude from a SOL or a SOL array (start stop, step), adapted from areols.py',
+    formatter_class = argparse.RawTextHelpFormatter)
 
 parser.add_argument('sol', nargs='+',type=float,
-                             help='''Input is sol number, return solar longitude \n'''
+                    help='''Input is sol number, return solar longitude \n'''
                                   '''Usage: ./MarsCalendar.py 750. \n'''
                                   '''       ./MarsCalendar.py start stop step''')
 
@@ -19,18 +40,18 @@ parser.add_argument('-ls','--ls', action='store_true',
                     """ \n""")
 
 
-parser.add_argument('-my', nargs='+',type=float,default=0.,
-                             help=''' Mars Year For ls>sol add 668 if my=1,1336 if my=2 etc.. \n'''
+parser.add_argument('-my', nargs='+',type=float, default=0.,
+                    help=''' Mars Year For ls>sol add 668 if my=1,1336 if my=2 etc.. \n'''
                                   '''Usage: ./MarsCalendar.py  350 -ls -my 2 \n''')
 
 parser.add_argument('-cum', action='store_true',
-                             help='''For sol>ls return ls as cummulative 0>360>720... instead of [0-360] \n'''
+                    help='''For sol>ls return ls as cummulative 0>360>720... instead of [0-360] \n'''
                                   '''Usage: ./MarsCalendar.py  670 -cum \n''')
 
-
-if __name__ == '__main__':
-
-
+# ======================================================
+#                  MAIN PROGRAM
+# ======================================================
+def main():
     #Load in Mars YEAR (if any, default is zero) and cummulative Ls
     my=np.asarray(parser.parse_args().my).astype(float)
     cum=False
@@ -62,4 +83,9 @@ if __name__ == '__main__':
     for i in range(0,len(in_array)):
         print(' %7.2f   |    %7.3f  '%(in_array[i],result[i]+my*668.))
 
+# ======================================================
+#                  END OF PROGRAM
+# ======================================================
 
+if __name__ == '__main__':
+    main()

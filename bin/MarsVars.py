@@ -1,47 +1,50 @@
 #!/usr/bin/env python3
+"""
+The MarsVars executable is for ...
 
-# Load generic Python Modules
-import argparse   # parse arguments
-import os         # access operating systems function
-import subprocess # run command
-import sys        # system command
-import warnings   # suppress certain errors when dealing with NaN arrays
+The executable requires x arguments:
+    * [-x --x]      define
 
+Third-party Requirements:
+    * numpy
+    * argparse
+    * requests
+
+List of Functions:
+    * x
+"""
+
+# make print statements appear in color
+from amescap.Script_utils import prRed, prCyan, prYellow
+
+# load generic Python modules
+import argparse     # parse arguments
+import os           # access operating system functions
+import subprocess   # run command-line command
+import sys          # system commands
+import warnings     # suppress errors triggered by NaNs
+import matplotlib
+import numpy as np
+from netCDF4 import Dataset, MFDataset
+
+# load amesCAP modules
 from amescap.FV3_utils import fms_press_calc, fms_Z_calc, dvar_dh, cart_to_azimut_TR
 from amescap.FV3_utils import mass_stream, zonal_detrend, spherical_div, spherical_curl, frontogenesis
-from amescap.Script_utils import check_file_tape, prYellow, prRed, prCyan, prGreen, prPurple, print_fileContent
+from amescap.Script_utils import check_file_tape, print_fileContent
 from amescap.Script_utils import FV3_file_type, filter_vars, find_fixedfile, get_longname_units, ak_bk_loader
 from amescap.Ncdf_wrapper import Ncdf
 
-# Attempt to import specific scientic modules that may or may not
-# be included in the default Python installation on NAS.
-try:
-    import matplotlib
-    matplotlib.use('Agg')  # Force matplotlib not to use any Xwindows backend.
-    import numpy as np
-    from netCDF4 import Dataset, MFDataset
-
-except ImportError as error_msg:
-    prYellow("Error while importing modules")
-    prYellow('You are using Python version '+str(sys.version_info[0:3]))
-    prYellow('Please source your virtual environment, e.g.:')
-    prCyan('    source envPython3.7/bin/activate.csh \n')
-    print("Error was: " + error_msg.message)
-    exit()
-
-except Exception as exception:
-    # Output unexpected Exceptions
-    print(exception, False)
-    print(exception.__class__.__name__ + ": " + exception.message)
-    exit()
+matplotlib.use('Agg')   # Force matplotlib NOT to load an 
+                        # Xwindows backend
 
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
 
-parser = argparse.ArgumentParser(description="""\033[93m MarsVars, variable manager. Add to or remove variables from the diagnostic files. \n'
+parser = argparse.ArgumentParser(
+    description="""\033[93m MarsVars, variable manager. Add to or remove variables from the diagnostic files. \n'
                                              Use MarsFiles ****.atmos.average.nc to view file content. \033[00m""",
-                                formatter_class=argparse.RawTextHelpFormatter)
+    formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('input_file', nargs='+',  # sys.stdin
                     help='***.nc file or list of ***.nc files ')
@@ -93,6 +96,7 @@ parser.add_argument('-zdiff', '--zdiff', nargs='+', default=[],
                     """A new a variable d_dz_var in [Unit/m] will be added to the file. \n"""
                     """> Usage: MarsVars ****.atmos.average.nc -zdiff temp \n"""
                     """ \n""")
+
 parser.add_argument('-col', '--col', nargs='+', default=[],
                     help="""Integrate a mixing ratio of a variable through the column. \n"""
                     """A new a variable var_col in [kg/m2] will be added to the file. \n"""
@@ -145,9 +149,11 @@ parser.add_argument('-multiply', '--multiply', type=float,
 parser.add_argument('--debug',  action='store_true',
                     help='Debug flag: release the exception')
 
-# =====================================================================
-# This is a list of the supported variables for --add (short name, longname, units)
-# =====================================================================
+# ======================================================
+#                  DEFINITIONS
+# ======================================================
+
+# a list of supported variables for [-add --add]
 VAR = {'rho':               ['density (postprocessed with CAP)', 'kg/m3'],
        'theta':             ['potential temperature (postprocessed with CAP)', 'K'],
        'w':                 ['vertical wind (postprocessed with CAP)', 'm/s'],
@@ -523,6 +529,10 @@ def compute_WMFF(MF, rho, lev, interp_type):
 # =====================================================================
 # =====================================================================
 # =====================================================================
+
+# ======================================================
+#                  MAIN PROGRAM
+# ======================================================
 
 filepath = os.getcwd()
 
@@ -1196,6 +1206,9 @@ def main():
 
             prCyan(ifile+' was updated')
 
+# ======================================================
+#                  END OF PROGRAM
+# ======================================================
 
 if __name__ == '__main__':
     main()

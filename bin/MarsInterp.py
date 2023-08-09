@@ -1,53 +1,55 @@
 #!/usr/bin/env python3
+"""
+The MarsInterp executable is for ...
 
-# Load generic Python Modules
-import argparse   # parse arguments
-import os         # access operating systems function
-import subprocess  # run command
-import sys        # system command
-import time       # monitor interpolation time
-import re         # string matching module to handle time_of_day_XX
+The executable requires x arguments:
+    * [-x --x]      define
 
-# ==========
-from amescap.FV3_utils import fms_press_calc, fms_Z_calc, vinterp, find_n, polar2XYZ, interp_KDTree, axis_interp
-from amescap.Script_utils import check_file_tape, prYellow, prRed, prCyan, prGreen, prPurple, print_fileContent
-from amescap.Script_utils import section_content_amescap_profile, find_tod_in_diurn, filter_vars, find_fixedfile, ak_bk_loader
+Third-party Requirements:
+    * numpy
+    * argparse
+    * requests
+
+List of Functions:
+    * x
+"""
+
+# make print statements appear in color
+from amescap.Script_utils import prRed, prCyan
+
+# load generic Python modules
+import argparse     # parse arguments
+import os           # access operating system functions
+import time         # monitor interpolation time
+import numpy as np
+from netCDF4 import Dataset
+import matplotlib
+
+# load amesCAP modules
+from amescap.FV3_utils import fms_press_calc, fms_Z_calc, vinterp, find_n
+from amescap.Script_utils import check_file_tape, section_content_amescap_profile, find_tod_in_diurn, filter_vars, find_fixedfile, ak_bk_loader
 from amescap.Ncdf_wrapper import Ncdf
-# ==========
 
-# Attempt to import specific scientic modules that may or may not 
-# be included in the default Python installation on NAS.
-try:
-    import matplotlib
-    matplotlib.use('Agg') # Force matplotlib NOT to use any Xwindows backend
-    import numpy as np
-    from netCDF4 import Dataset, MFDataset
-
-except ImportError as error_msg:
-    prYellow("Error while importing modules")
-    prYellow('You are using Python version '+str(sys.version_info[0:3]))
-    prYellow('Please source your virtual environment, e.g.:')
-    prCyan('    source envPython3.7/bin/activate.csh \n')
-    print("Error was: " + error_msg.message)
-    exit()
-except Exception as exception:
-    # Output unexpected Exceptions
-    print(exception, False)
-    print(exception.__class__.__name__ + ": " + exception.message)
-    exit()
+matplotlib.use('Agg')   # Force matplotlib NOT to load an 
+                        # Xwindows backend
 
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
-parser = argparse.ArgumentParser(description="""\033[93m MarsInterp, pressure interpolation on fixed layers\n \033[00m""",
-                                 formatter_class=argparse.RawTextHelpFormatter)
+
+parser = argparse.ArgumentParser(
+    description="""\033[93m MarsInterp, pressure interpolation on fixed layers\n \033[00m""",
+    formatter_class=argparse.RawTextHelpFormatter)
+
 
 parser.add_argument('input_file', nargs='+',  # sys.stdin
                     help='***.nc file or list of ***.nc files')
+
 parser.add_argument('-t', '--type', type=str, default='pstd',
                     help=""">  --type can be 'pstd', 'zstd' or 'zagl' [DEFAULT is pstd, 36 levels] \n"""
                     """>  Usage: MarsInterp.py ****.atmos.average.nc \n"""
                     """          MarsInterp.py ****.atmos.average.nc -t zstd \n""")
+
 
 parser.add_argument('-l', '--level', type=str, default=None,
                     help=""">  Layer IDs as defined in the ~/.amescap_profile hidden file. \n"""
@@ -55,6 +57,7 @@ parser.add_argument('-l', '--level', type=str, default=None,
                     """\033[96mcp ~/amesCAP/mars_templates/amescap_profile ~/.amescap_profile\033[00m) \n"""
                     """>  Usage: MarsInterp.py ****.atmos.average.nc -t pstd -l p44 \n"""
                     """          MarsInterp.py ****.atmos.average.nc -t zstd -l phalf_mb \n""")
+
 
 parser.add_argument('-include', '--include', nargs='+',
                     help="""Only include the listed variables. Dimensions and 1D variables are always included. \n"""
@@ -74,9 +77,10 @@ parser.add_argument('--debug',  action='store_true',
                     help='Debug flag: release the exceptions.')
 
 
-# =====================================================================
-# =====================================================================
-# =====================================================================
+# ======================================================
+#                  DEFINITIONS
+# ======================================================
+
 # TODO: If only one time step, reshape from (lev,lat,lon) to (time, lev, lat, lon).
 
 # Fill values for NaN. Do not use np.NaN - it is deprecated and will raise issues when using runpinterp
@@ -91,6 +95,10 @@ M_co2 = 0.044  # kg/mol
 
 # ===========================
 filepath = os.getcwd()
+
+# ======================================================
+#                  MAIN PROGRAM
+# ======================================================
 
 def main():
     start_time   = time.time()
@@ -320,6 +328,9 @@ def main():
         fnew.close()
         print("Completed in %.3f sec" % (time.time() - start_time))
 
+# ======================================================
+#                  END OF PROGRAM
+# ======================================================
 
 if __name__ == '__main__':
     main()

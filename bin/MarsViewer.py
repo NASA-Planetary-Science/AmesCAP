@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-'''
+"""
+The MarsViewer executable is for ...
+
 Alex 11/29/18
 This is a pure-Python implementation of a primitive image viewer.
 It is designed to display an image preview in the terminal where accessing NAS through 
@@ -7,31 +9,36 @@ X11 is not possible or is slow. Supported formats are PNG, EPS, and PDF.
 
 Adapted from:
 https://github.com/Belval/pdf2image
-'''
+
+The executable requires two arguments:
+    * [-id --id]      the simulation identifier, AND
+    * [-ls --ls]      the desired solar longitude(s), OR
+    * [-f -filename]  the name(s) of the desired file(s)
+
+Third-party Requirements:
+    * numpy
+    * argparse
+    * requests
+
+List of Functions:
+    * download - queries the requested file from the NAS Data Portal
+"""
+
+# make print statements appear in color
+from amescap.Script_utils import prYellow, prCyan
 
 from amescap.pdf2image import convert_from_bytes
 
-# Load generic Python Modules
-import os         # access operating systems function
-import sys        # system command
+# load generic Python modules
+import sys          # system commands
+import os           # access operating system functions
 import numpy as np
+from PIL import Image
 
-# The functions below make print statements appear in color
-def prCyan(skk): print("\033[96m{}\033[00m" .format(skk))
-def prYellow(skk): print("\033[93m{}\033[00m" .format(skk))
+# ======================================================
+#                  DEFINITIONS
+# ======================================================
 
-# Attempt to import specific scientic modules that may or may not
-# be included in the default Python installation on NAS.
-try:
-    from PIL import Image
-except ImportError as error_msg:
-    prYellow("Error, this function requires the Python Image Library (Pillow)")
-    prYellow('Please install Pillow in your virtual environment:')
-    prCyan('        pip install Pillow\n')
-    print("Error was: " + error_msg.message)
-    exit()
-
-# Some definitions
 def get_ansi_color_code(r, g, b):
     if r == g and g == b:
         if r < 8:
@@ -82,7 +89,18 @@ def show_image(img_path):
             sys.stdout.write(txt_col)
         print('')
 
-if __name__ == '__main__':
+# ======================================================
+#                  MAIN PROGRAM
+# ======================================================
+
+def main():
     if len(sys.argv) > 1:
         img_path = sys.argv[1]
         show_image(img_path)
+
+# ======================================================
+#                  END OF PROGRAM
+# ======================================================
+
+if __name__ == '__main__':
+    main()
