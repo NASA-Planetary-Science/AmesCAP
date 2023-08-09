@@ -90,14 +90,14 @@ def main():
     if parser.parse_args().ls:
         # if [-Ls --Ls] is input, return sol
         numIN = np.asarray(parser.parse_args().ls).astype(float)
-        txt_multi='   Ls    |    Sol    '
+        txt_multi='\n   Ls    |    Sol    '
         arrayIN = parse_array(numIN)
         arrayOUT = ls2sol(arrayIN)
         
     elif parser.parse_args().sol:
         # if [-sol --sol] is input, return Ls
         numIN = np.asarray(parser.parse_args().sol).astype(float)
-        txt_multi='    SOL    |    Ls    '
+        txt_multi='\n    SOL    |    Ls    '
         arrayIN = parse_array(numIN)
         arrayOUT = sol2ls(arrayIN, cummulative = cum)
 
@@ -110,8 +110,9 @@ def main():
     print('-----------------------')
     for i in range(0, len(arrayIN)):
         #print(' %7.2f   |    %7.3f  '%(arrayIN[i],arrayOUT[i]+MY*668.))
-        print(f" {arrayIN[i]:.2f}   |    {(arrayOUT[i]+MY*668.):.2f}  ")
-        print(arrayIN[i], arrayOUT[i]+MY*668.)
+        print(f" {arrayIN[i]:.2f}  |  {(arrayOUT[i]+MY*668.):.2f}  ")
+    
+    print("\n")
 
 # ======================================================
 #                  END OF PROGRAM
