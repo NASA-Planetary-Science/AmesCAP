@@ -7,7 +7,7 @@ the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 The executable requires two arguments:
     * [-id --id]      the simulation identifier, AND
     * [-ls --ls]      the desired solar longitude(s), OR
-    * [-f -filename]  the name(s) of the desired file(s)
+    * [-f --filename]  the name(s) of the desired file(s)
 
 Third-party Requirements:
     * numpy
@@ -40,30 +40,30 @@ parser = argparse.ArgumentParser(
                  f"NAS Data Portal {Default}"), 
     formatter_class = argparse.RawTextHelpFormatter)
 
-parser.add_argument('-id', '--id', type=str,
-                    help = ("Query data by simulation identifier "
-                    "corresponding to \n"
-                    "a subdirectory of legacygcmdata/:\n"
+parser.add_argument('-id', '--id', type = str,
+                    help = (f"Query data by simulation identifier "
+                    f"corresponding to \n"
+                    f"a subdirectory of legacygcmdata/:\n"
                     f"{Cyan}https://data.nas.nasa.gov/legacygcm/"
                     f"data_legacygcm.php?dir=/legacygcmdata{Default}\n"
                     "Current options include: "
                     f"'{Yellow}ACTIVECLDS{Default}', "
                     f"'{Yellow}INERTCLDS{Default}', "
                     f"and '{Yellow}ACTIVECLDS_NCDF{Default}'\n"
-                    "> Usage: MarsPull.py -id  INERTCLDS \n\n"))
+                    f"> Usage: MarsPull.py -id  INERTCLDS \n\n"))
 
-parser.add_argument('-ls', '--ls', nargs='+', type=float,
-                    help = ("Query data by solar longitude (Ls) - requires"
-                    " a simulation identifier (--id)\n"
-                    "> Usage: MarsPull.py -id ACTIVECLDS -ls 90.\n"
-                    ">        MarsPull.py -id ACTIVECLDS -ls [start] "
-                    "[stop] \n\n"))
+parser.add_argument('-ls', '--ls', nargs = '+', type = float,
+                    help = (f"Query data by solar longitude (Ls). "
+                    f"Requires a simulation identifier (--id)\n"
+                    f"> Usage: MarsPull.py -id ACTIVECLDS -ls 90.\n"
+                    f">        MarsPull.py -id ACTIVECLDS -ls [start] "
+                    f"[stop] \n\n"))
 
-parser.add_argument('-f', '--filename', nargs='+', type=str,
-                    help = ("Query data by file name - requires"
-                    " a simulation identifier (--id)\n"
-                    "> Usage: MarsPull.py -id ACTIVECLDS_NCDF -f "
-                    "fort.11_0730 fort.11_0731 \n\n"))
+parser.add_argument('-f', '--filename', nargs = '+', type = str,
+                    help = (f"Query data by file name - requires"
+                    f" a simulation identifier (--id)\n"
+                    f"> Usage: MarsPull.py -id ACTIVECLDS_NCDF -f "
+                    f"fort.11_0730 fort.11_0731 \n\n"))
 
 # ======================================================
 #                  DEFINITIONS

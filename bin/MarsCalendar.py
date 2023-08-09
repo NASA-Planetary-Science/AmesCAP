@@ -36,26 +36,29 @@ parser = argparse.ArgumentParser(
     formatter_class = argparse.RawTextHelpFormatter)
 
 parser.add_argument('-sol', '--sol', nargs = '+', type = float,
-                    help = ("Input sol number. Required. Can either be "
-                    "one sol or a range with an increment "
-                    "(start stop step)\n"
-                    "> Usage: MarsCalendar.py 750.\n"
-                    ">        MarsCalendar.py 750 800 5\n\n"))
+                    help = (f"Input sol number. Required. Can either \n"
+                    f"be one sol or a range with an increment \n"
+                    f"(start stop step)\n"
+                    f"> Usage: MarsCalendar.py -sol 750\n"
+                    f">        MarsCalendar.py -sol 750 800 5\n\n"))
 
 parser.add_argument('-ls', '--ls', nargs = '+', type = float,
-                    help = ("Return the sol number corresponding"
-                    "to this Ls\n"
-                    "> Usage: MarsCalendar.py start stop step -ls\n\n"))
+                    help = (f"Return the sol number corresponding \n"
+                    f"to this Ls\n"
+                    f"> Usage: MarsCalendar.py -ls 350\n"
+                    f">        MarsCalendar.py -ls 350 360 5\n\n"))
 
 
-parser.add_argument('-my', nargs = '+', type = float, default = 0.,
-                    help = ("The year of the simulation. MY=0 for "
-                    "sol=0-667, MY=1 for sol=668-1335 etc..\n"
-                    "> Usage: MarsCalendar.py 350 -ls -my 2\n\n"))
+parser.add_argument('-my', '--marsyear', nargs = '+', type = float, 
+                    default = 0.,
+                    help = (f"The year of the simulation. \n"
+                    f"MY=0 for sol=0-667, MY=1 for sol=668-1335 etc.\n"
+                    f"> Usage: MarsCalendar.py -ls 350 -my 2\n\n"))
 
-parser.add_argument('-cum', action = 'store_true',
-                    help = ("Return Ls in a cummulative form. Example: instead of Ls=0-360, Ls can be 0-720\n"
-                    "> Usage: MarsCalendar.py 670 -cum\n\n"))
+parser.add_argument('-cum', '--cumulative', action = 'store_true',
+                    help = (f"Return Ls in a cummulative form. \n"
+                    f"Example: instead of Ls=0-360, Ls can be 0-720\n"
+                    f"> Usage: MarsCalendar.py -sol 670 -cum\n\n"))
 
 # ======================================================
 #                  DEFINITIONS
@@ -97,22 +100,21 @@ def main():
     elif parser.parse_args().sol:
         # if [-sol --sol] is input, return Ls
         numIN = np.asarray(parser.parse_args().sol).astype(float)
-        txt_multi='\n    SOL    |    Ls    '
+        txt_multi='\n    SOL  |    Ls    '
         arrayIN = parse_array(numIN)
         arrayOUT = sol2ls(arrayIN, cummulative = cum)
 
     # if scalar, turn as float
     if len(np.atleast_1d(arrayOUT)) == 1:
-        arrayOUT = [arrayOUT]
+        arrayOUT = np.asarray(arrayOUT)
     
     # print arrayIN and corresponding arrayOUT
     print(txt_multi)
     print('-----------------------')
     for i in range(0, len(arrayIN)):
-        #print(' %7.2f   |    %7.3f  '%(arrayIN[i],arrayOUT[i]+MY*668.))
         print(f" {arrayIN[i]:.2f}  |  {(arrayOUT[i]+MY*668.):.2f}  ")
     
-    print("\n")
+    print(" ")
 
 # ======================================================
 #                  END OF PROGRAM
