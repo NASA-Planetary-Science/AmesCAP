@@ -2512,8 +2512,6 @@ def sol2ls(jld, cummulative=False):
         als = w - eq1  # Aerocentric Longitude
         areols = als/degrad
         areols[areols < 0.] += 360.
-        print(f"jld={jld}")
-        print(f"aerols={areols}")
         return areols
 
     # =============================================================================
