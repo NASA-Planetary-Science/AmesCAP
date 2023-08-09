@@ -42,7 +42,7 @@ parser.add_argument('-sol', '--sol', nargs = '+', type = float,
                     "> Usage: MarsCalendar.py 750.\n"
                     ">        MarsCalendar.py 750 800 5\n\n"))
 
-parser.add_argument('-ls', '--ls', action = 'store_true',
+parser.add_argument('-ls', '--ls', nargs = '+', type = float,
                     help = ("Return the sol number corresponding"
                     "to this Ls\n"
                     "> Usage: MarsCalendar.py start stop step -ls\n\n"))
@@ -58,6 +58,24 @@ parser.add_argument('-cum', action = 'store_true',
                     "> Usage: MarsCalendar.py 670 -cum\n\n"))
 
 # ======================================================
+#                  DEFINITIONS
+# ======================================================
+
+def parse_array(numIN):
+    if len(numIN) == 1:
+        in_array = numIN
+
+    elif len(numIN) == 3:
+        start, stop, step = numIN[0], numIN[1], numIN[2]
+        in_array = np.arange(start, stop, step)
+
+    else:
+        prRed("ERROR either [-ls --ls] or [-sol --sol] are required. "
+                "See 'MarsCalendar.py -h' for additional help.")
+        exit()
+    return(in_array)
+
+# ======================================================
 #                  MAIN PROGRAM
 # ======================================================
 
@@ -69,29 +87,18 @@ def main():
     if parser.parse_args().cum:
         cum = True
 
-    # load in the user-specified sols to be processed
-    # data_input = np.asarray(parser.parse_args().sol).astype(float)
-    data_input = parser.parse_args().sol
-
-    if len(data_input) == 1:
-        in_array = data_input
-        
-    elif len(data_input) == 3:
-        start, stop, step = data_input[0], data_input[1], data_input[2]
-        in_array = np.arange(start, stop, step)
-    
-    else:
-        prRed(f"ERROR a sol number or range (with an increment) is required. See 'MarsCalendar.py -h' for additional help.")
-        exit()
-
     if parser.parse_args().ls:
-        # if [-Ls --Ls] is input
+        # if [-Ls --Ls] is input, return sol
+        numIN = np.asarray(parser.parse_args().ls).astype(float)
         txt_multi='   Ls    |    Sol    '
+        in_array = parse_array(numIN)
         result = ls2sol(in_array)
         
-    else:
-        # if [-Ls --Ls] is excluded
+    elif parser.parse_args().sol:
+        # if [-sol --sol] is input, return Ls
+        numIN = np.asarray(parser.parse_args().sol).astype(float)
         txt_multi='    SOL    |    Ls    '
+        in_array = parse_array(numIN)
         result = sol2ls(in_array, cummulative = cum)
 
     # if scalar, turn as float
