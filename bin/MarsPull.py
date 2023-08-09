@@ -36,12 +36,12 @@ import requests     # download data from site
 # ======================================================
 
 parser = argparse.ArgumentParser(
-    description = (f"{Yellow}Uility for querying files on the MCMC "
-                f"NAS Data Portal {Default}"), 
+    description=(f"{Yellow}Uility for querying files on the MCMC "
+                 f"NAS Data Portal {Default}"), 
     formatter_class = argparse.RawTextHelpFormatter)
 
 parser.add_argument('-id', '--id', type=str,
-                    help=("Query data by simulation identifier "
+                    help = ("Query data by simulation identifier "
                     "corresponding to \n"
                     "a subdirectory of legacygcmdata/:\n"
                     f"{Cyan}https://data.nas.nasa.gov/legacygcm/"
@@ -53,14 +53,14 @@ parser.add_argument('-id', '--id', type=str,
                     "> Usage: MarsPull.py -id  INERTCLDS \n\n"))
 
 parser.add_argument('-ls', '--ls', nargs='+', type=float,
-                    help="Query data by solar longitude (Ls) - requires"
+                    help = ("Query data by solar longitude (Ls) - requires"
                     " a simulation identifier (--id)\n"
                     "> Usage: MarsPull.py -id ACTIVECLDS -ls 90.\n"
                     ">        MarsPull.py -id ACTIVECLDS -ls [start] "
-                    "[stop] \n\n")
+                    "[stop] \n\n"))
 
 parser.add_argument('-f', '--filename', nargs='+', type=str,
-                    help=("Query data by file name - requires"
+                    help = ("Query data by file name - requires"
                     " a simulation identifier (--id)\n"
                     "> Usage: MarsPull.py -id ACTIVECLDS_NCDF -f "
                     "fort.11_0730 fort.11_0731 \n\n"))

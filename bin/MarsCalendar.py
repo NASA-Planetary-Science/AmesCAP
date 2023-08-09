@@ -8,79 +8,100 @@ The executable requires x arguments:
 Third-party Requirements:
     * numpy
     * argparse
-    * requests
 
 List of Functions:
     * x
 """
+
+# make print statements appear in color
+from amescap.Script_utils import prRed
+Cyan = "\033[96m"
+Yellow = "\033[93m"
+Default = "\033[00m"
 
 # load generic Python modules
 import argparse     # parse arguments
 import numpy as np
 
 # load amesCAP modules
-from amescap.FV3_utils import sol2ls,ls2sol
-from amescap.Script_utils import prRed
+from amescap.FV3_utils import sol2ls, Ls2sol
 
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
 parser = argparse.ArgumentParser(
-    description = 'Gives the solar longitude from a SOL or a SOL array (start stop, step), adapted from areols.py',
+    description=(f"{Yellow}Returns the solar longitude (Ls) "
+                 f"corresponding to a sol or vice-versa. Adapted "
+                 f"from areols.py {Default}"),
     formatter_class = argparse.RawTextHelpFormatter)
 
-parser.add_argument('sol', nargs='+',type=float,
-                    help='''Input is sol number, return solar longitude \n'''
-                                  '''Usage: ./MarsCalendar.py 750. \n'''
-                                  '''       ./MarsCalendar.py start stop step''')
+parser.add_argument('-sol', '--sol' nargs = '+', type = float,
+                    help = ("Input sol number. Required. Can either be "
+                    "one sol or a range with an increment "
+                    "(start stop step)\n"
+                    "> Usage: MarsCalendar.py 750.\n"
+                    ">        MarsCalendar.py 750 800 5\n\n"))
 
-parser.add_argument('-ls','--ls', action='store_true',
-                    help="""Reverse operation. Inpout is Ls, output is sol \n"""
-                    """> Usage: ./MarsCalendar.py start stop step' -ls \n"""
-                    """ \n""")
+parser.add_argument('-ls', '--ls', action = 'store_true',
+                    help = ("Return the sol number corresponding"
+                    "to this Ls\n"
+                    "> Usage: MarsCalendar.py start stop step -ls\n\n"))
 
 
-parser.add_argument('-my', nargs='+',type=float, default=0.,
-                    help=''' Mars Year For ls>sol add 668 if my=1,1336 if my=2 etc.. \n'''
-                                  '''Usage: ./MarsCalendar.py  350 -ls -my 2 \n''')
+parser.add_argument('-my', nargs = '+', type = float, default = 0.,
+                    help = ("The year of the simulation. MY=0 for "
+                    "sol=0-667, MY=1 for sol=668-1335 etc..\n"
+                    "> Usage: MarsCalendar.py 350 -ls -my 2\n\n"))
 
-parser.add_argument('-cum', action='store_true',
-                    help='''For sol>ls return ls as cummulative 0>360>720... instead of [0-360] \n'''
-                                  '''Usage: ./MarsCalendar.py  670 -cum \n''')
+parser.add_argument('-cum', action = 'store_true',
+                    help = ("Return Ls in a cummulative form. Example: instead of Ls=0-360, Ls can be 0-720\n"
+                    "> Usage: MarsCalendar.py 670 -cum\n\n"))
 
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
+
 def main():
-    #Load in Mars YEAR (if any, default is zero) and cummulative Ls
-    my=np.asarray(parser.parse_args().my).astype(float)
-    cum=False
-    if parser.parse_args().cum:cum=True
+    # load in user-specified Mars year, if any. Default = 0
+    my = np.asarray(parser.parse_args().my).astype(float)
+    cum = False
+    # set Ls to cumulative, if requested
+    if parser.parse_args().cum:
+        cum = True
 
-    data_input=np.asarray(parser.parse_args().sol).astype(float)
+    # load in the user-specified sols to be processed
+    # data_input = np.asarray(parser.parse_args().sol).astype(float)
+    data_input = parser.parse_args().sol
 
-    if len(data_input)==1:
-        in_array=data_input
-    elif len(data_input)==3:
-        in_array=np.arange(data_input[0],data_input[1],data_input[2]) #start stop step
+    if len(data_input) == 1:
+        in_array = data_input
+        
+    elif len(data_input) == 3:
+        start, stop, step = data_input[0], data_input[1], data_input[2]
+        in_array = np.arange(start, stop, step)
+    
     else:
-        prRed('Wrong number of arguments: enter [sol/ls] or [start stop step]')
+        prRed(f"ERROR a sol number or range (with an increment) is required. See 'MarsCalendar.py -h' for additional help.")
         exit()
 
-    #Requesting ls instead
     if parser.parse_args().ls:
+        # if [-Ls --Ls] is input
         txt_multi='   Ls    |    Sol    '
-        result=ls2sol(in_array)
+        result = Ls2sol(in_array)
+        
     else:
+        # if [-Ls --Ls] is excluded
         txt_multi='    SOL    |    Ls    '
-        result=sol2ls(in_array,cummulative=cum)
+        result = sol2ls(in_array, cummulative = cum)
 
-    #Is scalar, turn as float
-    if len(np.atleast_1d(result))==1:result=[result]
+    # if scalar, turn as float
+    if len(np.atleast_1d(result)) == 1:
+        result = float(result)
+    
     #Display data
     print(txt_multi)
     print('-----------------------')
-    for i in range(0,len(in_array)):
+    for i in range(0, len(in_array)):
         print(' %7.2f   |    %7.3f  '%(in_array[i],result[i]+my*668.))
 
 # ======================================================
