@@ -111,6 +111,7 @@ def main():
     for i in range(0, len(arrayIN)):
         #print(' %7.2f   |    %7.3f  '%(arrayIN[i],arrayOUT[i]+MY*668.))
         print(f" {arrayIN[i]:.2f}   |    {(arrayOUT[i]+MY*668.):.3f}  ")
+        print(arrayIN[i], arrayOUT[i]+MY*668.)
 
 # ======================================================
 #                  END OF PROGRAM
