@@ -108,7 +108,7 @@ def main():
 
     # if scalar, turn as float
     if len(np.atleast_1d(arrayOUT)) == 1:
-        arrayOUT = np.asarray(arrayOUT)
+        arrayOUT = [arrayOUT]
     
     # print arrayIN and corresponding arrayOUT
     print(txt_multi)
