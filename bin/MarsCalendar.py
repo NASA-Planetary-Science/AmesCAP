@@ -106,11 +106,11 @@ def main():
         arrayIN = parse_array(numIN)
         arrayOUT = sol2ls(arrayIN, cummulative = cum)
 
-    print(arrayOUT)
+    print(f"before float {arrayOUT}")
     # if scalar, turn as float
     if len(np.atleast_1d(arrayOUT)) == 1:
         arrayOUT = np.asarray(arrayOUT)
-        print(arrayOUT)
+        print(f"after float {arrayOUT}")
     
     # print arrayIN and corresponding arrayOUT
     print(txt_multi)
