@@ -102,15 +102,15 @@ def main():
         arrayOUT = sol2ls(arrayIN, cummulative = cum)
 
     # if scalar, turn as float
-    if len(np.atleast_1d(arrayOUT)) == 1:
-        arrayOUT = float(arrayOUT)
+    # if len(np.atleast_1d(arrayOUT)) == 1:
+        # arrayOUT = float(arrayOUT)
     
     # print arrayIN and corresponding arrayOUT
     print(txt_multi)
     print('-----------------------')
     for i in range(0, len(arrayIN)):
         #print(' %7.2f   |    %7.3f  '%(arrayIN[i],arrayOUT[i]+MY*668.))
-        print(f" {arrayIN[i]:.2f}   |    {(arrayOUT[i]+MY*668.):.3f}  ")
+        print(f" {arrayIN[i]:.2f}   |    {(arrayOUT[i]+MY*668.):.2f}  ")
         print(arrayIN[i], arrayOUT[i]+MY*668.)
 
 # ======================================================
