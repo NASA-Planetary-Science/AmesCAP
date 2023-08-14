@@ -27,11 +27,13 @@ CAP is currently compatible with output from the MCMC’s `Legacy <https://githu
 
    installation
    autoapi/MarsPull/index
+   autoapi/MarsFormat/index
    autoapi/MarsFiles/index
    autoapi/MarsVars/index
-   autoapi/MarsViewer/index
    autoapi/MarsInterp/index
    autoapi/MarsPlot/index
+   autoapi/MarsCalendar/index
+   autoapi/MarsViewer/index
    examples
 
 
