@@ -50,20 +50,17 @@ Functions
    Parameters
    ----------
    simID : str
-       The simulation identifier, i.e., the name of the directory
-       to query at:
-       https://data.nas.nasa.gov/mcmc/data_legacygcm.php
+       The simulation identifier, i.e., the name of the directory         to query from: https://data.nas.nasa.gov/mcmc/data_legacygcm.php
 
    fName : str
-       The name of the file to download
+       The name of the file to download.
 
    Raises
    ------
-   rsp.status_code
-       A file-not-found error
+   A file-not-found error.
 
    Returns
    -------
-   The requested file(s), downloaded and saved to the current directory
+   The requested file(s), downloaded and saved to the current     directory.
 
 

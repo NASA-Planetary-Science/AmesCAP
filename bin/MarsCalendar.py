@@ -81,16 +81,16 @@ def parse_array(numIN):
     """
     Formats the input array for conversion.
     
-    Confirms that either [-ls --ls] or [-sol --sol] was passed as an
-    argument. Creates an array that ls2sol or sol2ls can read for the
+    Confirms that either [-ls --ls] or [-sol --sol] was passed as an \
+    argument. Creates an array that ls2sol or sol2ls can read for the \
     conversion from sol -> Ls or Ls -> sol.
     
     Parameters
     ----------
     numIN : float
-        The input Ls or sol to convert. Can either be one number:
-            300
-        or start stop step:
+        The input Ls or sol to convert. Can either be one number:\n
+            300\n
+        or start stop step:\n
             300 310 2
     
     Raises
@@ -100,8 +100,8 @@ def parse_array(numIN):
     Returns
     -------
     arrayIN
-        An array formatted for input into ls2sol or sol2ls. 
-            If numIN = 300, arrayIN=[300]
+        An array formatted for input into ls2sol or sol2ls. \n
+            If numIN = 300, arrayIN=[300]\n
             If numIN = 300 310 2, arrayIN = [300, 302, 304, 306, 308]    
     """
     
