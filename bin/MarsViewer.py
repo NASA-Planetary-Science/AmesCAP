@@ -151,8 +151,9 @@ def show_image(img_path):
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
+print('what does this do')
 print(sys.argv[0])
-print(sys.argv[1])
+print(sys.argv)
 
 def main():
     if len(sys.argv) > 1:
