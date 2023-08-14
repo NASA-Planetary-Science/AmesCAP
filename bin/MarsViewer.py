@@ -1,33 +1,24 @@
 #!/usr/bin/env python3
 """
-The MarsViewer executable is for ...
+The MarsViewer executable is a pure-Python implementation of a \
+primitive image viewer.
 
-Alex 11/29/18
-This is a pure-Python implementation of a primitive image viewer.
-It is designed to display an image preview in the terminal where accessing NAS through 
-X11 is not possible or is slow. Supported formats are PNG, EPS, and PDF.
+It is designed to display an image preview in the terminal where accessing NAS through X11 is not possible or is slow. Supported formats are PNG, EPS, and PDF.
 
 Adapted from:
 https://github.com/Belval/pdf2image
 
-The executable requires two arguments:
-    * [-id --id]      the simulation identifier, AND
-    * [-ls --ls]      the desired solar longitude(s), OR
-    * [-f -filename]  the name(s) of the desired file(s)
+The executable requires no arguments.
 
 Third-party Requirements:
     * numpy
-    * argparse
-    * requests
+    * Image
 
 List of Functions:
-    * download - queries the requested file from the NAS Data Portal
+    * get_ansi_color_code - 
+    * get_color - 
+    * show_image - 
 """
-
-# make print statements appear in color
-from amescap.Script_utils import prYellow, prCyan
-
-from amescap.pdf2image import convert_from_bytes
 
 # load generic Python modules
 import sys          # system commands
@@ -35,11 +26,36 @@ import os           # access operating system functions
 import numpy as np
 from PIL import Image
 
+# load amesCAP modules
+from amescap.pdf2image import convert_from_bytes
+
 # ======================================================
 #                  DEFINITIONS
 # ======================================================
 
 def get_ansi_color_code(r, g, b):
+    """
+    -
+
+    -
+
+    Parameters
+    ----------
+    r : float
+        -
+    g : float
+        -
+    b : float
+        -
+    
+    Raises
+    ------
+
+    Returns
+    -------
+    -
+        -
+    """
     if r == g and g == b:
         if r < 8:
             return 16
@@ -49,9 +65,49 @@ def get_ansi_color_code(r, g, b):
     return 16 + (36 * round(r / 255 * 5)) + (6 * round(g / 255 * 5)) + round(b / 255 * 5)
 
 def get_color(r, g, b):
+    """
+    -
+
+    -
+
+    Parameters
+    ----------
+    r : float
+        -
+    g : float
+        -
+    b : float
+        -
+    
+    Raises
+    ------
+
+    Returns
+    -------
+    -
+        -
+    """
     return "\x1b[48;5;{}m \x1b[0m".format(int(get_ansi_color_code(r, g, b)))
 
 def show_image(img_path):
+    """
+    -
+
+    -
+
+    Parameters
+    ----------
+    img_path : str
+        -
+    
+    Raises
+    ------
+
+    Returns
+    -------
+    -
+        -
+    """
     try:
         # If PDF, merge images together
         if img_path[-3:] == 'pdf':
@@ -71,6 +127,7 @@ def show_image(img_path):
             img = Image.open(img_path)
     except Exception as e:
         exit(e)
+    
     rows, columns = os.popen('stty size', 'r').read().split()
     mywidth = int(columns)
     scale_factor = 0.5  # account for height of line in terminal
@@ -96,6 +153,8 @@ def show_image(img_path):
 def main():
     if len(sys.argv) > 1:
         img_path = sys.argv[1]
+        print(sys.argv[0])
+        print(sys.argv[1])
         show_image(img_path)
 
 # ======================================================

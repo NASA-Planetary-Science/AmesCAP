@@ -129,18 +129,18 @@
 <dt class="sig sig-object py" id="MarsCalendar.parse_array">
 <span class="sig-prename descclassname"><span class="pre">MarsCalendar.</span></span><span class="sig-name descname"><span class="pre">parse_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">numIN</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsCalendar.parse_array" title="Permalink to this definition"></a></dt>
 <dd><p>Formats the input array for conversion.</p>
-<p>Confirms that either [-ls –ls] or [-sol –sol] was passed as an
-argument. Creates an array that ls2sol or sol2ls can read for the
-conversion from sol -&gt; Ls or Ls -&gt; sol.</p>
+<p>Confirms that either [-ls –ls] or [-sol –sol] was passed as an     argument. Creates an array that ls2sol or sol2ls can read for the     conversion from sol -&gt; Ls or Ls -&gt; sol.</p>
 <section id="parameters">
 <h4>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h4>
-<dl class="simple">
-<dt>numIN<span class="classifier">float</span></dt><dd><dl class="simple">
-<dt>The input Ls or sol to convert. Can either be one number:</dt><dd><p>300</p>
-</dd>
-<dt>or start stop step:</dt><dd><p>300 310 2</p>
-</dd>
-</dl>
+<dl>
+<dt>numIN<span class="classifier">float</span></dt><dd><p>The input Ls or sol to convert. Can either be one number:</p>
+<blockquote>
+<div><p>300</p>
+</div></blockquote>
+<p>or start stop step:</p>
+<blockquote>
+<div><p>300 310 2</p>
+</div></blockquote>
 </dd>
 </dl>
 </section>
@@ -150,12 +150,12 @@ conversion from sol -&gt; Ls or Ls -&gt; sol.</p>
 </section>
 <section id="returns">
 <h4>Returns<a class="headerlink" href="#returns" title="Permalink to this heading"></a></h4>
-<dl class="simple">
-<dt>arrayIN</dt><dd><dl class="simple">
-<dt>An array formatted for input into ls2sol or sol2ls.</dt><dd><p>If numIN = 300, arrayIN=[300]
-If numIN = 300 310 2, arrayIN = [300, 302, 304, 306, 308]</p>
-</dd>
-</dl>
+<dl>
+<dt>arrayIN</dt><dd><p>An array formatted for input into ls2sol or sol2ls.</p>
+<blockquote>
+<div><p>If numIN = 300, arrayIN=[300]</p>
+<p>If numIN = 300 310 2, arrayIN = [300, 302, 304, 306, 308]</p>
+</div></blockquote>
 </dd>
 </dl>
 </section>
