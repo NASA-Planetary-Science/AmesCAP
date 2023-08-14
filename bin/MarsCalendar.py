@@ -78,6 +78,33 @@ parser.add_argument('-c', '--cumulative', action='store_true',
 # ======================================================
 
 def parse_array(numIN):
+    """
+    Formats the input array for conversion.
+    
+    Confirms that either [-ls --ls] or [-sol --sol] was passed as an
+    argument. Creates an array that ls2sol or sol2ls can read for the
+    conversion from sol -> Ls or Ls -> sol.
+    
+    Parameters
+    ----------
+    numIN : float
+        The input Ls or sol to convert. Can either be one number:
+            300
+        or start stop step:
+            300 310 2
+    
+    Raises
+    ------
+    Error if neither [-ls --ls] or [-sol --sol] is provided.
+    
+    Returns
+    -------
+    arrayIN
+        An array formatted for input into ls2sol or sol2ls. 
+            If numIN = 300, arrayIN=[300]
+            If numIN = 300 310 2, arrayIN = [300, 302, 304, 306, 308]    
+    """
+    
     if len(numIN) == 1:
         arrayIN = numIN
 
@@ -108,25 +135,25 @@ def main():
 
     if parser.parse_args().ls:
         # if [-Ls --Ls] is input, return sol
-        numIN = np.asarray(parser.parse_args().ls).astype(float)
+        inputNum = np.asarray(parser.parse_args().ls).astype(float)
         headerText = '\n   Ls    |    Sol    \n-----------------------'
-        arrayIN = parse_array(numIN)
-        arrayOUT = ls2sol(arrayIN)
+        inputArr = parse_array(inputNum)
+        outputArr = ls2sol(inputArr)
         
     elif parser.parse_args().sol:
         # if [-sol --sol] is input, return Ls
-        numIN = np.asarray(parser.parse_args().sol).astype(float)
+        inputNum = np.asarray(parser.parse_args().sol).astype(float)
         headerText = '\n    SOL  |    Ls    \n-----------------------'
-        arrayIN = parse_array(numIN)
-        arrayOUT = sol2ls(arrayIN, cumulative=accumulate)
+        inputArr = parse_array(inputNum)
+        outputArr = sol2ls(inputArr, cumulative=accumulate)
 
     # if scalar, return as float
-    arrayOUT = np.atleast_1d(arrayOUT)
+    outputArr = np.atleast_1d(outputArr)
     
     print(headerText)
-    for i in range(0, len(arrayIN)):
-        # print arrayIN and corresponding arrayOUT
-        print(f" {arrayIN[i]:.2f}  |  {(arrayOUT[i]+MY*668.):.2f}  ")
+    for i in range(0, len(inputArr)):
+        # print inputArr and corresponding outputArr
+        print(f" {inputArr[i]:.2f}  |  {(outputArr[i]+MY*668.):.2f}  ")
     
     print(" ")
 
