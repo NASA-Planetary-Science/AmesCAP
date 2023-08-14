@@ -92,6 +92,7 @@ def main():
     # MY = np.asarray(parser.parse_args().marsyear).astype(float)
     MY = parser.parse_args().marsyear
     # If MY is a float(e.g. psfc=700.), make it a 1-element array(e.g. psfc=[700])
+    MY = np.atleast_1d(MY)
     print(f"MARS YEAR = {MY}")
     
     if parser.parse_args().cumulative:
