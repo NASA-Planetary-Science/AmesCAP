@@ -50,7 +50,7 @@ parser.add_argument('-id', '--id', type = str,
                     f"'{Yellow}ACTIVECLDS{Default}', "
                     f"'{Yellow}INERTCLDS{Default}', "
                     f"and '{Yellow}ACTIVECLDS_NCDF{Default}'\n"
-                    f"> Usage: MarsPull.py -id  INERTCLDS \n\n"))
+                    f"> Usage: MarsPull.py -id  INERTCLDS ...\n\n"))
 
 parser.add_argument('-ls', '--ls', nargs = '+', type = float,
                     help = (f"Query data by solar longitude (Ls). "
@@ -62,7 +62,7 @@ parser.add_argument('-ls', '--ls', nargs = '+', type = float,
 parser.add_argument('-f', '--filename', nargs = '+', type = str,
                     help = (f"Query data by file name - requires"
                     f" a simulation identifier (--id)\n"
-                    f"> Usage: MarsPull.py -id ACTIVECLDS_NCDF -f "
+                    f"> Usage: MarsPull.py -id ACTIVECLDS -f "
                     f"fort.11_0730 fort.11_0731 \n\n"))
 
 # ======================================================
@@ -232,7 +232,7 @@ def main():
             download(fName, simID)
     else:
         # if the user did not specify Ls or a file name...
-        prYellow("ERROR No data requested. Use [-ls --ls] or "
+        prYellow("ERROR No file requested. Use [-ls --ls] or "
                  "[-f --filename] with [-id --id] to specify a file to "
                  "download.")
         exit()
