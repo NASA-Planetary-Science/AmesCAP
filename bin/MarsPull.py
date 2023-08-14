@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-The MarsPull executable is for querying data from the Mars Climate
-Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on
+The MarsPull executable is for querying data from the Mars Climate \
+Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on \
 the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
 The executable requires 2 arguments:
