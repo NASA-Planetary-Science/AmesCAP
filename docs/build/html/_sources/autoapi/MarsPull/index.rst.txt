@@ -5,9 +5,7 @@
 
 .. autoapi-nested-parse::
 
-   The MarsPull executable is for querying data from the Mars Climate
-   Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on
-   the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
+   The MarsPull executable is for querying data from the Mars Climate Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
    The executable requires 2 arguments:
        * [-id --id]      The simulation identifier, AND
