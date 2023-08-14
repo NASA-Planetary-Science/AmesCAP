@@ -59,10 +59,12 @@ def get_ansi_color_code(r, g, b):
     if r == g and g == b:
         if r < 8:
             return 16
-        if r > 248:
+        elif r > 248:
             return 231
-        return round(((r - 8) / 247) * 24) + 232
-    return 16 + (36 * round(r / 255 * 5)) + (6 * round(g / 255 * 5)) + round(b / 255 * 5)
+        else:
+            return round(((r - 8) / 247) * 24) + 232
+    else:
+        return 16 + (36 * round(r / 255 * 5)) + (6 * round(g / 255 * 5)) + round(b / 255 * 5)
 
 def get_color(r, g, b):
     """
@@ -87,7 +89,7 @@ def get_color(r, g, b):
     -
         -
     """
-    return "\x1b[48;5;{}m \x1b[0m".format(int(get_ansi_color_code(r, g, b)))
+    return f"\x1b[48;5;{int(get_ansi_color_code(r, g, b))}m \x1b[0m"
 
 def show_image(img_path):
     """
@@ -149,12 +151,12 @@ def show_image(img_path):
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
+print(sys.argv[0])
+print(sys.argv[1])
 
 def main():
     if len(sys.argv) > 1:
         img_path = sys.argv[1]
-        print(sys.argv[0])
-        print(sys.argv[1])
         show_image(img_path)
 
 # ======================================================
