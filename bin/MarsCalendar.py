@@ -3,15 +3,23 @@
 The MarsCalendar executable accepts an input Ls or day-of-year (sol) and
 returns the corresponding sol or Ls, respectively.
 
-The executable requires x arguments:
-    * [-x --x]      define
+The executable requires 1 of the following arguments:
+    * [-sol --sol]          The sol to convert to Ls, OR
+    * [-ls --ls]            the Ls to convert to sol.
+
+and optionally accepts 2 arguments:
+    * [-my --marsyear]      The Mars Year of the simulation to compute 
+                            sol or Ls from, AND/OR
+    * [-c --cumulative]     Returns Ls in cumulative form.
 
 Third-party Requirements:
     * numpy
     * argparse
 
 List of Functions:
-    * x
+    * parse_array - Formats the requested sol/Ls for conversion to
+                    Ls/sol. Computes arrays from [start, stop, step] if
+                    necessary.
 """
 
 # make print statements appear in color
@@ -52,15 +60,15 @@ parser.add_argument('-ls', '--ls', nargs = '+', type = float,
 
 parser.add_argument('-my', '--marsyear', nargs = '+', type = float, 
                     default = 0.,
-                    help = (f"Return the sol number corresponding "
-                    f"to this Ls of a particular year of the "
-                    f"simulation. Requires [-ls --ls]. \n"
+                    help = (f"Return the sol or Ls corresponding "
+                    f"to the Ls or sol of a particular year of the "
+                    f"simulation. Req. [-ls --ls] or [-sol --sol]. \n"
                     f"MY=0 for sol=0-667, MY=1 for sol=668-1335 etc.\n"
                     f"> Usage: MarsCalendar.py -ls 350 -my 2\n\n"))
 
 parser.add_argument('-c', '--cumulative', action='store_true',
                     help = (f"Return Ls from sol in cumulative form. "
-                    f"Requires [-sol --sol]. \n"
+                    f"Req. [-sol --sol]. \n"
                     f"EX: Returns Ls=360-720 instead of Ls=0-360 "
                     f"for input sol=669-1336 \n"
                     f"> Usage: MarsCalendar.py -sol 700 -c\n\n"))
