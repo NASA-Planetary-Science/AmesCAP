@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
-The MarsCalendar executable is for ...
+The MarsCalendar executable accepts an input Ls or day-of-year (sol) and
+returns the corresponding sol or Ls, respectively.
 
 The executable requires x arguments:
     * [-x --x]      define
@@ -36,29 +37,33 @@ parser = argparse.ArgumentParser(
     formatter_class = argparse.RawTextHelpFormatter)
 
 parser.add_argument('-sol', '--sol', nargs = '+', type = float,
-                    help = (f"Input sol number. Required. Can either \n"
-                    f"be one sol or a range with an increment \n"
-                    f"(start stop step)\n"
+                    help = (f"Input sol number. Required. Can either "
+                    f"be one sol or a range with an increment "
+                    f"(start stop step).\n"
                     f"> Usage: MarsCalendar.py -sol 750\n"
                     f">        MarsCalendar.py -sol 750 800 5\n\n"))
 
 parser.add_argument('-ls', '--ls', nargs = '+', type = float,
-                    help = (f"Return the sol number corresponding \n"
-                    f"to this Ls\n"
+                    help = (f"Return the sol number corresponding "
+                    f"to this Ls.\n"
                     f"> Usage: MarsCalendar.py -ls 350\n"
                     f">        MarsCalendar.py -ls 350 360 5\n\n"))
 
 
 parser.add_argument('-my', '--marsyear', nargs = '+', type = float, 
                     default = 0.,
-                    help = (f"The year of the simulation. \n"
+                    help = (f"Return the sol number corresponding "
+                    f"to this Ls of a particular year of the "
+                    f"simulation. Requires [-ls --ls]. \n"
                     f"MY=0 for sol=0-667, MY=1 for sol=668-1335 etc.\n"
                     f"> Usage: MarsCalendar.py -ls 350 -my 2\n\n"))
 
 parser.add_argument('-c', '--cumulative', action='store_true',
-                    help = (f"Return Ls in a cumulative form. \n"
-                    f"Example: instead of Ls=0-360, Ls can be 0-720\n"
-                    f"> Usage: MarsCalendar.py -sol 670 -c\n\n"))
+                    help = (f"Return Ls from sol in cumulative form. "
+                    f"Requires [-sol --sol]. \n"
+                    f"EX: Returns Ls=360-720 instead of Ls=0-360 "
+                    f"for input sol=669-1336 \n"
+                    f"> Usage: MarsCalendar.py -sol 700 -c\n\n"))
 
 # ======================================================
 #                  DEFINITIONS
@@ -85,6 +90,7 @@ def parse_array(numIN):
 def main():
     # load in user-specified Mars year, if any. Default = 0
     MY = np.asarray(parser.parse_args().marsyear).astype(float)
+    print(f"MARS YEAR = {MY}")
     
     if parser.parse_args().cumulative:
         # set Ls to cumulative, if requested
