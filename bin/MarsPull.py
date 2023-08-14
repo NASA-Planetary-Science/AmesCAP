@@ -180,10 +180,6 @@ def main():
                  "for additional help.")
         exit()
 
-    # baseURL = ("https://data.nas.nasa.gov/legacygcm/"
-    #            "download_data_legacygcm.php?file=/legacygcmdata/"
-    #            + simID + "/")
-
     if parser.parse_args().ls:
         # if the user input an ID and specified one or more Ls...
         lsIN = np.asarray(parser.parse_args().ls)
