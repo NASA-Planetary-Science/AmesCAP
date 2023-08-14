@@ -2444,12 +2444,12 @@ def robin2cart(LAT, LON):
 # ===================== (End projections section) ================================
 
 
-def sol2ls(jld, cummulative=False):
+def sol2ls(jld, cumulative=False):
     """
     Return the solar longitude Ls as a function of the sol number. Sol 0 is spring equinox.
     Args:
         jld [float or 1D array]: sol number after perihelion
-        cummulative [bool]     : if True, result is cummulative Ls 0>360>720 etc..
+        cumulative [bool]     : if True, result is cumulative Ls 0>360>720 etc..
 
     Returns:
         Ls: The corresponding solar longitude Ls
@@ -2526,7 +2526,7 @@ def sol2ls(jld, cummulative=False):
 
         For those edges cases where Ls is close to 359.9, the routine calculate again the Ls at a later time (say 1 sols) to check for outlier points.
         '''
-        # Calculate cummulative Ls using sol2ls function() and adding +360 for every mars year
+        # Calculate cumulative Ls using sol2ls function() and adding +360 for every mars year
         areols, MY = [np.zeros_like(jld) for _ in range(0, 2)]
         date = jld - zero_date
         MY = (date-equinox)//(year)+1  # MY=(date-equinox)//(year)
@@ -2544,7 +2544,7 @@ def sol2ls(jld, cummulative=False):
             date_plus1 = jld_plus1 - zero_date
             MY_plus1 = (date_plus1-equinox)//(668.)+1  # Compute MY
             Ls_cum_plus1 = Ls_plus1+MY_plus1 * \
-                360.  # Cummulative Ls 1 day after.
+                360.  # cumulative Ls 1 day after.
             # If things are smooth the Ls should go from [359>361]. If it reads [359>721], we need to update the MY for those indices
             # difference between two consecutive Ls, should be small unless Ls_cum was too big at the first place
             diff = Ls_cum_plus1-Ls_cum[ii]
@@ -2554,7 +2554,7 @@ def sol2ls(jld, cummulative=False):
         Ls_cum = Ls_mod+MY*360.
         return Ls_cum
 
-    if cummulative:
+    if cumulative:
         return sol2ls_cum(jld)
     else:
         return sol2ls_mod(jld)
@@ -2574,7 +2574,7 @@ def ls2sol(Ls_in):
     #===Internal functions======
     from scipy import optimize
     def internal_func(Ls_in):
-        func_int = lambda x: sol2ls(x,cummulative=True)
+        func_int = lambda x: sol2ls(x,cumulative=True)
         errfunc = lambda x, y: func_int(x) - y # Distance to the target function
         p0 = [0.] # Initial guess for the parameters
         p1, success = optimize.leastsq(errfunc, p0[:], args=(Ls_in))
