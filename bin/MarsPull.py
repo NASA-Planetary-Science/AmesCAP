@@ -37,7 +37,7 @@ import requests     # download data from site
 
 parser = argparse.ArgumentParser(
     description=(f"{Yellow}Uility for querying files on the MCMC "
-                 f"NAS Data Portal {Default}"), 
+                 f"NAS Data Portal. {Default}"), 
     formatter_class = argparse.RawTextHelpFormatter)
 
 parser.add_argument('-id', '--id', type = str,
