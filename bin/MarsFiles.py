@@ -149,41 +149,40 @@ parser.add_argument('-no_trend', '--no_trend', action='store_true',
             f">        MarsFiles.py *.atmos_daily.nc -hpf 0.5 10. "
             f"--no_trend \n\n"))
 
-Decomposition in zonal harmonics, disabled for initial CAP release:
-parser.add_argument('-hpk', '--high_pass_zonal', nargs = '+', 
-            type = int,
-            help = (f"Spatial filtering utilities: low-, high-, and "
-            f"band pass filters. \n"
-            f"Use '--no_trend' to compute amplitudes only "
-            f"(data is always detrended before filtering). \n"
-            f"{Cyan}Generates a new file ending in '_hpk.nc'."
-            f"{Default} \n"
-            f"> Usage: MarsFiles.py *.atmos_daily.nc -hpk 10 "
-            f"--no_trend \n"
-            f"         (-hpk)  --high_pass_zonal kmin \n\n"))
+# Decomposition in zonal harmonics, disabled for initial CAP release:
+# parser.add_argument('-hpk', '--high_pass_zonal', nargs = '+', 
+#             type = int,
+#             help = (f"Spatial filtering utilities: low-, high-, and "
+#             f"band pass filters. \n"
+#             f"Use '--no_trend' to compute amplitudes only "
+#             f"(data is always detrended before filtering). \n"
+#             f"{Cyan}Generates a new file ending in '_hpk.nc'."
+#             f"{Default} \n"
+#             f"> Usage: MarsFiles.py *.atmos_daily.nc -hpk 10 "
+#             f"--no_trend \n"
+#             f"         (-hpk)  --high_pass_zonal kmin \n\n"))
 
-parser.add_argument('-lpk', '--low_pass_zonal', nargs = '+', type = int,
-            help = (f"Spatial filtering utilities: low-, high-, and "
-            f"band pass filters. \n"
-            f"Use '--no_trend' to compute amplitudes only "
-            f"(data is always detrended before filtering). \n"
-            f"{Cyan}Generates a new file ending in '_lpk.nc'."
-            f"{Default} \n"
-            f"> Usage: MarsFiles.py *.atmos_daily.nc -lpk 20 "
-            f"--no_trend\n"
-            f"         (-lpk)  --low_pass_zonal  kmax \n\n"))
+# parser.add_argument('-lpk', '--low_pass_zonal', nargs = '+', type = int,
+#             help = (f"Spatial filtering utilities: low-, high-, and "
+#             f"band pass filters. \n"
+#             f"Use '--no_trend' to compute amplitudes only "
+#             f"(data is always detrended before filtering). \n"
+#             f"{Cyan}Generates a new file ending in '_lpk.nc'."
+#             f"{Default} \n"
+#             f"> Usage: MarsFiles.py *.atmos_daily.nc -lpk 20 "
+#             f"--no_trend\n"
+#             f"         (-lpk)  --low_pass_zonal  kmax \n\n"))
 
-parser.add_argument('-bpk', '--band_pass_zonal', nargs = '+',
-            help = (f"Spatial filtering utilities: low-, high-, and "
-            f"band pass filters. \n"
-            f"Use '--no_trend' to compute amplitudes only "
-            f"(data is always detrended before filtering). \n"
-            f"{Cyan}Generates a new file ending in '_bpk.nc'."
-            f"{Default} \n"
-            f"> Usage: MarsFiles.py *.atmos_daily.nc -bpk 10 20 "
-            f"--no_trend\n"
-            f"         (-bpk)  --band_pass_zonal kmin kmax \n\n"))
-
+# parser.add_argument('-bpk', '--band_pass_zonal', nargs = '+',
+#             help = (f"Spatial filtering utilities: low-, high-, and "
+#             f"band pass filters. \n"
+#             f"Use '--no_trend' to compute amplitudes only "
+#             f"(data is always detrended before filtering). \n"
+#             f"{Cyan}Generates a new file ending in '_bpk.nc'."
+#             f"{Default} \n"
+#             f"> Usage: MarsFiles.py *.atmos_daily.nc -bpk 10 20 "
+#             f"--no_trend\n"
+#             f"         (-bpk)  --band_pass_zonal kmin kmax \n\n"))
 
 parser.add_argument('-tidal', '--tidal', nargs = '+', type = int,
             help = (f"Performs a tidal analyis on 'diurn' files. \n"
