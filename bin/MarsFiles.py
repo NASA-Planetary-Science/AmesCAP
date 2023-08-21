@@ -48,7 +48,7 @@ from amescap.Script_utils import (find_tod_in_diurn, FV3_file_type,
 
 parser = argparse.ArgumentParser(
             description=(f"{Yellow}MarsFiles is a file manager. Use it "
-                 f" to modify a netCDF file format.{Default} \n\n"),
+                 f"to modify a netCDF file format.{Default} \n\n"),
             formatter_class = argparse.RawTextHelpFormatter)
 
 parser.add_argument('input_file', nargs = '+',
@@ -63,8 +63,8 @@ parser.add_argument('-fv3', '--fv3', nargs = '+',
             f"  - 'daily'  : 5-sol continuous \n"
             f"  - 'diurn'  : 5-sol averages for each time of day \n"
             f"{Green}Usage: \n"
-            f"  > MarsFiles.py filename.nc -fv3 fixed \n"
-            f"  > MarsFiles.py filename.nc -fv3 fixed diurn "
+            f"> MarsFiles.py filename.nc -fv3 fixed \n"
+            f"> MarsFiles.py filename.nc -fv3 fixed diurn "
             f"{Default}\n\n"))
 
 parser.add_argument('-c', '--combine', action='store_true',
@@ -75,7 +75,7 @@ parser.add_argument('-c', '--combine', action='store_true',
             f"{Yellow}Overwrites the first file in the series. "
             f"To override, use --ext.{Default} \n"
             f"{Green}Usage: \n"
-            f"  > MarsFiles.py *.atmos_average.nc --combine "
+            f"> MarsFiles.py *.atmos_average.nc --combine "
             f"{Default}\n\n"))
 
 parser.add_argument('-t', '--tshift', nargs = '?', const = 999, 
@@ -83,11 +83,11 @@ parser.add_argument('-t', '--tshift', nargs = '?', const = 999,
             help = (f"Apply a time-shift to {Yellow}'diurn'{Default} "
             f"files. \n"
             "Vertically interpolated 'diurn' files OK. \n"
-            f"{Cyan}Generates a new file ending in '_T.nc'.{Default} \n"
+            f"{Yellow}Generates a new file ending in '_T.nc'{Default} \n"
             f"{Green}Usage: \n"
-            f"  > MarsFiles.py *.atmos_diurn.nc --tshift \n"
+            f"> MarsFiles.py *.atmos_diurn.nc --tshift \n"
             f"    {Blue}(outputs data for all 24 local times){Green} \n"
-            f"  > MarsFiles.py *.atmos_diurn.nc --tshift '3 15'"
+            f"> MarsFiles.py *.atmos_diurn.nc --tshift '3 15'"
             f"\n"
             f"    {Blue}(outputs data for target local times only)"
             f"{Default}\n\n"))
@@ -95,26 +95,26 @@ parser.add_argument('-t', '--tshift', nargs = '?', const = 999,
 parser.add_argument('-ba', '--bin_average', nargs = '?', const = 5, 
             type = int,
             help = (f"Bin MGCM 'daily' files like 'average' files. \n"
-            f"{Cyan}Generates a new file ending in '_to_average.nc'."
+            f"{Yellow}Generates a new file ending in '_to_average.nc'"
             f"{Default} \n"
             f"{Green}Usage: \n"
-            f"  > MarsFiles.py *.atmos_daily.nc -ba \n"
+            f"> MarsFiles.py *.atmos_daily.nc -ba \n"
             f"    {Blue}(default, bin 5 days){Green} \n"
-            f"  > MarsFiles.py *.atmos_daily_pstd.nc -ba 10 \n"
+            f"> MarsFiles.py *.atmos_daily_pstd.nc -ba 10 \n"
             f"    {Blue}(bin 10 days)"
             f"{Default}\n\n"))
 
 parser.add_argument('-bd', '--bin_diurn', action = 'store_true',
             help = (f"Bin MGCM 'daily' files like 'diurn' files. \n"
             f"May be used jointly with --bin_average. \n"
-            f"{Cyan}Generates a new file ending in '_to_diurn.nc'."
+            f"{Yellow}Generates a new file ending in '_to_diurn.nc'"
             f"{Default} \n"
             f"{Green}Usage: \n"
-            f"  > MarsFiles.py *.atmos_daily.nc -bd \n"
+            f"> MarsFiles.py *.atmos_daily.nc -bd \n"
             f"    {Blue}(Default 5-day bin){Green} \n"
-            f"  > MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 10 \n"
+            f"> MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 10 \n"
             f"    {Blue}(10-day bin){Green} \n"
-            f"  > MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 1 \n"
+            f"> MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 1 \n"
             f"    {Blue}(No binning. Mimics raw Legacy output)"
             f"{Default}\n\n"))
 
@@ -125,10 +125,10 @@ parser.add_argument('-hpf', '--high_pass_filter', nargs = '+',
             f"band-pass filters. \n"
             f"Use '--no_trend' to compute amplitudes only. \n"
             f"Data detrended before filtering. \n"
-            f"{Cyan}Generates a new file ending in '_hpf.nc'."
+            f"{Yellow}Generates a new file ending in '_hpf.nc'"
             f"{Default} \n"
             f"{Green}Usage: \n"
-            f"  > MarsFiles.py *.atmos_daily.nc -hpf 10. \n"
+            f"> MarsFiles.py *.atmos_daily.nc -hpf 10. \n"
             f"    {Blue}(-hpf) --high_pass_filter sol_min "
             f"{Default}\n\n"))
 
@@ -138,10 +138,10 @@ parser.add_argument('-lpf', '--low_pass_filter', nargs = '+',
             f"band-pass filters. \n"
             f"Use '--no_trend' to compute amplitudes only. \n"
             f"Data detrended before filtering. \n"
-            f"{Cyan}Generates a new file ending in '_lpf.nc'."
+            f"{Yellow}Generates a new file ending in '_lpf.nc'"
             f"{Default} \n"
             f"{Green}Usage: \n"
-            f"  > MarsFiles.py *.atmos_daily.nc -lpf 0.5 \n"
+            f"> MarsFiles.py *.atmos_daily.nc -lpf 0.5 \n"
             f"    {Blue}(-lpf) --low_pass_filter sol_max "
             f"{Default}\n\n"))
 
@@ -150,10 +150,10 @@ parser.add_argument('-bpf', '--band_pass_filter', nargs = '+',
             f"band-pass filters. \n"
             f"Use '--no_trend' to compute amplitudes only. \n"
             f"Data detrended before filtering. \n"
-            f"{Cyan}Generates a new file ending in 'bpf.nc'."
+            f"{Yellow}Generates a new file ending in 'bpf.nc'"
             f"{Default} \n"
             f"{Green}Usage: \n"
-            f"  > MarsFiles.py *.atmos_daily.nc -hpf 0.5 10. \n"
+            f"> MarsFiles.py *.atmos_daily.nc -hpf 0.5 10. \n"
             f"    {Blue}(-bpf) --band_pass_filter sol_min sol max "
             f"{Default}\n\n"))
 
@@ -161,14 +161,14 @@ parser.add_argument('-no_trend', '--no_trend', action='store_true',
             help = (f"Filter and compute amplitudes only. \n"
             f"For use with temporal filtering utilities (-lpf, -hpf, "
             f"-bpf). \n"
-            f"{Cyan}Generates a new file ending in '_no_trend.nc'."
+            f"{Yellow}Generates a new file ending in '_no_trend.nc'"
             f"{Default} \n"
             f"{Green}Usage: \n"
-            f"  > MarsFiles.py *.atmos_daily.nc -hpf 10. "
+            f"> MarsFiles.py *.atmos_daily.nc -hpf 10. "
             f"--no_trend \n"
-            f"  > MarsFiles.py *.atmos_daily.nc -lpf 0.5 "
+            f"> MarsFiles.py *.atmos_daily.nc -lpf 0.5 "
             f"--no_trend \n"
-            f"  > MarsFiles.py *.atmos_daily.nc -hpf 0.5 10. "
+            f"> MarsFiles.py *.atmos_daily.nc -hpf 0.5 10. "
             f"--no_trend "
             f"{Default}\n\n"))
 
@@ -179,7 +179,7 @@ parser.add_argument('-no_trend', '--no_trend', action='store_true',
 #             f"band pass filters. \n"
 #             f"Use '--no_trend' to compute amplitudes only. \n"
 #             f"Data detrended before filtering. \n"
-#             f"{Cyan}Generates a new file ending in '_hpk.nc'."
+#             f"{Yellow}Generates a new file ending in '_hpk.nc'"
 #             f"{Default} \n"
 #             f"{Green}Usage: \n"
 #             f"    > MarsFiles.py *.atmos_daily.nc -hpk 10 "
@@ -192,7 +192,7 @@ parser.add_argument('-no_trend', '--no_trend', action='store_true',
 #             f"band pass filters. \n"
 #             f"Use '--no_trend' to compute amplitudes only. \n"
 #             f"Data detrended before filtering. \n"
-#             f"{Cyan}Generates a new file ending in '_lpk.nc'."
+#             f"{Yellow}Generates a new file ending in '_lpk.nc'"
 #             f"{Default} \n"
 #             f"{Green}Usage: \n"
 #             f"    > MarsFiles.py *.atmos_daily.nc -lpk 20 "
@@ -205,7 +205,7 @@ parser.add_argument('-no_trend', '--no_trend', action='store_true',
 #             f"band pass filters. \n"
 #             f"Use '--no_trend' to compute amplitudes only. \n"
 #             f"Data detrended before filtering. \n"
-#             f"{Cyan}Generates a new file ending in '_bpk.nc'."
+#             f"{Yellow}Generates a new file ending in '_bpk.nc'"
 #             f"{Default} \n"
 #             f"{Green}Usage: \n"
 #             f"    > MarsFiles.py *.atmos_daily.nc -bpk 10 20 "
@@ -217,29 +217,29 @@ parser.add_argument('-tidal', '--tidal', nargs = '+', type = int,
             help = (f"Performs a tidal analyis on 'diurn' files. \n"
             f"Extracts diurnal tide and its harmonics. \n"
             f"N = 1 diurnal, N = 2 semi-diurnal etc. \n"
-            f"{Cyan}Generates a new file ending in '_tidal.nc'."
+            f"{Yellow}Generates a new file ending in '_tidal.nc'"
             f"{Default} \n"
             f"{Green}Usage: \n"
-            f"  > MarsFiles.py *.atmos_diurn.nc -tidal 4 \n"
+            f"> MarsFiles.py *.atmos_diurn.nc -tidal 4 \n"
             f"    {Blue}(extracts 4 harmonics) "
             f"{Default}\n\n"))
 
 parser.add_argument('-reconstruct', '--reconstruct', 
             action = 'store_true',
             help = (f"Reconstructs the first N harmonics. \n"
-            f"{Cyan}Generates a new file ending in '_reconstruct.nc'."
+            f"{Yellow}Generates a new file ending in '_reconstruct.nc'"
             f"{Default} \n"
             f"{Green}Usage: \n"
-            f"  > MarsFiles.py *.atmos_diurn.nc -tidal 6 "
+            f"> MarsFiles.py *.atmos_diurn.nc -tidal 6 "
             f"--include ps temp --reconstruct "
             f"{Default}\n\n"))
 
 parser.add_argument('-norm', '--normalize', action = 'store_true',
             help = (f"Provides result in percent amplitude. \n"
-            f"{Cyan}Generates a new file ending in '_norm.nc'."
+            f"{Yellow}Generates a new file ending in '_norm.nc'"
             f"{Default} \n"
             f"{Green}Usage: \n"
-            f"  > MarsFiles.py *.atmos_diurn.nc -tidal 6 "
+            f"> MarsFiles.py *.atmos_diurn.nc -tidal 6 "
             f"--include ps --normalize "
             f"{Default}\n\n"))
 
@@ -248,16 +248,16 @@ parser.add_argument('-rs', '--regrid_source', nargs = '+',
             f"Both source and target files should be vertically \n"
             f"interpolated to the same standard grid \n"
             f"(e.g. zstd, zagl, pstd, etc.). \n"
-            f"{Cyan}Generates a new file ending in '_regrid.nc'."
+            f"{Yellow}Generates a new file ending in '_regrid.nc'"
             f"{Default} \n"
             f"{Green}Usage: \n"
-            f"  > MarsInterp.py *.atmos.average_pstd.nc -rs "
+            f"> MarsInterp.py *.atmos.average_pstd.nc -rs "
             f"simu2/00668.atmos_average_pstd.nc "
             f"{Default}\n\n"))
 
 parser.add_argument('-za', '--zonal_avg', action = 'store_true',
             help = (f"Zonally average all variables in a file. \n"
-            f"{Cyan}Generates a new file ending in '_zonal_avg.nc'."
+            f"{Yellow}Generates a new file ending in '_zonal_avg.nc'"
             f"{Default} \n"
             "   > MarsFiles.py *.atmos_diurn.nc -za "
             f"{Default}\n\n"))
@@ -269,7 +269,7 @@ parser.add_argument('-include', '--include', nargs = '+',
             f"{Yellow}Overwrites existing target file. To override, "
             f"use --ext.{Default} \n"
             f"{Green}Usage: \n"
-            f"  > MarsFiles.py *.atmos_daily.nc -ba --include ps "
+            f"> MarsFiles.py *.atmos_daily.nc -ba --include ps "
             f"ts ucomp "
             f"{Default}\n\n"))
 
@@ -277,7 +277,7 @@ parser.add_argument('-e', '--ext', type = str, default = None,
             help = (f"Do not overwrite file. Append the extension \n"
             f"provided after --ext to the new file. \n"
             f"{Green}Usage: \n"
-            f"  > MarsFiles.py *.atmos.average.nc --combine "
+            f"> MarsFiles.py *.atmos.average.nc --combine "
             f"--ext _combined \n"
             f"    {Blue}(produces *.atmos.average_combined.nc) "
             f"{Default}\n\n"))
