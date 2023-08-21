@@ -86,10 +86,10 @@ parser.add_argument('-t', '--tshift', nargs = '?', const = 999,
             f"{Yellow}Generates a new file ending in '_T.nc'{Default} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_diurn.nc --tshift \n"
-            f"    {Blue}(outputs data for all 24 local times){Green} \n"
+            f"  {Blue}(outputs data for all 24 local times){Green} \n"
             f"> MarsFiles.py *.atmos_diurn.nc --tshift '3 15'"
             f"\n"
-            f"    {Blue}(outputs data for target local times only)"
+            f"  {Blue}(outputs data for target local times only)"
             f"{Default}\n\n"))
 
 parser.add_argument('-ba', '--bin_average', nargs = '?', const = 5, 
@@ -99,9 +99,9 @@ parser.add_argument('-ba', '--bin_average', nargs = '?', const = 5,
             f"{Default} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -ba \n"
-            f"    {Blue}(default, bin 5 days){Green} \n"
+            f"  {Blue}(default, bin 5 days){Green} \n"
             f"> MarsFiles.py *.atmos_daily_pstd.nc -ba 10 \n"
-            f"    {Blue}(bin 10 days)"
+            f"  {Blue}(bin 10 days)"
             f"{Default}\n\n"))
 
 parser.add_argument('-bd', '--bin_diurn', action = 'store_true',
@@ -111,11 +111,11 @@ parser.add_argument('-bd', '--bin_diurn', action = 'store_true',
             f"{Default} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -bd \n"
-            f"    {Blue}(Default 5-day bin){Green} \n"
+            f"  {Blue}(Default 5-day bin){Green} \n"
             f"> MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 10 \n"
-            f"    {Blue}(10-day bin){Green} \n"
+            f"  {Blue}(10-day bin){Green} \n"
             f"> MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 1 \n"
-            f"    {Blue}(No binning. Mimics raw Legacy output)"
+            f"  {Blue}(No binning. Mimics raw Legacy output)"
             f"{Default}\n\n"))
 
 
@@ -129,7 +129,7 @@ parser.add_argument('-hpf', '--high_pass_filter', nargs = '+',
             f"{Default} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -hpf 10. \n"
-            f"    {Blue}(-hpf) --high_pass_filter sol_min "
+            f"  {Blue}(-hpf) --high_pass_filter sol_min "
             f"{Default}\n\n"))
 
 parser.add_argument('-lpf', '--low_pass_filter', nargs = '+', 
@@ -142,7 +142,7 @@ parser.add_argument('-lpf', '--low_pass_filter', nargs = '+',
             f"{Default} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -lpf 0.5 \n"
-            f"    {Blue}(-lpf) --low_pass_filter sol_max "
+            f"  {Blue}(-lpf) --low_pass_filter sol_max "
             f"{Default}\n\n"))
 
 parser.add_argument('-bpf', '--band_pass_filter', nargs = '+',
@@ -154,7 +154,7 @@ parser.add_argument('-bpf', '--band_pass_filter', nargs = '+',
             f"{Default} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -hpf 0.5 10. \n"
-            f"    {Blue}(-bpf) --band_pass_filter sol_min sol max "
+            f"  {Blue}(-bpf) --band_pass_filter sol_min sol max "
             f"{Default}\n\n"))
 
 parser.add_argument('-no_trend', '--no_trend', action='store_true',
@@ -221,7 +221,7 @@ parser.add_argument('-tidal', '--tidal', nargs = '+', type = int,
             f"{Default} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_diurn.nc -tidal 4 \n"
-            f"    {Blue}(extracts 4 harmonics) "
+            f"  {Blue}(extracts 4 harmonics) "
             f"{Default}\n\n"))
 
 parser.add_argument('-reconstruct', '--reconstruct', 
@@ -279,7 +279,7 @@ parser.add_argument('-e', '--ext', type = str, default = None,
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos.average.nc --combine "
             f"--ext _combined \n"
-            f"    {Blue}(produces *.atmos.average_combined.nc) "
+            f"  {Blue}(produces *.atmos.average_combined.nc) "
             f"{Default}\n\n"))
 
 parser.add_argument('--debug',  action='store_true',
