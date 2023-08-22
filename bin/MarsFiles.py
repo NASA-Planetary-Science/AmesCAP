@@ -110,7 +110,7 @@ parser.add_argument('-bd', '--bin_diurn', action = 'store_true',
             f"{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -bd \n"
-            f"  {Blue}(nocolor 5-day bin){Green} \n"
+            f"  {Blue}(default 5-day bin){Green} \n"
             f"> MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 10 \n"
             f"  {Blue}(10-day bin){Green} \n"
             f"> MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 1 \n"
@@ -272,7 +272,7 @@ parser.add_argument('-include', '--include', nargs = '+',
             f"ts ucomp "
             f"{nocolor}\n\n"))
 
-parser.add_argument('-e', '--ext', type = str, nocolor = None,
+parser.add_argument('-e', '--ext', type = str, default = None,
             help = (f"Do not overwrite file. Append the extension \n"
             f"provided after --ext to the new file. \n"
             f"{Green}Usage: \n"
