@@ -1159,6 +1159,7 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True, cwd=None):
     """
 
     histname = os.path.basename(fpath)
+    print(f" CB histname is {histname}")
     if cwd is None:
         histdir = os.path.dirname(fpath)
         print(f" CB using fpath {histdir}")
