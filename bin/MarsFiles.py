@@ -54,8 +54,8 @@ parser.add_argument('input_file', nargs = '+',
             help = (f"A netCDF file or list of netCDF files. \n\n"))
 
 parser.add_argument('-fv3', '--fv3', nargs = '+',
-            help = (f"Produce MGCM 'diurn', 'average' and 'daily' "
-            f"files from Legacy output. \n"
+            help = (f"Produce MGCM 'fixed', 'diurn', 'average' and "
+            f"'daily' files from Legacy output. \n"
             f"Available options are: \n"
             f"  - 'fixed'  : static fields (e.g., topography) \n"
             f"  - 'average': 5-sol averages \n"
@@ -1138,6 +1138,8 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True, cwd=None):
     """
     Make MGCM-like 'average', 'daily', and 'diurn' files.
     
+    Used when call to -fv3 --fv3 is made.
+    
     Parameters
     ----------
     fpath : str
@@ -1159,10 +1161,10 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True, cwd=None):
     histname = os.path.basename(fpath)
     if cwd is None:
         histdir = os.path.dirname(fpath)
-        print(f"using fpath {histdir}")
+        print(f" CB using fpath {histdir}")
     else:
         histdir = cwd
-        print(f"using cwd {histdir}")
+        print(f" CB using cwd {histdir}")
 
     histfile = Dataset(fpath, 'r', format='NETCDF4_CLASSIC')
     histvars = histfile.variables.keys()
