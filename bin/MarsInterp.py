@@ -15,7 +15,7 @@ from amescap.Script_utils import section_content_amescap_profile, find_tod_in_di
 from amescap.Ncdf_wrapper import Ncdf
 # ==========
 
-# Attempt to import specific scientic modules that may or may not 
+# Attempt to import specific scientic modules that may or may not
 # be included in the default Python installation on NAS.
 try:
     import matplotlib
@@ -116,14 +116,14 @@ def main():
             # Copy requested variable
             lev_in = eval('np.array('+custom_level+')')
         else:
-            # Default levels, this is size 36
-            lev_in = np.array([1.0e+03, 9.5e+02, 9.0e+02, 8.5e+02, 8.0e+02, 7.5e+02, 7.0e+02,
-                               6.5e+02, 6.0e+02, 5.5e+02, 5.0e+02, 4.5e+02, 4.0e+02, 3.5e+02,
-                               3.0e+02, 2.5e+02, 2.0e+02, 1.5e+02, 1.0e+02, 7.0e+01, 5.0e+01,
-                               3.0e+01, 2.0e+01, 1.0e+01, 7.0e+00, 5.0e+00, 3.0e+00, 2.0e+00,
-                               1.0e+00, 5.0e-01, 3.0e-01, 2.0e-01, 1.0e-01, 5.0e-02, 3.0e-02,
-                               1.0e-02])
-    
+
+            lev_in=np.array([1.0e+03, 9.5e+02, 9.0e+02, 8.5e+02, 8.0e+02, 7.5e+02, 7.0e+02,
+                6.5e+02, 6.0e+02, 5.5e+02, 5.0e+02, 4.5e+02, 4.0e+02, 3.5e+02,
+                3.0e+02, 2.5e+02, 2.0e+02, 1.5e+02, 1.0e+02, 7.0e+01, 5.0e+01,
+                3.0e+01, 2.0e+01, 1.0e+01, 7.0e+00, 5.0e+00, 3.0e+00, 2.0e+00,
+                1.0e+00, 5.0e-01, 3.0e-01, 2.0e-01, 1.0e-01, 5.0e-02, 3.0e-02,
+                1.0e-02])
+
     # =========================== zstd ===========================
     elif interp_type == 'zstd':
         longname_txt    = 'standard altitude'
@@ -155,7 +155,7 @@ def main():
             prRed('***Error*** Topography (zsurf) is required for interpolation to zstd, but the')
             prRed('file %s cannot be not found' % (name_fixed))
             exit()
-    
+
     # =========================== zagl ===========================
     elif interp_type == 'zagl':
         longname_txt    = 'altitude above ground level'
@@ -208,6 +208,8 @@ def main():
 
         ps = np.array(fNcdf.variables['ps'])
 
+        #For pstd only, uncommenting the following line will use pfull as default layers:
+        #if interp_type == 'pstd':lev_in=fNcdf.variables['pfull'][::-1]
         if len(ps.shape) == 3:
             do_diurn = False
             tod_name = 'not_used'
@@ -221,7 +223,7 @@ def main():
             # Same for 'diurn' files, e.g (time, time_of_day_XX, lev, lat, lon) >>> (lev, time_of_day_XX, time, lat, lon)
             permut = [2, 1, 0, 3, 4]
             # ( 0 1 2 3 4) >>> ( 2 1 0 3 4 )
-        
+
         # Compute levels in the file, these are permutted arrays
         # Suppress "divide by zero" error
         with np.errstate(divide='ignore', invalid='ignore'):
