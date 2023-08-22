@@ -1138,7 +1138,8 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True, cwd=None):
     """
     Make MGCM-like 'average', 'daily', and 'diurn' files.
     
-    Used when call to -fv3 --fv3 is made.
+    Used if call to -fv3 --fv3 is made AND Legacy files are in netCDF
+    format (not fort.11).
     
     Parameters
     ----------
@@ -1283,7 +1284,7 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True, cwd=None):
 
     if 'fixed' in typelistfv3:
         # Copy Legacy.fixed to current directory
-        cmd_txt = f"{cp} {sys.prefix}/mars_data/Legacy.fixed.nc {fdate}.fixed.nc"
+        cmd_txt = f"cp {sys.prefix}/mars_data/Legacy.fixed.nc {fdate}.fixed.nc"
         p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
         print(f"{cwd}/{fdate}.fixed.nc was copied locally")
 
