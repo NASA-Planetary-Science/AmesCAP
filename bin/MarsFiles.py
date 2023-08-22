@@ -290,7 +290,6 @@ parser.add_argument('--debug', action='store_true',
 
 def main():
     file_list = parser.parse_args().input_file
-    cwd       = os.getcwd()
     path2data = os.getcwd()
 
     if parser.parse_args().fv3 and parser.parse_args().combine:
@@ -336,7 +335,7 @@ def main():
                     lsmax = ls_r
                 else:
                     lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
-                a = make_FV3_files(f, parser.parse_args().fv3, True, cwd)
+                a = make_FV3_files(f, parser.parse_args().fv3, True)
 
         else:
             print("Processing fort.11 files")
@@ -1134,7 +1133,7 @@ def main():
 # *******************************************************************************
 
 
-def make_FV3_files(fpath, typelistfv3, renameFV3=True, cwd=None):
+def make_FV3_files(fpath, typelistfv3, renameFV3=True):
     """
     Make MGCM-like 'average', 'daily', and 'diurn' files.
     
@@ -1150,8 +1149,6 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True, cwd=None):
     renameFV3 : bool
         Rename the files from Legacy_LsXXX_LsYYY.nc to \
             XXXXX.atmos_average.nc following MGCM output conventions
-    cwd : str
-        Sets the current working directory
     
     Returns
     -------
@@ -1159,18 +1156,9 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True, cwd=None):
         XXXXX.atmos_diurn.nc
     """
 
-    histname = os.path.basename(fpath)
-    print(f" CB histname is {histname}")
-    print(f" CB os.path.dirname(fpath) is {os.path.dirname(fpath)}")
-    if cwd is None:
-        histdir = os.path.dirname(fpath)
-        print(f" CB using fpath {histdir}")
-    else:
-        histdir = cwd
-        print(f" CB using cwd {histdir}")
+    histdir = os.getcwd()
 
     histfile = Dataset(fpath, 'r', format='NETCDF4_CLASSIC')
-    histvars = histfile.variables.keys()
     histdims = histfile.dimensions.keys()
 
     # Convert the first Ls in file to a sol number
@@ -1287,7 +1275,7 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True, cwd=None):
         # Copy Legacy.fixed to current directory
         cmd_txt = f"cp {sys.prefix}/mars_data/Legacy.fixed.nc {fdate}.fixed.nc"
         p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
-        print(f"{cwd}/{fdate}.fixed.nc was copied locally")
+        print(f"{os.getcwd()}/{fdate}.fixed.nc was copied locally")
 
 
 # Function to perform time averages over all fields
