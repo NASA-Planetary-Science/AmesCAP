@@ -17,10 +17,9 @@ List of Functions:
 # make print statements appear in color
 from amescap.Script_utils import prYellow, prCyan, prRed
 Cyan = "\033[96m"
-dCyan = '\033[36m'
 Blue = '\033[94m'
 Yellow = "\033[93m"
-Default = "\033[00m"
+nocolor = "\033[00m"
 Red = "\033[91m"
 Green = "\033[92m"
 Purple = "\033[95m"
@@ -48,7 +47,7 @@ from amescap.Script_utils import (find_tod_in_diurn, FV3_file_type,
 
 parser = argparse.ArgumentParser(
             description=(f"{Yellow}MarsFiles is a file manager. Use it "
-                 f"to modify a netCDF file format.{Default} \n\n"),
+                 f"to modify a netCDF file format.{nocolor} \n\n"),
             formatter_class = argparse.RawTextHelpFormatter)
 
 parser.add_argument('input_file', nargs = '+',
@@ -65,7 +64,7 @@ parser.add_argument('-fv3', '--fv3', nargs = '+',
             f"{Green}Usage: \n"
             f"> MarsFiles.py filename.nc -fv3 fixed \n"
             f"> MarsFiles.py filename.nc -fv3 fixed diurn "
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
 parser.add_argument('-c', '--combine', action='store_true',
             help = (f"Combine sequential files of the same type into "
@@ -73,50 +72,50 @@ parser.add_argument('-c', '--combine', action='store_true',
             f"Works with all file types ('fixed', 'average', "
             f"'daily' and 'diurn'). \n"
             f"{Yellow}Overwrites the first file in the series. "
-            f"To override, use --ext.{Default} \n"
+            f"To override, use --ext.{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_average.nc --combine "
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
 parser.add_argument('-t', '--tshift', nargs = '?', const = 999, 
             type = str,
-            help = (f"Apply a time-shift to {Yellow}'diurn'{Default} "
+            help = (f"Apply a time-shift to {Yellow}'diurn'{nocolor} "
             f"files. \n"
             "Vertically interpolated 'diurn' files OK. \n"
-            f"{Yellow}Generates a new file ending in '_T.nc'{Default} \n"
+            f"{Yellow}Generates a new file ending in '_T.nc'{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_diurn.nc --tshift \n"
             f"  {Blue}(outputs data for all 24 local times){Green} \n"
             f"> MarsFiles.py *.atmos_diurn.nc --tshift '3 15'"
             f"\n"
             f"  {Blue}(outputs data for target local times only)"
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
 parser.add_argument('-ba', '--bin_average', nargs = '?', const = 5, 
             type = int,
             help = (f"Bin MGCM 'daily' files like 'average' files. \n"
             f"{Yellow}Generates a new file ending in '_to_average.nc'"
-            f"{Default} \n"
+            f"{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -ba \n"
-            f"  {Blue}(default, bin 5 days){Green} \n"
+            f"  {Blue}(nocolor, bin 5 days){Green} \n"
             f"> MarsFiles.py *.atmos_daily_pstd.nc -ba 10 \n"
             f"  {Blue}(bin 10 days)"
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
 parser.add_argument('-bd', '--bin_diurn', action = 'store_true',
             help = (f"Bin MGCM 'daily' files like 'diurn' files. \n"
             f"May be used jointly with --bin_average. \n"
             f"{Yellow}Generates a new file ending in '_to_diurn.nc'"
-            f"{Default} \n"
+            f"{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -bd \n"
-            f"  {Blue}(Default 5-day bin){Green} \n"
+            f"  {Blue}(nocolor 5-day bin){Green} \n"
             f"> MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 10 \n"
             f"  {Blue}(10-day bin){Green} \n"
             f"> MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 1 \n"
             f"  {Blue}(No binning. Mimics raw Legacy output)"
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
 
 parser.add_argument('-hpf', '--high_pass_filter', nargs = '+', 
@@ -126,11 +125,11 @@ parser.add_argument('-hpf', '--high_pass_filter', nargs = '+',
             f"Use '--no_trend' to compute amplitudes only. \n"
             f"Data detrended before filtering. \n"
             f"{Yellow}Generates a new file ending in '_hpf.nc'"
-            f"{Default} \n"
+            f"{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -hpf 10. \n"
             f"  {Blue}(-hpf) --high_pass_filter sol_min "
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
 parser.add_argument('-lpf', '--low_pass_filter', nargs = '+', 
             type = float,
@@ -139,11 +138,11 @@ parser.add_argument('-lpf', '--low_pass_filter', nargs = '+',
             f"Use '--no_trend' to compute amplitudes only. \n"
             f"Data detrended before filtering. \n"
             f"{Yellow}Generates a new file ending in '_lpf.nc'"
-            f"{Default} \n"
+            f"{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -lpf 0.5 \n"
             f"  {Blue}(-lpf) --low_pass_filter sol_max "
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
 parser.add_argument('-bpf', '--band_pass_filter', nargs = '+',
             help = (f"Temporal filtering utilities: low-, high-, and "
@@ -151,18 +150,18 @@ parser.add_argument('-bpf', '--band_pass_filter', nargs = '+',
             f"Use '--no_trend' to compute amplitudes only. \n"
             f"Data detrended before filtering. \n"
             f"{Yellow}Generates a new file ending in 'bpf.nc'"
-            f"{Default} \n"
+            f"{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -hpf 0.5 10. \n"
             f"  {Blue}(-bpf) --band_pass_filter sol_min sol max "
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
 parser.add_argument('-no_trend', '--no_trend', action='store_true',
             help = (f"Filter and compute amplitudes only. \n"
             f"For use with temporal filtering utilities (-lpf, -hpf, "
             f"-bpf). \n"
             f"{Yellow}Generates a new file ending in '_no_trend.nc'"
-            f"{Default} \n"
+            f"{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -hpf 10. "
             f"--no_trend \n"
@@ -170,7 +169,7 @@ parser.add_argument('-no_trend', '--no_trend', action='store_true',
             f"--no_trend \n"
             f"> MarsFiles.py *.atmos_daily.nc -hpf 0.5 10. "
             f"--no_trend "
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
 # Decomposition in zonal harmonics, disabled for initial CAP release:
 # parser.add_argument('-hpk', '--high_pass_zonal', nargs = '+', 
@@ -180,12 +179,12 @@ parser.add_argument('-no_trend', '--no_trend', action='store_true',
 #             f"Use '--no_trend' to compute amplitudes only. \n"
 #             f"Data detrended before filtering. \n"
 #             f"{Yellow}Generates a new file ending in '_hpk.nc'"
-#             f"{Default} \n"
+#             f"{nocolor} \n"
 #             f"{Green}Usage: \n"
 #             f"    > MarsFiles.py *.atmos_daily.nc -hpk 10 "
 #             f"--no_trend \n"
 #             f"      {Blue}(-hpk)  --high_pass_zonal kmin "
-#             f"{Default}\n\n"))
+#             f"{nocolor}\n\n"))
 
 # parser.add_argument('-lpk', '--low_pass_zonal', nargs = '+', type = int,
 #             help = (f"Spatial filtering utilities: low-, high-, and "
@@ -193,12 +192,12 @@ parser.add_argument('-no_trend', '--no_trend', action='store_true',
 #             f"Use '--no_trend' to compute amplitudes only. \n"
 #             f"Data detrended before filtering. \n"
 #             f"{Yellow}Generates a new file ending in '_lpk.nc'"
-#             f"{Default} \n"
+#             f"{nocolor} \n"
 #             f"{Green}Usage: \n"
 #             f"    > MarsFiles.py *.atmos_daily.nc -lpk 20 "
 #             f"--no_trend\n"
 #             f"      {Blue}(-lpk)  --low_pass_zonal  kmax "
-#             f"{Default}\n\n"))
+#             f"{nocolor}\n\n"))
 
 # parser.add_argument('-bpk', '--band_pass_zonal', nargs = '+',
 #             help = (f"Spatial filtering utilities: low-, high-, and "
@@ -206,42 +205,42 @@ parser.add_argument('-no_trend', '--no_trend', action='store_true',
 #             f"Use '--no_trend' to compute amplitudes only. \n"
 #             f"Data detrended before filtering. \n"
 #             f"{Yellow}Generates a new file ending in '_bpk.nc'"
-#             f"{Default} \n"
+#             f"{nocolor} \n"
 #             f"{Green}Usage: \n"
 #             f"    > MarsFiles.py *.atmos_daily.nc -bpk 10 20 "
 #             f"--no_trend\n"
 #             f"      {Blue}(-bpk)  --band_pass_zonal kmin kmax "
-#             f"{Default}\n\n"))
+#             f"{nocolor}\n\n"))
 
 parser.add_argument('-tidal', '--tidal', nargs = '+', type = int,
             help = (f"Performs a tidal analyis on 'diurn' files. \n"
             f"Extracts diurnal tide and its harmonics. \n"
             f"N = 1 diurnal, N = 2 semi-diurnal etc. \n"
             f"{Yellow}Generates a new file ending in '_tidal.nc'"
-            f"{Default} \n"
+            f"{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_diurn.nc -tidal 4 \n"
             f"  {Blue}(extracts 4 harmonics) "
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
 parser.add_argument('-reconstruct', '--reconstruct', 
             action = 'store_true',
             help = (f"Reconstructs the first N harmonics. \n"
             f"{Yellow}Generates a new file ending in '_reconstruct.nc'"
-            f"{Default} \n"
+            f"{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_diurn.nc -tidal 6 "
             f"--include ps temp --reconstruct "
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
 parser.add_argument('-norm', '--normalize', action = 'store_true',
             help = (f"Provides result in percent amplitude. \n"
             f"{Yellow}Generates a new file ending in '_norm.nc'"
-            f"{Default} \n"
+            f"{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_diurn.nc -tidal 6 "
             f"--include ps --normalize "
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
 parser.add_argument('-rs', '--regrid_source', nargs = '+',
             help = (f"Regrid a target file to match a source file. \n"
@@ -249,49 +248,45 @@ parser.add_argument('-rs', '--regrid_source', nargs = '+',
             f"interpolated to the same standard grid \n"
             f"(e.g. zstd, zagl, pstd, etc.). \n"
             f"{Yellow}Generates a new file ending in '_regrid.nc'"
-            f"{Default} \n"
+            f"{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsInterp.py *.atmos.average_pstd.nc -rs "
             f"simu2/00668.atmos_average_pstd.nc "
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
 parser.add_argument('-za', '--zonal_avg', action = 'store_true',
             help = (f"Zonally average all variables in a file. \n"
             f"{Yellow}Generates a new file ending in '_zonal_avg.nc'"
-            f"{Default} \n"
+            f"{nocolor} \n"
             "   > MarsFiles.py *.atmos_diurn.nc -za "
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
 parser.add_argument('-include', '--include', nargs = '+',
             help = (f"Flag to include only the variables listed \n"
             f"after -include in the target file. \n"
             f"All dimensional and 1D variables are always included. \n"
             f"{Yellow}Overwrites existing target file. To override, "
-            f"use --ext.{Default} \n"
+            f"use --ext.{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -ba --include ps "
             f"ts ucomp "
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
-parser.add_argument('-e', '--ext', type = str, default = None,
+parser.add_argument('-e', '--ext', type = str, nocolor = None,
             help = (f"Do not overwrite file. Append the extension \n"
             f"provided after --ext to the new file. \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos.average.nc --combine "
             f"--ext _combined \n"
             f"  {Blue}(produces *.atmos.average_combined.nc) "
-            f"{Default}\n\n"))
+            f"{nocolor}\n\n"))
 
-parser.add_argument('--debug',  action='store_true',
-            help = (f"Debug flag: release the exceptions. \n"))
+parser.add_argument('--debug', action='store_true',
+            help = (f"Debug flag: release the exceptions. \n\n"))
 
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
-
-# Use ncks or internal method to concatenate files
-# cat_method='ncks'
-cat_method = 'internal'
 
 def main():
     file_list = parser.parse_args().input_file
@@ -299,7 +294,7 @@ def main():
     path2data = os.getcwd()
 
     if parser.parse_args().fv3 and parser.parse_args().combine:
-        prRed('Use --fv3 and --combine sequentially to avoid ambiguity ')
+        prRed("Use --fv3 and --combine sequentially to avoid ambiguity")
         exit()
 
     # "===========================================================================
@@ -310,8 +305,7 @@ def main():
     if parser.parse_args().fv3:
         for irequest in parser.parse_args().fv3:
             if irequest not in ['fixed', 'average', 'daily', 'diurn']:
-                prRed(
-                    irequest + " is not available, select 'fixed', 'average', 'daily', or 'diurn'")
+                prRed(f"{irequest} is not available, select 'fixed', 'average', 'daily', or 'diurn'")
 
     # Argument Definitions:
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -329,7 +323,7 @@ def main():
         lsmax = None
 
         if histlist[0][-3:] == '.nc':
-            print('Processing LegacyGCM_*.nc files')
+            print("Processing LegacyGCM_*.nc files")
             for f in histlist:
                 histname = os.path.basename(f)
                 ls_l = histname[-12:-9]
@@ -345,7 +339,7 @@ def main():
                 a = make_FV3_files(f, parser.parse_args().fv3, True, cwd)
 
         else:
-            print('Processing fort.11 files')
+            print("Processing fort.11 files")
             for fname in histlist:
                 f = Fort(fname)
                 if 'fixed' in parser.parse_args().fv3:
@@ -361,7 +355,7 @@ def main():
     # =============  Append netcdf files along the 'time' dimension =============
     # ===========================================================================
     elif parser.parse_args().combine:
-        prYellow('Using %s method for concatenation' % (cat_method))
+        prYellow("Using internal method for concatenation")
 
         # Get files to process
         histlist = []
@@ -379,13 +373,12 @@ def main():
             for i in range(1, fnum):
                 rm_cmd += ' '+histlist[i]
             p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
-            prCyan('Cleaned all but '+file_list[0])
+            prCyan(f"Cleaned all but {file_list[0]}")
             exit()
 
         # =========
         fnum = len(histlist)
-        prCyan('Merging %i files, starting with %s ...' %
-                (fnum, file_list[0]))
+        prCyan(f"Merging {fnum} files, starting with {file_list[0]} ...")
 
         # This section iexcludes any variable not listed after --include
         if parser.parse_args().include:
@@ -419,7 +412,7 @@ def main():
         cmd_txt = 'mv '+file_tmp+' '+fileout
         p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
         p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
-        prCyan(fileout + ' was merged')
+        prCyan(f"{fileout} was merged")
 
 # ===============================================================================
 # ============= Time-Shifting Implementation by Victoria H. =====================
@@ -513,7 +506,7 @@ def main():
                 fdiurn, parser.parse_args().include)  # Get all variables
 
             for ivar in var_list:
-                prCyan("Processing: %s ..." % (ivar))
+                prCyan(f"Processing: {ivar} ...")
                 varNcf = fdiurn.variables[ivar]
                 varIN = varNcf[:]
                 vkeys = varNcf.dimensions
@@ -577,10 +570,8 @@ def main():
             N_left = Nin % combinedN
 
             if N_left != 0:
-                prYellow('***Warning*** requested  %i sols bin period. File has %i timestep/sols and %i/(%i x %i) is not a round number' %
-                         (nday, iperday, Nin, nday, iperday))
-                prYellow('    Will use %i  bins of (%i x %i)=%i timesteps (%i) and discard %i timesteps' % (
-                    N_even, nday, iperday, combinedN, N_even*combinedN, N_left))
+                prYellow(f"***Warning*** requested {nday} sols bin period. File has {iperday} timestep/sols and {Nin}/({nday} x {iperday}) is not a round number")
+                prYellow(f"    Will use {N_even}  bins of ({nday} x {iperday})={combinedN} timesteps ({N_even*combinedN}) and discard {N_left} timesteps")
 
             # Define a netcdf object from the netcdf wrapper module
             fnew = Ncdf(fullnameOUT)
@@ -598,7 +589,7 @@ def main():
                 varNcf = fdaily.variables[ivar]
 
                 if 'time' in varNcf.dimensions:
-                    prCyan("Processing: %s ..." % (ivar))
+                    prCyan(f"Processing: {ivar}")
                     var_out = daily_to_average(varNcf[:], dt_in, nday)
                     longname_txt, units_txt = get_longname_units(fdaily, ivar)
                     fnew.log_variable(
@@ -606,10 +597,10 @@ def main():
 
                 else:
                     if ivar in ['pfull', 'lat', 'lon', 'phalf', 'pk', 'bk', 'pstd', 'zstd', 'zagl']:
-                        prCyan("Copying axis: %s..." % (ivar))
+                        prCyan(f"Copying axis: {ivar}")
                         fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
                     else:
-                        prCyan("Copying variable: %s..." % (ivar))
+                        prCyan(f"Copying variable: {ivar}")
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
 
@@ -672,7 +663,7 @@ def main():
 
                 # If 'time' is the dimension (not just a 'time' array)
                 if 'time' in varNcf.dimensions and ivar != 'time':
-                    prCyan("Processing: %s ..." % (ivar))
+                    prCyan(f"Processing: {ivar}")
                     dims_in = varNcf.dimensions
                     dims_out = (dims_in[0],)+(tod_name,)+dims_in[1:]
                     var_out = daily_to_diurn(varNcf[:], time_in[0:iperday])
@@ -685,10 +676,10 @@ def main():
 
                 else:
                     if ivar in ['pfull', 'lat', 'lon', 'phalf', 'pk', 'bk', 'pstd', 'zstd', 'zagl']:
-                        prCyan("Copying axis: %s..." % (ivar))
+                        prCyan(f"Copying axis: {ivar}")
                         fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
                     elif ivar != 'time':
-                        prCyan("Copying variable: %s..." % (ivar))
+                        prCyan(f"Copying variable: {ivar}")
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
 
@@ -707,7 +698,7 @@ def main():
             nsol = np.asarray(
                 parser.parse_args().high_pass_filter).astype(float)
             if len(np.atleast_1d(nsol)) != 1:
-                prRed('***Error*** sol_min accepts only one value')
+                prRed("***Error*** sol_min accepts only one value")
                 exit()
         if parser.parse_args().low_pass_filter:
             btype = 'low'
@@ -715,7 +706,7 @@ def main():
             nsol = np.asarray(
                 parser.parse_args().low_pass_filter).astype(float)
             if len(np.atleast_1d(nsol)) != 1:
-                prRed('sol_max accepts only one value')
+                prRed("sol_max accepts only one value")
                 exit()
         if parser.parse_args().band_pass_filter:
             btype = 'band'
@@ -723,7 +714,7 @@ def main():
             nsol = np.asarray(
                 parser.parse_args().band_pass_filter).astype(float)
             if len(np.atleast_1d(nsol)) != 2:
-                prRed('Requires two values: sol_min sol_max')
+                prRed("Requires two values: sol_min sol_max")
                 exit()
         if parser.parse_args().no_trend:
             out_ext = out_ext+'_no_trend'
@@ -752,8 +743,7 @@ def main():
 
             # Check if the frequency domain is allowed
             if any(nn <= 2*dt for nn in nsol):
-                prRed(
-                    '***Error***  minimum cut-off cannot be smaller than the Nyquist period of 2xdt=%g sol' % (2*dt))
+                prRed(f"***Error***  minimum cut-off cannot be smaller than the Nyquist period of 2xdt={2*dt} sol")
                 exit()
 
             # Define a netcdf object from the netcdf wrapper module
@@ -786,7 +776,7 @@ def main():
                 varNcf = fdaily.variables[ivar]
 
                 if 'time' in varNcf.dimensions and ivar not in ['time', 'areo']:
-                    prCyan("Processing: %s ..." % (ivar))
+                    prCyan(f"Processing: {ivar}")
                     var_out = zeroPhi_filter(
                         varNcf[:], btype, low_highcut, fs, axis=0, order=4, no_trend=parser.parse_args().no_trend)
                     longname_txt, units_txt = get_longname_units(fdaily, ivar)
@@ -794,10 +784,10 @@ def main():
                         ivar, var_out, varNcf.dimensions, longname_txt, units_txt)
                 else:
                     if ivar in ['pfull', 'lat', 'lon', 'phalf', 'pk', 'bk', 'pstd', 'zstd', 'zagl']:
-                        prCyan("Copying axis: %s..." % (ivar))
+                        prCyan(f"Copying axis: {ivar}")
                         fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
                     else:
-                        prCyan("Copying variable: %s..." % (ivar))
+                        prCyan(f"Copying variable: {ivar}")
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
 
@@ -815,20 +805,20 @@ def main():
     #     if parser.parse_args().high_pass_zonal:
     #         btype='high';out_ext='_hpk';nk=np.asarray(parser.parse_args().high_pass_zonal).astype(int)
     #         if len(np.atleast_1d(nk))!=1:
-    #             prRed('***Error*** kmin accepts only one value')
+    #             prRed("***Error*** kmin accepts only one value")
     #             exit()
     #     if parser.parse_args().low_pass_zonal:
     #         btype='low';out_ext='_lpk';nk=np.asarray(parser.parse_args().low_pass_zonal).astype(int)
     #         if len(np.atleast_1d(nk))!=1:
-    #             prRed('kmax accepts only one value')
+    #             prRed("kmax accepts only one value")
     #             exit()
     #     if parser.parse_args().band_pass_zonal:
     #         btype='band';out_ext='_bpk';nk=np.asarray(parser.parse_args().band_pass_zonal).astype(int)
     #         if len(np.atleast_1d(nk))!=2:
-    #             prRed('Requires two values: kmin kmax')
+    #             prRed("Requires two values: kmin kmax")
     #             exit()
     #
-    #     if parser.parse_args().no_trend:out_ext =out_ext+'_no_trend'
+    #     if parser.parse_args().no_trend:out_ext =f"{out_ext}_no_trend"
     #
     #     for filei in file_list:
     #         # Add path unless full path is provided
@@ -855,18 +845,18 @@ def main():
     #         # Check if the frequency domain is allowed and display some information
     #
     #         if any(nn > len(lat)/2 for nn in nk):
-    #             prRed('***Warning***  maximum wavenumber cut-off cannot be larger than the Nyquist criteria of nlat/2= %i sol'%(len(lat)/2))
+    #             prRed(f"***Warning***  maximum wavenumber cut-off cannot be larger than the Nyquist criteria of nlat/2= {len(lat)/2)} sol")
     #         elif btype=='low':
     #             L_max=(1./nk)*dx
-    #             prYellow('Low pass filter, allowing only wavelength > %g km'%(L_max))
+    #             prYellow("Low pass filter, allowing only wavelength > {L_max} km")
     #         elif btype=='high':
     #             L_min=(1./nk)*dx
-    #             prYellow('High pass filter, allowing only wavelength < %g km'%(L_min))
+    #             prYellow("High pass filter, allowing only wavelength < {L_min} km")
     #         elif btype=='band':
     #             L_min=(1./nk[1])*dx
     #             L_max=1./max(nk[0],1.e-20)*dx
     #             if L_max>1.e20:L_max=np.inf
-    #             prYellow('Band pass filter, allowing only %g km < wavelength < %g km'%(L_min,L_max))
+    #             prYellow("Band pass filter, allowing only {L_min} km < wavelength < {L_max} km")
 
    ##
     #         fnew = Ncdf(fullnameOUT) # Define a netcdf object from the netcdf wrapper module
@@ -888,7 +878,7 @@ def main():
     #             varNcf = fname.variables[ivar]
     #
     #             if ('lat' in varNcf.dimensions) and ('lon' in varNcf.dimensions):
-    #                 prCyan("Processing: %s ..."%(ivar))
+    #                 prCyan(f"Processing: {ivar} ...")
     #
     #                 # Step 1 : Detrend the data
     #                 TREND=get_trend_2D(varNcf[:],LON,LAT,'wmean')
@@ -905,10 +895,10 @@ def main():
     #                 fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
     #             else:
     #                 if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time']:
-    #                     prCyan("Copying axis: %s..."%(ivar))
+    #                     prCyan(f"Copying axis: {ivar} ...")
     #                     fnew.copy_Ncaxis_with_content(fname.variables[ivar])
     #                 else:
-    #                     prCyan("Copying variable: %s..."%(ivar))
+    #                     prCyan(f"Copying variable: {ivar} ...")
     #                     fnew.copy_Ncvar(fname.variables[ivar])
     #         fnew.close()
 
@@ -920,7 +910,7 @@ def main():
         from amescap.Spectral_utils import diurn_extract, reconstruct_diurn
         N = parser.parse_args().tidal[0]
         if len(np.atleast_1d(N)) != 1:
-            prRed('***Error*** N accepts only one value')
+            prRed("***Error*** N accepts only one value")
             exit()
         out_ext = '_tidal'
         if parser.parse_args().reconstruct:
@@ -978,7 +968,7 @@ def main():
                 var_unit = getattr(varNcf, 'units', '')
 
                 if tod_name in varNcf.dimensions and ivar not in [tod_name, 'areo'] and len(varNcf.shape) > 2:
-                    prCyan("Processing: %s ..." % (ivar))
+                    prCyan(f"Processing: {ivar}")
 
                     # Normalize the data
                     if parser.parse_args().normalize:
@@ -994,33 +984,33 @@ def main():
                         VARN = reconstruct_diurn(
                             amp, phas, tod_in, lon, sumList=[])
                         for nn in range(N):
-                            fnew.log_variable("%s_N%i" % (ivar, nn+1), VARN[nn, ...].swapaxes(
-                                0, 1), varNcf.dimensions, "harmonic N=%i for %s" % (nn+1, longname_txt), units_txt)
+                            fnew.log_variable(f"{ivar}_N{nn+1}", VARN[nn, ...].swapaxes(
+                                0, 1), varNcf.dimensions, f"harmonic N={nn+1} for {longname_txt}", units_txt)
 
                     else:
                         #Update the dimensions
                         new_dim=list(varNcf.dimensions)
-                        new_dim[1]='time_of_day_%i'%(N)
-                        fnew.log_variable("%s_amp"%(ivar),amp.swapaxes(0,1),new_dim,"tidal amplitude for %s"%(longname_txt),units_txt)
-                        fnew.log_variable("%s_phas"%(ivar),phas.swapaxes(0,1),new_dim,"tidal phase for %s"%(longname_txt),'hr')
+                        new_dim[1]=f"time_of_day_{N}"
+                        fnew.log_variable(f"{ivar}_amp",amp.swapaxes(0,1),new_dim,f"tidal amplitude for {longname_txt}",units_txt)
+                        fnew.log_variable(f"{ivar}_phas",phas.swapaxes(0,1),new_dim,f"tidal phase for {longname_txt}","hr")
 
                 elif  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time']:
-                        prCyan("Copying axis: %s..."%(ivar))
+                        prCyan(f"Copying axis: {ivar}...")
                         fnew.copy_Ncaxis_with_content(fdiurn.variables[ivar])
                 elif  ivar in ['areo']:
                         if parser.parse_args().reconstruct:
                             #time_of_day is the same size as the original file
-                            prCyan("Copying axis: %s..."%(ivar))
+                            prCyan(f"Copying axis: {ivar}...")
                             fnew.copy_Ncvar(fdiurn.variables['areo'])
                         else:
-                            prCyan("Processing: %s ..."%(ivar))
+                            prCyan(f"Processing: {ivar} ...")
                             #Create areo variable reflecting the new shape
                             areo_new=np.zeros((areo.shape[0],N,1))
                             #Copy areo
                             for xx in range(N):areo_new[:,xx,:]=areo[:,0,:]
                             #Update the dimensions
                             new_dim=list(varNcf.dimensions)
-                            new_dim[1]='time_of_day_%i'%(N)
+                            new_dim[1]=f"time_of_day_{N}"
                             #fnew.log_variable(ivar,areo_new,new_dim,longname_txt,units_txt)
                             fnew.log_variable(ivar,areo_new,new_dim,longname_txt,var_unit)
 
@@ -1069,10 +1059,10 @@ def main():
                 longname_txt,units_txt=get_longname_units(f_in,ivar)
 
                 if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time','areo']:
-                        prCyan("Copying axis: %s..."%(ivar))
+                        prCyan(f"Copying axis: {ivar}...")
                         fnew.copy_Ncaxis_with_content(fNcdf_t.variables[ivar])
                 elif varNcf.dimensions[-2:]==('lat', 'lon'): #Ignore variables like  'time_bounds', 'scalar_axis' or 'grid_xt_bnds'...
-                    prCyan("Regridding: %s..."%(ivar))
+                    prCyan(f"Regridding: {ivar} ...")
                     var_OUT=regrid_Ncfile(varNcf,f_in,fNcdf_t)
                     fnew.log_variable(ivar,var_OUT,varNcf.dimensions,longname_txt,units_txt)
 
@@ -1118,20 +1108,20 @@ def main():
                 varNcf     = fdaily.variables[ivar]
                 longname_txt,units_txt=get_longname_units(fdaily,ivar)
                 if 'lon' in varNcf.dimensions and ivar not in ['lon','grid_xt_bnds','grid_yt_bnds']:
-                    prCyan("Processing: %s ..."%(ivar))
+                    prCyan(f"Processing: {ivar} ...")
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore", category=RuntimeWarning)
                         var_out=np.nanmean(varNcf[:],axis=-1)[...,np.newaxis]
                         fnew.log_variable(ivar,var_out,varNcf.dimensions,longname_txt,units_txt)
                 else:
                     if ivar in ['pfull', 'lat', 'phalf', 'pk', 'bk', 'pstd', 'zstd', 'zagl']:
-                        prCyan("Copying axis: %s..." % (ivar))
+                        prCyan("Copying axis: {ivar}")
                         fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
                     elif ivar in ['grid_xt_bnds', 'grid_yt_bnds', 'lon']:
                         pass
 
                     else:
-                        prCyan("Copying variable: %s..." % (ivar))
+                        prCyan(f"Copying variable: {ivar}")
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
     else:
@@ -1145,22 +1135,34 @@ def main():
 
 
 def make_FV3_files(fpath, typelistfv3, renameFV3=True, cwd=None):
-    '''
+    """
     Make MGCM-like 'average', 'daily', and 'diurn' files.
-    Args:
-        fpath       : full path to the Legacy netcdf files
-        typelistfv3 : MGCM-like file type: 'average', 'daily', or 'diurn'
-        renameFV3   : rename the files from Legacy_Lsxxx_Lsyyy.nc to XXXXX.atmos_average.nc following MGCM output conventions
-        cwd         : the output path
-    Returns:
-        atmos_average, atmos_daily, atmos_diurn
-    '''
+    
+    Parameters
+    ----------
+    fpath : str
+        Full path to the Legacy netcdf files
+    typelistfv3 : list
+        MGCM-like file type: 'average', 'daily', or 'diurn'
+    renameFV3 : bool
+        Rename the files from Legacy_LsXXX_LsYYY.nc to \
+            XXXXX.atmos_average.nc following MGCM output conventions
+    cwd : str
+        Sets the current working directory
+    
+    Returns
+    -------
+    The MGCM-like files: XXXXX.atmos_average.nc, XXXXX.atmos_daily.nc, \
+        XXXXX.atmos_diurn.nc
+    """
 
     histname = os.path.basename(fpath)
     if cwd is None:
         histdir = os.path.dirname(fpath)
+        print(f"using fpath {histdir}")
     else:
         histdir = cwd
+        print(f"using cwd {histdir}")
 
     histfile = Dataset(fpath, 'r', format='NETCDF4_CLASSIC')
     histvars = histfile.variables.keys()
@@ -1171,17 +1173,37 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True, cwd=None):
         fdate = '%05i' % (ls2sol_1year(histfile.variables['ls'][0]))
 
     def proccess_file(newf, typefv3):
+        """
+            Summary line - fits on one line
+
+            Extended description of function, what it outputs
+
+            Parameters
+            ----------
+            newf : str
+                Path to target file
+            typefv3 : str
+                Identifies type of file: 'average', 'daily', or 'diurn'
+
+            Raises
+            ------
+            SomeError
+                Error description if X
+
+            Returns
+            -------
+            returned_val
+                define returned_val
+        """
         for dname in histdims:
             if dname == 'nlon':
                 var = histfile.variables['longitude']
                 npvar = var[:]
-                newf.add_dim_with_content(
-                    'lon', npvar, 'longitude', getattr(var, 'units'), 'X')
+                newf.add_dim_with_content('lon', npvar, 'longitude', getattr(var, 'units'), 'X')
             elif dname == 'nlat':
                 var = histfile.variables['latitude']
                 npvar = var[:]
-                newf.add_dim_with_content(
-                    'lat', npvar, 'latitude', getattr(var, 'units'), 'Y')
+                newf.add_dim_with_content('lat', npvar, 'latitude', getattr(var, 'units'), 'Y')
 
             elif dname == 'time':
                 newf.add_dimension('time', None)
@@ -1258,9 +1280,9 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True, cwd=None):
 
     if 'fixed' in typelistfv3:
         # Copy Legacy.fixed to current directory
-        cmd_txt = 'cp '+sys.prefix+'/mars_data/Legacy.fixed.nc '+fdate+'.fixed.nc'
+        cmd_txt = f"{cp} {sys.prefix}/mars_data/Legacy.fixed.nc {fdate}.fixed.nc"
         p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
-        print(cwd+'/'+fdate+'.fixed.nc was copied locally')
+        print(f"{cwd}/{fdate}.fixed.nc was copied locally")
 
 
 # Function to perform time averages over all fields
