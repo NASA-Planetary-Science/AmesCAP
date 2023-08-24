@@ -355,7 +355,7 @@ parser.add_argument('--debug', action='store_true',
 
 def main():
     file_list = parser.parse_args().input_file
-    path2data = os.getcwd()
+    data_dir = os.getcwd()
 
     if parser.parse_args().fv3 and parser.parse_args().combine:
         prRed("Use --fv3 and --combine sequentially to avoid ambiguity")
@@ -378,7 +378,7 @@ def main():
         histlist = []
         for filei in file_list:
             if not ('/' in filei):
-                histlist.append(path2data+'/'+filei)
+                histlist.append(data_dir+'/'+filei)
             else:
                 histlist.append(filei)
         fnum = len(histlist)
@@ -426,7 +426,7 @@ def main():
         for filei in file_list:
             # Add path unless full path is provided
             if not ('/' in filei):
-                histlist.append(path2data+'/'+filei)
+                histlist.append(data_dir+'/'+filei)
             else:
                 histlist.append(filei)
 
@@ -493,7 +493,7 @@ def main():
         for filei in file_list:
             # Add path unless full path is provided
             if not ('/' in filei):
-                fullnameIN = path2data + '/' + filei
+                fullnameIN = data_dir + '/' + filei
             else:
                 fullnameIN = filei
             fullnameOUT = fullnameIN[:-3]+'_T'+'.nc'
@@ -609,7 +609,7 @@ def main():
         for filei in file_list:
             # Add path unless full path is provided
             if not ('/' in filei):
-                fullnameIN = path2data + '/' + filei
+                fullnameIN = data_dir + '/' + filei
             else:
                 fullnameIN = filei
             fullnameOUT = fullnameIN[:-3]+'_to_average'+'.nc'
@@ -681,7 +681,7 @@ def main():
         for filei in file_list:
             # Add path unless full path is provided
             if not ('/' in filei):
-                fullnameIN = path2data + '/' + filei
+                fullnameIN = data_dir + '/' + filei
             else:
                 fullnameIN = filei
             fullnameOUT = fullnameIN[:-3]+'_to_diurn'+'.nc'
@@ -786,7 +786,7 @@ def main():
         for filei in file_list:
             # Add path unless full path is provided
             if not ('/' in filei):
-                fullnameIN = path2data + '/' + filei
+                fullnameIN = data_dir + '/' + filei
             else:
                 fullnameIN = filei
             fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
@@ -887,7 +887,7 @@ def main():
     #     for filei in file_list:
     #         # Add path unless full path is provided
     #         if not ('/' in filei):
-    #             fullnameIN = path2data + '/' + filei
+    #             fullnameIN = data_dir + '/' + filei
     #         else:
     #             fullnameIN=filei
     #         fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
@@ -985,7 +985,7 @@ def main():
         for filei in file_list:
             # Add path unless full path is provided
             if not ('/' in filei):
-                fullnameIN = path2data + '/' + filei
+                fullnameIN = data_dir + '/' + filei
             else:
                 fullnameIN = filei
             fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
@@ -1090,13 +1090,13 @@ def main():
 
         # Add path unless full path is provided
         if not ('/' in name_target):
-            name_target = path2data + '/' + name_target
+            name_target = data_dir + '/' + name_target
         fNcdf_t = Dataset(name_target, 'r')
 
         for filei in file_list:
             # Add path unless full path is provided
             if not ('/' in filei):
-                fullnameIN = path2data + '/' + filei
+                fullnameIN = data_dir + '/' + filei
             else:
                 fullnameIN = filei
             fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
@@ -1142,7 +1142,7 @@ def main():
         for filei in file_list:
             # Add path unless full path is provided
             if not ('/' in filei):
-                fullnameIN = path2data + '/' + filei
+                fullnameIN = data_dir + '/' + filei
             else:
                 fullnameIN = filei
             fullnameOUT = fullnameIN[:-3]+'_zonal_avg'+'.nc'

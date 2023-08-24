@@ -116,14 +116,14 @@
 <h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPull.download" title="MarsPull.download"><code class="xref py py-obj docutils literal notranslate"><span class="pre">download</span></code></a>(fName, simID)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPull.download" title="MarsPull.download"><code class="xref py py-obj docutils literal notranslate"><span class="pre">download</span></code></a>(file_name, simulation_id)</p></td>
 <td><p>Downloads a file from the MCMC Legacy GCM directory on the NAS Data</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPull.download">
-<span class="sig-prename descclassname"><span class="pre">MarsPull.</span></span><span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simID</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPull.download" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">MarsPull.</span></span><span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPull.download" title="Permalink to this definition"></a></dt>
 <dd><p>Downloads a file from the MCMC Legacy GCM directory on the NAS Data
 Portal (data.nas.nasa.gov).</p>
 <p>This function specifies the file to download by appending to the
@@ -135,9 +135,9 @@ longitude [-ls –ls].</p>
 <section id="parameters">
 <h4>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h4>
 <dl class="simple">
-<dt>simID<span class="classifier">str</span></dt><dd><p>The simulation identifier, i.e., the name of the directory         to query from: <a class="reference external" href="https://data.nas.nasa.gov/mcmc/data_legacygcm.php">https://data.nas.nasa.gov/mcmc/data_legacygcm.php</a></p>
+<dt>simulation_id<span class="classifier">str</span></dt><dd><p>The simulation identifier, i.e., the name of the directory         to query from: <a class="reference external" href="https://data.nas.nasa.gov/mcmc/data_legacygcm.php">https://data.nas.nasa.gov/mcmc/data_legacygcm.php</a></p>
 </dd>
-<dt>fName<span class="classifier">str</span></dt><dd><p>The name of the file to download.</p>
+<dt>file_name<span class="classifier">str</span></dt><dd><p>The name of the file to download.</p>
 </dd>
 </dl>
 </section>

@@ -119,20 +119,20 @@
 <h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsCalendar.parse_array" title="MarsCalendar.parse_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_array</span></code></a>(numIN)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsCalendar.parse_array" title="MarsCalendar.parse_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_array</span></code></a>(len_input)</p></td>
 <td><p>Formats the input array for conversion.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsCalendar.parse_array">
-<span class="sig-prename descclassname"><span class="pre">MarsCalendar.</span></span><span class="sig-name descname"><span class="pre">parse_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">numIN</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsCalendar.parse_array" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">MarsCalendar.</span></span><span class="sig-name descname"><span class="pre">parse_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">len_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsCalendar.parse_array" title="Permalink to this definition"></a></dt>
 <dd><p>Formats the input array for conversion.</p>
 <p>Confirms that either [-ls –ls] or [-sol –sol] was passed as an     argument. Creates an array that ls2sol or sol2ls can read for the     conversion from sol -&gt; Ls or Ls -&gt; sol.</p>
 <section id="parameters">
 <h4>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h4>
 <dl>
-<dt>numIN<span class="classifier">float</span></dt><dd><p>The input Ls or sol to convert. Can either be one number:</p>
+<dt>len_input<span class="classifier">float</span></dt><dd><p>The input Ls or sol to convert. Can either be one number:</p>
 <blockquote>
 <div><p>300</p>
 </div></blockquote>
@@ -150,10 +150,16 @@
 <section id="returns">
 <h4>Returns<a class="headerlink" href="#returns" title="Permalink to this heading"></a></h4>
 <dl>
-<dt>arrayIN</dt><dd><p>An array formatted for input into ls2sol or sol2ls.</p>
+<dt>input_as_arr</dt><dd><p>An array formatted for input into ls2sol or sol2ls.</p>
 <blockquote>
-<div><p>If numIN = 300, arrayIN=[300]</p>
-<p>If numIN = 300 310 2, arrayIN = [300, 302, 304, 306, 308]</p>
+<div><p>If len_input = 300:</p>
+<blockquote>
+<div><p>input_as_arr=[300]</p>
+</div></blockquote>
+<p>If len_input = 300 310 2:</p>
+<blockquote>
+<div><p>input_as_arr = [300, 302, 304, 306, 308]</p>
+</div></blockquote>
 </div></blockquote>
 </dd>
 </dl>

@@ -118,7 +118,7 @@
 <h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsFiles.make_FV3_files" title="MarsFiles.make_FV3_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_FV3_files</span></code></a>(fpath, typelistfv3[, renameFV3, cwd])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsFiles.make_FV3_files" title="MarsFiles.make_FV3_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_FV3_files</span></code></a>(fpath, typelistfv3[, renameFV3])</p></td>
 <td><p>Make MGCM-like 'average', 'daily', and 'diurn' files.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#MarsFiles.change_vname_longname_unit" title="MarsFiles.change_vname_longname_unit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_vname_longname_unit</span></code></a>(vname, longname_txt, units_txt)</p></td>
@@ -137,19 +137,25 @@
 </table>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsFiles.make_FV3_files">
-<span class="sig-prename descclassname"><span class="pre">MarsFiles.</span></span><span class="sig-name descname"><span class="pre">make_FV3_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typelistfv3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renameFV3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFiles.make_FV3_files" title="Permalink to this definition"></a></dt>
-<dd><p>Make MGCM-like ‘average’, ‘daily’, and ‘diurn’ files.
-Args:</p>
-<blockquote>
-<div><p>fpath       : full path to the Legacy netcdf files
-typelistfv3 : MGCM-like file type: ‘average’, ‘daily’, or ‘diurn’
-renameFV3   : rename the files from Legacy_Lsxxx_Lsyyy.nc to XXXXX.atmos_average.nc following MGCM output conventions
-cwd         : the output path</p>
-</div></blockquote>
+<span class="sig-prename descclassname"><span class="pre">MarsFiles.</span></span><span class="sig-name descname"><span class="pre">make_FV3_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typelistfv3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renameFV3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFiles.make_FV3_files" title="Permalink to this definition"></a></dt>
+<dd><p>Make MGCM-like ‘average’, ‘daily’, and ‘diurn’ files.</p>
+<p>Used if call to -fv3 –fv3 is made AND Legacy files are in netCDF
+format (not fort.11).</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h4>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>atmos_average, atmos_daily, atmos_diurn</p>
+<dt>fpath<span class="classifier">str</span></dt><dd><p>Full path to the Legacy netcdf files</p>
+</dd>
+<dt>typelistfv3<span class="classifier">list</span></dt><dd><p>MGCM-like file type: ‘average’, ‘daily’, or ‘diurn’</p>
+</dd>
+<dt>renameFV3<span class="classifier">bool</span></dt><dd><p>Rename the files from Legacy_LsXXX_LsYYY.nc to             XXXXX.atmos_average.nc following MGCM output conventions</p>
 </dd>
 </dl>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Permalink to this heading"></a></h4>
+<p>The MGCM-like files: XXXXX.atmos_average.nc, XXXXX.atmos_daily.nc,         XXXXX.atmos_diurn.nc</p>
+</section>
 </dd></dl>
 
 <dl class="py function">

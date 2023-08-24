@@ -35,24 +35,24 @@ Functions
 
 
 
-.. py:function:: download(fName, simID)
+.. py:function:: download(file_name, simulation_id)
 
    Downloads a file from the MCMC Legacy GCM directory on the NAS Data
    Portal (data.nas.nasa.gov).
 
-   This function specifies the file to download by appending to the 
-   URL the subdirectory, indicated by the user-specified 
-   simulation identifier [-id --id], and the name of the file. The 
-   file name is either provided by the user directly using 
-   [-f --filename] or determined based on the user-specified solar 
+   This function specifies the file to download by appending to the
+   URL the subdirectory, indicated by the user-specified
+   simulation identifier [-id --id], and the name of the file. The
+   file name is either provided by the user directly using
+   [-f --filename] or determined based on the user-specified solar
    longitude [-ls --ls].
 
    Parameters
    ----------
-   simID : str
+   simulation_id : str
        The simulation identifier, i.e., the name of the directory         to query from: https://data.nas.nasa.gov/mcmc/data_legacygcm.php
 
-   fName : str
+   file_name : str
        The name of the file to download.
 
    Raises

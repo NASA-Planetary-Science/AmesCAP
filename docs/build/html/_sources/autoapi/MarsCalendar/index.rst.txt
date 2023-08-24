@@ -37,7 +37,7 @@ Functions
 
 
 
-.. py:function:: parse_array(numIN)
+.. py:function:: parse_array(len_input)
 
    Formats the input array for conversion.
 
@@ -45,7 +45,7 @@ Functions
 
    Parameters
    ----------
-   numIN : float
+   len_input : float
        The input Ls or sol to convert. Can either be one number:
 
            300
@@ -60,11 +60,16 @@ Functions
 
    Returns
    -------
-   arrayIN
-       An array formatted for input into ls2sol or sol2ls. 
+   input_as_arr
+       An array formatted for input into ls2sol or sol2ls.
 
-           If numIN = 300, arrayIN=[300]
+           If len_input = 300:
 
-           If numIN = 300 310 2, arrayIN = [300, 302, 304, 306, 308]    
+               input_as_arr=[300]
+
+           If len_input = 300 310 2:
+
+               input_as_arr = [300, 302, 304, 306, 308]
+
 
 
