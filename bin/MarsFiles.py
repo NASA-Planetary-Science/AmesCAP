@@ -36,8 +36,8 @@ import warnings     # suppress errors triggered by NaNs
 # load amesCAP modules
 from amescap.Ncdf_wrapper import Ncdf, Fort
 from amescap.FV3_utils import tshift, daily_to_average, daily_to_diurn
-from amescap.Script_utils import (find_tod_in_diurn, FV3_file_type, 
-                                  filter_vars, regrid_Ncfile, 
+from amescap.Script_utils import (find_tod_in_diurn, FV3_file_type,
+                                  filter_vars, regrid_Ncfile,
                                   get_longname_units)
 
 
@@ -46,15 +46,24 @@ from amescap.Script_utils import (find_tod_in_diurn, FV3_file_type,
 # ======================================================
 
 parser = argparse.ArgumentParser(
-            description=(f"{Yellow}MarsFiles is a file manager. Use it "
-                 f"to modify a netCDF file format.{nocolor} \n\n"),
-            formatter_class = argparse.RawTextHelpFormatter)
+    description=(
+        f"{Yellow}MarsFiles is a file manager. Use it to modify a "
+        f"netCDF file format.{nocolor} \n\n"
+    ),
+    formatter_class = argparse.RawTextHelpFormatter
+)
 
-parser.add_argument('input_file', nargs = '+',
-            help = (f"A netCDF file or list of netCDF files. \n\n"))
+parser.add_argument(
+    'input_file', nargs = '+',
+    help = (
+        f"A netCDF file or list of netCDF files. \n\n"
+    )
+)
 
-parser.add_argument('-fv3', '--fv3', nargs = '+',
-            help = (f"Produce MGCM 'fixed', 'diurn', 'average' and "
+parser.add_argument(
+    '-fv3', '--fv3', nargs = '+',
+    help = (
+        f"Produce MGCM 'fixed', 'diurn', 'average' and "
             f"'daily' files from Legacy output. \n"
             f"Available options are: \n"
             f"  - 'fixed'  : static fields (e.g., topography) \n"
@@ -64,10 +73,14 @@ parser.add_argument('-fv3', '--fv3', nargs = '+',
             f"{Green}Usage: \n"
             f"> MarsFiles.py filename.nc -fv3 fixed \n"
             f"> MarsFiles.py filename.nc -fv3 fixed diurn "
-            f"{nocolor}\n\n"))
+            f"{nocolor}\n\n"
+    )
+)
 
-parser.add_argument('-c', '--combine', action='store_true',
-            help = (f"Combine sequential files of the same type into "
+parser.add_argument(
+    '-c', '--combine', action='store_true',
+    help = (
+        f"Combine sequential files of the same type into "
             f"one file. \n"
             f"Works with all file types ('fixed', 'average', "
             f"'daily' and 'diurn'). \n"
@@ -75,11 +88,14 @@ parser.add_argument('-c', '--combine', action='store_true',
             f"To override, use --ext.{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_average.nc --combine "
-            f"{nocolor}\n\n"))
+            f"{nocolor}\n\n"
+    )
+)
 
-parser.add_argument('-t', '--tshift', nargs = '?', const = 999, 
-            type = str,
-            help = (f"Apply a time-shift to {Yellow}'diurn'{nocolor} "
+parser.add_argument(
+    '-t', '--tshift', nargs = '?', const = 999, type = str,
+    help = (
+        f"Apply a time-shift to {Yellow}'diurn'{nocolor} "
             f"files. \n"
             "Vertically interpolated 'diurn' files OK. \n"
             f"{Yellow}Generates a new file ending in '_T.nc'{nocolor} \n"
@@ -89,11 +105,14 @@ parser.add_argument('-t', '--tshift', nargs = '?', const = 999,
             f"> MarsFiles.py *.atmos_diurn.nc --tshift '3 15'"
             f"\n"
             f"  {Blue}(outputs data for target local times only)"
-            f"{nocolor}\n\n"))
+            f"{nocolor}\n\n"
+        )
+)
 
-parser.add_argument('-ba', '--bin_average', nargs = '?', const = 5, 
-            type = int,
-            help = (f"Bin MGCM 'daily' files like 'average' files. \n"
+parser.add_argument(
+    '-ba', '--bin_average', nargs = '?', const = 5,type = int,
+    help = (
+        f"Bin MGCM 'daily' files like 'average' files. \n"
             f"{Yellow}Generates a new file ending in '_to_average.nc'"
             f"{nocolor} \n"
             f"{Green}Usage: \n"
@@ -101,10 +120,14 @@ parser.add_argument('-ba', '--bin_average', nargs = '?', const = 5,
             f"  {Blue}(nocolor, bin 5 days){Green} \n"
             f"> MarsFiles.py *.atmos_daily_pstd.nc -ba 10 \n"
             f"  {Blue}(bin 10 days)"
-            f"{nocolor}\n\n"))
+            f"{nocolor}\n\n"
+    )
+)
 
-parser.add_argument('-bd', '--bin_diurn', action = 'store_true',
-            help = (f"Bin MGCM 'daily' files like 'diurn' files. \n"
+parser.add_argument(
+    '-bd', '--bin_diurn', action = 'store_true',
+    help = (
+        f"Bin MGCM 'daily' files like 'diurn' files. \n"
             f"May be used jointly with --bin_average. \n"
             f"{Yellow}Generates a new file ending in '_to_diurn.nc'"
             f"{nocolor} \n"
@@ -115,12 +138,15 @@ parser.add_argument('-bd', '--bin_diurn', action = 'store_true',
             f"  {Blue}(10-day bin){Green} \n"
             f"> MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 1 \n"
             f"  {Blue}(No binning. Mimics raw Legacy output)"
-            f"{nocolor}\n\n"))
+            f"{nocolor}\n\n"
+    )
+)
 
 
-parser.add_argument('-hpf', '--high_pass_filter', nargs = '+', 
-            type = float,
-            help = (f"Temporal filtering utilities: low-, high-, and "
+parser.add_argument(
+    '-hpf', '--high_pass_filter', nargs = '+', type = float,
+    help = (
+        f"Temporal filtering utilities: low-, high-, and "
             f"band-pass filters. \n"
             f"Use '--no_trend' to compute amplitudes only. \n"
             f"Data detrended before filtering. \n"
@@ -129,11 +155,14 @@ parser.add_argument('-hpf', '--high_pass_filter', nargs = '+',
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -hpf 10. \n"
             f"  {Blue}(-hpf) --high_pass_filter sol_min "
-            f"{nocolor}\n\n"))
+            f"{nocolor}\n\n"
+    )
+)
 
-parser.add_argument('-lpf', '--low_pass_filter', nargs = '+', 
-            type = float,
-            help = (f"Temporal filtering utilities: low-, high-, and "
+parser.add_argument(
+    '-lpf', '--low_pass_filter', nargs = '+', type = float,
+    help = (
+        f"Temporal filtering utilities: low-, high-, and "
             f"band-pass filters. \n"
             f"Use '--no_trend' to compute amplitudes only. \n"
             f"Data detrended before filtering. \n"
@@ -142,10 +171,14 @@ parser.add_argument('-lpf', '--low_pass_filter', nargs = '+',
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -lpf 0.5 \n"
             f"  {Blue}(-lpf) --low_pass_filter sol_max "
-            f"{nocolor}\n\n"))
+            f"{nocolor}\n\n"
+    )
+)
 
-parser.add_argument('-bpf', '--band_pass_filter', nargs = '+',
-            help = (f"Temporal filtering utilities: low-, high-, and "
+parser.add_argument(
+    '-bpf', '--band_pass_filter', nargs = '+',
+    help = (
+        f"Temporal filtering utilities: low-, high-, and "
             f"band-pass filters. \n"
             f"Use '--no_trend' to compute amplitudes only. \n"
             f"Data detrended before filtering. \n"
@@ -154,10 +187,14 @@ parser.add_argument('-bpf', '--band_pass_filter', nargs = '+',
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_daily.nc -hpf 0.5 10. \n"
             f"  {Blue}(-bpf) --band_pass_filter sol_min sol max "
-            f"{nocolor}\n\n"))
+            f"{nocolor}\n\n"
+    )
+)
 
-parser.add_argument('-no_trend', '--no_trend', action='store_true',
-            help = (f"Filter and compute amplitudes only. \n"
+parser.add_argument(
+    '-no_trend', '--no_trend', action='store_true',
+    help = (
+        f"Filter and compute amplitudes only. \n"
             f"For use with temporal filtering utilities (-lpf, -hpf, "
             f"-bpf). \n"
             f"{Yellow}Generates a new file ending in '_no_trend.nc'"
@@ -169,51 +206,66 @@ parser.add_argument('-no_trend', '--no_trend', action='store_true',
             f"--no_trend \n"
             f"> MarsFiles.py *.atmos_daily.nc -hpf 0.5 10. "
             f"--no_trend "
-            f"{nocolor}\n\n"))
+            f"{nocolor}\n\n"
+    )
+)
 
 # Decomposition in zonal harmonics, disabled for initial CAP release:
-# parser.add_argument('-hpk', '--high_pass_zonal', nargs = '+', 
-#             type = int,
-#             help = (f"Spatial filtering utilities: low-, high-, and "
-#             f"band pass filters. \n"
-#             f"Use '--no_trend' to compute amplitudes only. \n"
-#             f"Data detrended before filtering. \n"
-#             f"{Yellow}Generates a new file ending in '_hpk.nc'"
-#             f"{nocolor} \n"
-#             f"{Green}Usage: \n"
-#             f"    > MarsFiles.py *.atmos_daily.nc -hpk 10 "
-#             f"--no_trend \n"
-#             f"      {Blue}(-hpk)  --high_pass_zonal kmin "
-#             f"{nocolor}\n\n"))
+parser.add_argument(
+    '-hpk', '--high_pass_zonal', nargs = '+', type = int,
+    help = (
+        f"Spatial filtering utilities: low-, high-, and "
+            f"band pass filters. \n"
+            f"Use '--no_trend' to compute amplitudes only. \n"
+            f"Data detrended before filtering. \n"
+            f"{Yellow}Generates a new file ending in '_hpk.nc'"
+            f"{nocolor} \n"
+            f"{Green}Usage: \n"
+            f"    > MarsFiles.py *.atmos_daily.nc -hpk 10 "
+            f"--no_trend \n"
+            f"      {Blue}(-hpk)  --high_pass_zonal kmin "
+            f"{nocolor}\n\n"
+    )
+)
 
-# parser.add_argument('-lpk', '--low_pass_zonal', nargs = '+', type = int,
-#             help = (f"Spatial filtering utilities: low-, high-, and "
-#             f"band pass filters. \n"
-#             f"Use '--no_trend' to compute amplitudes only. \n"
-#             f"Data detrended before filtering. \n"
-#             f"{Yellow}Generates a new file ending in '_lpk.nc'"
-#             f"{nocolor} \n"
-#             f"{Green}Usage: \n"
-#             f"    > MarsFiles.py *.atmos_daily.nc -lpk 20 "
-#             f"--no_trend\n"
-#             f"      {Blue}(-lpk)  --low_pass_zonal  kmax "
-#             f"{nocolor}\n\n"))
+parser.add_argument(
+    '-lpk', '--low_pass_zonal', nargs = '+', type = int,
+    help = (
+        f"Spatial filtering utilities: low-, high-, and "
+            f"band pass filters. \n"
+            f"Use '--no_trend' to compute amplitudes only. \n"
+            f"Data detrended before filtering. \n"
+            f"{Yellow}Generates a new file ending in '_lpk.nc'"
+            f"{nocolor} \n"
+            f"{Green}Usage: \n"
+            f"    > MarsFiles.py *.atmos_daily.nc -lpk 20 "
+            f"--no_trend\n"
+            f"      {Blue}(-lpk)  --low_pass_zonal  kmax "
+            f"{nocolor}\n\n"
+    )
+)
 
-# parser.add_argument('-bpk', '--band_pass_zonal', nargs = '+',
-#             help = (f"Spatial filtering utilities: low-, high-, and "
-#             f"band pass filters. \n"
-#             f"Use '--no_trend' to compute amplitudes only. \n"
-#             f"Data detrended before filtering. \n"
-#             f"{Yellow}Generates a new file ending in '_bpk.nc'"
-#             f"{nocolor} \n"
-#             f"{Green}Usage: \n"
-#             f"    > MarsFiles.py *.atmos_daily.nc -bpk 10 20 "
-#             f"--no_trend\n"
-#             f"      {Blue}(-bpk)  --band_pass_zonal kmin kmax "
-#             f"{nocolor}\n\n"))
+parser.add_argument(
+    '-bpk', '--band_pass_zonal', nargs = '+',
+    help = (
+        f"Spatial filtering utilities: low-, high-, and "
+            f"band pass filters. \n"
+            f"Use '--no_trend' to compute amplitudes only. \n"
+            f"Data detrended before filtering. \n"
+            f"{Yellow}Generates a new file ending in '_bpk.nc'"
+            f"{nocolor} \n"
+            f"{Green}Usage: \n"
+            f"    > MarsFiles.py *.atmos_daily.nc -bpk 10 20 "
+            f"--no_trend\n"
+            f"      {Blue}(-bpk)  --band_pass_zonal kmin kmax "
+            f"{nocolor}\n\n"
+    )
+)
 
-parser.add_argument('-tidal', '--tidal', nargs = '+', type = int,
-            help = (f"Performs a tidal analyis on 'diurn' files. \n"
+parser.add_argument(
+    '-tidal', '--tidal', nargs = '+', type = int,
+    help = (
+        f"Performs a tidal analyis on 'diurn' files. \n"
             f"Extracts diurnal tide and its harmonics. \n"
             f"N = 1 diurnal, N = 2 semi-diurnal etc. \n"
             f"{Yellow}Generates a new file ending in '_tidal.nc'"
@@ -221,29 +273,40 @@ parser.add_argument('-tidal', '--tidal', nargs = '+', type = int,
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_diurn.nc -tidal 4 \n"
             f"  {Blue}(extracts 4 harmonics) "
-            f"{nocolor}\n\n"))
+            f"{nocolor}\n\n"
+    )
+)
 
-parser.add_argument('-reconstruct', '--reconstruct', 
-            action = 'store_true',
-            help = (f"Reconstructs the first N harmonics. \n"
+parser.add_argument(
+    '-reconstruct', '--reconstruct', action = 'store_true',
+    help = (
+        f"Reconstructs the first N harmonics. \n"
             f"{Yellow}Generates a new file ending in '_reconstruct.nc'"
             f"{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_diurn.nc -tidal 6 "
             f"--include ps temp --reconstruct "
-            f"{nocolor}\n\n"))
+            f"{nocolor}\n\n"
+    )
+)
 
-parser.add_argument('-norm', '--normalize', action = 'store_true',
-            help = (f"Provides result in percent amplitude. \n"
+parser.add_argument(
+    '-norm', '--normalize', action = 'store_true',
+    help = (
+        f"Provides result in percent amplitude. \n"
             f"{Yellow}Generates a new file ending in '_norm.nc'"
             f"{nocolor} \n"
             f"{Green}Usage: \n"
             f"> MarsFiles.py *.atmos_diurn.nc -tidal 6 "
             f"--include ps --normalize "
-            f"{nocolor}\n\n"))
+            f"{nocolor}\n\n"
+    )
+)
 
-parser.add_argument('-rs', '--regrid_source', nargs = '+',
-            help = (f"Regrid a target file to match a source file. \n"
+parser.add_argument(
+    '-rs', '--regrid_source', nargs = '+',
+    help = (
+        f"Regrid a target file to match a source file. \n"
             f"Both source and target files should be vertically \n"
             f"interpolated to the same standard grid \n"
             f"(e.g. zstd, zagl, pstd, etc.). \n"
@@ -252,7 +315,9 @@ parser.add_argument('-rs', '--regrid_source', nargs = '+',
             f"{Green}Usage: \n"
             f"> MarsInterp.py *.atmos.average_pstd.nc -rs "
             f"simu2/00668.atmos_average_pstd.nc "
-            f"{nocolor}\n\n"))
+            f"{nocolor}\n\n"
+    )
+)
 
 parser.add_argument('-za', '--zonal_avg', action = 'store_true',
             help = (f"Zonally average all variables in a file. \n"
@@ -1136,10 +1201,10 @@ def main():
 def make_FV3_files(fpath, typelistfv3, renameFV3=True):
     """
     Make MGCM-like 'average', 'daily', and 'diurn' files.
-    
+
     Used if call to -fv3 --fv3 is made AND Legacy files are in netCDF
     format (not fort.11).
-    
+
     Parameters
     ----------
     fpath : str
@@ -1149,21 +1214,21 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
     renameFV3 : bool
         Rename the files from Legacy_LsXXX_LsYYY.nc to \
             XXXXX.atmos_average.nc following MGCM output conventions
-    
+
     Returns
     -------
     The MGCM-like files: XXXXX.atmos_average.nc, XXXXX.atmos_daily.nc, \
         XXXXX.atmos_diurn.nc
     """
 
-    histdir = os.getcwd()
+    historyDir = os.getcwd()
 
     histfile = Dataset(fpath, 'r', format='NETCDF4_CLASSIC')
     histdims = histfile.dimensions.keys()
 
     # Convert the first Ls in file to a sol number
     if renameFV3:
-        fdate = '%05i' % (ls2sol_1year(histfile.variables['ls'][0]))
+        fdate = f"{(ls2sol_1year(histfile.variables['ls'][0])):05}"
 
     def proccess_file(newf, typefv3):
         """
@@ -1248,7 +1313,7 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
 
     if 'average' in typelistfv3:
         newfname_avg = fdate+'.atmos_average.nc'  # 5 sol average over 'time_of_day' and 'time'
-        newfpath_avg = os.path.join(histdir, newfname_avg)
+        newfpath_avg = os.path.join(historyDir, newfname_avg)
         newfavg = Ncdf(newfpath_avg)
         proccess_file(newfavg, 'average')
         do_avg_vars(histfile, newfavg, True, True)
@@ -1257,7 +1322,7 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
     if 'daily' in typelistfv3:
         # Daily snapshot of the output
         newfname_daily = fdate+'.atmos_daily.nc'
-        newfpath_daily = os.path.join(histdir, newfname_daily)
+        newfpath_daily = os.path.join(historyDir, newfname_daily)
         newfdaily = Ncdf(newfpath_daily)
         proccess_file(newfdaily, 'daily')
         do_avg_vars(histfile, newfdaily, False, False)
@@ -1265,7 +1330,7 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
 
     if 'diurn' in typelistfv3:
         newfname_diurn = fdate+'.atmos_diurn.nc'  # 5 sol average over 'time' only
-        newfpath_diurn = os.path.join(histdir, newfname_diurn)
+        newfpath_diurn = os.path.join(historyDir, newfname_diurn)
         newfdiurn = Ncdf(newfpath_diurn)
         proccess_file(newfdiurn, 'diurn')
         do_avg_vars(histfile, newfdiurn, True, False)

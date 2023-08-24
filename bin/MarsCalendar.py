@@ -39,84 +39,99 @@ from amescap.FV3_utils import sol2ls, ls2sol
 #                  ARGUMENT PARSER
 # ======================================================
 parser = argparse.ArgumentParser(
-    description=(f"{Yellow}Returns the solar longitude (Ls) "
-                 f"corresponding to a sol or vice-versa. Adapted "
-                 f"from areols.py {Default}"),
-    formatter_class = argparse.RawTextHelpFormatter)
+    description=(
+        f"{Yellow}Returns the solar longitude (Ls) corresponding to a "
+        f"sol or vice-versa. Adapted from areols.py {Default}"
+    ),
+    formatter_class = argparse.RawTextHelpFormatter
+)
 
-parser.add_argument('-sol', '--sol', nargs = '+', type = float,
-                    help = (f"Input sol number. Required. Can either "
-                    f"be one sol or a range with an increment "
-                    f"(start stop step).\n"
-                    f"> Usage: MarsCalendar.py -sol 750\n"
-                    f">        MarsCalendar.py -sol 750 800 5\n\n"))
+parser.add_argument(
+    '-sol', '--sol', nargs = '+', type = float,
+    help = (
+        f"Input sol number. Required. Can either be one sol or a"
+        f"range with an increment (start stop step).\n"
+        f"> Usage: MarsCalendar.py -sol 750\n"
+        f">        MarsCalendar.py -sol 750 800 5\n\n"
+    )
+)
 
-parser.add_argument('-ls', '--ls', nargs = '+', type = float,
-                    help = (f"Return the sol number corresponding "
-                    f"to this Ls.\n"
-                    f"> Usage: MarsCalendar.py -ls 350\n"
-                    f">        MarsCalendar.py -ls 350 360 5\n\n"))
+parser.add_argument(
+    '-ls', '--ls', nargs = '+', type = float,
+    help = (
+        f"Return the sol number corresponding to this Ls.\n"
+        f"> Usage: MarsCalendar.py -ls 350\n"
+        f">        MarsCalendar.py -ls 350 360 5\n\n"
+    )
+)
 
+parser.add_argument(
+    '-my', '--marsyear', nargs = '+', type = float, default = 0.,
+    help = (
+        f"Return the sol or Ls corresponding to the Ls or sol of a "
+        f"particular year of the simulation. \n"
+        f"Req. [-ls --ls] or [-sol --sol]. \n"
+        f"MY=0 for sol=0-667, MY=1 for sol=668-1335 etc.\n"
+        f"> Usage: MarsCalendar.py -ls 350 -my 2\n\n"
+    )
+)
 
-parser.add_argument('-my', '--marsyear', nargs = '+', type = float, 
-                    default = 0.,
-                    help = (f"Return the sol or Ls corresponding "
-                    f"to the Ls or sol of a particular year of the "
-                    f"simulation. Req. [-ls --ls] or [-sol --sol]. \n"
-                    f"MY=0 for sol=0-667, MY=1 for sol=668-1335 etc.\n"
-                    f"> Usage: MarsCalendar.py -ls 350 -my 2\n\n"))
-
-parser.add_argument('-c', '--cumulative', action='store_true',
-                    help = (f"Return Ls from sol in cumulative form. "
-                    f"Req. [-sol --sol]. \n"
-                    f"EX: Returns Ls=360-720 instead of Ls=0-360 "
-                    f"for input sol=669-1336 \n"
-                    f"> Usage: MarsCalendar.py -sol 700 -c\n\n"))
+parser.add_argument(
+    '-c', '--cumulative', action='store_true',
+    help = (
+        f"Return Ls from sol in cumulative form. Req. [-sol --sol]. \n"
+        f"EX: Returns Ls=360-720 instead of Ls=0-360 for input "
+        f"sol=669-1336 \n"
+        f"> Usage: MarsCalendar.py -sol 700 -c\n\n"
+    )
+)
 
 # ======================================================
 #                  DEFINITIONS
 # ======================================================
 
-def parse_array(numIN):
+def parse_array(len_input):
     """
     Formats the input array for conversion.
-    
+
     Confirms that either [-ls --ls] or [-sol --sol] was passed as an \
     argument. Creates an array that ls2sol or sol2ls can read for the \
     conversion from sol -> Ls or Ls -> sol.
-    
+
     Parameters
     ----------
-    numIN : float
+    len_input : float
         The input Ls or sol to convert. Can either be one number:\n
             300\n
         or start stop step:\n
             300 310 2
-    
+
     Raises
     ------
     Error if neither [-ls --ls] or [-sol --sol] is provided.
-    
+
     Returns
     -------
-    arrayIN
-        An array formatted for input into ls2sol or sol2ls. \n
-            If numIN = 300, arrayIN=[300]\n
-            If numIN = 300 310 2, arrayIN = [300, 302, 304, 306, 308]    
+    input_as_arr
+        An array formatted for input into ls2sol or sol2ls.\n
+            If len_input = 300:\n
+                input_as_arr=[300]\n
+            If len_input = 300 310 2:\n
+                input_as_arr = [300, 302, 304, 306, 308]\n
     """
-    
-    if len(numIN) == 1:
-        arrayIN = numIN
 
-    elif len(numIN) == 3:
-        start, stop, step = numIN[0], numIN[1], numIN[2]
-        arrayIN = np.arange(start, stop, step)
+    if len(len_input) == 1:
+        input_as_arr = len_input
+
+    elif len(len_input) == 3:
+        start, stop, step = len_input[0], len_input[1], len_input[2]
+        input_as_arr = np.arange(start, stop, step)
 
     else:
         prRed("ERROR either [-ls --ls] or [-sol --sol] are required. "
-                "See 'MarsCalendar.py -h' for additional help.")
+              "See 'MarsCalendar.py -h' for additional help.")
         exit()
-    return(arrayIN)
+    return(input_as_arr)
 
 # ======================================================
 #                  MAIN PROGRAM
@@ -126,7 +141,7 @@ def main():
     # load in user-specified Mars year, if any. Default = 0
     MY = np.squeeze(parser.parse_args().marsyear)
     print(f"MARS YEAR = {MY}")
-    
+
     if parser.parse_args().cumulative:
         # set Ls to cumulative, if requested
         accumulate = True
@@ -135,27 +150,27 @@ def main():
 
     if parser.parse_args().ls:
         # if [-Ls --Ls] is input, return sol
-        inputNum = np.asarray(parser.parse_args().ls).astype(float)
-        headerText = '\n   Ls    |    Sol    \n-----------------------'
-        inputArr = parse_array(inputNum)
-        outputArr = ls2sol(inputArr)
-        
+        input_num = np.asarray(parser.parse_args().ls).astype(float)
+        head_text = '\n   Ls    |    Sol    \n-----------------------'
+        input_arr = parse_array(input_num)
+        output_arr = ls2sol(input_arr)
+
     elif parser.parse_args().sol:
         # if [-sol --sol] is input, return Ls
-        inputNum = np.asarray(parser.parse_args().sol).astype(float)
-        headerText = '\n    SOL  |    Ls    \n-----------------------'
-        inputArr = parse_array(inputNum)
-        outputArr = sol2ls(inputArr, cumulative=accumulate)
+        input_num = np.asarray(parser.parse_args().sol).astype(float)
+        head_text = '\n    SOL  |    Ls    \n-----------------------'
+        input_arr = parse_array(input_num)
+        output_arr = sol2ls(input_arr, cumulative=accumulate)
 
     # if scalar, return as float
-    outputArr = np.atleast_1d(outputArr)
-    
-    print(headerText)
-    for i in range(0, len(inputArr)):
-        # print inputArr and corresponding outputArr
-        print(f" {inputArr[i]:.2f}  |  {(outputArr[i]+MY*668.):.2f}  ")
-    
-    print(" ")
+    output_arr = np.atleast_1d(output_arr)
+
+    print(head_text)
+    for i in range(0, len(input_arr)):
+        # print input_arr and corresponding output_arr
+        print(f" {input_arr[i]:.2f}  |  {(output_arr[i]+MY*668.):.2f}")
+
+    print("\n")
 
 # ======================================================
 #                  END OF PROGRAM
