@@ -51,7 +51,7 @@ parser = argparse.ArgumentParser(
         f"{Yellow}fit2FV3.py is for converting non-MGCM output "
         f"to MGCM format{nocolor} \n\n"
     ),
-    formatter_class=argparse.RawTextHelpFormatter
+    formatter_class = argparse.RawTextHelpFormatter
 )
 
 parser.add_argument(
