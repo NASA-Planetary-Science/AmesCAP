@@ -58,63 +58,60 @@ parser.add_argument(
     '-fv3', '--fv3', nargs = '+',
     help = (
         f"Produce MGCM 'fixed', 'diurn', 'average' and "
-            f"'daily' files from Legacy output.\n"
-            f"Available options are:\n"
-            f"  - 'fixed'  : static fields (e.g., topography)\n"
-            f"  - 'average': 5-sol averages\n"
-            f"  - 'daily'  : 5-sol continuous\n"
-            f"  - 'diurn'  : 5-sol averages for each time of day\n"
-            f"{Green}Usage:\n"
-            f"> MarsFiles.py filename.nc -fv3 fixed\n"
-            f"> MarsFiles.py filename.nc -fv3 fixed diurn "
-            f"{NoColor}\n\n"
+        f"'daily' files from Legacy output.\n"
+        f"Available options are:\n"
+        f"  - 'fixed'  : static fields (e.g., topography)\n"
+        f"  - 'average': 5-sol averages\n"
+        f"  - 'daily'  : 5-sol continuous\n"
+        f"  - 'diurn'  : 5-sol averages for each time of day\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py filename.nc -fv3 fixed\n"
+        f"> MarsFiles.py filename.nc -fv3 fixed diurn"
+        f"{NoColor}\n\n"
     )
 )
 
 parser.add_argument(
     '-c', '--combine', action='store_true',
     help = (
-        f"Combine sequential files of the same type into "
-            f"one file.\n"
-            f"Works with all file types ('fixed', 'average', "
-            f"'daily' and 'diurn').\n"
-            f"{Yellow}Overwrites the first file in the series. "
-            f"To override, use --ext.{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"> MarsFiles.py *.atmos_average.nc --combine "
-            f"{NoColor}\n\n"
+        f"Combine sequential files of the same type into one file.\n"
+        f"Works with all file types ('fixed', 'average', "
+        f"'daily' and 'diurn').\n"
+        f"{Yellow}Overwrites the first file in the series. "
+        f"To override, use --ext.{NoColor}\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py *.atmos_average.nc --combine"
+        f"{NoColor}\n\n"
     )
 )
 
 parser.add_argument(
     '-t', '--tshift', nargs = '?', const = 999, type = str,
     help = (
-        f"Apply a time-shift to {Yellow}'diurn'{NoColor} "
-            f"files.\n"
-            "Vertically interpolated 'diurn' files OK.\n"
-            f"{Yellow}Generates a new file ending in '_T.nc'{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"> MarsFiles.py *.atmos_diurn.nc --tshift\n"
-            f"  {Blue}(outputs data for all 24 local times){Green}\n"
-            f"> MarsFiles.py *.atmos_diurn.nc --tshift '3 15'"
-            f"\n"
-            f"  {Blue}(outputs data for target local times only)"
-            f"{NoColor}\n\n"
-        )
+    f"Apply a time-shift to {Yellow}'diurn'{NoColor}  files.\n"
+        "Vertically interpolated 'diurn' files OK.\n"
+        f"{Yellow}Generates a new file ending in '_T.nc'{NoColor}\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py *.atmos_diurn.nc --tshift\n"
+        f"  {Blue}(outputs data for all 24 local times){Green}\n"
+        f"> MarsFiles.py *.atmos_diurn.nc --tshift '3 15'"
+        f"\n"
+        f"  {Blue}(outputs data for target local times only)"
+        f"{NoColor}\n\n"
+    )
 )
 
 parser.add_argument(
     '-ba', '--bin_average', nargs = '?', const = 5,type = int,
     help = (
         f"Bin MGCM 'daily' files like 'average' files.\n"
-            f"{Yellow}Generates a new file ending in '_to_average.nc'"
-            f"{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"> MarsFiles.py *.atmos_daily.nc -ba\n"
-            f"  {Blue}(NoColor, bin 5 days){Green}\n"
-            f"> MarsFiles.py *.atmos_daily_pstd.nc -ba 10\n"
-            f"  {Blue}(bin 10 days)"
-            f"{NoColor}\n\n"
+        f"{Yellow}Generates a new file ending in '_to_average.nc'\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py *.atmos_daily.nc -ba\n"
+        f"  {Blue}(NoColor, bin 5 days){Green}\n"
+        f"> MarsFiles.py *.atmos_daily_pstd.nc -ba 10\n"
+        f"  {Blue}(bin 10 days)"
+        f"{NoColor}\n\n"
     )
 )
 
@@ -122,17 +119,16 @@ parser.add_argument(
     '-bd', '--bin_diurn', action = 'store_true',
     help = (
         f"Bin MGCM 'daily' files like 'diurn' files.\n"
-            f"May be used jointly with --bin_average.\n"
-            f"{Yellow}Generates a new file ending in '_to_diurn.nc'"
-            f"{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"> MarsFiles.py *.atmos_daily.nc -bd\n"
-            f"  {Blue}(default 5-day bin){Green}\n"
-            f"> MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 10\n"
-            f"  {Blue}(10-day bin){Green}\n"
-            f"> MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 1\n"
-            f"  {Blue}(No binning. Mimics raw Legacy output)"
-            f"{NoColor}\n\n"
+        f"May be used jointly with --bin_average.\n"
+        f"{Yellow}Generates a new file ending in '_to_diurn.nc'\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py *.atmos_daily.nc -bd\n"
+        f"  {Blue}(default 5-day bin){Green}\n"
+        f"> MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 10\n"
+        f"  {Blue}(10-day bin){Green}\n"
+        f"> MarsFiles.py *.atmos_daily_pstd.nc -bd -ba 1\n"
+        f"  {Blue}(No binning. Mimics raw Legacy output)"
+        f"{NoColor}\n\n"
     )
 )
 
@@ -141,15 +137,14 @@ parser.add_argument(
     '-hpf', '--high_pass_filter', nargs = '+', type = float,
     help = (
         f"Temporal filtering utilities: low-, high-, and "
-            f"band-pass filters.\n"
-            f"Use '--no_trend' to compute amplitudes only.\n"
-            f"Data detrended before filtering.\n"
-            f"{Yellow}Generates a new file ending in '_hpf.nc'"
-            f"{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"> MarsFiles.py *.atmos_daily.nc -hpf 10.\n"
-            f"  {Blue}(-hpf) --high_pass_filter sol_min "
-            f"{NoColor}\n\n"
+        f"band-pass filters.\n"
+        f"Use '--no_trend' to compute amplitudes only.\n"
+        f"Data detrended before filtering.\n"
+        f"{Yellow}Generates a new file ending in '_hpf.nc'\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py *.atmos_daily.nc -hpf 10.\n"
+        f"  {Blue}(-hpf) --high_pass_filter sol_min "
+        f"{NoColor}\n\n"
     )
 )
 
@@ -157,15 +152,14 @@ parser.add_argument(
     '-lpf', '--low_pass_filter', nargs = '+', type = float,
     help = (
         f"Temporal filtering utilities: low-, high-, and "
-            f"band-pass filters.\n"
-            f"Use '--no_trend' to compute amplitudes only.\n"
-            f"Data detrended before filtering.\n"
-            f"{Yellow}Generates a new file ending in '_lpf.nc'"
-            f"{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"> MarsFiles.py *.atmos_daily.nc -lpf 0.5\n"
-            f"  {Blue}(-lpf) --low_pass_filter sol_max "
-            f"{NoColor}\n\n"
+        f"band-pass filters.\n"
+        f"Use '--no_trend' to compute amplitudes only.\n"
+        f"Data detrended before filtering.\n"
+        f"{Yellow}Generates a new file ending in '_lpf.nc'\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py *.atmos_daily.nc -lpf 0.5\n"
+        f"  {Blue}(-lpf) --low_pass_filter sol_max "
+        f"{NoColor}\n\n"
     )
 )
 
@@ -173,15 +167,14 @@ parser.add_argument(
     '-bpf', '--band_pass_filter', nargs = '+',
     help = (
         f"Temporal filtering utilities: low-, high-, and "
-            f"band-pass filters.\n"
-            f"Use '--no_trend' to compute amplitudes only.\n"
-            f"Data detrended before filtering.\n"
-            f"{Yellow}Generates a new file ending in 'bpf.nc'"
-            f"{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"> MarsFiles.py *.atmos_daily.nc -hpf 0.5 10.\n"
-            f"  {Blue}(-bpf) --band_pass_filter sol_min sol max "
-            f"{NoColor}\n\n"
+        f"band-pass filters.\n"
+        f"Use '--no_trend' to compute amplitudes only.\n"
+        f"Data detrended before filtering.\n"
+        f"{Yellow}Generates a new file ending in 'bpf.nc'\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py *.atmos_daily.nc -hpf 0.5 10.\n"
+        f"  {Blue}(-bpf) --band_pass_filter sol_min sol max "
+        f"{NoColor}\n\n"
     )
 )
 
@@ -189,18 +182,14 @@ parser.add_argument(
     '-no_trend', '--no_trend', action='store_true',
     help = (
         f"Filter and compute amplitudes only.\n"
-            f"For use with temporal filtering utilities (-lpf, -hpf, "
-            f"-bpf).\n"
-            f"{Yellow}Generates a new file ending in '_no_trend.nc'"
-            f"{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"> MarsFiles.py *.atmos_daily.nc -hpf 10. "
-            f"--no_trend\n"
-            f"> MarsFiles.py *.atmos_daily.nc -lpf 0.5 "
-            f"--no_trend\n"
-            f"> MarsFiles.py *.atmos_daily.nc -hpf 0.5 10. "
-            f"--no_trend "
-            f"{NoColor}\n\n"
+        f"For use with temporal filtering utilities (-lpf, -hpf, "
+        f"-bpf).\n"
+        f"{Yellow}Generates a new file ending in '_no_trend.nc'\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py *.atmos_daily.nc -hpf 10. --no_trend\n"
+        f"> MarsFiles.py *.atmos_daily.nc -lpf 0.5 --no_trend\n"
+        f"> MarsFiles.py *.atmos_daily.nc -hpf 0.5 10. --no_trend"
+        f"{NoColor}\n\n"
     )
 )
 
@@ -209,16 +198,14 @@ parser.add_argument(
     '-hpk', '--high_pass_zonal', nargs = '+', type = int,
     help = (
         f"Spatial filtering utilities: low-, high-, and "
-            f"band pass filters.\n"
-            f"Use '--no_trend' to compute amplitudes only.\n"
-            f"Data detrended before filtering.\n"
-            f"{Yellow}Generates a new file ending in '_hpk.nc'"
-            f"{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"    > MarsFiles.py *.atmos_daily.nc -hpk 10 "
-            f"--no_trend\n"
-            f"      {Blue}(-hpk)  --high_pass_zonal kmin "
-            f"{NoColor}\n\n"
+        f"band pass filters.\n"
+        f"Use '--no_trend' to compute amplitudes only.\n"
+        f"Data detrended before filtering.\n"
+        f"{Yellow}Generates a new file ending in '_hpk.nc'\n"
+        f"{Green}Usage:\n"
+        f"    > MarsFiles.py *.atmos_daily.nc -hpk 10 --no_trend\n"
+        f"      {Blue}(-hpk) --high_pass_zonal kmin "
+        f"{NoColor}\n\n"
     )
 )
 
@@ -226,16 +213,14 @@ parser.add_argument(
     '-lpk', '--low_pass_zonal', nargs = '+', type = int,
     help = (
         f"Spatial filtering utilities: low-, high-, and "
-            f"band pass filters.\n"
-            f"Use '--no_trend' to compute amplitudes only.\n"
-            f"Data detrended before filtering.\n"
-            f"{Yellow}Generates a new file ending in '_lpk.nc'"
-            f"{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"    > MarsFiles.py *.atmos_daily.nc -lpk 20 "
-            f"--no_trend\n"
-            f"      {Blue}(-lpk)  --low_pass_zonal  kmax "
-            f"{NoColor}\n\n"
+        f"band pass filters.\n"
+        f"Use '--no_trend' to compute amplitudes only.\n"
+        f"Data detrended before filtering.\n"
+        f"{Yellow}Generates a new file ending in '_lpk.nc'\n"
+        f"{Green}Usage:\n"
+        f"    > MarsFiles.py *.atmos_daily.nc -lpk 20 --no_trend\n"
+        f"      {Blue}(-lpk) --low_pass_zonal kmax "
+        f"{NoColor}\n\n"
     )
 )
 
@@ -243,16 +228,14 @@ parser.add_argument(
     '-bpk', '--band_pass_zonal', nargs = '+',
     help = (
         f"Spatial filtering utilities: low-, high-, and "
-            f"band pass filters.\n"
-            f"Use '--no_trend' to compute amplitudes only.\n"
-            f"Data detrended before filtering.\n"
-            f"{Yellow}Generates a new file ending in '_bpk.nc'"
-            f"{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"    > MarsFiles.py *.atmos_daily.nc -bpk 10 20 "
-            f"--no_trend\n"
-            f"      {Blue}(-bpk)  --band_pass_zonal kmin kmax "
-            f"{NoColor}\n\n"
+        f"band pass filters.\n"
+        f"Use '--no_trend' to compute amplitudes only.\n"
+        f"Data detrended before filtering.\n"
+        f"{Yellow}Generates a new file ending in '_bpk.nc'\n"
+        f"{Green}Usage:\n"
+        f"    > MarsFiles.py *.atmos_daily.nc -bpk 10 20 --no_trend\n"
+        f"      {Blue}(-bpk) --band_pass_zonal kmin kmax"
+        f"{NoColor}\n\n"
     )
 )
 
@@ -260,14 +243,13 @@ parser.add_argument(
     '-tidal', '--tidal', nargs = '+', type = int,
     help = (
         f"Performs a tidal analyis on 'diurn' files.\n"
-            f"Extracts diurnal tide and its harmonics.\n"
-            f"N = 1 diurnal, N = 2 semi-diurnal etc.\n"
-            f"{Yellow}Generates a new file ending in '_tidal.nc'"
-            f"{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"> MarsFiles.py *.atmos_diurn.nc -tidal 4\n"
-            f"  {Blue}(extracts 4 harmonics) "
-            f"{NoColor}\n\n"
+        f"Extracts diurnal tide and its harmonics.\n"
+        f"N = 1 diurnal, N = 2 semi-diurnal etc.\n"
+        f"{Yellow}Generates a new file ending in '_tidal.nc'\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py *.atmos_diurn.nc -tidal 4\n"
+        f"  {Blue}(extracts 4 harmonics)"
+        f"{NoColor}\n\n"
     )
 )
 
@@ -275,12 +257,11 @@ parser.add_argument(
     '-reconstruct', '--reconstruct', action = 'store_true',
     help = (
         f"Reconstructs the first N harmonics.\n"
-            f"{Yellow}Generates a new file ending in '_reconstruct.nc'"
-            f"{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"> MarsFiles.py *.atmos_diurn.nc -tidal 6 "
-            f"--include ps temp --reconstruct "
-            f"{NoColor}\n\n"
+        f"{Yellow}Generates a new file ending in '_reconstruct.nc'\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py *.atmos_diurn.nc -tidal 6 "
+        f"--include ps temp --reconstruct"
+        f"{NoColor}\n\n"
     )
 )
 
@@ -288,12 +269,11 @@ parser.add_argument(
     '-norm', '--normalize', action = 'store_true',
     help = (
         f"Provides result in percent amplitude.\n"
-            f"{Yellow}Generates a new file ending in '_norm.nc'"
-            f"{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"> MarsFiles.py *.atmos_diurn.nc -tidal 6 "
-            f"--include ps --normalize "
-            f"{NoColor}\n\n"
+        f"{Yellow}Generates a new file ending in '_norm.nc'\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py *.atmos_diurn.nc -tidal 6 "
+        f"--include ps --normalize"
+        f"{NoColor}\n\n"
     )
 )
 
@@ -301,47 +281,56 @@ parser.add_argument(
     '-rs', '--regrid_source', nargs = '+',
     help = (
         f"Regrid a target file to match a source file.\n"
-            f"Both source and target files should be vertically\n"
-            f"interpolated to the same standard grid\n"
-            f"(e.g. zstd, zagl, pstd, etc.).\n"
-            f"{Yellow}Generates a new file ending in '_regrid.nc'"
-            f"{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"> MarsInterp.py *.atmos.average_pstd.nc -rs "
-            f"simu2/00668.atmos_average_pstd.nc "
-            f"{NoColor}\n\n"
+        f"Both source and target files should be vertically\n"
+        f"interpolated to the same standard grid\n"
+        f"(e.g. zstd, zagl, pstd, etc.).\n"
+        f"{Yellow}Generates a new file ending in '_regrid.nc'\n"
+        f"{Green}Usage:\n"
+        f"> MarsInterp.py *.atmos.average_pstd.nc -rs "
+        f"simu2/00668.atmos_average_pstd.nc"
+        f"{NoColor}\n\n"
     )
 )
 
 parser.add_argument('-za', '--zonal_avg', action = 'store_true',
-            help = (f"Zonally average all variables in a file.\n"
-            f"{Yellow}Generates a new file ending in '_zonal_avg.nc'"
-            f"{NoColor}\n"
-            "   > MarsFiles.py *.atmos_diurn.nc -za "
-            f"{NoColor}\n\n"))
+    help = (
+        f"Zonally average all variables in a file.\n"
+        f"{Yellow}Generates a new file ending in '_zonal_avg.nc'\n"
+        f"{Green}Usage:\n"
+        "> MarsFiles.py *.atmos_diurn.nc -za"
+        f"{NoColor}\n\n"
+    )
+)
 
 parser.add_argument('-include', '--include', nargs = '+',
-            help = (f"Flag to include only the variables listed\n"
-            f"after -include in the target file.\n"
-            f"All dimensional and 1D variables are always included.\n"
-            f"{Yellow}Overwrites existing target file. To override, "
-            f"use --ext.{NoColor}\n"
-            f"{Green}Usage:\n"
-            f"> MarsFiles.py *.atmos_daily.nc -ba --include ps "
-            f"ts ucomp "
-            f"{NoColor}\n\n"))
+    help = (
+        f"Flag to include only the variables listed after \n"
+        f"-include in the target file.\n"
+        f"All dimensional and 1D variables are always included.\n"
+        f"{Yellow}Overwrites existing target file. To override, "
+        f"use --ext.{NoColor}\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py *.atmos_daily.nc -ba --include ps ts ucomp"
+        f"{NoColor}\n\n"
+    )
+)
 
 parser.add_argument('-e', '--ext', type = str, default = None,
-            help = (f"Do not overwrite file. Append the extension\n"
-            f"provided after --ext to the new file.\n"
-            f"{Green}Usage:\n"
-            f"> MarsFiles.py *.atmos.average.nc --combine "
-            f"--ext _combined\n"
-            f"  {Blue}(produces *.atmos.average_combined.nc) "
-            f"{NoColor}\n\n"))
+    help = (
+        f"Do not overwrite file. Append the extension provided \n"
+        f"after --ext to the new file.\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py *.atmos.average.nc --combine --ext _combined\n"
+        f"  {Blue}(produces *.atmos.average_combined.nc)"
+        f"{NoColor}\n\n"
+    )
+)
 
 parser.add_argument('--debug', action='store_true',
-            help = (f"Debug flag: release the exceptions.\n\n"))
+    help = (
+        f"Debug flag: release the exceptions.\n\n"
+    )
+)
 
 # ======================================================
 #                  MAIN PROGRAM
@@ -352,62 +341,61 @@ def main():
     data_dir = os.getcwd()
 
     if parser.parse_args().fv3 and parser.parse_args().combine:
-        prRed("Use --fv3 and --combine sequentially to avoid ambiguity")
+        prRed("Use --fv3 and --combine separately to avoid ambiguity")
         exit()
 
-    # "===========================================================================
-    # ==========  Conversion Legacy -> FV3 by Richard U. and Alex. K. ===========
-    # ===========================================================================
+    # ==================================================================
+    #                   Conversion Legacy -> FV3
+    #                    Richard U. and Alex. K.
+    # ==================================================================
 
-    # ======= Convert to MGCM Output Format =======
+    # Convert to MGCM Output Format
     if parser.parse_args().fv3:
-        for irequest in parser.parse_args().fv3:
-            if irequest not in ['fixed', 'average', 'daily', 'diurn']:
-                prRed(f"{irequest} is not available, select 'fixed', 'average', 'daily', or 'diurn'")
+        for req_file in parser.parse_args().fv3:
+            if req_file not in ['fixed', 'average', 'daily', 'diurn']:
+                prRed(f"{req_file} is invalid. Select "\
+                      f"'fixed', 'average', 'daily', or 'diurn'")
 
-    # Argument Definitions:
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-        # Get files to process
-        histlist = []
-        for filei in file_list:
-            if not ('/' in filei):
-                histlist.append(data_dir+'/'+filei)
+        # Make a list of input files including the full path to the dir
+        full_file_list = []
+        for file in file_list:
+            if not ('/' in file):
+                full_file_list.append(data_dir + '/' + file)
             else:
-                histlist.append(filei)
-        fnum = len(histlist)
+                full_file_list.append(file)
+        num_files = len(full_file_list)
 
-        lsmin = None
-        lsmax = None
+        # lsmin = None
+        # lsmax = None
 
-        if histlist[0][-3:] == '.nc':
-            print("Processing LegacyGCM_*.nc files")
-            for f in histlist:
-                histname = os.path.basename(f)
-                ls_l = histname[-12:-9]
-                ls_r = histname[-6:-3]
-                if lsmin is None:
-                    lsmin = ls_l
-                else:
-                    lsmin = str(min(int(lsmin), int(ls_l))).zfill(3)
-                if lsmax is None:
-                    lsmax = ls_r
-                else:
-                    lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
+        if full_file_list[0][-3:] == '.nc':
+            print("Processing Legacy MGCM netCDF files")
+            for f in full_file_list:
+                file_name = os.path.basename(f)
+                # ls_l = file_name[-12:-9]
+                # ls_r = file_name[-6:-3]
+                
+                # if lsmin is None:
+                #     lsmin = ls_l
+                # else:
+                #     lsmin = str(min(int(lsmin), int(ls_l))).zfill(3)
+                # if lsmax is None:
+                #     lsmax = ls_r
+                # else:
+                #     lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
                 a = make_FV3_files(f, parser.parse_args().fv3, True)
-
         else:
             print("Processing fort.11 files")
-            for fname in histlist:
-                f = Fort(fname)
+            for f in full_file_list:
+                file_name = Fort(f)
                 if 'fixed' in parser.parse_args().fv3:
-                    f.write_to_fixed()
+                    file_name.write_to_fixed()
                 if 'average' in parser.parse_args().fv3:
-                    f.write_to_average()
+                    file_name.write_to_average()
                 if 'daily' in parser.parse_args().fv3:
-                    f.write_to_daily()
+                    file_name.write_to_daily()
                 if 'diurn' in parser.parse_args().fv3:
-                    f.write_to_diurn()
+                    file_name.write_to_diurn()
 
     # ===========================================================================
     # =============  Append netcdf files along the 'time' dimension =============
@@ -416,27 +404,27 @@ def main():
         prYellow("Using internal method for concatenation")
 
         # Get files to process
-        histlist = []
-        for filei in file_list:
+        full_file_list = []
+        for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in filei):
-                histlist.append(data_dir+'/'+filei)
+            if not ('/' in file):
+                full_file_list.append(data_dir+'/'+file)
             else:
-                histlist.append(filei)
+                full_file_list.append(file)
 
-        fnum = len(histlist)
+        num_files = len(full_file_list)
         # Easy case: merging **.fixed.nc means deleting all but the first file:
-        if file_list[0][5:] == '.fixed.nc' and fnum >= 2:
+        if file_list[0][5:] == '.fixed.nc' and num_files >= 2:
             rm_cmd = 'rm -f '
-            for i in range(1, fnum):
-                rm_cmd += ' '+histlist[i]
+            for i in range(1, num_files):
+                rm_cmd += ' '+full_file_list[i]
             p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
             prCyan(f"Cleaned all but {file_list[0]}")
             exit()
 
         # =========
-        fnum = len(histlist)
-        prCyan(f"Merging {fnum} files, starting with {file_list[0]} ...")
+        num_files = len(full_file_list)
+        prCyan(f"Merging {num_files} files, starting with {file_list[0]} ...")
 
         # This section iexcludes any variable not listed after --include
         if parser.parse_args().include:
@@ -448,9 +436,9 @@ def main():
             exclude_list = []
 
         # This creates a temporaty file ***_tmp.nc to work in
-        file_tmp = histlist[0][:-3]+'_tmp'+'.nc'
+        file_tmp = full_file_list[0][:-3]+'_tmp'+'.nc'
         Log = Ncdf(file_tmp, 'Merged file')
-        Log.merge_files_from_list(histlist, exclude_var=exclude_list)
+        Log.merge_files_from_list(full_file_list, exclude_var=exclude_list)
         Log.close()
 
         # ===== Delete the files that were combined ====
@@ -461,11 +449,11 @@ def main():
             ls_end = file_list[-1][18:21]
             fileout = 'LegacyGCM_Ls%s_Ls%s.nc' % (ls_ini, ls_end)
         else:
-            fileout = histlist[0]
+            fileout = full_file_list[0]
 
         # Assemble 'remove' and 'move' commands to execute
         rm_cmd = 'rm -f '
-        for ifile in histlist:
+        for ifile in full_file_list:
             rm_cmd += ' '+ifile
         cmd_txt = 'mv '+file_tmp+' '+fileout
         p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
@@ -484,12 +472,12 @@ def main():
             target_list = np.fromstring(
                 parser.parse_args().tshift, dtype=float, sep=' ')
 
-        for filei in file_list:
+        for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in filei):
-                fullnameIN = data_dir + '/' + filei
+            if not ('/' in file):
+                fullnameIN = data_dir + '/' + file
             else:
-                fullnameIN = filei
+                fullnameIN = file
             fullnameOUT = fullnameIN[:-3]+'_T'+'.nc'
 
             # Append extension, if any:
@@ -600,12 +588,12 @@ def main():
     # ===========================================================================
     elif parser.parse_args().bin_average and not parser.parse_args().bin_diurn:
         nday = parser.parse_args().bin_average
-        for filei in file_list:
+        for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in filei):
-                fullnameIN = data_dir + '/' + filei
+            if not ('/' in file):
+                fullnameIN = data_dir + '/' + file
             else:
-                fullnameIN = filei
+                fullnameIN = file
             fullnameOUT = fullnameIN[:-3]+'_to_average'+'.nc'
 
             # Append extension, if any:
@@ -672,12 +660,12 @@ def main():
         else:
             nday = parser.parse_args().bin_average
 
-        for filei in file_list:
+        for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in filei):
-                fullnameIN = data_dir + '/' + filei
+            if not ('/' in file):
+                fullnameIN = data_dir + '/' + file
             else:
-                fullnameIN = filei
+                fullnameIN = file
             fullnameOUT = fullnameIN[:-3]+'_to_diurn'+'.nc'
 
             # Append extension, if any:
@@ -777,12 +765,12 @@ def main():
         if parser.parse_args().no_trend:
             out_ext = out_ext+'_no_trend'
 
-        for filei in file_list:
+        for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in filei):
-                fullnameIN = data_dir + '/' + filei
+            if not ('/' in file):
+                fullnameIN = data_dir + '/' + file
             else:
-                fullnameIN = filei
+                fullnameIN = file
             fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
 
             # Append extension, if any:
@@ -878,12 +866,12 @@ def main():
     #
     #     if parser.parse_args().no_trend:out_ext =f"{out_ext}_no_trend"
     #
-    #     for filei in file_list:
+    #     for file in file_list:
     #         # Add path unless full path is provided
-    #         if not ('/' in filei):
-    #             fullnameIN = data_dir + '/' + filei
+    #         if not ('/' in file):
+    #             fullnameIN = data_dir + '/' + file
     #         else:
-    #             fullnameIN=filei
+    #             fullnameIN=file
     #         fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
     #
     #         # Append extension, if any:
@@ -976,12 +964,12 @@ def main():
         if parser.parse_args().normalize:
             out_ext = out_ext+'_norm'
 
-        for filei in file_list:
+        for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in filei):
-                fullnameIN = data_dir + '/' + filei
+            if not ('/' in file):
+                fullnameIN = data_dir + '/' + file
             else:
-                fullnameIN = filei
+                fullnameIN = file
             fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
 
             # Append extension, if any:
@@ -1087,12 +1075,12 @@ def main():
             name_target = data_dir + '/' + name_target
         fNcdf_t = Dataset(name_target, 'r')
 
-        for filei in file_list:
+        for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in filei):
-                fullnameIN = data_dir + '/' + filei
+            if not ('/' in file):
+                fullnameIN = data_dir + '/' + file
             else:
-                fullnameIN = filei
+                fullnameIN = file
             fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
 
             # Append extension, if any:
@@ -1133,12 +1121,12 @@ def main():
 
     elif parser.parse_args().zonal_avg:
 
-        for filei in file_list:
+        for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in filei):
-                fullnameIN = data_dir + '/' + filei
+            if not ('/' in file):
+                fullnameIN = data_dir + '/' + file
             else:
-                fullnameIN = filei
+                fullnameIN = file
             fullnameOUT = fullnameIN[:-3]+'_zonal_avg'+'.nc'
 
             # Append extension, if any:
