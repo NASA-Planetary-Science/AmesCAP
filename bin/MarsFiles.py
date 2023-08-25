@@ -374,16 +374,21 @@ def main():
                 file_name = os.path.basename(f)
                 ls_l = file_name[-12:-9]
                 ls_r = file_name[-6:-3]
+                print(f"\n ls_l and ls_r are {ls_l} and {ls_r}")
                 
                 if lsmin is None:
                     lsmin = ls_l
+                    print(f"\n lsmin is {lsmin}")
                 else:
                     lsmin = str(min(int(lsmin), int(ls_l))).zfill(3)
+                    print(f"\n lsmin is {lsmin}")
                 if lsmax is None:
                     lsmax = ls_r
+                    print(f"\n lsmax is {lsmax}")
                 else:
                     lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
-                a = make_FV3_files(f, parser.parse_args().fv3, True)
+                    print(f"\n lsmax is {lsmax}")
+                make_FV3_files(f, parser.parse_args().fv3, True)
         else:
             print("Processing fort.11 files")
             for f in full_file_list:
