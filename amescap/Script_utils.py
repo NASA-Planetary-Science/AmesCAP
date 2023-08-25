@@ -23,13 +23,13 @@ def prPurple(input_txt):
 def prLightPurple(input_txt):
     print(f"\033[94m{input_txt}\033[00m")
 
-CYN = "\033[96m"
-BLU = "\033[94m"
-YLW = "\033[93m"
-NCL = "\033[00m"
-RED = "\033[91m"
-GRN = "\033[92m"
-PRP = "\033[95m"
+Cyan = "\033[96m"
+Blue = "\033[94m"
+Yellow = "\033[93m"
+NoColor = "\033[00m"
+Red = "\033[91m"
+Green = "\033[92m"
+Purple = "\033[95m"
 
 def MY_func(Ls_cont):
     '''

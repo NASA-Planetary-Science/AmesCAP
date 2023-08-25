@@ -23,10 +23,7 @@ List of Functions:
 """
 
 # make print statements appear in color
-from amescap.Script_utils import prRed
-Cyan = "\033[96m"
-Yellow = "\033[93m"
-Default = "\033[00m"
+from amescap.Script_utils import prRed, Yellow, NoColor, Green
 
 # load generic Python modules
 import argparse     # parse arguments
@@ -41,7 +38,7 @@ from amescap.FV3_utils import sol2ls, ls2sol
 parser = argparse.ArgumentParser(
     description=(
         f"{Yellow}Returns the solar longitude (Ls) corresponding to a "
-        f"sol or vice-versa. Adapted from areols.py {Default}"
+        f"sol or vice-versa. Adapted from areols.py.{NoColor}\n"
     ),
     formatter_class = argparse.RawTextHelpFormatter
 )
@@ -51,8 +48,10 @@ parser.add_argument(
     help = (
         f"Input sol number. Required. Can either be one sol or a"
         f"range with an increment (start stop step).\n"
-        f"> Usage: MarsCalendar.py -sol 750\n"
-        f">        MarsCalendar.py -sol 750 800 5\n\n"
+        f"{Green}Usage:\n"
+        f"> MarsCalendar.py -sol 750\n"
+        f"> MarsCalendar.py -sol 750 800 5"
+        f"{NoColor}\n\n"
     )
 )
 
@@ -60,8 +59,10 @@ parser.add_argument(
     '-ls', '--ls', nargs = '+', type = float,
     help = (
         f"Return the sol number corresponding to this Ls.\n"
-        f"> Usage: MarsCalendar.py -ls 350\n"
-        f">        MarsCalendar.py -ls 350 360 5\n\n"
+        f"{Green}Usage:\n"
+        f"> MarsCalendar.py -ls 350\n"
+        f"> MarsCalendar.py -ls 350 360 5"
+        f"{NoColor}\n\n"
     )
 )
 
@@ -72,17 +73,27 @@ parser.add_argument(
         f"particular year of the simulation. \n"
         f"Req. [-ls --ls] or [-sol --sol]. \n"
         f"MY=0 for sol=0-667, MY=1 for sol=668-1335 etc.\n"
-        f"> Usage: MarsCalendar.py -ls 350 -my 2\n\n"
+        f"{Green}Usage:\n"
+        f"> Usage: MarsCalendar.py -ls 350 -my 2"
+        f"{NoColor}\n\n"
     )
 )
 
 parser.add_argument(
     '-c', '--cumulative', action='store_true',
     help = (
-        f"Return Ls from sol in cumulative form. Req. [-sol --sol]. \n"
+        f"Return Ls from sol in cumulative form. Req. [-sol --sol].\n"
         f"EX: Returns Ls=360-720 instead of Ls=0-360 for input "
         f"sol=669-1336 \n"
-        f"> Usage: MarsCalendar.py -sol 700 -c\n\n"
+        f"{Green}Usage:\n"
+        f"> MarsCalendar.py -sol 700 -c"
+        f"{NoColor}\n\n"
+    )
+)
+
+parser.add_argument('--debug', action='store_true',
+    help = (
+        f"Debug flag: release the exceptions.\n\n"
     )
 )
 

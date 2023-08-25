@@ -19,10 +19,8 @@ List of Functions:
 """
 
 # make print statements appear in color
-from amescap.Script_utils import prYellow, prCyan
-Cyan = "\033[96m"
-Yellow = "\033[93m"
-Default = "\033[00m"
+from amescap.Script_utils import (prYellow, prCyan, Cyan, Yellow, 
+                                  NoColor, Green)
 
 # load generic Python modules
 import sys          # system commands
@@ -39,7 +37,7 @@ import requests     # download data from site
 parser = argparse.ArgumentParser(
     description=(
         f"{Yellow}Uility for querying files on the MCMC NAS Data "
-        f"Portal.{Default}"
+        f"Portal.{NoColor}"
     ),
     formatter_class = argparse.RawTextHelpFormatter
 )
@@ -50,11 +48,13 @@ parser.add_argument(
         f"Query data by simulation identifier corresponding to \n"
         f"a subdirectory of legacygcmdata/:\n"
         f"{Cyan}https://data.nas.nasa.gov/legacygcm/data_legacygcm.php?"
-        f"dir=/legacygcmdata{Default}\n"
-        f"Current options include: '{Yellow}ACTIVECLDS{Default}', "
-        f"'{Yellow}INERTCLDS{Default}', and '{Yellow}ACTIVECLDS_NCDF"
-        f"{Default}'\n"
-        f"> Usage: MarsPull.py -id  INERTCLDS...\n\n"
+        f"dir=/legacygcmdata{NoColor}\n"
+        f"Current options include: '{Yellow}ACTIVECLDS{NoColor}', "
+        f"'{Yellow}INERTCLDS{NoColor}', and '{Yellow}ACTIVECLDS_NCDF\n"
+        f"{Green}Usage:\n"
+        f"> MarsPull.py -id  INERTCLDS..."
+        f"{NoColor}\n\n"
+        
     )
 )
 
@@ -63,8 +63,10 @@ parser.add_argument(
     help=(
         f"Query data by solar longitude (Ls). Requires a simulation "
         f"identifier (--id)\n"
-        f"> Usage: MarsPull.py -id ACTIVECLDS -ls 90.\n"
-        f">        MarsPull.py -id ACTIVECLDS -ls [start] [stop] \n\n"
+        f"{Green}Usage:\n"
+        f"> MarsPull.py -id ACTIVECLDS -ls 90.\n"
+        f"> MarsPull.py -id ACTIVECLDS -ls [start] [stop]"
+        f"{NoColor}\n\n"
     )
 )
 
@@ -73,8 +75,15 @@ parser.add_argument(
     help=(
         f"Query data by file name. Requires a simulation identifier "
         f"(--id)\n"
-        f"> Usage: MarsPull.py -id ACTIVECLDS -f "
-        f"fort.11_0730 fort.11_0731 \n\n"
+        f"{Green}Usage:\n"
+        f"> MarsPull.py -id ACTIVECLDS -f fort.11_0730 fort.11_0731"
+        f"{NoColor}\n\n"
+    )
+)
+
+parser.add_argument('--debug', action='store_true',
+    help = (
+        f"Debug flag: release the exceptions.\n\n"
     )
 )
 
