@@ -89,7 +89,6 @@ parser.add_argument('--debug', action='store_true',
 # ======================================================
 #                  DEFINITIONS
 # ======================================================
-global time, lat, lon, phalf, pfull
 
 # MarsWRF
 def marswrf_to_mgcm(DS):
@@ -201,7 +200,7 @@ def marswrf_to_mgcm(DS):
             DS.TSK, ['time', 'lat', 'lon'],
             'surface temperature', 'K'],
     }
-    return var_dict
+    return var_dict, time, lat, lon, phalf, pfull
 
 
 # OpenMars
@@ -266,7 +265,7 @@ def openmars_to_mgcm(DS):
             DS.tsurf, ['time', 'lat', 'lon'],
             'surface temperature', 'K']
     }
-    return var_dict
+    return var_dict, time, lat, lon, phalf, pfull
     
     
 # ======================================================
@@ -291,11 +290,13 @@ def main():
 
         # If user indicated marsWRF data
         if parser.parse_args().marswrf:
-            archive_vars = marswrf_to_mgcm(input_DS)
+            (archive_vars, time, lat, 
+            lon, phalf, pfull) = marswrf_to_mgcm(input_DS)
 
         # if user indicated openMars data
         elif parser.parse_args().openmars:
-            archive_vars = openmars_to_mgcm(input_DS)
+            (archive_vars, time, lat, 
+            lon, phalf, pfull) = openmars_to_mgcm(input_DS)
 
         # Create output file (common to all models)
         coord_attributes = {
