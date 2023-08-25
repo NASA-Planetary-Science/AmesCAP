@@ -349,7 +349,7 @@ def main():
     #                    Richard U. and Alex. K.
     # ==================================================================
 
-    # Convert to MGCM Output Format
+    # =============== Convert to MGCM Output Format
     if parser.parse_args().fv3:
         for req_file in parser.parse_args().fv3:
             if req_file not in ['fixed', 'average', 'daily', 'diurn']:
@@ -365,29 +365,24 @@ def main():
                 full_file_list.append(file)
         num_files = len(full_file_list)
 
-        lsmin = None
-        lsmax = None
+        # lsmin = None
+        # lsmax = None
 
         if full_file_list[0][-3:] == '.nc':
             print("Processing Legacy MGCM netCDF files")
             for f in full_file_list:
-                file_name = os.path.basename(f)
-                ls_l = file_name[-12:-9]
-                ls_r = file_name[-6:-3]
-                print(f"\n ls_l and ls_r are {ls_l} and {ls_r}")
+                # file_name = os.path.basename(f)
+                # ls_l = file_name[-12:-9]
+                # ls_r = file_name[-6:-3]
                 
-                if lsmin is None:
-                    lsmin = ls_l
-                    print(f"\n IF lsmin is {lsmin}")
-                else:
-                    lsmin = str(min(int(lsmin), int(ls_l))).zfill(3)
-                    print(f"\n ELSE lsmin is {lsmin}")
-                if lsmax is None:
-                    lsmax = ls_r
-                    print(f"\n IF lsmax is {lsmax}")
-                else:
-                    lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
-                    print(f"\n ELSE lsmax is {lsmax}")
+                # if lsmin is None:
+                #     lsmin = ls_l
+                # else:
+                #     lsmin = str(min(int(lsmin), int(ls_l))).zfill(3)
+                # if lsmax is None:
+                #     lsmax = ls_r
+                # else:
+                #     lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
                 make_FV3_files(f, parser.parse_args().fv3, True)
         else:
             print("Processing fort.11 files")
@@ -402,72 +397,78 @@ def main():
                 if 'diurn' in parser.parse_args().fv3:
                     file_name.write_to_diurn()
 
-    # ===========================================================================
-    # =============  Append netcdf files along the 'time' dimension =============
-    # ===========================================================================
+    # =============== Append files along the 'time' dimension
     elif parser.parse_args().combine:
         prYellow("Using internal method for concatenation")
 
-        # Get files to process
+        # Make a list of input files including the full path to the dir
         full_file_list = []
         for file in file_list:
-            # Add path unless full path is provided
             if not ('/' in file):
-                full_file_list.append(data_dir+'/'+file)
+                full_file_list.append(data_dir + '/' + file)
             else:
                 full_file_list.append(file)
-
         num_files = len(full_file_list)
-        # Easy case: merging **.fixed.nc means deleting all but the first file:
-        if file_list[0][5:] == '.fixed.nc' and num_files >= 2:
-            rm_cmd = 'rm -f '
+        
+        # For fixed files, deleting all but the first file has the same
+        # effect as combining files
+        if file_list[0][5:] == ".fixed.nc" and num_files >= 2:
+            rm_cmd = "rm -f "
             for i in range(1, num_files):
-                rm_cmd += ' '+full_file_list[i]
-            p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
+                # 1-N files ensures file number 0 is preserved
+                rm_cmd += " " + full_file_list[i]
+            p = subprocess.run(rm_cmd, universal_newlines=True, 
+                               shell=True)
             prCyan(f"Cleaned all but {file_list[0]}")
             exit()
 
         # =========
-        num_files = len(full_file_list)
-        prCyan(f"Merging {num_files} files, starting with {file_list[0]} ...")
+        prCyan(f"Merging {num_files} files starting with "
+               f"{file_list[0]}...")
 
-        # This section iexcludes any variable not listed after --include
+        # Exclude variables NOT listed after --include
         if parser.parse_args().include:
             f = Dataset(file_list[0], 'r')
-            exclude_list = filter_vars(f, parser.parse_args(
-            ).include, giveExclude=True)  # variable to exclude
+            exclude_list = filter_vars(
+                f, parser.parse_args().include, giveExclude=True
+            )
             f.close()
         else:
             exclude_list = []
 
-        # This creates a temporaty file ***_tmp.nc to work in
-        file_tmp = full_file_list[0][:-3]+'_tmp'+'.nc'
-        Log = Ncdf(file_tmp, 'Merged file')
-        Log.merge_files_from_list(full_file_list, exclude_var=exclude_list)
+        # Create a temporaty file ending in _tmp.nc to work in
+        tmp_file = f"{full_file_list[0][:-3]}_tmp.nc"
+        Log = Ncdf(tmp_file, 'Merged file')
+        Log.merge_files_from_list(full_file_list, 
+                                  exclude_var=exclude_list)
         Log.close()
 
-        # ===== Delete the files that were combined ====
+        # Delete the files that were used for combine
 
-        # Rename merged file LegacyGCM_LsINI_LsEND.nc or first files of the list (e.g 00010.atmos_average.nc)
+        # Rename temporary file for the final merged file 
+        # For Legacy netCDF files, rename using initial and end Ls
+        # For MGCM netCDF files, rename to the first file in the list
         if file_list[0][:12] == 'LegacyGCM_Ls':
             ls_ini = file_list[0][12:15]
             ls_end = file_list[-1][18:21]
-            fileout = 'LegacyGCM_Ls%s_Ls%s.nc' % (ls_ini, ls_end)
+            merged_file = f"LegacyGCM_Ls{ls_ini}_Ls{ls_end}.nc"
         else:
-            fileout = full_file_list[0]
+            merged_file = full_file_list[0]
 
-        # Assemble 'remove' and 'move' commands to execute
-        rm_cmd = 'rm -f '
-        for ifile in full_file_list:
-            rm_cmd += ' '+ifile
-        cmd_txt = 'mv '+file_tmp+' '+fileout
+        # Delete the files that were combined. Rename the _tmp.nc file
+        # using the name created above
+        rm_cmd = "rm -f "
+        for file in full_file_list:
+            rm_cmd += " " + file
+        cmd_txt = "mv " + tmp_file + " " + merged_file
         p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
         p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
-        prCyan(f"{fileout} was merged")
+        prCyan(f"{merged_file} was created from a merge")
 
-# ===============================================================================
-# ============= Time-Shifting Implementation by Victoria H. =====================
-# ===============================================================================
+    # ==================================================================
+    #                   Time-Shifting Implementation
+    #                            Victoria H.
+    # ==================================================================
 
     elif parser.parse_args().tshift:
         # target_list holds the target local times
@@ -480,19 +481,22 @@ def main():
         for file in file_list:
             # Add path unless full path is provided
             if not ('/' in file):
-                fullnameIN = data_dir + '/' + file
+                input_file_name = data_dir + '/' + file
             else:
-                fullnameIN = file
-            fullnameOUT = fullnameIN[:-3]+'_T'+'.nc'
+                input_file_name = file
+            output_file_name = input_file_name[:-3] + '_T.nc'
 
             # Append extension, if any:
             if parser.parse_args().ext:
-                fullnameOUT = fullnameOUT[:-3] + \
-                    '_'+parser.parse_args().ext+'.nc'
+                output_file_name = (output_file_name[:-3]
+                                    + '_'
+                                    + parser.parse_args().ext
+                                    + '.nc')
 
-            fdiurn = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            fdiurn = Dataset(input_file_name, 'r', 
+                             format='NETCDF4_CLASSIC')
             # Define a netcdf object from the netcdf wrapper module
-            fnew = Ncdf(fullnameOUT)
+            fnew = Ncdf(output_file_name)
             # Copy some dimensions from the old file to the new file
             fnew.copy_all_dims_from_Ncfile(fdiurn)
 
@@ -588,25 +592,26 @@ def main():
             fnew.close()
             fdiurn.close()
 
-    # ===========================================================================
-    # ===============  Bin a 'daily' file to an 'average' file ==================
-    # ===========================================================================
+    # ==================================================================
+    #               Bin a 'daily' file as an 'average' file 
+    #                               Alex K.
+    # ==================================================================
     elif parser.parse_args().bin_average and not parser.parse_args().bin_diurn:
         nday = parser.parse_args().bin_average
         for file in file_list:
             # Add path unless full path is provided
             if not ('/' in file):
-                fullnameIN = data_dir + '/' + file
+                input_file_name = data_dir + '/' + file
             else:
-                fullnameIN = file
-            fullnameOUT = fullnameIN[:-3]+'_to_average'+'.nc'
+                input_file_name = file
+            output_file_name = input_file_name[:-3]+'_to_average'+'.nc'
 
             # Append extension, if any:
             if parser.parse_args().ext:
-                fullnameOUT = fullnameOUT[:-3] + \
+                output_file_name = output_file_name[:-3] + \
                     '_'+parser.parse_args().ext+'.nc'
 
-            fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            fdaily = Dataset(input_file_name, 'r', format='NETCDF4_CLASSIC')
             var_list = filter_vars(
                 fdaily, parser.parse_args().include)  # Get all variables
 
@@ -625,7 +630,7 @@ def main():
                 prYellow(f"    Will use {N_even}  bins of ({nday} x {iperday})={combinedN} timesteps ({N_even*combinedN}) and discard {N_left} timesteps")
 
             # Define a netcdf object from the netcdf wrapper module
-            fnew = Ncdf(fullnameOUT)
+            fnew = Ncdf(output_file_name)
             # Copy all dimensions but 'time' from the old file to the new file
             fnew.copy_all_dims_from_Ncfile(fdaily, exclude_dim=['time'])
 
@@ -655,9 +660,10 @@ def main():
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
 
-    # ===========================================================================
-    # ===============  Bin a 'daily' file to a 'diurn' file =====================
-    # ===========================================================================
+    # ==================================================================
+    #               Bin a 'daily' file as a 'diurn' file
+    #                               Alex K.
+    # ==================================================================
     elif parser.parse_args().bin_diurn:
         # Use defaut binning period of 5 days (like 'average' files)
         if parser.parse_args().bin_average is None:
@@ -668,17 +674,17 @@ def main():
         for file in file_list:
             # Add path unless full path is provided
             if not ('/' in file):
-                fullnameIN = data_dir + '/' + file
+                input_file_name = data_dir + '/' + file
             else:
-                fullnameIN = file
-            fullnameOUT = fullnameIN[:-3]+'_to_diurn'+'.nc'
+                input_file_name = file
+            output_file_name = input_file_name[:-3]+'_to_diurn'+'.nc'
 
             # Append extension, if any:
             if parser.parse_args().ext:
-                fullnameOUT = fullnameOUT[:-3] + \
+                output_file_name = output_file_name[:-3] + \
                     '_'+parser.parse_args().ext+'.nc'
 
-            fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            fdaily = Dataset(input_file_name, 'r', format='NETCDF4_CLASSIC')
             var_list = filter_vars(
                 fdaily, parser.parse_args().include)  # Get all variables
 
@@ -689,7 +695,7 @@ def main():
             iperday = int(np.round(1/dt_in))
 
             # define a netcdf object from the netcdf wrapper module
-            fnew = Ncdf(fullnameOUT)
+            fnew = Ncdf(output_file_name)
             # Copy all dimensions but 'time' from the old file to the new file
             fnew.copy_all_dims_from_Ncfile(fdaily, exclude_dim=['time'])
 
@@ -734,9 +740,10 @@ def main():
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
 
-    # ===========================================================================
-    # ========================  Transient wave analysis =========================
-    # ===========================================================================
+    # ==================================================================
+    #                       Transient Wave Analysis
+    #                       Alex K. & R. J. Wilson
+    # ==================================================================
 
     elif parser.parse_args().high_pass_filter or parser.parse_args().low_pass_filter or parser.parse_args().band_pass_filter:
 
@@ -773,17 +780,17 @@ def main():
         for file in file_list:
             # Add path unless full path is provided
             if not ('/' in file):
-                fullnameIN = data_dir + '/' + file
+                input_file_name = data_dir + '/' + file
             else:
-                fullnameIN = file
-            fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
+                input_file_name = file
+            output_file_name = input_file_name[:-3]+out_ext+'.nc'
 
             # Append extension, if any:
             if parser.parse_args().ext:
-                fullnameOUT = fullnameOUT[:-3] + \
+                output_file_name = output_file_name[:-3] + \
                     '_'+parser.parse_args().ext+'.nc'
 
-            fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            fdaily = Dataset(input_file_name, 'r', format='NETCDF4_CLASSIC')
 
             var_list = filter_vars(
                 fdaily, parser.parse_args().include)  # Get all variables
@@ -798,7 +805,7 @@ def main():
                 exit()
 
             # Define a netcdf object from the netcdf wrapper module
-            fnew = Ncdf(fullnameOUT)
+            fnew = Ncdf(output_file_name)
             # Copy all dimensions but 'time' from the old file to the new file
             fnew.copy_all_dims_from_Ncfile(fdaily)
 
@@ -842,9 +849,10 @@ def main():
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
 
-    # ===========================================================================
-    # ========================  Zonal Decomposition Analysis ====================
-    # ===========================================================================
+    # ==================================================================
+    #                       Zonal Decomposition Analysis
+    #                               Alex K.
+    # ==================================================================
 
     # elif parser.parse_args().high_pass_zonal or parser.parse_args().low_pass_zonal or parser.parse_args().band_pass_zonal:
     #
@@ -874,15 +882,15 @@ def main():
     #     for file in file_list:
     #         # Add path unless full path is provided
     #         if not ('/' in file):
-    #             fullnameIN = data_dir + '/' + file
+    #             input_file_name = data_dir + '/' + file
     #         else:
-    #             fullnameIN=file
-    #         fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
+    #             input_file_name=file
+    #         output_file_name = input_file_name[:-3]+out_ext+'.nc'
     #
     #         # Append extension, if any:
-    #         if parser.parse_args().ext:fullnameOUT=fullnameOUT[:-3]+'_'+parser.parse_args().ext+'.nc'
+    #         if parser.parse_args().ext:output_file_name=output_file_name[:-3]+'_'+parser.parse_args().ext+'.nc'
     #
-    #         fname = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+    #         fname = Dataset(input_file_name, 'r', format='NETCDF4_CLASSIC')
     #
     #         var_list = filter_vars(fname,parser.parse_args().include) # Get all variables
     #
@@ -910,7 +918,7 @@ def main():
     #             prYellow("Band pass filter, allowing only {L_min} km < wavelength < {L_max} km")
 
    ##
-    #         fnew = Ncdf(fullnameOUT) # Define a netcdf object from the netcdf wrapper module
+    #         fnew = Ncdf(output_file_name) # Define a netcdf object from the netcdf wrapper module
     #         # Copy all dimensions but 'time' from the old file to the new file
     #         fnew.copy_all_dims_from_Ncfile(fname)
     #
@@ -953,9 +961,10 @@ def main():
     #                     fnew.copy_Ncvar(fname.variables[ivar])
     #         fnew.close()
 
-    # ===========================================================================
-    # ============================  Tidal Analysis ==============================
-    # ===========================================================================
+    # ==================================================================
+    #                           Tidal Analysis
+    #                           Alex K. & R. J. Wilson
+    # ==================================================================
 
     elif parser.parse_args().tidal:
         from amescap.Spectral_utils import diurn_extract, reconstruct_diurn
@@ -972,17 +981,17 @@ def main():
         for file in file_list:
             # Add path unless full path is provided
             if not ('/' in file):
-                fullnameIN = data_dir + '/' + file
+                input_file_name = data_dir + '/' + file
             else:
-                fullnameIN = file
-            fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
+                input_file_name = file
+            output_file_name = input_file_name[:-3]+out_ext+'.nc'
 
             # Append extension, if any:
             if parser.parse_args().ext:
-                fullnameOUT = fullnameOUT[:-3] + \
+                output_file_name = output_file_name[:-3] + \
                     '_'+parser.parse_args().ext+'.nc'
 
-            fdiurn = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            fdiurn = Dataset(input_file_name, 'r', format='NETCDF4_CLASSIC')
 
             var_list = filter_vars(
                 fdiurn, parser.parse_args().include)  # Get all variables
@@ -995,7 +1004,7 @@ def main():
             areo = fdiurn.variables['areo'][:]
 
             # Define a netcdf object from the netcdf wrapper module
-            fnew = Ncdf(fullnameOUT)
+            fnew = Ncdf(output_file_name)
             # Copy all dims but 'time_of_day' from the old file to the new file
 
             # Harmonics to reconstruct the signal. We use the original time_of_day array.
@@ -1067,9 +1076,10 @@ def main():
 
             fnew.close()
 
-    # ===========================================================================
-    # =============================  Regrid  files ==============================
-    # ===========================================================================
+    # ==================================================================
+    #                           Regridding Routine
+    #                                 Alex K.
+    # ==================================================================
 
     elif parser.parse_args().regrid_source:
         out_ext = '_regrid'
@@ -1083,23 +1093,23 @@ def main():
         for file in file_list:
             # Add path unless full path is provided
             if not ('/' in file):
-                fullnameIN = data_dir + '/' + file
+                input_file_name = data_dir + '/' + file
             else:
-                fullnameIN = file
-            fullnameOUT = fullnameIN[:-3]+out_ext+'.nc'
+                input_file_name = file
+            output_file_name = input_file_name[:-3]+out_ext+'.nc'
 
             # Append extension, if any:
             if parser.parse_args().ext:
-                fullnameOUT = fullnameOUT[:-3] + \
+                output_file_name = output_file_name[:-3] + \
                     '_'+parser.parse_args().ext+'.nc'
 
-            f_in = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            f_in = Dataset(input_file_name, 'r', format='NETCDF4_CLASSIC')
 
             var_list = filter_vars(
                 f_in, parser.parse_args().include)  # Get all variables
 
             # Define a netcdf object from the netcdf wrapper module
-            fnew = Ncdf(fullnameOUT)
+            fnew = Ncdf(output_file_name)
 
             # Copy all dims from the target file to the new file
             fnew.copy_all_dims_from_Ncfile(fNcdf_t)
@@ -1120,33 +1130,34 @@ def main():
             fnew.close()
             fNcdf_t.close()
 
-    # ===========================================================================
-    # =======================  Zonal averaging    ===============================
-    # ===========================================================================
+    # ==================================================================
+    #                           Zonal Averaging
+    #                              Alex K.
+    # ==================================================================
 
     elif parser.parse_args().zonal_avg:
 
         for file in file_list:
             # Add path unless full path is provided
             if not ('/' in file):
-                fullnameIN = data_dir + '/' + file
+                input_file_name = data_dir + '/' + file
             else:
-                fullnameIN = file
-            fullnameOUT = fullnameIN[:-3]+'_zonal_avg'+'.nc'
+                input_file_name = file
+            output_file_name = input_file_name[:-3]+'_zonal_avg'+'.nc'
 
             # Append extension, if any:
             if parser.parse_args().ext:
-                fullnameOUT = fullnameOUT[:-3] + \
+                output_file_name = output_file_name[:-3] + \
                     '_'+parser.parse_args().ext+'.nc'
 
-            fdaily = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+            fdaily = Dataset(input_file_name, 'r', format='NETCDF4_CLASSIC')
             var_list = filter_vars(
                 fdaily, parser.parse_args().include)  # Get all variables
 
             lon_in = fdaily.variables['lon'][:]
 
             # Define a netcdf object from the netcdf wrapper module
-            fnew = Ncdf(fullnameOUT)
+            fnew = Ncdf(output_file_name)
             # Copy all dimensions but 'time' from the old file to the new file
             fnew.copy_all_dims_from_Ncfile(fdaily, exclude_dim=['lon'])
 
@@ -1180,9 +1191,9 @@ def main():
 
 # END of script
 
-# *******************************************************************************
-# ************ Definitions for the functions used in this script ****************
-# *******************************************************************************
+# ======================================================
+#                  DEFINITIONS
+# ======================================================
 
 
 def make_FV3_files(fpath, typelistfv3, renameFV3=True):
