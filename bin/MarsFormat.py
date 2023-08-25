@@ -68,7 +68,7 @@ parser.add_argument(
         f"Produce an MGCM-like daily file from an "
         f"{Yellow}openMars{nocolor} file.\n"
         f"{Green}Usage: \n"
-        f"> MarsFormat.py input_file*.nc -openmars \n"
+        f"> MarsFormat.py input_file*.nc -openmars daily"
         f"{nocolor}\n\n"
     )
 )
@@ -79,7 +79,7 @@ parser.add_argument(
         f"Produce an MGCM-like daily file from a "
         f"{Yellow}MarsWRF{nocolor} file.\n"
         f"{Green}Usage: \n"
-        f"> MarsFormat.py input_file*.nc -marswrf \n"
+        f"> MarsFormat.py input_file*.nc -marswrf daily"
         f"{nocolor}\n\n"
     )
 )
@@ -89,7 +89,7 @@ parser.add_argument(
 # )
 
 parser.add_argument('--debug', action='store_true',
-    help = (f"Debug flag: release the exceptions. \n\n")
+    help = (f"Debug flag: release the exceptions.\n\n")
 )
 
 # ======================================================
@@ -97,7 +97,7 @@ parser.add_argument('--debug', action='store_true',
 # ======================================================
 
 def main():
-    file_list = parser.parse_args().input_file_name
+    file_list = parser.parse_args().input_file
     data_dir = os.getcwd()
     
     for file_name in file_list:
