@@ -365,24 +365,24 @@ def main():
                 full_file_list.append(file)
         num_files = len(full_file_list)
 
-        # lsmin = None
-        # lsmax = None
+        lsmin = None
+        lsmax = None
 
         if full_file_list[0][-3:] == '.nc':
             print("Processing Legacy MGCM netCDF files")
             for f in full_file_list:
                 file_name = os.path.basename(f)
-                # ls_l = file_name[-12:-9]
-                # ls_r = file_name[-6:-3]
+                ls_l = file_name[-12:-9]
+                ls_r = file_name[-6:-3]
                 
-                # if lsmin is None:
-                #     lsmin = ls_l
-                # else:
-                #     lsmin = str(min(int(lsmin), int(ls_l))).zfill(3)
-                # if lsmax is None:
-                #     lsmax = ls_r
-                # else:
-                #     lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
+                if lsmin is None:
+                    lsmin = ls_l
+                else:
+                    lsmin = str(min(int(lsmin), int(ls_l))).zfill(3)
+                if lsmax is None:
+                    lsmax = ls_r
+                else:
+                    lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
                 a = make_FV3_files(f, parser.parse_args().fv3, True)
         else:
             print("Processing fort.11 files")
