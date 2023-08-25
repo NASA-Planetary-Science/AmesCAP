@@ -10,12 +10,26 @@ import re
 
 
 # The functions below allow to print in different color
-def prRed(skk): print("\033[91m{}\033[00m".format(skk))
-def prGreen(skk): print("\033[92m{}\033[00m".format(skk))
-def prCyan(skk): print("\033[96m{}\033[00m".format(skk))
-def prYellow(skk): print("\033[93m{}\033[00m".format(skk))
-def prPurple(skk): print("\033[95m{}\033[00m".format(skk))
-def prLightPurple(skk): print("\033[94m{}\033[00m".format(skk))
+def prRed(input_txt):
+    print(f"\033[91m{input_txt}\033[00m")
+def prGreen(input_txt):
+    print(f"\033[92m{input_txt}\033[00m")
+def prCyan(input_txt):
+    print(f"\033[96m{input_txt}\033[00m")
+def prYellow(input_txt):
+    print(f"\033[93m{input_txt}\033[00m")
+def prPurple(input_txt):
+    print(f"\033[95m{input_txt}\033[00m")
+def prLightPurple(input_txt):
+    print(f"\033[94m{input_txt}\033[00m")
+
+CYN = "\033[96m"
+BLU = "\033[94m"
+YLW = "\033[93m"
+NCL = "\033[00m"
+RED = "\033[91m"
+GRN = "\033[92m"
+PRP = "\033[95m"
 
 def MY_func(Ls_cont):
     '''
@@ -51,10 +65,10 @@ def print_fileContent(fileNcdf):
         None (print in the terminal)
     '''
     #Define Colors for printing
-    def Green(skk): return"\033[92m{}\033[00m".format(skk)
-    def Cyan(skk): return "\033[96m{}\033[00m".format(skk)
-    def Yellow(skk):return"\033[93m{}\033[00m".format(skk)
-    def Purple(skk):return"\033[95m{}\033[00m".format(skk)
+    def Green(input_txt): return"\033[92m{}\033[00m".format(input_txt)
+    def Cyan(input_txt): return "\033[96m{}\033[00m".format(input_txt)
+    def Yellow(input_txt):return"\033[93m{}\033[00m".format(input_txt)
+    def Purple(input_txt):return"\033[95m{}\033[00m".format(input_txt)
     if not os.path.isfile(fileNcdf):
         print(fileNcdf+' not found')
     else:
@@ -104,8 +118,8 @@ def print_varContent(fileNcdf,list_varfull,print_stat=False):
         None (print in the terminal)
     '''
     #Define Colors for printing
-    def Cyan(skk): return "\033[96m{}\033[00m".format(skk)
-    def Red(skk):  return "\033[91m{}\033[00m".format(skk)
+    def Cyan(input_txt): return "\033[96m{}\033[00m".format(input_txt)
+    def Red(input_txt):  return "\033[91m{}\033[00m".format(input_txt)
     if not os.path.isfile(fileNcdf):
         print(fileNcdf+' not found')
     else:
