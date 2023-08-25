@@ -87,6 +87,10 @@ parser.add_argument(
 #     '-legacy', '--legacy', nargs='+', help=argparse.SUPPRESS
 # )
 
+parser.add_argument('--debug', action='store_true',
+    help = (f"Debug flag: release the exceptions. \n\n")
+)
+
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
@@ -364,5 +368,5 @@ def main():
     #                  END OF PROGRAM
     # ======================================================
 
-    if __name__ == '__main__':
+    if __name__ == "__main__":
         main()
