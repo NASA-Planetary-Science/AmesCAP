@@ -92,7 +92,65 @@ parser.add_argument('--debug', action='store_true',
 
 # MarsWRF
 def marswrf_to_mgcm(DS):
-    #TODO longname is 'description' for MarsWRF
+    """
+    Converts variables in MarsWRF output files to MGCM-like format and
+    derives variables from their perturbations.
+
+    WRF data is output to dimensions: [time, pfull, lat, lon] or 
+    [t,z,y,x], just like MGCM data. Some WRF variables are on staggered
+    grids, referred to in the comments using ' (prime; like y').
+    
+    The dimensions of the native WRF variables can be:
+    - t  = time             (like time in MGCM)
+    - z  = bottom_top       (like pfull in MGCM)
+    - z' = bottom_top_stag  (like phalf in MGCM)
+    - y  = south_north      (like lat in MGCM)
+    - y' = south_north_stag
+    - x  = west_east        (like lon in MGCM)
+    - x' = west_east_stag  
+    
+    The variables transferred or derived from WRF output and piped to
+    the MGCM daily file are listed below.
+    
+    | MarsWRF | MGCM Equiv. | Units    | Notes
+    | ------- | ----------- | -----    |------
+    | XTIME   | time        | days     | *converted from minutes to days 
+    |         |             |          |  since simulation start*
+    | L_S     | areo        | degree   |
+    | PSFC    | ps          | Pa       |
+    | XLONG   | lon         | degree E | 
+    | XLAT    | lat         | degree N |
+    | HGT     | zsurf       | meters   |
+    | U       | ucomp       | m/s      | *req. interp. to regular grid*
+    | V       | vcomp       | m/s      | *req. interp. to regular grid*
+    | W       | w           | m/s      | *req. interp. to regular grid*
+    | H2OICE  | h2o_ice_sfc | kg/m2    |
+    | CO2ICE  | co2_ice_sfc | kg/m2    |
+    | ZNW     | bk          |          |
+    | TSK     | ts          | K        |
+    | P_TOP   | pk[0]       | Pa       | = model top pressure
+
+    Parameters
+    ----------
+    DS : xarray dataset
+        The dataset created by xarray when it opens the user-supplied
+        input file.
+
+    Returns
+    -------
+    var_dict : dictionary
+        Dictionary with variable names as keys and a list of attributes[values, dimensions, longname, units] as values.
+    time : array
+        Minutes since simulation start
+    lat : array
+        Latitude on a regular grid
+    lon : array
+        Longitude on a regular grid
+    phalf : array
+        Half pressure levels
+    pfull : array
+        Full pressure levels
+    """
 
     # Find shape of coordinates. Expecting [t,z,y,x]
     WRF_dims = np.shape(DS.T)
@@ -158,7 +216,7 @@ def marswrf_to_mgcm(DS):
     bk[:] = DS.ZNW[0, :]
 
     # Archive variables
-    # Each entry has [name, values, dimensions, longname,units]
+    # Each entry has [name, values, dimensions, longname, units]
     var_dict = {
         'ak': [
             ak, ['phalf'],
@@ -205,6 +263,34 @@ def marswrf_to_mgcm(DS):
 
 # OpenMars
 def openmars_to_mgcm(DS):
+    """
+    Converts variables in openMars output files to MGCM-like format.
+
+    openMars data is similar to MGCM data already. This function derives
+    pfull and phalf but otherwise only needs to rename variables and 
+    update units, longnames, and dimensions to match MGCM output.
+
+    Parameters
+    ----------
+    DS : xarray dataset
+        The dataset created by xarray when it opens the user-supplied
+        input file.
+
+    Returns
+    -------
+    var_dict : dictionary
+        Dictionary with variable names as keys and a list of attributes[values, dimensions, longname, units] as values.
+    time : array
+        Minutes since simulation start
+    lat : array
+        Latitude on a regular grid
+    lon : array
+        Longitude on a regular grid
+    phalf : array
+        Half pressure levels
+    pfull : array
+        Full pressure levels
+    """
     # Define coordinates for new DataFrame
     ref_press = 720  # TODO this is added on to create ak/bk
     time = DS.time  # minutes since simulation start [m]
@@ -218,21 +304,17 @@ def openmars_to_mgcm(DS):
     # Add p_half dimensions and ak, bk vertical grid coordinates
     # DS.expand_dims({'p_half':len(pfull)+1})
 
-    """
-    Compute sigma values.
-    Swap the sigma array upside down twice with [::-1].
-    The first time is for layers_mid_point_to_boundary() which 
-    needs sigma[0]=0, sigma[-1]=1. The second time is to 
-    reorganize the array in the original openMars format where 
-    sigma[0]=1, sigma[-1]=0
-    """
+    # Compute sigma values.    
+    # Invert sigma array for layers_mid_point_to_boundary(), which
+    # expects sigma[0]=0, sigma[-1]=1.
+    # Invert again so that sigma[0]=1, sigma[-1]=0
     DS['bk'] = layers_mid_point_to_boundary(DS.lev[::-1], 1.)[::-1]
     # Pure sigma model, set bk=0
     DS['ak'] = np.zeros(len(pfull)+1)
     phalf = np.array(DS['ak']) + ref_press*np.array(DS['bk'])
 
     # Archive variables
-    # Each entry has [name, values, dimensions, longname,units]
+    # Each entry has [name, values, dimensions, longname, units]
     var_dict = {
         'bk': [
             DS.bk, ['phalf'],
