@@ -42,14 +42,15 @@ from amescap.FV3_utils import layers_mid_point_to_boundary
 
 xr.set_options(keep_attrs=True)
 
+
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
 
 parser = argparse.ArgumentParser(
     description=(
-        f"{Yellow}fit2FV3.py is for converting non-MGCM output "
-        f"to MGCM format{nocolor} \n\n"
+        f"{Yellow}MarsFormat is for converting non-MGCM output "
+        f"to MGCM format.{nocolor} \n\n"
     ),
     formatter_class = argparse.RawTextHelpFormatter
 )
@@ -364,9 +365,9 @@ def main():
         
         prCyan(f"{output_file_name} was created")
 
-    # ======================================================
-    #                  END OF PROGRAM
-    # ======================================================
+# ======================================================
+#                  END OF PROGRAM
+# ======================================================
 
-    if __name__ == "__main__":
-        main()
+if __name__ == "__main__":
+    main()
