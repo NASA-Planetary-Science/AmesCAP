@@ -378,16 +378,16 @@ def main():
                 
                 if lsmin is None:
                     lsmin = ls_l
-                    print(f"\n lsmin is {lsmin}")
+                    print(f"\n IF lsmin is {lsmin}")
                 else:
                     lsmin = str(min(int(lsmin), int(ls_l))).zfill(3)
-                    print(f"\n lsmin is {lsmin}")
+                    print(f"\n ELSE lsmin is {lsmin}")
                 if lsmax is None:
                     lsmax = ls_r
-                    print(f"\n lsmax is {lsmax}")
+                    print(f"\n IF lsmax is {lsmax}")
                 else:
                     lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
-                    print(f"\n lsmax is {lsmax}")
+                    print(f"\n ELSE lsmax is {lsmax}")
                 make_FV3_files(f, parser.parse_args().fv3, True)
         else:
             print("Processing fort.11 files")
