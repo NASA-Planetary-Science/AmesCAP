@@ -82,16 +82,21 @@
              
   <section id="module-MarsFormat">
 <span id="marsformat"></span><h1><a class="reference internal" href="#module-MarsFormat" title="MarsFormat"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsFormat</span></code></a><a class="headerlink" href="#module-MarsFormat" title="Permalink to this heading"></a></h1>
-<p>The MarsFormat executable is for …</p>
+<p>The MarsFormat executable is a routine that transforms non-MGCM model
+output into MGCM-like model output for compatibility with CAP.</p>
+<p>MarsFormat changes variable names, dimension names, dimension order,
+and units to the configuration expected by CAP. In some cases, such as
+for MarsWRF, variables are derived and regridded onto a standard grid.</p>
 <dl class="simple">
 <dt>The executable requires x arguments:</dt><dd><ul class="simple">
-<li><p>[-x –x]      define</p></li>
+<li><p>[-openmars –openmars]    convert openMars data to MGCM format</p></li>
+<li><p>[-marswrf –marswrf]      convert MarsWRF data to MGCM format</p></li>
 </ul>
 </dd>
 <dt>Third-party Requirements:</dt><dd><ul class="simple">
 <li><p>numpy</p></li>
 <li><p>argparse</p></li>
-<li><p>requests</p></li>
+<li><p>xarray</p></li>
 </ul>
 </dd>
 <dt>List of Functions:</dt><dd><ul class="simple">
