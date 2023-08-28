@@ -523,85 +523,72 @@ def main():
             
             if target_list is None:
                 # If user does not specify which TOD(s) to do, do all 24
-                tod_in = None
                 tod_name_out = tod_name_in
                 fnew.copy_Ncaxis_with_content(
                     fdiurn.variables[tod_name_in]
                 )
-                # Only copy 'areo' if it exists in the original file
-                if 'areo' in fdiurn.variables.keys():
+                # Only copy "areo" if it exists in the original file
+                if "areo" in fdiurn.variables.keys():
                     fnew.copy_Ncvar(fdiurn.variables['areo'])
             else:
                 # If user requests specific local times, update the old
                 # axis as necessary
-                tod_in = target_list
-                tod_name_out = f"time_of_day_{(len(tod_in)):02}"
-                fnew.add_dim_with_content(tod_name_out, tod_in, 
-                    longname_txt="time of day",
-                    units_txt="[hours since 0000-00-00 00:00:00]",
-                    cart_txt=""
+                tod_name_out = f"time_of_day_{(len(target_list)):02}"
+                fnew.add_dim_with_content(tod_name_out, target_list, 
+                    longname_txt = "time of day",
+                    units_txt = "[hours since 0000-00-00 00:00:00]",
+                    cart_txt = ""
                 )
                 # Create 'areo' variable with the new size
-                areo_in = fdiurn.variables['areo'][:]
-                areo_shape = areo_in.shape
-                dims_out = fdiurn.variables['areo'].dimensions
-                # shape = (133, 24, 1)
-                # dims = ('time', 'time_of_day_24', 'scalar_axis')
-                print(f"1. {fdiurn.variables['areo'][:].shape}")
-                print(f"2. {fdiurn.variables['areo'].shape}")
+                areo_shape = fdiurn.variables['areo'].shape
+                areo_dims = fdiurn.variables['areo'].dimensions
 
                 # Update shape with new time_of_day
-                areo_shape = (areo_shape[0], len(tod_in), areo_shape[2])
-                dims_out = (dims_out[0], tod_name_out, dims_out[2])
-                areo_out = np.zeros(areo_shape)
-                # shape = (133, 1, 1)
-                # dims = ('time', 'time_of_day_01', 'scalar_axis')
+                areo_shape = (areo_shape[0], len(target_list), areo_shape[2])
+                areo_dims = (areo_dims[0], tod_name_out, areo_dims[2])
                 
-                # For new tod_in, e.g [3,15]
-                for ii in range(len(tod_in)):
-                    # Get the closest 'time_of_day' index in the input array
-                    it = np.argmin(np.abs(tod_in[ii]-tod_orig))
-                    areo_out[:, ii, 0] = areo_in[:, it, 0]
+                areo_out = np.zeros(areo_shape)
+                # For new target_list, e.g [3,15]
+                for i in range(len(target_list)):
+                    # Get the closest "time_of_day" index
+                    j = np.argmin(np.abs(target_list[i] - tod_orig))
+                    areo_out[:, i, 0] = fdiurn.variables['areo'][:, j, 0]
 
-                fnew.add_dim_with_content(
-                    'scalar_axis', [0], longname_txt="none", units_txt='none')
-                fnew.log_variable('areo', areo_out, dims_out,
-                                  'areo', 'degrees')
+                fnew.add_dim_with_content("scalar_axis", [0], 
+                                          longname_txt="none", 
+                                          units_txt="none"
+                )
+                fnew.log_variable("areo", areo_out, areo_dims,
+                                  "areo", "degrees"
+                )
 
-            # Read 4D field and do the time shift
+            # Read in 4D field(s) and do the time shift. Exclude vars
+            # not listed after --include in var_list
             longitude = np.array(fdiurn.variables['lon'])
-            var_list = filter_vars(
-                fdiurn, parser.parse_args().include)  # Get all variables
+            var_list = filter_vars(fdiurn, parser.parse_args().include)
 
-            for ivar in var_list:
-                prCyan(f"Processing: {ivar} ...")
-                varNcf = fdiurn.variables[ivar]
-                varIN = varNcf[:]
-                vkeys = varNcf.dimensions
-                longname_txt, units_txt = get_longname_units(fdiurn, ivar)
-                if (len(vkeys) == 4):
-                    ilat = vkeys.index('lat')
-                    ilon = vkeys.index('lon')
-                    itime = vkeys.index('time')
-                    itod = vkeys.index(tod_name_in)
-                    newvar = np.transpose(varIN, (ilon, ilat, itime, itod))
-                    newvarOUT = tshift(newvar, longitude,
-                                       tod_orig, timex=tod_in)
-                    varOUT = np.transpose(newvarOUT, (2, 3, 1, 0))
-                    fnew.log_variable(
-                        ivar, varOUT, ['time', tod_name_out, 'lat', 'lon'], longname_txt, units_txt)
-                if (len(vkeys) == 5):
-                    ilat = vkeys.index('lat')
-                    ilon = vkeys.index('lon')
-                    iz = vkeys.index(zaxis)
-                    itime = vkeys.index('time')
-                    itod = vkeys.index(tod_name_in)
-                    newvar = np.transpose(varIN, (ilon, ilat, iz, itime, itod))
-                    newvarOUT = tshift(newvar, longitude,
-                                       tod_orig, timex=tod_in)
-                    varOUT = np.transpose(newvarOUT, (3, 4, 2, 1, 0))
-                    fnew.log_variable(ivar, varOUT, [
-                                      'time', tod_name_out, zaxis, 'lat', 'lon'], longname_txt, units_txt)
+            for var in var_list:
+                prCyan(f"Processing: {var}...")
+                var_val = fdiurn.variables[var][:]
+                var_dims = fdiurn.variables[var].dimensions
+                longname_txt, units_txt = get_longname_units(fdiurn, var)
+                
+                ilat = var_dims.index('lat')
+                ilon = var_dims.index('lon')
+                itime = var_dims.index('time')
+                itod = var_dims.index(tod_name_in)
+                
+                if (len(var_dims) == 4):
+                    var_val_T = np.transpose(var_val, (ilon, ilat, itime, itod))
+                    var_val_T_shifted = tshift(var_val_T, longitude, tod_orig, timex=target_list)
+                    var_out = np.transpose(var_val_T_shifted, (2, 3, 1, 0))
+                    fnew.log_variable(var, var_out, ['time', tod_name_out, 'lat', 'lon'], longname_txt, units_txt)
+                if (len(var_dims) == 5):
+                    ilev = var_dims.index(zaxis)
+                    var_val_T = np.transpose(var_val, (ilon, ilat, ilev, itime, itod))
+                    var_val_T_shifted = tshift(var_val_T, longitude, tod_orig, timex=target_list)
+                    var_out = np.transpose(var_val_T_shifted, (3, 4, 2, 1, 0))
+                    fnew.log_variable(var, var_out, ['time', tod_name_out, zaxis, 'lat', 'lon'], longname_txt, units_txt)
             fnew.close()
             fdiurn.close()
 
@@ -950,7 +937,7 @@ def main():
     #             varNcf = fname.variables[ivar]
     #
     #             if ('lat' in varNcf.dimensions) and ('lon' in varNcf.dimensions):
-    #                 prCyan(f"Processing: {ivar} ...")
+    #                 prCyan(f"Processing: {ivar}...")
     #
     #                 # Step 1 : Detrend the data
     #                 TREND=get_trend_2D(varNcf[:],LON,LAT,'wmean')
@@ -967,10 +954,10 @@ def main():
     #                 fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
     #             else:
     #                 if  ivar in ['pfull', 'lat', 'lon','phalf','pk','bk','pstd','zstd','zagl','time']:
-    #                     prCyan(f"Copying axis: {ivar} ...")
+    #                     prCyan(f"Copying axis: {ivar}...")
     #                     fnew.copy_Ncaxis_with_content(fname.variables[ivar])
     #                 else:
-    #                     prCyan(f"Copying variable: {ivar} ...")
+    #                     prCyan(f"Copying variable: {ivar}...")
     #                     fnew.copy_Ncvar(fname.variables[ivar])
     #         fnew.close()
 
@@ -1012,7 +999,7 @@ def main():
             # Find 'time_of_day' variable name
             tod_name = find_tod_in_diurn(fdiurn)
 
-            tod_in = fdiurn.variables[tod_name][:]
+            target_tod = fdiurn.variables[tod_name][:]
             lon = fdiurn.variables['lon'][:]
             areo = fdiurn.variables['areo'][:]
 
@@ -1052,10 +1039,10 @@ def main():
                         var_unit = '% of diurnal mean'
 
                     amp, phas = diurn_extract(
-                        varIN.swapaxes(0, 1), N, tod_in, lon)
+                        varIN.swapaxes(0, 1), N, target_tod, lon)
                     if parser.parse_args().reconstruct:
                         VARN = reconstruct_diurn(
-                            amp, phas, tod_in, lon, sumList=[])
+                            amp, phas, target_tod, lon, sumList=[])
                         for nn in range(N):
                             fnew.log_variable(f"{ivar}_N{nn+1}", VARN[nn, ...].swapaxes(
                                 0, 1), varNcf.dimensions, f"harmonic N={nn+1} for {longname_txt}", units_txt)
@@ -1076,7 +1063,7 @@ def main():
                             prCyan(f"Copying axis: {ivar}...")
                             fnew.copy_Ncvar(fdiurn.variables['areo'])
                         else:
-                            prCyan(f"Processing: {ivar} ...")
+                            prCyan(f"Processing: {ivar}...")
                             #Create areo variable reflecting the new shape
                             areo_new=np.zeros((areo.shape[0],N,1))
                             #Copy areo
@@ -1136,7 +1123,7 @@ def main():
                         prCyan(f"Copying axis: {ivar}...")
                         fnew.copy_Ncaxis_with_content(fNcdf_t.variables[ivar])
                 elif varNcf.dimensions[-2:]==('lat', 'lon'): #Ignore variables like  'time_bounds', 'scalar_axis' or 'grid_xt_bnds'...
-                    prCyan(f"Regridding: {ivar} ...")
+                    prCyan(f"Regridding: {ivar}...")
                     var_OUT=regrid_Ncfile(varNcf,f_in,fNcdf_t)
                     fnew.log_variable(ivar,var_OUT,varNcf.dimensions,longname_txt,units_txt)
 
@@ -1183,7 +1170,7 @@ def main():
                 varNcf     = fdaily.variables[ivar]
                 longname_txt,units_txt=get_longname_units(fdaily,ivar)
                 if 'lon' in varNcf.dimensions and ivar not in ['lon','grid_xt_bnds','grid_yt_bnds']:
-                    prCyan(f"Processing: {ivar} ...")
+                    prCyan(f"Processing: {ivar}...")
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore", category=RuntimeWarning)
                         var_out=np.nanmean(varNcf[:],axis=-1)[...,np.newaxis]
