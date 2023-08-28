@@ -48,15 +48,15 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    'input_file', nargs = '+',
-    help = (
+    'input_file', nargs='+',
+    help=(
         f"A netCDF file or list of netCDF files.\n\n"
     )
 )
 
 parser.add_argument(
-    '-fv3', '--fv3', nargs = '+',
-    help = (
+    '-fv3', '--fv3', nargs='+',
+    help=(
         f"Produce MGCM 'fixed', 'diurn', 'average' and "
         f"'daily' files from Legacy output.\n"
         f"Available options are:\n"
@@ -73,7 +73,7 @@ parser.add_argument(
 
 parser.add_argument(
     '-c', '--combine', action='store_true',
-    help = (
+    help=(
         f"Combine sequential files of the same type into one file.\n"
         f"Works with all file types ('fixed', 'average', "
         f"'daily' and 'diurn').\n"
@@ -86,8 +86,8 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-t', '--tshift', nargs = '?', const = 999, type = str,
-    help = (
+    '-t', '--tshift', nargs='?', const=999, type=str,
+    help=(
     f"Apply a time-shift to {Yellow}'diurn'{NoColor}  files.\n"
         "Vertically interpolated 'diurn' files OK.\n"
         f"{Yellow}Generates a new file ending in '_T.nc'{NoColor}\n"
@@ -102,8 +102,8 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-ba', '--bin_average', nargs = '?', const = 5,type = int,
-    help = (
+    '-ba', '--bin_average', nargs='?', const=5,type=int,
+    help=(
         f"Bin MGCM 'daily' files like 'average' files.\n"
         f"{Yellow}Generates a new file ending in '_to_average.nc'\n"
         f"{Green}Usage:\n"
@@ -116,8 +116,8 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-bd', '--bin_diurn', action = 'store_true',
-    help = (
+    '-bd', '--bin_diurn', action='store_true',
+    help=(
         f"Bin MGCM 'daily' files like 'diurn' files.\n"
         f"May be used jointly with --bin_average.\n"
         f"{Yellow}Generates a new file ending in '_to_diurn.nc'\n"
@@ -134,8 +134,8 @@ parser.add_argument(
 
 
 parser.add_argument(
-    '-hpf', '--high_pass_filter', nargs = '+', type = float,
-    help = (
+    '-hpf', '--high_pass_filter', nargs='+', type=float,
+    help=(
         f"Temporal filtering utilities: low-, high-, and "
         f"band-pass filters.\n"
         f"Use '--no_trend' to compute amplitudes only.\n"
@@ -149,8 +149,8 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-lpf', '--low_pass_filter', nargs = '+', type = float,
-    help = (
+    '-lpf', '--low_pass_filter', nargs='+', type=float,
+    help=(
         f"Temporal filtering utilities: low-, high-, and "
         f"band-pass filters.\n"
         f"Use '--no_trend' to compute amplitudes only.\n"
@@ -164,8 +164,8 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-bpf', '--band_pass_filter', nargs = '+',
-    help = (
+    '-bpf', '--band_pass_filter', nargs='+',
+    help=(
         f"Temporal filtering utilities: low-, high-, and "
         f"band-pass filters.\n"
         f"Use '--no_trend' to compute amplitudes only.\n"
@@ -180,7 +180,7 @@ parser.add_argument(
 
 parser.add_argument(
     '-no_trend', '--no_trend', action='store_true',
-    help = (
+    help=(
         f"Filter and compute amplitudes only.\n"
         f"For use with temporal filtering utilities (-lpf, -hpf, "
         f"-bpf).\n"
@@ -195,8 +195,8 @@ parser.add_argument(
 
 # Decomposition in zonal harmonics, disabled for initial CAP release:
 parser.add_argument(
-    '-hpk', '--high_pass_zonal', nargs = '+', type = int,
-    help = (
+    '-hpk', '--high_pass_zonal', nargs='+', type=int,
+    help=(
         f"Spatial filtering utilities: low-, high-, and "
         f"band pass filters.\n"
         f"Use '--no_trend' to compute amplitudes only.\n"
@@ -210,8 +210,8 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-lpk', '--low_pass_zonal', nargs = '+', type = int,
-    help = (
+    '-lpk', '--low_pass_zonal', nargs='+', type=int,
+    help=(
         f"Spatial filtering utilities: low-, high-, and "
         f"band pass filters.\n"
         f"Use '--no_trend' to compute amplitudes only.\n"
@@ -225,8 +225,8 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-bpk', '--band_pass_zonal', nargs = '+',
-    help = (
+    '-bpk', '--band_pass_zonal', nargs='+',
+    help=(
         f"Spatial filtering utilities: low-, high-, and "
         f"band pass filters.\n"
         f"Use '--no_trend' to compute amplitudes only.\n"
@@ -240,8 +240,8 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-tidal', '--tidal', nargs = '+', type = int,
-    help = (
+    '-tidal', '--tidal', nargs='+', type=int,
+    help=(
         f"Performs a tidal analyis on 'diurn' files.\n"
         f"Extracts diurnal tide and its harmonics.\n"
         f"N = 1 diurnal, N = 2 semi-diurnal etc.\n"
@@ -254,8 +254,8 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-reconstruct', '--reconstruct', action = 'store_true',
-    help = (
+    '-reconstruct', '--reconstruct', action='store_true',
+    help=(
         f"Reconstructs the first N harmonics.\n"
         f"{Yellow}Generates a new file ending in '_reconstruct.nc'\n"
         f"{Green}Usage:\n"
@@ -266,8 +266,8 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-norm', '--normalize', action = 'store_true',
-    help = (
+    '-norm', '--normalize', action='store_true',
+    help=(
         f"Provides result in percent amplitude.\n"
         f"{Yellow}Generates a new file ending in '_norm.nc'\n"
         f"{Green}Usage:\n"
@@ -278,8 +278,8 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-rs', '--regrid_source', nargs = '+',
-    help = (
+    '-rs', '--regrid_source', nargs='+',
+    help=(
         f"Regrid a target file to match a source file.\n"
         f"Both source and target files should be vertically\n"
         f"interpolated to the same standard grid\n"
@@ -292,8 +292,8 @@ parser.add_argument(
     )
 )
 
-parser.add_argument('-za', '--zonal_avg', action = 'store_true',
-    help = (
+parser.add_argument('-za', '--zonal_avg', action='store_true',
+    help=(
         f"Zonally average all variables in a file.\n"
         f"{Yellow}Generates a new file ending in '_zonal_avg.nc'\n"
         f"{Green}Usage:\n"
@@ -302,8 +302,8 @@ parser.add_argument('-za', '--zonal_avg', action = 'store_true',
     )
 )
 
-parser.add_argument('-include', '--include', nargs = '+',
-    help = (
+parser.add_argument('-include', '--include', nargs='+',
+    help=(
         f"Flag to include only the variables listed after \n"
         f"-include in the target file.\n"
         f"All dimensional and 1D variables are always included.\n"
@@ -315,8 +315,8 @@ parser.add_argument('-include', '--include', nargs = '+',
     )
 )
 
-parser.add_argument('-e', '--ext', type = str, default = None,
-    help = (
+parser.add_argument('-e', '--ext', type=str, default = None,
+    help=(
         f"Do not overwrite file. Append the extension provided \n"
         f"after --ext to the new file.\n"
         f"{Green}Usage:\n"
@@ -327,7 +327,7 @@ parser.add_argument('-e', '--ext', type = str, default = None,
 )
 
 parser.add_argument('--debug', action='store_true',
-    help = (
+    help=(
         f"Debug flag: release the exceptions.\n\n"
     )
 )
@@ -359,16 +359,16 @@ def main():
         # Make a list of input files including the full path to the dir
         full_file_list = []
         for file in file_list:
-            if not ('/' in file):
-                full_file_list.append(data_dir + '/' + file)
+            if not ("/" in file):
+                full_file_list.append(f"{data_dir}/{file}")
             else:
-                full_file_list.append(file)
+                full_file_list.append(f"{file}")
         num_files = len(full_file_list)
 
         # lsmin = None
         # lsmax = None
 
-        if full_file_list[0][-3:] == '.nc':
+        if full_file_list[0][-3:] == ".nc":
             print("Processing Legacy MGCM netCDF files")
             for f in full_file_list:
                 # file_name = os.path.basename(f)
@@ -388,26 +388,26 @@ def main():
             print("Processing fort.11 files")
             for f in full_file_list:
                 file_name = Fort(f)
-                if 'fixed' in parser.parse_args().fv3:
+                if "fixed" in parser.parse_args().fv3:
                     file_name.write_to_fixed()
-                if 'average' in parser.parse_args().fv3:
+                if "average" in parser.parse_args().fv3:
                     file_name.write_to_average()
-                if 'daily' in parser.parse_args().fv3:
+                if "daily" in parser.parse_args().fv3:
                     file_name.write_to_daily()
-                if 'diurn' in parser.parse_args().fv3:
+                if "diurn" in parser.parse_args().fv3:
                     file_name.write_to_diurn()
 
-    # =============== Append files along the 'time' dimension
+    # =============== Append files along the "time" dimension
     elif parser.parse_args().combine:
         prYellow("Using internal method for concatenation")
 
         # Make a list of input files including the full path to the dir
         full_file_list = []
         for file in file_list:
-            if not ('/' in file):
-                full_file_list.append(data_dir + '/' + file)
+            if not ("/" in file):
+                full_file_list.append(f"{data_dir}/{file}")
             else:
-                full_file_list.append(file)
+                full_file_list.append(f"{file}")
         num_files = len(full_file_list)
         
         # For fixed files, deleting all but the first file has the same
@@ -438,25 +438,25 @@ def main():
 
         # Create a temporaty file ending in _tmp.nc to work in
         tmp_file = f"{full_file_list[0][:-3]}_tmp.nc"
-        Log = Ncdf(tmp_file, 'Merged file')
+        Log = Ncdf(tmp_file, "Merged file")
         Log.merge_files_from_list(full_file_list, 
                                   exclude_var=exclude_list)
         Log.close()
 
         # Delete the files that were used for combine
 
-        # Rename temporary file for the final merged file 
-        # For Legacy netCDF files, rename using initial and end Ls
-        # For MGCM netCDF files, rename to the first file in the list
-        if file_list[0][:12] == 'LegacyGCM_Ls':
+        # First, rename temporary file for the final merged file 
+        #   For Legacy netCDF files, rename using initial and end Ls
+        #   For MGCM netCDF files, rename to the first file in the list
+        if file_list[0][:12] == "LegacyGCM_Ls":
             ls_ini = file_list[0][12:15]
             ls_end = file_list[-1][18:21]
             merged_file = f"LegacyGCM_Ls{ls_ini}_Ls{ls_end}.nc"
         else:
             merged_file = full_file_list[0]
 
-        # Delete the files that were combined. Rename the _tmp.nc file
-        # using the name created above
+        # Second, delete the files that were combined. 
+        # Apply the new name created above
         rm_cmd = "rm -f "
         for file in full_file_list:
             rm_cmd += " " + file
@@ -476,22 +476,22 @@ def main():
             target_list = None
         else:
             target_list = np.fromstring(
-                parser.parse_args().tshift, dtype=float, sep=' ')
+                parser.parse_args().tshift, dtype=float, sep=" ")
 
         for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in file):
-                input_file_name = data_dir + '/' + file
+            if not ("/" in file):
+                input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
-            output_file_name = input_file_name[:-3] + '_T.nc'
+            output_file_name = f"{input_file_name[:-3]}_T.nc"
 
             # Append extension, if any:
             if parser.parse_args().ext:
                 output_file_name = (output_file_name[:-3]
-                                    + '_'
+                                    + "_"
                                     + parser.parse_args().ext
-                                    + '.nc')
+                                    + ".nc")
 
             fdiurn = Dataset(input_file_name, 'r', 
                              format='NETCDF4_CLASSIC')
@@ -505,45 +505,53 @@ def main():
             _, zaxis = FV3_file_type(fdiurn)
 
             # Copy some variables from the old file to the new file
-            fnew.copy_Ncaxis_with_content(fdiurn.variables['lon'])
-            fnew.copy_Ncaxis_with_content(fdiurn.variables['lat'])
-            fnew.copy_Ncaxis_with_content(fdiurn.variables['time'])
-            fnew.copy_Ncaxis_with_content(fdiurn.variables['scalar_axis'])
+            fnew.copy_Ncaxis_with_content(
+                fdiurn.variables['lon'])
+            fnew.copy_Ncaxis_with_content(
+                fdiurn.variables['lat'])
+            fnew.copy_Ncaxis_with_content(
+                fdiurn.variables['time'])
+            fnew.copy_Ncaxis_with_content(
+                fdiurn.variables['scalar_axis'])
 
-            # Only create a vertical axis if the original file contains 3D fields
+            # Only create a vertical axis if orig. file has 3D fields
             if zaxis in fdiurn.dimensions.keys():
                 fnew.copy_Ncaxis_with_content(fdiurn.variables[zaxis])
 
-            # Copy some dimensions from the old file to the new file
+            # Take care of TOD dimension in new file
+            tod_orig = np.array(fdiurn.variables[tod_name_in])
+            
             if target_list is None:
-                # Same input local times are used as target local times, use the old axis as-is
-                tod_orig = np.array(fdiurn.variables[tod_name_in])
-                tod_name_out = tod_name_in
-                fnew.copy_Ncaxis_with_content(fdiurn.variables[tod_name_in])
-                # tod_in=np.array(fdiurn.variables[tod_name_in])
+                # If user does not specify which TOD(s) to do, do all 24
                 tod_in = None
+                tod_name_out = tod_name_in
+                fnew.copy_Ncaxis_with_content(
+                    fdiurn.variables[tod_name_in]
+                )
                 # Only copy 'areo' if it exists in the original file
                 if 'areo' in fdiurn.variables.keys():
                     fnew.copy_Ncvar(fdiurn.variables['areo'])
             else:
-
-                tod_orig = np.array(fdiurn.variables[tod_name_in])
-                # Copy all dimensions but time_of_day. Update time_of_day array.
-                # fnew.copy_all_dims_from_Ncfile(fdiurn,exclude_dim=tod_name_in)
+                # If user requests specific local times, update the old
+                # axis as necessary
                 tod_in = target_list
-                tod_name_out = 'time_of_day_%02i' % (len(tod_in))
-                fnew.add_dim_with_content(tod_name_out, tod_in, longname_txt="time of day",
-                                          units_txt='[hours since 0000-00-00 00:00:00]', cart_txt='')
-
+                tod_name_out = f"time_of_day_{(len(tod_in)):02}"
+                fnew.add_dim_with_content(tod_name_out, tod_in, 
+                    longname_txt="time of day",
+                    units_txt="[hours since 0000-00-00 00:00:00]",
+                    cart_txt=""
+                )
                 # Create 'areo' variable with the new size
                 areo_in = fdiurn.variables['areo'][:]
                 areo_shape = areo_in.shape
                 dims_out = fdiurn.variables['areo'].dimensions
+                print(f"\nshape, dims = {areo_shape}, {dims_out}")
 
                 # Update shape with new time_of_day
                 areo_shape = (areo_shape[0], len(tod_in), areo_shape[2])
                 dims_out = (dims_out[0], tod_name_out, dims_out[2])
                 areo_out = np.zeros(areo_shape)
+                print(f"\nshape, dims = {areo_shape}, {dims_out}")
                 # For new tod_in, e.g [3,15]
                 for ii in range(len(tod_in)):
                     # Get the closest 'time_of_day' index in the input array
@@ -600,8 +608,8 @@ def main():
         nday = parser.parse_args().bin_average
         for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in file):
-                input_file_name = data_dir + '/' + file
+            if not ("/" in file):
+                input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
             output_file_name = input_file_name[:-3]+'_to_average'+'.nc'
@@ -673,8 +681,8 @@ def main():
 
         for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in file):
-                input_file_name = data_dir + '/' + file
+            if not ("/" in file):
+                input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
             output_file_name = input_file_name[:-3]+'_to_diurn'+'.nc'
@@ -779,8 +787,8 @@ def main():
 
         for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in file):
-                input_file_name = data_dir + '/' + file
+            if not ("/" in file):
+                input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
             output_file_name = input_file_name[:-3]+out_ext+'.nc'
@@ -881,8 +889,8 @@ def main():
     #
     #     for file in file_list:
     #         # Add path unless full path is provided
-    #         if not ('/' in file):
-    #             input_file_name = data_dir + '/' + file
+    #         if not ("/" in file):
+    #             input_file_name = f"{data_dir}/{file}"
     #         else:
     #             input_file_name=file
     #         output_file_name = input_file_name[:-3]+out_ext+'.nc'
@@ -980,8 +988,8 @@ def main():
 
         for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in file):
-                input_file_name = data_dir + '/' + file
+            if not ("/" in file):
+                input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
             output_file_name = input_file_name[:-3]+out_ext+'.nc'
@@ -1092,8 +1100,8 @@ def main():
 
         for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in file):
-                input_file_name = data_dir + '/' + file
+            if not ("/" in file):
+                input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
             output_file_name = input_file_name[:-3]+out_ext+'.nc'
@@ -1139,8 +1147,8 @@ def main():
 
         for file in file_list:
             # Add path unless full path is provided
-            if not ('/' in file):
-                input_file_name = data_dir + '/' + file
+            if not ("/" in file):
+                input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
             output_file_name = input_file_name[:-3]+'_zonal_avg'+'.nc'

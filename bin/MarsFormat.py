@@ -33,7 +33,7 @@ import os            # access operating system functions
 # load amesCAP modules
 from amescap.FV3_utils import layers_mid_point_to_boundary
 
-xr.set_options(keep_attrs=True)
+xr.set_options(keep_attrs = True)
 
 
 # ======================================================
@@ -45,7 +45,7 @@ parser = argparse.ArgumentParser(
         f"{Yellow}MarsFormat is for converting non-MGCM output "
         f"to MGCM format.{NoColor}\n\n"
     ),
-    formatter_class = argparse.RawTextHelpFormatter
+    formatter_class=argparse.RawTextHelpFormatter
 )
 
 parser.add_argument(

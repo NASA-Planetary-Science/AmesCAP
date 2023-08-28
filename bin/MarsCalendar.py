@@ -40,12 +40,12 @@ parser = argparse.ArgumentParser(
         f"{Yellow}Returns the solar longitude (Ls) corresponding to a "
         f"sol or vice-versa. Adapted from areols.py.{NoColor}\n"
     ),
-    formatter_class = argparse.RawTextHelpFormatter
+    formatter_class=argparse.RawTextHelpFormatter
 )
 
 parser.add_argument(
-    '-sol', '--sol', nargs = '+', type = float,
-    help = (
+    '-sol', '--sol', nargs='+', type=float,
+    help=(
         f"Input sol number. Required. Can either be one sol or a"
         f"range with an increment (start stop step).\n"
         f"{Green}Usage:\n"
@@ -56,8 +56,8 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-ls', '--ls', nargs = '+', type = float,
-    help = (
+    '-ls', '--ls', nargs='+', type=float,
+    help=(
         f"Return the sol number corresponding to this Ls.\n"
         f"{Green}Usage:\n"
         f"> MarsCalendar.py -ls 350\n"
@@ -67,8 +67,8 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-my', '--marsyear', nargs = '+', type = float, default = 0.,
-    help = (
+    '-my', '--marsyear', nargs='+', type=float, default = 0.,
+    help=(
         f"Return the sol or Ls corresponding to the Ls or sol of a "
         f"particular year of the simulation. \n"
         f"Req. [-ls --ls] or [-sol --sol]. \n"
@@ -81,7 +81,7 @@ parser.add_argument(
 
 parser.add_argument(
     '-c', '--cumulative', action='store_true',
-    help = (
+    help=(
         f"Return Ls from sol in cumulative form. Req. [-sol --sol].\n"
         f"EX: Returns Ls=360-720 instead of Ls=0-360 for input "
         f"sol=669-1336 \n"
@@ -92,7 +92,7 @@ parser.add_argument(
 )
 
 parser.add_argument('--debug', action='store_true',
-    help = (
+    help=(
         f"Debug flag: release the exceptions.\n\n"
     )
 )

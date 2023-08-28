@@ -39,7 +39,7 @@ parser = argparse.ArgumentParser(
         f"{Yellow}Uility for querying files on the MCMC NAS Data "
         f"Portal.{NoColor}"
     ),
-    formatter_class = argparse.RawTextHelpFormatter
+    formatter_class=argparse.RawTextHelpFormatter
 )
 
 parser.add_argument(
