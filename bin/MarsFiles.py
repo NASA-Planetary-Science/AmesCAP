@@ -545,13 +545,18 @@ def main():
                 areo_in = fdiurn.variables['areo'][:]
                 areo_shape = areo_in.shape
                 dims_out = fdiurn.variables['areo'].dimensions
-                print(f"\nshape, dims = {areo_shape}, {dims_out}")
+                # shape = (133, 24, 1)
+                # dims = ('time', 'time_of_day_24', 'scalar_axis')
+                print(f"1. {fdiurn.variables['areo'][:].shape}")
+                print(f"2. {fdiurn.variables['areo'].shape}")
 
                 # Update shape with new time_of_day
                 areo_shape = (areo_shape[0], len(tod_in), areo_shape[2])
                 dims_out = (dims_out[0], tod_name_out, dims_out[2])
                 areo_out = np.zeros(areo_shape)
-                print(f"\nshape, dims = {areo_shape}, {dims_out}")
+                # shape = (133, 1, 1)
+                # dims = ('time', 'time_of_day_01', 'scalar_axis')
+                
                 # For new tod_in, e.g [3,15]
                 for ii in range(len(tod_in)):
                     # Get the closest 'time_of_day' index in the input array
