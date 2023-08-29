@@ -644,12 +644,12 @@ def main():
                     f"*** Warning *** Requested a {bin_period}-sol bin "
                     f"period, but the file has a total of {len(time)} "
                     f"timesteps ({dt_per_day} per sol) and "
-                    f"{len(time)}/({bin_period}x{dt_per_day}={bins}) "
+                    f"{len(time)}/({bin_period}x{dt_per_day})={bins} "
                     f"is not a round number.\n"
-                    f"    Will use {bins_even} bins with {bin_period}x "
+                    f"    Will use {bins_even} bins with {bin_period}x"
                     f"{dt_per_day}={dt_total} timesteps per bin "
                     f"({bins_even*dt_total} timsteps total) and "
-                    f"discard {bins_left} timesteps")
+                    f"discard {bins_left} timesteps.")
 
             # Define a netcdf object from the netcdf wrapper module
             fnew = Ncdf(output_file_name)
