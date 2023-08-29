@@ -332,11 +332,208 @@ parser.add_argument('--debug', action='store_true',
     )
 )
 
+
+# ======================================================
+#                  DEFINITIONS
+# ======================================================
+
+def combine_files(file_list, full_file_list):
+    prYellow("Using internal method for concatenation")
+
+    # For fixed files, deleting all but the first file has the same
+    # effect as combining files
+    num_files = len(full_file_list)
+    if file_list[0][5:] == ".fixed.nc" and num_files >= 2:
+        rm_cmd = "rm -f "
+        for i in range(1, num_files):
+            # 1-N files ensures file number 0 is preserved
+            rm_cmd += " " + full_file_list[i]
+        p = subprocess.run(rm_cmd, universal_newlines=True,
+                            shell=True)
+        prCyan(f"Cleaned all but {file_list[0]}")
+        exit()
+
+    prCyan(f"Merging {num_files} files starting with "
+            f"{file_list[0]}...")
+
+    # Exclude variables NOT listed after --include
+    if parser.parse_args().include:
+        f = Dataset(file_list[0], 'r')
+        exclude_list = filter_vars(
+            f, parser.parse_args().include, giveExclude=True
+        )
+        f.close()
+    else:
+        exclude_list = []
+
+    # Create a temporaty file ending in _tmp.nc to work in
+    tmp_file = f"{full_file_list[0][:-3]}_tmp.nc"
+    Log = Ncdf(tmp_file, "Merged file")
+    Log.merge_files_from_list(full_file_list,
+                                exclude_var=exclude_list)
+    Log.close()
+
+    # ----- Delete the files that were used for combine -----
+
+    # First, rename temporary file for the final merged file
+    #   For Legacy netCDF files, rename using initial and end Ls
+    #   For MGCM netCDF files, rename to the first file in the list
+    if file_list[0][:12] == "LegacyGCM_Ls":
+        ls_ini = file_list[0][12:15]
+        ls_end = file_list[-1][18:21]
+        merged_file = f"LegacyGCM_Ls{ls_ini}_Ls{ls_end}.nc"
+    else:
+        merged_file = full_file_list[0]
+
+    # Second, delete the files that were combined.
+    # Apply the new name created above
+    rm_cmd = "rm -f "
+    for file in full_file_list:
+        rm_cmd += " " + file
+    cmd_txt = "mv " + tmp_file + " " + merged_file
+    p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
+    p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
+    prCyan(f"{merged_file} was created from a merge")
+    return
+
+
+# ==================================================================
+#                   Time-Shifting Implementation
+#                            Victoria H.
+# ==================================================================
+
+def time_shift(file_list):
+    # target_list = target local times requested by user
+    if parser.parse_args().tshift == 999:
+        target_list = None
+    else:
+        target_list = np.fromstring(parser.parse_args().tshift, 
+                                    dtype=float, sep=" ")
+
+    for file in file_list:
+        # Add path unless full path is provided
+        if not ("/" in file):
+            input_file_name = f"{data_dir}/{file}"
+        else:
+            input_file_name = file
+        output_file_name = f"{input_file_name[:-3]}_T.nc"
+
+        # Append extension, if any:
+        if parser.parse_args().ext:
+            output_file_name = (output_file_name[:-3]
+                                + "_"
+                                + parser.parse_args().ext
+                                + ".nc")
+
+        fdiurn = Dataset(input_file_name, 'r', format='NETCDF4_CLASSIC')
+        # Define a netcdf object from the netcdf wrapper module
+        fnew = Ncdf(output_file_name)
+        # Copy some dimensions from the old file to the new file
+        fnew.copy_all_dims_from_Ncfile(fdiurn)
+
+        # Find the "time of day" variable name
+        tod_name_in = find_tod_in_diurn(fdiurn)
+        _, zaxis = FV3_file_type(fdiurn)
+
+        # Copy some variables from the old file to the new file
+        fnew.copy_Ncaxis_with_content(fdiurn.variables['lon'])
+        fnew.copy_Ncaxis_with_content(fdiurn.variables['lat'])
+        fnew.copy_Ncaxis_with_content(fdiurn.variables['time'])
+        fnew.copy_Ncaxis_with_content(fdiurn.variables['scalar_axis'])
+
+        # Only create a vertical axis if orig. file has 3D fields
+        if zaxis in fdiurn.dimensions.keys():
+            fnew.copy_Ncaxis_with_content(fdiurn.variables[zaxis])
+
+        # Take care of TOD dimension in new file
+        tod_orig = np.array(fdiurn.variables[tod_name_in])
+        
+        if target_list is None:
+            # If user does not specify which TOD(s) to do, do all 24
+            tod_name_out = tod_name_in
+            fnew.copy_Ncaxis_with_content(fdiurn.variables[tod_name_in])
+            # Only copy "areo" if it exists in the original file
+            if "areo" in fdiurn.variables.keys():
+                fnew.copy_Ncvar(fdiurn.variables['areo'])
+        else:
+            # If user requests specific local times, update the old
+            # axis as necessary
+            tod_name_out = f"time_of_day_{(len(target_list)):02}"
+            fnew.add_dim_with_content(tod_name_out, target_list, 
+                longname_txt = "time of day",
+                units_txt = "[hours since 0000-00-00 00:00:00]",
+                cart_txt = ""
+            )
+            # Create 'areo' variable with the new size
+            areo_shape = fdiurn.variables['areo'].shape
+            areo_dims = fdiurn.variables['areo'].dimensions
+
+            # Update shape with new time_of_day
+            areo_shape = (areo_shape[0], len(target_list), areo_shape[2])
+            areo_dims = (areo_dims[0], tod_name_out, areo_dims[2])
+            
+            areo_out = np.zeros(areo_shape)
+            # For new target_list, e.g [3,15]
+            for i in range(len(target_list)):
+                # Get the closest "time_of_day" index
+                j = np.argmin(np.abs(target_list[i] - tod_orig))
+                areo_out[:, i, 0] = fdiurn.variables['areo'][:, j, 0]
+
+            fnew.add_dim_with_content("scalar_axis", [0], 
+                                      longname_txt="none", 
+                                      units_txt="none")
+            fnew.log_variable("areo", areo_out, areo_dims, "areo", 
+                              "degrees")
+
+        # Read in 4D field(s) and do the time shift. Exclude vars
+        # not listed after --include in var_list
+        lons = np.array(fdiurn.variables['lon'])
+        var_list = filter_vars(fdiurn, parser.parse_args().include)
+
+        for var in var_list:
+            prCyan(f"Processing: {var}...")
+            value = fdiurn.variables[var][:]
+            dims = fdiurn.variables[var].dimensions
+            longname_txt, units_txt = get_longname_units(fdiurn, var)
+            
+            y = dims.index('lat')
+            x = dims.index('lon')
+            t = dims.index('time')
+            tod = dims.index(tod_name_in)
+            
+            if (len(dims) == 4):
+                # time, tod, lat, lon 
+                var_val_tmp = np.transpose(value, (x, y, t, tod))
+                var_val_T = tshift(var_val_tmp, lons, tod_orig, 
+                                           timex = target_list)
+                var_out = np.transpose(var_val_T, (2, 3, 1, 0))
+                fnew.log_variable(var, var_out, 
+                    ['time', tod_name_out, 'lat', 'lon'], 
+                    longname_txt, 
+                    units_txt
+                )
+            if (len(dims) == 5):
+                # time, tod, Z, lat, lon 
+                z = dims.index(zaxis)
+                var_val_tmp = np.transpose(value, (x, y, z, t, tod))
+                var_val_T = tshift(var_val_tmp, lons, tod_orig, 
+                                           timex = target_list)
+                var_out = np.transpose(var_val_T, (3, 4, 2, 1, 0))
+                fnew.log_variable(var, var_out, 
+                    ['time', tod_name_out, zaxis, 'lat', 'lon'], 
+                    longname_txt, 
+                    units_txt
+                )
+        fnew.close()
+        fdiurn.close()
+    return
+        
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
 
 def main():
+    global data_dir
     file_list = parser.parse_args().input_file
     data_dir = os.getcwd()
 
@@ -345,11 +542,11 @@ def main():
         exit()
 
     # ==================================================================
-    #                   Conversion Legacy -> FV3
+    #               Conversion Legacy -> MGCM Format
     #                    Richard U. and Alex. K.
     # ==================================================================
 
-    # =============== Convert to MGCM Output Format
+    # Convert to MGCM Output Format
     if parser.parse_args().fv3:
         for req_file in parser.parse_args().fv3:
             if req_file not in ['fixed', 'average', 'daily', 'diurn']:
@@ -363,7 +560,6 @@ def main():
                 full_file_list.append(f"{data_dir}/{file}")
             else:
                 full_file_list.append(f"{file}")
-        num_files = len(full_file_list)
 
         # lsmin = None
         # lsmax = None
@@ -397,207 +593,23 @@ def main():
                 if "diurn" in parser.parse_args().fv3:
                     file_name.write_to_diurn()
 
-    # =============== Append files along the "time" dimension
+    # Combine files along the "time" dimension
     elif parser.parse_args().combine:
-        prYellow("Using internal method for concatenation")
+        combine_files(file_list, full_file_list)
 
-        # Make a list of input files including the full path to the dir
-        full_file_list = []
-        for file in file_list:
-            if not ("/" in file):
-                full_file_list.append(f"{data_dir}/{file}")
-            else:
-                full_file_list.append(f"{file}")
-        num_files = len(full_file_list)
-        
-        # For fixed files, deleting all but the first file has the same
-        # effect as combining files
-        if file_list[0][5:] == ".fixed.nc" and num_files >= 2:
-            rm_cmd = "rm -f "
-            for i in range(1, num_files):
-                # 1-N files ensures file number 0 is preserved
-                rm_cmd += " " + full_file_list[i]
-            p = subprocess.run(rm_cmd, universal_newlines=True, 
-                               shell=True)
-            prCyan(f"Cleaned all but {file_list[0]}")
-            exit()
-
-        # =========
-        prCyan(f"Merging {num_files} files starting with "
-               f"{file_list[0]}...")
-
-        # Exclude variables NOT listed after --include
-        if parser.parse_args().include:
-            f = Dataset(file_list[0], 'r')
-            exclude_list = filter_vars(
-                f, parser.parse_args().include, giveExclude=True
-            )
-            f.close()
-        else:
-            exclude_list = []
-
-        # Create a temporaty file ending in _tmp.nc to work in
-        tmp_file = f"{full_file_list[0][:-3]}_tmp.nc"
-        Log = Ncdf(tmp_file, "Merged file")
-        Log.merge_files_from_list(full_file_list, 
-                                  exclude_var=exclude_list)
-        Log.close()
-
-        # Delete the files that were used for combine
-
-        # First, rename temporary file for the final merged file 
-        #   For Legacy netCDF files, rename using initial and end Ls
-        #   For MGCM netCDF files, rename to the first file in the list
-        if file_list[0][:12] == "LegacyGCM_Ls":
-            ls_ini = file_list[0][12:15]
-            ls_end = file_list[-1][18:21]
-            merged_file = f"LegacyGCM_Ls{ls_ini}_Ls{ls_end}.nc"
-        else:
-            merged_file = full_file_list[0]
-
-        # Second, delete the files that were combined. 
-        # Apply the new name created above
-        rm_cmd = "rm -f "
-        for file in full_file_list:
-            rm_cmd += " " + file
-        cmd_txt = "mv " + tmp_file + " " + merged_file
-        p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
-        p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
-        prCyan(f"{merged_file} was created from a merge")
-
-    # ==================================================================
-    #                   Time-Shifting Implementation
-    #                            Victoria H.
-    # ==================================================================
-
+    # Time-shift files
     elif parser.parse_args().tshift:
-        # target_list holds the target local times
-        if parser.parse_args().tshift == 999:
-            target_list = None
-        else:
-            target_list = np.fromstring(
-                parser.parse_args().tshift, dtype=float, sep=" ")
-
-        for file in file_list:
-            # Add path unless full path is provided
-            if not ("/" in file):
-                input_file_name = f"{data_dir}/{file}"
-            else:
-                input_file_name = file
-            output_file_name = f"{input_file_name[:-3]}_T.nc"
-
-            # Append extension, if any:
-            if parser.parse_args().ext:
-                output_file_name = (output_file_name[:-3]
-                                    + "_"
-                                    + parser.parse_args().ext
-                                    + ".nc")
-
-            fdiurn = Dataset(input_file_name, 'r', 
-                             format='NETCDF4_CLASSIC')
-            # Define a netcdf object from the netcdf wrapper module
-            fnew = Ncdf(output_file_name)
-            # Copy some dimensions from the old file to the new file
-            fnew.copy_all_dims_from_Ncfile(fdiurn)
-
-            # Find the "time of day" variable name
-            tod_name_in = find_tod_in_diurn(fdiurn)
-            _, zaxis = FV3_file_type(fdiurn)
-
-            # Copy some variables from the old file to the new file
-            fnew.copy_Ncaxis_with_content(
-                fdiurn.variables['lon'])
-            fnew.copy_Ncaxis_with_content(
-                fdiurn.variables['lat'])
-            fnew.copy_Ncaxis_with_content(
-                fdiurn.variables['time'])
-            fnew.copy_Ncaxis_with_content(
-                fdiurn.variables['scalar_axis'])
-
-            # Only create a vertical axis if orig. file has 3D fields
-            if zaxis in fdiurn.dimensions.keys():
-                fnew.copy_Ncaxis_with_content(fdiurn.variables[zaxis])
-
-            # Take care of TOD dimension in new file
-            tod_orig = np.array(fdiurn.variables[tod_name_in])
-            
-            if target_list is None:
-                # If user does not specify which TOD(s) to do, do all 24
-                tod_name_out = tod_name_in
-                fnew.copy_Ncaxis_with_content(
-                    fdiurn.variables[tod_name_in]
-                )
-                # Only copy "areo" if it exists in the original file
-                if "areo" in fdiurn.variables.keys():
-                    fnew.copy_Ncvar(fdiurn.variables['areo'])
-            else:
-                # If user requests specific local times, update the old
-                # axis as necessary
-                tod_name_out = f"time_of_day_{(len(target_list)):02}"
-                fnew.add_dim_with_content(tod_name_out, target_list, 
-                    longname_txt = "time of day",
-                    units_txt = "[hours since 0000-00-00 00:00:00]",
-                    cart_txt = ""
-                )
-                # Create 'areo' variable with the new size
-                areo_shape = fdiurn.variables['areo'].shape
-                areo_dims = fdiurn.variables['areo'].dimensions
-
-                # Update shape with new time_of_day
-                areo_shape = (areo_shape[0], len(target_list), areo_shape[2])
-                areo_dims = (areo_dims[0], tod_name_out, areo_dims[2])
-                
-                areo_out = np.zeros(areo_shape)
-                # For new target_list, e.g [3,15]
-                for i in range(len(target_list)):
-                    # Get the closest "time_of_day" index
-                    j = np.argmin(np.abs(target_list[i] - tod_orig))
-                    areo_out[:, i, 0] = fdiurn.variables['areo'][:, j, 0]
-
-                fnew.add_dim_with_content("scalar_axis", [0], 
-                                          longname_txt="none", 
-                                          units_txt="none"
-                )
-                fnew.log_variable("areo", areo_out, areo_dims,
-                                  "areo", "degrees"
-                )
-
-            # Read in 4D field(s) and do the time shift. Exclude vars
-            # not listed after --include in var_list
-            longitude = np.array(fdiurn.variables['lon'])
-            var_list = filter_vars(fdiurn, parser.parse_args().include)
-
-            for var in var_list:
-                prCyan(f"Processing: {var}...")
-                var_val = fdiurn.variables[var][:]
-                var_dims = fdiurn.variables[var].dimensions
-                longname_txt, units_txt = get_longname_units(fdiurn, var)
-                
-                ilat = var_dims.index('lat')
-                ilon = var_dims.index('lon')
-                itime = var_dims.index('time')
-                itod = var_dims.index(tod_name_in)
-                
-                if (len(var_dims) == 4):
-                    var_val_T = np.transpose(var_val, (ilon, ilat, itime, itod))
-                    var_val_T_shifted = tshift(var_val_T, longitude, tod_orig, timex=target_list)
-                    var_out = np.transpose(var_val_T_shifted, (2, 3, 1, 0))
-                    fnew.log_variable(var, var_out, ['time', tod_name_out, 'lat', 'lon'], longname_txt, units_txt)
-                if (len(var_dims) == 5):
-                    ilev = var_dims.index(zaxis)
-                    var_val_T = np.transpose(var_val, (ilon, ilat, ilev, itime, itod))
-                    var_val_T_shifted = tshift(var_val_T, longitude, tod_orig, timex=target_list)
-                    var_out = np.transpose(var_val_T_shifted, (3, 4, 2, 1, 0))
-                    fnew.log_variable(var, var_out, ['time', tod_name_out, zaxis, 'lat', 'lon'], longname_txt, units_txt)
-            fnew.close()
-            fdiurn.close()
-
+        time_shift(file_list)
+    
     # ==================================================================
     #               Bin a 'daily' file as an 'average' file 
     #                               Alex K.
     # ==================================================================
-    elif parser.parse_args().bin_average and not parser.parse_args().bin_diurn:
-        nday = parser.parse_args().bin_average
+    elif (parser.parse_args().bin_average and not
+          parser.parse_args().bin_diurn):
+        
+        # Generate output file name
+        bin_period = parser.parse_args().bin_average
         for file in file_list:
             # Add path unless full path is provided
             if not ("/" in file):
@@ -608,26 +620,36 @@ def main():
 
             # Append extension, if any:
             if parser.parse_args().ext:
-                output_file_name = output_file_name[:-3] + \
-                    '_'+parser.parse_args().ext+'.nc'
+                output_file_name = (output_file_name[:-3] 
+                                    + '_' 
+                                    + parser.parse_args().ext
+                                    + '.nc')
 
             fdaily = Dataset(input_file_name, 'r', format='NETCDF4_CLASSIC')
-            var_list = filter_vars(
-                fdaily, parser.parse_args().include)  # Get all variables
+            var_list = filter_vars(fdaily, parser.parse_args().include)
 
-            time_in = fdaily.variables['time'][:]
-            Nin = len(time_in)
+            time = fdaily.variables['time'][:]
+            
 
-            dt_in = time_in[1]-time_in[0]
-            iperday = int(np.round(1/dt_in))
-            combinedN = int(iperday*nday)
+            time_increment = time[1] - time[0]
+            dt_per_day = int(np.round(1/time_increment))
+            dt_total = int(dt_per_day * bin_period)
 
-            N_even = Nin//combinedN
-            N_left = Nin % combinedN
+            bins = len(time) / (dt_per_day * bin_period)
+            bins_even = len(time) // dt_total
+            bins_left = len(time) % dt_total
 
-            if N_left != 0:
-                prYellow(f"***Warning*** requested {nday} sols bin period. File has {iperday} timestep/sols and {Nin}/({nday} x {iperday}) is not a round number")
-                prYellow(f"    Will use {N_even}  bins of ({nday} x {iperday})={combinedN} timesteps ({N_even*combinedN}) and discard {N_left} timesteps")
+            if bins_left != 0:
+                prYellow(
+                    f"*** Warning *** Requested a {bin_period}-sol bin "
+                    f"period, but the file has a total of {len(time)} "
+                    f"timesteps ({dt_per_day} per sol) and "
+                    f"{len(time)}/({bin_period}x{dt_per_day}={bins}) "
+                    f"is not a round number.\n"
+                    f"    Will use {bins_even} bins with {bin_period}x "
+                    f"{dt_per_day}={dt_total} timesteps per bin "
+                    f"({bins_even*dt_total} timsteps total) and "
+                    f"discard {bins_left} timesteps")
 
             # Define a netcdf object from the netcdf wrapper module
             fnew = Ncdf(output_file_name)
@@ -636,7 +658,7 @@ def main():
 
             # Calculate and log the new time array
             fnew.add_dimension('time', None)
-            time_out = daily_to_average(time_in[:], dt_in, nday)
+            time_out = daily_to_average(time[:], time_increment, bin_period)
             fnew.log_axis1D('time', time_out, 'time', longname_txt="sol number",
                             units_txt='days since 0000-00-00 00:00:00', cart_txt='T')
 
@@ -646,7 +668,7 @@ def main():
 
                 if 'time' in varNcf.dimensions:
                     prCyan(f"Processing: {ivar}")
-                    var_out = daily_to_average(varNcf[:], dt_in, nday)
+                    var_out = daily_to_average(varNcf[:], time_increment, bin_period)
                     longname_txt, units_txt = get_longname_units(fdaily, ivar)
                     fnew.log_variable(
                         ivar, var_out, varNcf.dimensions, longname_txt, units_txt)
@@ -667,9 +689,9 @@ def main():
     elif parser.parse_args().bin_diurn:
         # Use defaut binning period of 5 days (like 'average' files)
         if parser.parse_args().bin_average is None:
-            nday = 5
+            bin_period = 5
         else:
-            nday = parser.parse_args().bin_average
+            bin_period = parser.parse_args().bin_average
 
         for file in file_list:
             # Add path unless full path is provided
@@ -688,11 +710,10 @@ def main():
             var_list = filter_vars(
                 fdaily, parser.parse_args().include)  # Get all variables
 
-            time_in = fdaily.variables['time'][:]
-            Nin = len(time_in)
+            time = fdaily.variables['time'][:]
 
-            dt_in = time_in[1]-time_in[0]
-            iperday = int(np.round(1/dt_in))
+            time_increment = time[1] - time[0]
+            dt_per_day = int(np.round(1/time_increment))
 
             # define a netcdf object from the netcdf wrapper module
             fnew = Ncdf(output_file_name)
@@ -701,14 +722,14 @@ def main():
 
             # If no binning is requested, copy time axis as-is
             fnew.add_dimension('time', None)
-            time_out = daily_to_average(time_in[:], dt_in, nday)
+            time_out = daily_to_average(time[:], time_increment, bin_period)
             fnew.add_dim_with_content('time', time_out, longname_txt="sol number",
                                       units_txt='days since 0000-00-00 00:00:00', cart_txt='T')
 
             # Create a new 'time_of_day' dimension
-            tod_name = 'time_of_day_%02d' % (iperday)
+            tod_name = 'time_of_day_%02d' % (dt_per_day)
             time_tod = np.squeeze(daily_to_diurn(
-                time_in[0:iperday], time_in[0:iperday]))
+                time[0:dt_per_day], time[0:dt_per_day]))
             tod = np.mod(time_tod*24, 24)
             fnew.add_dim_with_content(tod_name, tod, longname_txt="time of day",
                                       units_txt="hours since 0000-00-00 00:00:00", cart_txt='N')
@@ -723,10 +744,10 @@ def main():
                     prCyan(f"Processing: {ivar}")
                     dims_in = varNcf.dimensions
                     dims_out = (dims_in[0],)+(tod_name,)+dims_in[1:]
-                    var_out = daily_to_diurn(varNcf[:], time_in[0:iperday])
-                    if nday != 1:
+                    var_out = daily_to_diurn(varNcf[:], time[0:dt_per_day])
+                    if bin_period != 1:
                         # dt is 1 sol between two 'diurn' timesteps
-                        var_out = daily_to_average(var_out, 1., nday)
+                        var_out = daily_to_average(var_out, 1., bin_period)
                     longname_txt, units_txt = get_longname_units(fdaily, ivar)
                     fnew.log_variable(ivar, var_out, dims_out,
                                       longname_txt, units_txt)
@@ -795,9 +816,9 @@ def main():
             var_list = filter_vars(
                 fdaily, parser.parse_args().include)  # Get all variables
 
-            time_in = fdaily.variables['time'][:]
+            time = fdaily.variables['time'][:]
 
-            dt = time_in[1]-time_in[0]
+            dt = time[1]-time[0]
 
             # Check if the frequency domain is allowed
             if any(nn <= 2*dt for nn in nsol):
@@ -820,7 +841,7 @@ def main():
                     'sol_min', nsol[0], "High-pass filter low cut-off period ", "sol")
                 fnew.add_constant(
                     'sol_max', nsol[1], "High-pass filter high cut-off period ", "sol")
-            dt = time_in[1]-time_in[0]
+            dt = time[1]-time[0]
 
             fs = 1/(dt)  # Frequency in sol-1
             if btype == 'band':
@@ -1342,7 +1363,7 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
 
 
 # Function to perform time averages over all fields
-def do_avg_vars(histfile, newf, avgtime, avgtod, Nday=5):
+def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
     histvars = histfile.variables.keys()
     for vname in histvars:
         var = histfile.variables[vname]
@@ -1389,8 +1410,8 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, Nday=5):
                 time0 = ls2sol_1year(npvar[0])+np.linspace(0, 10., len(npvar))
 
                 if avgtime:
-                    varnew = np.mean(npvar.reshape(-1, Nday), axis=1)
-                    time0 = np.mean(time0.reshape(-1, Nday), axis=1)
+                    varnew = np.mean(npvar.reshape(-1, bin_period), axis=1)
+                    time0 = np.mean(time0.reshape(-1, bin_period), axis=1)
 
                 if not avgtime and not avgtod:  # i.e 'daily' file
                     # Solar longitude
@@ -1416,7 +1437,7 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, Nday=5):
             varnew = npvar
             if avgtime:
                 varnew = np.mean(
-                    npvar.reshape(-1, Nday, vshape[1], vshape[2], vshape[3]), axis=1)
+                    npvar.reshape(-1, bin_period, vshape[1], vshape[2], vshape[3]), axis=1)
             if avgtod:
                 varnew = varnew.mean(axis=1)
             if not avgtime and not avgtod:
@@ -1433,7 +1454,7 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, Nday=5):
             varnew = npvar
             if avgtime:
                 varnew = np.mean(
-                    npvar.reshape(-1, Nday, vshape[1], vshape[2], vshape[3], vshape[4]), axis=1)
+                    npvar.reshape(-1, bin_period, vshape[1], vshape[2], vshape[3], vshape[4]), axis=1)
             if avgtod:
                 varnew = varnew.mean(axis=1)
             if not avgtime and not avgtod:
