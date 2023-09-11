@@ -44,6 +44,8 @@ extensions = [
 
 autoapi_type = 'python'
 autoapi_dirs = ['../../bin']
+autoapi_ignore = ['*/MarsPlot.py', '*/MarsVars.py', '*/MarsInterp.py',
+                  '*/MarsFormat.py', '*/MarsFiles.py', '*/MarsCalendar.py']
 autoapi_add_toctree_entry = False
 autoapi_keep_files = True
 # autoapi_options = [ 'members', 'inherited-members', 'show-inheritance', 'show-inheritance-diagram', 'show-module-summary', 'imported-members' ]
