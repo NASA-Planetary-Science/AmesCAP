@@ -1,23 +1,9 @@
+:orphan:
+
 :py:mod:`MarsVars`
 ==================
 
 .. py:module:: MarsVars
-
-.. autoapi-nested-parse::
-
-   The MarsVars executable is for ...
-
-   The executable requires x arguments:
-       * [-x --x]      define
-
-   Third-party Requirements:
-       * numpy
-       * argparse
-       * requests
-
-   List of Functions:
-       * x
-
 
 
 Module Contents
