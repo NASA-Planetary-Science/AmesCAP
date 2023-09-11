@@ -19,9 +19,7 @@
         <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Examples &amp; Use Cases" href="../../examples.html" />
-    <link rel="prev" title="MarsPlot" href="../MarsPlot/index.html" /> 
+    <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,25 +42,9 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../MarsPull/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPull</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../MarsFormat/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsFormat</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../MarsFiles/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsFiles</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../MarsVars/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsVars</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../MarsInterp/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsInterp</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../MarsPlot/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPlot</span></code></a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsCalendar</span></code></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module Contents</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#functions">Functions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#MarsCalendar.parse_array"><code class="docutils literal notranslate"><span class="pre">parse_array()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples &amp; Use Cases</a></li>
 </ul>
 
         </div>
@@ -91,92 +73,12 @@
              
   <section id="module-MarsCalendar">
 <span id="marscalendar"></span><h1><a class="reference internal" href="#module-MarsCalendar" title="MarsCalendar"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsCalendar</span></code></a><a class="headerlink" href="#module-MarsCalendar" title="Permalink to this heading"></a></h1>
-<p>The MarsCalendar executable accepts an input Ls or day-of-year (sol) and returns the corresponding sol or Ls, respectively.</p>
-<dl class="simple">
-<dt>The executable requires 1 of the following arguments:</dt><dd><ul class="simple">
-<li><p>[-sol –sol]          The sol to convert to Ls, OR</p></li>
-<li><p>[-ls –ls]            the Ls to convert to sol.</p></li>
-</ul>
-</dd>
-<dt>and optionally accepts 2 arguments:</dt><dd><ul class="simple">
-<li><p>[-my –marsyear]      The Mars Year of the simulation to compute                            sol or Ls from, AND/OR</p></li>
-<li><p>[-c –cumulative]     Returns Ls in cumulative form.</p></li>
-</ul>
-</dd>
-<dt>Third-party Requirements:</dt><dd><ul class="simple">
-<li><p>numpy</p></li>
-<li><p>argparse</p></li>
-</ul>
-</dd>
-<dt>List of Functions:</dt><dd><ul class="simple">
-<li><p>parse_array - Formats the requested sol/Ls for conversion to                     Ls/sol. Computes arrays from [start, stop, step]                     if necessary.</p></li>
-</ul>
-</dd>
-</dl>
-<section id="module-contents">
-<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading"></a></h2>
-<section id="functions">
-<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsCalendar.parse_array" title="MarsCalendar.parse_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_array</span></code></a>(len_input)</p></td>
-<td><p>Formats the input array for conversion.</p></td>
-</tr>
-</tbody>
-</table>
-<dl class="py function">
-<dt class="sig sig-object py" id="MarsCalendar.parse_array">
-<span class="sig-prename descclassname"><span class="pre">MarsCalendar.</span></span><span class="sig-name descname"><span class="pre">parse_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">len_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsCalendar.parse_array" title="Permalink to this definition"></a></dt>
-<dd><p>Formats the input array for conversion.</p>
-<p>Confirms that either [-ls –ls] or [-sol –sol] was passed as an     argument. Creates an array that ls2sol or sol2ls can read for the     conversion from sol -&gt; Ls or Ls -&gt; sol.</p>
-<section id="parameters">
-<h4>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h4>
-<dl>
-<dt>len_input<span class="classifier">float</span></dt><dd><p>The input Ls or sol to convert. Can either be one number:</p>
-<blockquote>
-<div><p>300</p>
-</div></blockquote>
-<p>or start stop step:</p>
-<blockquote>
-<div><p>300 310 2</p>
-</div></blockquote>
-</dd>
-</dl>
-</section>
-<section id="raises">
-<h4>Raises<a class="headerlink" href="#raises" title="Permalink to this heading"></a></h4>
-<p>Error if neither [-ls –ls] or [-sol –sol] is provided.</p>
-</section>
-<section id="returns">
-<h4>Returns<a class="headerlink" href="#returns" title="Permalink to this heading"></a></h4>
-<dl>
-<dt>input_as_arr</dt><dd><p>An array formatted for input into ls2sol or sol2ls.</p>
-<blockquote>
-<div><p>If len_input = 300:</p>
-<blockquote>
-<div><p>input_as_arr=[300]</p>
-</div></blockquote>
-<p>If len_input = 300 310 2:</p>
-<blockquote>
-<div><p>input_as_arr = [300, 302, 304, 306, 308]</p>
-</div></blockquote>
-</div></blockquote>
-</dd>
-</dl>
-</section>
-</dd></dl>
-
-</section>
-</section>
 </section>
 
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../MarsPlot/index.html" class="btn btn-neutral float-left" title="MarsPlot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../../examples.html" class="btn btn-neutral float-right" title="Examples &amp; Use Cases" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+          <footer>
 
   <hr/>
 

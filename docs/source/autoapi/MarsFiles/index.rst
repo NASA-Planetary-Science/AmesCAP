@@ -1,23 +1,9 @@
+:orphan:
+
 :py:mod:`MarsFiles`
 ===================
 
 .. py:module:: MarsFiles
-
-.. autoapi-nested-parse::
-
-   The MarsFiles executable is for ...
-
-   The executable requires x arguments:
-       * [-x --x]      define
-
-   Third-party Requirements:
-       * numpy
-       * argparse
-       * requests
-
-   List of Functions:
-       * x
-
 
 
 Module Contents
@@ -37,25 +23,16 @@ Functions
 
 
 
-.. py:function:: make_FV3_files(fpath, typelistfv3, renameFV3=True)
+.. py:function:: make_FV3_files(fpath, typelistfv3, renameFV3=True, cwd=None)
 
    Make MGCM-like 'average', 'daily', and 'diurn' files.
-
-   Used if call to -fv3 --fv3 is made AND Legacy files are in netCDF
-   format (not fort.11).
-
-   Parameters
-   ----------
-   fpath : str
-       Full path to the Legacy netcdf files
-   typelistfv3 : list
-       MGCM-like file type: 'average', 'daily', or 'diurn'
-   renameFV3 : bool
-       Rename the files from Legacy_LsXXX_LsYYY.nc to             XXXXX.atmos_average.nc following MGCM output conventions
-
-   Returns
-   -------
-   The MGCM-like files: XXXXX.atmos_average.nc, XXXXX.atmos_daily.nc,         XXXXX.atmos_diurn.nc
+   Args:
+       fpath       : full path to the Legacy netcdf files
+       typelistfv3 : MGCM-like file type: 'average', 'daily', or 'diurn'
+       renameFV3   : rename the files from Legacy_Lsxxx_Lsyyy.nc to XXXXX.atmos_average.nc following MGCM output conventions
+       cwd         : the output path
+   Returns:
+       atmos_average, atmos_daily, atmos_diurn
 
 
 .. py:function:: change_vname_longname_unit(vname, longname_txt, units_txt)

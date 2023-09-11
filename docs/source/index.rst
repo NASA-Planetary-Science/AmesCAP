@@ -27,13 +27,7 @@ CAP is currently compatible with output from the MCMC’s `Legacy <https://githu
 
    installation
    autoapi/MarsPull/index
-   autoapi/MarsFormat/index
-   autoapi/MarsFiles/index
-   autoapi/MarsVars/index
-   autoapi/MarsInterp/index
-   autoapi/MarsPlot/index
-   autoapi/MarsCalendar/index
-   examples
+
 
 
 Indices and tables
