@@ -47,7 +47,17 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../MarsPull/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPull</span></code></a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsFormat</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsFormat</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module Contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#functions">Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#MarsFormat.marswrf_to_mgcm"><code class="docutils literal notranslate"><span class="pre">marswrf_to_mgcm()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsFormat.openmars_to_mgcm"><code class="docutils literal notranslate"><span class="pre">openmars_to_mgcm()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../MarsFiles/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsFiles</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../MarsVars/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsVars</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../MarsInterp/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsInterp</span></code></a></li>
@@ -104,6 +114,122 @@ for MarsWRF, variables are derived and regridded onto a standard grid.</p>
 </ul>
 </dd>
 </dl>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading"></a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsFormat.marswrf_to_mgcm" title="MarsFormat.marswrf_to_mgcm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">marswrf_to_mgcm</span></code></a>(DS)</p></td>
+<td><p>Converts variables in MarsWRF output files to MGCM-like format and</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsFormat.openmars_to_mgcm" title="MarsFormat.openmars_to_mgcm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">openmars_to_mgcm</span></code></a>(DS)</p></td>
+<td><p>Converts variables in openMars output files to MGCM-like format.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsFormat.marswrf_to_mgcm">
+<span class="sig-prename descclassname"><span class="pre">MarsFormat.</span></span><span class="sig-name descname"><span class="pre">marswrf_to_mgcm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">DS</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFormat.marswrf_to_mgcm" title="Permalink to this definition"></a></dt>
+<dd><p>Converts variables in MarsWRF output files to MGCM-like format and
+derives variables from their perturbations.</p>
+<p>WRF data is output to dimensions: [time, pfull, lat, lon] or
+[t,z,y,x], just like MGCM data. Some WRF variables are on staggered
+grids, referred to in the comments using ‘ (prime; like y’).</p>
+<p>The dimensions of the native WRF variables can be:
+- t  = time             (like time in MGCM)
+- z  = bottom_top       (like pfull in MGCM)
+- z’ = bottom_top_stag  (like phalf in MGCM)
+- y  = south_north      (like lat in MGCM)
+- y’ = south_north_stag
+- x  = west_east        (like lon in MGCM)
+- x’ = west_east_stag</p>
+<p>The variables transferred or derived from WRF output and piped to
+the MGCM daily file are listed below.</p>
+<div class="line-block">
+<div class="line">MarsWRF | MGCM Equiv. | Units    | Notes</div>
+<div class="line">——- | ———– | —–    <a href="#id1"><span class="problematic" id="id2">|</span></a>——</div>
+<div class="line">XTIME   | time        | days     | <a href="#id3"><span class="problematic" id="id4">*</span></a>converted from minutes to days</div>
+<div class="line-block">
+<div class="line">|             |          |  since simulation start*</div>
+</div>
+<div class="line">L_S     | areo        | degree   |</div>
+<div class="line">PSFC    | ps          | Pa       |</div>
+<div class="line">XLONG   | lon         | degree E |</div>
+<div class="line">XLAT    | lat         | degree N |</div>
+<div class="line">HGT     | zsurf       | meters   |</div>
+<div class="line">U       | ucomp       | m/s      | <em>req. interp. to regular grid</em></div>
+<div class="line">V       | vcomp       | m/s      | <em>req. interp. to regular grid</em></div>
+<div class="line">W       | w           | m/s      | <em>req. interp. to regular grid</em></div>
+<div class="line">H2OICE  | h2o_ice_sfc | kg/m2    |</div>
+<div class="line">CO2ICE  | co2_ice_sfc | kg/m2    |</div>
+<div class="line">ZNW     | bk          |          |</div>
+<div class="line">TSK     | ts          | K        |</div>
+<div class="line">P_TOP   | pk[0]       | Pa       | = model top pressure</div>
+</div>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h4>
+<dl class="simple">
+<dt>DS<span class="classifier">xarray dataset</span></dt><dd><p>The dataset created by xarray when it opens the user-supplied
+input file.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Permalink to this heading"></a></h4>
+<dl class="simple">
+<dt>var_dict<span class="classifier">dictionary</span></dt><dd><p>Dictionary with variable names as keys and a list of attributes[values, dimensions, longname, units] as values.</p>
+</dd>
+<dt>time<span class="classifier">array</span></dt><dd><p>Minutes since simulation start</p>
+</dd>
+<dt>lat<span class="classifier">array</span></dt><dd><p>Latitude on a regular grid</p>
+</dd>
+<dt>lon<span class="classifier">array</span></dt><dd><p>Longitude on a regular grid</p>
+</dd>
+<dt>phalf<span class="classifier">array</span></dt><dd><p>Half pressure levels</p>
+</dd>
+<dt>pfull<span class="classifier">array</span></dt><dd><p>Full pressure levels</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsFormat.openmars_to_mgcm">
+<span class="sig-prename descclassname"><span class="pre">MarsFormat.</span></span><span class="sig-name descname"><span class="pre">openmars_to_mgcm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">DS</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFormat.openmars_to_mgcm" title="Permalink to this definition"></a></dt>
+<dd><p>Converts variables in openMars output files to MGCM-like format.</p>
+<p>openMars data is similar to MGCM data already. This function derives
+pfull and phalf but otherwise only needs to rename variables and
+update units, longnames, and dimensions to match MGCM output.</p>
+<section id="id5">
+<h4>Parameters<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h4>
+<dl class="simple">
+<dt>DS<span class="classifier">xarray dataset</span></dt><dd><p>The dataset created by xarray when it opens the user-supplied
+input file.</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h4>Returns<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h4>
+<dl class="simple">
+<dt>var_dict<span class="classifier">dictionary</span></dt><dd><p>Dictionary with variable names as keys and a list of attributes[values, dimensions, longname, units] as values.</p>
+</dd>
+<dt>time<span class="classifier">array</span></dt><dd><p>Minutes since simulation start</p>
+</dd>
+<dt>lat<span class="classifier">array</span></dt><dd><p>Latitude on a regular grid</p>
+</dd>
+<dt>lon<span class="classifier">array</span></dt><dd><p>Longitude on a regular grid</p>
+</dd>
+<dt>phalf<span class="classifier">array</span></dt><dd><p>Half pressure levels</p>
+</dd>
+<dt>pfull<span class="classifier">array</span></dt><dd><p>Full pressure levels</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+</section>
 </section>
 
 
