@@ -19,8 +19,6 @@ A quick overview of what is covered in this installation document:
 2. [Installing CAP](#2-installing-cap)
 3. [Testing & Using CAP](#3-testing-using-cap)
 4. [Practical Tips](#4-practical-tips-for-later-use-during-the-tutorial)
-5. [Do This Before Attending the Tutorial](#5-do-this-before-attending-the-tutorial)
-
 
 
 
@@ -458,69 +456,3 @@ syntax on
 colorscheme default
 au BufReadPost *.in  set syntax=python
 ```
-
-
-
-
-***
-
-## 5. Do This Before Attending the Tutorial
-
-In order to follow along with the practical part of the MGCM Tutorial, we ask that you **download several MGCM output files beforehand**. You should save these on the machine you'll be using during the tutorial.
-
-We'll use CAP to retrieve these files from the MGCM Data Portal. To begin, activate the virtual environment:
-
-```bash
-(local)>$ source AmesCAP/bin/activate      # bash
-(local)>$ source AmesCAP/bin/activate.csh  # csh/tcsh
-```
-
-Choose a directory in which to store these MGCM output files on your machine. We will also create two sub- directories, one for an MGCM simulation with radiatively inert clouds (RIC) and one for an MGCM simulation with radiatively active clouds (RAC):
-
-```bash
-(AmesCAP)>$ mkdir CAP_tutorial
-(AmesCAP)>$ cd CAP_tutorial
-(AmesCAP)>$ mkdir INERTCLDS ACTIVECLDS
-```
-
-Then, download the corresponding data in each directory:
-
-```bash
-(AmesCAP)>$ cd INERTCLDS
-(AmesCAP)>$ MarsPull.py -id INERTCLDS -ls 255 285
-(AmesCAP)>$ cd ../ACTIVECLDS
-(AmesCAP)>$ MarsPull.py -id ACTIVECLDS -ls 255 285
-```
-
-Finally, check for files integrity using the `disk use` command:
-
-```bash
-cd ..
-du -h INERTCLDS/fort.11*
-du -h ACTIVECLDS/fort.11*
-> 433M	fort.11_0719
-[...]
-```
-
-The files should be 433Mb each. That's it! `CAP_tutorial` now holds the necessary `fort.11` files from the radiatively active and inert MGCM simulations:
-
-```
-CAP_tutorial/
-├── INERTCLDS/
-│   └── fort.11_0719  fort.11_0720  fort.11_0721  fort.11_0722  fort.11_0723
-└── ACTIVECLDS/
-    └── fort.11_0719  fort.11_0720  fort.11_0721  fort.11_0722  fort.11_0723
-```
-
-
-You can now deactivate the virtual environment:
-
-```bash
-(AmesCAP)>$ deactivate
-```
-> If you encounter an issue during the download process or if the files are not 433Mb, please verify the files availability on [the MCMC Data Portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php) and try again later. You can re-attempt to download specific files as follows: `MarsPull.py -id  ACTIVECLDS -f fort.11_0720 fort.11_0723` (make sure to navigate to the appropriate simulation directory first), or simply download the 10 files listed above manually from the website.
-
-
-
-
-***
