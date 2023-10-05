@@ -45,7 +45,7 @@ except Exception as exception:
 
 degr = u"\N{DEGREE SIGN}"
 global current_version
-current_version = 3.3
+current_version = 3.4
 
 # ======================================================
 #                  ARGUMENT PARSER
