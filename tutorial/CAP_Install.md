@@ -1,4 +1,4 @@
-![](./tutorial_images/Tutorial_Banner_Final.png)
+![](./tutorial_images/Tutorial_Banner_2023.png)
 
 
 
