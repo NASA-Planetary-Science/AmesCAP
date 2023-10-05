@@ -241,7 +241,7 @@ That's it! CAP is installed in `AmesCAP` and you can see the `MarsXXXX.py` execu
 > MarsPlot.py      activate         easy_install-3.8          pip              python3
 ```
 
-> Shall you need to modify any code, note that when you access the `Mars` tools above, those are **not** executed from the `AmesCAP-master/` folder in your `/Downloads` directory, but instead from the `AmesCAP` virtual environment where they were installed by pip.
+> Shall you need to modify any code, note that when you access the `Mars` tools above, those are **not** executed from the `AmesCAP/` folder in your `/Downloads` directory, but instead from the `AmesCAP` virtual environment where they were installed by pip.
 
 Double check that the paths to the executables are correctly set in your terminal by exiting the virtual environment:
 
