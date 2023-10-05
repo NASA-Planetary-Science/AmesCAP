@@ -6,7 +6,7 @@
 * [Cheat sheet](#cheat-sheet)
 * [The big question... How do I do this? >  <span style="color:red">Ask for help!  </span>](#the-big-question-how-do-i-do-this---span-stylecolorredask-for-help--span)
 * [1. `MarsPull.py` - Downloading Raw MGCM Output](#1-marspullpy---downloading-raw-mgcm-output)
-* [2. `MarsFiles.py` - Reducing the Files](#2-marsfilespy---reducing-the-files)
+* [2. `MarsFiles.py` - Files Manipulations and Reduction](#2-marsfilespy---files-manipulations-and-reduction)
 * [3. `MarsVars.py` - Performing Variable Operations](#3-marsvarspy---performing-variable-operations)
 * [4. `MarsInterp.py` - Interpolating the Vertical Grid](#4-marsinterppy---interpolating-the-vertical-grid)
 * [5. `MarsPlot.py` - Plotting the Results](#5-marsplotpy---plotting-the-results)
@@ -97,7 +97,7 @@ MarsPull.py -id ACTIVECLDS -f fort.11_0720 fort.11_0723
 [Back to Top](#cheat-sheet)
 ***
 
-# 2. `MarsFiles.py` - Reducing the Files
+# 2. `MarsFiles.py` - Files Manipulations and Reduction
 
 `MarsFiles` provides several tools for file manipulations, including code designed to create binned, averaged, and time-shifted files from MGCM output. The `-fv3` flag is used to convert fort.11 binaries to the Netcdf data format (you can select one or more of the file format listed below):
 
@@ -109,10 +109,10 @@ These are the file formats that `MarsFiles` can create from the fort.11 MGCM out
 
 **Primary files**
 
-| File name | Description                                    |Timesteps for 10 sols x 16 output/sol           |Ratio to daily file (430Mb)|
+| File name | Description                                    |Timesteps for 10 sols x 24 output/sol           |Ratio to daily file |
 |-----------|------------------------------------------------|----------------------------------------------- | ---                  |
-|**atmos_daily.nc** | continuous time series                | (16 x 10)=160                                  | 1                    |
-|**atmos_diurn.nc** | data binned by time of day and 5-day averaged | (16 x 2)=32                                    | x5 smaller           |
+|**atmos_daily.nc** | continuous time series                | (24 x 10)=240                                  | 1                    |
+|**atmos_diurn.nc** | data binned by time of day and 5-day averaged | (24 x 2)=48                                    | x5 smaller           |
 |**atmos_average.nc** | 5-day averages                              |  (1 x 2) = 2                                           | x80 smaller          |
 |**fixed.nc** | statics variable such as surface albedo and topography  |  static                                        |few kB                |
 

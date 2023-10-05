@@ -214,8 +214,6 @@ There is therefore no need to reference the full paths while **inside** the virt
 
 ## 2. Installing CAP
 
-Now we can download and install CAP in `AmesCAP`. CAP was provided to you in the tarfile `AmesCAP-master.zip` that was sent along with these instructions. Download `AmesCAP-master.zip`. You can leave the file in `Downloads/`, or,  if you encounter any permission issue, move it to a temporary location like your `/home` or `/Desktop` directories.
-
 ### Using `pip`
 
 Open a terminal window, activate the virtual environment, and untar the file or install from the github:
@@ -225,11 +223,8 @@ Open a terminal window, activate the virtual environment, and untar the file or 
 (local)>$ source ~/AmesCAP/bin/activate.csh      # cshr/tsch
 (local)>$ source ~/AmesCAP/Scripts/activate.csh  #  Cygwin/Windows
 (local)>$ conda AmesCAP/bin/activate             # if you used conda
-# FROM AN ARCHIVE:
-(AmesCAP)>$ tar -xf AmesCAP-master.zip
-(AmesCAP)>$ cd AmesCAP-master
-(AmesCAP)>$ pip install .
-# OR FROM THE GITHUB:
+
+
 (AmesCAP)>$ pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 ```
 > Please follow the instructions to upgrade pip if recommended during that steps. Instructions relevant the *conda* package manager are listed at the end of this section
@@ -246,7 +241,7 @@ That's it! CAP is installed in `AmesCAP` and you can see the `MarsXXXX.py` execu
 > MarsPlot.py      activate         easy_install-3.8          pip              python3
 ```
 
-> Shall you need to modify any code, note that when you access the `Mars` tools above, those are **not** executed from the `AmesCAP-master/` folder in your `/Downloads` directory, but instead from the `AmesCAP` virtual environment where they were installed by pip. You can safely move AmesCAP-master.zip and the AmesCAP-master directory to a different location on your system.
+> Shall you need to modify any code, note that when you access the `Mars` tools above, those are **not** executed from the `AmesCAP-master/` folder in your `/Downloads` directory, but instead from the `AmesCAP` virtual environment where they were installed by pip.
 
 Double check that the paths to the executables are correctly set in your terminal by exiting the virtual environment:
 
@@ -331,12 +326,6 @@ Activate the virtual environment, then install CAP:
 ```bash
 (local)>$ conda activate AmesCAP
 (AmesCAP)>$ conda install pip
-# FROM AN ARCHIVE:
-(AmesCAP)>$ cd ~/Downloads
-(AmesCAP)>$ tar -xf AmesCAP-master.zip
-(AmesCAP)>$ cd AmesCAP-master
-(AmesCAP)>$ pip install .
-# OR FROM THE GITHUB:
 (AmesCAP)>$ pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 ```
 
