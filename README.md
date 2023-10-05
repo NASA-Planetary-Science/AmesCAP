@@ -4,8 +4,8 @@ CAP is a set of Python3 libraries and command-line executables that streamline t
 
 Please check the [tutorial/](./tutorial/) directory for:
 
-* Detailed installation instructions for Linux, MacOS, Windows [Step-by-Step Installation](../tutorial/CAP_Install.md)
-* A lecture presenting the functionalities of the CAP [Introduction to CAP and Documentation of its Functions](../tutorial/CAP_lecture.md)
+* Detailed installation instructions for Linux, MacOS, Windows [Step-by-Step Installation](./tutorial/CAP_Install.md)
+* A lecture presenting the functionalities of the CAP [Introduction to CAP and Documentation of its Functions](./tutorial/CAP_lecture.md)
 * A set of practice exercises to get familiar with CAP [Practice Exercises](../tutorial/CAP_Exercises.md)
 
 The tutorial uses outputs from MGCM simulations extensively documented in [Haberle et al. 2019](https://www.sciencedirect.com/science/article/pii/S0019103518305761)
