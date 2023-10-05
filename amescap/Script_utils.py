@@ -259,7 +259,7 @@ def FV3_file_type(fNcdf):
         fNcdf: an (open) Netcdf file object
     Return:
        f_type (string): 'fixed', 'contineous', or 'diurn'
-       interp_type (string): 'pfull','pstd','zstd','zagl','zgrid'
+       interp_type (string): 'pfull','pstd','zstd','zagl'
     '''
     #Get the full path from the file
     fullpath=get_Ncdf_path(fNcdf)
@@ -289,7 +289,6 @@ def FV3_file_type(fNcdf):
     if 'pstd'  in dims: interp_type='pstd'
     if 'zstd'  in dims: interp_type='zstd'
     if 'zagl'  in dims: interp_type='zagl'
-    if 'zgrid' in dims: interp_type='zgrid'
     return f_type,interp_type
 
 def alt_FV3path(fullpaths,alt,test_exist=True):
@@ -567,7 +566,7 @@ def section_content_amescap_profile(section_ID):
     except FileNotFoundError:
         prRed("Error: %s config file not found "%(input_file))
         prYellow("To use this feature, create a hidden config file from the template in your home directory with:")
-        prCyan("    cp amesCAP/mars_templates/amescap_profile  ~/.amescap_profile")
+        prCyan("    cp AmesCAP/mars_templates/amescap_profile  ~/.amescap_profile")
         exit()
     except Exception as exception: #Return the error
         prRed('Error')

@@ -1,6 +1,11 @@
 # This is a personal customization file, to be used in addition to default layers defined inside MarsInterp.py
 # You may alter any of the above, or define new grid structure using a unique identifier of your choice.
 
+<<<<<<<<<<<<<<| MarsPlot.py Settings |>>>>>>>>>>>>>
+add_sol_to_time_axis = False  # If True, displays sol numbers below Ls values on axis
+lon_coordinate = 360          # 180 for -180->180 or 360 for 0->360
+show_NaN_in_slice = False     # True includes NaNs in slices (like np.mean), False ignores NaNs (like np.nanmean)
+
 <<<<<<<<<<<<<<| Pressure definitions for pstd |>>>>>>>>>>>>>
 
 p44 = [1.0e+03, 9.5e+02, 9.0e+02, 8.5e+02, 8.0e+02, 7.5e+02, 7.0e+02,
