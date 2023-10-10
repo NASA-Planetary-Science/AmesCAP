@@ -1106,7 +1106,7 @@ def lon180_to_360(lon):
     else:  # lon180 is an array
         lon[lon < 0] += 360
         # reogranize lon by increasing values
-        lon = np.append(lon[lon < 180], lon[lon >= 180])
+        lon = np.append(lon[lon <= 180], lon[lon > 180])
     return lon
 
 
@@ -1159,7 +1159,7 @@ def shiftgrid_180_to_360(lon, data):  # longitude is LAST
     lon = np.array(lon)
     lon[lon < 0] += 360.  # convert to 0-360
     data = np.concatenate(
-        (data[..., lon < 180], data[..., lon >= 180]), axis=-1)  # stack data
+        (data[..., lon <= 180], data[..., lon > 180]), axis=-1)  # stack data
     return data
 
 
