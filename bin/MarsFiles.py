@@ -17,7 +17,7 @@ import warnings     # suppress certain errors when dealing with NaN arrays
 # ==========
 from amescap.Ncdf_wrapper import Ncdf, Fort
 from amescap.FV3_utils import tshift, daily_to_average, daily_to_diurn, get_trend_2D
-from amescap.Script_utils import prYellow, prCyan, prRed, find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile, get_longname_units
+from amescap.Script_utils import prYellow, prCyan, prRed, find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile, get_longname_units,extract_path_basename
 # ==========
 
 # ======================================================
@@ -42,6 +42,11 @@ parser.add_argument('-c', '--combine', action='store_true',
                     help="""Combine a sequence of similar files into a single file \n"""
                     """> Usage: MarsFiles.py *.atmos_average.nc --combine \n"""
                     """> Works with Legacy and MGCM 'fixed', 'average', 'daily' and 'diurn' files\n"""
+                    """ \n""")
+
+parser.add_argument('-split', '--split', nargs='+',
+                    help="""Extract time values between a min and max sol\n"""
+                    """> Usage: MarsFiles.py 00668.tmos_average.nc --split 200 400 \n"""
                     """ \n""")
 
 parser.add_argument('-t', '--tshift', nargs='?', const=999, type=str,
@@ -268,6 +273,67 @@ def main():
         p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
         p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
         prCyan(fileout + ' was merged')
+
+
+    # ===========================================================================
+    # =============  Split a file between solmin and solmax =====================
+    # ===========================================================================
+    elif parser.parse_args().split:
+        bounds=np.asarray(parser.parse_args().split).astype(float)
+        if len(np.atleast_1d(bounds))!=2:
+            prRed('Requires two values: sol_min sol_max')
+            exit()
+
+        # Add path unless full path is provided
+        if not ('/' in file_list[0]):
+            fullnameIN = path2data + '/' + file_list[0]
+        else:
+            fullnameIN = file_list[0]
+
+
+        fNcdf = Dataset(fullnameIN, 'r', format='NETCDF4_CLASSIC')
+        var_list = filter_vars(
+            fNcdf, parser.parse_args().include)  # Get all variables
+
+        time_in = fNcdf.variables['time'][:]
+
+        imin=np.argmin(np.abs(bounds[0]-time_in))
+        imax=np.argmin(np.abs(bounds[1]-time_in))
+        time_out=time_in[imin:imax]
+        len_sols=time_out[-1]-time_out[0]
+
+        fpath,fname=extract_path_basename(fullnameIN)
+
+        fullnameOUT = fpath+'/%05d%s_%03dsols.nc'%(time_out[0],fname[5:-3],len_sols)
+        prCyan(fullnameOUT)
+        Log=Ncdf(fullnameOUT)
+        Log.copy_all_dims_from_Ncfile(fNcdf,exclude_dim=['time'])
+        Log.add_dimension('time',None)
+        Log.log_axis1D('time', time_out, 'time', longname_txt="sol number",
+                                    units_txt='days since 0000-00-00 00:00:00', cart_txt='T')
+
+        # Loop over all variables in the file
+        for ivar in var_list:
+            varNcf = fNcdf.variables[ivar]
+
+            if 'time' in varNcf.dimensions and ivar!='time':
+                prCyan("Processing: %s ..." % (ivar))
+                var_out = varNcf[imin:imax,...]
+                longname_txt, units_txt = get_longname_units(fNcdf, ivar)
+                Log.log_variable(
+                    ivar, var_out, varNcf.dimensions, longname_txt, units_txt)
+
+            else:
+                if ivar in ['pfull', 'lat', 'lon', 'phalf', 'pk', 'bk', 'pstd', 'zstd', 'zagl']:
+                    prCyan("Copying axis: %s..." % (ivar))
+                    Log.copy_Ncaxis_with_content(fNcdf.variables[ivar])
+                elif ivar!='time':
+                    prCyan("Copying variable: %s..." % (ivar))
+                    Log.copy_Ncvar(fNcdf.variables[ivar])
+        Log.close()
+        fNcdf.close()
+
+
 
 # ===============================================================================
 # ============= Time-Shifting Implementation by Victoria H. =====================

@@ -782,5 +782,5 @@ class Fort(object):
         Lsdi=np.append(Lsdi,2*Lsdi[-1]-Lsdi[-2])
 
         for i in range(len(Ls)//stride):
-            Ls_out[i*stride:(i+1)*stride]=np.arange(0,stride)/np.float(stride)*(Lsdi[i+1]-Lsdi[i])+Lsdi[i]
+            Ls_out[i*stride:(i+1)*stride]=np.arange(0,stride)/np.float32(stride)*(Lsdi[i+1]-Lsdi[i])+Lsdi[i]
         return Ls_out
