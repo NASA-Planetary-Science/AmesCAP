@@ -45,8 +45,8 @@ parser.add_argument('-c', '--combine', action='store_true',
                     """ \n""")
 
 parser.add_argument('-split', '--split', nargs='+',
-                    help="""Extract time values between a min and max sol\n"""
-                    """> Usage: MarsFiles.py 00668.tmos_average.nc --split 200 400 \n"""
+                    help="""Extract time values between min and max sol numbers\n"""
+                    """> Usage: MarsFiles.py 00668.tmos_average.nc --split 700 800 \n"""
                     """ \n""")
 
 parser.add_argument('-t', '--tshift', nargs='?', const=999, type=str,
