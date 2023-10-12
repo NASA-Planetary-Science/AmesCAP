@@ -45,8 +45,9 @@ parser.add_argument('-c', '--combine', action='store_true',
                     """ \n""")
 
 parser.add_argument('-split', '--split', nargs='+',
-                    help="""Extract time values between min and max sol numbers\n"""
-                    """> Usage: MarsFiles.py 00668.tmos_average.nc --split 700 800 \n"""
+                    help="""Extract values between min and max solar longitudes 0-360 [°]\n"""
+                    """  This assumes all values in the file are from only one Mars Year. \n"""
+                    """> Usage: MarsFiles.py 00668.atmos_average.nc --split 0 90 \n"""
                     """ \n""")
 
 parser.add_argument('-t', '--tshift', nargs='?', const=999, type=str,
@@ -281,7 +282,7 @@ def main():
     elif parser.parse_args().split:
         bounds=np.asarray(parser.parse_args().split).astype(float)
         if len(np.atleast_1d(bounds))!=2:
-            prRed('Requires two values: sol_min sol_max')
+            prRed('Requires two values: ls_min ls_max')
             exit()
 
         # Add path unless full path is provided
@@ -296,15 +297,19 @@ def main():
             fNcdf, parser.parse_args().include)  # Get all variables
 
         time_in = fNcdf.variables['time'][:]
+        areo_in = np.squeeze(fNcdf.variables['areo'][:])%360
 
-        imin=np.argmin(np.abs(bounds[0]-time_in))
-        imax=np.argmin(np.abs(bounds[1]-time_in))
+        imin=np.argmin(np.abs(bounds[0]-areo_in))
+        imax=np.argmin(np.abs(bounds[1]-areo_in))
+        if imin==imax:
+            prRed('Warning, requested Ls min = %g and Ls max= %g are out of file range Ls(%.1f-%.1f)'%(bounds[0],bounds[1],areo_in[0],areo_in[-1]))
+            exit()
         time_out=time_in[imin:imax]
         len_sols=time_out[-1]-time_out[0]
 
         fpath,fname=extract_path_basename(fullnameIN)
 
-        fullnameOUT = fpath+'/%05d%s_%03dsols.nc'%(time_out[0],fname[5:-3],len_sols)
+        fullnameOUT = fpath+'/%05d%s_Ls%03d_%03d.nc'%(time_out[0],fname[5:-3],bounds[0],bounds[1])
         prCyan(fullnameOUT)
         Log=Ncdf(fullnameOUT)
         Log.copy_all_dims_from_Ncfile(fNcdf,exclude_dim=['time'])
