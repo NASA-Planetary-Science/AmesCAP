@@ -123,7 +123,7 @@ parser.add_argument('-norm', '--normalize', action='store_true',
 parser.add_argument('-rs', '--regrid_source', nargs='+',
                     help=""" Reggrid MGCM output or observation files using another netcdf file grid structure (time, lev, lat, lon) \n"""
                     """>  Both source(s) and target files should be vertically interpolated to a standard grid (e.g. zstd, zagl, pstd) \n"""
-                    """>  Usage: MarsInterp.py ****.atmos.average_pstd.nc -rs simu2/00668.atmos_average_pstd.nc \n""")
+                    """>  Usage: MarsFiles.py ****.atmos.average_pstd.nc -rs simu2/00668.atmos_average_pstd.nc \n""")
 
 parser.add_argument('-za', '--zonal_avg', action='store_true',
                     help="""Apply zonal averaging to a file. \n"""

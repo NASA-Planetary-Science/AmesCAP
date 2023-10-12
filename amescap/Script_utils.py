@@ -235,7 +235,7 @@ def extract_path_basename(filename):
     Args:
         filename: e.g. 'XXXXX.fixed.nc', './history/XXXXX.fixed.nc' or '/home/user/history/XXXXX.fixed.nc'
     Returns:
-        filepath : '/home/user/history/XXXXX.fixed.nc' in all the cases above
+        filepath : '/home/user/history/' in all the cases above
         basename:   XXXXX.fixed.nc in all the cases above
 
     ***NOTE***
