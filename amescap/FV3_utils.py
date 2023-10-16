@@ -1689,7 +1689,7 @@ def tshift(array, lon, timeo, timex=None):
     id = dims[0]  # number of longitudes in file
     nsteps = len(timeo)   # number of timesteps per day in input
 
-    nsf = float_(nsteps)   # number of timesteps per day in input
+    nsf = float(nsteps)   # number of timesteps per day in input
 
     timeo = np.squeeze(timeo)
 
