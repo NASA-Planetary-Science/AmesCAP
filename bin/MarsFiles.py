@@ -277,7 +277,7 @@ def main():
 
 
     # ===========================================================================
-    # =============  Split a file between solmin and solmax =====================
+    # =============  Split a file between Ls min and Ls max =====================
     # ===========================================================================
     elif parser.parse_args().split:
         bounds=np.asarray(parser.parse_args().split).astype(float)
@@ -297,14 +297,26 @@ def main():
             fNcdf, parser.parse_args().include)  # Get all variables
 
         time_in = fNcdf.variables['time'][:]
-        areo_in = np.squeeze(fNcdf.variables['areo'][:])%360
+
+        #===Read areo variable===
+        f_type,_=FV3_file_type(fNcdf)
+
+        if f_type=='diurn': #size is areo (133,24,1)
+            areo_in = np.squeeze(fNcdf.variables['areo'][:,0,:])%360
+        else:               #size is areo (133,1)
+            areo_in = np.squeeze(fNcdf.variables['areo'][:])%360
+
 
         imin=np.argmin(np.abs(bounds[0]-areo_in))
         imax=np.argmin(np.abs(bounds[1]-areo_in))
+
         if imin==imax:
             prRed('Warning, requested Ls min = %g and Ls max= %g are out of file range Ls(%.1f-%.1f)'%(bounds[0],bounds[1],areo_in[0],areo_in[-1]))
             exit()
+
         time_out=time_in[imin:imax]
+        prCyan(time_in)
+        prCyan(time_out)
         len_sols=time_out[-1]-time_out[0]
 
         fpath,fname=extract_path_basename(fullnameIN)
