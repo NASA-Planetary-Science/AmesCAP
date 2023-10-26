@@ -391,7 +391,7 @@ def main():
             fnew.copy_Ncaxis_with_content(fdiurn.variables['lon'])
             fnew.copy_Ncaxis_with_content(fdiurn.variables['lat'])
             fnew.copy_Ncaxis_with_content(fdiurn.variables['time'])
-            fnew.copy_Ncaxis_with_content(fdiurn.variables['scalar_axis'])
+            #fnew.copy_Ncaxis_with_content(fdiurn.variables['scalar_axis'])
 
             # Only create a vertical axis if the original file contains 3D fields
             if zaxis in fdiurn.dimensions.keys():
