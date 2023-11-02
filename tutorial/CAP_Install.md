@@ -1,15 +1,13 @@
 ![](./tutorial_images/Tutorial_Banner_2023.png)
 
 
-
-
 ***
 
 # Installing the Community Analysis Pipeline (CAP)
 
 ### Welcome!
 
-This document contains the instructions for installing the NASA Ames MCMC's Community Analysis Pipeline (CAP). **We ask that you come to the MGCM Tutorial on November 2-4 with CAP installed on your machine** so that we can jump right into using it! On the second day of the tutorial (November 3rd), we will be using CAP to analyze MGCM output.
+This document contains the instructions for installing the NASA Ames MCMC's Community Analysis Pipeline (CAP).
 
 Installing CAP is fairly straightforward. We will create a Python virtual environment, download CAP, and then install CAP in the virtual environment. That's it!
 
@@ -55,7 +53,7 @@ If you are already comfortable with Python's package management system, you are 
 
 For all other users, we highly recommend using the latest version of the Anaconda Python distribution. It ships with pre-compiled math and plotting packages such as `numpy` and `matplotlib` as well as pre-compiled libraries like `hdf5` headers for reading `netCDF` files (the preferred filetype for analysing MGCM output).
 
-You can install the Anaconda Python distribution via the command-line or using a [graphical interface](https://www.anaconda.com/distribution/#download-section) (scroll to the very bottom of the page for all download options). You can install Anaconda at either the `System/` level or the `User/` level (the later does not require admin-priviledges). The instructions below are for the **command-line installation** and installs Anaconda in your **home directory**, which is the recommended location. Open a terminal and type the following:
+You can install the Anaconda Python distribution via the command-line or using a [graphical interface](https://www.anaconda.com/download) (scroll to the very bottom of the page for all download options). You can install Anaconda at either the `System/` level or the `User/` level (the later does not require admin-priviledges). The instructions below are for the **command-line installation** and installs Anaconda in your **home directory**, which is the recommended location. Open a terminal and type the following:
 
 ```bash
 (local)>$ chmod +x Anaconda3-2021.05-MacOSX-x86_64.sh   # make the .sh file executable (actual name may differ)
@@ -241,7 +239,6 @@ That's it! CAP is installed in `AmesCAP` and you can see the `MarsXXXX.py` execu
 > MarsPlot.py      activate         easy_install-3.8          pip              python3
 ```
 
-> Shall you need to modify any code, note that when you access the `Mars` tools above, those are **not** executed from the `AmesCAP/` folder in your `/Downloads` directory, but instead from the `AmesCAP` virtual environment where they were installed by pip.
 
 Double check that the paths to the executables are correctly set in your terminal by exiting the virtual environment:
 
