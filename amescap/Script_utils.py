@@ -10,16 +10,6 @@ import re
 
 
 # The functions below allow to print in different color
-#def prRed(skk): print("\033[91m{}\033[00m".format(skk))
-#def prGreen(skk): print("\033[92m{}\033[00m".format(skk))
-#def prCyan(skk): print("\033[96m{}\033[00m".format(skk))
-#def prYellow(skk): print("\033[93m{}\033[00m".format(skk))
-#def prPurple(skk): print("\033[95m{}\033[00m".format(skk))
-#def prLightPurple(skk): print("\033[94m{}\033[00m".format(skk))
-
-
-
-# The functions below allow to print in different color
 def prRed(input_txt):
     print(f"\033[91m{input_txt}\033[00m")
 def prGreen(input_txt):
@@ -40,8 +30,6 @@ NoColor = "\033[00m"
 Red = "\033[91m"
 Green = "\033[92m"
 Purple = "\033[95m"
-
-
 
 def MY_func(Ls_cont):
     '''
@@ -76,6 +64,11 @@ def print_fileContent(fileNcdf):
     Returns:
         None (print in the terminal)
     '''
+    #Define Colors for printing
+    def Green(input_txt): return"\033[92m{}\033[00m".format(input_txt)
+    def Cyan(input_txt): return "\033[96m{}\033[00m".format(input_txt)
+    def Yellow(input_txt):return"\033[93m{}\033[00m".format(input_txt)
+    def Purple(input_txt):return"\033[95m{}\033[00m".format(input_txt)
     if not os.path.isfile(fileNcdf):
         print(fileNcdf+' not found')
     else:
@@ -94,16 +87,12 @@ def print_fileContent(fileNcdf):
         for idim in all_dims:
             for ivar in all_var:
                 if f.variables[ivar].dimensions==idim :
-                    txt_dim=str(getattr(f.variables[ivar],'dimensions',''))
-                    txt_shape=str(getattr(f.variables[ivar],'shape',''))
-                    txt_long_name=str(getattr(f.variables[ivar],'long_name',''))
-                    txt_units=str(getattr(f.variables[ivar],'units',''))
-                    print(txt_dim)
-                    print(txt_shape)
-                    print(txt_long_name)
-                    print(type(txt_units))
-                    #print(prGreen(ivar.ljust(15))+': '+prPurple(txt_dim)+'= '+prCyan(txt_shape)+', '+prYellow(txt_long_name)+\
-                    #'  ['+txt_units+']')
+                    txt_dim=getattr(f.variables[ivar],'dimensions','')
+                    txt_shape=getattr(f.variables[ivar],'shape','')
+                    txt_long_name=getattr(f.variables[ivar],'long_name','')
+                    txt_units=getattr(f.variables[ivar],'units','')
+                    print(Green(ivar.ljust(15))+': '+Purple(txt_dim)+'= '+Cyan(txt_shape)+', '+Yellow(txt_long_name)+\
+                    '  ['+txt_units+']')
 
         try: #This part will be skipped if  the netcdf file does not contains a 'time' variable
             t_ini=f.variables['time'][0];t_end=f.variables['time'][-1]
@@ -129,14 +118,16 @@ def print_varContent(fileNcdf,list_varfull,print_stat=False):
         None (print in the terminal)
     '''
     #Define Colors for printing
+    def Cyan(input_txt): return "\033[96m{}\033[00m".format(input_txt)
+    def Red(input_txt):  return "\033[91m{}\033[00m".format(input_txt)
     if not os.path.isfile(fileNcdf):
         print(fileNcdf+' not found')
     else:
 
         if print_stat:
-            print(prCyan('__________________________________________________________________________'))
-            print(prCyan('           VAR            |      MIN      |      MEAN     |      MAX      |'))
-            print(prCyan('__________________________|_______________|_______________|_______________|'))
+            print(Cyan('__________________________________________________________________________'))
+            print(Cyan('           VAR            |      MIN      |      MEAN     |      MAX      |'))
+            print(Cyan('__________________________|_______________|_______________|_______________|'))
         for varfull in list_varfull:
             try:
                 slice='[:]'
@@ -152,28 +143,28 @@ def print_varContent(fileNcdf,list_varfull,print_stat=False):
                     Min=np.nanmin(var)
                     Mean=np.nanmean(var)
                     Max=np.nanmax(var)
-                    print(prCyan('%26s|%15g|%15g|%15g|'%(varfull,Min,Mean,Max)))
+                    print(Cyan('%26s|%15g|%15g|%15g|'%(varfull,Min,Mean,Max)))
                     if varname=='areo':
                         # If variable is areo, also print the modulo
-                        print(prCyan('%17s(mod 360)|(%13g)|(%13g)|(%13g)|'%(varfull,np.nanmin(var%360),np.nanmean(var%360),np.nanmax(var%360))))
+                        print(Cyan('%17s(mod 360)|(%13g)|(%13g)|(%13g)|'%(varfull,np.nanmin(var%360),np.nanmean(var%360),np.nanmax(var%360))))
                 else:
                     if varname!='areo':
-                        print(prCyan(varfull+'= '))
-                        print(prCyan(var))
+                        print(Cyan(varfull+'= '))
+                        print(Cyan(var))
                     else:
                         #Special case for areo, also print modulo
-                        print(prCyan('areo (areo mod 360)='))
+                        print(Cyan('areo (areo mod 360)='))
                         for ii in var: print(ii,ii%360)
 
-                    print(prCyan('______________________________________________________________________'))
+                    print(Cyan('______________________________________________________________________'))
             except:
                 if print_stat:
-                    print(prRed('%26s|%15s|%15s|%15s|'%(varfull,'','','')))
+                    print(Red('%26s|%15s|%15s|%15s|'%(varfull,'','','')))
                 else:
-                    print(prRed(varfull))
+                    print(Red(varfull))
         #Last line for the table
         if print_stat:
-            print(prCyan('__________________________|_______________|_______________|_______________|'))
+            print(Cyan('__________________________|_______________|_______________|_______________|'))
         f.close()
 
 
@@ -258,7 +249,7 @@ def extract_path_basename(filename):
     Args:
         filename: e.g. 'XXXXX.fixed.nc', './history/XXXXX.fixed.nc' or '/home/user/history/XXXXX.fixed.nc'
     Returns:
-        filepath : '/home/user/history/' in all the cases above
+        filepath : '/home/user/history/XXXXX.fixed.nc' in all the cases above
         basename:   XXXXX.fixed.nc in all the cases above
 
     ***NOTE***
@@ -561,7 +552,7 @@ def section_content_amescap_profile(section_ID):
     '''
     Execude code section in /home/user/.amescap_profile
     Args:
-        section_ID: string defining the section to loa, e.g 'Pressure definitions for pstd'
+        section_ID: string defining the section to load, e.g 'Pressure definitions for pstd'
     Returns
         return line in that section as python code
     '''
