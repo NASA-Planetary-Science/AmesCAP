@@ -10,13 +10,28 @@ import re
 
 
 # The functions below allow to print in different color
-def prRed(skk): print("\033[91m{}\033[00m".format(skk))
-def prGreen(skk): print("\033[92m{}\033[00m".format(skk))
-def prCyan(skk): print("\033[96m{}\033[00m".format(skk))
-def prYellow(skk): print("\033[93m{}\033[00m".format(skk))
-def prPurple(skk): print("\033[95m{}\033[00m".format(skk))
-def prLightPurple(skk): print("\033[94m{}\033[00m".format(skk))
+#def prRed(skk): print("\033[91m{}\033[00m".format(skk))
+#def prGreen(skk): print("\033[92m{}\033[00m".format(skk))
+#def prCyan(skk): print("\033[96m{}\033[00m".format(skk))
+#def prYellow(skk): print("\033[93m{}\033[00m".format(skk))
+#def prPurple(skk): print("\033[95m{}\033[00m".format(skk))
+#def prLightPurple(skk): print("\033[94m{}\033[00m".format(skk))
 
+
+
+# The functions below allow to print in different color
+def prRed(input_txt):
+    print(f"\033[91m{input_txt}\033[00m")
+def prGreen(input_txt):
+    print(f"\033[92m{input_txt}\033[00m")
+def prCyan(input_txt):
+    print(f"\033[96m{input_txt}\033[00m")
+def prYellow(input_txt):
+    print(f"\033[93m{input_txt}\033[00m")
+def prPurple(input_txt):
+    print(f"\033[95m{input_txt}\033[00m")
+def prLightPurple(input_txt):
+    print(f"\033[94m{input_txt}\033[00m")
 
 Cyan = "\033[96m"
 Blue = "\033[94m"
@@ -79,12 +94,16 @@ def print_fileContent(fileNcdf):
         for idim in all_dims:
             for ivar in all_var:
                 if f.variables[ivar].dimensions==idim :
-                    txt_dim=getattr(f.variables[ivar],'dimensions','')
-                    txt_shape=getattr(f.variables[ivar],'shape','')
-                    txt_long_name=getattr(f.variables[ivar],'long_name','')
-                    txt_units=getattr(f.variables[ivar],'units','')
-                    print(prGreen(ivar.ljust(15))+': '+prPurple(txt_dim)+'= '+prCyan(txt_shape)+', '+prYellow(txt_long_name)+\
-                    '  ['+txt_units+']')
+                    txt_dim=str(getattr(f.variables[ivar],'dimensions',''))
+                    txt_shape=str(getattr(f.variables[ivar],'shape',''))
+                    txt_long_name=str(getattr(f.variables[ivar],'long_name',''))
+                    txt_units=str(getattr(f.variables[ivar],'units',''))
+                    print(txt_dim)
+                    print(txt_shape)
+                    print(txt_long_name)
+                    print(type(txt_units))
+                    #print(prGreen(ivar.ljust(15))+': '+prPurple(txt_dim)+'= '+prCyan(txt_shape)+', '+prYellow(txt_long_name)+\
+                    #'  ['+txt_units+']')
 
         try: #This part will be skipped if  the netcdf file does not contains a 'time' variable
             t_ini=f.variables['time'][0];t_end=f.variables['time'][-1]
