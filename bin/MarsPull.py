@@ -19,8 +19,7 @@ List of Functions:
 """
 
 # make print statements appear in color
-from amescap.Script_utils import (prYellow, prCyan, Cyan, Yellow, 
-                                  NoColor, Green)
+from amescap.Script_utils import prYellow, prCyan, Green,Yellow,NoColor,Cyan
 
 # load generic Python modules
 import sys          # system commands
@@ -49,26 +48,15 @@ parser.add_argument(
         f"a subdirectory of legacygcmdata/:\n"
         f"{Cyan}https://data.nas.nasa.gov/legacygcm/data_legacygcm.php?"
         f"dir=/legacygcmdata{NoColor}\n"
-        f"Current options include: '{Yellow}ACTIVECLDS{NoColor}', "
-        f"'{Yellow}INERTCLDS{NoColor}', and '{Yellow}ACTIVECLDS_NCDF\n"
+        f"Current options include: '{Yellow}FV3BETAOUT1{NoColor}' '{Yellow}ACTIVECLDS{NoColor}', "
+        f"'{Yellow}INERTCLDS{NoColor}', {Yellow}NEWBASE_ACTIVECLDS{NoColor}  and '{Yellow}ACTIVECLDS_NCDF\n"
         f"{Green}Usage:\n"
         f"> MarsPull.py -id  INERTCLDS..."
         f"{NoColor}\n\n"
-        
+
     )
 )
 
-parser.add_argument(
-    '-ls', '--ls', nargs='+', type=float,
-    help=(
-        f"Query data by solar longitude (Ls). Requires a simulation "
-        f"identifier (--id)\n"
-        f"{Green}Usage:\n"
-        f"> MarsPull.py -id ACTIVECLDS -ls 90.\n"
-        f"> MarsPull.py -id ACTIVECLDS -ls [start] [stop]"
-        f"{NoColor}\n\n"
-    )
-)
 
 parser.add_argument(
     '-f', '--filename', nargs='+', type=str,
@@ -81,22 +69,27 @@ parser.add_argument(
     )
 )
 
-parser.add_argument('--debug', action='store_true',
-    help = (
-        f"Debug flag: release the exceptions.\n\n"
+parser.add_argument(
+    '-ls', '--ls', nargs='+', type=float,
+    help=(
+        f"Legacy GCM only: Query data by solar longitude (Ls). Requires a simulation "
+        f"identifier (--id)\n"
+        f"{Green}Usage:\n"
+        f"> MarsPull.py -id ACTIVECLDS -ls 90.\n"
+        f"> MarsPull.py -id ACTIVECLDS -ls [start] [stop]"
+        f"{NoColor}\n\n"
     )
 )
-
 
 # ======================================================
 #                  DEFINITIONS
 # ======================================================
 
-global SAVEDIR, ls_0, ls_N
-SAVEDIR = (f"{os.getcwd()}/")
+
+saveDir = (f"{os.getcwd()}/")
 
 # available files by Ls:
-ls_0 = np.array([
+Ls_ini = np.array([
     0, 5, 10, 15, 19, 24, 29, 34, 38, 43, 48, 52, 57, 61, 66, 70, 75,
     79, 84, 88, 93, 97, 102, 106, 111, 116, 121, 125, 130, 135, 140,
     146, 151, 156, 162, 167, 173, 179, 184, 190, 196, 202, 209, 215,
@@ -104,7 +97,7 @@ ls_0 = np.array([
     304, 310, 316,322, 328, 333, 339, 344, 350, 355
 ])
 
-ls_N = np.array([
+Ls_end = np.array([
     4, 9, 14, 19, 24, 29, 33, 38, 42, 47, 52, 56, 61, 65, 70, 74, 79,
     83, 88, 92, 97, 101, 106, 111, 115, 120, 125, 130, 135, 140, 145,
     150, 156, 161, 167, 172, 178, 184, 190, 196, 202, 208, 214, 221,
@@ -113,138 +106,116 @@ ls_N = np.array([
 ])
 
 
-def download(file_name, simulation_id):
-    """
-    Downloads a file from the MCMC Legacy GCM directory on the NAS Data
-    Portal (data.nas.nasa.gov).
 
-    This function specifies the file to download by appending to the
-    URL the subdirectory, indicated by the user-specified
-    simulation identifier [-id --id], and the name of the file. The
-    file name is either provided by the user directly using
-    [-f --filename] or determined based on the user-specified solar
-    longitude [-ls --ls].
+def download(url, filename):
+    """
+    Downloads a file from the NAS Data Portal (data.nas.nasa.gov).
 
     Parameters
     ----------
-    simulation_id : str
-        The simulation identifier, i.e., the name of the directory \
-        to query from: https://data.nas.nasa.gov/mcmc/data_legacygcm.php
-
-    file_name : str
-        The name of the file to download.
-
-    Raises
-    ------
-    A file-not-found error.
+    url : str
+        The url to download, e.g   'https://data.nas.nasa.gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_Ls000_Ls004.nc'
+    filename : str
+        The local filename e.g  '/lou/la4/akling/Data/LegacyGCM_Ls000_Ls004.nc'
 
     Returns
     -------
     The requested file(s), downloaded and saved to the current \
     directory.
+
+
+    Raises
+    ------
+    A file-not-found error.
     """
 
-    baseURL = ("https://data.nas.nasa.gov/legacygcm/"
-               "download_data_legacygcm.php?file=/legacygcmdata/"
-               + simulation_id + "/")
+    _ , fname=os.path.split(filename)
+    response = requests.get(url, stream=True)
+    total = response.headers.get('content-length')
 
-    URL = baseURL + file_name
-
-    filename = SAVEDIR + file_name
-
-    # use a context manager to make an HTTP request and file
-    rsp = requests.get(URL, stream=True)
-
-    # get the total size, in bytes, from the response header
-    total_size = rsp.headers.get('content-length')
-
-    if rsp.status_code == 404:
-        prYellow(f"ERROR File not found! Error code: {rsp.status_code}")
-        exit()
-
+    if response.status_code == 404:
+        print('Error during download, error code is: ',response.status_code)
     else:
-        # download the data and show a progress bar
-        prCyan(f"Downloading {file_name}...")
 
-        with open(filename, 'wb') as f:
-            downloaded = 0
-            if total_size:
-                # convert total_size from str to int
-                total_size = int(total_size)
-                # define the size of the chunk to iterate over (Mb)
-                chunk_size = max(int(total_size/1000), 1024*1024)
+        #If we have access to the size of the file, return progress bar
+        if total is not None:
+            with open(filename, 'wb') as f:
+                downloaded = 0
+                if total :total = int(total)
+                for data in response.iter_content(chunk_size=max(int(total/1000), 1024*1024)):
+                    downloaded += len(data)
+                    f.write(data)
+                    status = int(50*downloaded/total)
+                    sys.stdout.write(f"\r[{'#'*status}{'.'*(50-status)}]")
+                    sys.stdout.flush()
+            sys.stdout.write('\n')
+        else:
 
-            # iterate over every chunk and calculate % of total_size
-            for chunk in rsp.iter_content(chunk_size=chunk_size):
-                downloaded += len(chunk)
-                f.write(chunk)
-
-                # calculate current %
-                status = int(50*downloaded/total_size)
-
-                # print progress to console then flush console
-                sys.stdout.write(f"\r[{'#'*status}{'.'*(50-status)}]")
-                sys.stdout.flush()
-        sys.stdout.write('\n')
-
+            #Header is unknown yet, skip the use of a progress bar
+            print('Downloading %s ...'%(fname))
+            with open(filename, 'wb')as f:
+                f.write(response.content)
+            print('%s Done'%(fname))
 
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
-
 def main():
-    # parse out the name of the file
-    simulation_id = parser.parse_args().id
 
-    if simulation_id is None:
-        prYellow("ERROR [-id, --id] is required. Use 'MarsPull.py -h' "
-                 "for additional help.")
+    #Original
+    #URLbase="https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/"
+    simu_ID=parser.parse_args().id
+
+    if simu_ID is None :
+        prYellow("***Error*** simulation ID [-id --id] is required. See 'MarsPull.py -h' for help")
         exit()
 
-    if parser.parse_args().ls:
-        # if the user input an ID and specified one or more Ls...
-        ls_input = np.asarray(parser.parse_args().ls)
+    #URLbase='https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/'+simu_ID+'/'
+    print('new URL base')
+    if simu_ID in ['ACTIVECLDS','INERTCLDS', 'NEWBASE_ACTIVECLDS','ACTIVECLDS_NCDF']:
+        URLbase='https://data.nas.nasa.gov/mcmcref/legacygcmdata/'+simu_ID+'/'
+    elif simu_ID in ['FV3BETAOUT1']:
+        URLbase='https://data.nas.nasa.gov/mcmcref/fv3betaout1data/'
 
-        if len(ls_input) == 1:
-            # if the user input one Ls...
-            i_start = np.argmin(np.abs(ls_0 - ls_input))
-            if ls_input < ls_0[i_start]:
-                i_start -= 1
-            i_end = i_start
 
-        elif len(ls_input) == 2:
-            # if the user input a range of Ls...
-            i_start = np.argmin(np.abs(ls_0 - ls_input[0]))
-            if ls_input[0] < ls_0[i_start]:
-                i_start -= 1
-            i_end = np.argmin(np.abs(ls_N - ls_input[1]))
-            if ls_input[1] > ls_N[i_end]:
-                i_end += 1
+    if parser.parse_args().ls :
+        data_input=np.asarray(parser.parse_args().ls)
+        if len(data_input)==1: #query only  the file that contains this Ls
+            i_start=np.argmin(np.abs(Ls_ini-data_input))
+            if data_input<Ls_ini[i_start]:i_start-=1
+            num_files=np.arange(i_start,i_start+1)
 
-        num_files = np.arange(i_start, i_end+1)
-        prCyan(f"Saving {len(num_files)} file(s) to {SAVEDIR}")
+        elif len(data_input)==2: #start stop  is provided
+            i_start=np.argmin(np.abs(Ls_ini-data_input[0]))
+            if data_input[0]<Ls_ini[i_start]:i_start-=1
 
-        for n in num_files:
-            # netCDF files
-            if simulation_id == 'ACTIVECLDS_NCDF':
-                file_name = (
-                    f"LegacyGCM_Ls{ls_0[n]:03d}_Ls{ls_N[n]:03d}.nc"
-                )
-            # fort.11 files
+            i_end=np.argmin(np.abs(Ls_end-data_input[1]))
+            if data_input[1]>Ls_end[i_end]:i_end+=1
+
+            num_files=np.arange(i_start,i_end+1)
+        prCyan(f"Saving {len(num_files)} file(s) to {saveDir}")
+        for ii in num_files:
+            #Legacy .nc files
+            if simu_ID=='ACTIVECLDS_NCDF':
+                fName='LegacyGCM_Ls%03d_Ls%03d.nc'%(Ls_ini[ii],Ls_end[ii])
+            #fort.11 files
             else:
-                file_name = (f"fort.11_{(670 + n):04d}")
-            # trigger the file download
-            download(file_name, simulation_id)
+                fName='fort.11_%04d'%(670+ii)
+
+            url = URLbase+fName
+            filename=saveDir+fName
+            #print('Downloading '+ fName+ '...')
+            print('Downloading '+ url+ '...')
+            download(url,filename)
 
     elif parser.parse_args().filename:
-        # if the user input an ID and a file name...
-        file_name_in = np.asarray(parser.parse_args().filename)
-        prCyan(f"Saving {len(file_name_in)} file(s) to {SAVEDIR}")
-        for file_name in file_name_in:
-            # trigger the file download
-            download(file_name, simulation_id)
+        f_input=np.asarray(parser.parse_args().filename)
+        for ff in f_input :
+            url = URLbase+ff
+            filename=saveDir+ff
+            print('Downloading '+ url+ '...')#ff
+            download(url,filename)
     else:
-        # if the user did not specify Ls or a file name...
         prYellow("ERROR No file requested. Use [-ls --ls] or "
                  "[-f --filename] with [-id --id] to specify a file to "
                  "download.")

@@ -1670,7 +1670,7 @@ def tshift(array, lon, timeo, timex=None):
     '''
     Conversion to uniform local time.
     Args:
-        array: variable to be shifted. Assume longitude is the first dimension and time in the last dimension
+        array: variable to be shifted. Assume longitude is the first dimension and time_of_day is the last dimension
         lon: longitude
         timeo : time_of_day index from input file
         timex (optional) : local time (hr) to shift to, e.g. '3. 15.'
