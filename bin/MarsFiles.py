@@ -53,7 +53,7 @@ parser.add_argument('-split', '--split', nargs='+',
 parser.add_argument('-t', '--tshift', nargs='?', const=999, type=str,
                     help="""Apply a timeshift to 'diurn' files. ***Compatible with 'diurn' files only*** \n"""
                     """Can also process vertically interpolated 'diurn' files (e.g. ***_diurn_pstd.nc) \n"""
-                    """> Usage: MarsFiles.py *.atmos_diurn.nc --tshift  (outputs data to all 24 local times)\n"""
+                    """> Usage: MarsFiles.py *.atmos_diurn.nc --tshift  (use time_of_day_XX in input file as target local times)\n"""
                     """>        MarsFiles.py *.atmos_diurn.nc --tshift  '3. 15.' (list ( in quotes '') specifies target local times) \n"""
                     """ \n""")
 

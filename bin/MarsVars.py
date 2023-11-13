@@ -83,7 +83,7 @@ parser.add_argument('-add', '--add', nargs='+', default=[],
                     'mx               (Vertical Flux of Zonal Momentum)   Req. [ucomp, w] \n'
                     'my               (Vertical Flux of Merid. Momentum)  Req. [vcomp, w] \n'
                     'ax               (Zonal Wave-Mean Flow Forcing)      Req. [ucomp, w, rho] \n'
-                    'ay               (Merid. Wave-Mean Flow Forcing)     Req. [ucomp, w, rho] \n'
+                    'ay               (Merid. Wave-Mean Flow Forcing)     Req. [vcomp, w, rho] \n'
                     'tp_t             (Normalized Temp. Perturbation)     Req. [temp] \n'
                     '\033[00m')
 
