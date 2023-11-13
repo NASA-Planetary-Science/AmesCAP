@@ -45,9 +45,8 @@ parser.add_argument(
     '-id', '--id', type=str,
     help=(
         f"Query data by simulation identifier corresponding to \n"
-        f"a subdirectory of legacygcmdata/:\n"
-        f"{Cyan}https://data.nas.nasa.gov/legacygcm/data_legacygcm.php?"
-        f"dir=/legacygcmdata{NoColor}\n"
+        f"a subdirectory of :\n"
+        f"{Cyan}https://data.nas.nasa.gov/mcmcref/ \n"
         f"Current options include: '{Yellow}FV3BETAOUT1{NoColor}' '{Yellow}ACTIVECLDS{NoColor}', "
         f"'{Yellow}INERTCLDS{NoColor}', {Yellow}NEWBASE_ACTIVECLDS{NoColor}  and '{Yellow}ACTIVECLDS_NCDF\n"
         f"{Green}Usage:\n"
