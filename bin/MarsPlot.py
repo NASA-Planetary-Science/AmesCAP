@@ -3526,6 +3526,7 @@ class Fig_1D(object):
                          lw=3, ms=7, label=txt_label)
                 plt.ylabel('Latitude', fontsize=label_size -
                            self.nPan*label_factor)
+
                 # Label is provided
                 if self.axis_opt2:
                     plt.xlabel(self.axis_opt2, fontsize=label_size -
@@ -3571,7 +3572,7 @@ class Fig_1D(object):
                     LsDay = np.mod(LsDay, 360)
 
                 plt.plot(LsDay, var, self.axis_opt1, lw=3, ms=7, label=txt_label)
-
+                plt.xlabel('L$_s$', fontsize=label_size -self.nPan*label_factor)
                 # Label is provided
                 if self.axis_opt2:
                     plt.ylabel(self.axis_opt2, fontsize=label_size -
