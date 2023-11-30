@@ -12,7 +12,7 @@ CAP is a Python toolkit designed to simplify post-processing and plotting MGCM o
 4. `MarsInterp.py`  &rarr; interpolating the vertical grid
 5. `MarsPlot.py`  &rarr; plotting MGCM output
 
-The following exercises are organized into two parts by function. We will go through Part I on Tuesday Nov. 14 and Part II on Wednesday Nov. 15.
+The following exercises are organized into two parts by function. We will go through **Part I on Monday Nov. 13** and **Part II on Tuesday Nov. 14**.
 
 **[Part I: File Manipulations](#part-i-file-manipulations) &rarr; `MarsFiles.py`, `MarsVars.py`, & `MarsInterp.py`**
 
@@ -319,7 +319,7 @@ We now have four different `diurn` files in our directory:
 
 ```bash
 03340.atmos_diurn.nc                  # Original MGCM file
-03847.atmos_diurn_Ls265_275.nc        # + Trimmed to L$_s$=240-300
+03847.atmos_diurn_Ls265_275.nc        # + Trimmed to Ls=265-275
 03847.atmos_diurn_Ls265_275_T.nc      # + Time-shifted; `ps` and `temp` only
 03847.atmos_diurn_Ls265_275_T_pstd.nc # + Pressure-interpolated
 ```
@@ -545,31 +545,50 @@ To open the file, we need to copy it to our local computer. We'll create an alia
 
 First, open a new terminal tab (`CRTL-t`).
 
-Then, change to the directory hosting your token for this tutorial (the token is the file ending in `.pem`)
+Then, change to the directory hosting your token for this tutorial (the token is the file ending in `.pem`).
 
-Finally, build the secure copy (`scp`) command using the following:
+Finally, build the secure copy (`scp`) command OR use `sftp`.
 
-- The name of your `.pem` file
-- The address you used to login to the cloud (something like `user@IP.amazonaws.com`)
-- The path to the PDF in the cloud (`path/to/Diagnostics.pdf`)
+#### Using `scp`(recommended)
+
+To build your `scp` command:
+- The name of your `.pem` file (e.g., `mars-clusterXX.pem`)
+- The address you used to login to the cloud (something like `centos@YOUR_IP_ADDRESS`)
+- The path to the PDF in the cloud: `tutorial_files/cap_exercises/Diagnostics.pdf`
 
 Putting these together, the secure copy command is:
 
 ```bash
-(local)~$ scp -i "mars-test.pem" user@IP.amazonaws.com:path/to/Diagnostics.pdf .
+(local)~$ scp -i "mars-clusterXX.pem" centos@YOUR_IP_ADDRESS:tutorial_files/cap_exercises/Diagnostics.pdf .
 ```
 
 To make the command into an alias named `getpdf`:
 
 ```bash
-(local)~$ alias getpdf='scp -i "mars-test.pem" user@IP.amazonaws.com:path/to/Diagnostics.pdf .'
+(local)~$ alias getpdf='scp -i "mars-clusterXX.pem" centos@YOUR_IP_ADDRESS:tutorial_files/cap_exercises/Diagnostics.pdf .'
 ```
 
 Now we can pull the PDF to our local computer with one simple command:
 
 ```bash
-(local)~$ getpdf
+(local)~$ getpdf # uses scp
 ```
+
+#### Using `sftp`
+
+Alternatively, if `scp` isn't working for you, you can use `sftp`. To do this, go to your new terminal tab and type:
+
+```bash
+(local)~$ sftp -i "mars-clusterXX.pem" centos@YOUR_IP_ADDRESS
+sftp> cd tutorial_files/cap_exercises
+```
+
+Then when you want to pull the PDF to your local computer, type:
+
+```bash
+sftp> get Diagnostics.pdf
+```
+
 
 ***
 
@@ -637,7 +656,13 @@ Type `ESC-:wq` to save and close the file. Then, pass it to `MarsPlot.py`:
 Now, go to your **local terminal** tab and retrieve the PDF:
 
 ```bash
-(local)~$ getpwd
+(local)~$ getpdf # uses scp
+```
+
+or
+
+```bash
+sftp> get Diagnostics.pdf # uses sftp
 ```
 
 Now we can open it and view our plot.
@@ -676,7 +701,13 @@ Save and quit the editor (`ESC-:wq`) and pass `Custom.in` to `MarsPlot.py`:
 In your **local terminal** tab, retrieve the PDF to view the plots:
 
 ```bash
-(local)~$ getpwd
+(local)~$ getpdf # uses scp
+```
+
+or
+
+```bash
+sftp> get Diagnostics.pdf # uses sftp
 ```
 
 *[Return to Part II](#cap-practical-day-2)*
@@ -702,7 +733,9 @@ Create the **visible dust optical depth** plot first:
 
 The input to `Main Variable` is not so straightforward this time. We want to plot the *normalized* dust optical depth, which is dervied as follows:
 
-`normalized_dust_OD = opacity / surface_pressure * reference_pressure`
+```
+normalized_dust_OD = opacity / surface_pressure * reference_pressure
+```
 
 The MGCM outputs column-integrated visible dust opacity to the variable `taudust_VIS`, surface pressure is saved as `ps`, and we'll use a reference pressure of 610 Pa. Recall that element-wise operations are performed when square brackets `[]` are placed around the variable in `Main Variable`. Putting all that together, `Main Variable` is:
 
@@ -732,7 +765,13 @@ Save and quit the editor (`ESC-:wq`). pass `Custom.in` to `MarsPlot.py`:
 In your **local terminal** tab, retrieve the PDF to view the plots:
 
 ```bash
-(local)~$ getpwd
+(local)~$ getpdf # uses scp
+```
+
+or
+
+```bash
+sftp> get Diagnostics.pdf # uses sftp
 ```
 
 Notice we have two separate 1D plots on the same page. This is because of the `HOLD ON` and `HOLD OFF` arguments. Without those, these two plots would be on separate pages. But how do we overplot the lines on top of one another?
@@ -797,7 +836,13 @@ Save and quit the editor (`ESC-:wq`). pass `Custom.in` to `MarsPlot.py`, and pul
 ```bash
 (amesCAP)~$ MarsPlot.py Custom.in
 # switch to the local terminal...
-(local)~$ getpwd
+(local)~$ getpdf # uses scp
+```
+
+or
+
+```bash
+sftp> get Diagnostics.pdf # uses sftp
 ```
 
 *[Return to Part II](#cap-practical-day-2)*
@@ -856,6 +901,13 @@ Cmin, Cmax     = -230,230
 2nd Variable   = 03847.atmos_average_Ls265_275_pstd.ucomp
 # set cmap = PiYG in Axis Options
 ```
+Title          = Zonal Wind [m/s] (Ls=270)
+Main Variable  = 03847.atmos_average_Ls265_275_pstd.ucomp
+Cmin, Cmax     = -230,230
+...
+2nd Variable   = 03847.atmos_average_Ls265_275_pstd.ucomp
+# set cmap = PiYG in Axis Options
+```
 
 ```python
 Title          = Meridional Wind [m/s] (Ls=270)
@@ -871,7 +923,13 @@ Save and quit the editor (`ESC-:wq`). pass `Custom.in` to `MarsPlot.py`, and pul
 ```bash
 (amesCAP)~$ MarsPlot.py Custom.in
 # switch to the local terminal...
-(local)~$ getpwd
+(local)~$ getpdf # uses scp
+```
+
+or
+
+```bash
+sftp> get Diagnostics.pdf # uses sftp
 ```
 
 *[Return to Part II](#cap-practical-day-2)*
