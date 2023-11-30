@@ -10,12 +10,26 @@ import re
 
 
 # The functions below allow to print in different color
-def prRed(skk): print("\033[91m{}\033[00m".format(skk))
-def prGreen(skk): print("\033[92m{}\033[00m".format(skk))
-def prCyan(skk): print("\033[96m{}\033[00m".format(skk))
-def prYellow(skk): print("\033[93m{}\033[00m".format(skk))
-def prPurple(skk): print("\033[95m{}\033[00m".format(skk))
-def prLightPurple(skk): print("\033[94m{}\033[00m".format(skk))
+def prRed(input_txt):
+    print(f"\033[91m{input_txt}\033[00m")
+def prGreen(input_txt):
+    print(f"\033[92m{input_txt}\033[00m")
+def prCyan(input_txt):
+    print(f"\033[96m{input_txt}\033[00m")
+def prYellow(input_txt):
+    print(f"\033[93m{input_txt}\033[00m")
+def prPurple(input_txt):
+    print(f"\033[95m{input_txt}\033[00m")
+def prLightPurple(input_txt):
+    print(f"\033[94m{input_txt}\033[00m")
+
+Cyan = "\033[96m"
+Blue = "\033[94m"
+Yellow = "\033[93m"
+NoColor = "\033[00m"
+Red = "\033[91m"
+Green = "\033[92m"
+Purple = "\033[95m"
 
 def MY_func(Ls_cont):
     '''
@@ -51,10 +65,10 @@ def print_fileContent(fileNcdf):
         None (print in the terminal)
     '''
     #Define Colors for printing
-    def Green(skk): return"\033[92m{}\033[00m".format(skk)
-    def Cyan(skk): return "\033[96m{}\033[00m".format(skk)
-    def Yellow(skk):return"\033[93m{}\033[00m".format(skk)
-    def Purple(skk):return"\033[95m{}\033[00m".format(skk)
+    def Green(input_txt): return"\033[92m{}\033[00m".format(input_txt)
+    def Cyan(input_txt): return "\033[96m{}\033[00m".format(input_txt)
+    def Yellow(input_txt):return"\033[93m{}\033[00m".format(input_txt)
+    def Purple(input_txt):return"\033[95m{}\033[00m".format(input_txt)
     if not os.path.isfile(fileNcdf):
         print(fileNcdf+' not found')
     else:
@@ -104,8 +118,8 @@ def print_varContent(fileNcdf,list_varfull,print_stat=False):
         None (print in the terminal)
     '''
     #Define Colors for printing
-    def Cyan(skk): return "\033[96m{}\033[00m".format(skk)
-    def Red(skk):  return "\033[91m{}\033[00m".format(skk)
+    def Cyan(input_txt): return "\033[96m{}\033[00m".format(input_txt)
+    def Red(input_txt):  return "\033[91m{}\033[00m".format(input_txt)
     if not os.path.isfile(fileNcdf):
         print(fileNcdf+' not found')
     else:
@@ -259,7 +273,7 @@ def FV3_file_type(fNcdf):
         fNcdf: an (open) Netcdf file object
     Return:
        f_type (string): 'fixed', 'contineous', or 'diurn'
-       interp_type (string): 'pfull','pstd','zstd','zagl','zgrid'
+       interp_type (string): 'pfull','pstd','zstd','zagl'
     '''
     #Get the full path from the file
     fullpath=get_Ncdf_path(fNcdf)
@@ -289,7 +303,6 @@ def FV3_file_type(fNcdf):
     if 'pstd'  in dims: interp_type='pstd'
     if 'zstd'  in dims: interp_type='zstd'
     if 'zagl'  in dims: interp_type='zagl'
-    if 'zgrid' in dims: interp_type='zgrid'
     return f_type,interp_type
 
 def alt_FV3path(fullpaths,alt,test_exist=True):
@@ -539,7 +552,7 @@ def section_content_amescap_profile(section_ID):
     '''
     Execude code section in /home/user/.amescap_profile
     Args:
-        section_ID: string defining the section to loa, e.g 'Pressure definitions for pstd'
+        section_ID: string defining the section to load, e.g 'Pressure definitions for pstd'
     Returns
         return line in that section as python code
     '''
@@ -567,7 +580,7 @@ def section_content_amescap_profile(section_ID):
     except FileNotFoundError:
         prRed("Error: %s config file not found "%(input_file))
         prYellow("To use this feature, create a hidden config file from the template in your home directory with:")
-        prCyan("    cp amesCAP/mars_templates/amescap_profile  ~/.amescap_profile")
+        prCyan("    cp AmesCAP/mars_templates/amescap_profile  ~/.amescap_profile")
         exit()
     except Exception as exception: #Return the error
         prRed('Error')

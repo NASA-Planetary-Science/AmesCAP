@@ -901,6 +901,13 @@ Cmin, Cmax     = -230,230
 2nd Variable   = 03847.atmos_average_Ls265_275_pstd.ucomp
 # set cmap = PiYG in Axis Options
 ```
+Title          = Zonal Wind [m/s] (Ls=270)
+Main Variable  = 03847.atmos_average_Ls265_275_pstd.ucomp
+Cmin, Cmax     = -230,230
+...
+2nd Variable   = 03847.atmos_average_Ls265_275_pstd.ucomp
+# set cmap = PiYG in Axis Options
+```
 
 ```python
 Title          = Meridional Wind [m/s] (Ls=270)

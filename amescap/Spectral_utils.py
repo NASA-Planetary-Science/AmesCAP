@@ -71,7 +71,7 @@ def diurn_extract(VAR,N,tod,lon):
 
     #Reshape input variable VAR as a 2D array (tod,Nelements) for generalization
 
-    Ndim= np.int(np.prod(dimsIN[1:]))   #Ndim is the product of all dimensions but the time of day axis, e.g. time x lat x lon
+    Ndim= int(np.prod(dimsIN[1:]))   #Ndim is the product of all dimensions but the time of day axis, e.g. time x lat x lon
     dimsFLAT=np.append([nsteps],[Ndim])  # Shape of flattened array
     dimsOUT_flat=np.append([N],[Ndim])   # Shape of flattened array
     VAR= VAR.reshape(dimsFLAT)     #Flatten array to  (tod,Nelements)
@@ -191,7 +191,7 @@ def space_time(lon,timex, varIN,kmx,tmx):
     lon_id= dims[0]    # lon
     time_id= dims[-1]  # time
     dim_sup_id=dims[1:-1] #additional dimensions stacked in the middle
-    jd= np.int(np.prod( dim_sup_id))     #jd is the total number of dimensions in the middle is varIN>3D
+    jd= int(np.prod( dim_sup_id))     #jd is the total number of dimensions in the middle is varIN>3D
 
     varIN= np.reshape(varIN, (lon_id, jd, time_id) )   #flatten the middle dimensions if any
 

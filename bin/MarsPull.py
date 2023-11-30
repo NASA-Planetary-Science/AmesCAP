@@ -1,72 +1,132 @@
 #!/usr/bin/env python3
+"""
+The MarsPull executable is for querying data from the Mars Climate \
+Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on \
+the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
-# The functions below allow to print in different color
-def prCyan(skk):        print("\033[96m{}\033[00m".format(skk))
-def prYellow(skk):      print("\033[93m{}\033[00m".format(skk))
+The executable requires 2 arguments:
+    * [-id --id]      The simulation identifier, AND
+    * [-ls --ls]      the desired solar longitude(s), OR
+    * [-f --filename] the name(s) of the desired file(s).
 
-import sys
-import os
+Third-party Requirements:
+    * numpy
+    * argparse
+    * requests
 
-#=====Attempt to import specific scientic modules one may not find in the default python on NAS ====
-try:
-    import numpy as np
-    import argparse #parse arguments
-    import requests
+List of Functions:
+    * download - Queries the requested file from the NAS Data Portal.
+"""
 
-except ImportError as error_msg:
-    prYellow("Error while importing modules")
-    print("Error was: "+ error_msg.message)
-    exit()
+# make print statements appear in color
+from amescap.Script_utils import prYellow, prCyan, Green,Yellow,NoColor,Cyan
 
-except Exception as exception:
-    # Output unexpected Exceptions.
-    print(exception, False)
-    print(exception.__class__.__name__ + ": " + exception.message)
-    exit()
-
-
-
-parser = argparse.ArgumentParser(description="""\033[93mUilities for accessing files on the MCMC NAS repository\033[00m """,       formatter_class=argparse.RawTextHelpFormatter)
-
-
-parser.add_argument('-id','--id',type=str,
-                             help="Simulation identifier corresponding to a sub-directory of /legacygcmdata on the MCMC Data portal: \n"
-                                "\033[96mhttps://data.nas.nasa.gov/legacygcm/data_legacygcm.php?dir=/legacygcmdata\033[00m \n"
-                                "\n"
-                                  "Current options are : '\033[93mACTIVECLDS\033[00m', '\033[93mINERTCLDS\033[00m' and  '\033[93mACTIVECLDS_NCDF\033[00m' "
-                                  "Usage: MarsPull.py -id  INERTCLDS \n")
-
-parser.add_argument('-ls','--ls', nargs='+',type=float,
-                             help='Query data by Solar Longitude \n'
-                                  'Usage: MarsPull.py -ls  90. \n'
-                                  '       MarsPull.py -ls  start   stop \n')
-
-parser.add_argument('-f', '--filename',nargs='+',type=str,
-                 help=' Query specific file(s) \n'
-                      '> Usage:  MarsPull.py -id  ACTIVECLDS_NCDF -f  LegacyGCM_Ls000_Ls004.nc LegacyGCM_Ls005_Ls009.nc')
-#===Define variables===
+# load generic Python modules
+import sys          # system commands
+import os           # access operating system functions
+import numpy as np
+import argparse     # parse arguments
+import requests     # download data from site
 
 
-saveDir=os.getcwd()+'/'
-#============================ Files available in the database ======================
-Ls_ini=np.array([0,5,10,15,19,24,29,34,38,43,48,52,57,61,66,70,75,79,84,88,93,97,102,\
-106,111,116,121,125,130,135,140,146,151,156,162,167,173,179,184,190,196,202,\
-209,215,221,228,234,241,247,254,260,266,273,279,286,292,298,304,310,316,322,\
-328,333,339,344,350,355])
+# ======================================================
+#                  ARGUMENT PARSER
+# ======================================================
 
-Ls_end=np.array([4,9,14,19,24,29,33,38,42,47,52,56,61,65,70,74,79,83,88,92,97,\
-101,106,111,115,120,125,130,135,140,145,150,156,161,167,172,178,184,190,196,\
-202,208,214,221,227,233,240,246,253,259,266,272,279,285,291,297,304,310,316,\
-321,327,333,338,344,349,354,0])
-#====================================================================================
+parser = argparse.ArgumentParser(
+    description=(
+        f"{Yellow}Uility for querying files on the MCMC NAS Data "
+        f"Portal.{NoColor}"
+    ),
+    formatter_class=argparse.RawTextHelpFormatter
+)
+
+parser.add_argument(
+    '-id', '--id', type=str,
+    help=(
+        f"Query data by simulation identifier corresponding to \n"
+        f"a subdirectory of :\n"
+        f"{Cyan}https://data.nas.nasa.gov/mcmcref/ \n"
+        f"Current options include: '{Yellow}FV3BETAOUT1{NoColor}' '{Yellow}ACTIVECLDS{NoColor}', "
+        f"'{Yellow}INERTCLDS{NoColor}', {Yellow}NEWBASE_ACTIVECLDS{NoColor}  and '{Yellow}ACTIVECLDS_NCDF\n"
+        f"{Green}Usage:\n"
+        f"> MarsPull.py -id  INERTCLDS..."
+        f"{NoColor}\n\n"
+
+    )
+)
+
+
+parser.add_argument(
+    '-f', '--filename', nargs='+', type=str,
+    help=(
+        f"Query data by file name. Requires a simulation identifier "
+        f"(--id)\n"
+        f"{Green}Usage:\n"
+        f"> MarsPull.py -id ACTIVECLDS -f fort.11_0730 fort.11_0731"
+        f"{NoColor}\n\n"
+    )
+)
+
+parser.add_argument(
+    '-ls', '--ls', nargs='+', type=float,
+    help=(
+        f"Legacy GCM only: Query data by solar longitude (Ls). Requires a simulation "
+        f"identifier (--id)\n"
+        f"{Green}Usage:\n"
+        f"> MarsPull.py -id ACTIVECLDS -ls 90.\n"
+        f"> MarsPull.py -id ACTIVECLDS -ls [start] [stop]"
+        f"{NoColor}\n\n"
+    )
+)
+
+# ======================================================
+#                  DEFINITIONS
+# ======================================================
+
+
+saveDir = (f"{os.getcwd()}/")
+
+# available files by Ls:
+Ls_ini = np.array([
+    0, 5, 10, 15, 19, 24, 29, 34, 38, 43, 48, 52, 57, 61, 66, 70, 75,
+    79, 84, 88, 93, 97, 102, 106, 111, 116, 121, 125, 130, 135, 140,
+    146, 151, 156, 162, 167, 173, 179, 184, 190, 196, 202, 209, 215,
+    221, 228, 234, 241, 247, 254, 260, 266, 273, 279, 286, 292, 298,
+    304, 310, 316,322, 328, 333, 339, 344, 350, 355
+])
+
+Ls_end = np.array([
+    4, 9, 14, 19, 24, 29, 33, 38, 42, 47, 52, 56, 61, 65, 70, 74, 79,
+    83, 88, 92, 97, 101, 106, 111, 115, 120, 125, 130, 135, 140, 145,
+    150, 156, 161, 167, 172, 178, 184, 190, 196, 202, 208, 214, 221,
+    227, 233, 240, 246, 253, 259, 266, 272, 279, 285, 291, 297, 304,
+    310, 316, 321, 327, 333, 338, 344, 349, 354, 0
+])
+
+
 
 def download(url, filename):
-    '''
-    Save a file from a URL locally
-    Args:
-        URL: The URL to download, e.g   'https://data.nas.nasa.gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_Ls000_Ls004.nc'
-        filename: The local filename e.g  '/lou/la4/akling/Data/LegacyGCM_Ls000_Ls004.nc'
-    '''
+    """
+    Downloads a file from the NAS Data Portal (data.nas.nasa.gov).
+
+    Parameters
+    ----------
+    url : str
+        The url to download, e.g   'https://data.nas.nasa.gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_Ls000_Ls004.nc'
+    filename : str
+        The local filename e.g  '/lou/la4/akling/Data/LegacyGCM_Ls000_Ls004.nc'
+
+    Returns
+    -------
+    The requested file(s), downloaded and saved to the current \
+    directory.
+
+
+    Raises
+    ------
+    A file-not-found error.
+    """
 
     _ , fname=os.path.split(filename)
     response = requests.get(url, stream=True)
@@ -84,22 +144,21 @@ def download(url, filename):
                 for data in response.iter_content(chunk_size=max(int(total/1000), 1024*1024)):
                     downloaded += len(data)
                     f.write(data)
-                    done = int(50*downloaded/total)
-                    sys.stdout.write('\r[{}{}]'.format('#' * done, '.' * (50-done)))
+                    status = int(50*downloaded/total)
+                    sys.stdout.write(f"\r[{'#'*status}{'.'*(50-status)}]")
                     sys.stdout.flush()
             sys.stdout.write('\n')
         else:
 
             #Header is unknown yet, skip the use of a progress bar
             print('Downloading %s ...'%(fname))
-            with open(local_file, 'wb')as f:
-                f.write(data.content)
+            with open(filename, 'wb')as f:
+                f.write(response.content)
             print('%s Done'%(fname))
 
-
-#======================================================
+# ======================================================
 #                  MAIN PROGRAM
-#======================================================
+# ======================================================
 def main():
 
     #Original
@@ -110,7 +169,12 @@ def main():
         prYellow("***Error*** simulation ID [-id --id] is required. See 'MarsPull.py -h' for help")
         exit()
 
-    URLbase='https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/'+simu_ID+'/'
+    #URLbase='https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/'+simu_ID+'/'
+    print('new URL base')
+    if simu_ID in ['ACTIVECLDS','INERTCLDS', 'NEWBASE_ACTIVECLDS','ACTIVECLDS_NCDF']:
+        URLbase='https://data.nas.nasa.gov/mcmcref/legacygcmdata/'+simu_ID+'/'
+    elif simu_ID in ['FV3BETAOUT1']:
+        URLbase='https://data.nas.nasa.gov/mcmcref/fv3betaout1data/'
 
 
     if parser.parse_args().ls :
@@ -118,7 +182,7 @@ def main():
         if len(data_input)==1: #query only  the file that contains this Ls
             i_start=np.argmin(np.abs(Ls_ini-data_input))
             if data_input<Ls_ini[i_start]:i_start-=1
-            i_request=np.arange(i_start,i_start+1)
+            num_files=np.arange(i_start,i_start+1)
 
         elif len(data_input)==2: #start stop  is provided
             i_start=np.argmin(np.abs(Ls_ini-data_input[0]))
@@ -127,10 +191,9 @@ def main():
             i_end=np.argmin(np.abs(Ls_end-data_input[1]))
             if data_input[1]>Ls_end[i_end]:i_end+=1
 
-            i_request=np.arange(i_start,i_end+1)
-
-        print('Saving  %i files in %s '%(len(i_request),saveDir))
-        for ii in i_request:
+            num_files=np.arange(i_start,i_end+1)
+        prCyan(f"Saving {len(num_files)} file(s) to {saveDir}")
+        for ii in num_files:
             #Legacy .nc files
             if simu_ID=='ACTIVECLDS_NCDF':
                 fName='LegacyGCM_Ls%03d_Ls%03d.nc'%(Ls_ini[ii],Ls_end[ii])
@@ -152,10 +215,14 @@ def main():
             print('Downloading '+ url+ '...')#ff
             download(url,filename)
     else:
-        prYellow('No data requested, use -ls or -f options')
-#======================================================
+        prYellow("ERROR No file requested. Use [-ls --ls] or "
+                 "[-f --filename] with [-id --id] to specify a file to "
+                 "download.")
+        exit()
+
+# ======================================================
 #                  END OF PROGRAM
-#======================================================
+# ======================================================
 
 if __name__ == '__main__':
     main()

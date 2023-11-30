@@ -1,6 +1,4 @@
-![](./tutorial_images/Tutorial_Banner_Final.png)
-
-
+![](./tutorial_images/Tutorial_Banner_2023.png)
 
 
 ***
@@ -9,7 +7,7 @@
 
 ### Welcome!
 
-This document contains the instructions for installing the NASA Ames MCMC's Community Analysis Pipeline (CAP). **We ask that you come to the MGCM Tutorial on November 2-4 with CAP installed on your machine** so that we can jump right into using it! On the second day of the tutorial (November 3rd), we will be using CAP to analyze MGCM output.
+This document contains the instructions for installing the NASA Ames MCMC's Community Analysis Pipeline (CAP).
 
 Installing CAP is fairly straightforward. We will create a Python virtual environment, download CAP, and then install CAP in the virtual environment. That's it!
 
@@ -19,8 +17,6 @@ A quick overview of what is covered in this installation document:
 2. [Installing CAP](#2-installing-cap)
 3. [Testing & Using CAP](#3-testing-using-cap)
 4. [Practical Tips](#4-practical-tips-for-later-use-during-the-tutorial)
-5. [Do This Before Attending the Tutorial](#5-do-this-before-attending-the-tutorial)
-
 
 
 
@@ -57,7 +53,7 @@ If you are already comfortable with Python's package management system, you are 
 
 For all other users, we highly recommend using the latest version of the Anaconda Python distribution. It ships with pre-compiled math and plotting packages such as `numpy` and `matplotlib` as well as pre-compiled libraries like `hdf5` headers for reading `netCDF` files (the preferred filetype for analysing MGCM output).
 
-You can install the Anaconda Python distribution via the command-line or using a [graphical interface](https://www.anaconda.com/distribution/#download-section) (scroll to the very bottom of the page for all download options). You can install Anaconda at either the `System/` level or the `User/` level (the later does not require admin-priviledges). The instructions below are for the **command-line installation** and installs Anaconda in your **home directory**, which is the recommended location. Open a terminal and type the following:
+You can install the Anaconda Python distribution via the command-line or using a [graphical interface](https://www.anaconda.com/download) (scroll to the very bottom of the page for all download options). You can install Anaconda at either the `System/` level or the `User/` level (the later does not require admin-priviledges). The instructions below are for the **command-line installation** and installs Anaconda in your **home directory**, which is the recommended location. Open a terminal and type the following:
 
 ```bash
 (local)>$ chmod +x Anaconda3-2021.05-MacOSX-x86_64.sh   # make the .sh file executable (actual name may differ)
@@ -166,11 +162,11 @@ If, however, `which` points to some other location, such as `/usr/local/bin/pyth
 
 ### Step 2: Set Up the Virtual Environment:
 
-Python virtual environments are created from the command line. Create an environment called `amesCAP` by typing:
+Python virtual environments are created from the command line. Create an environment called `AmesCAP` by typing:
 
 ```bash
-(local)>$ python3 -m venv --system-site-packages amesCAP    # Linux/MacOS Use FULL PATH to python if needed
-(local)>$ python.exe -m venv –-system-site-packages amesCAP  # Cygwin/Windows Use FULL PATH to python if needed
+(local)>$ python3 -m venv --system-site-packages AmesCAP    # Linux/MacOS Use FULL PATH to python if needed
+(local)>$ python.exe -m venv –-system-site-packages AmesCAP  # Cygwin/Windows Use FULL PATH to python if needed
 ```
 
 First, find out if your terminal is using *bash* or a variation of *C-shell* (*.csh*, *.tsch*...) by typing:
@@ -183,28 +179,28 @@ First, find out if your terminal is using *bash* or a variation of *C-shell* (*.
 Depending on the answer, you can now activate the virtual environment with one of the options below:
 
 ```bash
-(local)>$ source amesCAP/bin/activate          # bash
-(local)>$ source amesCAP/bin/activate.csh      # csh/tcsh
-(local)>$ source amesCAP/Scripts/activate.csh  # Cygwin/Windows
-(local)>$ conda amesCAP/bin/activate           # if you used conda
+(local)>$ source AmesCAP/bin/activate          # bash
+(local)>$ source AmesCAP/bin/activate.csh      # csh/tcsh
+(local)>$ source AmesCAP/Scripts/activate.csh  # Cygwin/Windows
+(local)>$ conda AmesCAP/bin/activate           # if you used conda
 ```
 
 > In Cygwin/Windows, the `/bin` directory may be named `/Scripts`.
 
-You will notice that after sourcing `amesCAP`, your prompt changed indicate that you are now *inside* the virtual environment (i.e. `(local)>$ ` changed to `(amesCAP)>$`).
+You will notice that after sourcing `AmesCAP`, your prompt changed indicate that you are now *inside* the virtual environment (i.e. `(local)>$ ` changed to `(AmesCAP)>$`).
 
-We can verify that `which python` and `which pip` unambiguously point to `amesCAP/bin/python3` and `amesCAP/bin/pip`, respectively, by calling `which` within the virtual environment:
+We can verify that `which python` and `which pip` unambiguously point to `AmesCAP/bin/python3` and `AmesCAP/bin/pip`, respectively, by calling `which` within the virtual environment:
 
 ```bash
-(amesCAP)>$ which python3         # in bash, csh
-> amesCAP/bin/python3
-(amesCAP)>$ which pip
-> amesCAP/bin/pip
+(AmesCAP)>$ which python3         # in bash, csh
+> AmesCAP/bin/python3
+(AmesCAP)>$ which pip
+> AmesCAP/bin/pip
 
-(amesCAP)>$ which python.exe      # in Cygwin/Windows
-> amesCAP/Scripts/python.exe
-(amesCAP)>$ which pip
-> amesCAP/Scripts/pip            
+(AmesCAP)>$ which python.exe      # in Cygwin/Windows
+> AmesCAP/Scripts/python.exe
+(AmesCAP)>$ which pip
+> AmesCAP/Scripts/pip            
 ```
 
 There is therefore no need to reference the full paths while **inside** the virtual environment.
@@ -216,77 +212,71 @@ There is therefore no need to reference the full paths while **inside** the virt
 
 ## 2. Installing CAP
 
-Now we can download and install CAP in `amesCAP`. CAP was provided to you in the tarfile `AmesCAP-master.zip` that was sent along with these instructions. Download `AmesCAP-master.zip`. You can leave the file in `Downloads/`, or,  if you encounter any permission issue, move it to a temporary location like your `/home` or `/Desktop` directories.
-
 ### Using `pip`
 
 Open a terminal window, activate the virtual environment, and untar the file or install from the github:
 
 ```bash
-(local)>$ source ~/amesCAP/bin/activate          # bash
-(local)>$ source ~/amesCAP/bin/activate.csh      # cshr/tsch
-(local)>$ source ~/amesCAP/Scripts/activate.csh  #  Cygwin/Windows
-(local)>$ conda amesCAP/bin/activate             # if you used conda
-# FROM AN ARCHIVE:
-(amesCAP)>$ tar -xf AmesCAP-master.zip
-(amesCAP)>$ cd AmesCAP-master
-(amesCAP)>$ pip install .
-# OR FROM THE GITHUB:
-(amesCAP)>$ pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
+(local)>$ source ~/AmesCAP/bin/activate          # bash
+(local)>$ source ~/AmesCAP/bin/activate.csh      # cshr/tsch
+(local)>$ source ~/AmesCAP/Scripts/activate.csh  #  Cygwin/Windows
+(local)>$ conda AmesCAP/bin/activate             # if you used conda
+
+
+(AmesCAP)>$ pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 ```
 > Please follow the instructions to upgrade pip if recommended during that steps. Instructions relevant the *conda* package manager are listed at the end of this section
 
 
 
-That's it! CAP is installed in `amesCAP` and you can see the `MarsXXXX.py` executables stored in `~/amesCAP/bin/`:
+That's it! CAP is installed in `AmesCAP` and you can see the `MarsXXXX.py` executables stored in `~/AmesCAP/bin/`:
 
 ```bash
-(local)>$ ls ~/amesCAP/bin/
+(local)>$ ls ~/AmesCAP/bin/
 > Activate.ps1     MarsPull.py      activate.csh              nc4tonc3         pip3
 > MarsFiles.py     MarsVars.py      activate.fish             ncinfo           pip3.8
 > MarsInterp.py    MarsViewer.py    easy_install              normalizer       python
 > MarsPlot.py      activate         easy_install-3.8          pip              python3
 ```
 
-> Shall you need to modify any code, note that when you access the `Mars` tools above, those are **not** executed from the `AmesCAP-master/` folder in your `/Downloads` directory, but instead from the `amesCAP` virtual environment where they were installed by pip. You can safely move AmesCAP-master.zip and the AmesCAP-master directory to a different location on your system.
 
 Double check that the paths to the executables are correctly set in your terminal by exiting the virtual environment:
 
 ```bash
-(amesCAP)>$ deactivate
+(AmesCAP)>$ deactivate
 ```
 
 then reactivating the virtual environment:
 
 ```bash
-(local)>$ source ~/amesCAP/bin/activate          # bash
-(local)>$ source ~/amesCAP/bin/activate.csh      # csh/tsch
-(local)>$ source ~/amesCAP/Scripts/activate.csh  # cygwin
-(local)>$ conda amesCAP/bin/activate             # if you used conda
+(local)>$ source ~/AmesCAP/bin/activate          # bash
+(local)>$ source ~/AmesCAP/bin/activate.csh      # csh/tsch
+(local)>$ source ~/AmesCAP/Scripts/activate.csh  # cygwin
+(local)>$ conda AmesCAP/bin/activate             # if you used conda
 ```
 
 and checking the documentation for any CAP executable using the `--help` option:
 
 ```bash
-(amesCAP)>$ MarsPlot.py --help
-(amesCAP)>$ MarsPlot.py -h
+(AmesCAP)>$ MarsPlot.py --help
+(AmesCAP)>$ MarsPlot.py -h
 ```
 
 or using **full** paths:
 
 ```bash
-(amesCAP)>$ ~/amesCAP/bin/MarsPlot.py -h     # Linux/MacOS
-(amesCAP)>$ ~/amesCAP/Scripts/MarsPlot.py -h # Cygwin/Windows
+(AmesCAP)>$ ~/AmesCAP/bin/MarsPlot.py -h     # Linux/MacOS
+(AmesCAP)>$ ~/AmesCAP/Scripts/MarsPlot.py -h # Cygwin/Windows
 ```
 
 If the pipeline is installed correctly, `--help` will display documentation and command-line arguments for `MarsPlot` in the terminal.
 
-> If you have either purposely or accidentally installed the `amescap` package on top of your main python distribution (e.g. in `~/anaconda3/lib/python3.7/site-packages/` or `~/anaconda3/bin/`) BEFORE setting-up the `amesCAP` virtual environment, the `Mars*.py` executables may not be present in the `~/amesCAP/bin/` directory of the virtual environment (`~/amesCAP/Scripts/` on Cygwin). Because on Step 2 we created the virtual environment using the `--system-site-packages` flag, python will consider that `amescap` is already installed when creating the new virtual environment and pull the code from that location, which may change the structure of the `~/amesCAP/bin` directory within the virtual environment. If that is the case, the recommended approach is to exit the virtual environment (`deactivate`), run `pip uninstall amescap` to remove CAP from the main python distribution, and start over at Step 2.
+> If you have either purposely or accidentally installed the `AmesCAP` package on top of your main python distribution (e.g. in `~/anaconda3/lib/python3.7/site-packages/` or `~/anaconda3/bin/`) BEFORE setting-up the `AmesCAP` virtual environment, the `Mars*.py` executables may not be present in the `~/AmesCAP/bin/` directory of the virtual environment (`~/AmesCAP/Scripts/` on Cygwin). Because on Step 2 we created the virtual environment using the `--system-site-packages` flag, python will consider that `AmesCAP` is already installed when creating the new virtual environment and pull the code from that location, which may change the structure of the `~/AmesCAP/bin` directory within the virtual environment. If that is the case, the recommended approach is to exit the virtual environment (`deactivate`), run `pip uninstall AmesCAP` to remove CAP from the main python distribution, and start over at Step 2.
 
-This completes the one-time installation of CAP in your virtual environment, `amesCAP`, which now looks like:
+This completes the one-time installation of CAP in your virtual environment, `AmesCAP`, which now looks like:
 
 ```
-amesCAP/
+AmesCAP/
 ├── bin
 │   ├── MarsFiles.py
 │   ├── MarsInterp.py
@@ -325,34 +315,28 @@ If you prefer using the `conda` package manager for setting up your virtual envi
 First, verify (using `conda info` or `which conda`) that you are using the intented `conda` executable (two or more versions of `conda` might be present if both Python2 and Python3 are installed on your system). Then, create the virtual environment with:
 
 ```bash
-(local)>$ conda create -n amesCAP
+(local)>$ conda create -n AmesCAP
 ```
 
 Activate the virtual environment, then install CAP:
 
 ```bash
-(local)>$ conda activate amesCAP
-(amesCAP)>$ conda install pip
-# FROM AN ARCHIVE:
-(amesCAP)>$ cd ~/Downloads
-(amesCAP)>$ tar -xf AmesCAP-master.zip
-(amesCAP)>$ cd AmesCAP-master
-(amesCAP)>$ pip install .
-# OR FROM THE GITHUB:
-(amesCAP)>$ pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
+(local)>$ conda activate AmesCAP
+(AmesCAP)>$ conda install pip
+(AmesCAP)>$ pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 ```
 
 The source code will be installed in:
 
 ```bash
-/path/to/anaconda3/envs/amesCAP/
+/path/to/anaconda3/envs/AmesCAP/
 ```
 
 and the virtual environment may be activated and deactivated with `conda`:
 
 ```bash
-(local)>$ conda activate amesCAP
-(amesCAP)>$ conda deactivate
+(local)>$ conda activate AmesCAP
+(AmesCAP)>$ conda deactivate
 (local)>$
 ```
 
@@ -375,13 +359,13 @@ and the virtual environment may be activated and deactivated with `conda`:
 To permanently remove CAP, activate the virtual environment and run the `uninstall` command:
 
 ```bash
-(local)>$ source amesCAP/bin/activate          # bash
-(local)>$ source amesCAP/bin/activate.csh      # csh/tcsh
-(local)>$ source amesCAP/Scripts/activate.csh  # Cygwin/Windows
-(amesCAP)>$ pip uninstall amescap
+(local)>$ source AmesCAP/bin/activate          # bash
+(local)>$ source AmesCAP/bin/activate.csh      # csh/tcsh
+(local)>$ source AmesCAP/Scripts/activate.csh  # Cygwin/Windows
+(AmesCAP)>$ pip uninstall AmesCAP
 ```
 
-You may also delete the `amesCAP` virtual environment directory at any time. This will uninstall CAP, remove the virtual environment from your machine, and will not affect your main Python distribution.
+You may also delete the `AmesCAP` virtual environment directory at any time. This will uninstall CAP, remove the virtual environment from your machine, and will not affect your main Python distribution.
 
 
 ***
@@ -391,33 +375,33 @@ You may also delete the `amesCAP` virtual environment directory at any time. Thi
 Whenever you want to use CAP, simply activate the virtual environment and all of CAP's executables will be accessible from the command line:
 
 ```bash
-(local)>$ source amesCAP/bin/activate          #   bash
-(local)>$ source amesCAP/bin/activate.csh      #   csh/tcsh
-(local)>$ source amesCAP/Scripts/activate.csh  #   Cygwin/Windows
+(local)>$ source AmesCAP/bin/activate          #   bash
+(local)>$ source AmesCAP/bin/activate.csh      #   csh/tcsh
+(local)>$ source AmesCAP/Scripts/activate.csh  #   Cygwin/Windows
 ```
 
 You can check that the tools are installed properly by typing `Mars` and then pressing the **TAB** key. No matter where you are on your system, you should see the following pop up:
 
 ```bash
-(amesCAP)>$ Mars[TAB]
+(AmesCAP)>$ Mars[TAB]
 > MarsFiles.py   MarsInterp.py  MarsPlot.py    MarsPull.py    MarsVars.py
 ```
 
 If no executables show up then the paths have not been properly set in the virtual environment. You can either use the full paths to the executables:
 
 ```bash
-(amesCAP)>$ ~/amesCAP/bin/MarsPlot.py
+(AmesCAP)>$ ~/AmesCAP/bin/MarsPlot.py
 ```
 
 Or set up aliases in your `./bashrc` or `.cshrc`:
 
 ```bash
 # with bash:
-(local)>$ echo alias MarsPlot='/Users/username/amesCAP/bin/MarsPlot.py' >> ~/.bashrc
+(local)>$ echo alias MarsPlot='/Users/username/AmesCAP/bin/MarsPlot.py' >> ~/.bashrc
 (local)>$ source ~/.bashrc
 
 # with csh/tsch
-(local)>$ echo alias MarsPlot /username/amesCAP/bin/MarsPlot >> ~/.cshrc
+(local)>$ echo alias MarsPlot /username/AmesCAP/bin/MarsPlot >> ~/.cshrc
 (local)>$ source ~/.cshrc
 ```
 
@@ -458,69 +442,3 @@ syntax on
 colorscheme default
 au BufReadPost *.in  set syntax=python
 ```
-
-
-
-
-***
-
-## 5. Do This Before Attending the Tutorial
-
-In order to follow along with the practical part of the MGCM Tutorial, we ask that you **download several MGCM output files beforehand**. You should save these on the machine you'll be using during the tutorial.
-
-We'll use CAP to retrieve these files from the MGCM Data Portal. To begin, activate the virtual environment:
-
-```bash
-(local)>$ source amesCAP/bin/activate      # bash
-(local)>$ source amesCAP/bin/activate.csh  # csh/tcsh
-```
-
-Choose a directory in which to store these MGCM output files on your machine. We will also create two sub- directories, one for an MGCM simulation with radiatively inert clouds (RIC) and one for an MGCM simulation with radiatively active clouds (RAC):
-
-```bash
-(amesCAP)>$ mkdir CAP_tutorial
-(amesCAP)>$ cd CAP_tutorial
-(amesCAP)>$ mkdir INERTCLDS ACTIVECLDS
-```
-
-Then, download the corresponding data in each directory:
-
-```bash
-(amesCAP)>$ cd INERTCLDS
-(amesCAP)>$ MarsPull.py -id INERTCLDS -ls 255 285
-(amesCAP)>$ cd ../ACTIVECLDS
-(amesCAP)>$ MarsPull.py -id ACTIVECLDS -ls 255 285
-```
-
-Finally, check for files integrity using the `disk use` command:
-
-```bash
-cd ..
-du -h INERTCLDS/fort.11*
-du -h ACTIVECLDS/fort.11*
-> 433M	fort.11_0719
-[...]
-```
-
-The files should be 433Mb each. That's it! `CAP_tutorial` now holds the necessary `fort.11` files from the radiatively active and inert MGCM simulations:
-
-```
-CAP_tutorial/
-├── INERTCLDS/
-│   └── fort.11_0719  fort.11_0720  fort.11_0721  fort.11_0722  fort.11_0723
-└── ACTIVECLDS/
-    └── fort.11_0719  fort.11_0720  fort.11_0721  fort.11_0722  fort.11_0723
-```
-
-
-You can now deactivate the virtual environment:
-
-```bash
-(amesCAP)>$ deactivate
-```
-> If you encounter an issue during the download process or if the files are not 433Mb, please verify the files availability on [the MCMC Data Portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php) and try again later. You can re-attempt to download specific files as follows: `MarsPull.py -id  ACTIVECLDS -f fort.11_0720 fort.11_0723` (make sure to navigate to the appropriate simulation directory first), or simply download the 10 files listed above manually from the website.
-
-
-
-
-***
