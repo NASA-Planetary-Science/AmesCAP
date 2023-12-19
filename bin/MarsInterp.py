@@ -134,21 +134,15 @@ def main():
         units_txt       = 'Pa'
         need_to_reverse = False
         interp_technic  = 'log'
+
+        content_txt = section_content_amescap_profile(
+            'Pressure definitions for pstd')
+        exec(content_txt)  # Load all variables in that section
+
         if custom_level:
-            content_txt = section_content_amescap_profile(
-                'Pressure definitions for pstd')
-            # print(content_txt)
-            exec(content_txt)  # Load all variables in that section
-            # Copy requested variable
             lev_in = eval('np.array('+custom_level+')')
         else:
-
-            lev_in=np.array([1.0e+03, 9.5e+02, 9.0e+02, 8.5e+02, 8.0e+02, 7.5e+02, 7.0e+02,
-                6.5e+02, 6.0e+02, 5.5e+02, 5.0e+02, 4.5e+02, 4.0e+02, 3.5e+02,
-                3.0e+02, 2.5e+02, 2.0e+02, 1.5e+02, 1.0e+02, 7.0e+01, 5.0e+01,
-                3.0e+01, 2.0e+01, 1.0e+01, 7.0e+00, 5.0e+00, 3.0e+00, 2.0e+00,
-                1.0e+00, 5.0e-01, 3.0e-01, 2.0e-01, 1.0e-01, 5.0e-02, 3.0e-02,
-                1.0e-02])
+            lev_in = eval('np.array(pstd_default)')
 
     # =========================== zstd ===========================
     elif interp_type == 'zstd':
@@ -156,19 +150,16 @@ def main():
         units_txt       = 'm'
         need_to_reverse = True
         interp_technic  = 'lin'
+
+        content_txt = section_content_amescap_profile(
+            'Altitude definitions for zstd')
+        exec(content_txt)  # Load all variables in that section
+
         if custom_level:
-            content_txt = section_content_amescap_profile(
-                'Altitude definitions for zstd')
-            exec(content_txt)  # Load all variables in that section
-            # Copy requested variable
             lev_in = eval('np.array('+custom_level+')')
         else:
+            lev_in = eval('np.array(zstd_default)')
             # Default levels, this is size 45
-            lev_in = np.array([-7000, -6000, -5000, -4500, -4000, -3500, -3000, -2500, -2000, -1500, -1000,
-                               -500, 0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000,
-                               6000, 7000, 8000, 9000, 10000, 12000, 14000, 16000, 18000,
-                               20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000,
-                               60000, 70000, 80000, 90000, 100000])
 
         # The fixed file is necessary if pk, bk are not in the requested file, or
         # to load the topography if zstd output is requested.
@@ -188,19 +179,15 @@ def main():
         units_txt       = 'm'
         need_to_reverse = True
         interp_technic  = 'lin'
+
+        content_txt = section_content_amescap_profile(
+            'Altitude definitions for zagl')
+        exec(content_txt)  # Load all variables in that section
+
         if custom_level:
-            content_txt = section_content_amescap_profile(
-                'Altitude definitions for zagl')
-            # print(content_txt)
-            exec(content_txt)  # Load all variables in that section
-            # Copy requested variable
             lev_in = eval('np.array('+custom_level+')')
         else:
-            # Default levels, this is size 45
-            lev_in = np.array([0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000,
-                               6000, 7000, 8000, 9000, 10000, 12000, 14000, 16000, 18000,
-                               20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000,
-                               60000, 70000, 80000, 90000, 100000, 110000])
+            lev_in = eval('np.array(zagl_default)')
     else:
         prRed("Interpolation type '%s' is not supported, use  'pstd','zstd' or 'zagl'" % (
             interp_type))

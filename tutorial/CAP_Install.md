@@ -1,6 +1,4 @@
-![](./tutorial_images/Tutorial_Banner_Final.png)
-
-
+![](./tutorial_images/Tutorial_Banner_2023.png)
 
 
 ***
@@ -9,7 +7,7 @@
 
 ### Welcome!
 
-This document contains the instructions for installing the NASA Ames MCMC's Community Analysis Pipeline (CAP). **We ask that you come to the MGCM Tutorial on November 2-4 with CAP installed on your machine** so that we can jump right into using it! On the second day of the tutorial (November 3rd), we will be using CAP to analyze MGCM output.
+This document contains the instructions for installing the NASA Ames MCMC's Community Analysis Pipeline (CAP).
 
 Installing CAP is fairly straightforward. We will create a Python virtual environment, download CAP, and then install CAP in the virtual environment. That's it!
 
@@ -19,8 +17,6 @@ A quick overview of what is covered in this installation document:
 2. [Installing CAP](#2-installing-cap)
 3. [Testing & Using CAP](#3-testing-using-cap)
 4. [Practical Tips](#4-practical-tips-for-later-use-during-the-tutorial)
-5. [Do This Before Attending the Tutorial](#5-do-this-before-attending-the-tutorial)
-
 
 
 
@@ -57,7 +53,7 @@ If you are already comfortable with Python's package management system, you are 
 
 For all other users, we highly recommend using the latest version of the Anaconda Python distribution. It ships with pre-compiled math and plotting packages such as `numpy` and `matplotlib` as well as pre-compiled libraries like `hdf5` headers for reading `netCDF` files (the preferred filetype for analysing MGCM output).
 
-You can install the Anaconda Python distribution via the command-line or using a [graphical interface](https://www.anaconda.com/distribution/#download-section) (scroll to the very bottom of the page for all download options). You can install Anaconda at either the `System/` level or the `User/` level (the later does not require admin-priviledges). The instructions below are for the **command-line installation** and installs Anaconda in your **home directory**, which is the recommended location. Open a terminal and type the following:
+You can install the Anaconda Python distribution via the command-line or using a [graphical interface](https://www.anaconda.com/download) (scroll to the very bottom of the page for all download options). You can install Anaconda at either the `System/` level or the `User/` level (the later does not require admin-priviledges). The instructions below are for the **command-line installation** and installs Anaconda in your **home directory**, which is the recommended location. Open a terminal and type the following:
 
 ```bash
 (local)>$ chmod +x Anaconda3-2021.05-MacOSX-x86_64.sh   # make the .sh file executable (actual name may differ)
@@ -216,8 +212,6 @@ There is therefore no need to reference the full paths while **inside** the virt
 
 ## 2. Installing CAP
 
-Now we can download and install CAP in `AmesCAP`. CAP was provided to you in the tarfile `AmesCAP-master.zip` that was sent along with these instructions. Download `AmesCAP-master.zip`. You can leave the file in `Downloads/`, or,  if you encounter any permission issue, move it to a temporary location like your `/home` or `/Desktop` directories.
-
 ### Using `pip`
 
 Open a terminal window, activate the virtual environment, and untar the file or install from the github:
@@ -227,11 +221,8 @@ Open a terminal window, activate the virtual environment, and untar the file or 
 (local)>$ source ~/AmesCAP/bin/activate.csh      # cshr/tsch
 (local)>$ source ~/AmesCAP/Scripts/activate.csh  #  Cygwin/Windows
 (local)>$ conda AmesCAP/bin/activate             # if you used conda
-# FROM AN ARCHIVE:
-(AmesCAP)>$ tar -xf AmesCAP-master.zip
-(AmesCAP)>$ cd AmesCAP-master
-(AmesCAP)>$ pip install .
-# OR FROM THE GITHUB:
+
+
 (AmesCAP)>$ pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 ```
 > Please follow the instructions to upgrade pip if recommended during that steps. Instructions relevant the *conda* package manager are listed at the end of this section
@@ -248,7 +239,6 @@ That's it! CAP is installed in `AmesCAP` and you can see the `MarsXXXX.py` execu
 > MarsPlot.py      activate         easy_install-3.8          pip              python3
 ```
 
-> Shall you need to modify any code, note that when you access the `Mars` tools above, those are **not** executed from the `AmesCAP-master/` folder in your `/Downloads` directory, but instead from the `AmesCAP` virtual environment where they were installed by pip. You can safely move AmesCAP-master.zip and the AmesCAP-master directory to a different location on your system.
 
 Double check that the paths to the executables are correctly set in your terminal by exiting the virtual environment:
 
@@ -333,12 +323,6 @@ Activate the virtual environment, then install CAP:
 ```bash
 (local)>$ conda activate AmesCAP
 (AmesCAP)>$ conda install pip
-# FROM AN ARCHIVE:
-(AmesCAP)>$ cd ~/Downloads
-(AmesCAP)>$ tar -xf AmesCAP-master.zip
-(AmesCAP)>$ cd AmesCAP-master
-(AmesCAP)>$ pip install .
-# OR FROM THE GITHUB:
 (AmesCAP)>$ pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 ```
 
@@ -458,69 +442,3 @@ syntax on
 colorscheme default
 au BufReadPost *.in  set syntax=python
 ```
-
-
-
-
-***
-
-## 5. Do This Before Attending the Tutorial
-
-In order to follow along with the practical part of the MGCM Tutorial, we ask that you **download several MGCM output files beforehand**. You should save these on the machine you'll be using during the tutorial.
-
-We'll use CAP to retrieve these files from the MGCM Data Portal. To begin, activate the virtual environment:
-
-```bash
-(local)>$ source AmesCAP/bin/activate      # bash
-(local)>$ source AmesCAP/bin/activate.csh  # csh/tcsh
-```
-
-Choose a directory in which to store these MGCM output files on your machine. We will also create two sub- directories, one for an MGCM simulation with radiatively inert clouds (RIC) and one for an MGCM simulation with radiatively active clouds (RAC):
-
-```bash
-(AmesCAP)>$ mkdir CAP_tutorial
-(AmesCAP)>$ cd CAP_tutorial
-(AmesCAP)>$ mkdir INERTCLDS ACTIVECLDS
-```
-
-Then, download the corresponding data in each directory:
-
-```bash
-(AmesCAP)>$ cd INERTCLDS
-(AmesCAP)>$ MarsPull.py -id INERTCLDS -ls 255 285
-(AmesCAP)>$ cd ../ACTIVECLDS
-(AmesCAP)>$ MarsPull.py -id ACTIVECLDS -ls 255 285
-```
-
-Finally, check for files integrity using the `disk use` command:
-
-```bash
-cd ..
-du -h INERTCLDS/fort.11*
-du -h ACTIVECLDS/fort.11*
-> 433M	fort.11_0719
-[...]
-```
-
-The files should be 433Mb each. That's it! `CAP_tutorial` now holds the necessary `fort.11` files from the radiatively active and inert MGCM simulations:
-
-```
-CAP_tutorial/
-├── INERTCLDS/
-│   └── fort.11_0719  fort.11_0720  fort.11_0721  fort.11_0722  fort.11_0723
-└── ACTIVECLDS/
-    └── fort.11_0719  fort.11_0720  fort.11_0721  fort.11_0722  fort.11_0723
-```
-
-
-You can now deactivate the virtual environment:
-
-```bash
-(AmesCAP)>$ deactivate
-```
-> If you encounter an issue during the download process or if the files are not 433Mb, please verify the files availability on [the MCMC Data Portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php) and try again later. You can re-attempt to download specific files as follows: `MarsPull.py -id  ACTIVECLDS -f fort.11_0720 fort.11_0723` (make sure to navigate to the appropriate simulation directory first), or simply download the 10 files listed above manually from the website.
-
-
-
-
-***

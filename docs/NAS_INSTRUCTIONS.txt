@@ -31,7 +31,7 @@ pip install setuptools --upgrade
 
 
 # 6. Install CAP in the virtual environment:
-pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git@master-dev
+pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 
 # 7. Deactivate CAP with:
 deactivate

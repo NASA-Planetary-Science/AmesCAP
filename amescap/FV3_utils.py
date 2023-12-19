@@ -233,7 +233,7 @@ def find_n0(Lfull_IN, Llev_OUT, reverse_input=False):
     Nfull = dimsIN[0]
     dimsOUT = tuple(np.append(Nlev, dimsIN[1:]))
     # 'Ndim' is the product of all the dimensions except for the vertical axis
-    Ndim = np.int(np.prod(dimsIN[1:]))
+    Ndim = int(np.prod(dimsIN[1:]))
     Lfull_IN = np.reshape(Lfull_IN, (Nfull, Ndim))
 
     if reverse_input:
@@ -294,8 +294,8 @@ def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
     N_OUT = dimsOUT[0]
 
     # Number of element in arrays other than interpolation axis
-    NdimsIN = np.int(np.prod(dimsIN[1:]))
-    NdimsOUT = np.int(np.prod(dimsOUT[1:]))
+    NdimsIN = int(np.prod(dimsIN[1:]))
+    NdimsOUT = int(np.prod(dimsOUT[1:]))
 
     if (NdimsIN > 1 and NdimsOUT > 1) and (NdimsIN != NdimsOUT):
         print('*** Error in find_n(): dimensions of arrays other than the interpolated (first) axis must be 1 or identical***')
@@ -433,7 +433,7 @@ def vinterp(varIN, Lfull, Llev, type_int='log', reverse_input=False, masktop=Tru
 
     dimsOUT = tuple(np.append(Nlev, dimsIN[1:]))
     # Ndim is the product  of all dimensions but the vertical axis
-    Ndim = np.int(np.prod(dimsIN[1:]))
+    Ndim = int(np.prod(dimsIN[1:]))
     # flatten the other dimensions to (Nfull, Ndim)
     varIN = np.reshape(varIN, (Nfull, Ndim))
     # flatten the other dimensions to (Nfull, Ndim)
@@ -681,7 +681,7 @@ def interp_KDTree(var_IN, lat_IN, lon_IN, lat_OUT, lon_OUT, N_nearest=10):
     # If lat, lon are 1D, broadcast dimensions:
 
     # Ndim is the product of all input dimensions but lat & lon
-    Ndim = np.int(np.prod(dimsIN[0:-2]))
+    Ndim = int(np.prod(dimsIN[0:-2]))
     dims_IN_reshape = tuple(np.append(Ndim, nlon_IN*nlat_IN))
     dims_OUT_reshape = tuple(np.append(Ndim, nlat_OUT*nlon_OUT))
     # Needed if var is (lat,lon)
@@ -1106,7 +1106,7 @@ def lon180_to_360(lon):
     else:  # lon180 is an array
         lon[lon < 0] += 360
         # reogranize lon by increasing values
-        lon = np.append(lon[lon < 180], lon[lon >= 180])
+        lon = np.append(lon[lon <= 180], lon[lon > 180])
     return lon
 
 
@@ -1159,7 +1159,7 @@ def shiftgrid_180_to_360(lon, data):  # longitude is LAST
     lon = np.array(lon)
     lon[lon < 0] += 360.  # convert to 0-360
     data = np.concatenate(
-        (data[..., lon < 180], data[..., lon >= 180]), axis=-1)  # stack data
+        (data[..., lon <= 180], data[..., lon > 180]), axis=-1)  # stack data
     return data
 
 
@@ -1180,7 +1180,7 @@ def second_hhmmss(seconds, lon_180=0.):
     # Add timezone offset (1hr/15 degree)
     hours = np.mod(hours+lon_180/15., 24)
 
-    return np.int(hours), np.int(minutes), np.int(seconds)
+    return np.int32(hours), np.int32(minutes), np.int32(seconds)
 
 
 def sol_hhmmss(time_sol, lon_180=0.):
@@ -1497,7 +1497,7 @@ def compute_uneven_sigma(num_levels, N_scale_heights, surf_res, exponent, zero_t
     """
     b = np.zeros(int(num_levels)+1)
     for k in range(0, num_levels):
-        zeta = 1.-k/np.float(num_levels)  # zeta decreases with k
+        zeta = 1.-k/float(num_levels)  # zeta decreases with k
         z = surf_res*zeta + (1.0 - surf_res)*(zeta**exponent)
         b[k] = np.exp(-z*N_scale_heights)  # z goes from 1 to 0
     b[-1] = 1.0
@@ -1670,7 +1670,7 @@ def tshift(array, lon, timeo, timex=None):
     '''
     Conversion to uniform local time.
     Args:
-        array: variable to be shifted. Assume longitude is the first dimension and time in the last dimension
+        array: variable to be shifted. Assume longitude is the first dimension and time_of_day is the last dimension
         lon: longitude
         timeo : time_of_day index from input file
         timex (optional) : local time (hr) to shift to, e.g. '3. 15.'
@@ -1689,7 +1689,7 @@ def tshift(array, lon, timeo, timex=None):
     id = dims[0]  # number of longitudes in file
     nsteps = len(timeo)   # number of timesteps per day in input
 
-    nsf = np.float_(nsteps)   # number of timesteps per day in input
+    nsf = float(nsteps)   # number of timesteps per day in input
 
     timeo = np.squeeze(timeo)
 
@@ -1771,8 +1771,8 @@ def tshift(array, lon, timeo, timex=None):
     #           Now carry out the interpolation
     for nd in range(nsteps_out):  # Number of output time levels
         for i in range(id):  # Number of longitudes
-            im = np.int(imm[i, nd]) % 24
-            ipa = np.int(ipp[i, nd])
+            im = np.int32(imm[i, nd]) % 24
+            ipa = np.int32(ipp[i, nd])
             frac = fraction[i, nd]
             narray[i, :, nd] = (1.-frac)*array[i, :, im] + \
                 frac*array[i, :, ipa]
@@ -1837,7 +1837,7 @@ def add_cyclic(data, lon):
     # Compute increment
     dlon = lon[1]-lon[0]
     # Create new array, size [nlon+1]
-    data_c = np.zeros((data.shape[0], data.shape[1]+1), np.float)
+    data_c = np.zeros((data.shape[0], data.shape[1]+1), float)
     data_c[:, 0:-1] = data[:, :]
     data_c[:, -1] = data[:, 0]
     return data_c, np.append(lon, lon[-1]+dlon)

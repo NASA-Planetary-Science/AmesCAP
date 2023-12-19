@@ -41,6 +41,12 @@ parser = argparse.ArgumentParser(
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
+    description=(
+        f"{Yellow}Uility for querying files on the MCMC NAS Data "
+        f"Portal.{NoColor}"
+    ),
+    formatter_class=argparse.RawTextHelpFormatter
+)
 
 parser.add_argument(
     '-id', '--id', type=str,
@@ -92,9 +98,20 @@ parser.add_argument('--debug', action='store_true',
 #                  DEFINITIONS
 # ======================================================
 
+
+saveDir = (f"{os.getcwd()}/")
+
 global SAVEDIR, ls_0, ls_N
 SAVEDIR = (f"{os.getcwd()}/")
 
+# available files by Ls:
+Ls_ini = np.array([
+    0, 5, 10, 15, 19, 24, 29, 34, 38, 43, 48, 52, 57, 61, 66, 70, 75,
+    79, 84, 88, 93, 97, 102, 106, 111, 116, 121, 125, 130, 135, 140,
+    146, 151, 156, 162, 167, 173, 179, 184, 190, 196, 202, 209, 215,
+    221, 228, 234, 241, 247, 254, 260, 266, 273, 279, 286, 292, 298,
+    304, 310, 316,322, 328, 333, 339, 344, 350, 355
+])
 # available files by Ls:
 ls_0 = np.array([
     0, 5, 10, 15, 19, 24, 29, 34, 38, 43, 48, 52, 57, 61, 66, 70, 75,
@@ -102,6 +119,14 @@ ls_0 = np.array([
     146, 151, 156, 162, 167, 173, 179, 184, 190, 196, 202, 209, 215,
     221, 228, 234, 241, 247, 254, 260, 266, 273, 279, 286, 292, 298,
     304, 310, 316,322, 328, 333, 339, 344, 350, 355
+])
+
+Ls_end = np.array([
+    4, 9, 14, 19, 24, 29, 33, 38, 42, 47, 52, 56, 61, 65, 70, 74, 79,
+    83, 88, 92, 97, 101, 106, 111, 115, 120, 125, 130, 135, 140, 145,
+    150, 156, 161, 167, 172, 178, 184, 190, 196, 202, 208, 214, 221,
+    227, 233, 240, 246, 253, 259, 266, 272, 279, 285, 291, 297, 304,
+    310, 316, 321, 327, 333, 338, 344, 349, 354, 0
 ])
 
 ls_N = np.array([

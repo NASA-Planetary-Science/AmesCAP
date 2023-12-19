@@ -1,4 +1,8 @@
-![](./tutorial_images/Tutorial_Banner_Final.png)
+![](./tutorial_images/Tutorial_Banner_2023.png)
+
+# Introducing the Community Analysis Pipeline (CAP)
+
+![](./tutorial_images/GCM_Workflow_PRO.png)
 
 <!-- TOC titleSize:2 tabSpaces:2 depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 skip:0 title:1 charForUnorderedList:* -->
 ## Table of Contents
@@ -6,19 +10,19 @@
 * [Cheat sheet](#cheat-sheet)
 * [The big question... How do I do this? >  <span style="color:red">Ask for help!  </span>](#the-big-question-how-do-i-do-this---span-stylecolorredask-for-help--span)
 * [1. `MarsPull.py` - Downloading Raw MGCM Output](#1-marspullpy---downloading-raw-mgcm-output)
-* [2. `MarsFiles.py` - Reducing the Files](#2-marsfilespy---reducing-the-files)
+* [2. `MarsFiles.py` - Files Manipulations and Reduction](#2-marsfilespy---files-manipulations-and-reduction)
 * [3. `MarsVars.py` - Performing Variable Operations](#3-marsvarspy---performing-variable-operations)
 * [4. `MarsInterp.py` - Interpolating the Vertical Grid](#4-marsinterppy---interpolating-the-vertical-grid)
 * [5. `MarsPlot.py` - Plotting the Results](#5-marsplotpy---plotting-the-results)
 * [MarsPlot.py:  How to?](#marsplotpy--how-to)
-  * [Inspect the content of netCDF files](#inspect-the-content-of-netcdf-files)
+  * [Inspect variable content of netCDF files](#inspect-variable-content-of-netcdf-files)
   * [Disable or add a new plot](#disable-or-add-a-new-plot)
   * [Adjust the color range  and colormap](#adjust-the-color-range--and-colormap)
   * [Make a 1D-plot](#make-a-1d-plot)
   * [Customize 1D plots](#customize-1d-plots)
   * [Put multiple plots on the same page](#put-multiple-plots-on-the-same-page)
   * [Put multiple 1D-plots on the same page](#put-multiple-1d-plots-on-the-same-page)
-  * [Use a different epoch](#use-a-different-epoch)
+  * [Use a different start date](#use-a-different-start-date)
   * [Access simulation in a different directory](#access-simulation-in-a-different-directory)
   * [Overwrite the free dimensions.](#overwrite-the-free-dimensions)
   * [Element-wise operations](#element-wise-operations)
@@ -31,7 +35,7 @@
 
 ***
 
-# Introducing the Community Analysis Pipeline (CAP)
+
 
 CAP is a toolkit designed to simplify the post-processing of MGCM output. CAP is written in Python and works with existing Python libraries, allowing any Python user to install and use CAP easily and free of charge. Without CAP, plotting MGCM output requires that a user provide their own scripts for post-processing, including code for interpolating the vertical grid, computing and adding derived variables to files, converting between file types, and creating diagnostic plots. In other words, a user would be responsible for the entire post-processing effort as illustrated in Figure 1.
 
@@ -47,9 +51,9 @@ As a foreword, we will list a few design characteristics of CAP:
 * CAP is written in **Python**, an open-source programming language with extensive scientific libraries available
 * CAP is installed within a Python **virtual environment**, which provides cross-platform support (MacOS, Linux and Windows), robust version control (packages updated within the main Python distribution will not affect CAP), and is not intrusive as it disappears when deactivated
 * CAP is composed of a **set of libraries** (functions), callable from a user's own scripts and a collection of **five executables**, which  allows for efficient processing of model outputs from the command-line.
-* CAP uses the **netCDF4 data format**, which is widely use in the climate modeling community and self-descriptive (meaning that a file contains  explicit information about its content in term of variables names, units etc...)
+* CAP uses the **netCDF4 data format**, which is widely used in the climate modeling community and self-descriptive (meaning that a file contains  explicit information about its content in term of variables names, units etc...)
 * CAP uses a convention for output formatting inherited from the GFDL Finite­-Volume Cubed-Sphere Dynamical Core, referred here as  "**FV3 format**": outputs may be binned and averaged in time in various ways for analysis.  
-*  CAP long-term goal is to offer **multi-model support**. At the time of the writing, both the NASA Ames Legacy GCM and the NASA Ames GCM with the FV3 dynamical core are  supported. Efforts are underway to offer compatibility to others Global Climate Models (e.g. eMARS, LMD, MarsWRF).
+*  CAP's long-term goal is to offer **multi-model support**. At the time of the writing, both the NASA Ames Legacy GCM and the NASA Ames GCM with the FV3 dynamical core are  supported. Efforts are underway to offer compatibility to others Global Climate Models (e.g. eMARS, LMD, MarsWRF).
 
 
 Specifically, CAP consists of five executables:
@@ -61,7 +65,7 @@ Specifically, CAP consists of five executables:
 5. `MarsPlot.py`    Visualize the MGCM output
 
 
-These executables and their commonly-used functions are illustrated in the cheat sheet below in the order in which they are most often used. You should feel free to reference during and after the tutorial.
+These executables and their commonly-used functions are illustrated in the cheat sheet below in the order in which they are most often used. You should feel free to reference the cheat sheet during and after the tutorial.
 
 # Cheat sheet
 
@@ -76,7 +80,7 @@ CAP is designed to be modular. For example, a user could post-process and plot M
 Use the `--help` (`-h` for short) option on any executable to display documentation and examples.
 
 ```
-(AmesCAP)>$ MarsPlot.py -h
+(amesCAP)>$ MarsPlot.py -h
 > usage: MarsPlot.py [-h] [-i INSPECT_FILE] [-d DATE [DATE ...]] [--template]
 >                   [-do DO] [-sy] [-o {pdf,eps,png}] [-vert] [-dir DIRECTORY]
 >                   [--debug]
@@ -88,54 +92,59 @@ Use the `--help` (`-h` for short) option on any executable to display documentat
 
 # 1. `MarsPull.py` - Downloading Raw MGCM Output
 
-`MarsPull` is a utility for accessing MGCM output files hosted on the [MCMC Data portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php). MGCM data is archived in 1.5 hour intervals (16x/day) and packaged in files containing 10 sols. The files are named fort.11_XXXX in the order they were produced, but  `MarsPull` maps those files to specific solar longitudes (L<sub>s</sub>, in °). This allows users to request a file at a specific L<sub>s</sub> or for a range of L<sub>s</sub> using the `-ls` flag. Additionally the `identifier` (`-id`) flag is used to route `MarsPull` through a particular simulation. The `filename` (`-f`) flag can be used to parse specific files within a particular directory.
+`MarsPull` is a utility for accessing MGCM output files hosted on the [MCMC Data Portal](https://data.nas.nasa.gov/mcmcref/index.html). `MarsPull` uses simulation identifiers (`-id` flag) to point to various sub-directories on the MCMC data portal, and then automates the downloading of files within those sub-directories. `MarsPull` is most useful to download simulations that contain a large number of outputs. Additionally, for Legacy GCM files, `MarsPull` allows users to request a file at a specific L<sub>s</sub> (or for a range of L<sub>s</sub>) using the `-ls` flag.
+
 
 ```bash
-MarsPull.py -id INERTCLDS -ls 255 285
-MarsPull.py -id ACTIVECLDS -f fort.11_0720 fort.11_0723
+MarsPull.py -id FV3BETAOUT1 -f 03340.fixed.nc 03340.atmos_average.nc  #using file names with -f flag
+MarsPull.py -id INERTCLDS -ls 255 285                   #LEGACY ONLY, using solar longitude
 ```
+
 [Back to Top](#cheat-sheet)
 ***
 
-# 2. `MarsFiles.py` - Reducing the Files
+# 2. `MarsFiles.py` - Files Manipulations and Reduction
 
-`MarsFiles` provides several tools for file manipulations, including code designed to create binned, averaged, and time-shifted files from MGCM output. The `-fv3` flag is used to convert fort.11 binaries to the Netcdf data format (you can select one or more of the file format listed below):
+`MarsFiles` provides several tools for file manipulations, file reduction, filtering and data from MGCM outputs. 
 
-```bash
-(AmesCAP)>$ MarsFiles.py fort.11* -fv3 fixed average daily diurn
-```
+Files generated by the NASA Ames MGCM, will natively be in the Netcdf4 data format, with  different (runscript-customizable) binning options:  `average`, `daily` and `diurn` and `fixed`
 
-These are the file formats that `MarsFiles` can create from the fort.11 MGCM output files.
-
-**Primary files**
-
-| File name | Description                                    |Timesteps for 10 sols x 16 output/sol           |Ratio to daily file (430Mb)|
+| File name | Description                                    |Timesteps for 10 sols x 24 output/sol           |Ratio to daily file |
 |-----------|------------------------------------------------|----------------------------------------------- | ---                  |
-|**atmos_daily.nc** | continuous time series                | (16 x 10)=160                                  | 1                    |
-|**atmos_diurn.nc** | data binned by time of day and 5-day averaged | (16 x 2)=32                                    | x5 smaller           |
+|**atmos_daily.nc** | continuous time series                | (24 x 10)=240                                  | 1                    |
+|**atmos_diurn.nc** | data binned by time of day and 5-day averaged | (24 x 2)=48                                    | x5 smaller           |
 |**atmos_average.nc** | 5-day averages                              |  (1 x 2) = 2                                           | x80 smaller          |
 |**fixed.nc** | statics variable such as surface albedo and topography  |  static                                        |few kB                |
 
 
-**Secondary files**
+`MarsFiles` provides several functions to perform *data reduction*:
+
+* Create **multi-day averages** of contineous time-series:  `--bin_average` flag
+* Create **diurnal composites** of contineous time-series: `--bin_diurn` flag
+* Extract **specific seasons** from `average`, `daily` and `diurn` file: `--split`
+* Combine **multiple** `average`, `daily` and `diurn` files as one :`--combine`
+* Create **zonally-averaged** files:  `--zonal_average` flag  
+
+![](./tutorial_images/binning_sketch.png)
+
+`MarsFiles` provides several functions to alter the spatio-temporal of the files:
 
 
-| File name | description|
-|-----------|------------|
-|daily**_lpf**,**_hpf**,**_bpf** |low, high and band pass filtered|
-|diurn**_T** |uniform local time (same time of day at all longitudes)|
-|diurn**_tidal** |tidally-decomposed files into  harmonics|
-|daily**_to_average**  **_to_diurn** |custom re-binning of daily files|
+* Perform **tidal analysis** (e.g. diurnal, semi-diurnal components) on diurnal composites files: `--tidal` flag
+* Apply **temporal filters** to time-varying fields: low pass (`-lpf`), high-pass (`-hpf`) and band-pass (`-bpf`) flags
+* **Regrid** a file to a different spatio/temporal grid : `--regrid_source` flag
+* **Time shifting** diurnal composite files to the same universal local time (e.g. 3pm everywhere): `--tshift` flag
 
-- `MarsFiles` can concatenate like-files together along the time dimension using the `-combine` (`-c`) flag.
+>For all the operations mentioned above, the user has the option of processing all, or only a select number of variables within the file (`--include var1 var2 ...` flag )
+
+
+Time shifting allows for the interpolation of diurnal composite files to the same local times at all longitudes. This is useful to compare with orbital datasets which often provides two (e.g. 3am and 3pm) local times.
 
 ```bash
-> 07180.atmos_average.nc  07190.atmos_average.nc  07200.atmos_average.nc # 3 files with 10 days of output each
-(AmesCAP)>$ MarsFiles.py *atmos_average.nc -c
-> 07180.atmos_average.nc  # 1 file with 30 days of output
-```
-
-![Figure X. MarsFiles options](./tutorial_images/MarsFiles_diurn.png)
+(AmesCAP)>$ MarsFiles.py *.atmos_diurn.nc --tshift
+(AmesCAP)>$ MarsFiles.py *.atmos_diurn.nc --tshift  '3. 15.'
+```                     
+![](./tutorial_images/time_shift.png)
 *3pm surface temperature before (left) and after (right) processing a diurn file with MarsFile to uniform local time (`diurn_T.nc`)*
 
 
@@ -147,7 +156,7 @@ These are the file formats that `MarsFiles` can create from the fort.11 MGCM out
 `MarsVars` provides several tools relating to variable operations such as adding and removing variables, and performing column integrations. With no other arguments, passing a file to `MarsVars` displays file content, much like `ncdump`:
 
 ```bash
-(AmesCAP)>$ MarsVars.py 00000.atmos_average.nc
+(amesCAP)>$ MarsVars.py 00000.atmos_average.nc
 >
 > ===================DIMENSIONS==========================
 > ['bnds', 'time', 'lat', 'lon', 'pfull', 'scalar_axis', 'phalf']
@@ -158,17 +167,17 @@ These are the file formats that `MarsFiles` can create from the fort.11 MGCM out
 > (etc)
 ```
 
-A typical option of `MarsVars` would be to add the atmospheric density `rho` to a file. Because the density is easily computed from the pressure and temperature fields, we do not archive in in the GCM output and instead provides a utility to add it as needed. This conservative approach to logging output allows to  minimize disk space and speed-up post processing.
+A typical option of `MarsVars` would be to add the atmospheric density `rho` to a file. Because the density is easily computed from the pressure and temperature fields, we do not archive in the GCM output and instead provides a utility to add it as needed. This conservative approach to logging output allows for the  minimization of disk space and speed-up post processing.
 
 
 ```bash
-(AmesCAP)>$ MarsVars.py 00000.atmos_average.nc -add rho
+(amesCAP)>$ MarsVars.py 00000.atmos_average.nc -add rho
 ```
 
 We can see that `rho` was added by calling `MarsVars` with no argument as before:
 
 ```bash
-(AmesCAP)>$ MarsVars.py 00000.atmos_average.nc
+(amesCAP)>$ MarsVars.py 00000.atmos_average.nc
 >
 > ===================DIMENSIONS==========================
 > ['bnds', 'time', 'lat', 'lon', 'pfull', 'scalar_axis', 'phalf']
@@ -194,13 +203,22 @@ The `help` (`-h`) option provides information on available variables and needed 
 |col |-col | column integration, applicable to mixing ratios in [kg/kg] |
 |zdiff |-zdiff |vertical differentiation (e.g. compute gradients)|
 |zonal_detrend |-zd | zonally detrend a variable|
+|edit |-edit | change a variable's name, attributes or scale|
+
+This is an example of how one can edit a Netcdf's variable using CAP.
+
+```bash
+(AmesCAP)>$ MarsVars.py *.atmos_average.nc --edit temp -rename airtemp
+(AmesCAP)>$ MarsVars.py *.atmos_average.nc --edit ps -multiply 0.01 -longname 'new pressure' -unit 'mbar'
+```                        
+
 
 [Back to Top](#cheat-sheet)
 ***
 
 # 4. `MarsInterp.py` - Interpolating the Vertical Grid
 
-Native MGCM output files use a terrain-following pressure coordinate as the vertical coordinate (`pfull`), which means the geometric heights and the actual mid-layer pressure of atmospheric layers vary based on the location (i.e. between adjacent grid points). In order to do any rigorous spatial averaging, it is therefore necessary to interpolate each vertical column to a same (standard) pressure grid (`_pstd` grid):
+Native MGCM output files use a terrain-following pressure coordinate as the vertical coordinate (`pfull`), which means the geometric heights and the actual mid-layer pressure of atmospheric layers vary based on the location (i.e. between adjacent grid points). In order to do any rigorous spatial averaging, it is therefore necessary to interpolate each vertical column to a same standard pressure (`_pstd`) grid:
 
 ![Figure X. MarsInterp](./tutorial_images/MarsInterp.png)
 
@@ -209,14 +227,14 @@ Native MGCM output files use a terrain-following pressure coordinate as the vert
 `MarsInterp` is used to perform the vertical interpolation from *reference* (`pfull`) layers to *standard* (`pstd`) layers:
 
 ```bash
-(AmesCAP)>$ MarsInterp.py  00000.atmos_average.nc
+(amesCAP)>$ MarsInterp.py  00000.atmos_average.nc
 ```
 
 An inspection of the file shows that the pressure level axis which was `pfull` (30 layers) has been replaced by a standard pressure coordinate `pstd` (36 layers), and all 3- and 4-dimensional variables reflect the new shape:
 
 ```bash
-(AmesCAP)>$ MarsInterp.py  00000.atmos_average.nc
-(AmesCAP)>$ MarsVars.py 00000.atmos_average_pstd.nc
+(amesCAP)>$ MarsInterp.py  00000.atmos_average.nc
+(amesCAP)>$ MarsVars.py 00000.atmos_average_pstd.nc
 >
 > ===================DIMENSIONS==========================
 > ['bnds', 'time', 'lat', 'lon', 'scalar_axis', 'phalf', 'pstd']
@@ -237,12 +255,12 @@ An inspection of the file shows that the pressure level axis which was `pfull` (
 
 **Use of custom vertical grids**
 
-`MarsInterp` uses default grids for each of the interpolation listed above but it is possible for the user to specify the layers for the interpolation. This is done by editing a **hidden** file `.amescap_profile`(note the dot '`.`) in your home directory.  
+`MarsInterp` uses default grids for each of the interpolation listed above but it is possible for the user to specify the layers for the interpolation. This is done by editing a **hidden** file `.amescap_profile`(<span style="color:red"> note the dot '`.`' </span>) in your home directory.  
 
 For the first use, you will need to copy a template of `amescap_profile` to your /home directory:
 
 ```bash
-(AmesCAP)>$ cp ~/AmesCAP/mars_templates/amescap_profile ~/.amescap_profile # Note the dot '.' !!!
+(amesCAP)>$ cp ~/amesCAP/mars_templates/amescap_profile ~/.amescap_profile # Note the dot '.' !!!
 ```
 You can open `~/.amescap_profile` with any text editor:
 
@@ -264,7 +282,7 @@ In the example above, the user custom-defined two vertical grids, one with 44 le
 You can use these by calling `MarsInterp` with the `-level` (`-l`) argument followed by the name of the new grid defined in `.amescap_profile`.
 
 ```bash
-(AmesCAP)>$ MarsInterp.py  00000.atmos_average.nc -t pstd -l  p44
+(amesCAP)>$ MarsInterp.py  00000.atmos_average.nc -t pstd -l  p44
 ```
 [Back to Top](#cheat-sheet)
 ***
@@ -282,13 +300,32 @@ The following figure shows the three components of MarsPlot:
 
 ![Figure 4. MarsPlot workflow](./tutorial_images/MarsPlot_graphics.png)
 
+
+Within the terminal, MarsPlot's `--inspect` (`-i` for short) command is used to display the content of the netCDF file and select variables to be plotted.
+
+```bash
+(amesCAP)> MarsPlot.py -i 07180.atmos_average.nc
+
+> ===================DIMENSIONS==========================
+> ['lat', 'lon', 'pfull', 'phalf', 'zgrid', 'scalar_axis', 'time']
+> [...]
+> ====================CONTENT==========================
+> pfull          : ('pfull',)= (24,), ref full pressure level  [Pa]
+> temp           : ('time', 'pfull', 'lat', 'lon')= (10, 24, 36, 60), temperature  [K]
+> ucomp          : ('time', 'pfull', 'lat', 'lon')= (10, 24, 36, 60), zonal wind  [m/sec]
+> [...]
+```
+> Note that the `-i` method works with any netCDF file, not just the ones generated by CAP
+
+In the command listed above, we can see that the 4-dimensional arrays `temp` and `ucomp` are  available in the output file. The choices of variables and the type of cross-sections to be plotted for the analysis are made through the use of a template.
+
 The default template, Custom.in, can be created by passing the `-template` argument to `MarsPlot`. Custom.in is pre-populated to draw two plots on one page: a topographical plot from the fixed file and a cross-section of the zonal wind from the average file. Creating the template and passing it into `MarsPlot` creates a PDF containing the plots:
 
 ```
-(AmesCAP)>$ MarsPlot.py -template
+(amesCAP)>$ MarsPlot.py -template
 > /path/to/simulation/run_name/history/Custom.in was created
-(AmesCAP)>$
-(AmesCAP)>$ MarsPlot.py Custom.in
+(amesCAP)>$
+(amesCAP)>$ MarsPlot.py Custom.in
 > Reading Custom.in
 > [----------]  0 % (2D_lon_lat :fixed.zsurf)
 > [#####-----] 50 % (2D_lat_lev :atmos_average.ucomp, Ls= (MY 2) 252.30, zonal avg)
@@ -309,9 +346,9 @@ The data selection process to make any particular cross section is shown in the 
 
 ```
 1.     Which simulation                                              ┌─
-    (e.g. ACTIVECLDS directory)                                      │  DEFAULT    1. ref> is current directory
+    (e.g. path_to_sim/ directory)                                    │  DEFAULT    1. ref> is current directory
           │                                                          │  SETTINGS
-          └── 2.   Which XXXXX epoch                                 │             2. latest XXXXX.fixed in directory
+          └── 2.   Which XXXXX start date                            │             2. latest XXXXX.fixed in directory
                (e.g. 00668, 07180)                                   └─
                    │                                                 ┌─
                    └── 3.   Which type of file                       │
@@ -341,7 +378,7 @@ The free dimensions are set by default using day-to-day decisions from a climate
 
 *Rule table for the default settings of the free dimensions*
 
-In practice, these cases cover 99% of the work typically done so whenever a setting is left to default (`= None` in MarsPlot's syntax) this is what is being used. This allows to considerably streamline the data selection process.
+In practice, these cases cover 99% of the work typically done so whenever a setting is left to default (`= None` in MarsPlot's syntax) this is what is being used. This allows us to considerably streamline the data selection process.
 
 `Custom.in` can be modified using your preferred text editor (and renamed to your liking). This is an example of the code snippet in `Custom.in` used to generate a lon/lat cross-section. Note that the heading is set to `= True`, so that plot is activated for MarsPlot to process.
 
@@ -366,18 +403,18 @@ To wrap-up (the use of `{}` to overwrite default settings is discussed later on)
                         │                     SIMPLIFY TO               │
 00668.atmos_average@1.temp{lev=1000;ls=270}     >>>      atmos_average.temp
   │         │       │              │                           │
-epoch  file type simulation    free dimensions             file type
-                 directory
+start file type simulation    free dimensions             file type
+date             directory
 ```
 These are the four types of accepted entries for the free dimensions:
 
 
 |Accepted input |Meaning| Example|
-|--         |-       |--|
+|--             |---        |--    |
 |`None` |Use default settings from the rule table above| `Ls 0-360 = None`|
 |`value`|  Return index closest to requested value in the figure'sunit |`Level [Pa/m]  = 50 ` (50 Pa)|
 |`Val Min, Val Max`| Return the average between two values |`Lon +/-180 = -30,30`|
-|`all`| `all` is a special keyword that return the average over all values along that dimension |`Latitude       = all`
+|`all`| `all` is a special keyword that return the average over all values along that dimension |`Latitude       = all`|
 
 *Accepted values for the `Ls 0-360`, `Level [Pa/m]` ,`Lon +/-180`, `Latitude` and time of day free dimensions*
 
@@ -388,7 +425,7 @@ These are the four types of accepted entries for the free dimensions:
 
 # MarsPlot.py:  How to?
 
-This section discusses MarsPlot capabilities. Note that a compact version of these instructions is present as comment at the very top of a new `Custom.in` and can be used as a quick reference:
+This section discusses MarsPlot capabilities. Note that a compact version of these instructions are present as comment at the very top of a new `Custom.in` and can be used as a quick reference:
 ```python
 ===================== |MarsPlot V3.2|===================
 # QUICK REFERENCE:
@@ -397,27 +434,12 @@ This section discusses MarsPlot capabilities. Note that a compact version of the
 # > 'True', 'False' and 'None' are capitalized. Do not use quotes '' anywhere in this file
 etc...
 ```
-## Inspect the content of netCDF files  
+## Inspect variable content of netCDF files  
 
-A handy function is MarsPlot's `--inspect` (`-i` for short) command which displays the content of a netCDF file:
 
+The `--inspect` method in MarsPlot.py can be combined with the `--dump` flag which is most useful to show the content of specific 1D arrays in the terminal.
 ```bash
-(AmesCAP)> MarsPlot.py -i 07180.atmos_average.nc
-
-> ===================DIMENSIONS==========================
-> ['lat', 'lon', 'pfull', 'phalf', 'zgrid', 'scalar_axis', 'time']
-> [...]
-> ====================CONTENT==========================
-> pfull          : ('pfull',)= (24,), ref full pressure level  [Pa]
-> temp           : ('time', 'pfull', 'lat', 'lon')= (10, 24, 36, 60), temperature  [K]
-> ucomp          : ('time', 'pfull', 'lat', 'lon')= (10, 24, 36, 60), zonal wind  [m/sec]
-> [...]
-```
-> Note that the `-i` method works with any netCDF file, not just the ones generated by CAP
-
-The `--inspect` method can be combined with the `--dump` flag which is most useful to show the content of specific 1D arrays in the terminal.
-```bash
-(AmesCAP)>$ MarsPlot.py -i 07180.atmos_average.nc -dump pfull
+(amesCAP)>$ MarsPlot.py -i 07180.atmos_average.nc -dump pfull
 > pfull=
 > [8.7662227e-02 2.5499690e-01 5.4266089e-01 1.0518962e+00 1.9545468e+00
 > 3.5580616e+00 6.2466631e+00 1.0509957e+01 1.7400265e+01 2.8756382e+01
@@ -430,7 +452,7 @@ The `--inspect` method can be combined with the `--dump` flag which is most usef
 The `--stat` flag is better suited to inspect large, multi-dimensional arrays. You can also request specific array indexes using quotes and square brackets `'[]'`:
 
 ```bash
-(AmesCAP)>$  MarsPlot.py -i 07180.atmos_average.nc --stat ucomp 'temp[:,-1,:,:]'
+(amesCAP)>$  MarsPlot.py -i 07180.atmos_average.nc --stat ucomp 'temp[:,-1,:,:]'
 __________________________________________________________________________
            VAR            |      MIN      |      MEAN     |      MAX      |
 __________________________|_______________|_______________|_______________|
@@ -481,7 +503,7 @@ Finally, note the use of the `_r` suffix (reverse) to reverse the order of the c
 ## Make a 1D-plot
 The 1D plot template is different from the others in a few key ways:
 
-- Instead of `Title`, the template requires a `Legend`. When overploting several 1D variables on top of one another, the legend option will label them instead of changing the plot title.
+- Instead of `Title`, the template requires a `Legend`. When overplotting several 1D variables on top of one another, the legend option will label them instead of changing the plot title.
 - There is an additional `linestyle` axis option for the 1D plot.
 - There is also a `Diurnal` option. The `Diurnal` input can only be `None` or `AXIS`, since there is syntax for selecting a specific time of day using parenthesis (e.g. `atmos_diurn.temp{tod=15}`) The `AXIS` label tells `MarsPlot` which dimension serves as the X axis. `Main Variable` will dictate the Y axis.
 
@@ -491,11 +513,11 @@ The 1D plot template is different from the others in a few key ways:
 <<<<<<<<<<<<<<| Plot 1D = True |>>>>>>>>>>>>>
 Legend         = None                   # Legend instead of Title
 Main Variable  = atmos_average.temp
-Ls 0-360       = AXIS                   # Any of these can be selected
-Latitude       = None                   # as the X axis dimension, and
-Lon +/-180     = None                   # the free dimensions can accept
-Level [Pa/m]   = None                   # values as before. However,
-Diurnal  [hr]  = None                   # ** Diurnal can ONLY be AXIS or None **
+Ls 0-360       = AXIS                   #       Any of these can be selected
+Latitude       = None                   #       as the X axis dimension, and
+Lon +/-180     = None                   #       the free dimensions can accept
+Level [Pa/m]   = None                   #       values as before. However,
+Diurnal  [hr]  = None                   #   ** Diurnal can ONLY be AXIS or None **
 ```
 
 ## Customize 1D plots
@@ -555,7 +577,7 @@ Similarly adding the `ADD LINE` keywords between two (or more) templates can be 
 
 > Note that if you combine `HOLD ON/HOLD OFF` and `ADD LINE` to create a 1D figure with several sub-plots on a **multi-figure page**, the 1D plot has to be the LAST (and only 1D-figure with sub-plots) on that page.
 ***
-## Use a different epoch
+## Use a different start date
 
 If you have run a GCM simulation for a long time, you may have several files of the same type, e.g. :
 
@@ -563,7 +585,7 @@ If you have run a GCM simulation for a long time, you may have several files of 
 00000.fixed.nc          00100.fixed.nc         00200.fixed.nc         00300.fixed.nc
 00000.atmos_average.nc  00100.atmos_average.nc 00200.atmos_average.nc 00300.atmos_average.nc
 ```
-By default MarsPlot counts the `fixed` files in the directory and run the analysis on the last set of files, `00300.fixed.nc` and `00300.atmos_average.nc` in our example. Even though you may specify the epoch for each plot (e.g. `Main Variable  = 00200.atmos_average.temp` for the file starting at 200 sols), it is more convenient to leave the epoch out of the Custom.in and instead pass the `-date` argument to MarsPlot.
+By default MarsPlot counts the `fixed` files in the directory and run the analysis on the last set of files, `00300.fixed.nc` and `00300.atmos_average.nc` in our example. Even though you may specify the start date for each plot (e.g. `Main Variable  = 00200.atmos_average.temp` for the file starting at 200 sols), it is more convenient to leave the start date out of the Custom.in and instead pass the `-date` argument to MarsPlot.
 
 ```bash
 MarsPlot.py Custom.in -d 200
@@ -582,7 +604,7 @@ At the beginning of `MarsPlot` is the `<<< Simulations >>>` block which, is used
 ```python
 <<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>
 ref> None
-2> /path/to/another/sim # another simulation
+2> /path/to/another/sim                            # another simulation
 3>
 =======================================================
 ```
@@ -657,13 +679,13 @@ proj = ortho lon_center, lat_center    # rotate the globe
 ## Figure format, size
 
 * As shown in the `-help` documentation of MarsPlot, the output format for the figure is chosen using the `--output` (`-o`) flag between *pdf* (default, requires the ghostscript software), *png*, or *eps*.
-* The `-pw` (pixel width) flag can be use to change the  page width from its default value of 2000 pixels.
+* The `-pw` (pixel width) flag can be use to change the  page width from its default value of 2000 pixels. This is useful to make the labels more readable on multi-panels figure with a large number of plots.
 * The `--vertical` (`-vert`) can be use to make the pages vertical instead of horizontal
 
 ***
 ## Access CAP libraries and make your own plots
 
-CAP libraries are located (and documented) in `FV3_utils.py`. Spectral utilities are located in `Spectral_utils.py`,  classes to parse fortran binaries and generate netCDf files are located in `Ncdf_wrapper.py`
+CAP libraries are located (and documented) in `amescap/FV3_utils.py`. Spectral utilities are located in `amescap/Spectral_utils.py`,  classes to parse fortran binaries and generate netCDf files are located in `amescap/Ncdf_wrapper.py`
 
 The following code demonstrate how one can access CAP libraries and make plots for its own analysis:
 

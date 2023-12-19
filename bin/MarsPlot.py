@@ -36,7 +36,7 @@ from matplotlib.colors import LogNorm
 from amescap.Script_utils import check_file_tape
 from amescap.Script_utils import section_content_amescap_profile, print_fileContent, print_varContent, FV3_file_type, find_tod_in_diurn
 from amescap.Script_utils import wbr_cmap, rjw_cmap, dkass_temp_cmap, dkass_dust_cmap
-from amescap.FV3_utils import lon360_to_180, lon180_to_360, UT_LTtxt, area_weights_deg
+from amescap.FV3_utils import lon360_to_180, lon180_to_360, UT_LTtxt, area_weights_deg,shiftgrid_180_to_360,shiftgrid_360_to_180
 from amescap.FV3_utils import add_cyclic, azimuth2cart, mollweide2cart, robin2cart, ortho2cart
 
 # ignore deprecation warnings
@@ -46,7 +46,7 @@ matplotlib.use('Agg')   # Force matplotlib NOT to load an
 
 degr = u"\N{DEGREE SIGN}"
 global current_version
-current_version = 3.3
+current_version = 3.4
 
 # ======================================================
 #                  ARGUMENT PARSER
@@ -389,6 +389,36 @@ def mean_func(arr, axis):
     else:
         return np.nanmean(arr, axis=axis)
 
+# def shift_data(lon, data):
+#     '''
+#     This function shifts the longitude and data from 0/360 to -180/+180.
+#     Args:
+#         lon:  1D array of longitude (0/360)
+#         data: 2D array with last dimension = longitude
+#     Returns:
+#         lon:  1D array of longitude (-180/+180)
+#         data: shifted data
+#     Note: Use np.ma.hstack instead of np.hstack to keep the masked array properties.
+#     '''
+#     if lon_coord_type == 180:
+#         lon_180 = lon.copy()
+#         nlon = len(lon_180)
+#         # For 1D plots: If 1D, reshape array
+#         if len(data.shape) <= 1:
+#             data = data.reshape(1, nlon)
+#
+#         lon_180[lon_180 > 180] -= 360.
+#         data = np.hstack((data[:, lon_180 < 0], data[:, lon_180 >= 0]))
+#         lon_180 = np.append(lon_180[lon_180 < 0], lon_180[lon_180 >= 0])
+#         # If 1D plot, squeeze array
+#         if data.shape[0] == 1:
+#             data = np.squeeze(data)
+#     elif lon_coord_type == 360:
+#         lon_180, data = lon, data
+#     else:
+#         raise ValueError('Longitude coordinate type invalid. Please specify "180" or "360" after lon_coordinate in amescap_profile.')
+#     return lon_180, data
+
 def shift_data(lon, data):
     '''
     This function shifts the longitude and data from 0/360 to -180/+180.
@@ -400,25 +430,22 @@ def shift_data(lon, data):
         data: shifted data
     Note: Use np.ma.hstack instead of np.hstack to keep the masked array properties.
     '''
+    nlon = len(lon)
+    # For 1D plots: If 1D, reshape array
+    if len(data.shape) <= 1:
+        data = data.reshape(1, nlon)
     if lon_coord_type == 180:
-        lon_180 = lon.copy()
-        nlon = len(lon_180)
-        # For 1D plots: If 1D, reshape array
-        if len(data.shape) <= 1:
-            data = data.reshape(1, nlon)
-
-        lon_180[lon_180 > 180] -= 360.
-        data = np.hstack((data[:, lon_180 < 0], data[:, lon_180 >= 0]))
-        lon_180 = np.append(lon_180[lon_180 < 0], lon_180[lon_180 >= 0])
-        # If 1D plot, squeeze array
-        if data.shape[0] == 1:
-            data = np.squeeze(data)
+        lon_out=lon360_to_180(lon)
+        data = shiftgrid_360_to_180(lon,data)
     elif lon_coord_type == 360:
-        lon_180, data = lon, data
+        lon_out=lon180_to_360(lon)
+        data = shiftgrid_180_to_360(lon,data)
     else:
         raise ValueError('Longitude coordinate type invalid. Please specify "180" or "360" after lon_coordinate in amescap_profile.')
-    return lon_180, data
-
+    # If 1D plot, squeeze array
+    if data.shape[0] == 1:
+        data = np.squeeze(data)
+    return lon_out, data
 
 def MY_func(Ls_cont):
     '''
@@ -3501,6 +3528,7 @@ class Fig_1D(object):
                          lw=3, ms=7, label=txt_label)
                 plt.ylabel('Latitude', fontsize=label_size -
                            self.nPan*label_factor)
+
                 # Label is provided
                 if self.axis_opt2:
                     plt.xlabel(self.axis_opt2, fontsize=label_size -
@@ -3546,7 +3574,7 @@ class Fig_1D(object):
                     LsDay = np.mod(LsDay, 360)
 
                 plt.plot(LsDay, var, self.axis_opt1, lw=3, ms=7, label=txt_label)
-
+                plt.xlabel('L$_s$', fontsize=label_size -self.nPan*label_factor)
                 # Label is provided
                 if self.axis_opt2:
                     plt.ylabel(self.axis_opt2, fontsize=label_size -
