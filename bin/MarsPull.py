@@ -41,12 +41,6 @@ parser = argparse.ArgumentParser(
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
-    description=(
-        f"{Yellow}Uility for querying files on the MCMC NAS Data "
-        f"Portal.{NoColor}"
-    ),
-    formatter_class=argparse.RawTextHelpFormatter
-)
 
 parser.add_argument(
     '-id', '--id', type=str,
