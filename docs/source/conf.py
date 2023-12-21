@@ -24,7 +24,9 @@ sys.path.insert(0, os.path.abspath('../../bin'))
 project = 'AmesCAP'
 copyright = '2023, Alex Kling, Courtney Batterson, & Victoria Hartwick (Mars Climate Modeling Center | NASA Ames Research Center)'
 author = 'Alex Kling, Courtney Batterson, & Victoria Hartwick (Mars Climate Modeling Center | NASA Ames Research Center)'
+
 release = '1.0'
+
 master_doc = 'index'
 root_doc = 'index'
 
