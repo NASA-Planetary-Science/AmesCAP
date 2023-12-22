@@ -15,8 +15,8 @@ List of Functions:
 """
 
 # make print statements appear in color
-from amescap.Script_utils import (prYellow, prCyan, prRed, Blue, Yellow,
-                                 NoColor, Green)
+from amescap.Script_utils import (prYellow, prCyan, prRed, prPurple,
+                                  Blue, Yellow, NoColor, Green, Cyan)
 
 # load generic Python modules
 import argparse     # parse arguments
