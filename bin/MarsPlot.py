@@ -15,34 +15,41 @@ List of Functions:
 """
 
 # make print statements appear in color
-from amescap.Script_utils import prYellow, prRed, prCyan, prPurple
+from amescap.Script_utils import (prYellow, prCyan, prRed, Blue, Yellow,
+                                 NoColor, Green)
 
 # load generic Python modules
 import argparse     # parse arguments
-import os           # access operating system function
-import subprocess   # run command-line command
-import sys          # system command
+import os           # access operating system functions
+import subprocess   # run command-line commands
+import sys          # system commands
 import numpy as np
 from warnings import filterwarnings
 import matplotlib
 import matplotlib.pyplot as plt
 from netCDF4 import Dataset, MFDataset
-from numpy import sqrt, exp, max, mean, min, log, log10, sin, cos, abs
-from matplotlib.ticker import (
-    LogFormatter, NullFormatter, LogFormatterSciNotation, MultipleLocator)
+from numpy import abs
+from matplotlib.ticker import (LogFormatter, NullFormatter, 
+                               LogFormatterSciNotation, MultipleLocator)
 from matplotlib.colors import LogNorm
+
+matplotlib.use('Agg')   # Force matplotlib NOT to load Xwindows backend
 
 # load amesCAP modules
 from amescap.Script_utils import check_file_tape
-from amescap.Script_utils import section_content_amescap_profile, print_fileContent, print_varContent, FV3_file_type, find_tod_in_diurn
-from amescap.Script_utils import wbr_cmap, rjw_cmap, dkass_temp_cmap, dkass_dust_cmap
-from amescap.FV3_utils import lon360_to_180, lon180_to_360, UT_LTtxt, area_weights_deg,shiftgrid_180_to_360,shiftgrid_360_to_180
-from amescap.FV3_utils import add_cyclic, azimuth2cart, mollweide2cart, robin2cart, ortho2cart
+from amescap.Script_utils import (section_content_amescap_profile, 
+                                  print_fileContent, print_varContent, 
+                                  FV3_file_type, find_tod_in_diurn)
+from amescap.Script_utils import (wbr_cmap, rjw_cmap, dkass_temp_cmap, 
+                                  dkass_dust_cmap)
+from amescap.FV3_utils import (lon360_to_180, lon180_to_360, UT_LTtxt, 
+                               area_weights_deg, shiftgrid_180_to_360,
+                               shiftgrid_360_to_180)
+from amescap.FV3_utils import (add_cyclic, azimuth2cart, mollweide2cart,
+                               robin2cart, ortho2cart)
 
 # ignore deprecation warnings
 filterwarnings('ignore', category = DeprecationWarning)
-matplotlib.use('Agg')   # Force matplotlib NOT to load an 
-                        # Xwindows backend
 
 degr = u"\N{DEGREE SIGN}"
 global current_version
@@ -51,71 +58,146 @@ current_version = 3.4
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
+
 parser = argparse.ArgumentParser(
-    description="""\033[93mAnalysis Toolkit for the MGCM, V%s\033[00m """ % (current_version),
-    formatter_class=argparse.RawTextHelpFormatter)
+    description=(
+        f"{Yellow}Analysis Toolkit for the MGCM, V{current_version}."
+        f"{NoColor}\n\n"
+    ),
+    formatter_class=argparse.RawTextHelpFormatter
+)
 
-parser.add_argument('custom_file', nargs='?', type=argparse.FileType('r'), default=None,  # sys.stdin
-                    help='Use optional input file Custom.in to create the graphs. \n'
-                    '> Usage: MarsPlot Custom.in  [other options]\n'
-                    'Update CAP as needed with \033[96mpip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git --upgrade\033[00m \n'
-                    'Tutorial: \033[93mhttps://github.com/NASA-Planetary-Science/AmesCAP\033[00m')
+parser.add_argument(
+    'custom_file', nargs='?', type=argparse.FileType('r'), default=None,
+    help=(
+        f"Use optional input file Custom.in to create the graphs.\n"
+        f"{Green}Usage:\n"
+        f"> MarsPlot Custom.in [other options]\n"
+        f"{NoColor}\n\n"
+        f"Update CAP as needed with:{Cyan}\n"
+        f"> pip install git+https://github.com/NASA-Planetary-Science/"
+        f"AmesCAP.git --upgrade\n"
+        f"{NoColor}Tutorial: "
+        f"{Yellow}https://github.com/NASA-Planetary-Science/AmesCAP"
+        f"{NoColor}\n\n"
+    )
+)
 
-parser.add_argument('-i', '--inspect_file', default=None,
-                    help="""Inspect netcdf file content. Variables are sorted by dimensions. \n"""
-                    """> Usage: MarsPlot -i 00000.atmos_daily.nc\n"""
-                    """Options: use --dump (variable content) and --stat (min, mean,max) jointly with --inspect \n"""
-                    """>  MarsPlot -i 00000.atmos_daily.nc -dump pfull 'temp[6,:,30,10]'  (quotes '' necessary for browsing dimensions)\n"""
-                    """>  MarsPlot -i 00000.atmos_daily.nc -stat 'ucomp[5,:,:,:]' 'vcomp[5,:,:,:]'\n""")
+parser.add_argument(
+    '-i', '--inspect_file', default=None,
+    help=(
+        f"Inspect netcdf file content. Variables are sorted by dimensions.\n"
+        f"{Green}Usage:\n"
+        f"> MarsPlot -i 00000.atmos_daily.nc\n"
+        f"{Blue}Options: use --dump (variable content) and --stat "
+        f"(min, mean,max) jointly with --inspect{Green}\n"
+        f"> MarsPlot -i 00000.atmos_daily.nc -dump pfull 'temp[6,:,30,10]'\n"
+        f"{Blue}(quotes '' req. for browsing dimensions){Green}\n"
+        f"> MarsPlot -i 00000.atmos_daily.nc -stat 'ucomp[5,:,:,:]' "
+        f"'vcomp[5,:,:,:]'"
+        f"{NoColor}\n\n"
+    )
+)
 
-# These two options are to be used jointly with --inspect
-parser.add_argument('--dump', '-dump', nargs='+', default=None,
-                    help=argparse.SUPPRESS)
+parser.add_argument(
+    '--dump', '-dump', nargs='+', default=None,
+    help=argparse.SUPPRESS
+) # to be used jointly with --inspect
 
-parser.add_argument('--stat', '-stat', nargs='+', default=None,
-                    help=argparse.SUPPRESS)
+parser.add_argument(
+    '--stat', '-stat', nargs='+', default=None,
+    help=argparse.SUPPRESS
+) # to be used jointly with --inspect
 
-parser.add_argument('-d', '--date', nargs='+', default=None,
-                    help='Specify the files to use. Default is the last file created. \n'
-                    '> Usage: MarsPlot Custom.in -d 700     (one file) \n'
-                    '         MarsPlot Custom.in -d 350 700 (start file end file)')
+parser.add_argument(
+    '-d', '--date', nargs='+', default=None,
+    help=(
+        f"Specify the files to use. Default is the last file created.\n"
+        f"{Green}Usage:\n"
+        f"> Usage: MarsPlot Custom.in -d 700\n"
+        f"         MarsPlot Custom.in -d 350 700 (start end)"
+        f"{NoColor}\n\n"
+    )
+)
 
-parser.add_argument('--template', '-template', action='store_true',
-                    help="""Generate a template (Custom.in) for creating the plots.\n """
-                    """(Use '--temp' to create a Custom.in file without these instructions)\n""")
+parser.add_argument(
+    '--template', '-template', action='store_true',
+    help=(
+        f"Generate a template (Custom.in) for creating the plots.\n"
+        f"(Use '--temp' to create a Custom.in file without these "
+        f"instructions)\n\n"
+    )
+)
 
-parser.add_argument('-temp', '--temp', action='store_true',
-                    help=argparse.SUPPRESS)  # Creates a Custom.in template without the instructions
+parser.add_argument(
+    '-temp', '--temp', action='store_true',
+    help=argparse.SUPPRESS
+) # Creates a Custom.in template without the instructions
 
-parser.add_argument('-do', '--do', nargs=1, type=str, default=None,  # sys.stdin
-                    help='(Re)use a template file (e.g. my_custom.in). Searches in ~/amesCAP/mars_templates/ first, \n'
-                    'then in /u/mkahre/MCMC/analysis/working/shared_templates/ \n'
-                    '> Usage: MarsPlot -do my_custom [other options]')
+parser.add_argument(
+    '-do', '--do', nargs=1, type=str, default=None,  # sys.stdin
+    help=(
+        f"(Re)use a template file (e.g. my_custom.in). Searches in "
+        f"~/amesCAP/mars_templates/ first, then in "
+        f"/u/mkahre/MCMC/analysis/working/shared_templates/.\n"
+        f"{Green}Usage:\n"
+        f"> MarsPlot -do my_custom [other options]"
+        f"{NoColor}\n\n"
+    )
+)
 
-parser.add_argument('-sy', '--stack_year', action='store_true', default=False,
-                    help='Stack consecutive years in 1D time series plots (recommended). Otherwise plots in monotonically increasing format.\n'
-                    '> Usage: MarsPlot Custom.in -sy \n')
+parser.add_argument(
+    '-sy', '--stack_year', action='store_true', default=False,
+    help=(
+        f"Stack consecutive years in 1D time series plots (recommended). "
+        f"Otherwise, plot in monotonically increasing format.\n"
+        f"{Green}Usage:\n"
+        f"> MarsPlot Custom.in -sy"
+        f"{NoColor}\n\n"
+    )
+)
 
 parser.add_argument("-o", "--output", default="pdf",
-                    choices=['pdf', 'eps', 'png'],
-                    help='Output file format.\n'
-                    'Default is PDF if ghostscript (gs) is available and PNG otherwise\n'
-                    '> Usage: MarsPlot Custom.in -o png \n'
-                    '       : MarsPlot Custom.in -o png -pw 500 (set pixel width to 500, default is 2000)\n')
+    choices=['pdf', 'eps', 'png'],
+    help=(
+        f"Output file format.\n"
+        f"Default is PDF if ghostscript (gs) is available, else PNG.\n"
+        f"{Green}Usage:\n"
+        f"> MarsPlot Custom.in -o png\n"
+        f"> MarsPlot Custom.in -o png -pw 500 "
+        f"  {Blue}(sets pixel width to 500, default is 2000)"
+        f"{NoColor}\n\n"
+    )
+)
 
-parser.add_argument('-vert', '--vertical', action='store_true', default=False,
-                    help='Output figures in portrain instead of landscape format. \n')
+parser.add_argument(
+    '-vert', '--vertical', action='store_true', default=False,
+    help=(
+        f"Output figures in portrain instead of landscape format.\n\n"
+    )
+)
 
 parser.add_argument("-pw", "--pwidth", default=2000, type=float,
-                    help=argparse.SUPPRESS)
+    help=argparse.SUPPRESS
+)
 
-parser.add_argument('-dir', '--directory', default=os.getcwd(),
-                    help='Target directory if input files are not in current directory. \n'
-                    '> Usage: MarsPlot Custom.in [other options] -dir /u/akling/FV3/verona/c192L28_dliftA/history')
+parser.add_argument(
+    '-dir', '--directory', default=os.getcwd(),
+    help=(
+        f"Target directory if input files are not in current directory.\n"
+        f"{Green}Usage:\n"
+        f"> MarsPlot Custom.in [other options] -dir /u/akling/FV3/"
+        f"verona/c192L28_dliftA/history"
+        f"{NoColor}\n\n"
+    )
+)
 
-
-parser.add_argument('--debug',  action='store_true',
-                    help='Debug flag: do not bypass errors')
+parser.add_argument(
+    '--debug',  action='store_true',
+    help=(
+        f"Debug flag: do not bypass errors.\n\n"
+    )
+)
 
 # ======================================================
 #                  MAIN PROGRAM
@@ -1696,12 +1778,12 @@ def progress(k, Nmax, txt='', success=True):
     barLength = 10
     block = int(round(barLength*progress))
     bar = "[{0}]".format("#"*block + "-"*(barLength-block))
-    # bar = "Running... [\033[96m{0}\033[00m]".format( "#"*block + "-"*(barLength-block))  # add color
+    # bar = "Running... [{Cyan}{0}{NoColor}]".format( "#"*block + "-"*(barLength-block))  # add color
     if success == True:
         # status="%i %% (%s)"%(100*progress,txt) # No color
-        status = "%3i %% \033[92m(%s)\033[00m" % (100*progress, txt)  # Green
+        status = "%3i %% \033[92m(%s){NoColor}" % (100*progress, txt)  # Green
     elif success == False:
-        status = "%3i %% \033[91m(%s)\033[00m" % (100*progress, txt)  # Red
+        status = "%3i %% \033[91m(%s){NoColor}" % (100*progress, txt)  # Red
     elif success == None:
         status = "%3i %% (%s)" % (100*progress, txt)  # Red
     text = '\r'+bar+status+'\n'

@@ -15,7 +15,8 @@ List of Functions:
 """
 
 # make print statements appear in color
-from amescap.Script_utils import prRed, prCyan
+from amescap.Script_utils import (prYellow, prCyan, prRed, Blue, Yellow,
+                                 NoColor, Green)
 
 # load generic Python modules
 import argparse     # parse arguments
@@ -25,75 +26,101 @@ import numpy as np
 from netCDF4 import Dataset
 import matplotlib
 
+matplotlib.use('Agg') # Force matplotlib NOT load Xwindows backend
+
 # load amesCAP modules
-from amescap.FV3_utils import fms_press_calc, fms_Z_calc, vinterp, find_n
-from amescap.Script_utils import check_file_tape, section_content_amescap_profile, find_tod_in_diurn, filter_vars, find_fixedfile, ak_bk_loader
+from amescap.FV3_utils import (fms_press_calc, fms_Z_calc, vinterp, 
+                               find_n)
+from amescap.Script_utils import (check_file_tape, 
+                                  section_content_amescap_profile, 
+                                  find_tod_in_diurn, filter_vars, 
+                                  find_fixedfile, ak_bk_loader)
 from amescap.Ncdf_wrapper import Ncdf
-
-# Attempt to import specific scientic modules that may or may not
-# be included in the default Python installation on NAS.
-try:
-    import matplotlib
-    matplotlib.use('Agg') # Force matplotlib NOT to use any Xwindows backend
-    import numpy as np
-    from netCDF4 import Dataset, MFDataset
-
-except ImportError as error_msg:
-    prYellow("Error while importing modules")
-    prYellow('You are using Python version '+str(sys.version_info[0:3]))
-    prYellow('Please source your virtual environment, e.g.:')
-    prCyan('    source envPython3.7/bin/activate.csh \n')
-    print("Error was: " + error_msg.message)
-    exit()
-except Exception as exception:
-    # Output unexpected Exceptions
-    print(exception, False)
-    print(exception.__class__.__name__ + ": " + exception.message)
-    exit()
 
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
 
 parser = argparse.ArgumentParser(
-    description="""\033[93m MarsInterp, pressure interpolation on fixed layers\n \033[00m""",
-    formatter_class=argparse.RawTextHelpFormatter)
+    description=(
+        f"{Yellow}MarsInterp, pressure interpolation on fixed "
+        f"layers.{NoColor}\n\n"
+    ),
+    formatter_class=argparse.RawTextHelpFormatter
+)
 
+parser.add_argument(
+    'input_file', nargs='+',  # sys.stdin
+    help=(
+        f"A netCDF file or list of netCDF files.\n\n"
+    )
+)
 
-parser.add_argument('input_file', nargs='+',  # sys.stdin
-                    help='***.nc file or list of ***.nc files')
+parser.add_argument(
+    '-t', '--type', type=str, default='pstd',
+    help=(
+        f"Interpolation type. Accepts 'pstd', 'zstd', or 'zagl'.\n"
+        f"{Green}Usage:\n"
+        f"> MarsInterp.py ****.atmos.average.nc\n"
+        f"> MarsInterp.py ****.atmos.average.nc -t zstd\n"
+        f"{NoColor}\n\n"
+    )
+)
 
-parser.add_argument('-t', '--type', type=str, default='pstd',
-                    help=""">  --type can be 'pstd', 'zstd' or 'zagl' [DEFAULT is pstd, 36 levels] \n"""
-                    """>  Usage: MarsInterp.py ****.atmos.average.nc \n"""
-                    """          MarsInterp.py ****.atmos.average.nc -t zstd \n""")
+parser.add_argument(
+    '-l', '--level', type=str, default=None,
+    help=(
+        f"Layer IDs as defined in ~/.amescap_profile. For first time use, "
+        f"copy ~/.amescap_profile to ~/amesCAP:\n"
+        f"{Cyan}cp ~/amesCAP/mars_templates/amescap_profile "
+        f"~/.amescap_profile\n"
+        f"{Green}Usage:\n"
+        f"> MarsInterp.py ****.atmos.average.nc -t pstd -l p44\n"
+        f"> MarsInterp.py ****.atmos.average.nc -t zstd -l phalf_mb\n"
+        f"{NoColor}\n\n"
+    )
+)
 
+parser.add_argument(
+    '-include', '--include', nargs='+',
+    help=(
+        f"Only include the listed variables. Dimensions and 1D variables are "
+        f"always included.\n"
+        f"{Green}Usage:\n"
+        f"> MarsInterp.py *.atmos_daily.nc --include ps ts temp\n"
+        f"{NoColor}\n\n"
+    )
+)
 
-parser.add_argument('-l', '--level', type=str, default=None,
-                    help=""">  Layer IDs as defined in the ~/.amescap_profile hidden file. \n"""
-                    """(For first time use, copy ~/.amescap_profile to ~/amesCAP, e.g.: \n"""
-                    """\033[96mcp ~/amesCAP/mars_templates/amescap_profile ~/.amescap_profile\033[00m) \n"""
-                    """>  Usage: MarsInterp.py ****.atmos.average.nc -t pstd -l p44 \n"""
-                    """          MarsInterp.py ****.atmos.average.nc -t zstd -l phalf_mb \n""")
+parser.add_argument(
+    '-e', '--ext', type=str, default=None,
+    help=(
+        f"Append an extension (_ext.nc) to the output file instead of "
+        f"replacing the existing file.\n"
+        f"{Green}Usage:\n"
+        f"> MarsInterp.py ****.atmos.average.nc -ext B\n"
+        f"  {Blue}Produces ****.atmos.average_pstd_B.nc.\n"
+        f"{NoColor}\n\n"
+    )
+)
 
+parser.add_argument(
+    '-g', '--grid', action='store_true',
+    help=(
+        f"Output current grid information to standard output. This will not "
+        f"run the interpolation.\n"
+        f"{Green}Usage:\n"
+        f"> MarsInterp.py ****.atmos.average.nc -t pstd -l p44 -g\n"
+        f"{NoColor}\n\n"
+    )
+)
 
-parser.add_argument('-include', '--include', nargs='+',
-                    help="""Only include the listed variables. Dimensions and 1D variables are always included. \n"""
-                    """> Usage: MarsInterp.py *.atmos_daily.nc --include ps ts temp \n"""
-                         """\033[00m""")
-
-parser.add_argument('-e', '--ext', type=str, default=None,
-                    help="""> Append an extension (_ext.nc) to the output file instead of replacing the existing file. \n"""
-                    """>  Usage: MarsInterp.py ****.atmos.average.nc -ext B \n"""
-                    """   This will produce ****.atmos.average_pstd_B.nc files \n""")
-
-parser.add_argument('-g', '--grid', action='store_true',
-                    help="""> Output current grid information to standard output. This will not run the interpolation. """
-                    """>  Usage: MarsInterp.py ****.atmos.average.nc -t pstd -l p44 -g \n""")
-
-parser.add_argument('--debug',  action='store_true',
-                    help='Debug flag: release the exceptions.')
-
+parser.add_argument(
+    '--debug',  action='store_true',
+    help=(
+        f"Debug flag: do not bypass errors.\n\n"
+    )
+)
 
 # ======================================================
 #                  DEFINITIONS

@@ -22,7 +22,8 @@ List of Functions:
 """
 
 # make print statements appear in color
-from amescap.Script_utils import prCyan, Yellow, NoColor, Green
+from amescap.Script_utils import (prYellow, prCyan, prRed, Blue, Yellow,
+                                 NoColor, Green)
 
 # load generic Python modules
 import argparse      # parse arguments
@@ -82,7 +83,9 @@ parser.add_argument(
 # )
 
 parser.add_argument('--debug', action='store_true',
-    help = (f"Debug flag: release the exceptions.\n\n")
+    help = (
+        f"Debug flag: do not bypass errors.\n\n"
+    )
 )
 
 
@@ -136,6 +139,9 @@ def marswrf_to_mgcm(DS):
         The dataset created by xarray when it opens the user-supplied
         input file.
 
+    Raises
+    ------
+    
     Returns
     -------
     var_dict : dictionary
@@ -276,6 +282,9 @@ def openmars_to_mgcm(DS):
         The dataset created by xarray when it opens the user-supplied
         input file.
 
+    Raises
+    ------
+    
     Returns
     -------
     var_dict : dictionary

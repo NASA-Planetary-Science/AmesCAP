@@ -19,8 +19,8 @@ List of Functions:
 """
 
 # make print statements appear in color
-from amescap.Script_utils import (prYellow, prCyan, Cyan, Yellow, 
-                                  NoColor, Green)
+from amescap.Script_utils import (prYellow, prCyan, prRed, Blue, Yellow,
+                                 NoColor, Green)
 
 # load generic Python modules
 import sys          # system commands
@@ -37,7 +37,8 @@ import requests     # download data from site
 parser = argparse.ArgumentParser(
     description=(
         f"{Yellow}Uility for querying files on the MCMC NAS Data "
-        f"Portal.{NoColor}"
+        f"Portal."
+        f"{NoColor}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
@@ -54,7 +55,6 @@ parser.add_argument(
         f"{Green}Usage:\n"
         f"> MarsPull.py -id  INERTCLDS..."
         f"{NoColor}\n\n"
-        
     )
 )
 
@@ -83,7 +83,7 @@ parser.add_argument(
 
 parser.add_argument('--debug', action='store_true',
     help = (
-        f"Debug flag: release the exceptions.\n\n"
+        f"Debug flag: do not bypass errors.\n\n"
     )
 )
 
@@ -137,18 +137,18 @@ def download(file_name, simulation_id):
     Downloads a file from the MCMC Legacy GCM directory on the NAS Data
     Portal (data.nas.nasa.gov).
 
-    This function specifies the file to download by appending to the
-    URL the subdirectory, indicated by the user-specified
-    simulation identifier [-id --id], and the name of the file. The
-    file name is either provided by the user directly using
-    [-f --filename] or determined based on the user-specified solar
-    longitude [-ls --ls].
+    This function specifies the file to download by appending to the \
+    URL to the subdirectory, indicated by the user-specified \
+    simulation identifier [-id --id], and the name of the file. The \
+    file name is either provided by the user directly using \
+    [-f --filename] or determined based on the user-specified solar \
+        longitude [-ls --ls].
 
     Parameters
     ----------
     simulation_id : str
-        The simulation identifier, i.e., the name of the directory \
-        to query from: https://data.nas.nasa.gov/mcmc/data_legacygcm.php
+        The simulation identifier, i.e., the name of the directory to \
+        query from: https://data.nas.nasa.gov/mcmc/data_legacygcm.php
 
     file_name : str
         The name of the file to download.
@@ -159,8 +159,7 @@ def download(file_name, simulation_id):
 
     Returns
     -------
-    The requested file(s), downloaded and saved to the current \
-    directory.
+    The requested file(s), downloaded & saved to the current directory.
     """
 
     baseURL = ("https://data.nas.nasa.gov/legacygcm/"

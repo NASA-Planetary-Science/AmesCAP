@@ -15,314 +15,525 @@ List of Functions:
 """
 
 # make print statements appear in color
-from amescap.Script_utils import prRed, prCyan, prYellow
+from amescap.Script_utils import (prYellow, prCyan, prRed, Blue, Yellow,
+                                 NoColor, Green, Cyan)
 
 # load generic Python modules
 import argparse     # parse arguments
 import os           # access operating system functions
-import subprocess   # run command-line command
+import subprocess   # run command-line commands
 import sys          # system commands
 import warnings     # suppress errors triggered by NaNs
 import matplotlib
 import numpy as np
-from netCDF4 import Dataset, MFDataset
+from netCDF4 import Dataset
+
+matplotlib.use('Agg')   # Force matplotlib NOT to load Xwindows backend
 
 # load amesCAP modules
-from amescap.FV3_utils import fms_press_calc, fms_Z_calc, dvar_dh, cart_to_azimut_TR
-from amescap.FV3_utils import mass_stream, zonal_detrend, spherical_div, spherical_curl, frontogenesis
-from amescap.Script_utils import check_file_tape, print_fileContent
-from amescap.Script_utils import FV3_file_type, filter_vars, find_fixedfile, get_longname_units, ak_bk_loader
+from amescap.FV3_utils import (fms_press_calc, fms_Z_calc, dvar_dh, 
+                               cart_to_azimut_TR)
+from amescap.FV3_utils import (mass_stream, zonal_detrend, 
+                               spherical_div, spherical_curl, 
+                               frontogenesis)
+from amescap.Script_utils import (check_file_tape, print_fileContent)
+from amescap.Script_utils import (FV3_file_type, filter_vars, 
+                                  get_longname_units, ak_bk_loader)
 from amescap.Ncdf_wrapper import Ncdf
-
-matplotlib.use('Agg')   # Force matplotlib NOT to load an 
-                        # Xwindows backend
 
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
 
 parser = argparse.ArgumentParser(
-    description="""\033[93m MarsVars, variable manager. Add to or remove variables from the diagnostic files. \n'
-                                             Use MarsFiles ****.atmos.average.nc to view file content. \033[00m""",
-    formatter_class=argparse.RawTextHelpFormatter)
+    description=(
+        f"{Yellow} MarsVars, variable manager. Add to or remove "
+        f"variables from the diagnostic files.\n"
+        f"Use MarsFiles.py ****.atmos.average.nc to view file content."
+        f"{NoColor}\n\n"
+    ),
+    formatter_class=argparse.RawTextHelpFormatter
+)
 
-parser.add_argument('input_file', nargs='+',  # sys.stdin
-                    help='***.nc file or list of ***.nc files ')
+parser.add_argument(
+    'input_file', nargs='+',
+    help=(
+        f"A netCDF file or list of netCDF files.\n\n"
+    )
+)
 
-parser.add_argument('-add', '--add', nargs='+', default=[],
-                    help='Add a new variable to file. Variables that can be added are listed below. \n'
-                    '> Usage: MarsVars ****.atmos.average.nc -add varname \n'
-                    '\033[96mON NATIVE FILES: \n'
-                    'rho              (Density)                         Req. [ps, temp] \n'
-                    'theta            (Potential Temperature)           Req. [ps, temp] \n'
-                    'pfull3D          (Pressure at layer midpoint)      Req. [ps, temp] \n'
-                    'DP               (Layer thickness [pressure])      Req. [ps, temp] \n'
-                    'DZ               (layer thickness [altitude])      Req. [ps, temp] \n'
-                    'zfull            (Altitude AGL)                    Req. [ps, temp] \n'
-                    'w                (Vertical Wind)                   Req. [ps, temp, omega] \n'
-                    'wdir             (Horiz. Wind Direction)           Req. [ucomp, vcomp] \n'
-                    'wspeed           (Horiz. Wind Magnitude)           Req. [ucomp, vcomp] \n'
-                    'N                (Brunt Vaisala Frequency)         Req. [ps, temp] \n'
-                    'Ri               (Richardson Number)               Req. [ps, temp] \n'
-                    'Tco2             (CO2 Condensation Temperature)    Req. [ps, temp] \n'
-                    'scorer_wl        (Scorer Horiz. Wavelength)        Req. [ps, temp, ucomp] \n'
-                    'div              (Divergence of Wind)              Req. [ucomp, vcomp] \n'
-                    'curl             (Relative Vorticity)              Req. [ucomp, vcomp] \n'
-                    'fn               (Frontogenesis)                   Req. [ucomp, vcomp, theta] \n'
-                    'dzTau            (Dust Extinction Rate)            Req. [dst_mass_micro, temp] \n'
-                    'izTau            (Ice Extinction Rate)             Req. [ice_mass_micro, temp] \n'
-                    'dst_mass_micro   (Dust Mass Mixing Ratio)          Req. [dzTau, temp] \n'
-                    'ice_mass_micro   (Ice Mass Mixing Ratio)           Req. [izTau, temp] \n'
-                    'Vg_sed           (Sedimentation Rate)              Req. [dst_mass_micro, dst_num_micro, temp] \n'
-                    'w_net            (Net Vertical Wind (w-Vg_sed))    Req. [w, Vg_sed] \n'
-                    ' \n\nNOTE:                    \n'
-                    '   MarsVars offers some support on interpolated files. Particularly if pfull3D \n'
-                    '              and zfull are added to the file before interpolation. \n'
-                    '\033[00m \n'
-                    '\033[93mON INTERPOLATED FILES (i.e. _pstd, _zstd, _zagl): \n'
-                    'msf              (Mass Stream Function)              Req. [vcomp] \n'
-                    'ep               (Wave Potential Energy)             Req. [temp] \n'
-                    'ek               (Wave Kinetic Energy)               Req. [ucomp, vcomp] \n'
-                    'mx               (Vertical Flux of Zonal Momentum)   Req. [ucomp, w] \n'
-                    'my               (Vertical Flux of Merid. Momentum)  Req. [vcomp, w] \n'
-                    'ax               (Zonal Wave-Mean Flow Forcing)      Req. [ucomp, w, rho] \n'
-                    'ay               (Merid. Wave-Mean Flow Forcing)     Req. [vcomp, w, rho] \n'
-                    'tp_t             (Normalized Temp. Perturbation)     Req. [temp] \n'
-                    '\033[00m')
+parser.add_argument(
+    '-add', '--add', nargs='+', default=[],
+    help=(
+        f"Add a new variable to file. Variables that can be added are "
+        f"listed below.\n"
+        f"{Green}Usage:\n"
+        f"> MarsVars ****.atmos.average.nc -add varname\n"
+        f"{Cyan}ON NATIVE FILES:\n"
+        f"{Yellow}varname          (full variable name)             "
+        f"[required variables]{Cyan}\n"
+        f"rho            (Density)                       [ps, temp]\n"
+        f"theta          (Potential Temperature)         [ps, temp]\n"
+        f"pfull3D        (Pressure at layer midpoint)    [ps, temp]\n"
+        f"DP             (Layer thickness [pressure])    [ps, temp]\n"
+        f"DZ             (layer thickness [altitude])    [ps, temp]\n"
+        f"zfull          (Altitude AGL)                  [ps, temp]\n"
+        f"w              (Vertical Wind)                 [ps, temp, omega]\n"
+        f"wdir           (Horiz. Wind Direction)         [ucomp, vcomp]\n"
+        f"wspeed         (Horiz. Wind Magnitude)         [ucomp, vcomp]\n"
+        f"N              (Brunt Vaisala Frequency)       [ps, temp]\n"
+        f"Ri             (Richardson Number)             [ps, temp]\n"
+        f"Tco2           (CO2 Condensation Temperature)  [ps, temp]\n"
+        f"scorer_wl      (Scorer Horiz. Wavelength)      [ps, temp, ucomp]\n"
+        f"div            (Divergence of Wind)            [ucomp, vcomp]\n"
+        f"curl           (Relative Vorticity)            [ucomp, vcomp]\n"
+        f"fn             (Frontogenesis)                 "
+        f"[ucomp, vcomp, theta]\n"
+        f"dzTau          (Dust Extinction Rate)          "
+        f"[dst_mass_micro, temp]\n"
+        f"izTau          (Ice Extinction Rate)           [ice_mass_micro, temp]\n"
+        f"dst_mass_micro (Dust Mass Mixing Ratio)        [dzTau, temp]\n"
+        f"ice_mass_micro (Ice Mass Mixing Ratio)         [izTau, temp]\n"
+        f"Vg_sed         (Sedimentation Rate)            "
+        f"[dst_mass_micro, dst_num_micro, temp]\n"
+        f"w_net          (Net Vertical Wind (w-Vg_sed))  [w, Vg_sed]\n\n"
+        f"{NoColor}NOTE:\n"
+        f"MarsVars offers some support on interpolated files, particularly "
+        f"if pfull3D and zfull are added to the file before interpolation.\n\n"
+        f"{Cyan}ON INTERPOLATED FILES (i.e. _pstd, _zstd, _zagl):\n"
+        f"{Yellow}varname          (full variable name)             "
+        f"[required variables]{Cyan}\n"
+        f"msf            (Mass Stream Function)          [vcomp]\n"
+        f"ep             (Wave Potential Energy)         [temp]\n"
+        f"ek             (Wave Kinetic Energy)           [ucomp, vcomp]\n"
+        f"mx             (Vert. Flux of Zonal Momentum)  [ucomp, w]\n"
+        f"my             (Vert. Flux of Merid. Momentum) [vcomp, w]\n"
+        f"ax             (Zonal Wave-Mean Flow Forcing)  [ucomp, w, rho]\n"
+        f"ay             (Merid. Wave-Mean Flow Forcing) [vcomp, w, rho]\n"
+        f"tp_t           (Normalized Temp. Perturbation) [temp]"
+        f"{NoColor}\n\n"
+    )
+)
 
+parser.add_argument(
+    '-zdiff', '--zdiff', nargs='+', default=[],
+    help=(
+        f"Differentiate a variable w.r.t. the Z axis. A new a variable "
+        f"d_dz_var in [Unit/m] will be added to the file.\n"
+        f"{Green}Usage:\n"
+        f"> MarsVars ****.atmos.average.nc -zdiff temp"
+        f"{NoColor}\n\n"
+    )
+)
 
-parser.add_argument('-zdiff', '--zdiff', nargs='+', default=[],
-                    help="""Differentiate a variable w.r.t. the Z axis \n"""
-                    """A new a variable d_dz_var in [Unit/m] will be added to the file. \n"""
-                    """> Usage: MarsVars ****.atmos.average.nc -zdiff temp \n"""
-                    """ \n""")
+parser.add_argument(
+    '-col', '--col', nargs='+', default=[],
+    help=(
+        f"Integrate a mixing ratio of a variable through the column.\n"
+        f"A new a variable var_col in [kg/m2] will be added to the "
+        f"file.\n"
+        f"{Green}Usage:\n"
+        f"> MarsVars ****.atmos.average.nc -col ice_mass"
+        f"{NoColor}\n\n"
+    )
+)
 
-parser.add_argument('-col', '--col', nargs='+', default=[],
-                    help="""Integrate a mixing ratio of a variable through the column. \n"""
-                    """A new a variable var_col in [kg/m2] will be added to the file. \n"""
-                    """> Usage: MarsVars ****.atmos.average.nc -col ice_mass \n"""
-                    """ \n""")
+parser.add_argument(
+    '-zd', '--zonal_detrend', nargs='+', default=[],
+    help=(
+        f"Detrend a variable by substracting its zonal mean value.\n"
+        f"A new a variable var_p (for prime) will be added to the "
+        f"file.\n"
+        f"{Green}Usage:\n"
+        f"> MarsVars ****.atmos.average.nc -zd ucomp"
+        f"{NoColor}\n\n"
+    )
+)
 
-parser.add_argument('-zd', '--zonal_detrend', nargs='+', default=[],
-                    help="""Detrend a variable by substracting its zonal mean value. \n"""
-                    """A new a variable var_p (for prime) will be added to the file. \n"""
-                    """> Usage: MarsVars ****.atmos.average.nc -zd ucomp \n"""
-                    """ \n""")
+parser.add_argument(
+    '-dp_to_dz', '--dp_to_dz', nargs='+', default=[],
+    help=(
+        f"Convert aerosol opacities [op/Pa] to [op/m] (-dp_to_dz) and "
+        f"[op/m] to [op/Pa] (-dp_to_dz)\n"
+        f"Requires [DP, DZ].\n"
+        f"A new a variable var_dp_to_dz will be added to the file.\n"
+        f"{Green}Usage:\n"
+        f"> MarsVars ****.atmos.average.nc -dp_to_dz opacity\n"
+        f"{NoColor}Use -dz_to_dp to convert from [op/m] to [op/Pa]\n\n"
+    )
+)
 
-parser.add_argument('-dp_to_dz', '--dp_to_dz', nargs='+', default=[],
-                    help="""Convert aerosol opacities [op/Pa] to [op/m] (-dp_to_dz) and [op/m] to [op/Pa] (-dp_to_dz) \n"""
-                    """Requires [DP, DZ]. \n"""
-                    """A new a variable var_dp_to_dz will be added to the file \n"""
-                    """> Usage: MarsVars ****.atmos.average.nc -dp_to_dz opacity \n"""
-                    """  Use -dz_to_dp to convert from [op/m] to [op/Pa]\n""")
+parser.add_argument(
+    '-dz_to_dp', '--dz_to_dp', nargs='+', default=[],
+    help=argparse.SUPPRESS
+)  # same as --hpf but without the instructions
 
-parser.add_argument('-dz_to_dp', '--dz_to_dp', nargs='+', default=[],
-                    help=argparse.SUPPRESS)  # same as --hpf but without the instructions
+parser.add_argument(
+    '-rm', '--remove', nargs='+', default=[],
+    help=(
+        f"Remove a variable from a file.\n"
+        f"{Green}Usage:\n"
+        f"> MarsVars ****.atmos.average.nc -rm rho theta"
+        f"{NoColor}\n\n"
+    )
+)
 
-parser.add_argument('-rm', '--remove', nargs='+', default=[],
-                    help='Remove a variable from a file. \n'
-                    '> Usage: MarsVars ****.atmos.average.nc -rm rho theta \n')
+parser.add_argument(
+    '-extract', '--extract', nargs='+', default=[],
+    help=(
+        f"Extract variable(s) to a new _extract.nc file.\n"
+        f"{Green}Usage:\n"
+        f"> MarsVars ****.atmos.average.nc -extract ps ts"
+        f"{NoColor}\n\n"
+    )
+)
 
-parser.add_argument('-extract', '--extract', nargs='+', default=[],
-                    help='Extract variable(s) to a new _extract.nc file. \n'
-                    '> Usage: MarsVars ****.atmos.average.nc -extract ps ts \n')
+parser.add_argument(
+    '-edit', '--edit', default=None,
+    help=(
+        f"Edit a variable 'name', 'longname', or 'unit', or scale its "
+        f"values.\n"
+        f"Use jointly with -rename -longname -unit or -multiply flags\n"
+        f"{Green}Usage:\n"
+        f"> MarsVars.py *.atmos_average.nc --edit temp -rename "
+        f"airtemp\n"
+        f"> MarsVars.py *.atmos_average.nc --edit ps -multiply 0.01 "
+        f"-longname 'new pressure' -unit 'mbar'"
+        f"{NoColor}\n\n"
+    )
+)
 
-parser.add_argument('-edit', '--edit', default=None,
-                    help="""Edit a variable 'name', 'longname', or 'unit', or scale its values. \n"""
-                    """> Use jointly with -rename -longname -unit or -multiply flags \n"""
-                    """> Usage: MarsVars.py *.atmos_average.nc --edit temp -rename airtemp \n"""
-                    """> Usage: MarsVars.py *.atmos_average.nc --edit ps -multiply 0.01 -longname 'new pressure' -unit 'mbar' \n"""
-                    """ \n""")
+parser.add_argument(
+    '-rename', '--rename', type=str, default=None,
+    help=argparse.SUPPRESS
+) # To be used jointly with --edit
 
-parser.add_argument('-rename', '--rename', type=str, default=None,
-                    help=argparse.SUPPRESS)                             # To be used jointly with --edit
+parser.add_argument(
+    '-longname', '--longname', type=str, default=None,
+    help=argparse.SUPPRESS
+) # To be used jointly with --edit
 
-parser.add_argument('-longname', '--longname', type=str, default=None,
-                    help=argparse.SUPPRESS)                             # To be used jointly with --edit
+parser.add_argument(
+    '-unit', '--unit', type=str, default=None,
+    help=argparse.SUPPRESS
+) # To be used jointly with --edit
 
-parser.add_argument('-unit', '--unit', type=str, default=None,
-                    help=argparse.SUPPRESS)                             # To be used jointly with --edit
+parser.add_argument(
+    '-multiply', '--multiply', type=float, default=None, 
+    help=argparse.SUPPRESS
+) # To be used jointly with --edit
 
-parser.add_argument('-multiply', '--multiply', type=float,
-                    default=None, help=argparse.SUPPRESS)               # To be used jointly with --edit
-
-parser.add_argument('--debug',  action='store_true',
-                    help='Debug flag: release the exception')
+parser.add_argument(
+    '--debug',  action='store_true',
+    help=(
+        f"Debug flag: do not bypass errors.\n\n"
+    )
+)
 
 # ======================================================
 #                  DEFINITIONS
 # ======================================================
 
 # a list of supported variables for [-add --add]
-VAR = {'rho':               ['density (postprocessed with CAP)', 'kg/m3'],
-       'theta':             ['potential temperature (postprocessed with CAP)', 'K'],
-       'w':                 ['vertical wind (postprocessed with CAP)', 'm/s'],
-       'pfull3D':           ['pressure at layer midpoint (postprocessed with CAP)', 'Pa'],
-       'DP':                ['layer thickness (pressure) (postprocessed with CAP)', 'Pa'],
-       'zfull':             ['altitude  AGL at layer midpoint (postprocessed with CAP)', 'm'],
-       'DZ':                ['layer thickness (altitude) (postprocessed with CAP)', 'm'],
-       'wdir':              ['wind direction (postprocessed with CAP)', 'deg'],
-       'wspeed':            ['wind speed (postprocessed with CAP)', 'm/s'],
-       'N':                 ['Brunt Vaisala frequency (postprocessed with CAP)', 'rad/s'],
-       'Ri':                ['Richardson number (postprocessed with CAP)', 'none'],
-       'Tco2':              ['CO2 condensation temerature (postprocessed with CAP)', 'K'],
-       'div':               ['divergence of the wind field (postprocessed with CAP)', 'Hz'],
-       'curl':              ['relative vorticity (postprocessed with CAP)', 'Hz'],
-       'scorer_wl':         ['Scorer horizontal wavelength [L=2.pi/sqrt(l**2)] (postprocessed with CAP)', 'm'],
-       'msf':               ['mass stream function (postprocessed with CAP)', '1.e8 x kg/s'],
-       'ep':                ['wave potential energy (postprocessed with CAP)', 'J/kg'],
-       'ek':                ['wave kinetic energy (postprocessed with CAP)', 'J/kg'],
-       'mx':                ['vertical flux of zonal momentum (postprocessed with CAP)', 'J/kg'],
-       'my':                ['vertical flux of merididional momentum(postprocessed with CAP)', 'J/kg'],
-       'ax':                ['zonal wave-mean flow forcing (postprocessed with CAP)', 'm/s/s'],
-       'ay':                ['meridional wave-mean flow forcing (postprocessed with CAP)', 'm/s/s'],
-       'tp_t':              ['normalized temperature perturbation (postprocessed with CAP)', 'None'],
-       'fn':                ['frontogenesis (postprocessed with CAP)', 'K m-1 s-1'],
-       'dzTau':             ['dust extinction rate (postprocessed with CAP)', 'km-1'],
-       'izTau':             ['ice extinction rate (postprocessed with CAP)', 'km-1'],
-       'dst_mass_micro':    ['dust mass mixing ratio (postprocessed with CAP)', 'kg/kg'],
-       'ice_mass_micro':    ['ice mass mixing ratio (postprocessed with CAP)', 'kg/kg'],
-       'Vg_sed':            ['sedimentation rate (postprocessed with CAP)', 'm/s'],
-       'w_net':             ['net vertical wind [w-Vg_sed] (postprocessed with CAP)', 'm/s'],
-       }
-# =====================================================================
-# =====================================================================
-# =====================================================================
-# TODO : If only one timestep, reshape from (lev, lat, lon) to (time, lev, lat, lon)
+cap_str = '(derived using CAP)'
+VAR = {
+    'rho':[f'Density {cap_str}', 'kg/m^3'],
+    'theta':[f'Potential temperature {cap_str}', 'K'],
+    'w':[f'Vertical wind {cap_str}', 'm/s'],
+    'pfull3D':[f'Pressure at layer midpoint {cap_str}', 'Pa'],
+    'DP':[f'Layer thickness (pressure) {cap_str}', 'Pa'],
+    'zfull':[f'Altitude AGL at layer midpoint {cap_str}', 'm'],
+    'DZ':[f'Layer thickness (altitude) {cap_str}', 'm'],
+    'wdir':[f'Wind direction {cap_str}', 'deg'],
+    'wspeed':[f'Wind speed {cap_str}', 'm/s'],
+    'N':[f'Brunt Vaisala frequency {cap_str}', 'rad/s'],
+    'Ri':[f'Richardson number {cap_str}', 'none'],
+    'Tco2':[f'CO2 condensation temerature {cap_str}', 'K'],
+    'div':[f'Divergence of the wind field {cap_str}', 'Hz'],
+    'curl':[f'Relative vorticity {cap_str}','Hz'],
+    'scorer_wl':[f'Scorer horizontal wavelength [L=2.pi/sqrt(l^2)] {cap_str}',
+                 'm'],
+    'msf':[f'Mass stream function {cap_str}','1.e8 x kg/s'],
+    'ep':[f'Wave potential energy {cap_str}','J/kg'],
+    'ek':[f'Wave kinetic energy {cap_str}','J/kg'],
+    'mx':[f'Vertical flux of zonal momentum {cap_str}','J/kg'],
+    'my':[f'Vertical flux of merididional momentum{cap_str}','J/kg'],
+    'ax':[f'Zonal wave-mean flow forcing {cap_str}', 'm/s^2'],
+    'ay':[f'Meridional wave-mean flow forcing {cap_str}', 'm/s^2'],
+    'tp_t':[f'Normalized temperature perturbation {cap_str}', 'None'],
+    'fn':[f'Frontogenesis {cap_str}', 'K/m/s'],
+    'dzTau':[f'Dust extinction rate {cap_str}', 'km-1'],
+    'izTau':[f'Ice extinction rate {cap_str}', 'km-1'],
+    'dst_mass_micro':[f'Dust mass mixing ratio {cap_str}', 'kg/kg'],
+    'ice_mass_micro':[f'Ice mass mixing ratio {cap_str}', 'kg/kg'],
+    'Vg_sed':[f'Sedimentation rate {cap_str}', 'm/s'],
+    'w_net':[f'Net vertical wind [w-Vg_sed] {cap_str}', 'm/s'],
+}
 
-# Fill values for NaN. Do not use np.NaN, will raise error when running runpinterp
+# =====================================================================
+# =====================================================================
+# =====================================================================
+# TODO : If only one timestep, reshape from 
+#       (lev, lat, lon) to (time, lev, lat, lon)
+
+# Fill values for NaN. np.NaN, raises errors when running runpinterp.
 fill_value = 0.
 
-# Define constants
-global rgas, psrf, Tpole, g, R, Rd, rho_air, rho_dst, rho_ice, Qext_dst, Qext_ice, n0, S0, T0,\
-    Cp, Na, amu, amu_co2, mass_co2, sigma, M_co2, N, C_dst, C_ice
+# define constants
+global rgas, psrf, Tpole, g, R, Rd, rho_air, rho_dst, rho_ice
+global Qext_dst, Qext_ice, n0, S0, T0, Cp, Na, amu, amu_co2, mass_co2
+global sigma, M_co2, N, C_dst, C_ice
 
-rgas        = 189.              # Cas cosntant for CO2                  J/(kg-K) (or m2/(s2 K))
-psrf        = 610.              # Mars Surface Pressure                 Pa (or kg/ms^2)
-Tpole       = 150.              # Polar Temperature                     K
-g           = 3.72              # Gravitational Constant for Mars       m/s2
-R           = 8.314             # Universal Gas Constant                J/(mol. K)
-Rd          = 192.0             # R for dry air on Mars                 J/(kg K)
-rho_air     = psrf/(rgas*Tpole) # Air Density                           kg/m3
-rho_dst     = 2500.             # Dust Particle Density                 kg/m3
-#rho_dst     = 3000              # Dust Particle Density                 kg/m3       Kleinbohl et al. 2009
-rho_ice     = 900               # Ice Particle Density                  kg/m3       Heavens et al. 2010
-Qext_dst    = 0.35              # Dust Extinction Efficiency (MCS)                  Kleinbohl et al. 2009
-Qext_ice    = 0.773             # ice Extinction Efficiency (MCS)                   Heavens et al. 2010
-Reff_dst    = 1.06              # Effective Dust Particle Radius        micron      Kleinbohl et al. 2009
-Reff_ice    = 1.41              # Effective Ice Particle Radius         micron      Heavens et al. 2010
-n0          = 1.37*1.e-5        # Sutherland's Law                      N-s/m2
-S0          = 222               # Sutherland's Law                      K
-T0          = 273.15            # Sutherland's Law                      K
-Cp          = 735.0             # J/K
-Na          = 6.022*1.e23       # Avogadro's Number                     per mol
-Kb          = R/Na              # Boltzmann Constant                    (m2 kg)/(s2 K)
-amu         = 1.66054*1.e-27    # Atomic Mass Unit                      kg/amu
-amu_co2     = 44.0              # Molecular Mass of CO2                 amu
-mass_co2    = amu_co2*amu       # Mass of 1 CO2 Particle                kg
-sigma       = 0.63676           # Gives Effective Variance = 0.5 (Dust)
-M_co2       = 0.044             # Molar Mass of CO2                     kg/mol
-N           = 0.01              # For the wave potential energy calc    rad/s
+rgas = 189.             # Gas const. CO2 [J/kg/K or m^2/s^2/K]
+psrf = 610.             # Mars surface pressure [Pa or kg/m/s^2]
+Tpole = 150.            # Polar temperature [K]
+g = 3.72                # Gravitational constant for Mars [m/s^2]
+R = 8.314               # Universal gas constant [J/mol/K]
+Rd = 192.0              # R for dry air on Mars [J/kg/K]
+rho_air = psrf/(rgas*Tpole)     # Air density [kg/m^3]
+rho_dst = 2500.         # Dust particle density [kg/m^3]
+#rho_dst = 3000          # Dust particle density [kg/m^3]
+#                        #   (Kleinbohl et al. 2009)
+rho_ice = 900           # Ice particle density [kg/m^3]
+                        #   (Heavens et al. 2010)
+Qext_dst = 0.35         # Dust extinction efficiency (MCS)
+                        #   (Kleinbohl et al. 2009)
+Qext_ice = 0.773        # ice extinction efficiency (MCS)
+                        #   (Heavens et al. 2010)
+Reff_dst = 1.06         # Effective dust particle radius [micron]
+                        #   (Kleinbohl et al. 2009)
+Reff_ice = 1.41         # Effective ice particle radius [micron]
+                        #   (Heavens et al. 2010)
+n0 = 1.37*1.e-5         # Sutherland's law [N-s/m^2]
+S0 = 222                # Sutherland's law [K]
+T0 = 273.15             # Sutherland's law [K]
+Cp = 735.0              # [J/K]
+Na = 6.022*1.e23        # Avogadro's number [per mol]
+Kb = R/Na               # Boltzmann constant [m^2*kg/s^2/K]
+amu = 1.66054*1.e-27    # Atomic mass Unit [kg/amu]
+amu_co2 = 44.0          # Molecular mass of CO2 [amu]
+mass_co2 = amu_co2*amu  # Mass of 1 CO2 particle [kg]
+sigma = 0.63676         # Gives effective variance = 0.5 (Dust)
+M_co2 = 0.044           # Molar mass of CO2 [kg/mol]
+N = 0.01                # For wave potential energy calc. [rad/s]
 
-C_dst       = (4/3)*(rho_dst/Qext_dst)*Reff_dst     # 12114.286         m-2
-C_ice       = (4/3)*(rho_ice/Qext_ice)*Reff_ice     # 2188.874          m-2
-
+# For mmr <-> extinction rate calculations:
+C_dst = (4/3) * (rho_dst/Qext_dst) * Reff_dst   # = 12114.286 [m-2]
+C_ice = (4/3) * (rho_ice/Qext_ice) * Reff_ice   # = 2188.874 [m-2]
 
 # ===========================
 def compute_p_3D(ps, ak, bk, shape_out):
     """
-    Return the 3D pressure field at the layer midpoint.
-    *** NOTE***
-    The shape_out argument ensures that when time = 1 (one timestep), results are returned
-    as (1, lev, lat, lon) not (lev, lat, lon)
+    Compute the 3D pressure at layer midpoints.
+
+    Parameters
+    ----------
+    ps : array
+        Surface pressure [time, lat, lon] (Pa)
+    ak : array
+        Vertical coordinate pressure value [phalf] (Pa)
+    bk : array
+        Vertical coordinate sigma value [phalf] (None)
+    shape_out : float
+        Determines how to handle the dimensions of p_3D.
+        If len(time) = 1 (one timestep), p_3D is returned as \
+        [1, lev, lat, lon] as opposed to [lev, lat, lon]
+
+    Raises
+    ------
+
+    Returns
+    -------
+    p_3D
+        The full 3D pressure array [time, lev, lat, lon] (Pa)
     """
     p_3D = fms_press_calc(ps, ak, bk, lev_type='full')
-    # p_3D [lev, tim, lat, lon] ->[tim, lev, lat, lon]
+    # Swap dimensions 0 and 1 (time and lev)
     p_3D = p_3D.transpose(lev_T)
     return p_3D.reshape(shape_out)
 
 # =====================================================================
 def compute_rho(p_3D, temp):
     """
-    Returns density in [kg/m3].
+    Compute density.
+
+    Parameters
+    ----------
+    p_3D : array
+        Pressure [time, lev, lat, lon] (Pa)
+    temp : array
+        Temperature [time, lev, lat, lon] (K)
+
+    Raises
+    ------
+
+    Returns
+    -------
+    Density
+        Density [time, lev, lat, lon] (kg/m^3)
     """
-    return p_3D/(rgas*temp)
+    return p_3D / (rgas*temp)
 
 # =====================================================================
 def compute_xzTau(q, temp, lev, const, f_type):
     """
-    Returns dust or ice extinction in [km-1].
-    Adapted from Heavens et al. 2011, observations by MCS (JGR).
+    Compute the dust or ice extinction rate.
+    Adapted from Heavens et al. (2011) observations from MCS (JGR).
+
+    Parameters
+    ----------
+    q : array
+        Dust or ice mass mixing ratio [time, lev, lat, lon] (ppm)
+    temp : array
+        Temperature [time, lev, lat, lon] (K)
+    lev : array
+        Vertical coordinate (e.g., pstd) [lev] (e.g., Pa)
+    const : float
+        Dust or ice constant
+    f_type : str
+        The FV3 file type: diurn, daily, or average
+
+    Raises
+    ------
+
+    Returns
+    -------
+    xzTau
+        Dust or ice extinction rate [time, lev, lat, lon] (km-1)
     """
     if f_type == 'diurn':
-        PT = np.repeat(
-            lev, (q.shape[0] * q.shape[1] * q.shape[3] * q.shape[4]))
-        PT = np.reshape(
-            PT, (q.shape[2],  q.shape[0],  q.shape[1],  q.shape[3],   q.shape[4]))
+        PT = np.repeat(lev, (q.shape[0]*q.shape[1]*q.shape[3]*q.shape[4]))
+        PT = np.reshape(PT,
+                        (q.shape[2], q.shape[0], q.shape[1], q.shape[3], 
+                         q.shape[4])
+                    )
         # (lev, tim, tod, lat, lon) -> (tim, tod, lev, lat, lon)
         P = PT.transpose((1, 2, 0, 3, 4))
     else:
-        PT = np.repeat(lev, (q.shape[0] * q.shape[2] * q.shape[3]))
-        PT = np.reshape(
-            PT, (q.shape[1],  q.shape[0],  q.shape[2],  q.shape[3]))
-        # (lev, tim, lat, lon) -> (tim, lev, lat, lon)
+        PT = np.repeat(lev, (q.shape[0]*q.shape[2]*q.shape[3]))
+        PT = np.reshape(PT, (q.shape[1], q.shape[0], q.shape[2], q.shape[3]))
+        # Swap dimensions 0 and 1 (time and lev)
         P = PT.transpose(lev_T)
 
-    rho_z = P/(Rd*temp)
-    # Converts Mass Mixing Ratio (q) from kg/kg -> ppm (mg/kg)
+    rho_z = P / (Rd*temp)
+    # Converts mass mixing ratio (q) from kg/kg -> ppm (mg/kg)
     # Converts extinction (xzTau) from m-1 -> km-1
-    xzTau = (rho_z*(q*1.e6)/const)*1000
+    xzTau = (rho_z * (q*1.e6) / const) * 1000
     return xzTau
 
 # =====================================================================
 def compute_mmr(xTau, temp, lev, const, f_type):
     """
-    Return dust or ice mixing ratio [kg/kg]
-    Adapted from Heavens et al. 2011. observations by MCS (JGR)
+    Compute the dust or ice mixing ratio.
+    Adapted from Heavens et al. (2011) observations from MCS (JGR).
+    
+    Parameters
+    ----------
+    xTau : array
+        Dust or ice extinction rate [time, lev, lat, lon] (km-1)
+    temp : array
+        Temperature [time, lev, lat, lon] (K)
+    lev : array
+        Vertical coordinate (e.g., pstd) [lev] (e.g., Pa)
+    const : float
+        Dust or ice constant
+    f_type : str
+        The FV3 file type: diurn, daily, or average
+
+    Raises
+    ------
+
+    Returns
+    -------
+    q
+        Dust or ice mass mixing ratio [time, lev, lat, lon] (ppm)
     """
     if f_type == 'diurn':
-        PT = np.repeat(
-            lev, (xTau.shape[0] * xTau.shape[1] * xTau.shape[3] * xTau.shape[4]))
-        PT = np.reshape(
-            PT, (xTau.shape[2],  xTau.shape[0],  xTau.shape[1],  xTau.shape[3],   xTau.shape[4]))
+        PT = np.repeat(lev,
+                       (xTau.shape[0]*xTau.shape[1]
+                        *xTau.shape[3]*xTau.shape[4])
+                    )
+        PT = np.reshape(PT,
+                        (xTau.shape[2], xTau.shape[0], xTau.shape[1],
+                         xTau.shape[3], xTau.shape[4])
+                    )
         # (lev, tim, tod, lat, lon) -> (tim, tod, lev, lat, lon)
         P = PT.transpose((1, 2, 0, 3, 4))
     else:
-        PT = np.repeat(lev, (xTau.shape[0] * xTau.shape[2] * xTau.shape[3]))
-        PT = np.reshape(
-            PT, (xTau.shape[1],  xTau.shape[0],  xTau.shape[2],  xTau.shape[3]))
-        # (lev, tim, lat, lon) -> (tim, lev, lat, lon)
+        PT = np.repeat(lev, (xTau.shape[0]*xTau.shape[2]*xTau.shape[3]))
+        PT = np.reshape(PT,
+                        (xTau.shape[1], xTau.shape[0], xTau.shape[2], 
+                         xTau.shape[3])
+                    )
+        # Swap dimensions 0 and 1 (time and lev)
         P = PT.transpose(lev_T)
 
-    rho_z = P/(Rd*temp)
+    rho_z = P / (Rd*temp)
     # Converts extinction (xzTau) from km-1 -> m-1
     # Converts mass mixing ratio (q) from ppm (kg/kg) -> mg/kg
-    q = (const*(xTau/1000)/rho_z)/1.e6
+    q = (const * (xTau/1000) / rho_z) / 1.e6
     return q
 
 # =====================================================================
 def compute_Vg_sed(xTau, nTau, temp):
     """
-    Returns the dust sedimentation rate.
+    Calculate the sedimentation rate of the dust.
+
+    Parameters
+    ----------
+    xTau : array
+        Dust or ice MASS mixing ratio [time, lev, lat, lon] (ppm)
+    nTau : array
+        Dust or ice NUMBER mixing ratio [time, lev, lat, lon] (None)
+    temp : array
+        Temperature [time, lev, lat, lon] (K)
+
+    Raises
+    ------
+
+    Returns
+    -------
+    Vg
+        Dust sedimentation rate [time, lev, lat, lon] (m/s)
     """
-    r0 = (((3.*xTau) / (4.*np.pi*rho_dst*nTau))
-          ** (1/3) * np.exp(-3*(sigma**2)/2))
-    Rp = r0*np.exp(3.5*sigma**2)
-    c = (2/9)*rho_dst*(Rp)**2*g
-    eta = n0*((temp/T0)**(3/2))*((T0+S0)/(temp+S0))
-    v = np.sqrt((3*Kb*temp)/mass_co2)
-    mfp = 2*eta/(rho_air*v)
-    Kn = mfp/Rp
-    alpha = 1.246+0.42*np.exp(-0.87/Kn)
-    Vg = c*(1+alpha*Kn)/eta
+    r0 = (
+        ((3.*xTau) / (4.*np.pi*rho_dst*nTau)) ** (1/3)
+        * np.exp(-3 * (sigma**2) / 2)
+    )
+    Rp = r0 * np.exp(3.5*sigma**2)
+    c = (2/9) * rho_dst * (Rp)**2 * g
+    eta = n0 * (
+        (temp/T0)**(3/2)) * ((T0+S0)/(temp+S0)
+    )
+    v = np.sqrt((3*Kb*temp) / mass_co2)
+    mfp = (2*eta) / (rho_air*v)
+    Kn = mfp / Rp
+    alpha = 1.246 + 0.42*np.exp(-0.87/Kn)
+    Vg = c*(1 + alpha*Kn)/eta
     return Vg
 
 # =====================================================================
 def compute_w_net(Vg, wvar):
     """
-    Returns the net vertical wind (subtracts the sedimentation rate (Vg_sed)
-    from the vertical wind (w))
-    w_net = w - Vg_sed
+    Computes the net vertical wind, which is the vertical wind (w) \
+    minus the sedimentation rate (Vg_sed):
+    
+        w_net = w - Vg_sed
+
+    Parameters
+    ----------
+    Vg : array
+        Dust sedimentation rate [time, lev, lat, lon] (m/s)
+    wvar : array
+        Vertical wind [time, lev, lat, lon] (m/s)
+
+    Raises
+    ------
+
+    Returns
+    -------
+    w_net
+        Net vertical wind speed [time, lev, lat, lon] (m/s)
     """
     w_net = np.subtract(wvar, Vg)
     return w_net
@@ -330,63 +541,140 @@ def compute_w_net(Vg, wvar):
 # =====================================================================
 def compute_theta(p_3D, ps, temp, f_type):
     """
-    Returns the potential temperature in [K].
-    """
-    theta_exp = R/(M_co2*Cp)
-    # Broadcast dimensions
-    ps_shape = ps.shape
-    if f_type == 'diurn':
-        # (time, tod, lat, lon) is transformed into (time, tod, 1, lat, lon)
-        ps_shape = [ps_shape[0], ps_shape[1], 1, ps_shape[2], ps_shape[3]]
-    else:
-        # (time, lat, lon) is transformed into (time, 1, lat, lon)
-        ps_shape = [ps_shape[0], 1, ps_shape[1], ps_shape[2]]
+    Compute the potential temperature.
 
-    return temp*(np.reshape(ps, ps_shape)/p_3D)**(theta_exp)
+    Parameters
+    ----------
+    p_3D : array
+        The full 3D pressure array [time, lev, lat, lon] (Pa)
+    ps : array
+        Surface pressure [time, lat, lon] (Pa)
+    temp : array
+        Temperature [time, lev, lat, lon] (K)
+    f_type : str
+        The FV3 file type: diurn, daily, or average
+
+    Raises
+    ------
+
+    Returns
+    -------
+    Potential temperature
+        [time, lev, lat, lon] (K)
+    """
+    theta_exp = R / (M_co2*Cp)
+    # Broadcast dimensions
+    if f_type == 'diurn':
+        # (time, tod, lat, lon) -> (time, tod, 1, lat, lon)
+        ps_shape = [ps.shape[0], ps.shape[1], 1, ps.shape[2], ps.shape[3]]
+    else:
+        # (time, lat, lon) -> (time, 1, lat, lon)
+        ps_shape = [ps.shape[0], 1, ps.shape[1], ps.shape[2]]
+
+    return temp * (np.reshape(ps, ps_shape)/p_3D) ** theta_exp
 
 # =====================================================================
 def compute_w(rho, omega):
-    return -omega/(rho*g)
+    """
+    Compute the vertical wind using the omega equation.
+    
+    Under hydrostatic balance, omega is proportional to the vertical
+    wind velocity (w):
+        omega = dp/dt = (dp/dz)(dz/dt) = (dp/dz)*w
+    Under hydrostatic equilibrium,
+        dp/dz = -rho*g
+    So omega can be calculated as:
+        omega = -rho * g * w
+
+    Parameters
+    ----------
+    rho : array
+        Atmospheric density [time, lev, lat, lon] (kg/m^3)
+    omega : array
+        Rate of change in pressure at layer midpoint [time, lev, lat, lon] (Pa/s)
+        
+    Raises
+    ------
+
+    Returns
+    -------
+    vertical wind
+        [time, lev, lat, lon] (m/s)
+    """
+    return -omega / (rho*g)
 
 # =====================================================================
 def compute_zfull(ps, ak, bk, temp):
     """
-    Returns the altitude of the layer midpoints AGL in [m].
+    Calculate the altitude of the layer midpoints above ground level.
+
+    Parameters
+    ----------
+    ps : array
+        Surface pressure [time, lat, lon] (Pa)
+    ak : array
+        Vertical coordinate pressure value [phalf] (Pa)
+    bk : array
+        Vertical coordinate sigma value [phalf] (None)
+    temp : array
+        Temperature [time, lev, lat, lon] (K)
+    
+    Raises
+    ------
+
+    Returns
+    -------
+    zfull
+        [time, lev, lat, lon] (m)
     """
-    dim_out = temp.shape
-    zfull = fms_Z_calc(ps, ak, bk, temp.transpose(
-        lev_T), topo=0., lev_type='full')  # (lev, time, tod, lat, lon)
-    # p_3D [lev, tim, lat, lon] -> [tim, lev, lat, lon]
-    # temp [tim, tod, lev, lat, lon, lev] -> [lev, time, tod,lat, lon]
+    zfull = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T),
+                       topo=0., lev_type='full')
+    
+    # Note: lev_T swaps dims 0 & 1, ensuring level is the first \
+    # dimension for the calculation
+    
     zfull = zfull.transpose(lev_T_out)
     return zfull
 
 # =====================================================================
 def compute_zhalf(ps, ak, bk, temp):
     """
-    Returns the altitude of the layer interfaces AGL in [m]
+    Calculate the altitude of the layer interfaces above ground level.
+
+    Parameters
+    ----------
+    ps : array
+        Surface pressure [time, lat, lon] (Pa)
+    ak : array
+        Vertical coordinate pressure value [phalf] (Pa)
+    bk : array
+        Vertical coordinate sigma value [phalf] (None)
+    temp : array
+        Temperature [time, lev, lat, lon] (K)
+
+    Raises
+    ------
+
+    Returns
+    -------
+    zhalf
+        [time, lev, lat, lon] (m)
     """
-    dim_out = temp.shape
-    # temp: [tim, lev, lat, lon, lev] ->[lev, time,  lat,  lon]
-    zhalf = fms_Z_calc(ps, ak, bk, temp.transpose(
-        lev_T), topo=0., lev_type='half')
-    # p_3D [lev+1, tim, lat, lon] ->[tim, lev+1, lat, lon]
+    zhalf = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T),
+                       topo=0., lev_type='half')
+    
+    # Note: lev_T swaps dims 0 & 1, ensuring level is the first \
+    # dimension for the calculation
+    
     zhalf = zhalf.transpose(lev_T_out)
     return zhalf
 
 # =====================================================================
 def compute_DZ_full_pstd(pstd, temp, ftype='average'):
     """
-    Returns the thickness of a layer (distance between two layers) from the
-    midpoint of the standard pressure levels ('pstd').
-
-    Args:
-        pstd:   1D array of standard pressure in [Pa]
-        temp:   3D array of temperature
-        ftype: 'daily', 'aveage', or 'diurn'
-    Returns:
-        DZ_full_pstd: 3D array of thicknesses
-
+    Calculate the thickness of a layer from the midpoint of the \
+    standard pressure levels ('pstd').
+    
     *** NOTE***
     In this context, 'pfull' = 'pstd' with the layer interfaces defined somewhere
     in between successive layers.
@@ -399,94 +687,273 @@ def compute_DZ_full_pstd(pstd, temp, ftype='average'):
     --- 1 ---            --------  pfull = pstd    v
     --- 0 --- SFC        ========  phalf
                         / / / /
+    
+    Parameters
+    ----------
+    pstd : array
+        Vertical coordinate (pstd) [lev] (Pa)
+    temp : array
+        Temperature [time, lev, lat, lon] (K)
+    f_type : str
+        The FV3 file type: diurn, daily, or average
+
+    Raises
+    ------
+
+    Returns
+    -------
+    DZ_full_pstd
+        Layer thicknesses [time, lev, lat, lon] (Pa)
     """
+    # Determine whether the lev dimension is located at i = 1 or i = 2
     if ftype == 'diurn':
         axis = 2
     else:
         axis = 1
 
+    # Make lev the first dimension, swapping it with time
     temp = np.swapaxes(temp, 0, axis)
 
-    # Create broadcasting array for 'pstd'
-    shape_out = temp.shape
-    reshape_shape = [1 for i in range(0, len(shape_out))]
-    reshape_shape[0] = len(pstd)  # e.g [28, 1, 1, 1]
-    pstd_b = pstd.reshape(reshape_shape)
+    # Create a new shape = [1, 1, 1, 1]
+    new_shape = [1 for i in range(0, len(temp.shape))]
+    # Make the first dimesion = the length of the lev dimension (pstd)
+    new_shape[0] = len(pstd)
+    # Reshape pstd according to new_shape
+    pstd_reshaped = pstd.reshape(new_shape)
 
+    # Compute thicknesses using avg. temperature of both layers
     DZ_full_pstd = np.zeros_like(temp)
+    DZ_full_pstd[0:-1, ...] = (
+        -rgas * 0.5 * (temp[1:, ...]+temp[0:-1, ...]) / g
+        * np.log(pstd_reshaped[1:, ...]/pstd_reshaped[0:-1, ...])
+    )
 
-    # Use the average temperature for both layers
-    DZ_full_pstd[0:-1, ...] = -rgas*0.5 * \
-        (temp[1:, ...]+temp[0:-1, ...])/g * \
-        np.log(pstd_b[1:, ...]/pstd_b[0:-1, ...])
-
-    # There is nothing to differentiate the last layer with, so copy over the value at N-1.
-    # Note that unless you fine-tune the standard pressure levels to match the model top,
-    # there is typically data missing in the last few layers. This is not a major issue.
-
+    # There is nothing to differentiate the last layer with, so copy \
+    # the second-to-last layer.
     DZ_full_pstd[-1, ...] = DZ_full_pstd[-2, ...]
+    
+    # Note that unless you fine-tune the standard pressure levels to \
+    # match the model top, data is usually missing in the last few \
+    # layers.
+    
     return np.swapaxes(DZ_full_pstd, 0, axis)
 
 # =====================================================================
 def compute_N(theta, zfull):
     """
-    Returns the Brunt Vaisala freqency in [rad/s].
+    Calculate the Brunt Vaisala freqency.
+    
+    Parameters
+    ----------
+    theta : float
+        Potential temperature [time, lev, lat, lon] (K)
+    zfull : array
+        Altitude above ground level at the layer midpoint \
+        [time, lev, lat, lon] (m)
+
+    Raises
+    ------
+
+    Returns
+    -------
+    N
+        Brunt Vaisala freqency [time, lev, lat, lon] [rad/s]
     """
-    dtheta_dz = dvar_dh(theta.transpose(
-        lev_T), zfull.transpose(lev_T)).transpose(lev_T)
-    return np.sqrt(g/theta*dtheta_dz)
+    # Differentiate theta w.r.t. zfull to obdain d(theta)/dz
+    dtheta_dz = dvar_dh(theta.transpose(lev_T),
+                        zfull.transpose(lev_T)).transpose(lev_T)
+    
+    # Note: lev_T swaps dims 0 & 1, ensuring level is the first \
+    # dimension for the differentiation
+    
+    # Calculate the Brunt Vaisala frequency
+    N = np.sqrt(g/theta * dtheta_dz)
+    
+    return N
 
 # =====================================================================
-def compute_Tco2(P_3D, temp):
+def compute_Tco2(P_3D):
     """
-    Returns the frost point of CO2 in [K].
-    Adapted from Fannale, 1982. Mars: The regolith-atmosphere cap system and climate change. Icarus.
-    """
-    return np.where(P_3D < 518000, -3167.8/(np.log(0.01*P_3D)-23.23), 684.2-92.3*np.log(P_3D)+4.32*np.log(P_3D)**2)
+    Calculate the frost point of CO2.
+    Adapted from Fannale (1982) - Mars: The regolith-atmosphere cap \
+    system and climate change. Icarus.
 
+    Parameters
+    ----------
+    P_3D : array
+        The full 3D pressure array [time, lev, lat, lon] (Pa)
+
+    Raises
+    ------
+
+    Returns
+    -------
+    CO2 frost point
+        CO2 frost point [K]
+    """
+    # Set some constants
+    B = -3167.8 # K
+    CO2_triple_pt_P = 518000 # Pa
+    
+    # Determine where the pressure < the CO2 triple point pressure
+    condition = (P_3D < CO2_triple_pt_P)
+    
+    # If P < triple point, calculate temperature
+    # modified vapor pressure curve equation
+    temp_where_true = B/(np.log(0.01*P_3D) - 23.23)
+    
+    # If P > triple point, calculate temperature
+    temp_where_false = 684.2 - 92.3*np.log(P_3D) + 4.32*np.log(P_3D)**2
+    
+    return np.where(condition, temp_where_true, temp_where_false)
+    
 # =====================================================================
 def compute_scorer(N, ucomp, zfull):
     """
-    Returns the Scorer wavelength in [m].
+    Calculate the Scorer wavelength.
+
+    Parameters
+    ----------
+    N : float
+        Brunt Vaisala freqency [time, lev, lat, lon] (rad/s)
+    ucomp : array
+        Zonal wind [time, lev, lat, lon] (m/s)
+    zfull: array
+        Altitude above ground level at the layer midpoint \
+        [time, lev, lat, lon] (m)
+
+    Raises
+    ------
+
+    Returns
+    -------
+    scorer_wl
+        Scorer horizontal wavelength [time, lev, lat, lon] (m)
     """
-    dudz = dvar_dh(ucomp.transpose(lev_T),
+    # Differentiate U w.r.t. zfull TWICE to obdain d^2U/dz^2
+    dUdz = dvar_dh(ucomp.transpose(lev_T),
                    zfull.transpose(lev_T)).transpose(lev_T)
-    dudz2 = dvar_dh(dudz.transpose(lev_T),
+    dUdz2 = dvar_dh(dUdz.transpose(lev_T),
                     zfull.transpose(lev_T)).transpose(lev_T)
-    scorer2 = N**2/ucomp**2 - 1./ucomp*dudz2
-    return 2*np.pi/np.sqrt(scorer2)
+    
+    # Note: lev_T swaps dims 0 & 1, ensuring level is the first \
+    # dimension for the differentiation
+    
+    # Compute the scorer parameter I^2(z) (m-1)
+    scorer_param = N**2/ucomp**2 - dUdz2/ucomp
+    
+    # Compute the wavelength
+    # I = sqrt(I^2) = wavenumber (k)
+    # wavelength (lambda) = 2pi/k
+    scorer_wl = 2*np.pi/np.sqrt(scorer_param)
+    
+    return scorer_wl
 
 # =====================================================================
 def compute_DP_3D(ps, ak, bk, shape_out):
     """
-    Returns the thickness of a layer in [Pa].
+    Calculate the thickness of a layer in pressure units.
+
+    Parameters
+    ----------
+    ps : array
+        Surface pressure [time, lat, lon] (Pa)
+    ak : array
+        Vertical coordinate pressure value [phalf] (Pa)
+    bk : array
+        Vertical coordinate sigma value [phalf] (None)
+    shape_out : float
+        Determines how to handle the dimensions of DP_3D.
+        If len(time) = 1 (one timestep), DP_3D is returned as \
+        [1, lev, lat, lon] as opposed to [lev, lat, lon]
+
+    Raises
+    ------
+
+    Returns
+    -------
+    DP
+        Layer thickness in pressure units [time, lev, lat, lon] (Pa)
     """
-    p_half3D = fms_press_calc(ps, ak, bk, lev_type='half')  # [lev, tim, lat, lon]
+    # Get the 3D pressure field from fms_press_calc
+    p_half3D = fms_press_calc(ps, ak, bk, lev_type='half')
+    # fms_press_calc will swap dimensions 0 and 1 so p_half3D has \
+    # dimensions = [lev, time, lat, lon]
+    
+    # Calculate the differences in pressure between each layer midpoint
     DP_3D = p_half3D[1:, ..., ] - p_half3D[0:-1, ...]
-    # p_3D [lev, tim, lat, lon] ->[tim, lev, lat, lon]
+    
+    # Swap dimensions 0 and 1, back to [time, lev, lat, lon]
     DP_3D = DP_3D.transpose(lev_T)
-    out = DP_3D.reshape(shape_out)
-    return out
+    
+    DP = DP_3D.reshape(shape_out)
+    return DP
 
 # =====================================================================
 def compute_DZ_3D(ps, ak, bk, temp, shape_out):
     """
-    Returns the layer thickness in [Pa].
+    Calculate the thickness of a layer in altitude units.
+
+    Parameters
+    ----------
+    ps : array
+        Surface pressure [time, lat, lon] (Pa)
+    ak : array
+        Vertical coordinate pressure value [phalf] (Pa)
+    bk : array
+        Vertical coordinate sigma value [phalf] (None)
+    shape_out : float
+        Determines how to handle the dimensions of DZ_3D.
+        If len(time) = 1 (one timestep), DZ_3D is returned as \
+        [1, lev, lat, lon] as opposed to [lev, lat, lon]
+
+    Raises
+    ------
+
+    Returns
+    -------
+    DZ
+        Layer thickness in altitude units [time, lev, lat, lon] (m)
     """
-    z_half3D = fms_Z_calc(ps, ak, bk, temp.transpose(
-        lev_T), topo=0., lev_type='half')
-    # Note the reversed order: Z decreases with increasing levels
+    
+    # Get the 3D altitude field from fms_Z_calc
+    z_half3D = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T), topo=0., 
+                          lev_type='half')
+    # fms_press_calc will swap dimensions 0 and 1 so p_half3D has \
+    # dimensions = [lev, time, lat, lon]
+    
+    # Calculate the differences in pressure between each layer midpoint
     DZ_3D = z_half3D[0:-1, ...]-z_half3D[1:, ..., ]
-    # DZ_3D [lev, tim, lat, lon] ->[tim, lev, lat, lon]
+    # Note the reversed order: Z decreases with increasing levels
+    
+    # Swap dimensions 0 and 1, back to [time, lev, lat, lon]
     DZ_3D = DZ_3D.transpose(lev_T)
-    out = DZ_3D.reshape(shape_out)
-    return out
+    
+    DZ = DZ_3D.reshape(shape_out)
+    
+    return DZ
 
 # =====================================================================
 def compute_Ep(temp):
     """
     Returns the wave potential energy (Ep) in [J/kg].
     Ep = 1/2 (g/N)**2 (T'/T)**2
+    """
+    """
+    Def.
+
+    Parameters
+    ----------
+    var : float
+        def
+
+    Raises
+    ------
+
+    Returns
+    -------
+    var
+        def
     """
     return 0.5*g**2*(zonal_detrend(temp)/(temp*N))**2
 
@@ -495,6 +962,22 @@ def compute_Ek(ucomp, vcomp):
     """
     Returns the wave kinetic energy (Ek) in [J/kg].
     Ek= 1/2 (u'**2+v'**2)
+    """
+    """
+    Def.
+
+    Parameters
+    ----------
+    var : float
+        def
+
+    Raises
+    ------
+
+    Returns
+    -------
+    var
+        def
     """
     return 0.5*(zonal_detrend(ucomp)**2+zonal_detrend(vcomp)**2)
 
@@ -515,9 +998,28 @@ def compute_WMFF(MF, rho, lev, interp_type):
     For 'pstd':
         [du/dz = (du/dp).(dp/dz)] > [du/dz = -rho g (du/dp)] with dp/dz = -rho g
     """
+    """
+    Def.
+
+    Parameters
+    ----------
+    var : float
+        def
+
+    Raises
+    ------
+
+    Returns
+    -------
+    var
+        def
+    """
     # Differentiate the variable
     darr_dz = dvar_dh((rho*MF).transpose(lev_T), lev).transpose(lev_T)
 
+    # Note: lev_T swaps dims 0 & 1, ensuring level is the first \
+    # dimension for the differentiation
+    
     if interp_type == 'pstd':
         # Computed du/dp, need to multiply by (-rho g) to obtain du/dz
         return g * darr_dz
@@ -773,8 +1275,11 @@ def main():
                             lev_T), zfull.transpose(lev_T)).transpose(lev_T)
                         OUT = N**2/(du_dz**2+dv_dz**2)
 
+                    # Note: lev_T swaps dims 0 & 1, ensuring level is \
+                    # the first dimension for the differentiation
+                    
                     if ivar == 'Tco2':
-                        OUT = compute_Tco2(p_3D, temp)
+                        OUT = compute_Tco2(p_3D)
 
                     if ivar == 'scorer_wl':
                         ucomp = fileNC.variables['ucomp'][:]
@@ -874,7 +1379,7 @@ def main():
                     var_Ncdf[:] = OUT
                     fileNC.close()
 
-                    print('%s: \033[92mDone\033[00m' % (ivar))
+                    print('%s: \033[92mDone{NoColor}' % (ivar))
 
                 except Exception as exception:
                     if debug:
@@ -903,7 +1408,7 @@ def main():
                 if f_type == 'diurn':
                     lev_T = [2, 1, 0, 3, 4]
                 else:  # [time, lat, lon]
-                    lev_T = [1, 0, 2, 3]  # [tim, lev, lat, lon]
+                    lev_T = [1, 0, 2, 3]  # [lev, time, lat, lon]
                 try:
                     var = fileNC.variables[idiff][:]
                     longname_txt, units_txt = get_longname_units(fileNC, idiff)
@@ -931,6 +1436,9 @@ def main():
                         # Differentiate the variable w.r.t. Z:
                         darr_dz = dvar_dh(var.transpose(
                             lev_T), zfull).transpose(lev_T)
+                        
+                        # Note: lev_T swaps dims 0 & 1, ensuring level \
+                        # is the first dimension for the differentiation
 
                     elif interp_type == 'pstd':
                         # If 'pstd', requires 'zfull'
@@ -949,6 +1457,9 @@ def main():
                         lev = fileNC.variables[interp_type][:]
                         darr_dz = dvar_dh(var.transpose(
                             lev_T), lev).transpose(lev_T)
+                        
+                    # Note: lev_T swaps dims 0 & 1, ensuring level is \
+                    # the first dimension for the differentiation
 
                     # Log the variable
                     var_Ncdf = fileNC.createVariable(
@@ -958,7 +1469,7 @@ def main():
                     var_Ncdf[:] = darr_dz
                     fileNC.close()
 
-                    print('%s: \033[92mDone\033[00m' % ('d_dz_'+idiff))
+                    print('%s: \033[92mDone{NoColor}' % ('d_dz_'+idiff))
                 except Exception as exception:
                     if debug:
                         raise
@@ -1001,7 +1512,7 @@ def main():
                     var_Ncdf[:] = zonal_detrend(var)
                     fileNC.close()
 
-                    print('%s: \033[92mDone\033[00m' % (izdetrend+'_p'))
+                    print('%s: \033[92mDone{NoColor}' % (izdetrend+'_p'))
                 except Exception as exception:
                     if debug:
                         raise
@@ -1042,7 +1553,7 @@ def main():
                         fileNC.variables['DZ'][:]
                     fileNC.close()
 
-                    print('%s: \033[92mDone\033[00m' % (idp_to_dz+'_dp_to_dz'))
+                    print('%s: \033[92mDone{NoColor}' % (idp_to_dz+'_dp_to_dz'))
                 except Exception as exception:
                     if debug:
                         raise
@@ -1080,7 +1591,7 @@ def main():
                         fileNC.variables['DP'][:]
                     fileNC.close()
 
-                    print('%s: \033[92mDone\033[00m' % (idz_to_dp+'_dz_to_dp'))
+                    print('%s: \033[92mDone{NoColor}' % (idz_to_dp+'_dz_to_dp'))
                 except Exception as exception:
                     if debug:
                         raise
@@ -1133,13 +1644,13 @@ def main():
                     # TODO edge cases where time = 1
                     if f_type == 'diurn':
                         # [time, tod, lat, lon]
-                        lev_T = [2, 1, 0, 3, 4]  # [time, tod, lev, lat, lon]
+                        lev_T = [2, 1, 0, 3, 4]  # [lev, tod, time, lat, lon]
                         dim_out = tuple(
                             [dim_in[0], dim_in[1], dim_in[3], dim_in[4]])
                         # In 'diurn', 'level' is the 3rd axis: (time, tod, lev, lat, lon)
                         lev_axis = 2
                     else:  # [time, lat, lon]
-                        lev_T = [1, 0, 2, 3]  # [time, lev, lat, lon]
+                        lev_T = [1, 0, 2, 3]  # [lev, time, lat, lon]
                         dim_out = tuple([dim_in[0], dim_in[2], dim_in[3]])
                         lev_axis = 1
 
@@ -1156,7 +1667,7 @@ def main():
 
                     fileNC.close()
 
-                    print('%s: \033[92mDone\033[00m' % (icol+'_col'))
+                    print('%s: \033[92mDone{NoColor}' % (icol+'_col'))
                 except Exception as exception:
                     if debug:
                         raise
