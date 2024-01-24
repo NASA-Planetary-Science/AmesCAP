@@ -29,33 +29,6 @@ Third-party Requirements:
     * os
     * subprocess
     * matplotlib
-
-List of Functions:
-    * compute_p_3D          Compute the 3D pressure at layer midpoints
-    * compute_rho           Compute density
-    * compute_xzTau         Compute the dust or ice extinction rate
-    * compute_mmr           Compute the dust or ice mixing ratio
-    * compute_Vg_sed        Calculate the sedimentation rate of the dust
-    * compute_w_net         Computes the net vertical wind
-    * compute_theta         Compute the potential temperature
-    * compute_w             Compute the vertical wind
-    * compute_zfull         Calculate the altitude of the layer 
-                            midpoints above ground level
-    * compute_zhalf         Calculate the altitude of the layer 
-                            interfaces above ground level
-    * compute_DZ_full_pstd  Calculate the thickness of a layer from the 
-                            midpoint of the standard pressure levels
-    * compute_N             Calculate the Brunt Vaisala freqency
-    * compute_Tco2          Calculate the frost point of CO2
-    * compute_scorer        Calculate the Scorer wavelength
-    * compute_DP_3D         Calculate the thickness of a layer in Pa
-    * compute_DZ_3D         Calculate the thickness of a layer in m
-    * compute_Ep            Calculate wave potential energy
-    * compute_Ek            Calculate wave kinetic energy
-    * compute_MF            Calculate zonal or meridional momentum 
-                            fluxes
-    * compute_WMFF          Calculate the zonal or meridional wave-mean 
-                            flow forcing
 """
 
 # make print statements appear in color
