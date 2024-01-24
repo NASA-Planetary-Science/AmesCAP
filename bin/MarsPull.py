@@ -10,8 +10,10 @@ The executable requires 2 arguments:
     * [-f --filename] the name(s) of the desired file(s).
 
 Third-party Requirements:
-    * numpy         * sys
-    * argparse      * os
+    * numpy
+    * sys
+    * argparse
+    * os
     * requests
 
 List of Functions:

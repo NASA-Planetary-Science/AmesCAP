@@ -6,9 +6,14 @@ The executable requires x arguments:
     * [-x --x]      define
 
 Third-party Requirements:
-    * numpy         * netCDF4       * sys
-    * argparse      * os            * warnings
-    * subprocess    * matplotlib
+    * numpy
+    * netCDF4
+    * sys
+    * argparse
+    * os
+    * warnings
+    * subprocess
+    * matplotlib
 
 List of Functions:
     * x

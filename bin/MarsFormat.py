@@ -15,7 +15,8 @@ and optionally accepts 2 arguments:
     * [-marswrf --marswrf]      convert MarsWRF data to MGCM format
 
 Third-party Requirements:
-    * numpy         * os
+    * numpy
+    * os
     * argparse
     * xarray
 

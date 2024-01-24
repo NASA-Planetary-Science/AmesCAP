@@ -23,9 +23,12 @@ and optionally accepts 2 arguments:
     * [-edit --edit]            Edit variable attributes or scale it
 
 Third-party Requirements:
-    * numpy         * netCDF4
-    * argparse      * os
-    * subprocess    * matplotlib
+    * numpy
+    * netCDF4
+    * argparse
+    * os
+    * subprocess
+    * matplotlib
 
 List of Functions:
     * compute_p_3D          Compute the 3D pressure at layer midpoints
@@ -377,28 +380,40 @@ C_ice = (4/3) * (rho_ice/Qext_ice) * Reff_ice   # = 2188.874 [m-2]
 def compute_p_3D(ps, ak, bk, shape_out):
     """
     Compute the 3D pressure at layer midpoints.
-
-    Parameters
-    ----------
-    ps : array
-        Surface pressure [time, lat, lon] (Pa)
-    ak : array
-        Vertical coordinate pressure value [phalf] (Pa)
-    bk : array
-        Vertical coordinate sigma value [phalf] (None)
-    shape_out : float
-        Determines how to handle the dimensions of p_3D.
-        If len(time) = 1 (one timestep), p_3D is returned as \
-        [1, lev, lat, lon] as opposed to [lev, lat, lon]
-
-    Raises
-    ------
-
-    Returns
-    -------
-    p_3D
-        The full 3D pressure array [time, lev, lat, lon] (Pa)
+    
+    :param ps: Surface pressure [time, lat, lon] (Pa)
+    :param ak: Vertical coordinate pressure value [phalf] (Pa)
+    :param bk: Vertical coordinate sigma value [phalf] (None)
+    :param shape_out: Determines how to handle the dimensions of p_3D. If len(time) = 1 (one timestep), p_3D is returned as [1, lev, lat, lon] as opposed to [lev, lat, lon]
+    :type ps: array
+    :type ak: array
+    :type bk: array
+    :type shape_out: float
+    :raise none: none
+    :return: p_3D: The full 3D pressure array [time, lev, lat, lon] (Pa)
+    :rtype: array
     """
+    # Parameters
+    # ----------
+    # ps : array
+    #     Surface pressure [time, lat, lon] (Pa)
+    # ak : array
+    #     Vertical coordinate pressure value [phalf] (Pa)
+    # bk : array
+    #     Vertical coordinate sigma value [phalf] (None)
+    # shape_out : float
+    #     Determines how to handle the dimensions of p_3D.
+    #     If len(time) = 1 (one timestep), p_3D is returned as \
+    #     [1, lev, lat, lon] as opposed to [lev, lat, lon]
+
+    # Raises
+    # ------
+
+    # Returns
+    # -------
+    # p_3D
+    #     The full 3D pressure array [time, lev, lat, lon] (Pa)
+    # """
     p_3D = fms_press_calc(ps, ak, bk, lev_type='full')
     # Swap dimensions 0 and 1 (time and lev)
     p_3D = p_3D.transpose(lev_T)
