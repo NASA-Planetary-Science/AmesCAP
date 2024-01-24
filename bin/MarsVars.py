@@ -105,10 +105,12 @@ parser.add_argument(
 parser.add_argument(
     '-add', '--add', nargs='+', default=[],
     help=(
-        f"TESTAdd a new variable to file. Variables that can be added are "
+        f"Add a new variable to file. Variables that can be added are "
         f"listed below.\n"
+        f" "
         f"{Green}Usage:\n"
         f"> MarsVars ****.atmos.average.nc -add varname\n"
+        f" "
         f"{Cyan}ON NATIVE FILES:\n"
         f"{Yellow}varname          full variable name"
         f"          [required variables]{Cyan}\n"
@@ -143,9 +145,10 @@ parser.add_argument(
         f"ice_mass_micro Ice Mass Mixing Ratio          [izTau, temp]\n"
         f"Vg_sed         Sedimentation Rate"
         f"             [dst_mass_micro, dst_num_micro, temp]\n"
-        f"w_net          Net Vertical Wind (w-Vg_sed)   [w, Vg_sed]\n\n"
-        f"{NoColor}NOTE: MarsVars offers some support on interpolated "
-        f"files, particularly if pfull3D and zfull are added to the "
+        f"w_net          Net Vertical Wind (w-Vg_sed)   [w, Vg_sed]\n"
+        f" "
+        f"{NoColor}NOTE: MarsVars offers some support on interpolated\n"
+        f"files, particularly if pfull3D and zfull are added to the\n"
         f"file before interpolation.\n\n"
         f"{Cyan}ON INTERPOLATED FILES (i.e. _pstd, _zstd, _zagl):\n"
         f"{Yellow}varname        full variable name"
@@ -168,7 +171,7 @@ parser.add_argument(
 parser.add_argument(
     '-zdiff', '--zdiff', nargs='+', default=[],
     help=(
-        f"Differentiate a variable w.r.t. the Z axis. A new a variable "
+        f"Differentiate a variable w.r.t. the Z axis. A new variable\n"
         f"d_dz_var in [Unit/m] will be added to the file.\n"
         f"{Green}Usage:\n"
         f"> MarsVars ****.atmos.average.nc -zdiff temp"
@@ -203,9 +206,8 @@ parser.add_argument(
 parser.add_argument(
     '-dp_to_dz', '--dp_to_dz', nargs='+', default=[],
     help=(
-        f"Convert aerosol opacities [op/Pa] to [op/m] (-dp_to_dz) and "
-        f"[op/m] to [op/Pa] (-dp_to_dz)\n"
-        f"Requires [DP, DZ].\n"
+        f"Convert aerosol opacities [op/Pa] to [op/m] (-dp_to_dz) and\n"
+        f"[op/m] to [op/Pa] (-dp_to_dz). Requires [DP, DZ].\n"
         f"A new a variable var_dp_to_dz will be added to the file.\n"
         f"{Green}Usage:\n"
         f"> MarsVars ****.atmos.average.nc -dp_to_dz opacity\n"
@@ -247,8 +249,8 @@ parser.add_argument(
         f"{Green}Usage:\n"
         f"> MarsVars.py *.atmos_average.nc --edit temp -rename "
         f"airtemp\n"
-        f"> MarsVars.py *.atmos_average.nc --edit ps -multiply 0.01 "
-        f"-longname 'new pressure' -unit 'mbar'"
+        f"> MarsVars.py *.atmos_average.nc --edit ps -multiply 0.01\n"
+        f"  -longname 'new pressure' -unit 'mbar'"
         f"{NoColor}\n\n"
     )
 )
@@ -285,39 +287,39 @@ parser.add_argument(
 # ======================================================
 
 # a list of supported variables for [-add --add]
-cap_str = '(derived using CAP)'
+cap_str = "(derived using CAP)"
 VAR = {
-    'rho':[f'Density {cap_str}', 'kg/m^3'],
-    'theta':[f'Potential temperature {cap_str}', 'K'],
-    'w':[f'Vertical wind {cap_str}', 'm/s'],
-    'pfull3D':[f'Pressure at layer midpoint {cap_str}', 'Pa'],
-    'DP':[f'Layer thickness (pressure) {cap_str}', 'Pa'],
-    'zfull':[f'Altitude AGL at layer midpoint {cap_str}', 'm'],
-    'DZ':[f'Layer thickness (altitude) {cap_str}', 'm'],
-    'wdir':[f'Wind direction {cap_str}', 'deg'],
-    'wspeed':[f'Wind speed {cap_str}', 'm/s'],
-    'N':[f'Brunt Vaisala frequency {cap_str}', 'rad/s'],
-    'Ri':[f'Richardson number {cap_str}', 'none'],
-    'Tco2':[f'CO2 condensation temerature {cap_str}', 'K'],
-    'div':[f'Divergence of the wind field {cap_str}', 'Hz'],
-    'curl':[f'Relative vorticity {cap_str}','Hz'],
-    'scorer_wl':[f'Scorer horizontal wavelength [L=2.pi/sqrt(l^2)] {cap_str}',
-                 'm'],
-    'msf':[f'Mass stream function {cap_str}','1.e8 x kg/s'],
-    'ep':[f'Wave potential energy {cap_str}','J/kg'],
-    'ek':[f'Wave kinetic energy {cap_str}','J/kg'],
-    'mx':[f'Vertical flux of zonal momentum {cap_str}','J/kg'],
-    'my':[f'Vertical flux of merididional momentum{cap_str}','J/kg'],
-    'ax':[f'Zonal wave-mean flow forcing {cap_str}', 'm/s^2'],
-    'ay':[f'Meridional wave-mean flow forcing {cap_str}', 'm/s^2'],
-    'tp_t':[f'Normalized temperature perturbation {cap_str}', 'None'],
-    'fn':[f'Frontogenesis {cap_str}', 'K/m/s'],
-    'dzTau':[f'Dust extinction rate {cap_str}', 'km-1'],
-    'izTau':[f'Ice extinction rate {cap_str}', 'km-1'],
-    'dst_mass_micro':[f'Dust mass mixing ratio {cap_str}', 'kg/kg'],
-    'ice_mass_micro':[f'Ice mass mixing ratio {cap_str}', 'kg/kg'],
-    'Vg_sed':[f'Sedimentation rate {cap_str}', 'm/s'],
-    'w_net':[f'Net vertical wind [w-Vg_sed] {cap_str}', 'm/s'],
+    "rho":[f"Density {cap_str}", "kg/m^3"],
+    "theta":[f"Potential temperature {cap_str}", "K"],
+    "w":[f"Vertical wind {cap_str}", "m/s"],
+    "pfull3D":[f"Pressure at layer midpoint {cap_str}", "Pa"],
+    "DP":[f"Layer thickness (pressure) {cap_str}", "Pa"],
+    "zfull":[f"Altitude AGL at layer midpoint {cap_str}", "m"],
+    "DZ":[f"Layer thickness (altitude) {cap_str}", "m"],
+    "wdir":[f"Wind direction {cap_str}", "deg"],
+    "wspeed":[f"Wind speed {cap_str}", "m/s"],
+    "N":[f"Brunt Vaisala frequency {cap_str}", "rad/s"],
+    "Ri":[f"Richardson number {cap_str}", "none"],
+    "Tco2":[f"CO2 condensation temperature {cap_str}", "K"],
+    "div":[f"Divergence of the wind field {cap_str}", "Hz"],
+    "curl":[f"Relative vorticity {cap_str}","Hz"],
+    "scorer_wl":[f"Scorer horizontal wavelength [L=2.pi/sqrt(l^2)] "
+                 f"{cap_str}", "m"],
+    "msf":[f"Mass stream function {cap_str}","1.e8 x kg/s"],
+    "ep":[f"Wave potential energy {cap_str}","J/kg"],
+    "ek":[f"Wave kinetic energy {cap_str}","J/kg"],
+    "mx":[f"Vertical flux of zonal momentum {cap_str}","J/kg"],
+    "my":[f"Vertical flux of merididional momentum{cap_str}","J/kg"],
+    "ax":[f"Zonal wave-mean flow forcing {cap_str}", "m/s^2"],
+    "ay":[f"Meridional wave-mean flow forcing {cap_str}", "m/s^2"],
+    "tp_t":[f"Normalized temperature perturbation {cap_str}", "None"],
+    "fn":[f"Frontogenesis {cap_str}", "K/m/s"],
+    "dzTau":[f"Dust extinction rate {cap_str}", "km-1"],
+    "izTau":[f"Ice extinction rate {cap_str}", "km-1"],
+    "dst_mass_micro":[f"Dust mass mixing ratio {cap_str}", "kg/kg"],
+    "ice_mass_micro":[f"Ice mass mixing ratio {cap_str}", "kg/kg"],
+    "Vg_sed":[f"Sedimentation rate {cap_str}", "m/s"],
+    "w_net":[f"Net vertical wind [w-Vg_sed] {cap_str}", "m/s"],
 }
 
 # =====================================================================
@@ -334,38 +336,38 @@ global rgas, psrf, Tpole, g, R, Rd, rho_air, rho_dst, rho_ice
 global Qext_dst, Qext_ice, n0, S0, T0, Cp, Na, amu, amu_co2, mass_co2
 global sigma, M_co2, N, C_dst, C_ice
 
-rgas = 189.             # Gas const. CO2 [J/kg/K or m^2/s^2/K]
-psrf = 610.             # Mars surface pressure [Pa or kg/m/s^2]
-Tpole = 150.            # Polar temperature [K]
-g = 3.72                # Gravitational constant for Mars [m/s^2]
-R = 8.314               # Universal gas constant [J/mol/K]
-Rd = 192.0              # R for dry air on Mars [J/kg/K]
-rho_air = psrf/(rgas*Tpole)     # Air density [kg/m^3]
-rho_dst = 2500.         # Dust particle density [kg/m^3]
-#rho_dst = 3000          # Dust particle density [kg/m^3]
-#                        #   (Kleinbohl et al. 2009)
-rho_ice = 900           # Ice particle density [kg/m^3]
-                        #   (Heavens et al. 2010)
-Qext_dst = 0.35         # Dust extinction efficiency (MCS)
-                        #   (Kleinbohl et al. 2009)
-Qext_ice = 0.773        # ice extinction efficiency (MCS)
-                        #   (Heavens et al. 2010)
-Reff_dst = 1.06         # Effective dust particle radius [micron]
-                        #   (Kleinbohl et al. 2009)
-Reff_ice = 1.41         # Effective ice particle radius [micron]
-                        #   (Heavens et al. 2010)
-n0 = 1.37*1.e-5         # Sutherland's law [N-s/m^2]
-S0 = 222                # Sutherland's law [K]
-T0 = 273.15             # Sutherland's law [K]
-Cp = 735.0              # [J/K]
-Na = 6.022*1.e23        # Avogadro's number [per mol]
-Kb = R/Na               # Boltzmann constant [m^2*kg/s^2/K]
-amu = 1.66054*1.e-27    # Atomic mass Unit [kg/amu]
-amu_co2 = 44.0          # Molecular mass of CO2 [amu]
-mass_co2 = amu_co2*amu  # Mass of 1 CO2 particle [kg]
-sigma = 0.63676         # Gives effective variance = 0.5 (Dust)
-M_co2 = 0.044           # Molar mass of CO2 [kg/mol]
-N = 0.01                # For wave potential energy calc. [rad/s]
+rgas = 189.                 # Gas const. CO2 [J/kg/K or m^2/s^2/K]
+psrf = 610.                 # Mars surface pressure [Pa or kg/m/s^2]
+Tpole = 150.                # Polar temperature [K]
+g = 3.72                    # Gravitational constant for Mars [m/s^2]
+R = 8.314                   # Universal gas constant [J/mol/K]
+Rd = 192.0                  # R for dry air on Mars [J/kg/K]
+rho_air = psrf/(rgas*Tpole) # Air density [kg/m^3]
+rho_dst = 2500.             # Dust particle density [kg/m^3]
+#rho_dst = 3000              # Dust particle density [kg/m^3]
+                            #   (Kleinbohl et al. 2009)
+rho_ice = 900               # Ice particle density [kg/m^3]
+                            #   (Heavens et al. 2010)
+Qext_dst = 0.35             # Dust extinction efficiency (MCS)
+                            #   (Kleinbohl et al. 2009)
+Qext_ice = 0.773            # ice extinction efficiency (MCS)
+                            #   (Heavens et al. 2010)
+Reff_dst = 1.06             # Effective dust particle radius [micron]
+                            #   (Kleinbohl et al. 2009)
+Reff_ice = 1.41             # Effective ice particle radius [micron]
+                            #   (Heavens et al. 2010)
+n0 = 1.37*1.e-5             # Sutherland's law [N-s/m^2]
+S0 = 222                    # Sutherland's law [K]
+T0 = 273.15                 # Sutherland's law [K]
+Cp = 735.0                  # [J/K]
+Na = 6.022*1.e23            # Avogadro's number [per mol]
+Kb = R/Na                   # Boltzmann constant [m^2*kg/s^2/K]
+amu = 1.66054*1.e-27        # Atomic mass Unit [kg/amu]
+amu_co2 = 44.0              # Molecular mass of CO2 [amu]
+mass_co2 = amu_co2*amu      # Mass of 1 CO2 particle [kg]
+sigma = 0.63676             # Gives effective variance = 0.5 (Dust)
+M_co2 = 0.044               # Molar mass of CO2 [kg/mol]
+N = 0.01                    # For wave potential energy calc. [rad/s]
 
 # For mmr <-> extinction rate calculations:
 C_dst = (4/3) * (rho_dst/Qext_dst) * Reff_dst   # = 12114.286 [m-2]
