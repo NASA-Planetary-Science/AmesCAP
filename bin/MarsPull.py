@@ -10,8 +10,8 @@ The executable requires 2 arguments:
     * [-f --filename] the name(s) of the desired file(s).
 
 Third-party Requirements:
-    * numpy
-    * argparse
+    * numpy         * sys
+    * argparse      * os
     * requests
 
 List of Functions:
@@ -24,11 +24,10 @@ from amescap.Script_utils import (prYellow, prCyan, prRed, Blue, Yellow,
 
 # load generic Python modules
 import sys          # system commands
-import os           # access operating system functions
-import numpy as np
 import argparse     # parse arguments
+import os           # access operating system functions
 import requests     # download data from site
-
+import numpy as np
 
 # ======================================================
 #                  ARGUMENT PARSER

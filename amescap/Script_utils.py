@@ -1,9 +1,9 @@
-import os
-import sys
-import subprocess
-from netCDF4 import Dataset, MFDataset
+import os           # access operating system functions
+import subprocess   # run command-line commands
 import numpy as np
+from netCDF4 import Dataset, MFDataset
 import re
+
 #=========================================================================
 #=========================Scripts utilities===============================
 #=========================================================================

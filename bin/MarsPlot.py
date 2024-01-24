@@ -6,9 +6,9 @@ The executable requires x arguments:
     * [-x --x]      define
 
 Third-party Requirements:
-    * numpy
-    * argparse
-    * requests
+    * numpy         * netCDF4       * sys
+    * argparse      * os            * warnings
+    * subprocess    * matplotlib
 
 List of Functions:
     * x
@@ -22,10 +22,10 @@ from amescap.Script_utils import (prYellow, prCyan, prRed, prPurple,
 import argparse     # parse arguments
 import os           # access operating system functions
 import subprocess   # run command-line commands
-import sys          # system commands
-import numpy as np
-from warnings import filterwarnings
 import matplotlib
+import numpy as np
+from netCDF4 import Dataset
+from warnings import filterwarnings
 import matplotlib.pyplot as plt
 from netCDF4 import Dataset, MFDataset
 from numpy import abs

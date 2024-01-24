@@ -1,28 +1,68 @@
 #!/usr/bin/env python3
 """
-The MarsVars executable is for ...
+The MarsVars executable is for performing variable manipulations in 
+existing files. Most often, it is used to derive and add variables to 
+existing files, but it also differentiates variables with respect to
+(w.r.t) the Z axis, column-integrates variables, converts aerosol
+opacities from opacity per Pascal to opacity per meter, removes and
+extracts variables from files, and enables scaling variables or editing 
+variable names, units, etc.
 
-The executable requires x arguments:
-    * [-x --x]      define
+The executable requires 1 argument:
+    * [input_file]      the file to be transformed
+
+and optionally accepts 2 arguments:
+    * [-add --add]              Derive and add variable to file
+    * [-zdiff --zdiff]          Differentiate variable w.r.t. Z axis
+    * [-col --col]              Column-integrate variable
+    * [-zd --zonal_detrend]     Subtract zonal mean from variable
+    * [-dp_to_dz --dp_to_dz]    Convert aerosol opacity op/Pa -> op/m
+    * [-dz_to_dp --dz_to_dp]    Convert aerosol opacity op/m -> op/Pa
+    * [-rm --remove]            Remove variable from file    
+    * [-extract --extract]      Copy variable to new file
+    * [-edit --edit]            Edit variable attributes or scale it
 
 Third-party Requirements:
-    * numpy
-    * argparse
-    * requests
+    * numpy         * netCDF4
+    * argparse      * os
+    * subprocess    * matplotlib
 
 List of Functions:
-    * x
+    * compute_p_3D          Compute the 3D pressure at layer midpoints
+    * compute_rho           Compute density
+    * compute_xzTau         Compute the dust or ice extinction rate
+    * compute_mmr           Compute the dust or ice mixing ratio
+    * compute_Vg_sed        Calculate the sedimentation rate of the dust
+    * compute_w_net         Computes the net vertical wind
+    * compute_theta         Compute the potential temperature
+    * compute_w             Compute the vertical wind
+    * compute_zfull         Calculate the altitude of the layer 
+                            midpoints above ground level
+    * compute_zhalf         Calculate the altitude of the layer 
+                            interfaces above ground level
+    * compute_DZ_full_pstd  Calculate the thickness of a layer from the 
+                            midpoint of the standard pressure levels
+    * compute_N             Calculate the Brunt Vaisala freqency
+    * compute_Tco2          Calculate the frost point of CO2
+    * compute_scorer        Calculate the Scorer wavelength
+    * compute_DP_3D         Calculate the thickness of a layer in Pa
+    * compute_DZ_3D         Calculate the thickness of a layer in m
+    * compute_Ep            Calculate wave potential energy
+    * compute_Ek            Calculate wave kinetic energy
+    * compute_MF            Calculate zonal or meridional momentum 
+                            fluxes
+    * compute_WMFF          Calculate the zonal or meridional wave-mean 
+                            flow forcing
 """
 
 # make print statements appear in color
-from amescap.Script_utils import (prYellow, prCyan, prRed, Blue, Yellow,
+from amescap.Script_utils import (prYellow, prCyan, prRed, Yellow,
                                  NoColor, Green, Cyan)
 
 # load generic Python modules
 import argparse     # parse arguments
 import os           # access operating system functions
 import subprocess   # run command-line commands
-import sys          # system commands
 import warnings     # suppress errors triggered by NaNs
 import matplotlib
 import numpy as np
@@ -65,12 +105,12 @@ parser.add_argument(
 parser.add_argument(
     '-add', '--add', nargs='+', default=[],
     help=(
-        f"Add a new variable to file. Variables that can be added are "
+        f"TESTAdd a new variable to file. Variables that can be added are "
         f"listed below.\n"
         f"{Green}Usage:\n"
         f"> MarsVars ****.atmos.average.nc -add varname\n"
         f"{Cyan}ON NATIVE FILES:\n"
-        f"{Yellow}varname          (full variable name)             "
+        f"{Yellow}varname          (full variable name)"
         f"[required variables]{Cyan}\n"
         f"rho            (Density)                       [ps, temp]\n"
         f"theta          (Potential Temperature)         [ps, temp]\n"
@@ -84,24 +124,27 @@ parser.add_argument(
         f"N              (Brunt Vaisala Frequency)       [ps, temp]\n"
         f"Ri             (Richardson Number)             [ps, temp]\n"
         f"Tco2           (CO2 Condensation Temperature)  [ps, temp]\n"
-        f"scorer_wl      (Scorer Horiz. Wavelength)      [ps, temp, ucomp]\n"
-        f"div            (Divergence of Wind)            [ucomp, vcomp]\n"
-        f"curl           (Relative Vorticity)            [ucomp, vcomp]\n"
-        f"fn             (Frontogenesis)                 "
+        f"scorer_wl      (Scorer Horiz. Wavelength)"
+        f"[ps, temp, ucomp]\n"
+        f"div            (Divergence of Wind)"
+        f"[ucomp, vcomp]\n"
+        f"curl           (Relative Vorticity)"
+        f"[ucomp, vcomp]\n"
+        f"fn             (Frontogenesis)"
         f"[ucomp, vcomp, theta]\n"
-        f"dzTau          (Dust Extinction Rate)          "
+        f"dzTau          (Dust Extinction Rate)"
         f"[dst_mass_micro, temp]\n"
         f"izTau          (Ice Extinction Rate)           [ice_mass_micro, temp]\n"
         f"dst_mass_micro (Dust Mass Mixing Ratio)        [dzTau, temp]\n"
         f"ice_mass_micro (Ice Mass Mixing Ratio)         [izTau, temp]\n"
-        f"Vg_sed         (Sedimentation Rate)            "
+        f"Vg_sed         (Sedimentation Rate)"
         f"[dst_mass_micro, dst_num_micro, temp]\n"
         f"w_net          (Net Vertical Wind (w-Vg_sed))  [w, Vg_sed]\n\n"
         f"{NoColor}NOTE:\n"
         f"MarsVars offers some support on interpolated files, particularly "
         f"if pfull3D and zfull are added to the file before interpolation.\n\n"
         f"{Cyan}ON INTERPOLATED FILES (i.e. _pstd, _zstd, _zagl):\n"
-        f"{Yellow}varname          (full variable name)             "
+        f"{Yellow}varname          (full variable name)"
         f"[required variables]{Cyan}\n"
         f"msf            (Mass Stream Function)          [vcomp]\n"
         f"ep             (Wave Potential Energy)         [temp]\n"
@@ -936,96 +979,114 @@ def compute_DZ_3D(ps, ak, bk, temp, shape_out):
 # =====================================================================
 def compute_Ep(temp):
     """
-    Returns the wave potential energy (Ep) in [J/kg].
-    Ep = 1/2 (g/N)**2 (T'/T)**2
-    """
-    """
-    Def.
+    Calculate wave potential energy.
+    Ep = 1/2 (g/N)^2 (T'/T)^2
 
     Parameters
     ----------
-    var : float
-        def
+    temp : array
+        Temperature [time, lev, lat, lon] (K)
 
     Raises
     ------
 
     Returns
     -------
-    var
-        def
+    Ep
+        Wave potential energy [time, lev, lat, lon] (J/kg)
     """
     return 0.5*g**2*(zonal_detrend(temp)/(temp*N))**2
 
 # =====================================================================
 def compute_Ek(ucomp, vcomp):
     """
-    Returns the wave kinetic energy (Ek) in [J/kg].
-    Ek= 1/2 (u'**2+v'**2)
-    """
-    """
-    Def.
+    Calculate wave kinetic energy.
+    Ek = 1/2 (u'**2+v'**2)
 
     Parameters
     ----------
-    var : float
-        def
+    ucomp : array
+        Zonal wind [time, lev, lat, lon] (m/s)
+    vcomp : array
+        Meridional wind [time, lev, lat, lon] (m/s)
 
     Raises
     ------
 
     Returns
     -------
-    var
-        def
+    Ek
+        Wave kinetic energy [time, lev, lat, lon] (J/kg)
     """
     return 0.5*(zonal_detrend(ucomp)**2+zonal_detrend(vcomp)**2)
 
 # =====================================================================
 def compute_MF(UVcomp, w):
     """
-    Returns the zonal or meridional momentum fluxes (u'w' or v'w').
+    Calculate zonal or meridional momentum fluxes.
+    
+    Parameters
+    ----------
+    UVcomp : array
+        Zonal or meridional wind (ucomp or vcomp) [time, lev, lat, lon] (m/s)
+    w : array
+        Vertical wind [time, lev, lat, lon] (m/s)
+    
+    Raises
+    ------
+
+    Returns
+    -------
+    u'w' or v'w'
+        Zonal/meridional momentum flux [time, lev, lat, lon] (J/kg)
     """
     return zonal_detrend(UVcomp)*zonal_detrend(w)
 
 # =====================================================================
 def compute_WMFF(MF, rho, lev, interp_type):
     """
-    Returns the zonal or meridional wave-mean flow forcing
-    ax= -1/rho d(rho u'w')/dz in [m/s/s]
-    ay= -1/rho d(rho v'w')/dz in [m/s/s]
+    Calculate the zonal or meridional wave-mean flow forcing.
+    ax = -1/rho d(rho u'w')/dz
+    ay = -1/rho d(rho v'w')/dz
 
-    For 'pstd':
-        [du/dz = (du/dp).(dp/dz)] > [du/dz = -rho g (du/dp)] with dp/dz = -rho g
-    """
-    """
-    Def.
+    If interp_type == 'pstd', then:
+        [du/dz = (du/dp).(dp/dz)] > [du/dz = -rho*g * (du/dp)]
+        where dp/dz = -rho*g
+        [du/dz = (du/dp).(-rho*g)] > [du/dz = -rho*g * (du/dp)]
 
     Parameters
     ----------
-    var : float
-        def
+    MF : array
+        Zonal/meridional momentum flux [time, lev, lat, lon] (J/kg)
+    rho : array
+        Atmospheric density [time, lev, lat, lon] (kg/m^3)
+    lev : array
+        Array for the vertical grid [lev] (zagl, zstd, pstd, or pfull)
+    interp_type : str
+        The vertical grid type ('zagl', 'zstd', 'pstd', or 'pfull')
 
     Raises
     ------
 
     Returns
     -------
-    var
-        def
+    ax or ay
+        The zonal or meridional wave-mean flow forcing [time, lev, lat, lon] (m/s2)
     """
-    # Differentiate the variable
+    # Differentiate the momentum flux (MF)
     darr_dz = dvar_dh((rho*MF).transpose(lev_T), lev).transpose(lev_T)
+    # Manually swap dimensions 0 and 1 so lev_T has 'lev' for first \
+    # dimension [lev, time, lat, lon] for the differentiation
 
-    # Note: lev_T swaps dims 0 & 1, ensuring level is the first \
-    # dimension for the differentiation
+    # Swap dimensions 0 and 1 back to [time, lev, lat, lon]
+    dTdz=dvar_dh(t.transpose([1,0,2,3]),Zkm).transpose([1,0,2,3])
     
     if interp_type == 'pstd':
         # Computed du/dp, need to multiply by (-rho g) to obtain du/dz
         return g * darr_dz
     else:
-        # With 'zagl' and 'zstd', levels already in meters du/dz
-        # computation does not need the above multiplier.
+        # 'zagl' and 'zstd' grids have levels in meters, so du/dz
+        # is not multiplied by g.
         return -1/rho*darr_dz
 
 # =====================================================================
@@ -1059,7 +1120,9 @@ def main():
     global lev_T_out  # Reshape in 'zfull' and 'zhalf' calculation
 
     # Check if an operation is requested. Otherwise, print file content.
-    if not (add_list or zdiff_list or zdetrend_list or remove_list or col_list or extract_list or dp_to_dz_list or dz_to_dp_list or edit_var):
+    if not (add_list or zdiff_list or zdetrend_list or remove_list or 
+            col_list or extract_list or dp_to_dz_list or 
+            dz_to_dp_list or edit_var):
         print_fileContent(file_list[0])
         prYellow(''' ***Notice***  No operation requested. Use '-add', '-zdiff', '-zd', '-col', '-dp_to_dz', '-rm' '-edit' ''')
         exit()  # Exit cleanly

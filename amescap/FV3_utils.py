@@ -1,5 +1,6 @@
+# load generic Python modules
+import warnings     # suppress errors triggered by NaNs
 import numpy as np
-import warnings     # suppress certain errors when dealing with NaN arrays
 
 # NOTE p_half = half-level = layer interfaces
 # NOTE p_full = full-level = layer midpoints

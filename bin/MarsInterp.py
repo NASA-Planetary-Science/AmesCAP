@@ -6,9 +6,9 @@ The executable requires x arguments:
     * [-x --x]      define
 
 Third-party Requirements:
-    * numpy
-    * argparse
-    * requests
+    * numpy         * netCDF4
+    * argparse      * os
+    * time          * matplotlib
 
 List of Functions:
     * x
@@ -22,9 +22,9 @@ from amescap.Script_utils import (prYellow, prCyan, prRed, Blue, Yellow,
 import argparse     # parse arguments
 import os           # access operating system functions
 import time         # monitor interpolation time
+import matplotlib
 import numpy as np
 from netCDF4 import Dataset
-import matplotlib
 
 matplotlib.use('Agg') # Force matplotlib NOT load Xwindows backend
 
