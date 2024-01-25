@@ -12,8 +12,12 @@
 
    Third-party Requirements:
        * numpy
+       * netCDF4
+       * sys
        * argparse
-       * requests
+       * os
+       * subprocess
+       * warnings
 
    List of Functions:
        * x

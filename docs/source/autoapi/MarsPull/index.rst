@@ -14,7 +14,9 @@
 
    Third-party Requirements:
        * numpy
+       * sys
        * argparse
+       * os
        * requests
 
    List of Functions:
@@ -40,17 +42,12 @@ Functions
    Downloads a file from the MCMC Legacy GCM directory on the NAS Data
    Portal (data.nas.nasa.gov).
 
-   This function specifies the file to download by appending to the
-   URL the subdirectory, indicated by the user-specified
-   simulation identifier [-id --id], and the name of the file. The
-   file name is either provided by the user directly using
-   [-f --filename] or determined based on the user-specified solar
-   longitude [-ls --ls].
+   This function specifies the file to download by appending to the     URL to the subdirectory, indicated by the user-specified     simulation identifier [-id --id], and the name of the file. The     file name is either provided by the user directly using     [-f --filename] or determined based on the user-specified solar         longitude [-ls --ls].
 
    Parameters
    ----------
    simulation_id : str
-       The simulation identifier, i.e., the name of the directory         to query from: https://data.nas.nasa.gov/mcmc/data_legacygcm.php
+       The simulation identifier, i.e., the name of the directory to         query from: https://data.nas.nasa.gov/mcmc/data_legacygcm.php
 
    file_name : str
        The name of the file to download.
@@ -61,6 +58,6 @@ Functions
 
    Returns
    -------
-   The requested file(s), downloaded and saved to the current     directory.
+   The requested file(s), downloaded & saved to the current directory.
 
 

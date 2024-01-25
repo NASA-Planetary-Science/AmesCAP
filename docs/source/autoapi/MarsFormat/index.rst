@@ -12,13 +12,16 @@
    and units to the configuration expected by CAP. In some cases, such as
    for MarsWRF, variables are derived and regridded onto a standard grid.
 
-   The executable requires x arguments:
+   The executable requires 1 argument:
+       * [input_file]              the file to be transformed
+       
+   and optionally accepts 2 arguments:
        * [-openmars --openmars]    convert openMars data to MGCM format
        * [-marswrf --marswrf]      convert MarsWRF data to MGCM format
-       
 
    Third-party Requirements:
        * numpy
+       * os
        * argparse
        * xarray
 
@@ -86,6 +89,9 @@ Functions
        The dataset created by xarray when it opens the user-supplied
        input file.
 
+   Raises
+   ------
+
    Returns
    -------
    var_dict : dictionary
@@ -115,6 +121,9 @@ Functions
    DS : xarray dataset
        The dataset created by xarray when it opens the user-supplied
        input file.
+
+   Raises
+   ------
 
    Returns
    -------
