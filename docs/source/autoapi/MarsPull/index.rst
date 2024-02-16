@@ -8,19 +8,16 @@
    The MarsPull executable is for querying data from the Mars Climate Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
    The executable requires 2 arguments:
-       * [-id --id]      The simulation identifier, AND
-       * [-ls --ls]      the desired solar longitude(s), OR
-       * [-f --filename] the name(s) of the desired file(s).
+       * ``[-id --id]``      The simulation identifier, AND
+       * ``[-ls --ls]``      the desired solar longitude(s), OR
+       * ``[-f --filename]`` the name(s) of the desired file(s).
 
    Third-party Requirements:
-       * numpy
-       * sys
-       * argparse
-       * os
-       * requests
-
-   List of Functions:
-       * download - Queries the requested file from the NAS Data Portal.
+       * ``numpy``
+       * ``sys``
+       * ``argparse``
+       * ``os``
+       * ``requests``
 
 
 

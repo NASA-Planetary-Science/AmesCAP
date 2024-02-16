@@ -9,52 +9,53 @@ extracts variables from files, and enables scaling variables or editing
 variable names, units, etc.
 
 The executable requires 1 argument:
-    * [input_file]      the file to be transformed
+    * ``[input_file]``      the file to be transformed
 
 and optionally accepts 2 arguments:
-    * [-add --add]              Derive and add variable to file
-    * [-zdiff --zdiff]          Differentiate variable w.r.t. Z axis
-    * [-col --col]              Column-integrate variable
-    * [-zd --zonal_detrend]     Subtract zonal mean from variable
-    * [-dp_to_dz --dp_to_dz]    Convert aerosol opacity op/Pa -> op/m
-    * [-dz_to_dp --dz_to_dp]    Convert aerosol opacity op/m -> op/Pa
-    * [-rm --remove]            Remove variable from file    
-    * [-extract --extract]      Copy variable to new file
-    * [-edit --edit]            Edit variable attributes or scale it
+    * ``[-add --add]``              Derive and add variable to file
+    * ``[-zdiff --zdiff]``          Differentiate variable w.r.t. Z axis
+    * ``[-col --col]``              Column-integrate variable
+    * ``[-zd --zonal_detrend]``     Subtract zonal mean from variable
+    * ``[-dp_to_dz --dp_to_dz]``    Convert aerosol opacity op/Pa -> op/m
+    * ``[-dz_to_dp --dz_to_dp]``    Convert aerosol opacity op/m -> op/Pa
+    * ``[-rm --remove]``            Remove variable from file    
+    * ``[-extract --extract]``      Copy variable to new file
+    * ``[-edit --edit]``            Edit variable attributes or scale it
 
 Third-party Requirements:
-    * numpy
-    * netCDF4
-    * argparse
-    * os
-    * subprocess
-    * matplotlib
+    * ``numpy``
+    * ``netCDF4``
+    * ``argparse``
+    * ``os``
+    * ``subprocess``
+    * ``matplotlib``
 """
 
-# make print statements appear in color
-from amescap.Script_utils import (prYellow, prCyan, prRed, Yellow,
-                                 NoColor, Green, Cyan)
+# Make print statements appear in color
+from amescap.Script_utils import (
+    prYellow, prCyan, prRed, Yellow, NoColor, Green, Cyan
+)
 
-# load generic Python modules
-import argparse     # parse arguments
-import os           # access operating system functions
-import subprocess   # run command-line commands
-import warnings     # suppress errors triggered by NaNs
+# Load generic Python modules
+import argparse     # Parse arguments
+import os           # Access operating system functions
+import subprocess   # Run command-line commands
+import warnings     # Suppress errors triggered by NaNs
 import matplotlib
 import numpy as np
 from netCDF4 import Dataset
 
-matplotlib.use('Agg')   # Force matplotlib NOT to load Xwindows backend
+matplotlib.use('Agg') # Force matplotlib NOT to load Xwindows backend
 
-# load amesCAP modules
-from amescap.FV3_utils import (fms_press_calc, fms_Z_calc, dvar_dh, 
-                               cart_to_azimut_TR)
-from amescap.FV3_utils import (mass_stream, zonal_detrend, 
-                               spherical_div, spherical_curl, 
-                               frontogenesis)
-from amescap.Script_utils import (check_file_tape, print_fileContent)
-from amescap.Script_utils import (FV3_file_type, filter_vars, 
-                                  get_longname_units, ak_bk_loader)
+# Load amesCAP modules
+from amescap.FV3_utils import (
+    fms_press_calc, fms_Z_calc, dvar_dh, cart_to_azimut_TR, mass_stream,
+    zonal_detrend, spherical_div, spherical_curl, frontogenesis
+)
+from amescap.Script_utils import (
+    check_file_tape, print_fileContent,FV3_file_type, filter_vars, 
+    get_longname_units, ak_bk_loader
+)
 from amescap.Ncdf_wrapper import Ncdf
 
 # ======================================================
@@ -265,37 +266,36 @@ parser.add_argument(
 # a list of supported variables for [-add --add]
 cap_str = "(derived using CAP)"
 VAR = {
-    "rho":[f"Density {cap_str}", "kg/m^3"],
-    "theta":[f"Potential temperature {cap_str}", "K"],
-    "w":[f"Vertical wind {cap_str}", "m/s"],
-    "pfull3D":[f"Pressure at layer midpoint {cap_str}", "Pa"],
-    "DP":[f"Layer thickness (pressure) {cap_str}", "Pa"],
-    "zfull":[f"Altitude AGL at layer midpoint {cap_str}", "m"],
-    "DZ":[f"Layer thickness (altitude) {cap_str}", "m"],
-    "wdir":[f"Wind direction {cap_str}", "deg"],
-    "wspeed":[f"Wind speed {cap_str}", "m/s"],
-    "N":[f"Brunt Vaisala frequency {cap_str}", "rad/s"],
-    "Ri":[f"Richardson number {cap_str}", "none"],
-    "Tco2":[f"CO2 condensation temperature {cap_str}", "K"],
-    "div":[f"Divergence of the wind field {cap_str}", "Hz"],
-    "curl":[f"Relative vorticity {cap_str}","Hz"],
-    "scorer_wl":[f"Scorer horizontal wavelength [L=2.pi/sqrt(l^2)] "
-                 f"{cap_str}", "m"],
-    "msf":[f"Mass stream function {cap_str}","1.e8 x kg/s"],
-    "ep":[f"Wave potential energy {cap_str}","J/kg"],
-    "ek":[f"Wave kinetic energy {cap_str}","J/kg"],
-    "mx":[f"Vertical flux of zonal momentum {cap_str}","J/kg"],
-    "my":[f"Vertical flux of merididional momentum{cap_str}","J/kg"],
-    "ax":[f"Zonal wave-mean flow forcing {cap_str}", "m/s^2"],
-    "ay":[f"Meridional wave-mean flow forcing {cap_str}", "m/s^2"],
-    "tp_t":[f"Normalized temperature perturbation {cap_str}", "None"],
-    "fn":[f"Frontogenesis {cap_str}", "K/m/s"],
-    "dzTau":[f"Dust extinction rate {cap_str}", "km-1"],
-    "izTau":[f"Ice extinction rate {cap_str}", "km-1"],
-    "dst_mass_micro":[f"Dust mass mixing ratio {cap_str}", "kg/kg"],
-    "ice_mass_micro":[f"Ice mass mixing ratio {cap_str}", "kg/kg"],
-    "Vg_sed":[f"Sedimentation rate {cap_str}", "m/s"],
-    "w_net":[f"Net vertical wind [w-Vg_sed] {cap_str}", "m/s"],
+    "rho": [f"Density {cap_str}", "kg/m^3"],
+    "theta": [f"Potential temperature {cap_str}", "K"],
+    "w": [f"Vertical wind {cap_str}", "m/s"],
+    "pfull3D": [f"Pressure at layer midpoint {cap_str}", "Pa"],
+    "DP": [f"Layer thickness (pressure) {cap_str}", "Pa"],
+    "zfull": [f"Altitude AGL at layer midpoint {cap_str}", "m"],
+    "DZ": [f"Layer thickness (altitude) {cap_str}", "m"],
+    "wdir": [f"Wind direction {cap_str}", "deg"],
+    "wspeed": [f"Wind speed {cap_str}", "m/s"],
+    "N": [f"Brunt Vaisala frequency {cap_str}", "rad/s"],
+    "Ri": [f"Richardson number {cap_str}", "none"],
+    "Tco2": [f"CO2 condensation temperature {cap_str}", "K"],
+    "div": [f"Divergence of the wind field {cap_str}", "Hz"],
+    "curl": [f"Relative vorticity {cap_str}","Hz"],
+    "scorer_wl": [f"Scorer horizontal wavelength [L=2.pi/sqrt(l^2)] {cap_str}", "m"],
+    "msf": [f"Mass stream function {cap_str}","1.e8 x kg/s"],
+    "ep": [f"Wave potential energy {cap_str}","J/kg"],
+    "ek": [f"Wave kinetic energy {cap_str}","J/kg"],
+    "mx": [f"Vertical flux of zonal momentum {cap_str}","J/kg"],
+    "my": [f"Vertical flux of merididional momentum{cap_str}","J/kg"],
+    "ax": [f"Zonal wave-mean flow forcing {cap_str}", "m/s^2"],
+    "ay": [f"Meridional wave-mean flow forcing {cap_str}", "m/s^2"],
+    "tp_t": [f"Normalized temperature perturbation {cap_str}", "None"],
+    "fn": [f"Frontogenesis {cap_str}", "K/m/s"],
+    "dzTau": [f"Dust extinction rate {cap_str}", "km-1"],
+    "izTau": [f"Ice extinction rate {cap_str}", "km-1"],
+    "dst_mass_micro": [f"Dust mass mixing ratio {cap_str}", "kg/kg"],
+    "ice_mass_micro": [f"Ice mass mixing ratio {cap_str}", "kg/kg"],
+    "Vg_sed": [f"Sedimentation rate {cap_str}", "m/s"],
+    "w_net": [f"Net vertical wind [w-Vg_sed] {cap_str}", "m/s"],
 }
 
 # =====================================================================
@@ -346,8 +346,8 @@ M_co2 = 0.044               # Molar mass of CO2 [kg/mol]
 N = 0.01                    # For wave potential energy calc. [rad/s]
 
 # For mmr <-> extinction rate calculations:
-C_dst = (4/3) * (rho_dst/Qext_dst) * Reff_dst   # = 12114.286 [m-2]
-C_ice = (4/3) * (rho_ice/Qext_ice) * Reff_ice   # = 2188.874 [m-2]
+C_dst = (4/3) * (rho_dst/Qext_dst) * Reff_dst # = 12114.286 [m-2]
+C_ice = (4/3) * (rho_ice/Qext_ice) * Reff_ice # = 2188.874 [m-2]
 
 # ===========================
 def compute_p_3D(ps, ak, bk, shape_out):

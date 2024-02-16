@@ -8,37 +8,34 @@ and units to the configuration expected by CAP. In some cases, such as
 for MarsWRF, variables are derived and regridded onto a standard grid.
 
 The executable requires 1 argument:
-    * [input_file]              the file to be transformed
+    * ``[input_file]``      the file to be transformed
     
 and optionally accepts 2 arguments:
-    * [-openmars --openmars]    convert openMars data to MGCM format
-    * [-marswrf --marswrf]      convert MarsWRF data to MGCM format
+    * ``[-openmars --openmars]``    convert openMars data to MGCM format
+    * ``[-marswrf --marswrf]``      convert MarsWRF data to MGCM format
 
 Third-party Requirements:
-    * numpy
-    * os
-    * argparse
-    * xarray
-
-List of Functions:
-    * x
+    * ``numpy``
+    * ``os``
+    * ``argparse``
+    * ``xarray``
 """
 
-# make print statements appear in color
-from amescap.Script_utils import (prYellow, prCyan, prRed, Blue, Yellow,
-                                 NoColor, Green)
+# Make print statements appear in color
+from amescap.Script_utils import (
+    prCyan, Yellow, NoColor, Green
+)
 
-# load generic Python modules
-import argparse     # parse arguments
-import os           # access operating system functions
+# Load generic Python modules
+import argparse     # Parse arguments
+import os           # Access operating system functions
 import numpy as np
 import xarray as xr
 
-# load amesCAP modules
+# Load amesCAP modules
 from amescap.FV3_utils import layers_mid_point_to_boundary
 
 xr.set_options(keep_attrs = True)
-
 
 # ======================================================
 #                  ARGUMENT PARSER

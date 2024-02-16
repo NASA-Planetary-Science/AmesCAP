@@ -5,30 +5,28 @@ Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on \
 the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
 The executable requires 2 arguments:
-    * [-id --id]      The simulation identifier, AND
-    * [-ls --ls]      the desired solar longitude(s), OR
-    * [-f --filename] the name(s) of the desired file(s).
+    * ``[-id --id]``      The simulation identifier, AND
+    * ``[-ls --ls]``      the desired solar longitude(s), OR
+    * ``[-f --filename]`` the name(s) of the desired file(s).
 
 Third-party Requirements:
-    * numpy
-    * sys
-    * argparse
-    * os
-    * requests
-
-List of Functions:
-    * download - Queries the requested file from the NAS Data Portal.
+    * ``numpy``
+    * ``sys``
+    * ``argparse``
+    * ``os``
+    * ``requests``
 """
 
-# make print statements appear in color
-from amescap.Script_utils import (prYellow, prCyan, prRed, Blue, Yellow,
-                                 NoColor, Green, Cyan)
+# Make print statements appear in color
+from amescap.Script_utils import (
+    prYellow, prCyan, Yellow, NoColor, Green, Cyan
+)
 
-# load generic Python modules
-import sys          # system commands
-import argparse     # parse arguments
-import os           # access operating system functions
-import requests     # download data from site
+# Load generic Python modules
+import sys          # System commands
+import argparse     # Parse arguments
+import os           # Access operating system functions
+import requests     # Download data from website
 import numpy as np
 
 # ======================================================

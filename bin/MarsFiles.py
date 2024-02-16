@@ -13,31 +13,29 @@ Third-party Requirements:
     * os
     * subprocess
     * warnings
-
-List of Functions:
-    * x
 """
 
-# make print statements appear in color
-from amescap.Script_utils import (prYellow, prCyan, prRed, Blue, Yellow,
-                                 NoColor, Green)
+# Make print statements appear in color
+from amescap.Script_utils import (
+    prYellow, prCyan, prRed, Blue, Yellow, NoColor, Green
+)
 
-# load generic Python Modules
-import sys          # system commands
-import argparse     # parse arguments
-import os           # access operating system functions
-import subprocess   # run command-line commands
-import warnings     # suppress errors triggered by NaNs
+# Load generic Python Modules
+import sys          # System commands
+import argparse     # Parse arguments
+import os           # Access operating system functions
+import subprocess   # Run command-line commands
+import warnings     # Suppress errors triggered by NaNs
 import numpy as np
 from netCDF4 import Dataset
 
-# load amesCAP modules
-from amescap.Ncdf_wrapper import Ncdf, Fort
-from amescap.FV3_utils import tshift, daily_to_average, daily_to_diurn
-from amescap.Script_utils import (find_tod_in_diurn, FV3_file_type,
-                                  filter_vars, regrid_Ncfile,
-                                  get_longname_units)
-
+# Load amesCAP modules
+from amescap.Ncdf_wrapper import (Ncdf, Fort)
+from amescap.FV3_utils import (tshift, daily_to_average, daily_to_diurn)
+from amescap.Script_utils import (
+    find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile,
+    get_longname_units
+)
 
 # ======================================================
 #                  ARGUMENT PARSER

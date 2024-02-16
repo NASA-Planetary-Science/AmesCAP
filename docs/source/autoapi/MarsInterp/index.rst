@@ -8,18 +8,15 @@
    The MarsInterp executable is for ...
 
    The executable requires x arguments:
-       * [-x --x]      define
+       * ``[-x --x]``      define
 
    Third-party Requirements:
-       * numpy
-       * netCDF4
-       * argparse
-       * os
-       * time
-       * matplotlib
-
-   List of Functions:
-       * x
+       * ``numpy``
+       * ``netCDF4``
+       * ``argparse``
+       * ``os``
+       * ``time``
+       * ``matplotlib``
 
 
 

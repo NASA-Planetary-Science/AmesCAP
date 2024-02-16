@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'autoapi.extension',
+    'sphinxcontrib.autoprogram',
 ]
 
 autoapi_type = 'python'

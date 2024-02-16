@@ -14,26 +14,26 @@
    variable names, units, etc.
 
    The executable requires 1 argument:
-       * [input_file]      the file to be transformed
+       * ``[input_file]``      the file to be transformed
 
    and optionally accepts 2 arguments:
-       * [-add --add]              Derive and add variable to file
-       * [-zdiff --zdiff]          Differentiate variable w.r.t. Z axis
-       * [-col --col]              Column-integrate variable
-       * [-zd --zonal_detrend]     Subtract zonal mean from variable
-       * [-dp_to_dz --dp_to_dz]    Convert aerosol opacity op/Pa -> op/m
-       * [-dz_to_dp --dz_to_dp]    Convert aerosol opacity op/m -> op/Pa
-       * [-rm --remove]            Remove variable from file    
-       * [-extract --extract]      Copy variable to new file
-       * [-edit --edit]            Edit variable attributes or scale it
+       * ``[-add --add]``              Derive and add variable to file
+       * ``[-zdiff --zdiff]``          Differentiate variable w.r.t. Z axis
+       * ``[-col --col]``              Column-integrate variable
+       * ``[-zd --zonal_detrend]``     Subtract zonal mean from variable
+       * ``[-dp_to_dz --dp_to_dz]``    Convert aerosol opacity op/Pa -> op/m
+       * ``[-dz_to_dp --dz_to_dp]``    Convert aerosol opacity op/m -> op/Pa
+       * ``[-rm --remove]``            Remove variable from file    
+       * ``[-extract --extract]``      Copy variable to new file
+       * ``[-edit --edit]``            Edit variable attributes or scale it
 
    Third-party Requirements:
-       * numpy
-       * netCDF4
-       * argparse
-       * os
-       * subprocess
-       * matplotlib
+       * ``numpy``
+       * ``netCDF4``
+       * ``argparse``
+       * ``os``
+       * ``subprocess``
+       * ``matplotlib``
 
 
 
@@ -278,7 +278,7 @@ Functions
    --- 0 --- SFC        ========  phalf
                        / / / /
 
-   :param pstd: Vertical coordinate (pstd) (Pa)
+   :param pstd: Vertical coordinate (pstd; Pa)
    :type pstd: array [lev]
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]

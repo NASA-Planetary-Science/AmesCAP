@@ -19,9 +19,6 @@
        * subprocess
        * warnings
 
-   List of Functions:
-       * x
-
 
 
 Module Contents

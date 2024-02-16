@@ -13,20 +13,17 @@
    for MarsWRF, variables are derived and regridded onto a standard grid.
 
    The executable requires 1 argument:
-       * [input_file]              the file to be transformed
+       * ``[input_file]``      the file to be transformed
        
    and optionally accepts 2 arguments:
-       * [-openmars --openmars]    convert openMars data to MGCM format
-       * [-marswrf --marswrf]      convert MarsWRF data to MGCM format
+       * ``[-openmars --openmars]``    convert openMars data to MGCM format
+       * ``[-marswrf --marswrf]``      convert MarsWRF data to MGCM format
 
    Third-party Requirements:
-       * numpy
-       * os
-       * argparse
-       * xarray
-
-   List of Functions:
-       * x
+       * ``numpy``
+       * ``os``
+       * ``argparse``
+       * ``xarray``
 
 
 
