@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 The MarsFormat executable is a routine that transforms non-MGCM model
-output into MGCM-like model output for compatibility with CAP. 
+output into MGCM-like model output for compatibility with CAP.
 
 MarsFormat changes variable names, dimension names, dimension order,
 and units to the configuration expected by CAP. In some cases, such as
@@ -9,7 +9,7 @@ for MarsWRF, variables are derived and regridded onto a standard grid.
 
 The executable requires 1 argument:
     * ``[input_file]``      the file to be transformed
-    
+
 and optionally accepts 2 arguments:
     * ``[-openmars --openmars]``    convert openMars data to MGCM format
     * ``[-marswrf --marswrf]``      convert MarsWRF data to MGCM format
@@ -37,9 +37,9 @@ from amescap.FV3_utils import layers_mid_point_to_boundary
 
 xr.set_options(keep_attrs = True)
 
-# ======================================================
-#                  ARGUMENT PARSER
-# ======================================================
+# ======================================================================
+#                           ARGUMENT PARSER
+# ======================================================================
 
 parser = argparse.ArgumentParser(
     description=(
@@ -50,14 +50,13 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    'input_file', nargs='+',
+    "input_file", nargs="+",
     help=(
         f"A netCDF file or list of netCDF files.\n\n"
     )
 )
 
-parser.add_argument(
-    '-openmars', '--openmars', nargs='+',
+parser.add_argument("-openmars", "--openmars", nargs="+",
     help=(
         f"Produce an MGCM-like daily file from an {Yellow}openMars"
         f"{NoColor} file.\n"
@@ -67,8 +66,7 @@ parser.add_argument(
     )
 )
 
-parser.add_argument(
-    '-marswrf', '--marswrf', nargs='+',
+parser.add_argument("-marswrf", "--marswrf", nargs="+",
     help=(
         f"Produce an MGCM-like daily file from a "
         f"{Yellow}MarsWRF{NoColor} file.\n"
@@ -78,20 +76,16 @@ parser.add_argument(
     )
 )
 
-# parser.add_argument(
-#     '-legacy', '--legacy', nargs='+', help=argparse.SUPPRESS
-# )
+# parser.add_argument("-legacy", "--legacy", nargs="+",
+#   help=argparse.SUPPRESS)
 
-parser.add_argument('--debug', action='store_true',
-    help = (
-        f"Debug flag: do not bypass errors.\n\n"
-    )
-)
+parser.add_argument("--debug", action="store_true",
+    help = (f"Debug flag: do not bypass errors.\n\n"))
 
 
-# ======================================================
-#                  DEFINITIONS
-# ======================================================
+# ======================================================================
+#                           DEFINITIONS
+# ======================================================================
 
 # MarsWRF
 def marswrf_to_mgcm(DS):
@@ -99,63 +93,64 @@ def marswrf_to_mgcm(DS):
     Converts variables in MarsWRF output files to MGCM-like format and
     derives variables from their perturbations.
 
-    WRF data is output to dimensions: [time, pfull, lat, lon] or 
+    WRF data is output to dimensions: [time, pfull, lat, lon] or
     [t,z,y,x], just like MGCM data. Some WRF variables are on staggered
     grids, referred to in the comments using ' (prime; like y').
-    
+
     The dimensions of the native WRF variables can be:
-    - t  = time             (like time in MGCM)
-    - z  = bottom_top       (like pfull in MGCM)
-    - z' = bottom_top_stag  (like phalf in MGCM)
-    - y  = south_north      (like lat in MGCM)
-    - y' = south_north_stag
-    - x  = west_east        (like lon in MGCM)
-    - x' = west_east_stag  
-    
+
+    ======== ==================== ========================
+    Variable MarsWRF Dimensions   MGCM Equivalent Variable
+    ======== ==================== ========================
+    ``t``    ``time``             ``time``
+    ``z``    ``bottom_top``       ``pfull``
+    ``z'``   ``bottom_top_stag``  ``phalf``
+    ``y``    ``south_north``      ``lat``
+    ``y'``   ``south_north_stag``
+    ``x``    ``west_east``        ``lon``
+    ``x'``   ``west_east_stag``
+    ======== ==================== ========================
+
     The variables transferred or derived from WRF output and piped to
     the MGCM daily file are listed below.
-    
-    | MarsWRF | MGCM Equiv. | Units    | Notes
-    | ------- | ----------- | -----    |------
-    | XTIME   | time        | days     | *converted from minutes to days 
-    |         |             |          |  since simulation start*
-    | L_S     | areo        | degree   |
-    | PSFC    | ps          | Pa       |
-    | XLONG   | lon         | degree E | 
-    | XLAT    | lat         | degree N |
-    | HGT     | zsurf       | meters   |
-    | U       | ucomp       | m/s      | *req. interp. to regular grid*
-    | V       | vcomp       | m/s      | *req. interp. to regular grid*
-    | W       | w           | m/s      | *req. interp. to regular grid*
-    | H2OICE  | h2o_ice_sfc | kg/m2    |
-    | CO2ICE  | co2_ice_sfc | kg/m2    |
-    | ZNW     | bk          |          |
-    | TSK     | ts          | K        |
-    | P_TOP   | pk[0]       | Pa       | = model top pressure
 
-    Parameters
-    ----------
-    DS : xarray dataset
-        The dataset created by xarray when it opens the user-supplied
-        input file.
+    ========== =============== ========== ================================
+    MarsWRF    MGCM Equiv.     Units      Notes
+    ========== =============== ========== ================================
+    ``XTIME``  ``time``        days       converted from minutes to \
+                                          days since simulation start
+    ``L_S``    ``areo``        degree     
+    ``PSFC``   ``ps``          Pa         
+    ``XLONG``  ``lon``         degree E   
+    ``XLAT``   ``lat``         degree N   
+    ``HGT``    ``zsurf``       meters     
+    ``U``      ``ucomp``       m/s        Requires interpolation to a \
+                                          regular grid
+    ``V``      ``vcomp``       m/s        Requires interpolation to a \
+                                          regular grid
+    ``W``      ``w``           m/s        Requires interpolation to a \
+                                          regular grid
+    ``H2OICE`` ``h2o_ice_sfc`` kg/m2      
+    ``CO2ICE`` ``co2_ice_sfc`` kg/m2      
+    ``ZNW``    ``bk``                     
+    ``TSK``    ``ts``          K          
+    ``P_TOP``  ``pk[0]``       Pa         model top pressure
+    ========== =============== ========== ================================
 
-    Raises
-    ------
-    
+    :param DS: The dataset created by xarray when it opens the \
+        user-supplied input file.
+    :type DS: xarray dataset
+
     Returns
     -------
-    var_dict : dictionary
-        Dictionary with variable names as keys and a list of attributes[values, dimensions, longname, units] as values.
-    time : array
-        Minutes since simulation start
-    lat : array
-        Latitude on a regular grid
-    lon : array
-        Longitude on a regular grid
-    phalf : array
-        Half pressure levels
-    pfull : array
-        Full pressure levels
+    :return: ``var_dict`` Dictionary with variable names as keys and a\
+        list of attributes[values, dimensions, longname, units] as \
+        values.\n
+        ``time`` (array) Minutes since simulation start\n
+        ``lat`` (array) Latitude on a regular grid\n
+        ``lon`` (array) Longitude on a regular grid\n
+        ``phalf`` (array) Half pressure levels\n
+        ``pfull`` (array) Full pressure levels\n
     """
 
     # Find shape of coordinates. Expecting [t,z,y,x]
@@ -177,11 +172,9 @@ def marswrf_to_mgcm(DS):
     phalf = DS.P_TOP[0] + DS.ZNW[0, :]*DS.P0
 
     # Calculate level height above the Surface (i.e. above topo)
-    zagl_lvl = (
-        (DS.PH[:, :Zmax, :, :] + DS.PHB[0, :Zmax, :, :])
-        / DS.G
-        - DS.HGT[0, :, :]
-    )
+    zagl_lvl = ((DS.PH[:, :Zmax, :, :] + DS.PHB[0, :Zmax, :, :])
+                / DS.G
+                - DS.HGT[0, :, :])
 
     # Find layer pressures [Pa]
     try:
@@ -224,85 +217,62 @@ def marswrf_to_mgcm(DS):
     # Archive variables
     # Each entry has [name, values, dimensions, longname, units]
     var_dict = {
-        'ak': [
-            ak, ['phalf'],
-            'pressure part of the hybrid coordinate', 'Pa'],
-        'bk': [
-            bk, ['phalf'],
-            'vertical coordinate sigma value', 'none'],
-        'areo': [
-            DS.L_S, ['time'],
-            'solar longitude', 'degree'],
-        'ps': [
-            DS.PSFC, ['time', 'lat', 'lon'],
-            'surface pressure', 'Pa'],
-        'zsurf': [
-            DS.HGT[0, :], ['lat', 'lon'],
-            'surface height', 'm'],
-        'ucomp': [
-            ucomp, ['time', 'pfull', 'lat', 'lon'],
-            'zonal winds', 'm/sec'],
-        'vcomp': [
-            vcomp, ['time', 'pfull', 'lat', 'lon'],
-            'meridional winds', 'm/sec'],
-        'w': [
-            w, ['time', 'pfull', 'lat', 'lon'],
-            'vertical winds', 'm/s'],
-        'pfull3D': [
-            pfull3D, ['time', 'pfull', 'lat', 'lon'],
-            'pressure', 'Pa'],
-        'temp': [
-            temp, ['time', 'pfull', 'lat', 'lon'],
-            'temperature', 'K'],
-        'h2o_ice_sfc': [
-            DS.H2OICE, ['time', 'lat', 'lon'],
-            'surface H2O Ice', 'kg/m2'],
-        'co2_ice_sfc': [
-            DS.CO2ICE, ['time', 'lat', 'lon'],
-            'surface CO2 Ice', 'kg/m2'],
-        'ts': [
-            DS.TSK, ['time', 'lat', 'lon'],
-            'surface temperature', 'K'],
+        "ak": [ak, ["phalf"],
+            "pressure part of the hybrid coordinate", "Pa"],
+        "bk": [bk, ["phalf"],
+            "vertical coordinate sigma value", "none"],
+        "areo": [DS.L_S, ["time"],
+            "solar longitude", "degree"],
+        "ps": [DS.PSFC, ["time", "lat", "lon"],
+            "surface pressure", "Pa"],
+        "zsurf": [DS.HGT[0, :], ["lat", "lon"],
+            "surface height", "m"],
+        "ucomp": [ucomp, ["time", "pfull", "lat", "lon"],
+            "zonal winds", "m/sec"],
+        "vcomp": [vcomp, ["time", "pfull", "lat", "lon"],
+            "meridional winds", "m/sec"],
+        "w": [w, ["time", "pfull", "lat", "lon"],
+            "vertical winds", "m/s"],
+        "pfull3D": [pfull3D, ["time", "pfull", "lat", "lon"],
+            "pressure", "Pa"],
+        "temp": [temp, ["time", "pfull", "lat", "lon"],
+            "temperature", "K"],
+        "h2o_ice_sfc": [DS.H2OICE, ["time", "lat", "lon"],
+            "surface H2O Ice", "kg/m2"],
+        "co2_ice_sfc": [DS.CO2ICE, ["time", "lat", "lon"],
+            "surface CO2 Ice", "kg/m2"],
+        "ts": [DS.TSK, ["time", "lat", "lon"],
+            "surface temperature", "K"],
     }
     return var_dict, time, lat, lon, phalf, pfull
 
 
-# OpenMars
 def openmars_to_mgcm(DS):
     """
     Converts variables in openMars output files to MGCM-like format.
 
     openMars data is similar to MGCM data already. This function derives
-    pfull and phalf but otherwise only needs to rename variables and 
+    pfull and phalf but otherwise only needs to rename variables and
     update units, longnames, and dimensions to match MGCM output.
 
-    Parameters
-    ----------
-    DS : xarray dataset
-        The dataset created by xarray when it opens the user-supplied
-        input file.
+    :param DS: The dataset created by xarray when it opens the \
+        user-supplied input file.
+    :type DS: xarray dataset
 
-    Raises
-    ------
-    
     Returns
     -------
-    var_dict : dictionary
-        Dictionary with variable names as keys and a list of attributes[values, dimensions, longname, units] as values.
-    time : array
-        Minutes since simulation start
-    lat : array
-        Latitude on a regular grid
-    lon : array
-        Longitude on a regular grid
-    phalf : array
-        Half pressure levels
-    pfull : array
-        Full pressure levels
+    :return: ``var_dict`` Dictionary with variable names as keys and a\
+        list of attributes[values, dimensions, longname, units] as \
+        values.\n
+        ``time`` (array) Minutes since simulation start\n
+        ``lat`` (array) Latitude on a regular grid\n
+        ``lon`` (array) Longitude on a regular grid\n
+        ``phalf`` (array) Half pressure levels\n
+        ``pfull`` (array) Full pressure levels\n
     """
     # Define coordinates for new DataFrame
-    ref_press = 720  # TODO this is added on to create ak/bk
-    time = DS.time  # minutes since simulation start [m]
+    ref_press = 720 # TODO this is added on to create ak/bk
+    time = DS.time # minutes since simulation start [m]
     lat = DS.lat
     lon = DS.lon
 
@@ -311,124 +281,114 @@ def openmars_to_mgcm(DS):
     pfull = DS.lev*ref_press
 
     # Add p_half dimensions and ak, bk vertical grid coordinates
-    # DS.expand_dims({'p_half':len(pfull)+1})
+    # DS.expand_dims({"p_half":len(pfull)+1})
 
-    # Compute sigma values.    
+    # Compute sigma values.
     # Invert sigma array for layers_mid_point_to_boundary(), which
     # expects sigma[0]=0, sigma[-1]=1.
     # Invert again so that sigma[0]=1, sigma[-1]=0
-    DS['bk'] = layers_mid_point_to_boundary(DS.lev[::-1], 1.)[::-1]
+    DS["bk"] = layers_mid_point_to_boundary(DS.lev[::-1], 1.)[::-1]
     # Pure sigma model, set bk=0
-    DS['ak'] = np.zeros(len(pfull)+1)
-    phalf = np.array(DS['ak']) + ref_press*np.array(DS['bk'])
+    DS["ak"] = np.zeros(len(pfull)+1)
+    phalf = np.array(DS["ak"]) + ref_press*np.array(DS["bk"])
 
     # Archive variables
     # Each entry has [name, values, dimensions, longname, units]
     var_dict = {
-        'bk': [
-            DS.bk, ['phalf'],
-            'vertical coordinate sigma value', 'none'],
-        'ak': [
-            DS.ak, ['phalf'],
-            'pressure part of the hybrid coordinate', 'Pa'],
-        'areo': [
-            DS.Ls, ['time'],
-            'solar longitude', 'degree'],
-        'ps': [
-            DS.ps, ['time', 'lat', 'lon'],
-            'surface pressure', 'Pa'],
-        'ucomp': [
-            DS.u, ['time', 'pfull', 'lat', 'lon'],
-            'zonal winds', 'm/sec'],
-        'vcomp': [
-            DS.v, ['time', 'pfull', 'lat', 'lon'],
-            'meridional wind', 'm/sec'],
-        'temp': [
-            DS.temp, ['time', 'pfull', 'lat', 'lon'],
-            'temperature', 'K'],
-        'dust_mass_col': [
-            DS.dustcol, ['time', 'lat', 'lon'],
-            'column integration of dust', 'kg/m2'],
-        'co2_ice_sfc': [
-            DS.co2ice, ['time', 'lat', 'lon'],
-            'surace CO2 ice', 'kg/m2'],
-        'ts': [
-            DS.tsurf, ['time', 'lat', 'lon'],
-            'surface temperature', 'K']
+        "bk": [DS.bk, ["phalf"],
+            "vertical coordinate sigma value", "none"],
+        "ak": [DS.ak, ["phalf"],
+            "pressure part of the hybrid coordinate", "Pa"],
+        "areo": [DS.Ls, ["time"],
+            "solar longitude", "degree"],
+        "ps": [DS.ps, ["time", "lat", "lon"],
+            "surface pressure", "Pa"],
+        "ucomp": [DS.u, ["time", "pfull", "lat", "lon"],
+            "zonal winds", "m/sec"],
+        "vcomp": [DS.v, ["time", "pfull", "lat", "lon"],
+            "meridional wind", "m/sec"],
+        "temp": [DS.temp, ["time", "pfull", "lat", "lon"],
+            "temperature", "K"],
+        "dust_mass_col": [DS.dustcol, ["time", "lat", "lon"],
+            "column integration of dust", "kg/m2"],
+        "co2_ice_sfc": [DS.co2ice, ["time", "lat", "lon"],
+            "surace CO2 ice", "kg/m2"],
+        "ts": [DS.tsurf, ["time", "lat", "lon"],
+            "surface temperature", "K"]
     }
     return var_dict, time, lat, lon, phalf, pfull
-    
-    
-# ======================================================
-#                  MAIN PROGRAM
-# ======================================================
+
+# ======================================================================
+#                           MAIN PROGRAM
+# ======================================================================
 
 def main():
     file_list = parser.parse_args().input_file
     data_dir = os.getcwd()
-    
+
     for file_name in file_list:
-        # if full path is not already in file_name, add it
-        if not ('/' in file_name):
+        if not ("/" in file_name):
+            # If full path is not already in file_name, add it
             input_file_name = f"{data_dir}/{file_name}"
         else:
             input_file_name = file_name
+            
         output_file_name = f"{input_file_name[:-3]}_atmos_daily.nc"
 
-        print('Processing...')
-        
+        print("Processing...")
+
         input_DS = xr.open_dataset(input_file_name, decode_times=False)
 
         # If user indicated marsWRF data
         if parser.parse_args().marswrf:
-            (archive_vars, time, lat, 
+            (archive_vars, time, lat,
             lon, phalf, pfull) = marswrf_to_mgcm(input_DS)
 
         # if user indicated openMars data
         elif parser.parse_args().openmars:
-            (archive_vars, time, lat, 
+            (archive_vars, time, lat,
             lon, phalf, pfull) = openmars_to_mgcm(input_DS)
 
         # Create output file (common to all models)
         coord_attributes = {
-            'time': ['time', 'days'],
-            'pfull': ['ref full pressure level', 'Pa'],
-            'lat': ['latitudes', 'degrees_N'],
-            'lon': ['longitudes', 'degrees_E'],
-            'phalf': ['ref pressure at layer boundaries', 'Pa']
+            "time": ["time", "days"],
+            "pfull": ["ref full pressure level", "Pa"],
+            "lat": ["latitudes", "degrees_N"],
+            "lon": ["longitudes", "degrees_E"],
+            "phalf": ["ref pressure at layer boundaries", "Pa"]
         }
 
         coord_values = {
-            'time': np.array(time),
-            'phalf': np.array(phalf),
-            'pfull': np.array(pfull),
-            'lat': np.array(lat),
-            'lon': np.array(lon)
+            "time": np.array(time),
+            "phalf": np.array(phalf),
+            "pfull": np.array(pfull),
+            "lat": np.array(lat),
+            "lon": np.array(lon)
         }
-        
+
         # Empty the dictionary
         var_DataArray = {}
         # Assign description and unit attributes to the dictionary
         for var in archive_vars.keys():
             var_DataArray[var] = xr.DataArray(
-                np.array(archive_vars[var][0]), 
+                np.array(archive_vars[var][0]),
                 dims = archive_vars[var][1]
             )
-            var_DataArray[var].attrs['long_name'] = archive_vars[var][2]
-            var_DataArray[var].attrs['units'] =  archive_vars[var][3]
+            var_DataArray[var].attrs["long_name"] = archive_vars[var][2]
+            var_DataArray[var].attrs["units"] =  archive_vars[var][3]
 
         # Create new DataFrame
         DF = xr.Dataset(var_DataArray, coords=coord_values)
 
         # Add longname and unit attibutes to the coordiate variables
         for var in coord_attributes.keys():
-            DF[var].attrs['long_name'] = coord_attributes[var][0]
-            DF[var].attrs['units'] = coord_attributes[var][1]
+            DF[var].attrs["long_name"] = coord_attributes[var][0]
+            DF[var].attrs["units"] = coord_attributes[var][1]
 
         # Check that vertical grid starts at top of atmosphere (TOA)
         # and highest pressures are at the surface.
         # If pressure at TOA is not minimized, flip array
-        if DF.pfull[0] != DF.pfull.min(): 
+        if DF.pfull[0] != DF.pfull.min():
             # regrid DS based on pfull
             DF = DF.isel(pfull = slice(None, None, -1))
             # flip phalf, ak, bk
@@ -442,24 +402,22 @@ def main():
             tmp_lon = np.array(DF.lon)
             tmp_lon = np.where(tmp_lon<0, tmp_lon+360, tmp_lon)
             DF = DF.assign_coords(
-                {
-                    'lon': ('lon', tmp_lon, DF.lon.attrs)
-                }
+                {"lon": ("lon", tmp_lon, DF.lon.attrs)}
             )
             DF = DF.sortby("lon")
 
-        # If areo does not have dimension 'scalar_axis', add it
+        # If areo does not have dimension scalar_axis, add it
         input_dimensions = DF.dims
-        if 'scalar_axis' not in input_dimensions:
+        if "scalar_axis" not in input_dimensions:
             scalar_axis = DF.assign_coords(scalar_axis=1)
-        
-        # Ensure areo dimension order is ('time', 'scalar_axis')
-        if DF.areo.dims != ('time', scalar_axis):
-            DF['areo'] = DF.areo.expand_dims('scalar_axis', axis=1)
+
+        # Ensure areo dimension order is (time, scalar_axis)
+        if DF.areo.dims != ("time", scalar_axis):
+            DF["areo"] = DF.areo.expand_dims("scalar_axis", axis=1)
 
         # Pipe processed data to a new netCDF file
         DF.to_netcdf(output_file_name)
-        
+
         prCyan(f"{output_file_name} was created")
 
 # ======================================================
