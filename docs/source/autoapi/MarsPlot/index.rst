@@ -5,7 +5,7 @@
 
 .. autoapi-nested-parse::
 
-   The MarsPlot executable is for generating plots from Custom.in template 
+   The MarsPlot executable is for generating plots from Custom.in template
    files. It sources variables from netCDF files in a specified directory.
 
    The executable requires x arguments:

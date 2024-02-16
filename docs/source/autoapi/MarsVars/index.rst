@@ -17,15 +17,15 @@
        * ``[input_file]``      the file to be transformed
 
    and optionally accepts 2 arguments:
-       * ``[-add --add]``              Derive and add variable to file
-       * ``[-zdiff --zdiff]``          Differentiate variable w.r.t. Z axis
-       * ``[-col --col]``              Column-integrate variable
-       * ``[-zd --zonal_detrend]``     Subtract zonal mean from variable
-       * ``[-dp_to_dz --dp_to_dz]``    Convert aerosol opacity op/Pa -> op/m
-       * ``[-dz_to_dp --dz_to_dp]``    Convert aerosol opacity op/m -> op/Pa
-       * ``[-rm --remove]``            Remove variable from file    
-       * ``[-extract --extract]``      Copy variable to new file
-       * ``[-edit --edit]``            Edit variable attributes or scale it
+       * ``[-add --add]``           Derive and add variable to file
+       * ``[-zdiff --zdiff]``       Differentiate variable w.r.t. Z axis
+       * ``[-col --col]``           Column-integrate variable
+       * ``[-zd --zonal_detrend]``  Subtract zonal mean from variable
+       * ``[-dp_to_dz --dp_to_dz]`` Convert aerosol opacity op/Pa -> op/m
+       * ``[-dz_to_dp --dz_to_dp]`` Convert aerosol opacity op/m -> op/Pa
+       * ``[-rm --remove]``         Remove variable from file    
+       * ``[-extract --extract]``   Copy variable to new file
+       * ``[-edit --edit]``         Edit variable attributes or scale it
 
    Third-party Requirements:
        * ``numpy``
@@ -79,12 +79,12 @@ Functions
    :type ak: array [phalf]
    :param bk: Vertical coordinate sigma value (None)
    :type bk: array [phalf]
-   :param shape_out: Determines how to handle the dimensions of p_3D.         If len(time) = 1 (one timestep), p_3D is returned as         [1, lev, lat, lon] as opposed to [lev, lat, lon]
+   :param shape_out: Determines how to handle the dimensions of p_3D.         If ``len(time) = 1`` (one timestep), ``p_3D`` is returned as         [1, lev, lat, lon] as opposed to [lev, lat, lon]
    :type shape_out: float
        
    :raises: 
 
-   :return: p_3D - The full 3D pressure array (Pa)
+   :return: ``p_3D`` The full 3D pressure array (Pa)
    :rtype: array [time, lev, lat, lon]
 
 
@@ -121,7 +121,7 @@ Functions
 
    :raises: 
 
-   :return: xzTau, Dust or ice extinction rate (km-1)
+   :return: ``xzTau`` Dust or ice extinction rate (km-1)
    :rtype: array [time, lev, lat, lon]
 
 
@@ -143,7 +143,7 @@ Functions
 
    :raises: 
 
-   :return: q, Dust or ice mass mixing ratio (ppm)
+   :return: ``q``, Dust or ice mass mixing ratio (ppm)
    :rtype: array [time, lev, lat, lon]
 
 
@@ -160,13 +160,13 @@ Functions
 
    :raises: 
 
-   :return: Vg, Dust sedimentation rate (m/s)
+   :return: ``Vg`` Dust sedimentation rate (m/s)
    :rtype: array [time, lev, lat, lon]
 
 
 .. py:function:: compute_w_net(Vg, wvar)
 
-   Computes the net vertical wind, which is the vertical wind (w)     minus the sedimentation rate (Vg_sed):
+   Computes the net vertical wind, which is the vertical wind (w)     minus the sedimentation rate (``Vg_sed``)::
 
        w_net = w - Vg_sed
 
@@ -177,7 +177,7 @@ Functions
 
    :raises: 
 
-   :return: w_net, Net vertical wind speed (m/s)
+   :return: `w_net` Net vertical wind speed (m/s)
    :rtype: array [time, lev, lat, lon]
 
 
@@ -205,11 +205,16 @@ Functions
    Compute the vertical wind using the omega equation.
 
    Under hydrostatic balance, omega is proportional to the vertical
-   wind velocity (w):
-       omega = dp/dt = (dp/dz)(dz/dt) = (dp/dz)*w
-   Under hydrostatic equilibrium,
-       dp/dz = -rho*g
-   So omega can be calculated as:
+   wind velocity (``w``)::
+
+       omega = dp/dt = (dp/dz)(dz/dt) = (dp/dz) * w
+
+   Under hydrostatic equilibrium::
+
+       dp/dz = -rho * g
+
+   So ``omega`` can be calculated as::
+
        omega = -rho * g * w
 
    :param rho: Atmospheric density (kg/m^3)
@@ -238,7 +243,7 @@ Functions
 
    :raises: 
 
-   :return: zfull (m)
+   :return: ``zfull`` (m)
    :rtype: array [time, lev, lat, lon]
 
 
@@ -257,26 +262,24 @@ Functions
 
    :raises: 
 
-   :return: zhalf (m)
+   :return: ``zhalf`` (m)
    :rtype: array [time, lev, lat, lon]
 
 
 .. py:function:: compute_DZ_full_pstd(pstd, temp, ftype='average')
 
-   Calculate the thickness of a layer from the midpoint of the     standard pressure levels ('pstd').
+   Calculate the thickness of a layer from the midpoint of the     standard pressure levels (``pstd``).
 
-   *** NOTE***
-   In this context, 'pfull' = 'pstd' with the layer interfaces defined somewhere
-   in between successive layers.
+   In this context, ``pfull=pstd`` with the layer interfaces     defined somewhere in between successive layers::
 
-   --- Nk --- TOP       ========  phalf
-   --- Nk-1 ---
-                        --------  pfull = pstd    ^
-                                                  | DZ_full_pstd
-                        ========  phalf           |
-   --- 1 ---            --------  pfull = pstd    v
-   --- 0 --- SFC        ========  phalf
-                       / / / /
+       --- Nk --- TOP       ========  phalf
+       --- Nk-1 ---
+                            --------  pfull = pstd    ^
+                                                      | DZ_full_pstd
+                            ========  phalf           |
+       --- 1 ---            --------  pfull = pstd    v
+       --- 0 --- SFC        ========  phalf
+                             / / / /
 
    :param pstd: Vertical coordinate (pstd; Pa)
    :type pstd: array [lev]
@@ -302,7 +305,7 @@ Functions
 
    :raises: 
 
-   :return: N, Brunt Vaisala freqency [rad/s]
+   :return: ``N``, Brunt Vaisala freqency [rad/s]
    :rtype: array [time, lev, lat, lon]
 
 
@@ -333,7 +336,7 @@ Functions
 
    :raises: 
 
-   :return: scorer_wl, Scorer horizontal wavelength (m)
+   :return: ``scorer_wl`` Scorer horizontal wavelength (m)
    :rtype: array [time, lev, lat, lon]
 
 
@@ -352,7 +355,7 @@ Functions
 
    :raises: 
 
-   :return: DP, Layer thickness in pressure units (Pa)
+   :return: ``DP`` Layer thickness in pressure units (Pa)
    :rtype: array [time, lev, lat, lon]
 
 
@@ -371,28 +374,30 @@ Functions
 
    :raises: 
 
-   :return: DZ, Layer thickness in altitude units (m)
+   :return: ``DZ`` Layer thickness in altitude units (m)
    :rtype: array [time, lev, lat, lon]
 
 
 .. py:function:: compute_Ep(temp)
 
-   Calculate wave potential energy.
-   Ep = 1/2 (g/N)^2 (T'/T)^2
+   Calculate wave potential energy::
+
+       Ep = 1/2 (g/N)^2 (temp'/temp)^2
 
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]
 
    :raises: 
 
-   :return: Ep, Wave potential energy (J/kg)
+   :return: ``Ep`` Wave potential energy (J/kg)
    :rtype: array [time, lev, lat, lon]
 
 
 .. py:function:: compute_Ek(ucomp, vcomp)
 
-   Calculate wave kinetic energy.
-   Ek = 1/2 (u'**2+v'**2)
+   Calculate wave kinetic energ::
+
+       Ek = 1/2 (u'**2+v'**2)
 
    :param ucomp: Zonal wind (m/s)
    :type ucomp: array [time, lev, lat, lon]
@@ -401,7 +406,7 @@ Functions
 
    :raises: 
 
-   :return: Ek, Wave kinetic energy (J/kg)
+   :return: ``Ek`` Wave kinetic energy (J/kg)
    :rtype: array [time, lev, lat, lon]
 
 
@@ -416,19 +421,24 @@ Functions
 
    :raises: 
 
-   :return: u'w' or v'w', Zonal/meridional momentum flux (J/kg)
+   :return: ``u'w'`` or ``v'w'``, Zonal/meridional momentum flux (J/kg)
    :rtype: array [time, lev, lat, lon]
 
 
 .. py:function:: compute_WMFF(MF, rho, lev, interp_type)
 
-   Calculate the zonal or meridional wave-mean flow forcing.
-   ax = -1/rho d(rho u'w')/dz
-   ay = -1/rho d(rho v'w')/dz
+   Calculate the zonal or meridional wave-mean flow forcing::
 
-   If interp_type == 'pstd', then:
+       ax = -1/rho d(rho u'w')/dz
+       ay = -1/rho d(rho v'w')/dz
+
+   If interp_type == ``pstd``, then::
+
        [du/dz = (du/dp).(dp/dz)] > [du/dz = -rho*g * (du/dp)]
-       where dp/dz = -rho*g
+
+   where:: 
+
+       dp/dz = -rho*g
        [du/dz = (du/dp).(-rho*g)] > [du/dz = -rho*g * (du/dp)]
 
    :param MF: Zonal/meridional momentum flux (J/kg)
