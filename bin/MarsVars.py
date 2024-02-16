@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-The MarsVars executable is for performing variable manipulations in 
-existing files. Most often, it is used to derive and add variables to 
+The MarsVars executable is for performing variable manipulations in
+existing files. Most often, it is used to derive and add variables to
 existing files, but it also differentiates variables with respect to
 (w.r.t) the Z axis, column-integrates variables, converts aerosol
 opacities from opacity per Pascal to opacity per meter, removes and
-extracts variables from files, and enables scaling variables or editing 
+extracts variables from files, and enables scaling variables or editing
 variable names, units, etc.
 
 The executable requires 1 argument:
@@ -18,7 +18,7 @@ and optionally accepts 2 arguments:
     * ``[-zd --zonal_detrend]``  Subtract zonal mean from variable
     * ``[-dp_to_dz --dp_to_dz]`` Convert aerosol opacity op/Pa -> op/m
     * ``[-dz_to_dp --dz_to_dp]`` Convert aerosol opacity op/m -> op/Pa
-    * ``[-rm --remove]``         Remove variable from file    
+    * ``[-rm --remove]``         Remove variable from file
     * ``[-extract --extract]``   Copy variable to new file
     * ``[-edit --edit]``         Edit variable attributes or scale it
 
@@ -46,7 +46,7 @@ import numpy as np
 from netCDF4 import Dataset
 
 # Force matplotlib NOT to load Xwindows backend
-matplotlib.use('Agg') 
+matplotlib.use('Agg')
 
 # Load amesCAP modules
 from amescap.FV3_utils import (
@@ -54,7 +54,7 @@ from amescap.FV3_utils import (
     zonal_detrend, spherical_div, spherical_curl, frontogenesis
 )
 from amescap.Script_utils import (
-    check_file_tape, print_fileContent,FV3_file_type, filter_vars, 
+    check_file_tape, print_fileContent,FV3_file_type, filter_vars,
     get_longname_units, ak_bk_loader
 )
 from amescap.Ncdf_wrapper import Ncdf
@@ -234,7 +234,7 @@ parser.add_argument("-unit", "--unit", type=str, default=None,
     help=argparse.SUPPRESS)
 
 # To be used jointly with --edit
-parser.add_argument("-multiply", "--multiply", type=float, default=None, 
+parser.add_argument("-multiply", "--multiply", type=float, default=None,
     help=argparse.SUPPRESS)
 
 
@@ -286,7 +286,7 @@ VAR = {
 # ======================================================================
 # ======================================================================
 # ======================================================================
-# TODO : If only one timestep, reshape from 
+# TODO : If only one timestep, reshape from
 #       (lev, lat, lon) to (time, lev, lat, lon)
 
 # Fill values for NaN. np.NaN, raises errors when running runpinterp.
@@ -338,7 +338,7 @@ C_ice = (4/3) * (rho_ice/Qext_ice) * Reff_ice # = 2188.874 [m-2]
 def compute_p_3D(ps, ak, bk, shape_out):
     """
     Compute the 3D pressure at layer midpoints.
-    
+
     :param ps: Surface pressure (Pa)
     :type ps: array [time, lat, lon]
     :param ak: Vertical coordinate pressure value (Pa)
@@ -349,8 +349,8 @@ def compute_p_3D(ps, ak, bk, shape_out):
         If ``len(time) = 1`` (one timestep), ``p_3D`` is returned as \
         [1, lev, lat, lon] as opposed to [lev, lat, lon]
     :type shape_out: float
-        
-    :raises: 
+
+    :raises:
 
     :return: ``p_3D`` The full 3D pressure array (Pa)
     :rtype: array [time, lev, lat, lon]
@@ -369,8 +369,8 @@ def compute_rho(p_3D, temp):
     :type p_3D: array [time, lev, lat, lon]
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
-    
-    :raises: 
+
+    :raises:
 
     :return: Density (kg/m^3)
     :rtype: array [time, lev, lat, lon]
@@ -394,7 +394,7 @@ def compute_xzTau(q, temp, lev, const, f_type):
     :param f_type: The FV3 file type: diurn, daily, or average
     :type f_stype: str
 
-    :raises: 
+    :raises:
 
     :return: ``xzTau`` Dust or ice extinction rate (km-1)
     :rtype: array [time, lev, lat, lon]
@@ -435,7 +435,7 @@ def compute_mmr(xTau, temp, lev, const, f_type):
     :param f_type: The FV3 file type: diurn, daily, or average
     :type f_stype: str
 
-    :raises: 
+    :raises:
 
     :return: ``q``, Dust or ice mass mixing ratio (ppm)
     :rtype: array [time, lev, lat, lon]
@@ -472,7 +472,7 @@ def compute_Vg_sed(xTau, nTau, temp):
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
 
-    :raises: 
+    :raises:
 
     :return: ``Vg`` Dust sedimentation rate (m/s)
     :rtype: array [time, lev, lat, lon]
@@ -494,7 +494,7 @@ def compute_w_net(Vg, wvar):
     """
     Computes the net vertical wind, which is the vertical wind (w) \
     minus the sedimentation rate (``Vg_sed``)::
-    
+
         w_net = w - Vg_sed
 
     :param Vg: Dust sedimentation rate (m/s)
@@ -502,7 +502,7 @@ def compute_w_net(Vg, wvar):
     :param wvar: Vertical wind (m/s)
     :type wvar: array [time, lev, lat, lon]
 
-    :raises: 
+    :raises:
 
     :return: `w_net` Net vertical wind speed (m/s)
     :rtype: array [time, lev, lat, lon]
@@ -524,7 +524,7 @@ def compute_theta(p_3D, ps, temp, f_type):
     :param f_type: The FV3 file type: diurn, daily, or average
     :type f_stype: str
 
-    :raises: 
+    :raises:
 
     :return: Potential temperature (K)
     :rtype: array [time, lev, lat, lon]
@@ -544,26 +544,26 @@ def compute_theta(p_3D, ps, temp, f_type):
 def compute_w(rho, omega):
     """
     Compute the vertical wind using the omega equation.
-    
+
     Under hydrostatic balance, omega is proportional to the vertical
     wind velocity (``w``)::
-    
+
         omega = dp/dt = (dp/dz)(dz/dt) = (dp/dz) * w
-    
+
     Under hydrostatic equilibrium::
-    
+
         dp/dz = -rho * g
-   
+
     So ``omega`` can be calculated as::
-    
+
         omega = -rho * g * w
 
     :param rho: Atmospheric density (kg/m^3)
     :type rho: array [time, lev, lat, lon]
     :param omega: Rate of change in pressure at layer midpoint (Pa/s)
     :type omega: array [time, lev, lat, lon]
-        
-    :raises: 
+
+    :raises:
 
     :return: vertical wind (m/s)
     :rtype: array [time, lev, lat, lon]
@@ -583,18 +583,18 @@ def compute_zfull(ps, ak, bk, temp):
     :type bk: array [phalf]
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
-    
-    :raises: 
+
+    :raises:
 
     :return: ``zfull`` (m)
     :rtype: array [time, lev, lat, lon]
     """
     zfull = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T),
                        topo=0., lev_type="full")
-    
+
     # Note: lev_T swaps dims 0 & 1, ensuring level is the first \
     # dimension for the calculation
-    
+
     zfull = zfull.transpose(lev_T_out)
     return zfull
 
@@ -612,17 +612,17 @@ def compute_zhalf(ps, ak, bk, temp):
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
 
-    :raises: 
+    :raises:
 
     :return: ``zhalf`` (m)
     :rtype: array [time, lev, lat, lon]
     """
     zhalf = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T),
                        topo=0., lev_type="half")
-    
+
     # Note: lev_T swaps dims 0 & 1, ensuring level is the first \
     # dimension for the calculation
-    
+
     zhalf = zhalf.transpose(lev_T_out)
     return zhalf
 
@@ -631,7 +631,7 @@ def compute_DZ_full_pstd(pstd, temp, ftype="average"):
     """
     Calculate the thickness of a layer from the midpoint of the \
     standard pressure levels (``pstd``).
-    
+
     In this context, ``pfull=pstd`` with the layer interfaces \
     defined somewhere in between successive layers::
 
@@ -651,7 +651,7 @@ def compute_DZ_full_pstd(pstd, temp, ftype="average"):
     :param f_type: The FV3 file type: diurn, daily, or average
     :type f_stype: str
 
-    :raises: 
+    :raises:
 
     :return: DZ_full_pstd, Layer thicknesses (Pa)
     :rtype: array [time, lev, lat, lon]
@@ -667,10 +667,10 @@ def compute_DZ_full_pstd(pstd, temp, ftype="average"):
 
     # Create a new shape = [1, 1, 1, 1]
     new_shape = [1 for i in range(0, len(temp.shape))]
-    
+
     # Make the first dimesion = the length of the lev dimension (pstd)
     new_shape[0] = len(pstd)
-    
+
     # Reshape pstd according to new_shape
     pstd_reshaped = pstd.reshape(new_shape)
 
@@ -684,11 +684,11 @@ def compute_DZ_full_pstd(pstd, temp, ftype="average"):
     # There is nothing to differentiate the last layer with, so copy \
     # the second-to-last layer.
     DZ_full_pstd[-1, ...] = DZ_full_pstd[-2, ...]
-    
+
     # Note that unless you fine-tune the standard pressure levels to \
     # match the model top, data is usually missing in the last few \
     # layers.
-    
+
     return np.swapaxes(DZ_full_pstd, 0, axis)
 
 # =====================================================================
@@ -701,7 +701,7 @@ def compute_N(theta, zfull):
     :param zfull: Altitude above ground level at the layer midpoint (m)
     :type zfull: array [time, lev, lat, lon]
 
-    :raises: 
+    :raises:
 
     :return: ``N``, Brunt Vaisala freqency [rad/s]
     :rtype: array [time, lev, lat, lon]
@@ -709,13 +709,13 @@ def compute_N(theta, zfull):
     # Differentiate theta w.r.t. zfull to obdain d(theta)/dz
     dtheta_dz = dvar_dh(theta.transpose(lev_T),
                         zfull.transpose(lev_T)).transpose(lev_T)
-    
+
     # Note: lev_T swaps dims 0 & 1, ensuring level is the first \
     # dimension for the differentiation
-    
+
     # Calculate the Brunt Vaisala frequency
     N = np.sqrt(g/theta * dtheta_dz)
-    
+
     return N
 
 # =====================================================================
@@ -728,7 +728,7 @@ def compute_Tco2(P_3D):
     :param P_3D: The full 3D pressure array (Pa)
     :type p_3D: array [time, lev, lat, lon]
 
-    :raises: 
+    :raises:
 
     :return: CO2 frost point [K]
     :rtype: array [time, lev, lat, lon]
@@ -736,19 +736,19 @@ def compute_Tco2(P_3D):
     # Set some constants
     B = -3167.8 # K
     CO2_triple_pt_P = 518000 # Pa
-    
+
     # Determine where the pressure < the CO2 triple point pressure
     condition = (P_3D < CO2_triple_pt_P)
-    
+
     # If P < triple point, calculate temperature
     # modified vapor pressure curve equation
     temp_where_true = B/(np.log(0.01*P_3D) - 23.23)
-    
+
     # If P > triple point, calculate temperature
     temp_where_false = 684.2 - 92.3*np.log(P_3D) + 4.32*np.log(P_3D)**2
-    
+
     return np.where(condition, temp_where_true, temp_where_false)
-    
+
 # =====================================================================
 def compute_scorer(N, ucomp, zfull):
     """
@@ -761,7 +761,7 @@ def compute_scorer(N, ucomp, zfull):
     :param zfull: Altitude above ground level at the layer midpoint (m)
     :type zfull: array [time, lev, lat, lon]
 
-    :raises: 
+    :raises:
 
     :return: ``scorer_wl`` Scorer horizontal wavelength (m)
     :rtype: array [time, lev, lat, lon]
@@ -771,18 +771,18 @@ def compute_scorer(N, ucomp, zfull):
                    zfull.transpose(lev_T)).transpose(lev_T)
     dUdz2 = dvar_dh(dUdz.transpose(lev_T),
                     zfull.transpose(lev_T)).transpose(lev_T)
-    
+
     # Note: lev_T swaps dims 0 & 1, ensuring level is the first \
     # dimension for the differentiation
-    
+
     # Compute the scorer parameter I^2(z) (m-1)
     scorer_param = N**2/ucomp**2 - dUdz2/ucomp
-    
+
     # Compute the wavelength
     # I = sqrt(I^2) = wavenumber (k)
     # wavelength (lambda) = 2pi/k
     scorer_wl = 2*np.pi/np.sqrt(scorer_param)
-    
+
     return scorer_wl
 
 # =====================================================================
@@ -801,7 +801,7 @@ def compute_DP_3D(ps, ak, bk, shape_out):
         [1, lev, lat, lon] as opposed to [lev, lat, lon]
     :type shape_out: float
 
-    :raises: 
+    :raises:
 
     :return: ``DP`` Layer thickness in pressure units (Pa)
     :rtype: array [time, lev, lat, lon]
@@ -810,13 +810,13 @@ def compute_DP_3D(ps, ak, bk, shape_out):
     p_half3D = fms_press_calc(ps, ak, bk, lev_type='half')
     # fms_press_calc will swap dimensions 0 and 1 so p_half3D has \
     # dimensions = [lev, time, lat, lon]
-    
+
     # Calculate the differences in pressure between each layer midpoint
     DP_3D = p_half3D[1:, ..., ] - p_half3D[0:-1, ...]
-    
+
     # Swap dimensions 0 and 1, back to [time, lev, lat, lon]
     DP_3D = DP_3D.transpose(lev_T)
-    
+
     DP = DP_3D.reshape(shape_out)
     return DP
 
@@ -836,40 +836,40 @@ def compute_DZ_3D(ps, ak, bk, temp, shape_out):
         [1, lev, lat, lon] as opposed to [lev, lat, lon]
     :type shape_out: float
 
-    :raises: 
+    :raises:
 
     :return: ``DZ`` Layer thickness in altitude units (m)
     :rtype: array [time, lev, lat, lon]
     """
-    
+
     # Get the 3D altitude field from fms_Z_calc
-    z_half3D = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T), topo=0., 
+    z_half3D = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T), topo=0.,
                           lev_type="half")
     # fms_press_calc will swap dimensions 0 and 1 so p_half3D has \
     # dimensions = [lev, time, lat, lon]
-    
+
     # Calculate the differences in pressure between each layer midpoint
     DZ_3D = z_half3D[0:-1, ...]-z_half3D[1:, ..., ]
     # Note the reversed order: Z decreases with increasing levels
-    
+
     # Swap dimensions 0 and 1, back to [time, lev, lat, lon]
     DZ_3D = DZ_3D.transpose(lev_T)
-    
+
     DZ = DZ_3D.reshape(shape_out)
-    
+
     return DZ
 
 # =====================================================================
 def compute_Ep(temp):
     """
     Calculate wave potential energy::
-    
+
         Ep = 1/2 (g/N)^2 (temp'/temp)^2
 
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
 
-    :raises: 
+    :raises:
 
     :return: ``Ep`` Wave potential energy (J/kg)
     :rtype: array [time, lev, lat, lon]
@@ -880,7 +880,7 @@ def compute_Ep(temp):
 def compute_Ek(ucomp, vcomp):
     """
     Calculate wave kinetic energ::
-    
+
         Ek = 1/2 (u'**2+v'**2)
 
     :param ucomp: Zonal wind (m/s)
@@ -888,7 +888,7 @@ def compute_Ek(ucomp, vcomp):
     :param vcomp: Meridional wind (m/s)
     :type vcomp: array [time, lev, lat, lon]
 
-    :raises: 
+    :raises:
 
     :return: ``Ek`` Wave kinetic energy (J/kg)
     :rtype: array [time, lev, lat, lon]
@@ -904,8 +904,8 @@ def compute_MF(UVcomp, w):
     :type UVcomp: array
     :param w: Vertical wind (m/s)
     :type w: array [time, lev, lat, lon]
-    
-    :raises: 
+
+    :raises:
 
     :return: ``u'w'`` or ``v'w'``, Zonal/meridional momentum flux (J/kg)
     :rtype: array [time, lev, lat, lon]
@@ -916,16 +916,16 @@ def compute_MF(UVcomp, w):
 def compute_WMFF(MF, rho, lev, interp_type):
     """
     Calculate the zonal or meridional wave-mean flow forcing::
-    
+
         ax = -1/rho d(rho u'w')/dz
         ay = -1/rho d(rho v'w')/dz
 
     If interp_type == ``pstd``, then::
-    
+
         [du/dz = (du/dp).(dp/dz)] > [du/dz = -rho*g * (du/dp)]
-    
-    where:: 
-    
+
+    where::
+
         dp/dz = -rho*g
         [du/dz = (du/dp).(-rho*g)] > [du/dz = -rho*g * (du/dp)]
 
@@ -938,7 +938,7 @@ def compute_WMFF(MF, rho, lev, interp_type):
     :param interp_type: The vertical grid type ('zagl', 'zstd', 'pstd', or 'pfull')
     :type interp_type: str
 
-    :raises: 
+    :raises:
 
     :return: The zonal or meridional wave-mean flow forcing (m/s2)
     :rtype: array [time, lev, lat, lon]
@@ -947,7 +947,7 @@ def compute_WMFF(MF, rho, lev, interp_type):
     darr_dz = dvar_dh((rho*MF).transpose(lev_T), lev).transpose(lev_T)
     # Manually swap dimensions 0 and 1 so lev_T has 'lev' for first \
     # dimension [lev, time, lat, lon] for the differentiation
-    
+
     if interp_type == 'pstd':
         # Computed du/dp, need to multiply by (-rho g) to obtain du/dz
         return g * darr_dz
@@ -990,10 +990,10 @@ def main():
     if not (add_list or
             zdiff_list or
             zdetrend_list or
-            remove_list or 
+            remove_list or
             col_list or
             extract_list or
-            dp_to_dz_list or 
+            dp_to_dz_list or
             dz_to_dp_list or
             edit_var):
         print_fileContent(file_list[0])
@@ -1014,20 +1014,20 @@ def main():
             try:
                 # If ncks is available, use it
                 subprocess.check_call(cmd_txt, shell=True,
-                                      stdout=open(os.devnull, "w"), 
+                                      stdout=open(os.devnull, "w"),
                                       stderr=open(os.devnull, "w"))
                 print("ncks is available. Using it.")
                 for ivar in remove_list:
                     print(f"Creating new file {ifile} without {ivar}:")
                     cmd_txt = f"ncks -C -O -x -v {ivar} {ifile} {ifile}"
                     try:
-                        subprocess.check_call(cmd_txt, shell=True, 
+                        subprocess.check_call(cmd_txt, shell=True,
                                               stdout=open(os.devnull, "w"),
                                               stderr=open(os.devnull, "w"))
                     except Exception as exception:
                         print(f"{exception.__class__.__name__ }: \
                             {exception.message}")
-            
+
             except subprocess.CalledProcessError:
                 # ncks is not available, use internal method
                 print("Using internal method instead.")
@@ -1039,7 +1039,7 @@ def main():
                 f_IN.close()
                 Log.close()
                 cmd_txt = f"mv {ifile_tmp} {ifile}"
-                p = subprocess.run(cmd_txt, universal_newlines=True, 
+                p = subprocess.run(cmd_txt, universal_newlines=True,
                                    shell=True)
                 prCyan(f"{ifile} was updated")
 
@@ -1048,9 +1048,9 @@ def main():
         # ==============================================================
         if extract_list:
             f_IN = Dataset(ifile, "r", format="NETCDF4_CLASSIC")
-            
+
             # The variable to exclude
-            exclude_list = filter_vars(f_IN, parser.parse_args().extract, 
+            exclude_list = filter_vars(f_IN, parser.parse_args().extract,
                                        giveExclude=True)
             print()
             ifile_tmp = f"{ifile[:-3]}_extract.nc"
@@ -1064,7 +1064,7 @@ def main():
         # ==============================================================
         # ============================ Add =============================
         # ==============================================================
-        # If the list is not empty, load ak and bk for the pressure 
+        # If the list is not empty, load ak and bk for the pressure
         # calculation. ak and bk are always necessary.
 
         # Check if the variable to be added is currently supported.
@@ -1077,19 +1077,19 @@ def main():
                 try:
                     fileNC = Dataset(ifile, "a", format="NETCDF4_CLASSIC")
                     f_type, interp_type = FV3_file_type(fileNC)
-                    
+
                     if interp_type == "pfull":
                         # Load ak and bk for pressure calculation. Usually required.
                         ak, bk = ak_bk_loader(fileNC)
-                    
+
                     # temp and ps always required. Get dimension
                     dim_out = fileNC.variables["temp"].dimensions
                     temp = fileNC.variables["temp"][:]
                     shape_out = temp.shape
-                    
+
                     if f_type == "diurn":
-                        # [time, tod, lev, lat, lon] 
-                        # -> [lev, tod, time, lat, lon] 
+                        # [time, tod, lev, lat, lon]
+                        # -> [lev, tod, time, lat, lon]
                         # -> [time, tod, lev, lat, lon]
                         lev_T = [2, 1, 0, 3, 4]
                         # (0 1 2 3 4) -> (2 1 0 3 4) -> (2 1 0 3 4)
@@ -1098,13 +1098,13 @@ def main():
                         # (time, tod, lev, lat, lon)
                         lev_axis = 2
                     else:
-                        # [tim, lev, lat, lon] 
-                        # -> [lev, time, lat, lon] 
+                        # [tim, lev, lat, lon]
+                        # -> [lev, time, lat, lon]
                         # -> [tim, lev, lat, lon]
                         lev_T = [1, 0, 2, 3]
                         # (0 1 2 3) -> (1 0 2 3) -> (1 0 2 3)
                         lev_T_out = lev_T
-                        # In average and daily files, level is the 2nd 
+                        # In average and daily files, level is the 2nd
                         # axis: (time, lev, lat, lon)
                         lev_axis = 1
 
@@ -1127,7 +1127,7 @@ def main():
                         # e.g [1, 28, 1, 1]
                         reshape_shape[lev_axis] = len(lev)
                         p_3D = lev.reshape(reshape_shape)
-                        
+
                     else:
                         try:
                             # If requested interp_type is zstd, or zagl,
@@ -1224,16 +1224,16 @@ def main():
                         ucomp = fileNC.variables["ucomp"][:]
                         vcomp = fileNC.variables["vcomp"][:]
                         du_dz = dvar_dh(
-                            ucomp.transpose(lev_T), 
+                            ucomp.transpose(lev_T),
                             zfull.transpose(lev_T)).transpose(lev_T)
                         dv_dz = dvar_dh(
-                            vcomp.transpose(lev_T), 
+                            vcomp.transpose(lev_T),
                             zfull.transpose(lev_T)).transpose(lev_T)
                         OUT = N**2/(du_dz**2+dv_dz**2)
 
                     # NOTE lev_T swaps dims 0 & 1, ensuring level is
                     # the first dimension for the differentiation
-                    
+
                     if ivar == "Tco2":
                         OUT = compute_Tco2(p_3D)
 
@@ -1275,18 +1275,18 @@ def main():
                         vcomp = fileNC.variables["vcomp"][:]
                         lat = fileNC.variables["lat"][:]
                         if f_type == "diurn":
-                            # [lev, lat, time, tod, lon] 
+                            # [lev, lat, time, tod, lon]
                             # -> [time, tod, lev, lat, lon]
                             # (0 1 2 3 4) -> (2 3 0 1 4) -> (2 3 0 1 4)
                             OUT = mass_stream(
-                                vcomp.transpose([2, 3, 0, 1, 4]), lat, lev, 
+                                vcomp.transpose([2, 3, 0, 1, 4]), lat, lev,
                                 type=interp_type).transpose([2, 3, 0, 1, 4])
                         else:
                             OUT = mass_stream(
-                                vcomp.transpose([1, 2, 3, 0]), lat, lev, 
+                                vcomp.transpose([1, 2, 3, 0]), lat, lev,
                                 type=interp_type).transpose([3, 0, 1, 2])
-                            # [time, lev, lat, lon] 
-                            # -> [lev, lat, lon, time]  
+                            # [time, lev, lat, lon]
+                            # -> [lev, lat, lon, time]
                             # ->  [time, lev, lat, lon]
                             # (0 1 2 3) -> (1 2 3 0) -> (3 0 1 2)
 
@@ -1320,11 +1320,11 @@ def main():
 
                     if ivar == "tp_t":
                         OUT = zonal_detrend(temp)/temp
-                        
+
                     if interp_type == "pfull":
                         # Filter out NANs in the native files
                         OUT[np.isnan(OUT)] = fill_value
-                        
+
                     else:
                         # Add NANs to the interpolated files
                         with warnings.catch_warnings():
@@ -1346,8 +1346,8 @@ def main():
                     if debug:
                         raise
                     if str(exception) == "NetCDF: String match to name in use":
-                        prYellow("***Error*** Variable already exists in file.")
-                        prYellow(f"Delete the existing variables {ivar} with \
+                        prYellow(f"***Error*** Variable already exists in \
+                            file.\nDelete the existing variables {ivar} with \
                             ``MarsVars.py {ifile} -rm {ivar}``")
 
         # ==============================================================
@@ -1376,16 +1376,16 @@ def main():
                 try:
                     var = fileNC.variables[idiff][:]
                     longname_txt, units_txt = get_longname_units(fileNC, idiff)
-                    # Remove the last ] to update the units (e.g [kg] 
+                    # Remove the last ] to update the units (e.g [kg]
                     # to [kg/m])
                     newUnits = f"{units_txt[:-2]}/m]"
                     newLong_name = f"vertical gradient of {longname_txt}"
                     # Alex's version of the above 2 lines:
-                    # remove the last ] to update units, (e.g [kg] 
+                    # remove the last ] to update units, (e.g [kg]
                     # to [kg/m])
                     #newUnits = getattr(
                         # fileNC.variables[idiff],"units","")[:-2]+"/m]"
-                    #newLong_name = ("vertical gradient of " 
+                    #newLong_name = ("vertical gradient of "
                     # + getattr(fileNC.variables[idiff], "long_name", """))
 
                     # temp and ps are always required. Get dimension
@@ -1397,17 +1397,17 @@ def main():
                             temp = fileNC.variables["temp"][:]
                             ps = fileNC.variables["ps"][:]
                             # Z is the first axis
-                            zfull = fms_Z_calc(ps, ak, bk, 
-                                               temp.transpose(lev_T), 
+                            zfull = fms_Z_calc(ps, ak, bk,
+                                               temp.transpose(lev_T),
                                                topo=0., lev_type="full")
-                        
+
                         # average file: zfull = (lev, time, lat, lon)
                         # diurn file: zfull = (lev, tod, time, lat, lon)
                         # Differentiate the variable w.r.t. Z:
                         darr_dz = dvar_dh(
                             var.transpose(lev_T),
                             zfull).transpose(lev_T)
-                        
+
                         # Note: lev_T swaps dims 0 & 1, ensuring level
                         # is the first dimension for the differentiation
 
@@ -1416,7 +1416,7 @@ def main():
                         if "zfull" in fileNC.variables.keys():
                             zfull = fileNC.variables["zfull"][:]
                             darr_dz = dvar_dh(
-                                var.transpose(lev_T), 
+                                var.transpose(lev_T),
                                 zfull.transpose(lev_T)).transpose(lev_T)
                         else:
                             lev = fileNC.variables[interp_type][:]
@@ -1431,7 +1431,7 @@ def main():
                         darr_dz = dvar_dh(
                             var.transpose(lev_T),
                             lev).transpose(lev_T)
-                        
+
                     # Note: lev_T swaps dims 0 & 1, ensuring level is
                     # the first dimension for the differentiation
 
@@ -1447,8 +1447,8 @@ def main():
                     if debug:
                         raise
                     if str(exception) == "NetCDF: String match to name in use":
-                        prYellow("***Error*** Variable already exists in file.")
-                        prYellow(f"Delete the existing variable \
+                        prYellow(f"***Error*** Variable already exists in \
+                            file.\nDelete the existing variable \
                             d_dz_{idiff} with 'MarsVars {ifile} -rm \
                             d_dz_{idiff}'")
 
@@ -1470,16 +1470,16 @@ def main():
                         fileNC, izdetrend)
                     newLong_name = f"zonal perturbation of {longname_txt}"
                     # Alex's version of the above (and below) lines:
-                    #newUnits = getattr(fileNC.variables[izdetrend], 
+                    #newUnits = getattr(fileNC.variables[izdetrend],
                     # "units", "")
-                    #newLong_name = "zonal perturbation of " 
+                    #newLong_name = "zonal perturbation of "
                     # + getattr(fileNC.variables[izdetrend], "long_name", "")
 
                     # Get dimension
                     dim_out = fileNC.variables[izdetrend].dimensions
 
                     # Log the variable
-                    var_Ncdf = fileNC.createVariable(izdetrend+"_p", "f4", 
+                    var_Ncdf = fileNC.createVariable(izdetrend+"_p", "f4",
                                                      dim_out)
                     var_Ncdf.long_name = newLong_name
                     var_Ncdf.units = units_txt
@@ -1492,9 +1492,8 @@ def main():
                     if debug:
                         raise
                     if str(exception) == "NetCDF: String match to name in use":
-                        prYellow("***Error*** Variable already exists in \
-                            file.")
-                        prYellow(f"Delete the existing variable \
+                        prYellow(f"***Error*** Variable already exists in \
+                            file. Delete the existing variable \
                             d_dz_{idiff} with 'MarsVars {ifile} -rm \
                             d_dz_{idiff}'")
 
@@ -1527,11 +1526,11 @@ def main():
                     dim_out = fileNC.variables[idp_to_dz].dimensions
 
                     # Log the variable
-                    var_Ncdf = fileNC.createVariable(f"{idp_to_dz}_dp_to_dz", 
+                    var_Ncdf = fileNC.createVariable(f"{idp_to_dz}_dp_to_dz",
                                                      "f4", dim_out)
                     var_Ncdf.long_name = newLong_name
                     var_Ncdf.units = newUnits
-                    var_Ncdf[:] = (var 
+                    var_Ncdf[:] = (var
                                    * fileNC.variables["DP"][:]
                                    / fileNC.variables["DZ"][:])
                     fileNC.close()
@@ -1541,11 +1540,11 @@ def main():
                     if debug:
                         raise
                     if str(exception) == 'NetCDF: String match to name in use':
-                        prYellow("***Error*** Variable already exists in file.")
-                        prYellow(f"Delete the existing variable \
+                        prYellow("***Error*** Variable already exists in \
+                            file\nDelete the existing variable \
                             {idp_to_dz}_dp_to_dz with 'MarsVars {ifile} -rm \
                             {idp_to_dz}_dp_to_dz'")
-        
+
         for idz_to_dp in dz_to_dp_list:
             # ========= Case 2: dz_to_dp
             fileNC = Dataset(ifile, "a", format="NETCDF4_CLASSIC")
@@ -1572,11 +1571,11 @@ def main():
                     dim_out = fileNC.variables[idz_to_dp].dimensions
 
                     # Log the variable
-                    var_Ncdf = fileNC.createVariable(f"{idz_to_dp}_dz_to_dp", 
+                    var_Ncdf = fileNC.createVariable(f"{idz_to_dp}_dz_to_dp",
                                                      "f4", dim_out)
                     var_Ncdf.long_name = newLong_name
                     var_Ncdf.units = newUnits
-                    var_Ncdf[:] = (var 
+                    var_Ncdf[:] = (var
                                    * fileNC.variables["DZ"][:]
                                    / fileNC.variables["DP"][:])
                     fileNC.close()
@@ -1586,10 +1585,8 @@ def main():
                     if debug:
                         raise
                     if str(exception) == 'NetCDF: String match to name in use':
-                        prYellow(
-                            "***Error*** Variable already exists in file."
-                        )
-                        prYellow(f"Delete the existing variable \
+                        prYellow(f"***Error*** Variable already exists in \
+                            file.\nDelete the existing variable \
                             {idp_to_dz}_dp_to_dz with 'MarsVars.py \
                             {ifile} -rm {idp_to_dz}_dp_to_dz'")
 
@@ -1598,19 +1595,19 @@ def main():
         # ==============================================================
         """
         Column-integrate the variable::
-        
+
                             z_top
                             ⌠
             We have col=    ⌡ var (rho dz)
                             0
-                            
+
             with [(dp/dz) = (-rho g)] => [(rho dz) = (-dp/g)]
-            
+
                         ___ p_sfc
                 >  col = \
                         /__ var (dp/g)
                             p_top
-                        
+
         """
 
         for icol in col_list:
@@ -1650,7 +1647,7 @@ def main():
                         # [lev, tod, time, lat, lon]
                         dim_out = tuple(
                             [dim_in[0], dim_in[1], dim_in[3], dim_in[4]])
-                        # In diurn, level is the 3rd axis: 
+                        # In diurn, level is the 3rd axis:
                         # (time, tod, lev, lat, lon)
                         lev_axis = 2
                     else:
@@ -1665,7 +1662,7 @@ def main():
                     out = np.sum(var*DP/g, axis=lev_axis)
 
                     # Log the variable
-                    var_Ncdf = fileNC.createVariable(f"{icol}_col", "f4", 
+                    var_Ncdf = fileNC.createVariable(f"{icol}_col", "f4",
                                                      dim_out)
                     var_Ncdf.long_name = newLong_name
                     var_Ncdf.units = newUnits
@@ -1678,20 +1675,18 @@ def main():
                     if debug:
                         raise
                     if str(exception) == "NetCDF: String match to name in use":
-                        prYellow(
-                            "***Error*** Variable already exists in file."
-                        )
-                        prYellow(f"Delete the existing variable \
+                        prYellow(f"***Error*** Variable already exists in \
+                            file.\nDelete the existing variable \
                             {icol}_col with 'MarsVars {ifile} -rm {icol}_col'")
         if edit_var:
             f_IN = Dataset(ifile, "r", format="NETCDF4_CLASSIC")
             ifile_tmp = f"{ifile[:-3]}_tmp.nc"
             Log = Ncdf(ifile_tmp, "Edited in postprocessing")
             Log.copy_all_dims_from_Ncfile(f_IN)
-            
+
             # Copy all variables but this one
             Log.copy_all_vars_from_Ncfile(f_IN, exclude_var=edit_var)
-            
+
             # Read value, longname, units, name, and log the new var
             var_Ncdf = f_IN.variables[edit_var]
 

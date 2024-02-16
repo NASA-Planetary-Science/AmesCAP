@@ -5,12 +5,12 @@
 
 .. autoapi-nested-parse::
 
-   The MarsVars executable is for performing variable manipulations in 
-   existing files. Most often, it is used to derive and add variables to 
+   The MarsVars executable is for performing variable manipulations in
+   existing files. Most often, it is used to derive and add variables to
    existing files, but it also differentiates variables with respect to
    (w.r.t) the Z axis, column-integrates variables, converts aerosol
    opacities from opacity per Pascal to opacity per meter, removes and
-   extracts variables from files, and enables scaling variables or editing 
+   extracts variables from files, and enables scaling variables or editing
    variable names, units, etc.
 
    The executable requires 1 argument:
@@ -23,7 +23,7 @@
        * ``[-zd --zonal_detrend]``  Subtract zonal mean from variable
        * ``[-dp_to_dz --dp_to_dz]`` Convert aerosol opacity op/Pa -> op/m
        * ``[-dz_to_dp --dz_to_dp]`` Convert aerosol opacity op/m -> op/Pa
-       * ``[-rm --remove]``         Remove variable from file    
+       * ``[-rm --remove]``         Remove variable from file
        * ``[-extract --extract]``   Copy variable to new file
        * ``[-edit --edit]``         Edit variable attributes or scale it
 
@@ -81,8 +81,8 @@ Functions
    :type bk: array [phalf]
    :param shape_out: Determines how to handle the dimensions of p_3D.         If ``len(time) = 1`` (one timestep), ``p_3D`` is returned as         [1, lev, lat, lon] as opposed to [lev, lat, lon]
    :type shape_out: float
-       
-   :raises: 
+
+   :raises:
 
    :return: ``p_3D`` The full 3D pressure array (Pa)
    :rtype: array [time, lev, lat, lon]
@@ -97,7 +97,7 @@ Functions
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]
 
-   :raises: 
+   :raises:
 
    :return: Density (kg/m^3)
    :rtype: array [time, lev, lat, lon]
@@ -119,7 +119,7 @@ Functions
    :param f_type: The FV3 file type: diurn, daily, or average
    :type f_stype: str
 
-   :raises: 
+   :raises:
 
    :return: ``xzTau`` Dust or ice extinction rate (km-1)
    :rtype: array [time, lev, lat, lon]
@@ -141,7 +141,7 @@ Functions
    :param f_type: The FV3 file type: diurn, daily, or average
    :type f_stype: str
 
-   :raises: 
+   :raises:
 
    :return: ``q``, Dust or ice mass mixing ratio (ppm)
    :rtype: array [time, lev, lat, lon]
@@ -158,7 +158,7 @@ Functions
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]
 
-   :raises: 
+   :raises:
 
    :return: ``Vg`` Dust sedimentation rate (m/s)
    :rtype: array [time, lev, lat, lon]
@@ -175,7 +175,7 @@ Functions
    :param wvar: Vertical wind (m/s)
    :type wvar: array [time, lev, lat, lon]
 
-   :raises: 
+   :raises:
 
    :return: `w_net` Net vertical wind speed (m/s)
    :rtype: array [time, lev, lat, lon]
@@ -194,7 +194,7 @@ Functions
    :param f_type: The FV3 file type: diurn, daily, or average
    :type f_stype: str
 
-   :raises: 
+   :raises:
 
    :return: Potential temperature (K)
    :rtype: array [time, lev, lat, lon]
@@ -221,8 +221,8 @@ Functions
    :type rho: array [time, lev, lat, lon]
    :param omega: Rate of change in pressure at layer midpoint (Pa/s)
    :type omega: array [time, lev, lat, lon]
-       
-   :raises: 
+
+   :raises:
 
    :return: vertical wind (m/s)
    :rtype: array [time, lev, lat, lon]
@@ -241,7 +241,7 @@ Functions
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]
 
-   :raises: 
+   :raises:
 
    :return: ``zfull`` (m)
    :rtype: array [time, lev, lat, lon]
@@ -260,7 +260,7 @@ Functions
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]
 
-   :raises: 
+   :raises:
 
    :return: ``zhalf`` (m)
    :rtype: array [time, lev, lat, lon]
@@ -288,7 +288,7 @@ Functions
    :param f_type: The FV3 file type: diurn, daily, or average
    :type f_stype: str
 
-   :raises: 
+   :raises:
 
    :return: DZ_full_pstd, Layer thicknesses (Pa)
    :rtype: array [time, lev, lat, lon]
@@ -303,7 +303,7 @@ Functions
    :param zfull: Altitude above ground level at the layer midpoint (m)
    :type zfull: array [time, lev, lat, lon]
 
-   :raises: 
+   :raises:
 
    :return: ``N``, Brunt Vaisala freqency [rad/s]
    :rtype: array [time, lev, lat, lon]
@@ -317,7 +317,7 @@ Functions
    :param P_3D: The full 3D pressure array (Pa)
    :type p_3D: array [time, lev, lat, lon]
 
-   :raises: 
+   :raises:
 
    :return: CO2 frost point [K]
    :rtype: array [time, lev, lat, lon]
@@ -334,7 +334,7 @@ Functions
    :param zfull: Altitude above ground level at the layer midpoint (m)
    :type zfull: array [time, lev, lat, lon]
 
-   :raises: 
+   :raises:
 
    :return: ``scorer_wl`` Scorer horizontal wavelength (m)
    :rtype: array [time, lev, lat, lon]
@@ -353,7 +353,7 @@ Functions
    :param shape_out: Determines how to handle the dimensions of DP_3D.        If len(time) = 1 (one timestep), DP_3D is returned as         [1, lev, lat, lon] as opposed to [lev, lat, lon]
    :type shape_out: float
 
-   :raises: 
+   :raises:
 
    :return: ``DP`` Layer thickness in pressure units (Pa)
    :rtype: array [time, lev, lat, lon]
@@ -372,7 +372,7 @@ Functions
    :param shape_out: Determines how to handle the dimensions of DZ_3D.        If len(time) = 1 (one timestep), DZ_3D is returned as         [1, lev, lat, lon] as opposed to [lev, lat, lon]
    :type shape_out: float
 
-   :raises: 
+   :raises:
 
    :return: ``DZ`` Layer thickness in altitude units (m)
    :rtype: array [time, lev, lat, lon]
@@ -387,7 +387,7 @@ Functions
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]
 
-   :raises: 
+   :raises:
 
    :return: ``Ep`` Wave potential energy (J/kg)
    :rtype: array [time, lev, lat, lon]
@@ -404,7 +404,7 @@ Functions
    :param vcomp: Meridional wind (m/s)
    :type vcomp: array [time, lev, lat, lon]
 
-   :raises: 
+   :raises:
 
    :return: ``Ek`` Wave kinetic energy (J/kg)
    :rtype: array [time, lev, lat, lon]
@@ -419,7 +419,7 @@ Functions
    :param w: Vertical wind (m/s)
    :type w: array [time, lev, lat, lon]
 
-   :raises: 
+   :raises:
 
    :return: ``u'w'`` or ``v'w'``, Zonal/meridional momentum flux (J/kg)
    :rtype: array [time, lev, lat, lon]
@@ -436,7 +436,7 @@ Functions
 
        [du/dz = (du/dp).(dp/dz)] > [du/dz = -rho*g * (du/dp)]
 
-   where:: 
+   where::
 
        dp/dz = -rho*g
        [du/dz = (du/dp).(-rho*g)] > [du/dz = -rho*g * (du/dp)]
@@ -450,7 +450,7 @@ Functions
    :param interp_type: The vertical grid type ('zagl', 'zstd', 'pstd', or 'pfull')
    :type interp_type: str
 
-   :raises: 
+   :raises:
 
    :return: The zonal or meridional wave-mean flow forcing (m/s2)
    :rtype: array [time, lev, lat, lon]

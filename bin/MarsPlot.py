@@ -1552,10 +1552,9 @@ def namelist_parser(Custom_file):
     if int(version) != int(current_version):
         # Check if the main versions are compatible
         # (e.g., Versions 1.1 and 1.2 are OK but not 1.0 and 2.0)
-        prYellow("*** Warning ***")
-        prYellow(f"Using MarsPlot V{current_version} but Custom.in template \
-            is deprecated (V{version})")
-        prYellow("***************")
+        prYellow(f"*** Warning ***\nUsing MarsPlot V{current_version} \
+            but Custom.in template is deprecated (V{version})\
+            \n***************")
 
     while (customFileIN.readline()[0] != "<"):
         # Skip the header
@@ -1707,14 +1706,13 @@ def namelist_parser(Custom_file):
 
     if holding:
         # Make sure we are not still holding figures
-        prRed("*** Error ***")
-        prRed(f"Missing 'HOLD OFF' statement in {Custom_file}")
+        prRed(f"*** Error ***\nMissing 'HOLD OFF' statement in {Custom_file}")
         exit()
 
     if addLine:
         # Make sure we are not still holding figures
-        prRed("*** Error ***")
-        prRed(f"Cannot have 'ADD LINE' after the last figure in {Custom_file}")
+        prRed(f"*** Error ***\nCannot have 'ADD LINE' after the last figure \
+            in {Custom_file}")
         exit()
 
     # Finished reading the file, distribute the number of figure and
@@ -1825,15 +1823,13 @@ def select_range(Ncdf_num, bound):
     if bound.size == 1:
         Ncdf_num = Ncdf_num[Ncdf_num == bound]
         if Ncdf_num.size == 0:
-            prRed("*** Error ***")
-            prRed(f"File {bound:05}.fixed.nc not found")
+            prRed(f"*** Error ***\nFile {bound:05}.fixed.nc not found")
             exit()
     elif bound.size == 2:
         Ncdf_num = Ncdf_num[Ncdf_num >= bound[0]]
         Ncdf_num = Ncdf_num[Ncdf_num <= bound[1]]
         if Ncdf_num.size == 0:
-            prRed("*** Error ***")
-            prRed(f"No fixed file with date between \
+            prRed(f"*** Error ***\nNo fixed file with date between \
                   [{bound[0]:05}-{bound[1]:05}] detected. Please \
                   double check the range.")
             exit()
@@ -2102,7 +2098,7 @@ class Fig_2D(object):
 
         # Various sanity checks
         if self.range and len(np.atleast_1d(self.range)) == 1:
-            prYellow(f"*** Warning *** In plot %{self.varfull}, Cmin, Cmax \
+            prYellow(f"*** Warning *** In plot {self.varfull}, Cmin, Cmax \
                 must be two values. Resetting to default")
             self.range = None
 
@@ -2552,9 +2548,9 @@ class Fig_2D(object):
                     sensitive_name = self.varfull.split("{")[0].strip()
                     # If varfull is a complex expression
                 else:
-                    sensitive_name = (
-                        f"expression_\
-                            {get_list_varfull(self.varfull)[0].split('{')[0].strip()}")
+                    expr = (get_list_varfull(
+                        self.varfull)[0].split('{')[0].strip())
+                    sensitive_name = (f"expression_{expr}")
             else:  # Multipanel
                 sensitive_name = "multi_panel"
             plt.tight_layout()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-The MarsCalendar executable accepts an input Ls or day-of-year (sol) and 
+The MarsCalendar executable accepts an input Ls or day-of-year (sol) and
 returns the corresponding sol or Ls, respectively.
 
 The executable requires 1 of the following arguments:
@@ -122,8 +122,8 @@ def parse_array(len_input):
         input_as_arr = np.arange(start, stop, step)
 
     else:
-        prRed("ERROR either [-ls --ls] or [-sol --sol] are required. \
-            See 'MarsCalendar.py -h' for additional help.")
+        prRed("ERROR either ``[-ls --ls]`` or ``[-sol --sol]`` are \
+            required. See 'MarsCalendar.py -h' for additional help.")
         exit()
     return(input_as_arr)
 
