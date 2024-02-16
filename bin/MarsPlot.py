@@ -410,7 +410,7 @@ def main():
             
             # Direct ghostscript output to a file instead of printing
             # to the screen
-            debug_filename = f"output_path/.{debug_MCMC_plots.txt}"
+            debug_filename = f"{output_path}/.debug_MCMC_plots.txt"
             fdump = open(debug_filename, "w")
             
             try:
