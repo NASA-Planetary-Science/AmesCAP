@@ -29,9 +29,9 @@ import numpy as np
 # Load amesCAP modules
 from amescap.FV3_utils import (sol2ls, ls2sol)
 
-# ======================================================
-#                  ARGUMENT PARSER
-# ======================================================
+# ======================================================================
+#                           ARGUMENT PARSER
+# ======================================================================
 
 parser = argparse.ArgumentParser(
     description=(
@@ -41,11 +41,10 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument(
-    '-sol', '--sol', nargs='+', type=float,
+parser.add_argument("-sol", "--sol", nargs="+", type=float,
     help=(
         f"Input sol number. Required. Can either be one sol or a"
-        f"range with an increment (start stop step).\n"
+        f"range with an increment (``start stop step``).\n"
         f"{Green}Usage:\n"
         f"> MarsCalendar.py -sol 750\n"
         f"> MarsCalendar.py -sol 750 800 5"
@@ -53,8 +52,7 @@ parser.add_argument(
     )
 )
 
-parser.add_argument(
-    '-ls', '--ls', nargs='+', type=float,
+parser.add_argument("-ls", "--ls", nargs="+", type=float,
     help=(
         f"Return the sol number corresponding to this Ls.\n"
         f"{Green}Usage:\n"
@@ -65,20 +63,19 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-my', '--marsyear', nargs='+', type=float, default = 0.,
+    "-my", "--marsyear", nargs="+", type=float, default = 0.,
     help=(
         f"Return the sol or Ls corresponding to the Ls or sol of a "
         f"particular year of the simulation. \n"
-        f"Req. [-ls --ls] or [-sol --sol]. \n"
-        f"MY=0 for sol=0-667, MY=1 for sol=668-1335 etc.\n"
+        f"Req. ``[-ls --ls]`` or ``[-sol --sol]``. \n"
+        f"``MY=0`` for sol=0-667, ``MY=1`` for sol=668-1335 etc.\n"
         f"{Green}Usage:\n"
         f"> Usage: MarsCalendar.py -ls 350 -my 2"
         f"{NoColor}\n\n"
     )
 )
 
-parser.add_argument(
-    '-c', '--cumulative', action='store_true',
+parser.add_argument('-c', '--cumulative', action='store_true',
     help=(
         f"Return Ls from sol in cumulative form. Req. [-sol --sol].\n"
         f"EX: Returns Ls=360-720 instead of Ls=0-360 for input "

@@ -1620,7 +1620,7 @@ def main():
                 ak, bk = ak_bk_loader(fileNC)
 
             if icol not in fileNC.variables.keys():
-                prRed(f"column integration error: variable {icol} is not 
+                prRed(f"column integration error: variable {icol} is not \
                       in {ifile}")
                 fileNC.close()
             else:
