@@ -3,7 +3,7 @@
 The MarsPlot executable is for generating plots from Custom.in template
 files. It sources variables from netCDF files in a specified directory.
 
-The executable requires x arguments:
+The executable requires:
     * ``[-template --template]`` generates blank Custom.in template
     * ``[-i --inspect]``         triggers ncdump-like text to console
     * ``[Custom.in]``            to create plots in Custom.in template

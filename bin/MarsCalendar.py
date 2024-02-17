@@ -7,7 +7,7 @@ The executable requires 1 of the following arguments:
     * ``[-sol --sol]``      The sol to convert to Ls, OR
     * ``[-ls --ls]``        The Ls to convert to sol.
 
-and optionally accepts 2 arguments:
+and optionally accepts:
     * ``[-my --marsyear]``  The Mars Year of the simulation to compute
                             sol or  Ls from, AND/OR
     * ``[-c --cumulative]`` Returns Ls in cumulative form.

@@ -5,7 +5,7 @@ altitude coordinates. Options include interpolation to standard \
 pressure (``pstd``), standard altitude (``zstd``), altitude above \
 ground level (``zagl``), or a custom vertical grid.
 
-The executable requires x arguments:
+The executable requires:
     * ``[-x --x]``      define
 
 Third-party Requirements:

@@ -7,10 +7,10 @@ MarsFormat changes variable names, dimension names, dimension order,
 and units to the configuration expected by CAP. In some cases, such as
 for MarsWRF, variables are derived and regridded onto a standard grid.
 
-The executable requires 1 argument:
+The executable requires:
     * ``[input_file]``      the file to be transformed
 
-and optionally accepts 2 arguments:
+and optionally accepts:
     * ``[-openmars --openmars]``    convert openMars data to MGCM format
     * ``[-marswrf --marswrf]``      convert MarsWRF data to MGCM format
 

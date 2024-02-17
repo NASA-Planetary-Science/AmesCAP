@@ -8,10 +8,10 @@ opacities from opacity per Pascal to opacity per meter, removes and
 extracts variables from files, and enables scaling variables or editing
 variable names, units, etc.
 
-The executable requires 1 argument:
+The executable requires:
     * ``[input_file]``      the file to be transformed
 
-and optionally accepts 2 arguments:
+and optionally accepts:
     * ``[-add --add]``           Derive and add variable to file
     * ``[-zdiff --zdiff]``       Differentiate variable w.r.t. Z axis
     * ``[-col --col]``           Column-integrate variable
