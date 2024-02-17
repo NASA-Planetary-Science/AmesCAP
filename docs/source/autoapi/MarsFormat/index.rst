@@ -113,28 +113,22 @@ Functions
    pfull and phalf but otherwise only needs to rename variables and
    update units, longnames, and dimensions to match MGCM output.
 
-   Parameters
-   ----------
-   DS : xarray dataset
-       The dataset created by xarray when it opens the user-supplied
-       input file.
-
-   Raises
-   ------
+   :param DS: The dataset created by xarray when it opens the         user-supplied input file.
+   :type DS: xarray dataset
 
    Returns
    -------
-   var_dict : dictionary
-       Dictionary with variable names as keys and a list of attributes[values, dimensions, longname, units] as values.
-   time : array
-       Minutes since simulation start
-   lat : array
-       Latitude on a regular grid
-   lon : array
-       Longitude on a regular grid
-   phalf : array
-       Half pressure levels
-   pfull : array
-       Full pressure levels
+   :return: ``var_dict`` Dictionary with variable names as keys and a        list of attributes[values, dimensions, longname, units] as         values.
+
+       ``time`` (array) Minutes since simulation start
+
+       ``lat`` (array) Latitude on a regular grid
+
+       ``lon`` (array) Longitude on a regular grid
+
+       ``phalf`` (array) Half pressure levels
+
+       ``pfull`` (array) Full pressure levels
+
 
 
