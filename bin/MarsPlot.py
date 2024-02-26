@@ -1922,7 +1922,6 @@ def progress(k, Nmax, txt="", success=True):
     :type Nmax: float
     :return: progress bar (EX: ``Running... [#---------] 10.64 %``)
     """
-    import sys
     progress = float(k)/Nmax
     barLength = 10
     block = int(round(barLength*progress))
