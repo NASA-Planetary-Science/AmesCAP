@@ -8,7 +8,7 @@
    The MarsPlot executable is for generating plots from Custom.in template
    files. It sources variables from netCDF files in a specified directory.
 
-   The executable requires x arguments:
+   The executable requires:
        * ``[-template --template]`` generates blank Custom.in template
        * ``[-i --inspect]``         triggers ncdump-like text to console
        * ``[Custom.in]``            to create plots in Custom.in template
@@ -61,6 +61,7 @@ Functions
    MarsPlot.get_overwrite_dim_1D
    MarsPlot.fig_layout
    MarsPlot.make_template
+   MarsPlot.give_permission
    MarsPlot.namelist_parser
    MarsPlot.get_figure_header
    MarsPlot.format_lon_lat
@@ -333,6 +334,18 @@ Functions
 .. py:function:: make_template()
 
    Generate the ``Custom.in`` template file.
+
+   Parameters
+   ----------
+   :return: Custom.in blank template
+
+
+.. py:function:: give_permission(filename)
+
+   Sets group permissions for files created on NAS.
+
+   :param filename: name of the file 
+   :type filename: str
 
 
 .. py:function:: namelist_parser(Custom_file)

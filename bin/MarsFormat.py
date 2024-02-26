@@ -8,7 +8,7 @@ and units to the configuration expected by CAP. In some cases, such as
 for MarsWRF, variables are derived and regridded onto a standard grid.
 
 The executable requires:
-    * ``[input_file]``      the file to be transformed
+    * ``[input_file]``              the file to be transformed
 
 and optionally accepts:
     * ``[-openmars --openmars]``    convert openMars data to MGCM format
@@ -141,8 +141,6 @@ def marswrf_to_mgcm(DS):
         user-supplied input file.
     :type DS: xarray dataset
 
-    Returns
-    -------
     :return: ``var_dict`` Dictionary with variable names as keys and a\
         list of attributes[values, dimensions, longname, units] as \
         values.\n

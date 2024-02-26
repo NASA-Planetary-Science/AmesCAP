@@ -6,40 +6,40 @@ as well as band pass filtering, tide analysis, zonal averaging, and \
 extracting variables from files. 
 
 The executable requires:
-    * ``[input_file]``      The file for manipulation
+    * ``[input_file]``                  the file for manipulation
 
 and optionally accepts:
-    * ``[-fv3, --fv3]``                 Produce MGCM ``fixed``, \
+    * ``[-fv3, --fv3]``                 produce MGCM ``fixed``, \
         ``diurn``, ``average`` and ``daily`` files from Legacy output
     * ``[-c, --combine]``               Combine sequential files of \
         the same type into one file
-    * ``[-t, --tshift]``                Apply a time-shift to \
+    * ``[-t, --tshift]``                apply a time-shift to \
         ``diurn`` files
-    * ``[-ba, --bin_average]``          Bin MGCM ``daily`` files like \
+    * ``[-ba, --bin_average]``          bin MGCM ``daily`` files like \
         ``average`` files
-    * ``[-bd, --bin_diurn]``            Bin MGCM ``daily`` files like \
+    * ``[-bd, --bin_diurn]``            bin MGCM ``daily`` files like \
         ``diurn`` files
-    * ``[-hp, --high_pass_filter]``     Temporal filtering: high-pass
-    * ``[-lp, --low_pass_filter]``      Temporal filtering: low-pass
-    * ``[-bp, --band_pass_filter]``     Temporal filtering: band-pass
-    * ``[-no_trend, --no_trend]``       Filter and compute amplitudes \
+    * ``[-hp, --high_pass_filter]``     temporal filtering: high-pass
+    * ``[-lp, --low_pass_filter]``      temporal filtering: low-pass
+    * ``[-bp, --band_pass_filter]``     temporal filtering: band-pass
+    * ``[-no_trend, --no_trend]``       filter and compute amplitudes \
         only (use with filtering)
-    * ``[-hpk, --high_pass_zonal]``     Spatial filtering: high-pass
-    * ``[-lpk, --low_pass_zonal]``      Spatial filtering: low-pass
-    * ``[-bpk, --band_pass_zonal]``     Spatial filtering: band-pass
-    * ``[-tidal, --tidal]``             Extracts diurnal tide and its \
+    * ``[-hpk, --high_pass_zonal]``     spatial filtering: high-pass
+    * ``[-lpk, --low_pass_zonal]``      spatial filtering: low-pass
+    * ``[-bpk, --band_pass_zonal]``     spatial filtering: band-pass
+    * ``[-tidal, --tidal]``             extracts diurnal tide and its \
         harmonics
-    * ``[-reconstruct, --reconstruct]`` Reconstructs the first N \
+    * ``[-reconstruct, --reconstruct]`` reconstructs the first N \
         harmonics
-    * ``[-norm, --normalize]``          Provides ``-tidal`` result in \
+    * ``[-norm, --normalize]``          provides ``-tidal`` result in \
         percent amplitude
-    * ``[-rs, --regrid_source]``        Regrid a target file to match \
+    * ``[-rs, --regrid_source]``        regrid a target file to match \
         a source file
-    * ``[-za, --zonal_avg]``            Zonally average all variables \
+    * ``[-za, --zonal_avg]``            zonally average all variables \
         in a file
-    * ``[-include, --include]``         Only include specific \
+    * ``[-include, --include]``         only include specific \
         variables from the target file
-    * ``[-e, --ext]``                   Create a new file with a \
+    * ``[-e, --ext]``                   create a new file with a \
         unique extension instead of overwriting current file
     
 Third-party Requirements:
@@ -357,6 +357,14 @@ parser.add_argument("--debug", action="store_true",
 # ======================================================================
 
 def combine_files(file_list, full_file_list):
+    """
+    Concatenates sequential output files in chronological order.
+
+    :param file_list: list of file names
+    :type file_list: list
+    :param full_file_list: list of file names and full paths
+    :type full_file_list: list
+    """
     prYellow("Using internal method for concatenation")
 
     # For fixed files, deleting all but the first file has the same
@@ -366,7 +374,7 @@ def combine_files(file_list, full_file_list):
         rm_cmd = "rm -f "
         for i in range(1, num_files):
             # 1-N files ensures file number 0 is preserved
-            rm_cmd += " " + full_file_list[i]
+            rm_cmd += f" {full_file_list[i]}"
         p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
         prCyan(f"Cleaned all but {file_list[0]}")
         exit()
@@ -405,9 +413,9 @@ def combine_files(file_list, full_file_list):
     # Apply the new name created above
     rm_cmd = "rm -f "
     for file in full_file_list:
-        rm_cmd += " " + file
+        rm_cmd += f" {file}"
         
-    cmd_txt = "mv " + tmp_file + " " + merged_file
+    cmd_txt = f"mv {tmp_file} {merged_file}"
     p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
     p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
     prCyan(f"{merged_file} was created from a merge")
@@ -419,6 +427,13 @@ def combine_files(file_list, full_file_list):
 # ==================================================================
 
 def time_shift(file_list):
+    """
+    This function converts the data in diurn files with a time_of_day_XX
+    dimension to universal local time.
+
+    :param file_list: list of file names
+    :type file_list: list
+    """
     if parser.parse_args().tshift == 999:
         target_list = None # target local times requested by user
     else:
@@ -1322,25 +1337,18 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
 
     def proccess_file(newf, typefv3):
         """
-            Summary line - fits on one line
+            Creates required variables and inputs them into the new \
+            files. Required variables include ``latitude``, \
+            ``longitude``, ``time``, ``time-of-day`` (if diurn file), \
+            and vertical layers (``phalf`` and ``pfull``).
 
-            Extended description of function, what it outputs
-
-            :param newf: Path to target file
+            :param newf: path to target file
             :type newf: str
-            :param typefv3: Identifies type of file: ``average``, \
+            :param typefv3: identifies type of file: ``average``, \
                 ``daily``, or ``diurn``
             :type typefv3: str
 
-            Raises
-            ------
-            SomeError
-                Error description if X
-
-            Returns
-            -------
-            returned_val
-                define returned_val
+            :return: netCDF file with minimum required variables
         """
         for dname in histdims:
             if dname == "nlon":
@@ -1445,8 +1453,26 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
         print(f"{os.getcwd()}/{fdate}.fixed.nc was copied locally")
 
 
-# Function to perform time averages over all fields
 def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
+    """
+    Performs a time average over all fields in a file.
+
+    :param histfile: file to perform time average on
+    :type histfile: str
+    :param newf: path to target file
+    :type newf: str
+    :param avgtime: whether ``histfile`` has averaged fields \
+        (e.g., ``atmos_average``)
+    :type avgtime: bool
+    :param avgtod: whether ``histfile`` has a diurnal time dimenion \
+        (e.g., ``atmos_diurn``)
+    :type avgtod: bool
+    :param bin_period: the time binning period if `histfile` has \
+        averaged fields (i.e., if ``avgtime==True``), defaults to 5
+    :type bin_period: int, optional
+    
+    :return: a time-averaged file
+    """
     histvars = histfile.variables.keys()
     for vname in histvars:
         var = histfile.variables[vname]
@@ -1577,8 +1603,17 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
 
 def change_vname_longname_unit(vname, longname_txt, units_txt):
     """
-    Update variable ``name``, ``longname``, and ``units``.
-    This was designed specifically for LegacyCGM.nc files.
+    Update variable ``name``, ``longname``, and ``units``. This is \
+    designed to work specifically with LegacyCGM.nc files.
+
+    :param vname: variable name
+    :type vname: str
+    :param longname_txt: variable description
+    :type longname_txt: str
+    :param units_txt: variable units
+    :type units_txt: str
+    
+    :return: variable name and corresponding description and unit
     """
 
     if vname == "psurf":
@@ -1630,8 +1665,16 @@ def change_vname_longname_unit(vname, longname_txt, units_txt):
 
 def replace_dims(dims, todflag):
     """
-    Function replaces dimensions with MGCM-like names and remove 
-    time_of_day. This was designed specifically for LegacyCGM.nc files.
+    Replaces dimensions with MGCM-like names. Removes ``time_of_day``. \
+    This is designed to work specifically with LegacyCGM.nc files.
+
+    :param dims: dimensions of the variable
+    :type dims: str
+    :param todflag: indicates whether there exists a ``time_of_day`` \
+        dimension
+    :type todflag: bool
+    
+    :return: new dimension names for the variable
     """
     newdims = dims
     if "nlat" in dims:
@@ -1651,7 +1694,7 @@ def replace_dims(dims, todflag):
 
 def replace_at_index(tuple_dims, idx, new_name):
     """
-    Update dimensions.
+    Updates variable dimensions.
     
     :param tuple_dims: the dimensions as tuples e.g. (``pfull``, \
         ``nlat``, ``nlon``)
@@ -1681,7 +1724,7 @@ def ls2sol_1year(Ls_deg, offset=True, round10=True):
     :param round10: if True, round to the nearest 10 sols
     :type round10: bool
     
-    :returns: ``Ds`` sol number
+    :returns: ``Ds`` the sol number
     
     .. NOTE:: For the moment, this is consistent with 0 <= Ls <= \
         359.99, but not for monotically increasing Ls.

@@ -9,18 +9,18 @@ extracts variables from files, and enables scaling variables or editing
 variable names, units, etc.
 
 The executable requires:
-    * ``[input_file]``      the file to be transformed
+    * ``[input_file]``          the file to be transformed
 
 and optionally accepts:
-    * ``[-add --add]``           Derive and add variable to file
-    * ``[-zdiff --zdiff]``       Differentiate variable w.r.t. Z axis
-    * ``[-col --col]``           Column-integrate variable
-    * ``[-zd --zonal_detrend]``  Subtract zonal mean from variable
-    * ``[-dp_to_dz --dp_to_dz]`` Convert aerosol opacity op/Pa -> op/m
-    * ``[-dz_to_dp --dz_to_dp]`` Convert aerosol opacity op/m -> op/Pa
-    * ``[-rm --remove]``         Remove variable from file
-    * ``[-extract --extract]``   Copy variable to new file
-    * ``[-edit --edit]``         Edit variable attributes or scale it
+    * ``[-add --add]``           derive and add variable to file
+    * ``[-zdiff --zdiff]``       differentiate variable w.r.t. Z axis
+    * ``[-col --col]``           column-integrate variable
+    * ``[-zd --zonal_detrend]``  subtract zonal mean from variable
+    * ``[-dp_to_dz --dp_to_dz]`` convert aerosol opacity op/Pa -> op/m
+    * ``[-dz_to_dp --dz_to_dp]`` convert aerosol opacity op/m -> op/Pa
+    * ``[-rm --remove]``         remove variable from file
+    * ``[-extract --extract]``   copy variable to new file
+    * ``[-edit --edit]``         edit variable attributes or scale it
 
 Third-party Requirements:
     * ``numpy``

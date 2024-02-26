@@ -12,10 +12,10 @@
    and units to the configuration expected by CAP. In some cases, such as
    for MarsWRF, variables are derived and regridded onto a standard grid.
 
-   The executable requires 1 argument:
-       * ``[input_file]``      the file to be transformed
+   The executable requires:
+       * ``[input_file]``              the file to be transformed
 
-   and optionally accepts 2 arguments:
+   and optionally accepts:
        * ``[-openmars --openmars]``    convert openMars data to MGCM format
        * ``[-marswrf --marswrf]``      convert MarsWRF data to MGCM format
 
@@ -89,8 +89,6 @@ Functions
    :param DS: The dataset created by xarray when it opens the         user-supplied input file.
    :type DS: xarray dataset
 
-   Returns
-   -------
    :return: ``var_dict`` Dictionary with variable names as keys and a        list of attributes[values, dimensions, longname, units] as         values.
 
        ``time`` (array) Minutes since simulation start

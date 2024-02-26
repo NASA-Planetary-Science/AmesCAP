@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 """
-The MarsCalendar executable accepts an input Ls or day-of-year (sol) and
-returns the corresponding sol or Ls, respectively.
+The MarsCalendar executable accepts an input Ls or day-of-year (sol) \
+and returns the corresponding sol or Ls, respectively.
 
 The executable requires 1 of the following arguments:
-    * ``[-sol --sol]``      The sol to convert to Ls, OR
-    * ``[-ls --ls]``        The Ls to convert to sol.
+    * ``[-sol --sol]``          the sol to convert to Ls, OR
+    * ``[-ls --ls]``            the Ls to convert to sol
 
 and optionally accepts:
-    * ``[-my --marsyear]``  The Mars Year of the simulation to compute
-                            sol or  Ls from, AND/OR
-    * ``[-c --cumulative]`` Returns Ls in cumulative form.
+    * ``[-my --marsyear]``      the Mars Year of the simulation to \
+        compute sol or  Ls from, AND/OR
+    * ``[-c --cumulative]``     returns Ls in cumulative form
 
 Third-party Requirements:
     * ``numpy``

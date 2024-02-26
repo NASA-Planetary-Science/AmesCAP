@@ -1375,6 +1375,10 @@ def fig_layout(subID, nPan, vertical_page=False):
 def make_template():
     """
     Generate the ``Custom.in`` template file.
+    
+    Parameters
+    ----------
+    :return: Custom.in blank template
     """
     global customFileIN  # Will be modified
     global current_version
@@ -1496,6 +1500,12 @@ def make_template():
     print(f"{newname} was created")
 
 def give_permission(filename):
+    """
+    Sets group permissions for files created on NAS.
+
+    :param filename: name of the file 
+    :type filename: str
+    """
     # NAS system only: set group permissions to the file
     try:
         # Catch error and standard output
@@ -2014,7 +2024,6 @@ class CustomTicker(LogFormatterSciNotation):
 #                           FIGURE DEFINITIONS
 # ======================================================================
 class Fig_2D(object):
-    # Parent class for 2D figures
     def __init__(self, varfull="fileYYY.XXX", doPlot=False, varfull2=None):
 
         self.title    = None
@@ -4034,7 +4043,7 @@ class Fig_1D(object):
                     txt_label = leg_text
                 else:
                     # Remove the first comma in fdim_txt to print to new line
-                    txt_label = var_info+"\n"+self.fdim_txt[1:]
+                    txt_label = f"{var_info}\n{self.fdim_txt[1:]}"
 
             if self.title:
                 if "{" in self.title:
@@ -4048,7 +4057,7 @@ class Fig_1D(object):
                     plt.title((self.title),
                               fontsize=(title_size-self.nPan*title_factor))
             else:
-                plt.title(var_info+"\n"+self.fdim_txt[1:],
+                plt.title(f"{var_info}\n{self.fdim_txt[1:]}",
                           fontsize=(title_size-self.nPan*title_factor),
                           wrap=False)
 

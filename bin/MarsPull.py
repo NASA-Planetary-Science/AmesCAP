@@ -5,9 +5,9 @@ Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on \
 the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
 The executable requires:
-    * ``[-id --id]``      The simulation identifier, AND
-    * ``[-ls --ls]``      the desired solar longitude(s), OR
-    * ``[-f --filename]`` the name(s) of the desired file(s).
+    * ``[-id --id]``        the simulation identifier, AND
+    * ``[-ls --ls]``        the desired solar longitude(s), OR
+    * ``[-f --filename]``   the name(s) of the desired file(s)
 
 Third-party Requirements:
     * ``numpy``
@@ -139,8 +139,6 @@ def download(file_name, simulation_id):
     ``[-f --filename]`` or determined based on the user-specified solar\
     longitude ``[-ls --ls]``.
 
-    Parameters
-    ----------
     :param simulation_id: The simulation identifier, i.e., the name of \
         the directory to query from: \
         https://data.nas.nasa.gov/mcmc/data_legacygcm.php
