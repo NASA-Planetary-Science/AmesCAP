@@ -289,8 +289,8 @@ def main():
                 # Confirm that the input date type is float
                 bound = np.asarray(parser.parse_args().date).astype(float)
             except Exception as e:
-                prRed("*** Syntax Error***\nPlease use: ``MarsPlot \
-                    Custom.in -d XXXX [YYYY] -o out``")
+                prRed("*** Syntax Error***\nPlease use: ``MarsPlot "
+                      "Custom.in -d XXXX [YYYY] -o out``")
                 exit()
         else:
             # If no optional [-d --date] argument is provided, default
@@ -440,8 +440,8 @@ def main():
             except subprocess.CalledProcessError:
                 # If the ghostscript command fails again, prompt user
                 # to try generating a PNG instead
-                print("ERROR with ghostscript when merging PDF, please \
-                    try a different format, such as PNG.")
+                print("ERROR with ghostscript when merging PDF, please "
+                      "try a different format, such as PNG.")
                 if debug:
                     raise
 
@@ -470,8 +470,8 @@ include_NaNs = eval("np.array(show_NaN_in_slice)")
 
 def mean_func(arr, axis):
     """
-    This function calculates a mean over the selected axis, ignoring or\
-    including NaN values as specified by ``show_NaN_in_slice`` in \
+    This function calculates a mean over the selected axis, ignoring or
+    including NaN values as specified by ``show_NaN_in_slice`` in 
    ``~/.amescap_profile``.
 
     :param arr: the array to be averaged
@@ -499,7 +499,7 @@ def shift_data(lon, data):
     :rtype: array [lon]
     :return: shifted data
     :rtype: array [1,lon]
-    :note: Use ``np.ma.hstack`` instead of ``np.hstack`` to keep the \
+    :note: Use ``np.ma.hstack`` instead of ``np.hstack`` to keep the 
         masked array properties
     """
     nlon = len(lon)
@@ -514,8 +514,8 @@ def shift_data(lon, data):
         data = shiftgrid_180_to_360(lon, data)
     else:
         raise ValueError(
-            "Longitude coordinate type invalid. Please specify ``180`` or \
-            ``360`` after lon_coordinate in ~/.amescap_profile."
+            "Longitude coordinate type invalid. Please specify ``180`` or "
+            "``360`` after lon_coordinate in ``~/.amescap_profile``."
         )
     # If 1D plot, squeeze array
     if data.shape[0] == 1:
@@ -536,10 +536,10 @@ def MY_func(Ls_cont):
 
 def get_lon_index(lon_query_180, lons):
     """
-    Returns the indices that will extract data from the netCDF file \
+    Returns the indices that will extract data from the netCDF file 
     according to a range of *longitudes*.
 
-    :param lon_query_180: longitudes in -180/+180: value, \
+    :param lon_query_180: longitudes in -180/+180: value, 
         ``[min, max]``, or `None`
     :type lon_query_180: list
     :param lons: longitude in 0/360
@@ -548,7 +548,7 @@ def get_lon_index(lon_query_180, lons):
     :rtype: array
     :return: text descriptor for the extracted longitudes
     :rtype: str
-    :note: the keyword ``all`` is passed as ``-99999`` by the rT() \
+    :note: the keyword ``all`` is passed as ``-99999`` by the rT() 
         functions
     """
     Nlon = len(lons)
@@ -633,7 +633,7 @@ def get_lon_index(lon_query_180, lons):
 
 def get_lat_index(lat_query, lats):
     """
-    Returns the indices that will extract data from the netCDF file \
+    Returns the indices that will extract data from the netCDF file 
     according to a range of *latitudes*.
 
     :param lat_query: requested latitudes (-90/+90)
@@ -643,7 +643,7 @@ def get_lat_index(lat_query, lats):
     :return: 1d array of file indices
     :rtype: text descriptor for the extracted longitudes
     :rtype: str
-    :note: the keyword ``all`` is passed as ``-99999`` by the ``rt()`` \
+    :note: the keyword ``all`` is passed as ``-99999`` by the ``rt()`` 
         function
     """
     Nlat = len(lats)
@@ -678,7 +678,7 @@ def get_lat_index(lat_query, lats):
 
 def get_tod_index(tod_query, tods):
     """
-    Returns the indices that will extract data from the netCDF file \
+    Returns the indices that will extract data from the netCDF file 
     according to a range of *times of day*.
 
     :param tod_query: requested time of day (0-24)
@@ -689,7 +689,7 @@ def get_tod_index(tod_query, tods):
     :rtype: array [tod]
     :return: descriptor for the extracted time of day
     :rtype: str
-    :note: the keyword ``all`` is passed as ``-99999`` by the ``rT()`` \
+    :note: the keyword ``all`` is passed as ``-99999`` by the ``rT()`` 
         function
     """
     Ntod = len(tods)
@@ -731,7 +731,7 @@ def get_tod_index(tod_query, tods):
 
 def get_level_index(level_query, levs):
     """
-    Returns the indices that will extract data from the netCDF file \
+    Returns the indices that will extract data from the netCDF file 
     according to a range of *pressures* (resp. depth for ``zgrid``).
 
     :param level_query: requested pressure [Pa] (depth [m])
@@ -742,7 +742,7 @@ def get_level_index(level_query, levs):
     :rtype: array
     :return: descriptor for the extracted pressure (depth)
     :rtype: str
-    :note: the keyword ``all`` is passed as ``-99999`` by the ``rT()`` \
+    :note: the keyword ``all`` is passed as ``-99999`` by the ``rT()`` 
         functions
     """
     level_query = np.array(level_query)
@@ -789,11 +789,11 @@ def get_level_index(level_query, levs):
 
 def get_time_index(Ls_query_360, LsDay):
     """
-    Returns the indices that will extract data from the netCDF file \
+    Returns the indices that will extract data from the netCDF file 
     according to a range of solar longitudes [0-360].
 
-    First try the Mars Year of the last timestep, then try the year \
-    before that. Use whichever Ls period is closest to the requested \
+    First try the Mars Year of the last timestep, then try the year 
+    before that. Use whichever Ls period is closest to the requested 
     date.
 
     :param Ls_query_360: requested solar longitudes
@@ -804,7 +804,7 @@ def get_time_index(Ls_query_360, LsDay):
     :rtype: array
     :return: descriptor for the extracted solar longitudes
     :rtype: str
-    :note: the keyword ``all`` is passed as ``-99999`` by the ``rT()`` \
+    :note: the keyword ``all`` is passed as ``-99999`` by the ``rT()`` 
         function
     """
 
@@ -875,9 +875,9 @@ def get_time_index(Ls_query_360, LsDay):
         ti = np.arange(ti_beg, ti_last+1)
 
         Ls_bounds = [LsDay[ti[0]], LsDay[ti[-1]]]
-        txt_time = (f", Ls= avg [(MY{MY_beg:02}) \
-            {np.mod(Ls_bounds[0], 360.):.2f} <-> (MY{MY_last:02}) \
-            {np.mod(Ls_bounds[1], 360.):.2f}]")
+        txt_time = (f", Ls= avg [(MY{MY_beg:02}) "
+                    f"{np.mod(Ls_bounds[0], 360.):.2f} <-> (MY{MY_last:02}) "
+                    f"{np.mod(Ls_bounds[1], 360.):.2f}]")
     return ti, txt_time
 
 # ======================================================================
@@ -888,10 +888,10 @@ def filter_input(txt, typeIn="char"):
     """
     Read template for the type of data expected
 
-    :param txt: text input into ``Custom.in`` to the right of an equal \
+    :param txt: text input into ``Custom.in`` to the right of an equal 
         sign
     :type txt: str
-    :param typeIn: type of data expected: ``char``, ``float``, ``int``,\
+    :param typeIn: type of data expected: ``char``, ``float``, ``int``,
         ``bool``, defaults to ``char``
     :type typeIn: str, optional
     :return: text input reformatted to ``[val1, val2]``
@@ -941,10 +941,10 @@ def filter_input(txt, typeIn="char"):
 
 def rT(typeIn="char"):
     """
-    Read template for the type of data expected. Returns value to \
+    Read template for the type of data expected. Returns value to 
     ``filter_input()``.
 
-    :param typeIn: type of data expected: ``char``, ``float``, ``int``,\
+    :param typeIn: type of data expected: ``char``, ``float``, ``int``,
         ``bool``, defaults to ``char``
     :type typeIn: str, optional
     :return: text input reformatted to ``[val1, val2]``
@@ -977,14 +977,14 @@ def read_axis_options(axis_options_txt):
     """
     Return axis customization options.
 
-    :param axis_options_txt: a copy of the last line ``Axis Options`` \
+    :param axis_options_txt: a copy of the last line ``Axis Options`` 
         in ``Custom.in`` templates
     :type axis_options_txt: str
     :return: X-axis bounds as a numpy array or ``None`` if undedefined
     :rtype: array or None
     :return: Y-axis bounds as a numpy array or ``None`` if undedefined
     :rtype: array or None
-    :return: colormap (e.g., ``jet``, ``nipy_spectral``) or line \
+    :return: colormap (e.g., ``jet``, ``nipy_spectral``) or line 
         options (e.g., ``--r`` for dashed red)
     :rtype: str
     :return: linear (``lin``) or logarithmic (``log``) color scale
@@ -1038,7 +1038,7 @@ def split_varfull(varfull):
     """
     Split ``varfull`` object into its component parts
 
-    :param varfull: a ``varfull`` object (e.g, \
+    :param varfull: a ``varfull`` object (e.g, 
         ``atmos_average@2.zsurf``, ``02400.atmos_average@2.zsurf``)
     :type varfull: str
     :return: (sol_array) a sol number or ``None`` (if none provided)
@@ -1081,13 +1081,13 @@ def remove_whitespace(raw_input):
     """
     Remove whitespace inside an expression.
 
-    This is different from the ``.strip()`` method, which only removes \
+    This is different from the ``.strip()`` method, which only removes 
     whitespaces at the edges of a string.
 
-    :param raw_input: user input for variable, (e.g., \
+    :param raw_input: user input for variable, (e.g., 
         ``[atmos_average.temp] + 2)``
     :type raw_input: str
-    :return: raw_input without whitespaces (e.g., \
+    :return: raw_input without whitespaces (e.g., 
         ``[atmos_average.temp]+2)``
     :rtype: str
     """
@@ -1102,10 +1102,10 @@ def clean_comma_whitespace(raw_input):
     """
     Remove commas and whitespaces inside an expression.
 
-    :param raw_input: dimensions specified by user input to Variable \
+    :param raw_input: dimensions specified by user input to Variable 
         (e.g., ``lat=3. , lon=2 , lev = 10.``)
     :type raw_input: str
-    :return: raw_input without whitespaces (e.g., \
+    :return: raw_input without whitespaces (e.g., 
         ``lat=3.,lon=2,lev=10.``)
     :rtype: str
     """
@@ -1120,10 +1120,10 @@ def get_list_varfull(raw_input):
     """
     Return requested variable from a complex ``varfull`` object with ``[]``.
 
-    :param raw_input: complex user input to Variable (e.g., \
+    :param raw_input: complex user input to Variable (e.g., 
         ``2*[atmos_average.temp]+[atmos_average2.ucomp]*1000``)
     :type raw_input: str
-    :return: list required variables (e.g., [``atmos_average.temp``, \
+    :return: list required variables (e.g., [``atmos_average.temp``, 
         ``atmos_average2.ucomp``])
     :rtype: str
     """
@@ -1144,7 +1144,7 @@ def get_list_varfull(raw_input):
 
 def get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2):
     """
-    Return new dimensions that will overwrite default dimensions for a \
+    Return new dimensions that will overwrite default dimensions for a 
     varfull object with ``{}`` on a 2D plot.
 
     ``2D_lon_lat:  fdim1 = ls,  fdim2 = lev``
@@ -1154,7 +1154,7 @@ def get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2):
     ``2D_time_lev: fdim1 = lat, fdim2 = lon``
     ``2D_lon_time: fdim1 = lat, fdim2 = lev``
 
-    :param varfull_bracket: a ``varfull`` object with ``{}`` (e.g., \
+    :param varfull_bracket: a ``varfull`` object with ``{}`` (e.g., 
         ``atmos_average.temp{lev=10;ls=350;lon=155;lat=25}``)
     :type varfull_bracket: str
     :param plot_type: the type of the plot template
@@ -1163,10 +1163,10 @@ def get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2):
     :type fdim1: str
     :param fdim2: Y axis dimension for plot
     :type fdim2: str
-    :return: (varfull) required file and variable (e.g., \
-        ``atmos_average.temp``); \
-        (fdim_out1) X axis dimension for plot; \
-        (fdim_out2) Y axis dimension for plot; \
+    :return: (varfull) required file and variable (e.g., 
+        ``atmos_average.temp``); 
+        (fdim_out1) X axis dimension for plot; 
+        (fdim_out2) Y axis dimension for plot; 
         (ftod_out) if X or Y axis dimension is time of day
     """
     # Initialization: use the dimension provided in the template
@@ -1191,9 +1191,9 @@ def get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2):
     for i in range(0, ndim_update):
         # Check if the requested dimension exists:
         if split_dim[i].split("=")[0] not in ["ls", "lev", "lon", "lat", "tod"]:
-            prYellow(f"*** Warning*** Ignoring dimension: \
-                {split_dim[i].split('=')[0]} because it is not recognized. \
-                Valid dimensions = ls,lev,lon, lat or tod")
+            prYellow(f"*** Warning*** Ignoring dimension: "
+                     f"{split_dim[i].split('=')[0]} because it is not "
+                     f"recognized. Valid dimensions = ls,lev,lon, lat or tod")
 
         if plot_type == "2D_lon_lat":
             if split_dim[i].split("=")[0] == "ls":
@@ -1238,10 +1238,10 @@ def get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2):
 
 def get_overwrite_dim_1D(varfull_bracket, t_in, lat_in, lon_in, lev_in, ftod_in):
     """
-    Return new dimensions that will overwrite default dimensions for a \
+    Return new dimensions that will overwrite default dimensions for a 
     varfull object with ``{}`` for a 1D plot.
 
-    :param varfull_bracket: a ``varfull`` object with ``{}`` (e.g., \
+    :param varfull_bracket: a ``varfull`` object with ``{}`` (e.g., 
         ``atmos_average.temp{lev=10;ls=350;lon=155;lat=25}``)
     :type varfull_bracket: str
     :param t_in: self.t variable
@@ -1254,13 +1254,13 @@ def get_overwrite_dim_1D(varfull_bracket, t_in, lat_in, lon_in, lev_in, ftod_in)
     :type lev_in: array [lev]
     :param ftod_in: self.ftod variable
     :type ftod_in: array [tod]
-    :return: ``varfull`` object without brackets (e.g., \
-        ``atmos_average.temp``); \
-        :return: (t_out) dimension to update; \
-        :return: (lat_out) dimension to update; \
-        :return: (lon_out) dimension to update; \
-        :return: (lev_out) dimension to update; \
-        :return: (ftod_out) dimension to update; \
+    :return: ``varfull`` object without brackets (e.g., 
+        ``atmos_average.temp``); 
+        :return: (t_out) dimension to update; 
+        :return: (lat_out) dimension to update; 
+        :return: (lon_out) dimension to update; 
+        :return: (lev_out) dimension to update; 
+        :return: (ftod_out) dimension to update; 
     """
     # Initialization: Use the dimension provided in the template
     t_out = t_in
@@ -1282,8 +1282,8 @@ def get_overwrite_dim_1D(varfull_bracket, t_in, lat_in, lon_in, lev_in, ftod_in)
     for i in range(0, ndim_update):
         # Check if the requested dimension exists:
         if split_dim[i].split("=")[0] not in ["time", "lev", "lon", "lat", "tod"]:
-            prYellow(f"*** Warning*** ignoring dimension: \
-                {split_dim[i].split('=')[0]} because it is not recognized. \
+            prYellow(f"*** Warning*** ignoring dimension: 
+                {split_dim[i].split('=')[0]} because it is not recognized. 
                 Valid dimensions = time,lev,lon, lat or tod")
 
         if split_dim[i].split("=")[0] == "ls":
@@ -1321,10 +1321,10 @@ def fig_layout(subID, nPan, vertical_page=False):
     :type subID: int
     :param nPan: number of panels desired on page (max = 64, 8x8)
     :type nPan: int
-    :param vertical_page: reverse the tuple for portrait format if \
+    :param vertical_page: reverse the tuple for portrait format if 
         ``True``
     :type vertical_page: bool
-    :return: plot layout (e.g., ``plt.subplot(nrows = out[0], ncols = \
+    :return: plot layout (e.g., ``plt.subplot(nrows = out[0], ncols = 
         out[1], plot_number = out[2])``)
     :rtype: tuple
     """
@@ -1388,7 +1388,7 @@ def make_template():
     customFileIN = open(newname, "w")
 
     # Add a line header. Primary use is to change the text color in vim
-    lh = """# """
+    lh = "# "
 
     # Create header with instructions. Add the version number to the title.
     customFileIN.write(
@@ -1396,74 +1396,74 @@ def make_template():
     if parser.parse_args().template:
         # Additional instructions if requested
         customFileIN.write(
-            lh+"""================================================= INSTRUCTIONS =================================================\n""")
-        customFileIN.write(lh+"""- Copy/paste template for the desired plot type. - Do not modify text left of an equal ``=`` sign. \n""")
-        customFileIN.write(lh+"""- Add comments using ``#``                         - Skip plots by setting <<<< Plot = False >>>> \n""")
-        customFileIN.write(lh+"""- Capitalize ``True``, ``False``, and ``None``.        - Do not use quotes ("") anywhere in this file. \n""")
-        customFileIN.write(lh+"""\n""")
-        customFileIN.write(lh+"""Group figures onto pages using``HOLD ON`` and ``HOLD OFF``. \n""")
-        customFileIN.write(lh+"""Optionally, use ``row,col`` to specify the layout: HOLD ON 2,3``. \n""")
-        customFileIN.write(lh+"""Use ``ADD LINE`` between 1D plots to overplot on the same figure. \n""")
-        customFileIN.write(lh+"""Figures templates must appear after ``START`` and before ``STOP``. \n""")
-        customFileIN.write(lh+"""Set the colorbar range with ``Cmin, Cmax``. Scientific notation (e.g., 1e-6, 2e3) is supported. \n""")
-        customFileIN.write(lh+"""Set the colorbar intervals directly by providing a list (e.g., 1e-6, 1e-4, 1e-2, 1e-0). \n""")
-        customFileIN.write(lh+"""Set the contour intervals for ``2nd Variable`` in a list (e.g., 150, 200, 250, 300, 350). \n""")
-        customFileIN.write(lh+"""The vertical grid of the *.nc file used in the plot determines what ``Level`` refers to.\n""")
-        customFileIN.write(lh+"""   ``Level`` can be: ``level``, ``pfull``, ``pstd``, ``plevs`` [Pa] or ``zstd``, ``zagl``, or ``zgrid`` [m].\n""")
-        customFileIN.write(lh+"""\n""")
-        customFileIN.write(lh+"""============================================ ALGEBRA ============================================\n""")
-        customFileIN.write(lh+"""Use square brackets ``[]`` for element-wise operations: \n""")
-        customFileIN.write(lh+"""   ``[fixed.zsurf]/(10.**3)``            Convert between units ([m] to [km], in this case).\n""")
-        customFileIN.write(lh+"""   ``[file.var1]/[file.var2]*610``       Multiply variables together.\n""")
-        customFileIN.write(lh+"""   ``[file.var]-[file@2.var]``           Difference plot of ``var`` from 2 simulations.\n""")
-        customFileIN.write(lh+"""   ``[file.var]-[file.var{lev=10}]``     Difference plot of ``var`` at two levels.\n""")
-        customFileIN.write(lh+"""Square brackets support the following expressions: sqrt, log, exp, abs, min, max, & mean.\n""")
-        customFileIN.write(lh+"""\n""")
-        customFileIN.write(lh+"""========================================= FREE DIMENSIONS =========================================\n""")
-        customFileIN.write(lh+"""Dimensions can be ``time``, ``lev``, ``lat``, ``lon``, or ``tod``.\n""")
-        customFileIN.write(lh+"""Dimensions default to None when a value or range is not specified. None corresponds to: \n""")
-        customFileIN.write(lh+"""   time  =  -1      The last (most recent) timestep (Nt).\n""")
-        customFileIN.write(lh+"""   lev   =  sfc     Nz for *.nc files, 0 for *_pstd.nc files.\n""")
-        customFileIN.write(lh+"""   lat   =  0       Equator\n""")
-        customFileIN.write(lh+"""   lon   =  ``all``   Zonal average over all longitudes\n""")
-        customFileIN.write(lh+"""   tod   =  ``15``    3 PM UT \n""")
-        customFileIN.write(lh+"""Setting a dimension equal to a number finds the value closest to that number. \n""")
-        customFileIN.write(lh+"""Setting a dimension equal to ``all`` averages the dimension over all values. \n""")
-        customFileIN.write(lh+"""Setting a dimension equal to a range averages the dimension over the values in the range. \n""")
-        customFileIN.write(lh+"""You can also overwrite a dimension in the Main Variable input using curvy brackets ``{}`` and the\n""")
-        customFileIN.write(lh+"""   dimension name. Separate the arguments with semi-colons ``;`` \n""")
-        customFileIN.write(lh+"""       e.g., Main Variable  = atmos_average.temp{ls = 90; lev= 5.,10; lon= all; lat=45} \n""")
-        customFileIN.write(lh+"""   Values must correspond to the units of the variable in the file: \n""")
-        customFileIN.write(lh+"""       time [Ls], lev [Pa/m], lon [+/-180 deg], and lat [deg]. \n""")
-        customFileIN.write(lh+"""* You can only select a time of day (tod) in diurn files using this syntax: \n""")
-        customFileIN.write(lh+"""       e.g., Main Variable  = atmos_diurn.ps{tod = 20} \n""")
-        customFileIN.write(lh+"""You can also specify the fontsize in Title using curvy brackets and ``size``:\n""")
-        customFileIN.write(lh+"""       e.g., Title = Temperature [K] {size = 20}.\n""")
-        customFileIN.write(lh+"""\n""")
-        customFileIN.write(lh+"""==================================== TIME SERIES AND 1D PLOTS ====================================\n""")
-        customFileIN.write(lh+"""Set the X axis variable by indicating AXIS after the appropriate dimension: \n""")
-        customFileIN.write(lh+"""       e.g., Ls = AXIS \n""")
-        customFileIN.write(lh+"""The other dimensions remain FREE DIMENSIONS and accept values as described above. \n""")
-        customFileIN.write(lh+"""The ``Diurnal [hr]`` dimension only accepts ``AXIS`` or ``None``. Indicate time of day only using the``\n""")
-        customFileIN.write(lh+"""   ``tod`` syntax as described in FREE DIMENSIONS. \n""")
-        customFileIN.write(lh+"""\n""")
-        customFileIN.write(lh+"""================================== AXIS OPTIONS AND PROJECTIONS ==================================\n""")
-        customFileIN.write(lh+"""Set the X and Y axis limits, map projection, colormap, and linestyle under Axis Options. \n""")
-        customFileIN.write(lh+"""All Matplolib styles are supported. \n""")
-        customFileIN.write(lh+"""   ``cmap``  colormap    ``jet`` (winds), ``nipy_spectral`` (temperature), ``bwr`` (diff plot), etc. \n""")
-        customFileIN.write(lh+"""   ``scale`` gradient    ``lin`` (linear), ``log`` (logarithmic; Cmin, Cmax is typically expected. \n""")
-        customFileIN.write(lh+"""   ``line``  linestyle   ``-r`` (solid red), ``--g`` (dashed green), ``-ob`` (solid blue + markers). \n""")
-        customFileIN.write(lh+"""   ``proj``  projection  Cylindrical: ``cart`` (Cartesian), ``robin`` (Robinson), ``moll`` (Mollweide), \n""")
-        customFileIN.write(lh+"""                       Azithumal: ``Npole lat`` (North Pole), ``Spole lat`` (South Pole),\n""")
-        customFileIN.write(lh+"""                       ``ortho lon,lat`` (Orthographic). \n""")
-        customFileIN.write(lh+"""\n""")
-        customFileIN.write(lh+"""===================== FILES FROM MULTIPLE SIMULATIONS =====================\n""")
-        customFileIN.write(lh+"""Under <<< Simulations >>>, there are numbered lines (``N>``) for you to use to indicate the \n""")
-        customFileIN.write(lh+"""   path to the *.nc file you want to reference. Empty fields are ignored. \n""")
-        customFileIN.write(lh+"""Provide the FULL PATH on the line, e.g., ``2> /u/User/FV3/path/to/history``. \n""")
-        customFileIN.write(lh+"""Specify the *.nc file from which to plot using the ``@`` symbol + the simulation number:\n""")
-        customFileIN.write(lh+"""   in the call to Main Variable, e.g., Main Variable = atmos_average@2.temp \n""")
-        customFileIN.write(lh+"""\n""")
+            lh+"================================================= INSTRUCTIONS =================================================\n")
+        customFileIN.write(lh+"- Copy/paste template for the desired plot type. - Do not modify text left of an equal ``=`` sign. \n")
+        customFileIN.write(lh+"- Add comments using ``#``                         - Skip plots by setting <<<< Plot = False >>>> \n")
+        customFileIN.write(lh+"- Capitalize ``True``, ``False``, and ``None``.        - Do not use quotes ("") anywhere in this file. \n")
+        customFileIN.write(lh+"\n")
+        customFileIN.write(lh+"Group figures onto pages using``HOLD ON`` and ``HOLD OFF``. \n")
+        customFileIN.write(lh+"Optionally, use ``row,col`` to specify the layout: HOLD ON 2,3``. \n")
+        customFileIN.write(lh+"Use ``ADD LINE`` between 1D plots to overplot on the same figure. \n")
+        customFileIN.write(lh+"Figures templates must appear after ``START`` and before ``STOP``. \n")
+        customFileIN.write(lh+"Set the colorbar range with ``Cmin, Cmax``. Scientific notation (e.g., 1e-6, 2e3) is supported. \n")
+        customFileIN.write(lh+"Set the colorbar intervals directly by providing a list (e.g., 1e-6, 1e-4, 1e-2, 1e-0). \n")
+        customFileIN.write(lh+"Set the contour intervals for ``2nd Variable`` in a list (e.g., 150, 200, 250, 300, 350). \n")
+        customFileIN.write(lh+"The vertical grid of the *.nc file used in the plot determines what ``Level`` refers to.\n")
+        customFileIN.write(lh+"   ``Level`` can be: ``level``, ``pfull``, ``pstd``, ``plevs`` [Pa] or ``zstd``, ``zagl``, or ``zgrid`` [m].\n")
+        customFileIN.write(lh+"\n")
+        customFileIN.write(lh+"============================================ ALGEBRA ============================================\n")
+        customFileIN.write(lh+"Use square brackets ``[]`` for element-wise operations: \n")
+        customFileIN.write(lh+"   ``[fixed.zsurf]/(10.**3)``            Convert between units ([m] to [km], in this case).\n")
+        customFileIN.write(lh+"   ``[file.var1]/[file.var2]*610``       Multiply variables together.\n")
+        customFileIN.write(lh+"   ``[file.var]-[file@2.var]``           Difference plot of ``var`` from 2 simulations.\n")
+        customFileIN.write(lh+"   ``[file.var]-[file.var{lev=10}]``     Difference plot of ``var`` at two levels.\n")
+        customFileIN.write(lh+"Square brackets support the following expressions: sqrt, log, exp, abs, min, max, & mean.\n")
+        customFileIN.write(lh+"\n")
+        customFileIN.write(lh+"========================================= FREE DIMENSIONS =========================================\n")
+        customFileIN.write(lh+"Dimensions can be ``time``, ``lev``, ``lat``, ``lon``, or ``tod``.\n")
+        customFileIN.write(lh+"Dimensions default to None when a value or range is not specified. None corresponds to: \n")
+        customFileIN.write(lh+"   time  =  -1      The last (most recent) timestep (Nt).\n")
+        customFileIN.write(lh+"   lev   =  sfc     Nz for *.nc files, 0 for *_pstd.nc files.\n")
+        customFileIN.write(lh+"   lat   =  0       Equator\n")
+        customFileIN.write(lh+"   lon   =  ``all``   Zonal average over all longitudes\n")
+        customFileIN.write(lh+"   tod   =  ``15``    3 PM UT \n")
+        customFileIN.write(lh+"Setting a dimension equal to a number finds the value closest to that number. \n")
+        customFileIN.write(lh+"Setting a dimension equal to ``all`` averages the dimension over all values. \n")
+        customFileIN.write(lh+"Setting a dimension equal to a range averages the dimension over the values in the range. \n")
+        customFileIN.write(lh+"You can also overwrite a dimension in the Main Variable input using curvy brackets ``{}`` and the\n")
+        customFileIN.write(lh+"   dimension name. Separate the arguments with semi-colons ``;`` \n")
+        customFileIN.write(lh+"       e.g., Main Variable  = atmos_average.temp{ls = 90; lev= 5.,10; lon= all; lat=45} \n")
+        customFileIN.write(lh+"   Values must correspond to the units of the variable in the file: \n")
+        customFileIN.write(lh+"       time [Ls], lev [Pa/m], lon [+/-180 deg], and lat [deg]. \n")
+        customFileIN.write(lh+"* You can only select a time of day (tod) in diurn files using this syntax: \n")
+        customFileIN.write(lh+"       e.g., Main Variable  = atmos_diurn.ps{tod = 20} \n")
+        customFileIN.write(lh+"You can also specify the fontsize in Title using curvy brackets and ``size``:\n")
+        customFileIN.write(lh+"       e.g., Title = Temperature [K] {size = 20}.\n")
+        customFileIN.write(lh+"\n")
+        customFileIN.write(lh+"==================================== TIME SERIES AND 1D PLOTS ====================================\n")
+        customFileIN.write(lh+"Set the X axis variable by indicating AXIS after the appropriate dimension: \n")
+        customFileIN.write(lh+"       e.g., Ls = AXIS \n")
+        customFileIN.write(lh+"The other dimensions remain FREE DIMENSIONS and accept values as described above. \n")
+        customFileIN.write(lh+"The ``Diurnal [hr]`` dimension only accepts ``AXIS`` or ``None``. Indicate time of day only using the``\n")
+        customFileIN.write(lh+"   ``tod`` syntax as described in FREE DIMENSIONS. \n")
+        customFileIN.write(lh+"\n")
+        customFileIN.write(lh+"================================== AXIS OPTIONS AND PROJECTIONS ==================================\n")
+        customFileIN.write(lh+"Set the X and Y axis limits, map projection, colormap, and linestyle under Axis Options. \n")
+        customFileIN.write(lh+"All Matplolib styles are supported. \n")
+        customFileIN.write(lh+"   ``cmap``  colormap    ``jet`` (winds), ``nipy_spectral`` (temperature), ``bwr`` (diff plot), etc. \n")
+        customFileIN.write(lh+"   ``scale`` gradient    ``lin`` (linear), ``log`` (logarithmic; Cmin, Cmax is typically expected. \n")
+        customFileIN.write(lh+"   ``line``  linestyle   ``-r`` (solid red), ``--g`` (dashed green), ``-ob`` (solid blue + markers). \n")
+        customFileIN.write(lh+"   ``proj``  projection  Cylindrical: ``cart`` (Cartesian), ``robin`` (Robinson), ``moll`` (Mollweide), \n")
+        customFileIN.write(lh+"                       Azithumal: ``Npole lat`` (North Pole), ``Spole lat`` (South Pole),\n")
+        customFileIN.write(lh+"                       ``ortho lon,lat`` (Orthographic). \n")
+        customFileIN.write(lh+"\n")
+        customFileIN.write(lh+"===================== FILES FROM MULTIPLE SIMULATIONS =====================\n")
+        customFileIN.write(lh+"Under <<< Simulations >>>, there are numbered lines (``N>``) for you to use to indicate the \n")
+        customFileIN.write(lh+"   path to the *.nc file you want to reference. Empty fields are ignored. \n")
+        customFileIN.write(lh+"Provide the FULL PATH on the line, e.g., ``2> /u/User/FV3/path/to/history``. \n")
+        customFileIN.write(lh+"Specify the *.nc file from which to plot using the ``@`` symbol + the simulation number:\n")
+        customFileIN.write(lh+"   in the call to Main Variable, e.g., Main Variable = atmos_average@2.temp \n")
+        customFileIN.write(lh+"\n")
     customFileIN.write(
         "<<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>\n")
     customFileIN.write("ref> None\n")
@@ -1562,9 +1562,9 @@ def namelist_parser(Custom_file):
     if int(version) != int(current_version):
         # Check if the main versions are compatible
         # (e.g., Versions 1.1 and 1.2 are OK but not 1.0 and 2.0)
-        prYellow(f"*** Warning ***\nUsing MarsPlot V{current_version} \
-            but Custom.in template is deprecated (V{version})\
-            \n***************")
+        prYellow(f"*** Warning ***\nUsing MarsPlot V{current_version} "
+                 f"but Custom.in template is deprecated (V{version})"
+                 f"\n***************")
 
     while (customFileIN.readline()[0] != "<"):
         # Skip the header
@@ -1721,8 +1721,8 @@ def namelist_parser(Custom_file):
 
     if addLine:
         # Make sure we are not still holding figures
-        prRed(f"*** Error ***\nCannot have 'ADD LINE' after the last figure \
-            in {Custom_file}")
+        prRed(f"*** Error ***\nCannot have 'ADD LINE' after the last figure "
+              f"in {Custom_file}")
         exit()
 
     # Finished reading the file, distribute the number of figure and
@@ -1742,12 +1742,12 @@ def get_figure_header(line_txt):
     """
     Returns the plot type by confirming that template = ``True``.
 
-    :param line_txt: template header from Custom.in (e.g., \
+    :param line_txt: template header from Custom.in (e.g., 
         ``<<<<<<<<<| Plot 2D lon X lat = True |>>>>>>>>``)
     :type line_txt: str
     :return: (figtype) figure type (e.g., ``Plot 2D lon X lat``)
     :rtype: str
-    :return: (boolPlot) whether to plot (``True``) or skip (``False``) \
+    :return: (boolPlot) whether to plot (``True``) or skip (``False``) 
         figure
     :rtype: bool
     """
@@ -1833,15 +1833,15 @@ def select_range(Ncdf_num, bound):
     if bound.size == 1:
         Ncdf_num = Ncdf_num[Ncdf_num == bound]
         if Ncdf_num.size == 0:
-            print(f"{Red}*** Error *** File {bound:05d}.fixed.nc not found ????????")
+            print(f"{Red}*** Error *** File {int(bound):05}.fixed.nc not found")
             exit()
     elif bound.size == 2:
         Ncdf_num = Ncdf_num[Ncdf_num >= bound[0]]
         Ncdf_num = Ncdf_num[Ncdf_num <= bound[1]]
         if Ncdf_num.size == 0:
-            print(f"{Red}*** Error ***\nNo fixed file with date between \
-                  [{str(bound[0]).zfill(5)}-{str(bound[1]).zfill(5)}] detected. Please \
-                  double check the range.")
+            print(f"{Red}*** Error ***\nNo fixed file with date between "
+                  f"[{int(bound[0]):05}-{int(bound[1]):05}] detected. Please "
+                  f"double check the range.")
             exit()
     return Ncdf_num
 
@@ -1850,10 +1850,10 @@ def create_name(root_name):
     """
     Modify file name if a file with that name already exists.
 
-    :param root_name: path + default name for the file type (e.g., \
+    :param root_name: path + default name for the file type (e.g., 
         ``/path/custom.in`` or ``/path/figure.png``)
     :type root_name: str
-    :return: the modified name if the file already exists \
+    :return: the modified name if the file already exists 
         (e.g., ``/path/custom_01.in`` or ``/path/figure_01.png``)
     :rtype: str
     """
@@ -1878,10 +1878,10 @@ def path_to_template(custom_name):
     """
     Locate the ``Custom.in`` template file requested by the user.
 
-    :param custom_name: name of the template file. \
+    :param custom_name: name of the template file. 
         Accepted formats are ``some_name`` or ``some_name.in``.
     :type custom_name: str
-    :return: the full path to the template file (e.g., \
+    :return: the full path to the template file (e.g., 
         ``/u/$USER/FV3/templates/my_custom.in``).
     """
     local_dir = f"{sys.prefix}/mars_templates"
@@ -1897,14 +1897,14 @@ def path_to_template(custom_name):
         # First look for template file in ~/FV3/templates
         if not os.path.isfile(f"{shared_dir}/{custom_name}"):
             # Then look in /lou/.../MCMC/analysis/working/templates
-            prRed(f"*** Error ***\nFile {custom_name} not found in \
-                {local_dir} nor in {shared_dir}")
+            prRed(f"*** Error ***\nFile {custom_name} not found in "
+                  f"{local_dir} nor in {shared_dir}")
 
             if not os.path.exists(local_dir):
                 # If a local ~/FV3/templates path is nonexistent,
                 # suggest creating it
-                prYellow(f"Note: directory: ~/FV3/templates does not \
-                    exist, create it with:\nmkdir {local_dir}")
+                prYellow(f"Note: directory: ~/FV3/templates does not "
+                         f"exist, create it with:\nmkdir {local_dir}")
             exit()
         else:
             return f"{shared_dir}/{custom_name}"
@@ -1940,10 +1940,10 @@ def progress(k, Nmax, txt="", success=True):
 
 def prep_file(var_name, file_type, simuID, sol_array):
     """
-    Open the file as a Dataset or MFDataset object depending on its \
-        status on Lou. Note that the input arguments are typically \
-        extracted from a ``varfull`` object (e.g., \
-        ``03340.atmos_average.ucomp``) and not from a file whose disk \
+    Open the file as a Dataset or MFDataset object depending on its 
+        status on Lou. Note that the input arguments are typically 
+        extracted from a ``varfull`` object (e.g., 
+        ``03340.atmos_average.ucomp``) and not from a file whose disk 
         status is known beforehand.
 
     :param var_name: variable to extract (e.g., ``ucomp``)
@@ -1955,9 +1955,9 @@ def prep_file(var_name, file_type, simuID, sol_array):
     :param sol_array: date in file name (e.g., [3340,4008])
     :type sol_array: list
 
-    :return: Dataset or MFDataset object; \
-        (var_info) longname and units; \
-        (dim_info) dimensions e.g., (``time``, ``lat``,``lon``); \
+    :return: Dataset or MFDataset object; 
+        (var_info) longname and units; 
+        (dim_info) dimensions e.g., (``time``, ``lat``,``lon``); 
         (dims) shape of the array e.g., [133,48,96]
     """
     global input_paths
@@ -2005,8 +2005,8 @@ def prep_file(var_name, file_type, simuID, sol_array):
         # Use Dataset otherwise
         f = Dataset(file_list[0], "r")
 
-    var_info = f"{getattr(f.variables[var_name], 'long_name', '')} \
-                [{getattr(f.variables[var_name], 'units', '')}]"
+    var_info = (f"{getattr(f.variables[var_name], 'long_name', '')} "
+                f"[{getattr(f.variables[var_name], 'units', '')}]")
     dim_info = f.variables[var_name].dimensions
     dims = f.variables[var_name].shape
     return f, var_info, dim_info, dims
@@ -2083,12 +2083,12 @@ class Fig_2D(object):
         # Write colormap AND projection if plot is 2D_lon_lat (Line # 8)
         if self.plot_type == "2D_lon_lat":
             customFileIN.write(
-                f"Axis Options  : {Xaxis_txt} = [None,None] | {Yaxis_txt} = \
-                    [None,None] | cmap = jet | scale = lin | proj = cart \n")
+                f"Axis Options  : {Xaxis_txt} = [None,None] | {Yaxis_txt} = "
+                f"[None,None] | cmap = jet | scale = lin | proj = cart \n")
         else:
             customFileIN.write(
-                f"Axis Options  : {Xaxis_txt} = [None,None] | {Yaxis_txt} = \
-                    [None,None] | cmap = jet |scale = lin \n")
+                f"Axis Options  : {Xaxis_txt} = [None,None] | {Yaxis_txt} = "
+                f"[None,None] | cmap = jet |scale = lin \n")
 
     def read_template(self):
         self.title    = rT("char")  # 1
@@ -2106,8 +2106,8 @@ class Fig_2D(object):
 
         # Various sanity checks
         if self.range and len(np.atleast_1d(self.range)) == 1:
-            prYellow(f"*** Warning *** In plot {self.varfull}, Cmin, Cmax \
-                must be two values. Resetting to default")
+            prYellow(f"*** Warning *** In plot {self.varfull}, Cmin, Cmax "
+                     f"must be two values. Resetting to default")
             self.range = None
 
     def data_loader_2D(self, varfull, plot_type):
@@ -2508,8 +2508,8 @@ class Fig_2D(object):
 
             if self.axis_opt2 == "log":
                 if self.range[0] <= 0 or self.range[1] <= 0:
-                    prRed("*** Error using log scale, bounds cannot be zero \
-                        or negative")
+                    prRed("*** Error using log scale, bounds cannot be zero "
+                          "or negative")
                 levs = np.logspace(
                     np.log10(self.range[0]), np.log10(self.range[1]), levels)
         return norm, levs
@@ -2616,19 +2616,19 @@ class Fig_2D_lon_lat(Fig_2D):
 
     def get_topo_2D(self, varfull, plot_type):
         """
-        This function returns the longitude, latitude, and topography \
-        to overlay as contours in a ``2D_lon_lat`` plot. Because the \
-        main variable requested may be complex \
-        (e.g., ``[00668.atmos_average_psdt2.temp]/1000.``), we will \
-        ensure to load the matching topography (here ``00668.fixed.nc``\
-        from the 2nd simulation). This function essentially does a \
-        simple task in a complicated way. Note that a great deal of \
+        This function returns the longitude, latitude, and topography 
+        to overlay as contours in a ``2D_lon_lat`` plot. Because the 
+        main variable requested may be complex 
+        (e.g., ``[00668.atmos_average_psdt2.temp]/1000.``), we will 
+        ensure to load the matching topography (here ``00668.fixed.nc``
+        from the 2nd simulation). This function essentially does a 
+        simple task in a complicated way. Note that a great deal of 
         the code is borrowed from the ``data_loader_2D()`` function.
 
-        :param varfull: variable input to main_variable in Custom.in \
+        :param varfull: variable input to main_variable in Custom.in 
             (e.g., ``03340.atmos_average.ucomp``)
         :type varfull: str
-        :param plot_type: plot template type (e.g., \
+        :param plot_type: plot template type (e.g., 
             ``Plot 2D lon X time``)
         :type plot_type: str
         :return: topography or ``None`` if no matching ``fixed`` file
@@ -3060,8 +3060,8 @@ class Fig_2D_time_lat(Fig_2D):
                 # Find timestep closest to this tick
                 id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
                 if add_sol_time_axis:
-                    labels[i] = (f"{np.mod(Ls_ticks[i], 360.):g}{degr}\
-                        \nsol {SolDay[id]}")
+                    labels[i] = (f"{np.mod(Ls_ticks[i], 360.):g}{degr}"
+                                 f"\nsol {SolDay[id]}")
                 else:
                     labels[i] = (f"{np.mod(Ls_ticks[i], 360.):g}{degr}")
             ax.set_xticklabels(labels,
@@ -3240,8 +3240,8 @@ class Fig_2D_time_lev(Fig_2D):
                 # Find timestep closest to this tick
                 id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
                 if add_sol_time_axis:
-                    labels[i] = (f"{np.mod(Ls_ticks[i], 360.)}{degr}\
-                        \nsol {SolDay[id]}")
+                    labels[i] = (f"{np.mod(Ls_ticks[i], 360.)}{degr}"
+                                 f"\nsol {SolDay[id]}")
                 else:
                     labels[i] = f"{np.mod(Ls_ticks[i], 360.)}{degr}"
             ax.set_xticklabels(labels,
@@ -3318,8 +3318,8 @@ class Fig_2D_lon_time(Fig_2D):
                 # Find timestep closest to this tick
                 id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
                 if add_sol_time_axis:
-                    labels[i] = (f"{np.mod(Ls_ticks[i], 360.):g}{degr}\
-                        \nsol {SolDay[id]}")
+                    labels[i] = (f"{np.mod(Ls_ticks[i], 360.):g}{degr}"
+                                 f"\nsol {SolDay[id]}")
                 else:
                     labels[i] = (f"{np.mod(Ls_ticks[i], 360.):g}{degr}")
             ax.set_yticklabels(labels,
@@ -3391,8 +3391,8 @@ class Fig_1D(object):
         customFileIN.write(f"Level [Pa/m]   = {self.lev}\n")     # 7
         customFileIN.write(f"Diurnal  [hr]  = {self.hour}\n")    # 8
         customFileIN.write(
-            f"Axis Options  : lat,lon+/-180,[Pa/m],Ls = [None,None] | \
-            var = [None,None] | linestyle = - | axlabel = None \n") # 9
+            f"Axis Options  : lat,lon+/-180,[Pa/m],Ls = [None,None] | "
+            f"var = [None,None] | linestyle = - | axlabel = None \n") # 9
 
     def read_template(self):
         self.title = rT("char")     # 1
@@ -3411,8 +3411,8 @@ class Fig_1D(object):
 
     def get_plot_type(self):
         """
-        Note that the ``self.t == "AXIS" test`` and the \
-        ``self.t = -88888`` assignment are only used when MarsPlot is \
+        Note that the ``self.t == "AXIS" test`` and the 
+        ``self.t = -88888`` assignment are only used when MarsPlot is 
         not passed a template.
 
         :return: type of 1D plot to create (1D_time, 1D_lat, etc.)
@@ -3440,11 +3440,11 @@ class Fig_1D(object):
             graph_type = "1D_diurn"
             ncheck += 1
         if ncheck == 0:
-            prYellow(f"*** Warning *** In 1D plot, {self.varfull}: use \
-                'AXIS' to set the varying dimension")
+            prYellow(f"*** Warning *** In 1D plot, {self.varfull}: use 'AXIS' "
+                     f"to set the varying dimension")
         if ncheck > 1:
-            prYellow(f"*** Warning *** In 1D plot, {self.varfull}: 'AXIS' \
-                keyword can only be used once")
+            prYellow(f"*** Warning *** In 1D plot, {self.varfull}: 'AXIS' "
+                     f"keyword can only be used once")
         return graph_type
 
     def data_loader_1D(self, varfull, plot_type):
@@ -3540,15 +3540,15 @@ class Fig_1D(object):
 
         :param var_name: variable name (e.g., ``temp``)
         :type var_name: str
-        :param file_type: MGCM output file type. Must be ``fixed`` or \
+        :param file_type: MGCM output file type. Must be ``fixed`` or 
             ``average``
         :type file_type: str
         :param simuID: number identifier for netCDF file directory
         :type simuID: str
-        :param sol_array: sol if different from default \
+        :param sol_array: sol if different from default 
             (e.g., ``02400``)
         :type sol_array:  str
-        :param plot_type: ``1D_lon``, ``1D_lat``, ``1D_lev``, or \
+        :param plot_type: ``1D_lon``, ``1D_lat``, ``1D_lev``, or 
             ``1D_time``
         :type plot_type: str
         :param t_req: Ls requested
@@ -3959,8 +3959,8 @@ class Fig_1D(object):
             raise
         sys.stdout.write("\033[F")
         sys.stdout.write("\033[K")
-        prYellow(f"*** Warning *** Attempting {self.plot_type} profile \
-            for {self.varfull}: {str(e)}")
+        prYellow(f"*** Warning *** Attempting {self.plot_type} profile "
+                 f"for {self.varfull}: {str(e)}")
         ax.text(0.5, 0.5, f"ERROR:{str(e)}",
                 horizontalalignment="center",
                 verticalalignment="center",
@@ -4002,8 +4002,10 @@ class Fig_1D(object):
                     # Does not do anything otherwise
                     sensitive_name = self.varfull.split("{")[0].strip()
                 else:
-                    sensitive_name = "expression_" + \
-                        get_list_varfull(self.varfull)[0].split("{")[0].strip()
+                    sensitive_name = ("expression_"
+                                      + get_list_varfull(
+                                          self.varfull
+                                        )[0].split("{")[0].strip())
             else:  # Multipanel
                 sensitive_name = "multi_panel"
 
@@ -4141,8 +4143,8 @@ class Fig_1D(object):
                     # Find timestep closest to this tick
                     id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
                     if add_sol_time_axis:
-                        labels[i] = (f"{np.mod(Ls_ticks[i], 360.)}{degr}\
-                            \nsol {SolDay[id]}")
+                        labels[i] = (f"{np.mod(Ls_ticks[i], 360.)}{degr}"
+                                     f"\nsol {SolDay[id]}")
                     else:
                         labels[i] = (f"{np.mod(Ls_ticks[i], 360.)}{degr}")
 
