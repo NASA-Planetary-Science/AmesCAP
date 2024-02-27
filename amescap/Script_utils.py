@@ -1,28 +1,16 @@
-import os           # access operating system functions
+# Load generic Python modules
+import os           # Access operating system functions
 import subprocess   # run command-line commands
 import numpy as np
 from netCDF4 import Dataset, MFDataset
 import re
+#=======================================================================
+#=========================== Script Utilities ==========================
+#=======================================================================
 
-#=========================================================================
-#=========================Scripts utilities===============================
-#=========================================================================
+global Cyan, Blue, Yellow, Nclr, Red, Green, Purple
 
-
-# The functions below allow to print in different color
-def prRed(input_txt):
-    print(f"\033[91m{input_txt}\033[00m")
-def prGreen(input_txt):
-    print(f"\033[92m{input_txt}\033[00m")
-def prCyan(input_txt):
-    print(f"\033[96m{input_txt}\033[00m")
-def prYellow(input_txt):
-    print(f"\033[93m{input_txt}\033[00m")
-def prPurple(input_txt):
-    print(f"\033[95m{input_txt}\033[00m")
-def prLightPurple(input_txt):
-    print(f"\033[94m{input_txt}\033[00m")
-
+# Variables for colored text
 Cyan = "\033[96m"
 Blue = "\033[94m"
 Yellow = "\033[93m"
@@ -31,40 +19,62 @@ Red = "\033[91m"
 Green = "\033[92m"
 Purple = "\033[95m"
 
+# Write print statements in different colors
+def prRed(input_txt):
+    print(f"{Red}{input_txt}{Nclr}")
+def prGreen(input_txt):
+    print(f"{Green}{input_txt}{Nclr}")
+def prCyan(input_txt):
+    print(f"{Cyan}{input_txt}{Nclr}")
+def prYellow(input_txt):
+    print(f"{Yellow}{input_txt}{Nclr}")
+def prPurple(input_txt):
+    print(f"{Purple}{input_txt}{Nclr}")
+def prLightPurple(input_txt):
+    print(f"{Blue}{input_txt}{Nclr}")
+
 def MY_func(Ls_cont):
-    '''
-    This function return the Mars Year
-    Args:
-        Ls_cont: solar longitude, continuous
-    Returns:
-        MY : int the Mars year
-    '''
+    """
+    Returns the Mars Year
+    
+    :param Ls_cont: solar longitude (continuous)
+    :type Ls_cont: array
+    
+    :return: the Mars year
+    :rtype: int
+    """
     return (Ls_cont)//(360.)+1
 
 def find_tod_in_diurn(fNcdf):
-    '''
-    Return the variable for the local time axis in diurn files.
+    """
+    Returns the variable for the local time axis in diurn files
+    (e.g., time_of_day_24).
     Original implementation by Victoria H.
-    Args:
-        fNcdf: an (open) Netcdf file object
-    Return:
-        tod (string): 'time_of_day_16'or 'time_of_day_24'
-    '''
+
+    :param fNcdf: a netCDF file
+    :type fNcdf: netCDF file object
+    
+    :return: the name of the time of day dimension
+    :rtype: str
+    """
     regex=re.compile('time_of_day.')
     varset=fNcdf.variables.keys()
-    return [string for string in varset if re.match(regex, string)][0] #Extract the 1st element of the list
+    # Extract the 1st element of the list
+    return [string for string in varset if re.match(regex, string)][0] 
 
 
 
 def print_fileContent(fileNcdf):
-    '''
-    Print the content of a Netcdf file in a compact format. Variables are sorted by dimensions.
-    Args:
-        fileNcdf: full path to netcdf file
-    Returns:
-        None (print in the terminal)
-    '''
-    #Define Colors for printing
+    """
+    Prints the contents of a netCDF file to the screen. Variables sorted
+    by dimension.
+
+    :param fileNcdf: full path to the netCDF file
+    :type fileNcdf: str
+    
+    :return: None
+    """
+    # Define Colors for printing
     def Green(input_txt): return"\033[92m{}\033[00m".format(input_txt)
     def Cyan(input_txt): return "\033[96m{}\033[00m".format(input_txt)
     def Yellow(input_txt):return"\033[93m{}\033[00m".format(input_txt)
@@ -107,16 +117,21 @@ def print_fileContent(fileNcdf):
         print("=====================================================")
 
 def print_varContent(fileNcdf,list_varfull,print_stat=False):
-    '''
-    Print the content of a variable inside a Netcdf file
-    This test is based on the existence of a least one  00XXX.fixed.nc in the current directory.
-    Args:
-        fileNcdf:      full path to netcdf file
-        list_varfull:  list of variable names and optional slices, e.g ['lon' ,'ps[:,10,20]']
-        print_stat:  if true, print min, mean and max instead of values
-    Returns:
-        None (print in the terminal)
-    '''
+    """
+    Print variable contents from a variable in a netCDF file. Requires
+    a XXXXX.fixed.nc file in the current directory.
+
+    :param fileNcdf: full path to a netcdf file
+    :type fileNcdf: str
+    :param list_varfull: list of variable names and optional slices
+        (e.g., ['lon' ,'ps[:,10,20]'])
+    :type list_varfull: list
+    :param print_stat: If True, print min, mean, and max. If False,
+        print values. Defaults to False
+    :type print_stat: bool, optional
+    
+    :return: None
+    """
     #Define Colors for printing
     def Cyan(input_txt): return "\033[96m{}\033[00m".format(input_txt)
     def Red(input_txt):  return "\033[91m{}\033[00m".format(input_txt)
@@ -135,7 +150,7 @@ def print_varContent(fileNcdf,list_varfull,print_stat=False):
                     varname,slice=varfull.strip().split('[');slice='['+slice
                 else:
                     varname=varfull.strip()
-                cmd_txt="""f.variables['"""+varname+"""']"""+slice
+                cmd_txt='''f.variables[''''+varname+'''']'''+slice
                 f=Dataset(fileNcdf, 'r')
                 var=eval(cmd_txt)
 
@@ -172,9 +187,7 @@ def print_varContent(fileNcdf,list_varfull,print_stat=False):
 
 
 def give_permission(filename):
-    '''
-    # NAS system only: set group permission to the file
-    '''
+    """Sets group file permissions for NAS system"""
     import subprocess
     import os
 
@@ -186,16 +199,19 @@ def give_permission(filename):
         pass
 
 def check_file_tape(fileNcdf,abort=False):
-    '''
-    Relevant for use on the NASA Advanced Supercomputing (NAS) environnment only
-    Check if a file is present on the disk by running the NAS dmls -l data migration command.
-    This avoid the program to stall if the files need to be migrated from the disk to the tape
-    Args:
-        fileNcdf: full path to netcdf file
-        exit: boolean. If True, exit the program (avoid stalling the program if file is not on disk)
-    Returns:
-        None (print status and abort program)
-    '''
+    """
+    For use in the NAS environnment only.
+    Checks whether a file is exists on the disk by running the command
+    ``dmls -l`` on NAS. This prevents the program from stalling if the 
+    files need to be migrated from the disk to the tape.
+
+    :param fileNcdf: full path to a netcdf file
+    :type fileNcdf: _type_
+    :param abort: If True, exit the program. Defaults to False
+    :type abort: bool, optional
+    
+    :return: None
+    """
     # If the filename provided is not a netcdf file, exit program right away
     if fileNcdf[-3:]!='.nc':
         prRed('*** Error ***')
@@ -230,31 +246,34 @@ def check_file_tape(fileNcdf,abort=False):
 
 
 def get_Ncdf_path(fNcdf):
-    '''
-    Return the full path of a Netcdf object.
-    Note that 'Dataset' and multi-files dataset (i.e. 'MFDataset') have different
-    attributes for the path, hence the need for this function.
-    Args:
-        fNcdf : Dataset or  MFDataset object
-    Returns :
-        Path: string (list) for Dataset (MFDataset)
-    '''
+    """
+    Returns the full path for a netCDF file object.
+    
+    .. NOTE:: ``Dataset`` and multi-file dataset (``MFDataset``) have 
+    different attributes for the path, hence the need for this function.
+
+    :param fNcdf: Dataset or MFDataset object
+    :type fNcdf: netCDF file object
+    :return: string list for the Dataset (MFDataset)
+    :rtype: str(list)
+    """
     fname_out=getattr(fNcdf,'_files',False) #Only MFDataset has the_files attribute
     if not fname_out: fname_out=getattr(fNcdf,'filepath')() #Regular Dataset
     return fname_out
 
 def extract_path_basename(filename):
-    '''
-    Return the path and basename of a file. If only the filename is provided, assume it is the current directory
-    Args:
-        filename: e.g. 'XXXXX.fixed.nc', './history/XXXXX.fixed.nc' or '/home/user/history/XXXXX.fixed.nc'
-    Returns:
-        filepath : '/home/user/history/XXXXX.fixed.nc' in all the cases above
-        basename:   XXXXX.fixed.nc in all the cases above
+    """
+    Returns the path and basename of a file. If only the filename is 
+    provided, assume it is in the current directory.
 
-    ***NOTE***
-    This routine does not check for file existence and only operates on the provided input string.
-    '''
+    :param filename: name of the netCDF file (may include full path)
+    :type filename: str
+    
+    :return: full file path & name of file
+    
+    .. NOTE:: This routine does not confirm that the file exists.
+        It operates on the provided input string.
+    """
     #Get the filename without the path
     if '/' in filename or '\\' in filename :
         filepath,basename=os.path.split(filename)
@@ -267,14 +286,18 @@ def extract_path_basename(filename):
     return filepath,basename
 
 def FV3_file_type(fNcdf):
-    '''
-    Return the type of output files:
-    Args:
-        fNcdf: an (open) Netcdf file object
-    Return:
-       f_type (string): 'fixed', 'contineous', or 'diurn'
-       interp_type (string): 'pfull','pstd','zstd','zagl'
-    '''
+    """
+    Return the type of the netCDF file (i.e., ``fixed``, ``diurn``, 
+    ``average``, ``daily``) and the format of the Ls array ``areo`` 
+    (i.e., ``fixed``, ``continuous``, or ``diurn``).
+
+    :param fNcdf: an open Netcdf file
+    :type fNcdf: Netcdf file object
+    
+    :return: The Ls array type (string, ``fixed``, ``continuous``, or 
+        ``diurn``) and the netCDF file type (string ``fixed``, 
+        ``diurn``, ``average``, or ``daily``)
+    """
     #Get the full path from the file
     fullpath=get_Ncdf_path(fNcdf)
     #If MFDataset, get the 1st file in the list
@@ -306,18 +329,25 @@ def FV3_file_type(fNcdf):
     return f_type,interp_type
 
 def alt_FV3path(fullpaths,alt,test_exist=True):
-    '''
-    Internal function. given an interpolated daily, diurn or average file
-    return the raw or fixed file. Accept string or list as input
-    Args:
-        fullpaths : e.g '/u/path/00010.atmos_average_pstd.nc' or LIST
-            alt: alternative type 'raw' or 'fixed'
-            test_exist=True test file existence on disk
-    Returns :
-        Alternative path to raw or fixed file, e.g.
-                    '/u/path/00010.atmos_average.nc'
-                    '/u/path/00010.fixed.nc'
-    '''
+    """
+    Returns the original or fixed file given an interpolated daily, 
+    diurn or average file.
+
+    :param fullpaths: full path to a file or a list of full paths to 
+        more than one file
+    :type fullpaths: str
+    :param alt: type of file to return (i.e., original or fixed)
+    :type alt: str
+    :param test_exist: Whether file exists on the disk, defaults to True
+    :type test_exist: bool, optional
+
+    :raises ValueError: _description_
+    
+    :return: path to original or fixed file 
+        (e.g., "/u/path/00010.atmos_average.nc" or 
+        "/u/path/00010.fixed.nc")
+    :rtype: str
+    """
     out_list=[]
     one_element=False
     #Convert as list for generality
@@ -350,29 +380,41 @@ def alt_FV3path(fullpaths,alt,test_exist=True):
 
 def smart_reader(fNcdf,var_list,suppress_warning=False):
     """
-    Smarter alternative to using var=fNcdf.variables['var'][:] when handling PROCESSED files that also check
-    matching XXXXX.atmos_average.nc (or daily...) and XXXXX.fixed.nc files
+    Alternative to ``var=fNcdf.variables['var'][:]`` for handling 
+    *processed* files that also checks for a matching average or daily 
+    and XXXXX.fixed.nc file.
 
-    Args:
-        fNcdf: Netcdf file object (i.e. already opened with Dataset or MFDataset)
-        var_list: variable or list of variables, e.g 'areo' or ['pk','bk','areo']
-        suppress_warning: Suppress debug statement, useful if variable is not expected to be found in the file anyway
-    Returns:
-        out_list: variables content as singleton or values to unpack
-
+    :param fNcdf: an open netCDF file 
+    :type fNcdf: netCDF file object
+    :param var_list: a variable or list of variables (e.g., ``areo`` or 
+        [``pk``,``bk``,``areo``])
+    :type var_list: _type_
+    :param suppress_warning: suppress debug statement. Useful if a 
+        variable is not expected to be in the file anyway. Defaults to 
+        False
+    :type suppress_warning: bool, optional
+    
+    :return: variable content (single or values to unpack)
+    :rtype: list
+    
     -------
-    Example:
-
-    from netCDF4 import Dataset
-
-    fNcdf=Dataset('/u/akling/FV3/00668.atmos_average_pstd.nc','r')
-
-    ucomp= fNcdf.variables['ucomp'][:]   # << this is the regular way
-    vcomp= smart_reader(fNcdf,'vcomp')   # << this is exacly equivalent
-    pk,bk,areo= smart_reader(fNcdf,['pk','bk','areo'])  # this will get 'areo' from 00668.atmos_average.nc is not available in the original _pstd.nc file
-                                                        # if pk and bk are absent from 0668.atmos_average.nc, it will also check 00668.fixed.n
-    *** NOTE ***
-        -Only the variables' content is returned, not the attributes
+    Example::
+        
+        from netCDF4 import Dataset
+        
+        fNcdf = Dataset("/u/akling/FV3/00668.atmos_average_pstd.nc", "r")
+        
+        # Approach using var=fNcdf.variables['var'][:]
+        ucomp = fNcdf.variables["ucomp"][:]  
+        # New approach that checks for a matching average/daily & fixed file
+        vcomp = smart_reader(fNcdf,"vcomp")
+        
+        # This will pull "areo" from an original file if it is not
+        # available in the interpolated file. If pk and bk are also not
+        # in the average file, it will check for them in the fixed file.
+        pk, bk, areo = smart_reader(fNcdf,["pk","bk","areo"])
+        
+    .. NOTE:: Only the variable content is returned, not attributes
     """
 
     #This out_list is for the variable
@@ -423,18 +465,32 @@ def smart_reader(fNcdf,var_list,suppress_warning=False):
 
 
 def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
-    '''
-    Regrid a Ncdf variable from one file's structure to match another file  [Alex Kling , May 2021]
-    Args:
-        VAR_Ncdf: A netCDF4 variable OBJECT, e.g. 'f_in.variables['temp']' from the source file
-        file_Nc_in: The opened netcdf file object  for that input variable, e.g f_in=Dataset('fname','r')
-        file_Nc_target: An opened netcdf file object  for the target grid t e.g f_out=Dataset('fname','r')
-    Returns:
-        VAR_OUT: the VALUES of VAR_Ncdf[:], interpolated on the grid for the target file.
+    """
+    Regrid a netCDF variable from one file structure to another.
+    Requires a file with the desired file structure to mimic.
+    [Alex Kling , May 2021]
 
-    *** Note***
-    While the KDTree interpolation can handle a 3D dataset (lon/lat/lev instead of just 2D lon/lat) , the grid points in the vertical are just a few 10's -100's meter in the PBL vs few 10'-100's km in the horizontal. This would results in excessive weighting in the vertical, which is why the vertical dimension is handled separately.
-    '''
+    :param VAR_Ncdf: a netCDF variable object to regrid
+        (e.g., ``f_in.variable["temp"]``)
+    :type VAR_Ncdf: netCDF file variable
+    :param file_Nc_in: an open netCDF file to source for the variable
+        (e.g., ``f_in=Dataset("filename", "r")``)
+    :type file_Nc_in: netCDF file object
+    :param file_Nc_target: an open netCDF file with the desired file
+        structure (e.g., ``f_out=Dataset("filename", "r")``)
+    :type file_Nc_target: netCDF file object
+    
+    :return: the values of the variable interpolated to the target file
+        grid.
+    :rtype: array
+    
+    .. NOTE:: While the KDTree interpolation can handle a 3D dataset 
+    (lon/lat/lev instead of just 2D lon/lat), the grid points in the 
+    vertical are just a few (10--100s) meters in the PBL vs a few 
+    (10-100s) kilometers in the horizontal. This results in excessive 
+    weighting in the vertical, which is why the vertical dimension is 
+    handled separately.
+    """
     from amescap.FV3_utils import interp_KDTree, axis_interp
     ftype_in,zaxis_in=FV3_file_type(file_Nc_in)
     ftype_t,zaxis_t=FV3_file_type(file_Nc_target)
@@ -442,13 +498,13 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
     #Sanity check
 
     if ftype_in !=ftype_t:
-        print("""*** Warning*** in regrid_Ncfile, input file  '%s' and target file '%s' must have the same type"""%(ftype_in,ftype_t))
+        print('''*** Warning*** in regrid_Ncfile, input file  '%s' and target file '%s' must have the same type'''%(ftype_in,ftype_t))
 
     if zaxis_in!=zaxis_t:
-        print("""*** Warning*** in regrid_Ncfile, input file  '%s' and target file '%s' must have the same vertical grid"""%(zaxis_in,zaxis_t))
+        print('''*** Warning*** in regrid_Ncfile, input file  '%s' and target file '%s' must have the same vertical grid'''%(zaxis_in,zaxis_t))
 
     if zaxis_in=='pfull' or zaxis_t=='pfull':
-        print("""*** Warning*** in regrid_Ncfile, input file  '%s' and target file '%s' must be vertically interpolated"""%(zaxis_in,zaxis_t))
+        print('''*** Warning*** in regrid_Ncfile, input file  '%s' and target file '%s' must be vertically interpolated'''%(zaxis_in,zaxis_t))
 
 
     #===Get target dimensions===
@@ -519,12 +575,12 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
 
 def progress(k,Nmax):
     """
-    Display a progress bar to monitor heavy calculations.
-    Args:
-        k: current iteration of the outer loop
-        Nmax: max iteration of the outer loop
-    Returns:
-        Running... [#---------] 10.64 %
+    Displays a progress bar to monitor heavy calculations.
+
+    :param k: current iteration of the outer loop
+    :type k: int
+    :param Nmax: max iteration of the outer loop
+    :type Nmax: int
     """
     import sys
     from math import ceil #round yo the 2nd digit
@@ -549,13 +605,16 @@ def progress(k,Nmax):
 
 
 def section_content_amescap_profile(section_ID):
-    '''
-    Execude code section in /home/user/.amescap_profile
-    Args:
-        section_ID: string defining the section to load, e.g 'Pressure definitions for pstd'
-    Returns
-        return line in that section as python code
-    '''
+    """
+    Executes first code section in ``~/.amescap_profile`` to read in
+    user-defined plot & interpolation settings.
+
+    :param section_ID: the section to load (e.g., Pressure definitions 
+        for pstd)
+    :type section_ID: str
+    
+    :return: the relevant line with Python syntax
+    """
     import os
     import numpy as np
     input_file=os.environ['HOME']+'/.amescap_profile'
@@ -588,17 +647,22 @@ def section_content_amescap_profile(section_ID):
 
 
 def filter_vars(fNcdf,include_list=None,giveExclude=False):
-    '''
-    Filter variable names in netcdf file for processing.
-    Will return all dimensions (e.g. 'lon', 'lat'...), the 'areo' variable, and any variable included in include_list
-    Args:
-        fNcdf: an open netcdf4 object pointing to a diurn, daily or average file
-        include_list: a list of variables to include, e.g. ['ucomp','vcomp']
-        giveExclude: if True, instead return the variables that must be excluded from the file, i.e.
-                     exclude_var = [all the variables] - [axis & dimensions] - [include_list]
-    Return:
-        var_list
-    '''
+    """
+    Filters the variable names in a netCDF file for processing. Returns
+    all dimensions (``lon``, ``lat``, etc.), the ``areo`` variable, and 
+    any other variable listed in ``include_list``.
+
+    :param fNcdf: an open netCDF object for a diurn, daily, or average 
+        file
+    :type fNcdf: netCDF file object
+    :param include_list:list of variables to include (e.g., [``ucomp``,
+        ``vcomp``], defaults to None
+    :type include_list: list or None, optional
+    :param giveExclude: if True, returns variables to be excluded from
+        the file, defaults to False
+    :type giveExclude: bool, optional
+    :return: list of variable names to include in the processed file
+    """
     var_list=fNcdf.variables.keys()
     #If no list is provided, return all variables:
     if include_list is None: return var_list
@@ -625,26 +689,27 @@ def filter_vars(fNcdf,include_list=None,giveExclude=False):
     return  out_list
 
 def find_fixedfile(filename):
-    '''
-    Batterson, Updated by Alex Nov 29 2022
-    Args:
-        filename   =  name of FV3 data file in use, i.e.
-                   'atmos_average.tile6.nc'
-    Returns:
-        name_fixed: fullpath to correspnding fixed file
+    """
+    Finds the relevant fixed file for a given average, daily, or diurn
+    file.
+    [Batterson, Updated by Alex Nov 29 2022]
 
-            DDDDD.atmos_average.nc  -> DDDDD.fixed.nc
-            atmos_average.tileX.nc  -> fixed.tileX.nc
-
-            *variations of these work too*
-
+    :param filename: an average, daily, or diurn netCDF file
+    :type filename: str
+    :return: full path to the correspnding fixed file
+    :rtype: str
+    
+    Compatible file types::
+            
+            DDDDD.atmos_average.nc                  -> DDDDD.fixed.nc
+            atmos_average.tileX.nc                  -> fixed.tileX.nc
             DDDDD.atmos_average_plevs.nc            -> DDDDD.fixed.nc
             DDDDD.atmos_average_plevs_custom.nc     -> DDDDD.fixed.nc
             atmos_average.tileX_plevs.nc            -> fixed.tileX.nc
             atmos_average.tileX_plevs_custom.nc     -> fixed.tileX.nc
             atmos_average_custom.tileX_plevs.nc     -> fixed.tileX.nc
-
-    '''
+    
+    """
     filepath,fname=extract_path_basename(filename)
     #Try the 'tile' or 'standard' version of the fixed files
     if 'tile' in fname:
@@ -657,20 +722,24 @@ def find_fixedfile(filename):
 
 
 def get_longname_units(fNcdf,varname):
-    '''
-    Return the 'long_name' and 'units'  attributes of a netcdf variable.
-    If the attributes are not present, this function will return blank strings instead of raising an error
-    Args:
-        fNcdf: an opened netcdf file
-        varname:  A variable to extract the attribute from (e.g. 'ucomp')
-    Return:
-        longname_txt : long_name attribute, e.g. 'zonal winds'
-        units_txt    : units attribute, e.g. [m/s]
+    """
+    Returns the longname and unit attributes of a variable in a netCDF
+    file. If the attributes are unavailable, returns blank strings to
+    avoid an error.
 
-    *** NOTE***
-    Some functions in MarsVars edit the units, e.g. turn [kg]  to [kg/m], therefore the empty string is made 4
-    characters in length ('    ' instead of '') to allow for editing by editing units_txt[:-2] for example
-    '''
+    :param fNcdf: an open netCDF file
+    :type fNcdf: netCDF file object
+    :param varname: variable to extract attribute from
+    :type varname: str
+    
+    :return: longname and unit attributes
+    :rtype: str
+    
+    .. NOTE:: Some functions in MarsVars edit the units 
+    (e.g., [kg] -> [kg/m]), therefore the empty string is 4 characters 
+    in length ('    ' instead of '') to allow for editing by 
+    ``editing units_txt[:-2]``, for example.
+    """
     return getattr(fNcdf.variables[varname],'long_name','    '), getattr(fNcdf.variables[varname],'units','    ')
 
 def wbr_cmap():
@@ -737,9 +806,10 @@ def wbr_cmap():
     return ListedColormap(tmp_cmap)
 
 def rjw_cmap():
-    '''
-    Returns a color map that goes from red<jade<wisteria or 'rjw'
-    '''
+    """
+    Returns John Wilson's preferred color map 
+    (red -> jade -> wisteria)
+    """
     from matplotlib.colors import ListedColormap
     tmp_cmap = np.zeros((55,4))
     tmp_cmap [:,3]=1. #set alpha
@@ -762,10 +832,11 @@ def rjw_cmap():
     return ListedColormap(tmp_cmap)
 
 def dkass_dust_cmap():
-    '''
-    Returns a color map that goes from yellow>orange>red>purple
-    Provided by Courtney B.
-    '''
+    """
+    Returns a color map useful for dust cross-sections.
+    (yellow -> orange -> red -> purple)
+    Provided by Courtney Batterson.
+    """
     from matplotlib.colors import ListedColormap,hex2color
     tmp_cmap = np.zeros((256,4))
     tmp_cmap [:,3]=1. #set alpha
@@ -820,10 +891,11 @@ def dkass_dust_cmap():
     return ListedColormap(tmp_cmap)
 
 def dkass_temp_cmap():
-    '''
-    Returns a color map that goes from black>purple>blue>green>yellow>orange>red
-    Provided by Courtney B.
-    '''
+    """
+    Returns a color map that highlights the 200K temperatures.
+    (black -> purple -> blue -> green -> yellow -> orange -> red)
+    Provided by Courtney Batterson.
+    """
     from matplotlib.colors import ListedColormap,hex2color
     tmp_cmap = np.zeros((256,4))
     tmp_cmap [:,3]=1. #set alpha
@@ -883,14 +955,17 @@ def dkass_temp_cmap():
 
 def pretty_print_to_fv_eta(var,varname,nperline=6):
     """
-    Print the ak or bk coefficients to copy paste in fv_eta.f90
-    Args:
-        data: ak or bk data
-        varname: the variable name, 'a' or 'b'
-        nperline:the number of elements per line
-    Returns:
-         The print statement ready to copy-paste in fv_eta.f90
+    Print the ``ak`` or ``bk`` coefficients for copying to 
+    ``fv_eta.f90``.
 
+    :param var: ak or bk data
+    :type var: array
+    :param varname: the variable name ("a" or "b")
+    :type varname: str
+    :param nperline: the number of elements per line, defaults to 6
+    :type nperline: int, optional
+    
+    :return: a print statement for copying into fv_eta.f90
     """
     NLAY=len(var)-1
     import sys
@@ -941,15 +1016,19 @@ def pretty_print_to_fv_eta(var,varname,nperline=6):
 
 
 def replace_dims(Ncvar_dim,vert_dim_name=None):
-    '''
-    Update the name for the variables dimension to match FV3's
-    Args:
-        Ncvar_dim: Netcdf variable dimensions, e.g f_Ncdf.variables['temp'].dimensions
-        vert_dim_name(optional): 'pstd', 'zstd', or 'zagl' if the vertical dimensions is ambigeous
-    Return:
-        dims_out: updated dimensions matching FV3's naming convention
+    """
+    Updates the name of the variable dimension to match the format of
+    the new NASA Ames Mars GCM output files.
 
-    '''
+    :param Ncvar_dim: netCDF variable dimensions 
+        (e.g., ``f_Ncdf.variables['temp'].dimensions``)
+    :type Ncvar_dim: str
+    :param vert_dim_name: the vertical dimension if it is ambiguous 
+        (``pstd``, ``zstd``, or ``zagl``). Defaults to None
+    :type vert_dim_name: str, optional
+    :return: updated dimensions
+    :rtype: str
+    """
     #Set input dictionary options that would be recognized as FV3 variables
     lat_dic=['lat','lats','latitudes','latitude']
     lon_dic=['lon','lon','longitude','longitudes']
@@ -972,22 +1051,24 @@ def replace_dims(Ncvar_dim,vert_dim_name=None):
     return tuple(dims_out)
 
 def ak_bk_loader(fNcdf):
-    '''
-    Return the ak and bk. First look in the current netcdf file.
-    If not found, this routine will check the XXXXX.fixed.nc in the same directory and then in the XXXXX.fixed.tileX.nc files if present
-    Args:
-        fNcdf: an opened netcdf file
-    Returns:
-        ak,bk : the ak, bk values
-    ***NOTE***
+    """
+    Return ``ak`` and ``bk`` arrays from the current netCDF file. If 
+    these are not found in the current file, search the fixed file in 
+    the same directory. If not there, then search the tiled fixed files.
 
-    This routine will look for both 'ak' and 'pk'.
+    :param fNcdf: an open netCDF file
+    :type fNcdf: a netCDF file object
+    
+    :return: the ``ak`` and ``bk`` arrays
+    
+    .. NOTE:: This routine will look for both ``ak`` and ``bk``. There 
+    are cases when it is convenient to load the ``ak``, ``bk`` once when
+    the files are first opened in ``MarsVars.py``, but the ``ak`` and 
+    ``bk`` arrays may not be necessary for in the calculation as is the 
+    case for ``MarsVars.py XXXXX.atmos_average_psd.nc --add msf``, which
+    operates on a pressure interpolated (``_pstd.nc``) file.
 
-    There are cases when it is convenient to load the  pk, bk once at the begining of the files in MarsVars.py,
-    However the pk, bk may not be used at all in the calculation. This is the case with MarsVars.py XXXXX.atmos_average_psd.nc --add msf (which operates on the _pstd.nc file)
-
-
-    '''
+    """
     #First try to read pk and bk in the current netcdf file:
     allvars=fNcdf.variables.keys()
 
