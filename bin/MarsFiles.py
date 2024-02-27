@@ -1185,7 +1185,7 @@ def main():
 
         # Add path unless full path is provided
         if not ('/' in name_target):
-            name_target = data_dir + '/' + name_target
+            name_target = f"{data_dir}/{name_target}"
         fNcdf_t = Dataset(name_target, 'r')
 
         for file in file_list:
@@ -1194,12 +1194,11 @@ def main():
                 input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
-            output_file_name = input_file_name[:-3]+out_ext+'.nc'
+            output_file_name = f"{input_file_name[:-3]}{out_ext}.nc"
 
             # Append extension, if any:
             if parser.parse_args().ext:
-                output_file_name = output_file_name[:-3] + \
-                    '_'+parser.parse_args().ext+'.nc'
+                output_file_name = f"{output_file_name[:-3]}_{parser.parse_args().ext}.nc"
 
             f_in = Dataset(input_file_name, 'r', format='NETCDF4_CLASSIC')
 
@@ -1245,12 +1244,11 @@ def main():
                 input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
-            output_file_name = input_file_name[:-3]+'_zonal_avg'+'.nc'
+            output_file_name = f"{input_file_name[:-3]}_zonal_avg.nc"
 
             # Append extension, if any:
             if parser.parse_args().ext:
-                output_file_name = output_file_name[:-3] + \
-                    '_'+parser.parse_args().ext+'.nc'
+                output_file_name = f"{output_file_name[:-3]}_{parser.parse_args().ext}.nc"
 
             fdaily = Dataset(input_file_name, 'r', format='NETCDF4_CLASSIC')
             var_list = filter_vars(
