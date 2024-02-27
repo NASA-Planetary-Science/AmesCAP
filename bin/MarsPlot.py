@@ -1833,7 +1833,7 @@ def select_range(Ncdf_num, bound):
     if bound.size == 1:
         Ncdf_num = Ncdf_num[Ncdf_num == bound]
         if Ncdf_num.size == 0:
-            prRed(f"*** Error ***\nFile {str(bound):05}.fixed.nc not found")
+            prRed(f"*** Error ***\nFile {str(bound).zfill(5)}.fixed.nc not found")
             exit()
     elif bound.size == 2:
         Ncdf_num = Ncdf_num[Ncdf_num >= bound[0]]
