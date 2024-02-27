@@ -22,9 +22,7 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (
-    prCyan, Yellow, NoColor, Green
-)
+from amescap.Script_utils import (prCyan, Yellow, Nclr, Green)
 
 # Load generic Python modules
 import argparse     # Parse arguments
@@ -44,7 +42,7 @@ xr.set_options(keep_attrs = True)
 parser = argparse.ArgumentParser(
     description=(
         f"{Yellow}MarsFormat is for converting non-MGCM output "
-        f"to MGCM format.{NoColor}\n\n"
+        f"to MGCM format.{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
@@ -59,20 +57,20 @@ parser.add_argument(
 parser.add_argument("-openmars", "--openmars", nargs="+",
     help=(
         f"Produce an MGCM-like daily file from an {Yellow}openMars"
-        f"{NoColor} file.\n"
+        f"{Nclr} file.\n"
         f"{Green}Usage:\n"
         f"> MarsFormat.py input_file*.nc -openmars daily"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
 parser.add_argument("-marswrf", "--marswrf", nargs="+",
     help=(
         f"Produce an MGCM-like daily file from a "
-        f"{Yellow}MarsWRF{NoColor} file.\n"
+        f"{Yellow}MarsWRF{Nclr} file.\n"
         f"{Green}Usage:\n"
         f"> MarsFormat.py input_file*.nc -marswrf daily"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -95,7 +93,7 @@ def marswrf_to_mgcm(DS):
 
     WRF data is output to dimensions: [time, pfull, lat, lon] or
     [t,z,y,x], just like MGCM data. Some WRF variables are on staggered
-    grids, referred to in the comments using ' (prime; like y').
+    grids, referred to in the comments using "'" (prime) EX: ``y'``.
 
     The dimensions of the native WRF variables can be:
 
@@ -117,32 +115,32 @@ def marswrf_to_mgcm(DS):
     ========== =============== ========== ================================
     MarsWRF    MGCM Equiv.     Units      Notes
     ========== =============== ========== ================================
-    ``XTIME``  ``time``        days       converted from minutes to \
+    ``XTIME``  ``time``        days       converted from minutes to
                                           days since simulation start
-    ``L_S``    ``areo``        degree     
-    ``PSFC``   ``ps``          Pa         
-    ``XLONG``  ``lon``         degree E   
-    ``XLAT``   ``lat``         degree N   
-    ``HGT``    ``zsurf``       meters     
-    ``U``      ``ucomp``       m/s        Requires interpolation to a \
+    ``L_S``    ``areo``        degree
+    ``PSFC``   ``ps``          Pa
+    ``XLONG``  ``lon``         degree E
+    ``XLAT``   ``lat``         degree N
+    ``HGT``    ``zsurf``       meters
+    ``U``      ``ucomp``       m/s        Requires interpolation to a
                                           regular grid
-    ``V``      ``vcomp``       m/s        Requires interpolation to a \
+    ``V``      ``vcomp``       m/s        Requires interpolation to a
                                           regular grid
-    ``W``      ``w``           m/s        Requires interpolation to a \
+    ``W``      ``w``           m/s        Requires interpolation to a
                                           regular grid
-    ``H2OICE`` ``h2o_ice_sfc`` kg/m2      
-    ``CO2ICE`` ``co2_ice_sfc`` kg/m2      
-    ``ZNW``    ``bk``                     
-    ``TSK``    ``ts``          K          
+    ``H2OICE`` ``h2o_ice_sfc`` kg/m2
+    ``CO2ICE`` ``co2_ice_sfc`` kg/m2
+    ``ZNW``    ``bk``
+    ``TSK``    ``ts``          K
     ``P_TOP``  ``pk[0]``       Pa         model top pressure
     ========== =============== ========== ================================
 
-    :param DS: The dataset created by xarray when it opens the \
+    :param DS: The dataset created by xarray when it opens the
         user-supplied input file.
     :type DS: xarray dataset
 
-    :return: ``var_dict`` Dictionary with variable names as keys and a\
-        list of attributes[values, dimensions, longname, units] as \
+    :return: ``var_dict`` Dictionary with variable names as keys and a
+        list of attributes[values, dimensions, longname, units] as
         values.\n
         ``time`` (array) Minutes since simulation start\n
         ``lat`` (array) Latitude on a regular grid\n
@@ -253,14 +251,14 @@ def openmars_to_mgcm(DS):
     pfull and phalf but otherwise only needs to rename variables and
     update units, longnames, and dimensions to match MGCM output.
 
-    :param DS: The dataset created by xarray when it opens the \
+    :param DS: The dataset created by xarray when it opens the
         user-supplied input file.
     :type DS: xarray dataset
 
     Returns
     -------
-    :return: ``var_dict`` Dictionary with variable names as keys and a\
-        list of attributes[values, dimensions, longname, units] as \
+    :return: ``var_dict`` Dictionary with variable names as keys and a
+        list of attributes[values, dimensions, longname, units] as
         values.\n
         ``time`` (array) Minutes since simulation start\n
         ``lat`` (array) Latitude on a regular grid\n
@@ -330,7 +328,7 @@ def main():
             input_file_name = f"{data_dir}/{file_name}"
         else:
             input_file_name = file_name
-            
+
         output_file_name = f"{input_file_name[:-3]}_atmos_daily.nc"
 
         print("Processing...")

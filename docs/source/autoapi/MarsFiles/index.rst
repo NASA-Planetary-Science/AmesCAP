@@ -5,32 +5,48 @@
 
 .. autoapi-nested-parse::
 
-   The MarsFiles executable has functions for manipulating entire files. The capabilities include time-shifting, binning, and regridding data, as well as band pass filtering, tide analysis, zonal averaging, and extracting variables from files. 
+   The MarsFiles executable has functions for manipulating entire files.
+   The capabilities include time-shifting, binning, and regridding data,
+   as well as band pass filtering, tide analysis, zonal averaging, and
+   extracting variables from files.
 
    The executable requires:
        * ``[input_file]``                  the file for manipulation
 
    and optionally accepts:
-       * ``[-fv3, --fv3]``                 produce MGCM ``fixed``,         ``diurn``, ``average`` and ``daily`` files from Legacy output
-       * ``[-c, --combine]``               Combine sequential files of         the same type into one file
-       * ``[-t, --tshift]``                apply a time-shift to         ``diurn`` files
-       * ``[-ba, --bin_average]``          bin MGCM ``daily`` files like         ``average`` files
-       * ``[-bd, --bin_diurn]``            bin MGCM ``daily`` files like         ``diurn`` files
+       * ``[-fv3, --fv3]``                 produce MGCM ``fixed``,
+           ``diurn``, ``average`` and ``daily`` files from Legacy output
+       * ``[-c, --combine]``               Combine sequential files of
+           the same type into one file
+       * ``[-t, --tshift]``                apply a time-shift to
+           ``diurn`` files
+       * ``[-ba, --bin_average]``          bin MGCM ``daily`` files like
+           ``average`` files
+       * ``[-bd, --bin_diurn]``            bin MGCM ``daily`` files like
+           ``diurn`` files
        * ``[-hp, --high_pass_filter]``     temporal filtering: high-pass
        * ``[-lp, --low_pass_filter]``      temporal filtering: low-pass
        * ``[-bp, --band_pass_filter]``     temporal filtering: band-pass
-       * ``[-no_trend, --no_trend]``       filter and compute amplitudes         only (use with filtering)
+       * ``[-no_trend, --no_trend]``       filter and compute amplitudes
+           only (use with filtering)
        * ``[-hpk, --high_pass_zonal]``     spatial filtering: high-pass
        * ``[-lpk, --low_pass_zonal]``      spatial filtering: low-pass
        * ``[-bpk, --band_pass_zonal]``     spatial filtering: band-pass
-       * ``[-tidal, --tidal]``             extracts diurnal tide and its         harmonics
-       * ``[-reconstruct, --reconstruct]`` reconstructs the first N         harmonics
-       * ``[-norm, --normalize]``          provides ``-tidal`` result in         percent amplitude
-       * ``[-rs, --regrid_source]``        regrid a target file to match         a source file
-       * ``[-za, --zonal_avg]``            zonally average all variables         in a file
-       * ``[-include, --include]``         only include specific         variables from the target file
-       * ``[-e, --ext]``                   create a new file with a         unique extension instead of overwriting current file
-       
+       * ``[-tidal, --tidal]``             extracts diurnal tide and its
+           harmonics
+       * ``[-reconstruct, --reconstruct]`` reconstructs the first N
+           harmonics
+       * ``[-norm, --normalize]``          provides ``-tidal`` result in
+           percent amplitude
+       * ``[-rs, --regrid_source]``        regrid a target file to match
+           a source file
+       * ``[-za, --zonal_avg]``            zonally average all variables
+           in a file
+       * ``[-include, --include]``         only include specific
+           variables from the target file
+       * ``[-e, --ext]``                   create a new file with a
+           unique extension instead of overwriting current file
+
    Third-party Requirements:
        * ``numpy``
        * ``netCDF4``
@@ -84,16 +100,20 @@ Functions
 .. py:function:: make_FV3_files(fpath, typelistfv3, renameFV3=True)
 
    Make MGCM-like ``average``, ``daily``, and ``diurn`` files.
-   Used if call to [``-fv3 --fv3``] is made AND Legacy files are in     netCDFformat (not fort.11).
+   Used if call to [``-fv3 --fv3``] is made AND Legacy files are in
+   netCDFformat (not fort.11).
 
    :param fpath: Full path to the Legacy netcdf files
    :type fpath: str
-   :param typelistfv3: MGCM-like file type: ``average``, ``daily``,         or ``diurn``
+   :param typelistfv3: MGCM-like file type: ``average``, ``daily``,
+       or ``diurn``
    :type typelistfv3: list
-   :param renameFV3: Rename the files from Legacy_LsXXX_LsYYY.nc to         ``XXXXX.atmos_average.nc`` following MGCM output conventions
+   :param renameFV3: Rename the files from Legacy_LsXXX_LsYYY.nc to
+       ``XXXXX.atmos_average.nc`` following MGCM output conventions
    :type renameFV3: bool
 
-   :return: The MGCM-like files: ``XXXXX.atmos_average.nc``,         ``XXXXX.atmos_daily.nc``, ``XXXXX.atmos_diurn.nc``.
+   :return: The MGCM-like files: ``XXXXX.atmos_average.nc``,
+       ``XXXXX.atmos_daily.nc``, ``XXXXX.atmos_diurn.nc``.
 
 
 .. py:function:: do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5)
@@ -104,11 +124,14 @@ Functions
    :type histfile: str
    :param newf: path to target file
    :type newf: str
-   :param avgtime: whether ``histfile`` has averaged fields         (e.g., ``atmos_average``)
+   :param avgtime: whether ``histfile`` has averaged fields
+       (e.g., ``atmos_average``)
    :type avgtime: bool
-   :param avgtod: whether ``histfile`` has a diurnal time dimenion         (e.g., ``atmos_diurn``)
+   :param avgtod: whether ``histfile`` has a diurnal time dimenion
+       (e.g., ``atmos_diurn``)
    :type avgtod: bool
-   :param bin_period: the time binning period if `histfile` has         averaged fields (i.e., if ``avgtime==True``), defaults to 5
+   :param bin_period: the time binning period if `histfile` has
+       averaged fields (i.e., if ``avgtime==True``), defaults to 5
    :type bin_period: int, optional
 
    :return: a time-averaged file
@@ -116,7 +139,8 @@ Functions
 
 .. py:function:: change_vname_longname_unit(vname, longname_txt, units_txt)
 
-   Update variable ``name``, ``longname``, and ``units``. This is     designed to work specifically with LegacyCGM.nc files.
+   Update variable ``name``, ``longname``, and ``units``. This is
+   designed to work specifically with LegacyCGM.nc files.
 
    :param vname: variable name
    :type vname: str
@@ -130,11 +154,13 @@ Functions
 
 .. py:function:: replace_dims(dims, todflag)
 
-   Replaces dimensions with MGCM-like names. Removes ``time_of_day``.     This is designed to work specifically with LegacyCGM.nc files.
+   Replaces dimensions with MGCM-like names. Removes ``time_of_day``.
+   This is designed to work specifically with LegacyCGM.nc files.
 
    :param dims: dimensions of the variable
    :type dims: str
-   :param todflag: indicates whether there exists a ``time_of_day``         dimension
+   :param todflag: indicates whether there exists a ``time_of_day``
+       dimension
    :type todflag: bool
 
    :return: new dimension names for the variable
@@ -144,9 +170,11 @@ Functions
 
    Updates variable dimensions.
 
-   :param tuple_dims: the dimensions as tuples e.g. (``pfull``,         ``nlat``, ``nlon``)
+   :param tuple_dims: the dimensions as tuples e.g. (``pfull``,
+       ``nlat``, ``nlon``)
    :type tuple_dims: tuple
-   :param idx: index indicating axis with the dimensions to update         (e.g. ``idx = 1``  for ``nlat``)
+   :param idx: index indicating axis with the dimensions to update
+       (e.g. ``idx = 1``  for ``nlat``)
    :type idx: int
    :param new_name: new dimension name (e.g. ``latitude``)
    :type new_name: str
@@ -167,6 +195,7 @@ Functions
 
    :returns: ``Ds`` the sol number
 
-   .. NOTE:: For the moment, this is consistent with 0 <= Ls <=         359.99, but not for monotically increasing Ls.
+   .. NOTE:: For the moment, this is consistent with 0 <= Ls <=
+       359.99, but not for monotically increasing Ls.
 
 

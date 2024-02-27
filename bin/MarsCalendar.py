@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-The MarsCalendar executable accepts an input Ls or day-of-year (sol) \
+The MarsCalendar executable accepts an input Ls or day-of-year (sol)
 and returns the corresponding sol or Ls, respectively.
 
 The executable requires 1 of the following arguments:
@@ -8,7 +8,7 @@ The executable requires 1 of the following arguments:
     * ``[-ls --ls]``            the Ls to convert to sol
 
 and optionally accepts:
-    * ``[-my --marsyear]``      the Mars Year of the simulation to \
+    * ``[-my --marsyear]``      the Mars Year of the simulation to
         compute sol or  Ls from, AND/OR
     * ``[-c --cumulative]``     returns Ls in cumulative form
 
@@ -18,9 +18,7 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (
-    prRed, Yellow, NoColor, Green
-)
+from amescap.Script_utils import (prRed, Yellow, Nclr, Green)
 
 # Load generic Python modules
 import argparse     # Parse arguments
@@ -36,7 +34,7 @@ from amescap.FV3_utils import (sol2ls, ls2sol)
 parser = argparse.ArgumentParser(
     description=(
         f"{Yellow}Returns the solar longitude (Ls) corresponding to a "
-        f"sol or vice-versa. Adapted from areols.py.{NoColor}\n\n"
+        f"sol or vice-versa. Adapted from areols.py.{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
@@ -48,7 +46,7 @@ parser.add_argument("-sol", "--sol", nargs="+", type=float,
         f"{Green}Usage:\n"
         f"> MarsCalendar.py -sol 750\n"
         f"> MarsCalendar.py -sol 750 800 5"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -58,7 +56,7 @@ parser.add_argument("-ls", "--ls", nargs="+", type=float,
         f"{Green}Usage:\n"
         f"> MarsCalendar.py -ls 350\n"
         f"> MarsCalendar.py -ls 350 360 5"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -71,7 +69,7 @@ parser.add_argument(
         f"``MY=0`` for sol=0-667, ``MY=1`` for sol=668-1335 etc.\n"
         f"{Green}Usage:\n"
         f"> Usage: MarsCalendar.py -ls 350 -my 2"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -82,7 +80,7 @@ parser.add_argument("-c", "--cumulative", action="store_true",
         f"sol=669-1336 \n"
         f"{Green}Usage:\n"
         f"> MarsCalendar.py -sol 700 -c"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -97,20 +95,20 @@ def parse_array(len_input):
     """
     Formats the input array for conversion.
 
-    Confirms that either ``[-ls --ls]`` or ``[-sol --sol]`` was passed \
-    as an argument. Creates an array that ls2sol or sol2ls can read \
+    Confirms that either ``[-ls --ls]`` or ``[-sol --sol]`` was passed
+    as an argument. Creates an array that ls2sol or sol2ls can read
     for the conversion from sol -> Ls or Ls -> sol.
 
-    :param len_input: The input Ls or sol to convert. Can either be \
+    :param len_input: The input Ls or sol to convert. Can either be
         onenumber (e.g., 300) or start stop step (e.g., 300 310 2).
     :type len_input: float
 
-    :raises: Error if neither ``[-ls --ls]`` or ``[-sol --sol]`` are\
+    :raises: Error if neither ``[-ls --ls]`` or ``[-sol --sol]`` are
         provided.
 
-    :return: ``input_as_arr`` An array formatted for input into \
-        ``ls2sol`` or ``sol2ls``. If ``len_input = 300``, then \
-        ``input_as_arr=[300]``. If ``len_input = 300 310 2``, then \
+    :return: ``input_as_arr`` An array formatted for input into
+        ``ls2sol`` or ``sol2ls``. If ``len_input = 300``, then
+        ``input_as_arr=[300]``. If ``len_input = 300 310 2``, then
         ``input_as_arr = [300, 302, 304, 306, 308]``.\n
     """
 
@@ -122,8 +120,8 @@ def parse_array(len_input):
         input_as_arr = np.arange(start, stop, step)
 
     else:
-        prRed("ERROR either ``[-ls --ls]`` or ``[-sol --sol]`` are \
-            required. See 'MarsCalendar.py -h' for additional help.")
+        prRed("ERROR either ``[-ls --ls]`` or ``[-sol --sol]`` are "
+              "required. See ``MarsCalendar.py -h`` for additional help.")
         exit()
     return(input_as_arr)
 

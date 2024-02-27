@@ -48,7 +48,7 @@ Functions
 
    WRF data is output to dimensions: [time, pfull, lat, lon] or
    [t,z,y,x], just like MGCM data. Some WRF variables are on staggered
-   grids, referred to in the comments using ' (prime; like y').
+   grids, referred to in the comments using "'" (prime) EX: ``y'``.
 
    The dimensions of the native WRF variables can be:
 
@@ -70,26 +70,33 @@ Functions
    ========== =============== ========== ================================
    MarsWRF    MGCM Equiv.     Units      Notes
    ========== =============== ========== ================================
-   ``XTIME``  ``time``        days       converted from minutes to                                           days since simulation start
-   ``L_S``    ``areo``        degree     
-   ``PSFC``   ``ps``          Pa         
-   ``XLONG``  ``lon``         degree E   
-   ``XLAT``   ``lat``         degree N   
-   ``HGT``    ``zsurf``       meters     
-   ``U``      ``ucomp``       m/s        Requires interpolation to a                                           regular grid
-   ``V``      ``vcomp``       m/s        Requires interpolation to a                                           regular grid
-   ``W``      ``w``           m/s        Requires interpolation to a                                           regular grid
-   ``H2OICE`` ``h2o_ice_sfc`` kg/m2      
-   ``CO2ICE`` ``co2_ice_sfc`` kg/m2      
-   ``ZNW``    ``bk``                     
-   ``TSK``    ``ts``          K          
+   ``XTIME``  ``time``        days       converted from minutes to
+                                         days since simulation start
+   ``L_S``    ``areo``        degree
+   ``PSFC``   ``ps``          Pa
+   ``XLONG``  ``lon``         degree E
+   ``XLAT``   ``lat``         degree N
+   ``HGT``    ``zsurf``       meters
+   ``U``      ``ucomp``       m/s        Requires interpolation to a
+                                         regular grid
+   ``V``      ``vcomp``       m/s        Requires interpolation to a
+                                         regular grid
+   ``W``      ``w``           m/s        Requires interpolation to a
+                                         regular grid
+   ``H2OICE`` ``h2o_ice_sfc`` kg/m2
+   ``CO2ICE`` ``co2_ice_sfc`` kg/m2
+   ``ZNW``    ``bk``
+   ``TSK``    ``ts``          K
    ``P_TOP``  ``pk[0]``       Pa         model top pressure
    ========== =============== ========== ================================
 
-   :param DS: The dataset created by xarray when it opens the         user-supplied input file.
+   :param DS: The dataset created by xarray when it opens the
+       user-supplied input file.
    :type DS: xarray dataset
 
-   :return: ``var_dict`` Dictionary with variable names as keys and a        list of attributes[values, dimensions, longname, units] as         values.
+   :return: ``var_dict`` Dictionary with variable names as keys and a
+       list of attributes[values, dimensions, longname, units] as
+       values.
 
        ``time`` (array) Minutes since simulation start
 
@@ -111,12 +118,15 @@ Functions
    pfull and phalf but otherwise only needs to rename variables and
    update units, longnames, and dimensions to match MGCM output.
 
-   :param DS: The dataset created by xarray when it opens the         user-supplied input file.
+   :param DS: The dataset created by xarray when it opens the
+       user-supplied input file.
    :type DS: xarray dataset
 
    Returns
    -------
-   :return: ``var_dict`` Dictionary with variable names as keys and a        list of attributes[values, dimensions, longname, units] as         values.
+   :return: ``var_dict`` Dictionary with variable names as keys and a
+       list of attributes[values, dimensions, longname, units] as
+       values.
 
        ``time`` (array) Minutes since simulation start
 

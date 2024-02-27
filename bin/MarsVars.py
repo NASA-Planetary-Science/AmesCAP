@@ -33,7 +33,7 @@ Third-party Requirements:
 
 # Make print statements appear in color
 from amescap.Script_utils import (
-    prYellow, prCyan, prRed, Yellow, NoColor, Green, Cyan
+    prYellow, prCyan, prRed, Yellow, Nclr, Green, Cyan
 )
 
 # Load generic Python modules
@@ -46,7 +46,7 @@ import numpy as np
 from netCDF4 import Dataset
 
 # Force matplotlib NOT to load Xwindows backend
-matplotlib.use('Agg')
+matplotlib.use("Agg")
 
 # Load amesCAP modules
 from amescap.FV3_utils import (
@@ -68,7 +68,7 @@ parser = argparse.ArgumentParser(
         f"{Yellow} MarsVars, variable manager. Add to or remove "
         f"variables from the diagnostic files.\n"
         f"Use MarsFiles.py ****.atmos.average.nc to view file content."
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
@@ -120,7 +120,7 @@ parser.add_argument("-add", "--add", nargs="+", default=[],
         f"             [dst_mass_micro, dst_num_micro, temp]\n"
         f"w_net          Net Vertical Wind (w-Vg_sed)   [w, Vg_sed]\n"
         f" "
-        f"{NoColor}NOTE: MarsVars offers some support on interpolated\n"
+        f"{Nclr}NOTE: MarsVars offers some support on interpolated\n"
         f"files, particularly if ``pfull3D`` and ``zfull`` are added \n"
         f"to the file before interpolation.\n\n"
         f"{Cyan}ON INTERPOLATED FILES (i.e. ``_pstd``, ``_zstd``, \n"
@@ -138,7 +138,7 @@ parser.add_argument("-add", "--add", nargs="+", default=[],
         f"ay             Merid. Wave-Mean Flow Forcing"
         f"  [vcomp, w, rho]\n"
         f"tp_t           Normalized Temp. Perturbation  [temp]"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -148,7 +148,7 @@ parser.add_argument("-zdiff", "--zdiff", nargs="+", default=[],
         f"``d_dz_var`` in [Unit/m] will be added to the file.\n"
         f"{Green}Usage:\n"
         f"> MarsVars ****.atmos.average.nc -zdiff temp"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -159,7 +159,7 @@ parser.add_argument("-col", "--col", nargs="+", default=[],
         f"the file.\n"
         f"{Green}Usage:\n"
         f"> MarsVars ****.atmos.average.nc -col ice_mass"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -170,7 +170,7 @@ parser.add_argument("-zd", "--zonal_detrend", nargs="+", default=[],
         f" file.\n"
         f"{Green}Usage:\n"
         f"> MarsVars ****.atmos.average.nc -zd ucomp"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -182,7 +182,7 @@ parser.add_argument("-dp_to_dz", "--dp_to_dz", nargs="+", default=[],
         f"file.\n"
         f"{Green}Usage:\n"
         f"> MarsVars ****.atmos.average.nc -dp_to_dz opacity\n"
-        f"{NoColor}Use -dz_to_dp to convert from [op/m] to [op/Pa]\n\n"
+        f"{Nclr}Use -dz_to_dp to convert from [op/m] to [op/Pa]\n\n"
     )
 )
 
@@ -194,7 +194,7 @@ parser.add_argument("-rm", "--remove", nargs="+", default=[],
         f"Remove a variable from a file.\n"
         f"{Green}Usage:\n"
         f"> MarsVars ****.atmos.average.nc -rm rho theta"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -203,7 +203,7 @@ parser.add_argument("-extract", "--extract", nargs="+", default=[],
         f"Extract variable(s) to a new ``_extract.nc`` file.\n"
         f"{Green}Usage:\n"
         f"> MarsVars ****.atmos.average.nc -extract ps ts"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -218,7 +218,7 @@ parser.add_argument("-edit", "--edit", default=None,
         f"airtemp\n"
         f"> MarsVars.py *.atmos_average.nc --edit ps -multiply 0.01\n"
         f"  -longname 'new pressure' -unit 'mbar'"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 # To be used jointly with --edit
@@ -284,8 +284,7 @@ VAR = {
 }
 
 # ======================================================================
-# ======================================================================
-# ======================================================================
+
 # TODO : If only one timestep, reshape from
 #       (lev, lat, lon) to (time, lev, lat, lon)
 
@@ -345,8 +344,8 @@ def compute_p_3D(ps, ak, bk, shape_out):
     :type ak: array [phalf]
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
-    :param shape_out: Determines how to handle the dimensions of p_3D. \
-        If ``len(time) = 1`` (one timestep), ``p_3D`` is returned as \
+    :param shape_out: Determines how to handle the dimensions of p_3D.
+        If ``len(time) = 1`` (one timestep), ``p_3D`` is returned as
         [1, lev, lat, lon] as opposed to [lev, lat, lon]
     :type shape_out: float
 
@@ -399,7 +398,7 @@ def compute_xzTau(q, temp, lev, const, f_type):
     :return: ``xzTau`` Dust or ice extinction rate (km-1)
     :rtype: array [time, lev, lat, lon]
     """
-    if f_type == 'diurn':
+    if f_type == "diurn":
         PT = np.repeat(lev, (q.shape[0]*q.shape[1]*q.shape[3]*q.shape[4]))
         PT = np.reshape(
             PT, (q.shape[2], q.shape[0], q.shape[1], q.shape[3], q.shape[4])
@@ -492,7 +491,7 @@ def compute_Vg_sed(xTau, nTau, temp):
 # =====================================================================
 def compute_w_net(Vg, wvar):
     """
-    Computes the net vertical wind, which is the vertical wind (w) \
+    Computes the net vertical wind, which is the vertical wind (w)
     minus the sedimentation rate (``Vg_sed``)::
 
         w_net = w - Vg_sed
@@ -592,7 +591,7 @@ def compute_zfull(ps, ak, bk, temp):
     zfull = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T),
                        topo=0., lev_type="full")
 
-    # Note: lev_T swaps dims 0 & 1, ensuring level is the first \
+    # Note: lev_T swaps dims 0 & 1, ensuring level is the first
     # dimension for the calculation
 
     zfull = zfull.transpose(lev_T_out)
@@ -620,7 +619,7 @@ def compute_zhalf(ps, ak, bk, temp):
     zhalf = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T),
                        topo=0., lev_type="half")
 
-    # Note: lev_T swaps dims 0 & 1, ensuring level is the first \
+    # Note: lev_T swaps dims 0 & 1, ensuring level is the first
     # dimension for the calculation
 
     zhalf = zhalf.transpose(lev_T_out)
@@ -629,10 +628,10 @@ def compute_zhalf(ps, ak, bk, temp):
 # =====================================================================
 def compute_DZ_full_pstd(pstd, temp, ftype="average"):
     """
-    Calculate the thickness of a layer from the midpoint of the \
+    Calculate the thickness of a layer from the midpoint of the
     standard pressure levels (``pstd``).
 
-    In this context, ``pfull=pstd`` with the layer interfaces \
+    In this context, ``pfull=pstd`` with the layer interfaces
     defined somewhere in between successive layers::
 
         --- Nk --- TOP       ========  phalf
@@ -681,12 +680,12 @@ def compute_DZ_full_pstd(pstd, temp, ftype="average"):
         * np.log(pstd_reshaped[1:, ...]/pstd_reshaped[0:-1, ...])
     )
 
-    # There is nothing to differentiate the last layer with, so copy \
+    # There is nothing to differentiate the last layer with, so copy
     # the second-to-last layer.
     DZ_full_pstd[-1, ...] = DZ_full_pstd[-2, ...]
 
-    # Note that unless you fine-tune the standard pressure levels to \
-    # match the model top, data is usually missing in the last few \
+    # Note that unless you fine-tune the standard pressure levels to
+    # match the model top, data is usually missing in the last few
     # layers.
 
     return np.swapaxes(DZ_full_pstd, 0, axis)
@@ -710,7 +709,7 @@ def compute_N(theta, zfull):
     dtheta_dz = dvar_dh(theta.transpose(lev_T),
                         zfull.transpose(lev_T)).transpose(lev_T)
 
-    # Note: lev_T swaps dims 0 & 1, ensuring level is the first \
+    # Note: lev_T swaps dims 0 & 1, ensuring level is the first
     # dimension for the differentiation
 
     # Calculate the Brunt Vaisala frequency
@@ -722,7 +721,7 @@ def compute_N(theta, zfull):
 def compute_Tco2(P_3D):
     """
     Calculate the frost point of CO2.
-    Adapted from Fannale (1982) - Mars: The regolith-atmosphere cap \
+    Adapted from Fannale (1982) - Mars: The regolith-atmosphere cap
     system and climate change. Icarus.
 
     :param P_3D: The full 3D pressure array (Pa)
@@ -772,7 +771,7 @@ def compute_scorer(N, ucomp, zfull):
     dUdz2 = dvar_dh(dUdz.transpose(lev_T),
                     zfull.transpose(lev_T)).transpose(lev_T)
 
-    # Note: lev_T swaps dims 0 & 1, ensuring level is the first \
+    # Note: lev_T swaps dims 0 & 1, ensuring level is the first
     # dimension for the differentiation
 
     # Compute the scorer parameter I^2(z) (m-1)
@@ -796,8 +795,8 @@ def compute_DP_3D(ps, ak, bk, shape_out):
     :type ak: array [phalf]
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
-    :param shape_out: Determines how to handle the dimensions of DP_3D.\
-        If len(time) = 1 (one timestep), DP_3D is returned as \
+    :param shape_out: Determines how to handle the dimensions of DP_3D.
+        If len(time) = 1 (one timestep), DP_3D is returned as
         [1, lev, lat, lon] as opposed to [lev, lat, lon]
     :type shape_out: float
 
@@ -807,8 +806,8 @@ def compute_DP_3D(ps, ak, bk, shape_out):
     :rtype: array [time, lev, lat, lon]
     """
     # Get the 3D pressure field from fms_press_calc
-    p_half3D = fms_press_calc(ps, ak, bk, lev_type='half')
-    # fms_press_calc will swap dimensions 0 and 1 so p_half3D has \
+    p_half3D = fms_press_calc(ps, ak, bk, lev_type="half")
+    # fms_press_calc will swap dimensions 0 and 1 so p_half3D has
     # dimensions = [lev, time, lat, lon]
 
     # Calculate the differences in pressure between each layer midpoint
@@ -831,8 +830,8 @@ def compute_DZ_3D(ps, ak, bk, temp, shape_out):
     :type ak: array [phalf]
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
-    :param shape_out: Determines how to handle the dimensions of DZ_3D.\
-        If len(time) = 1 (one timestep), DZ_3D is returned as \
+    :param shape_out: Determines how to handle the dimensions of DZ_3D.
+        If len(time) = 1 (one timestep), DZ_3D is returned as
         [1, lev, lat, lon] as opposed to [lev, lat, lon]
     :type shape_out: float
 
@@ -845,7 +844,7 @@ def compute_DZ_3D(ps, ak, bk, temp, shape_out):
     # Get the 3D altitude field from fms_Z_calc
     z_half3D = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T), topo=0.,
                           lev_type="half")
-    # fms_press_calc will swap dimensions 0 and 1 so p_half3D has \
+    # fms_press_calc will swap dimensions 0 and 1 so p_half3D has
     # dimensions = [lev, time, lat, lon]
 
     # Calculate the differences in pressure between each layer midpoint
@@ -935,7 +934,8 @@ def compute_WMFF(MF, rho, lev, interp_type):
     :type rho: array [time, lev, lat, lon]
     :param lev: Array for the vertical grid (zagl, zstd, pstd, or pfull)
     :type lev: array [lev]
-    :param interp_type: The vertical grid type ('zagl', 'zstd', 'pstd', or 'pfull')
+    :param interp_type: The vertical grid type (``zagl``, ``zstd``,
+        ``pstd``, or ``pfull``)
     :type interp_type: str
 
     :raises:
@@ -945,14 +945,14 @@ def compute_WMFF(MF, rho, lev, interp_type):
     """
     # Differentiate the momentum flux (MF)
     darr_dz = dvar_dh((rho*MF).transpose(lev_T), lev).transpose(lev_T)
-    # Manually swap dimensions 0 and 1 so lev_T has 'lev' for first \
+    # Manually swap dimensions 0 and 1 so lev_T has lev for first
     # dimension [lev, time, lat, lon] for the differentiation
 
-    if interp_type == 'pstd':
+    if interp_type == "pstd":
         # Computed du/dp, need to multiply by (-rho g) to obtain du/dz
         return g * darr_dz
     else:
-        # 'zagl' and 'zstd' grids have levels in meters, so du/dz
+        # zagl and zstd grids have levels in meters, so du/dz
         # is not multiplied by g.
         return -1/rho*darr_dz
 
@@ -984,7 +984,7 @@ def main():
     # [1, 0, 2, 3] for [time, lev, lat, lon] and
     # [2, 1, 0, 3, 4] for [time, tod, lev, lat, lon]
     global lev_T
-    global lev_T_out # Reshape in 'zfull' and 'zhalf' calculation
+    global lev_T_out # Reshape in zfull and zhalf calculation
 
     # Check if an operation is requested. Otherwise, print file content.
     if not (add_list or
@@ -997,8 +997,8 @@ def main():
             dz_to_dp_list or
             edit_var):
         print_fileContent(file_list[0])
-        prYellow("***Notice***  No operation requested. Use -add, \
-            -zdiff, -zd, -col, -dp_to_dz, -rm, or -edit")
+        prYellow("***Notice***  No operation requested. Use -add, "
+                 f"-zdiff, -zd, -col, -dp_to_dz, -rm, or -edit")
         exit()
 
     # For all the files
@@ -1025,8 +1025,8 @@ def main():
                                               stdout=open(os.devnull, "w"),
                                               stderr=open(os.devnull, "w"))
                     except Exception as exception:
-                        print(f"{exception.__class__.__name__ }: \
-                            {exception.message}")
+                        print(f"{exception.__class__.__name__ }: "
+                              f"{exception.message}")
 
             except subprocess.CalledProcessError:
                 # ncks is not available, use internal method
@@ -1070,8 +1070,8 @@ def main():
         # Check if the variable to be added is currently supported.
         for ivar in add_list:
             if ivar not in VAR.keys():
-                prRed(f"Variable '{ivar}' is not supported and cannot \
-                    be added to the file. ")
+                prRed(f"Variable ``{ivar}`` is not supported and cannot "
+                      f"be added to the file. ")
             else:
                 print(f"Processing: {ivar}...")
                 try:
@@ -1340,15 +1340,16 @@ def main():
                     var_Ncdf[:] = OUT
                     fileNC.close()
 
-                    print(f"{ivar}: \033[92mDone{NoColor}")
+                    print(f"{ivar}: {Green}Done{Nclr}")
 
                 except Exception as exception:
                     if debug:
                         raise
                     if str(exception) == "NetCDF: String match to name in use":
-                        prYellow(f"***Error*** Variable already exists in \
-                            file.\nDelete the existing variables {ivar} with \
-                            ``MarsVars.py {ifile} -rm {ivar}``")
+                        prYellow(f"***Error*** Variable already exists in "
+                                 f"file.\nDelete the existing variables "
+                                 f"{ivar} with "
+                                 f"``MarsVars.py {ifile} -rm {ivar}``")
 
         # ==============================================================
         # ================== Vertical Differentiation ==================
@@ -1442,15 +1443,15 @@ def main():
                     var_Ncdf[:] = darr_dz
                     fileNC.close()
 
-                    print(f"d_dz_{idiff}: \033[92mDone{NoColor}")
+                    print(f"d_dz_{idiff}: {Green}Done{Nclr}")
                 except Exception as exception:
                     if debug:
                         raise
                     if str(exception) == "NetCDF: String match to name in use":
-                        prYellow(f"***Error*** Variable already exists in \
-                            file.\nDelete the existing variable \
-                            d_dz_{idiff} with 'MarsVars {ifile} -rm \
-                            d_dz_{idiff}'")
+                        prYellow(f"***Error*** Variable already exists in "
+                                 f"file.\nDelete the existing variable "
+                                 f"d_dz_{idiff} with "
+                                 f"``MarsVars {ifile} -rm d_dz_{idiff}``")
 
         # ==============================================================
         # ====================== Zonal Detrending ======================
@@ -1487,22 +1488,22 @@ def main():
                     var_Ncdf[:] = zonal_detrend(var)
                     fileNC.close()
 
-                    print(f"{izdetrend}_p: \033[92mDone{NoColor}")
+                    print(f"{izdetrend}_p: {Green}Done{Nclr}")
                 except Exception as exception:
                     if debug:
                         raise
                     if str(exception) == "NetCDF: String match to name in use":
-                        prYellow(f"***Error*** Variable already exists in \
-                            file. Delete the existing variable \
-                            d_dz_{idiff} with 'MarsVars {ifile} -rm \
-                            d_dz_{idiff}'")
+                        prYellow(f"***Error*** Variable already exists in "
+                                 f"file. Delete the existing variable "
+                                 f"d_dz_{idiff} with "
+                                 f"``MarsVars {ifile} -rm d_dz_{idiff}``")
 
         # ==============================================================
         # ========= Opacity Conversion (dp_to_dz and dz_to_dp) =========
         # ==============================================================
         for idp_to_dz in dp_to_dz_list:
             # ========= Case 1: dp_to_dz
-            fileNC = Dataset(ifile, 'a', format='NETCDF4_CLASSIC')
+            fileNC = Dataset(ifile, "a", format="NETCDF4_CLASSIC")
             f_type, interp_type = FV3_file_type(fileNC)
             if idp_to_dz not in fileNC.variables.keys():
                 prRed(
@@ -1535,15 +1536,15 @@ def main():
                                    / fileNC.variables["DZ"][:])
                     fileNC.close()
 
-                    print(f"{idp_to_dz}_dp_to_dz: \033[92mDone{NoColor}")
+                    print(f"{idp_to_dz}_dp_to_dz: {Green}Done{Nclr}")
                 except Exception as exception:
                     if debug:
                         raise
-                    if str(exception) == 'NetCDF: String match to name in use':
-                        prYellow("***Error*** Variable already exists in \
-                            file\nDelete the existing variable \
-                            {idp_to_dz}_dp_to_dz with 'MarsVars {ifile} -rm \
-                            {idp_to_dz}_dp_to_dz'")
+                    if str(exception) == "NetCDF: String match to name in use":
+                        prYellow(f"***Error*** Variable already exists "
+                              f"in file\nDelete the existing variable "
+                              f"{idp_to_dz}_dp_to_dz with "
+                              f"``MarsVars {ifile} -rm {idp_to_dz}_dp_to_dz``")
 
         for idz_to_dp in dz_to_dp_list:
             # ========= Case 2: dz_to_dp
@@ -1580,15 +1581,16 @@ def main():
                                    / fileNC.variables["DP"][:])
                     fileNC.close()
 
-                    print(f"{idz_to_dp}_dz_to_dp: \033[92mDone{NoColor}")
+                    print(f"{idz_to_dp}_dz_to_dp: {Green}Done{Nclr}")
                 except Exception as exception:
                     if debug:
                         raise
-                    if str(exception) == 'NetCDF: String match to name in use':
-                        prYellow(f"***Error*** Variable already exists in \
-                            file.\nDelete the existing variable \
-                            {idp_to_dz}_dp_to_dz with 'MarsVars.py \
-                            {ifile} -rm {idp_to_dz}_dp_to_dz'")
+                    if str(exception) == "NetCDF: String match to name in use":
+                        prYellow(f"***Error*** Variable already exists in "
+                                 f"file.\nDelete the existing variable "
+                                 f"{idp_to_dz}_dp_to_dz with "
+                                 f"``MarsVars.py {ifile} -rm "
+                                 f"{idp_to_dz}_dp_to_dz``")
 
         # ==============================================================
         # ====================== Column Integration ====================
@@ -1617,8 +1619,8 @@ def main():
                 ak, bk = ak_bk_loader(fileNC)
 
             if icol not in fileNC.variables.keys():
-                prRed(f"column integration error: variable {icol} is not \
-                      in {ifile}")
+                prRed(f"column integration error: variable {icol} is not "
+                      f"in {ifile}")
                 fileNC.close()
             else:
                 print(f"Performing column integration: {icol}...")
@@ -1670,14 +1672,15 @@ def main():
 
                     fileNC.close()
 
-                    print(f"{icol}_col: \033[92mDone{NoColor}")
+                    print(f"{icol}_col: {Green}Done{Nclr}")
                 except Exception as exception:
                     if debug:
                         raise
                     if str(exception) == "NetCDF: String match to name in use":
-                        prYellow(f"***Error*** Variable already exists in \
-                            file.\nDelete the existing variable \
-                            {icol}_col with 'MarsVars {ifile} -rm {icol}_col'")
+                        prYellow(f"***Error*** Variable already exists in "
+                                 f"file.\nDelete the existing variable "
+                                 f"{icol}_col with "
+                                 f"``MarsVars {ifile} -rm {icol}_col``")
         if edit_var:
             f_IN = Dataset(ifile, "r", format="NETCDF4_CLASSIC")
             ifile_tmp = f"{ifile[:-3]}_tmp.nc"

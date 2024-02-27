@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-The MarsPull executable is for querying data from the Mars Climate \
-Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on \
+The MarsPull executable is for querying data from the Mars Climate
+Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on
 the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
 The executable requires:
@@ -19,7 +19,7 @@ Third-party Requirements:
 
 # Make print statements appear in color
 from amescap.Script_utils import (
-    prYellow, prCyan, Yellow, NoColor, Green, Cyan
+    prYellow, prCyan, Yellow, Nclr, Green, Cyan
 )
 
 # Load generic Python modules
@@ -37,7 +37,7 @@ parser = argparse.ArgumentParser(
     description=(
         f"{Yellow}Uility for querying files on the MCMC NAS Data "
         f"Portal."
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
@@ -47,13 +47,13 @@ parser.add_argument("-id", "--id", type=str,
         f"Query data by simulation identifier corresponding to \n"
         f"a subdirectory of legacygcmdata/:\n"
         f"{Cyan}https://data.nas.nasa.gov/legacygcm/data_legacygcm.php?"
-        f"dir=/legacygcmdata{NoColor}\n"
-        f"Current options include: ``{Yellow}ACTIVECLDS{NoColor}``, "
-        f"``{Yellow}INERTCLDS{NoColor}``, and "
+        f"dir=/legacygcmdata{Nclr}\n"
+        f"Current options include: ``{Yellow}ACTIVECLDS{Nclr}``, "
+        f"``{Yellow}INERTCLDS{Nclr}``, and "
         f"``{Yellow}ACTIVECLDS_NCDF``\n"
         f"{Green}Usage:\n"
         f"> MarsPull.py -id  INERTCLDS..."
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -64,7 +64,7 @@ parser.add_argument("-ls", "--ls", nargs="+", type=float,
         f"{Green}Usage:\n"
         f"> MarsPull.py -id ACTIVECLDS -ls 90.\n"
         f"> MarsPull.py -id ACTIVECLDS -ls [start] [stop]"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -74,7 +74,7 @@ parser.add_argument("-f", "--filename", nargs="+", type=str,
         f"(``--id``)\n"
         f"{Green}Usage:\n"
         f"> MarsPull.py -id ACTIVECLDS -f fort.11_0730 fort.11_0731"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -132,15 +132,15 @@ def download(file_name, simulation_id):
     Downloads a file from the MCMC Legacy GCM directory on the NAS Data
     Portal (data.nas.nasa.gov).
 
-    This function specifies the file to download by appending to the \
-    URL to the subdirectory, indicated by the user-specified \
-    simulation identifier ``[-id --id]``, and the name of the file. The\
-    file name is either provided by the user directly using \
-    ``[-f --filename]`` or determined based on the user-specified solar\
+    This function specifies the file to download by appending to the
+    URL to the subdirectory, indicated by the user-specified
+    simulation identifier ``[-id --id]``, and the name of the file. The
+    file name is either provided by the user directly using
+    ``[-f --filename]`` or determined based on the user-specified solar
     longitude ``[-ls --ls]``.
 
-    :param simulation_id: The simulation identifier, i.e., the name of \
-        the directory to query from: \
+    :param simulation_id: The simulation identifier, i.e., the name of
+        the directory to query from:
         https://data.nas.nasa.gov/mcmc/data_legacygcm.php
     :type simulation_id: str
     :param file_name: The name of the file to download.
@@ -148,13 +148,12 @@ def download(file_name, simulation_id):
 
     :raises: file-not-found error.
 
-    :return: downloads & saves the requested file(s) to the current \
+    :return: downloads & saves the requested file(s) to the current
         directory.
     """
 
-    baseURL = (
-        f"https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.\
-        php?file=/legacygcmdata/{simulation_id}/")
+    baseURL = (f"https://data.nas.nasa.gov/legacygcm/download_data_legacygcm."
+               f"php?file=/legacygcmdata/{simulation_id}/")
 
     URL = baseURL + file_name
 
@@ -205,8 +204,8 @@ def main():
     simulation_id = parser.parse_args().id
 
     if simulation_id is None:
-        prYellow("ERROR [-id, --id] is required. Use 'MarsPull.py -h' \
-            for additional help.")
+        prYellow("ERROR [-id, --id] is required. Use 'MarsPull.py -h' "
+                 f"for additional help.")
         exit()
 
     if parser.parse_args().ls:
@@ -253,9 +252,9 @@ def main():
             download(file_name, simulation_id)
     else:
         # If the user did not specify Ls or a file name
-        prYellow("ERROR No file requested. Use ``[-ls --ls]`` or \
-            ``[-f --filename]`` with ``[-id --id]`` to specify a file \
-            to download.")
+        prYellow("ERROR No file requested. Use ``[-ls --ls]`` or "
+                 "``[-f --filename]`` with ``[-id --id]`` to specify a file "
+                 "to download.")
         exit()
 
 # ======================================================================

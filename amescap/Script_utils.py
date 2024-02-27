@@ -26,7 +26,7 @@ def prLightPurple(input_txt):
 Cyan = "\033[96m"
 Blue = "\033[94m"
 Yellow = "\033[93m"
-NoColor = "\033[00m"
+Nclr = "\033[00m"
 Red = "\033[91m"
 Green = "\033[92m"
 Purple = "\033[95m"
@@ -35,7 +35,7 @@ def MY_func(Ls_cont):
     '''
     This function return the Mars Year
     Args:
-        Ls_cont: solar longitude, contineuous
+        Ls_cont: solar longitude, continuous
     Returns:
         MY : int the Mars year
     '''

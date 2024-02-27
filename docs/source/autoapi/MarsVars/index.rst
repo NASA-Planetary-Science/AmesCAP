@@ -79,7 +79,9 @@ Functions
    :type ak: array [phalf]
    :param bk: Vertical coordinate sigma value (None)
    :type bk: array [phalf]
-   :param shape_out: Determines how to handle the dimensions of p_3D.         If ``len(time) = 1`` (one timestep), ``p_3D`` is returned as         [1, lev, lat, lon] as opposed to [lev, lat, lon]
+   :param shape_out: Determines how to handle the dimensions of p_3D.
+       If ``len(time) = 1`` (one timestep), ``p_3D`` is returned as
+       [1, lev, lat, lon] as opposed to [lev, lat, lon]
    :type shape_out: float
 
    :raises:
@@ -166,7 +168,8 @@ Functions
 
 .. py:function:: compute_w_net(Vg, wvar)
 
-   Computes the net vertical wind, which is the vertical wind (w)     minus the sedimentation rate (``Vg_sed``)::
+   Computes the net vertical wind, which is the vertical wind (w)
+   minus the sedimentation rate (``Vg_sed``)::
 
        w_net = w - Vg_sed
 
@@ -268,9 +271,11 @@ Functions
 
 .. py:function:: compute_DZ_full_pstd(pstd, temp, ftype='average')
 
-   Calculate the thickness of a layer from the midpoint of the     standard pressure levels (``pstd``).
+   Calculate the thickness of a layer from the midpoint of the
+   standard pressure levels (``pstd``).
 
-   In this context, ``pfull=pstd`` with the layer interfaces     defined somewhere in between successive layers::
+   In this context, ``pfull=pstd`` with the layer interfaces
+   defined somewhere in between successive layers::
 
        --- Nk --- TOP       ========  phalf
        --- Nk-1 ---
@@ -312,7 +317,8 @@ Functions
 .. py:function:: compute_Tco2(P_3D)
 
    Calculate the frost point of CO2.
-   Adapted from Fannale (1982) - Mars: The regolith-atmosphere cap     system and climate change. Icarus.
+   Adapted from Fannale (1982) - Mars: The regolith-atmosphere cap
+   system and climate change. Icarus.
 
    :param P_3D: The full 3D pressure array (Pa)
    :type p_3D: array [time, lev, lat, lon]
@@ -350,7 +356,9 @@ Functions
    :type ak: array [phalf]
    :param bk: Vertical coordinate sigma value (None)
    :type bk: array [phalf]
-   :param shape_out: Determines how to handle the dimensions of DP_3D.        If len(time) = 1 (one timestep), DP_3D is returned as         [1, lev, lat, lon] as opposed to [lev, lat, lon]
+   :param shape_out: Determines how to handle the dimensions of DP_3D.
+       If len(time) = 1 (one timestep), DP_3D is returned as
+       [1, lev, lat, lon] as opposed to [lev, lat, lon]
    :type shape_out: float
 
    :raises:
@@ -369,7 +377,9 @@ Functions
    :type ak: array [phalf]
    :param bk: Vertical coordinate sigma value (None)
    :type bk: array [phalf]
-   :param shape_out: Determines how to handle the dimensions of DZ_3D.        If len(time) = 1 (one timestep), DZ_3D is returned as         [1, lev, lat, lon] as opposed to [lev, lat, lon]
+   :param shape_out: Determines how to handle the dimensions of DZ_3D.
+       If len(time) = 1 (one timestep), DZ_3D is returned as
+       [1, lev, lat, lon] as opposed to [lev, lat, lon]
    :type shape_out: float
 
    :raises:
@@ -447,7 +457,8 @@ Functions
    :type rho: array [time, lev, lat, lon]
    :param lev: Array for the vertical grid (zagl, zstd, pstd, or pfull)
    :type lev: array [lev]
-   :param interp_type: The vertical grid type ('zagl', 'zstd', 'pstd', or 'pfull')
+   :param interp_type: The vertical grid type (``zagl``, ``zstd``,
+       ``pstd``, or ``pfull``)
    :type interp_type: str
 
    :raises:

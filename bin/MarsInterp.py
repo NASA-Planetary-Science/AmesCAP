@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-The MarsInterp executable is for interpolating files to pressure or \
-altitude coordinates. Options include interpolation to standard \
-pressure (``pstd``), standard altitude (``zstd``), altitude above \
+The MarsInterp executable is for interpolating files to pressure or
+altitude coordinates. Options include interpolation to standard
+pressure (``pstd``), standard altitude (``zstd``), altitude above
 ground level (``zagl``), or a custom vertical grid.
 
 The executable requires:
     * ``[input_file]``          the file to be transformed
 
 and optionally accepts:
-    * ``[-t --type]``           type of interpolation to perform \
+    * ``[-t --type]``           type of interpolation to perform
         (altitude, pressure, etc.)
     * ``[-l --level]``          specific vertical grid to interpolate to
-    * ``[-include --include]``  variables to include in the new \
+    * ``[-include --include]``  variables to include in the new
         interpolated file
     * ``[-e --ext]``            custom extension for the new file
-    * ``[-g --grid]``           print the vertical grid chosen by \
+    * ``[-g --grid]``           print the vertical grid chosen by
         [-l --level] to the screen
 
 
@@ -30,7 +30,7 @@ Third-party Requirements:
 
 # make print statements appear in color
 from amescap.Script_utils import (
-    prCyan, prRed, Blue, Yellow,  NoColor, Green, Cyan
+    prCyan, prRed, Blue, Yellow, Nclr, Green, Cyan
 )
 
 # load generic Python modules
@@ -42,14 +42,14 @@ import numpy as np
 from netCDF4 import Dataset
 
 # Force matplotlib NOT load Xwindows backend
-matplotlib.use("Agg") 
+matplotlib.use("Agg")
 
 # load amesCAP modules
 from amescap.FV3_utils import (
     fms_press_calc, fms_Z_calc, vinterp,find_n
 )
 from amescap.Script_utils import (
-    check_file_tape, section_content_amescap_profile, find_tod_in_diurn, 
+    check_file_tape, section_content_amescap_profile, find_tod_in_diurn,
     filter_vars, find_fixedfile, ak_bk_loader
 )
 from amescap.Ncdf_wrapper import Ncdf
@@ -61,7 +61,7 @@ from amescap.Ncdf_wrapper import Ncdf
 parser = argparse.ArgumentParser(
     description=(
         f"{Yellow}MarsInterp, pressure interpolation on fixed "
-        f"layers.{NoColor}\n\n"
+        f"layers.{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
@@ -75,7 +75,7 @@ parser.add_argument("-t", "--type", type=str, default="pstd",
         f"``zagl``.\n{Green}Usage:\n"
         f"> MarsInterp.py ****.atmos.average.nc\n"
         f"> MarsInterp.py ****.atmos.average.nc -t zstd\n"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -88,7 +88,7 @@ parser.add_argument("-l", "--level", type=str, default=None,
         f"{Green}Usage:\n"
         f"> MarsInterp.py ****.atmos.average.nc -t pstd -l p44\n"
         f"> MarsInterp.py ****.atmos.average.nc -t zstd -l phalf_mb\n"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -98,7 +98,7 @@ parser.add_argument("-include", "--include", nargs="+",
         f"variables are always included.\n"
         f"{Green}Usage:\n"
         f"> MarsInterp.py *.atmos_daily.nc --include ps ts temp\n"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -109,7 +109,7 @@ parser.add_argument("-e", "--ext", type=str, default=None,
         f"{Green}Usage:\n"
         f"> MarsInterp.py ****.atmos.average.nc -ext B\n"
         f"  {Blue}Produces ****.atmos.average_pstd_B.nc.\n"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -119,7 +119,7 @@ parser.add_argument("-g", "--grid", action="store_true",
         f"will not run the interpolation.\n"
         f"{Green}Usage:\n"
         f"> MarsInterp.py ****.atmos.average.nc -t pstd -l p44 -g\n"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -130,10 +130,10 @@ parser.add_argument("--debug", action="store_true",
 #                           DEFINITIONS
 # ======================================================================
 
-# TODO: If only one time step, reshape from (lev,lat,lon) to 
+# TODO: If only one time step, reshape from (lev,lat,lon) to
 # (time, lev, lat, lon).
 
-# Fill values for NaN. Do not use np.NaN because it is deprecated and 
+# Fill values for NaN. Do not use np.NaN because it is deprecated and
 # will raise issues when using runpinterp
 fill_value = 0.
 
@@ -171,7 +171,7 @@ def main():
             "Pressure definitions for pstd"
         )
         # Load all variables in that section
-        exec(content_txt)  
+        exec(content_txt)
 
         if custom_level:
             lev_in = eval(f"np.array({custom_level})")
@@ -189,7 +189,7 @@ def main():
             "Altitude definitions for zstd"
         )
         # Load all variables in that section
-        exec(content_txt)  
+        exec(content_txt)
 
         if custom_level:
             lev_in = eval(f"np.array({custom_level})")
@@ -197,8 +197,8 @@ def main():
             lev_in = eval("np.array(zstd_default)")
             # Default levels, this is size 45
 
-        # The fixed file is necessary if pk, bk are not in the 
-        # requested file, orto load the topography if zstd output is 
+        # The fixed file is necessary if pk, bk are not in the
+        # requested file, orto load the topography if zstd output is
         # requested.
         name_fixed = find_fixedfile(file_list[0])
         try:
@@ -206,9 +206,9 @@ def main():
             zsurf = f_fixed.variables["zsurf"][:]
             f_fixed.close()
         except FileNotFoundError:
-            prRed("***Error*** Topography (zsurf) is required for \
-                interpolation to zstd, but the file {name_fixed} \
-                    cannot be not found")
+            prRed(f"***Error*** Topography (zsurf) is required for "
+                  f"interpolation to zstd, but the file {name_fixed} "
+                  f"cannot be not found")
             exit()
 
     # =========================== zagl ===========================
@@ -222,30 +222,30 @@ def main():
             "Altitude definitions for zagl"
         )
         # Load all variables in that section
-        exec(content_txt)  
+        exec(content_txt)
 
         if custom_level:
             lev_in = eval(f"np.array({custom_level})")
         else:
             lev_in = eval("np.array(zagl_default)")
     else:
-        prRed(f"Interpolation type {interp_type} is not supported, \
-            use ``pstd``, ``zstd`` or ``zagl``" )
+        prRed(f"Interpolation type {interp_type} is not supported, use "
+              f"``pstd``, ``zstd`` or ``zagl``")
         exit()
-    
+
     if grid_out:
         # Only print grid content and exit the code
         print(*lev_in)
         exit()
-    
+
     for ifile in file_list:
         # First check if file is present on the disk (Lou only)
         check_file_tape(ifile)
 
         # Append extension, if any
         if parser.parse_args().ext:
-            newname = (f"{filepath}/{ifile[:-3]}_{interp_type}_\
-                {parser.parse_args().ext}.nc")
+            newname = (f"{filepath}/{ifile[:-3]}_{interp_type}_"
+                       f"{parser.parse_args().ext}.nc")
         else:
             newname = (f"{filepath}/{ifile[:-3]}_{interp_type}.nc")
 
@@ -255,20 +255,20 @@ def main():
 
         fNcdf = Dataset(ifile, "r", format="NETCDF4_CLASSIC")
         # Load pk, bk, and ps for 3D pressure field calculation.
-        # Read the pk and bk for each file in case the vertical 
+        # Read the pk and bk for each file in case the vertical
         # resolution has changed.
         ak, bk = ak_bk_loader(fNcdf)
 
         ps = np.array(fNcdf.variables["ps"])
 
-        # For pstd only: Uncommenting the following line will use 
+        # For pstd only: Uncommenting the following line will use
         # pfull as default layers:
         # if interp_type == "pstd":lev_in=fNcdf.variables["pfull"][::-1]
-        
+
         if len(ps.shape) == 3:
             do_diurn = False
             tod_name = "not_used"
-            # Put vertical axis first for 4D variable, 
+            # Put vertical axis first for 4D variable,
             # e.g (time, lev, lat, lon) >>> (lev, time, lat, lon)
             permut = [1, 0, 2, 3]
             # ( 0 1 2 3 ) >>> ( 1 0 2 3 )
@@ -276,8 +276,8 @@ def main():
             do_diurn = True
             # Find time_of_day variable name
             tod_name = find_tod_in_diurn(fNcdf)
-            # Same for diurn files, 
-            # e.g (time, time_of_day_XX, lev, lat, lon) 
+            # Same for diurn files,
+            # e.g (time, time_of_day_XX, lev, lat, lon)
             # >>> (lev, time_of_day_XX, time, lat, lon)
             permut = [2, 1, 0, 3, 4]
             # ( 0 1 2 3 4) >>> ( 2 1 0 3 4 )
@@ -291,8 +291,8 @@ def main():
 
             elif interp_type == "zagl":
                 temp = fNcdf.variables["temp"][:]
-                L_3D_P = fms_Z_calc(ps, ak, bk, 
-                                    temp.transpose(permut), 
+                L_3D_P = fms_Z_calc(ps, ak, bk,
+                                    temp.transpose(permut),
                                     topo=0.,
                                     lev_type="full")
 
@@ -305,9 +305,9 @@ def main():
                                       ps.shape[1],
                                       axis=1)
 
-                L_3D_P = fms_Z_calc(ps, ak, bk, 
-                                    temp.transpose(permut), 
-                                    topo=zflat, 
+                L_3D_P = fms_Z_calc(ps, ak, bk,
+                                    temp.transpose(permut),
+                                    topo=zflat,
                                     lev_type="full")
 
         fnew = Ncdf(newname, "Pressure interpolation using MarsInterp.py")
@@ -316,7 +316,7 @@ def main():
         # Get all variables in the file
         # var_list=fNcdf.variables.keys()
         # Get the variables
-        var_list = filter_vars(fNcdf, parser.parse_args().include)  
+        var_list = filter_vars(fNcdf, parser.parse_args().include)
 
         fnew.copy_all_dims_from_Ncfile(fNcdf, exclude_dim=["pfull"])
         # Add new vertical dimension
@@ -337,15 +337,15 @@ def main():
         # Re-use the indices for each file, speeds up the calculation
         compute_indices = True
         for ivar in var_list:
-            if (fNcdf.variables[ivar].dimensions == ("time", "pfull", 
+            if (fNcdf.variables[ivar].dimensions == ("time", "pfull",
                                                      "lat", "lon") or
-                fNcdf.variables[ivar].dimensions == ("time", tod_name, "pfull", 
+                fNcdf.variables[ivar].dimensions == ("time", tod_name, "pfull",
                                                      "lat", "lon") or
-                fNcdf.variables[ivar].dimensions == ("time", "pfull", 
+                fNcdf.variables[ivar].dimensions == ("time", "pfull",
                                                      "grid_yt", "grid_xt")):
                 if compute_indices:
                     prCyan("Computing indices ...")
-                    index = find_n(L_3D_P, lev_in, 
+                    index = find_n(L_3D_P, lev_in,
                                    reverse_input=need_to_reverse)
                     compute_indices = False
 
@@ -354,8 +354,8 @@ def main():
                 # This with the loop suppresses "divide by zero" errors
                 with np.errstate(divide="ignore", invalid="ignore"):
                     varOUT = vinterp(
-                        varIN.transpose(permut), L_3D_P, lev_in, 
-                        type_int=interp_technic, reverse_input=need_to_reverse, 
+                        varIN.transpose(permut), L_3D_P, lev_in,
+                        type_int=interp_technic, reverse_input=need_to_reverse,
                         masktop=True, index=index).transpose(permut)
 
                 long_name_txt = getattr(fNcdf.variables[ivar], "long_name", "")
@@ -366,7 +366,7 @@ def main():
                 if not do_diurn:
                     if "tile" in ifile:
                         fnew.log_variable(
-                            ivar, varOUT, ("time", interp_type, 
+                            ivar, varOUT, ("time", interp_type,
                                            "grid_yt", "grid_xt"),
                             long_name_txt, units_txt)
                     else:
@@ -376,18 +376,18 @@ def main():
                 else:
                     if "tile" in ifile:
                         fnew.log_variable(
-                            ivar, varOUT, ("time", tod_name, interp_type, 
+                            ivar, varOUT, ("time", tod_name, interp_type,
                                            "grid_yt", "grid_xt"),
                             long_name_txt, units_txt)
                     else:
                         fnew.log_variable(
-                            ivar, varOUT, ('time', tod_name, interp_type,
-                                           'lat', 'lon'),
+                            ivar, varOUT, ("time", tod_name, interp_type,
+                                           "lat", "lon"),
                             long_name_txt, units_txt)
             else:
-                if ivar not in ['time', 'pfull', 'lat', 'lon', 'phalf',
-                                'ak', 'pk', 'bk', 'pstd', 'zstd', 
-                                'zagl', tod_name, 'grid_xt', 'grid_yt']:
+                if ivar not in ["time", "pfull", "lat", "lon", "phalf", "ak",
+                                "pk", "bk", "pstd", "zstd", "zagl", tod_name,
+                                "grid_xt", "grid_yt"]:
                     #print("\r Copying over: %s..."%(ivar), end="")
                     prCyan(f"Copying over: {ivar}...")
                     fnew.copy_Ncvar(fNcdf.variables[ivar])
