@@ -1833,14 +1833,14 @@ def select_range(Ncdf_num, bound):
     if bound.size == 1:
         Ncdf_num = Ncdf_num[Ncdf_num == bound]
         if Ncdf_num.size == 0:
-            print("{Red}*** Error ***\nFile {:05}.fixed.nc not found ????????".format(bound))
+            print(f"{Red}*** Error ***\nFile {str(bound).zfill(5)}.fixed.nc not found ????????")
             exit()
     elif bound.size == 2:
         Ncdf_num = Ncdf_num[Ncdf_num >= bound[0]]
         Ncdf_num = Ncdf_num[Ncdf_num <= bound[1]]
         if Ncdf_num.size == 0:
             print(f"{Red}*** Error ***\nNo fixed file with date between \
-                  [{(bound[0]):05}-{(bound[1]):05}] detected. Please \
+                  [{str(bound[0]).zfill(5)}-{str(bound[1]).zfill(5)}] detected. Please \
                   double check the range.")
             exit()
     return Ncdf_num
