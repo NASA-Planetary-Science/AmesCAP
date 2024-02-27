@@ -1834,6 +1834,7 @@ def select_range(Ncdf_num, bound):
         Ncdf_num = Ncdf_num[Ncdf_num == bound]
         if Ncdf_num.size == 0:
             print(f"{Red}*** Error ***\nFile {str(bound):05}.fixed.nc not found ????????")
+            print(bound)
             exit()
     elif bound.size == 2:
         Ncdf_num = Ncdf_num[Ncdf_num >= bound[0]]
