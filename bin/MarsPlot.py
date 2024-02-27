@@ -1839,8 +1839,8 @@ def select_range(Ncdf_num, bound):
         Ncdf_num = Ncdf_num[Ncdf_num >= bound[0]]
         Ncdf_num = Ncdf_num[Ncdf_num <= bound[1]]
         if Ncdf_num.size == 0:
-            prRed(f"*** Error ***\nNo fixed file with date between \
-                  [{bound[0]:05}-{bound[1]:05}] detected. Please \
+            print(f"{Red}*** Error ***\nNo fixed file with date between \
+                  [{(bound[0]):05}-{(bound[1]):05}] detected. Please \
                   double check the range.")
             exit()
     return Ncdf_num
