@@ -1833,15 +1833,15 @@ def select_range(Ncdf_num, bound):
     if bound.size == 1:
         Ncdf_num = Ncdf_num[Ncdf_num == bound]
         if Ncdf_num.size == 0:
-            prRed(f"*** Error ***\nFile {bound:0>{5}}.fixed.nc not found")
+            prRed(f'*** Error ***\nFile {bound:05}.fixed.nc not found')
             exit()
     elif bound.size == 2:
         Ncdf_num = Ncdf_num[Ncdf_num >= bound[0]]
         Ncdf_num = Ncdf_num[Ncdf_num <= bound[1]]
         if Ncdf_num.size == 0:
-            prRed(f"*** Error ***\nNo fixed file with date between \
-                  [{bound[0]:0>{5}}-{bound[1]:0>{5}}] detected. Please \
-                  double check the range.")
+            prRed(f'*** Error ***\nNo fixed file with date between \
+                  [{bound[0]:05}-{bound[1]:05}] detected. Please \
+                  double check the range.')
             exit()
     return Ncdf_num
 
@@ -1989,7 +1989,7 @@ def prep_file(var_name, file_type, simuID, sol_array):
     for i in range(0, nfiles):
         if file_has_sol_number:
             # Include sol number
-            file_list[i] = f"{input_paths[simuID]}/{(Sol_num_current[i])+file_type:0>{5}}.nc"
+            file_list[i] = f"{input_paths[simuID]}/{(Sol_num_current[i])+file_type:05}.nc"
         else:  # No sol number
             file_list[i] = f"{input_paths[simuID]}/{file_type}.nc"
 
