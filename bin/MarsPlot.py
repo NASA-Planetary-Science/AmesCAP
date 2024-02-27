@@ -21,7 +21,7 @@ Third-party Requirements:
 
 # Make print statements appear in color
 from amescap.Script_utils import (
-    prYellow, prRed, prPurple, Blue, Yellow, NoColor, Green, Cyan
+    prYellow, prRed, prPurple, Blue, Yellow, NoColor, Green, Cyan, Red
 )
 
 # Load generic Python modules
@@ -1833,7 +1833,7 @@ def select_range(Ncdf_num, bound):
     if bound.size == 1:
         Ncdf_num = Ncdf_num[Ncdf_num == bound]
         if Ncdf_num.size == 0:
-            prRed(f"*** Error ***\nFile {(bound.zfill(5))}.fixed.nc not found")
+            print(f"{Red}*** Error ***\nFile {bound:05}.fixed.nc not found")
             exit()
     elif bound.size == 2:
         Ncdf_num = Ncdf_num[Ncdf_num >= bound[0]]
