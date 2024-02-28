@@ -819,7 +819,7 @@ def find_fixedfile(filename):
     filepath, fname = extract_path_basename(filename)
     if "tile" in fname:
         # Try the tile or standard version of the fixed files
-        name_fixed = f"{filepath}/fixed.tile{fname.split("tile")[1][0]}.nc"
+        name_fixed = f"{filepath}/fixed.tile{fname.split('tile')[1][0]}.nc"
     else:
         name_fixed = f"{filepath}/{fname.split(".")[0]}.fixed.nc"
         
