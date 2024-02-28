@@ -821,7 +821,7 @@ def find_fixedfile(filename):
         # Try the tile or standard version of the fixed files
         name_fixed = f"{filepath}/fixed.tile{fname.split('tile')[1][0]}.nc"
     else:
-        name_fixed = f"{filepath}/{fname.split(".")[0]}.fixed.nc"
+        name_fixed = f"{filepath}/{fname.split('.')[0]}.fixed.nc"
         
     if not  os.path.exists(name_fixed):
         # If neither is found, set-up a default name
