@@ -18,7 +18,7 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (prRed, Yellow, Nclr, Green)
+from amescap.Script_utils import (Yellow, Nclr, Green, Red)
 
 # Load generic Python modules
 import argparse     # Parse arguments
@@ -120,8 +120,8 @@ def parse_array(len_input):
         input_as_arr = np.arange(start, stop, step)
 
     else:
-        prRed("ERROR either ``[-ls --ls]`` or ``[-sol --sol]`` are "
-              "required. See ``MarsCalendar.py -h`` for additional help.")
+        print(f"{Red}ERROR either ``[-ls --ls]`` or ``[-sol --sol]`` are "
+              f"required. See ``MarsCalendar.py -h`` for additional help.{Nclr}")
         exit()
     return(input_as_arr)
 

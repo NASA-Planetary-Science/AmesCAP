@@ -46,7 +46,7 @@ extensions = [
 ]
 
 autoapi_type = 'python'
-autoapi_dirs = ['../../bin']
+autoapi_dirs = ['../../bin','../../amescap']
 autoapi_add_toctree_entry = False
 autoapi_keep_files = True
 # autoapi_options = [ 'members', 'inherited-members', 'show-inheritance', 'show-inheritance-diagram', 'show-module-summary', 'imported-members' ]

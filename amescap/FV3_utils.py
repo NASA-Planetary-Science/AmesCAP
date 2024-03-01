@@ -1,4 +1,18 @@
-# load generic Python modules
+# !/usr/bin/env python3
+"""
+FV3_utils contains internal functions for processing data in MGCM output
+files such as vertical interpolation.
+These functions can be used on their own outside of CAP if they are
+imported as a module::
+
+    from /u/path/FV3_utils import fms_press_calc
+
+Third-party Requirements:
+    * ``numpy``
+    * ``warnings``
+"""
+
+# Load generic Python modules
 import warnings     # suppress errors triggered by NaNs
 import numpy as np
 
@@ -209,7 +223,7 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type='full'):
 
 
 def find_n0(Lfull_IN, Llev_OUT, reverse_input=False):
-    '''
+    """
     Return the index for the level(s) just below Llev_OUT.
     This assumes Lfull_IN is increasing in the array (e.g p(0) = 0Pa, p(N) = 1000Pa)
 
@@ -224,7 +238,7 @@ def find_n0(Lfull_IN, Llev_OUT, reverse_input=False):
         - if Lfull_IN is 1D array and Llev_OUT is a float then n is a float.
         - if Lfull_IN is ND [lev, time, lat, lon] and Llev_OUT is a 1D array of size 'klev' then
           'n' is an array of size [klev, Ndim] with 'Ndim' = (time x lat x lon).
-    '''
+    """
     # Number of original layers
     Lfull_IN = np.array(Lfull_IN)
     Nlev = len(np.atleast_1d(Llev_OUT))
@@ -253,7 +267,7 @@ def find_n0(Lfull_IN, Llev_OUT, reverse_input=False):
 
 
 def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
-    '''
+    """
     Map the closest index from a 1D input array to a ND output array just below the input values.
     Args:
         X_IN (float or 1D array):   source level [Pa] or [m].
@@ -279,7 +293,7 @@ def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
 
        Therefore, the cyclic values must therefore be handled during the interpolation but not at this stage.
 
-       '''
+       """
     # number of original layers
     if type(X_IN) != np.ndarray:
         X_IN = np.array(X_IN)
@@ -339,7 +353,7 @@ def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
 
 
 def expand_index(Nindex, VAR_shape_axis_FIRST, axis_list):
-    '''
+    """
     Repeat interpolation indices along an axis.
     Args:
         Nindex: inteprolation indices, size is (n_axis, Nfull= time x lat x lon)
@@ -354,7 +368,7 @@ def expand_index(Nindex, VAR_shape_axis_FIRST, axis_list):
     (tod,time,LEV,lat,lon) only requires the interpolation indices for (tod,time,lat,lon).
     This routines expands the indices from (tod,time,lat,lon) to (tod,time,LEV,lat,lon) with Nfull=time x lev x lat x lon for use in interpolation
 
-    '''
+    """
     # If one element, turn axis to list
     if len(np.atleast_1d(axis_list)) == 1:
         axis_list = [axis_list]
@@ -383,7 +397,7 @@ def expand_index(Nindex, VAR_shape_axis_FIRST, axis_list):
 
 
 def vinterp(varIN, Lfull, Llev, type_int='log', reverse_input=False, masktop=True, index=None):
-    '''
+    """
     Vertical linear or logarithmic interpolation for pressure or altitude.   Alex Kling 5-27-20
     Args:
         varIN: variable to interpolate (N-dimensional array with VERTICAL AXIS FIRST)
@@ -415,7 +429,7 @@ def vinterp(varIN, Lfull, Llev, type_int='log', reverse_input=False, masktop=Tru
          A =    (zlev-zn+1)/(zn-zn+1)    in 'lin' mode
 
 
-    '''
+    """
     # Special case where only 1 layer is requested
     Nlev = len(np.atleast_1d(Llev))
     if Nlev == 1:
@@ -493,7 +507,7 @@ def vinterp(varIN, Lfull, Llev, type_int='log', reverse_input=False, masktop=Tru
 
 
 def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int='lin', modulo=None):
-    '''
+    """
     One dimensional linear /log interpolation along one axis. [Alex Kling, May 2021]
     Args:
         var_IN (N-D array): N-Dimensional variable, e.g.  [lev,lat,lon],[time,lev,lat,lon] on a REGULAR grid.
@@ -517,7 +531,7 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int='lin', modulo
     X_OUT= Xn*A + (1-A)*Xn+1
     with A = log(xi/xn+1)/log(xn/xn+1) in 'log' mode
          A =    (xi-xn+1)/(xn-xn+1)    in 'lin' mode
-    '''
+    """
     # Convert list to numpy array as needed
     if type(var_IN) != np.ndarray:
         var_IN = np.array(var_IN)
@@ -562,7 +576,7 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int='lin', modulo
 
 
 def layers_mid_point_to_boundary(pfull, sfc_val):
-    '''
+    """
     A general description for the layer boundaries is p_half= ps*bk +pk
     This routine convert  p_full or bk, the coordinate  of the layer MIDPOINTS into the coordinate of the layers
     BOUNDARIES, p_half. The surface value must be provided    [A. Kling, 2022]
@@ -597,7 +611,7 @@ def layers_mid_point_to_boundary(pfull, sfc_val):
 
     This was tested on a L30 simulation:
     The value of phalf are reconstruted from pfull with a max error of 100*(phalh-phalf_reconstruct)/phalf < 0.4% at the top.
-    '''
+    """
 
     def lambertW_approx(x):
         # Internal function. Uniform approximation for the product log-function
@@ -622,7 +636,7 @@ def layers_mid_point_to_boundary(pfull, sfc_val):
 
 
 def polar2XYZ(lon, lat, alt, Re=3400*10**3):  # radian
-    '''
+    """
     Spherical to cartesian coordinates transformation
     Args:
         lon,lat (ND array): longitude and latitude, in [rad]
@@ -631,7 +645,7 @@ def polar2XYZ(lon, lat, alt, Re=3400*10**3):  # radian
         X,Y,Z in cartesian coordinates [m]
     ***NOTE***
     This is a classic polar coordinate system with colat = pi/2 -lat,  the colatitude and cos(colat) = sin(lat)
-    '''
+    """
     lon = np.array(lon)
     lat = np.array(lat)
     alt = np.array(alt)
@@ -644,7 +658,7 @@ def polar2XYZ(lon, lat, alt, Re=3400*10**3):  # radian
 
 
 def interp_KDTree(var_IN, lat_IN, lon_IN, lat_OUT, lon_OUT, N_nearest=10):
-    '''
+    """
     Inverse-distance-weighted interpolation using nearest neighboor for ND variables.  [Alex Kling , May 2021]
     Args:
         var_IN: N-Dimensional variable to regrid, e.g.  [lev,lat,lon],[time,lev,lat,lon]... with [lat, lon] dimensions LAST in [deg]
@@ -659,7 +673,7 @@ def interp_KDTree(var_IN, lat_IN, lon_IN, lat_OUT, lon_OUT, N_nearest=10):
     > The nearest neighbour interpolation is only done on the lon/lat axis, (not level).  Although this interpolation work well on the 3D field (x,y,z),
     this is typically not what is expected: In a 4°x4° run, the closest points East, West, North and South, on the target grid  are 100's of km away
     while the closest points in the vertical are a few 10's -100's meter in the PBL, which would results in excessive weighting in the vertical.
-    '''
+    """
     from scipy.spatial import cKDTree  # TODO Import called each time. May be moved out of the routine is scipy is a requirement for the pipeline
 
     dimsIN = var_IN.shape
@@ -706,7 +720,7 @@ def interp_KDTree(var_IN, lat_IN, lon_IN, lat_OUT, lon_OUT, N_nearest=10):
 
 
 def cart_to_azimut_TR(u, v, mode='from'):
-    '''
+    """
     Convert cartesian coordinates or wind vectors to radian,using azimut angle.
 
     Args:
@@ -714,7 +728,7 @@ def cart_to_azimut_TR(u, v, mode='from'):
         mode='to' direction towards the vector is pointing, 'from': direction from the vector is coming
     Returns:
         Theta [deg], R the polar coordinates
-    '''
+    """
     if mode == 'from':
         cst = 180
     if mode == 'to':
@@ -723,7 +737,7 @@ def cart_to_azimut_TR(u, v, mode='from'):
 
 
 def sfc_area_deg(lon1, lon2, lat1, lat2, R=3390000.):
-    '''
+    """
     Return the surface between two set of latitudes/longitudes
     S= Int[R**2 dlon cos(lat) dlat]     _____lat2
     Args:                               \    \
@@ -733,7 +747,7 @@ def sfc_area_deg(lon1, lon2, lat1, lat2, R=3390000.):
     *** NOTE***
     Lon and Lat define the corners of the area, not the grid cells' centers
 
-    '''
+    """
     lat1 *= np.pi/180
     lat2 *= np.pi/180
     lon1 *= np.pi/180
@@ -742,7 +756,7 @@ def sfc_area_deg(lon1, lon2, lat1, lat2, R=3390000.):
 
 
 def area_meridional_cells_deg(lat_c, dlon, dlat, normalize=False, R=3390000.):
-    '''
+    """
     Return area of invidual cells for a meridional band of thickness dlon
     S= Int[R**2 dlon cos(lat) dlat]
     with  sin(a)-sin(b)=2 cos((a+b)/2)sin((a+b)/2)
@@ -755,7 +769,7 @@ def area_meridional_cells_deg(lat_c, dlon, dlat, normalize=False, R=3390000.):
         normalize: if True, sum of output elements is 1.   dlon
     Returns:
         S: areas of the cells, same size as lat_c in [m2] or normalized by the total area
-    '''
+    """
     # Initialize
     area_tot = 1.
     # Compute total area in a longitude band extending from lat[0]-dlat/2 to lat_c[-1]+dlat/2
@@ -770,7 +784,7 @@ def area_meridional_cells_deg(lat_c, dlon, dlat, normalize=False, R=3390000.):
 
 
 def area_weights_deg(var_shape, lat_c, axis=-2):
-    '''
+    """
     Return weights for averaging of the variable var.
     Args:
         var_shape: variable's shape, e.g. [133,36,48,46] typically obtained with 'var.shape'
@@ -800,7 +814,7 @@ def area_weights_deg(var_shape, lat_c, axis=-2):
 
     >>> Therfore taking a regular average of (var*W) with np.mean(var*W) or np.average(var,weights=W) returns the weighted-average of var
     Use np.average(var,weights=W,axis=X) to average over a specific axis
-    '''
+    """
 
     # var or lat is a scalar, do nothing
     if len(np.atleast_1d(lat_c)) == 1 or len(np.atleast_1d(var_shape)) == 1:
@@ -871,11 +885,11 @@ def areo_avg(VAR, areo, Ls_target, Ls_angle, symmetric=True):
     # This was removed, for exemple, if 10 degree of data are requested around Ls 0:
     #                       Ls 355 <-- (0.00)--> 5
     #   and the file is       Ls 1 <-- (180)--> 357   the  data selected should be 1>5 and 355 > 357
-    '''
+    """
     #check is the Ls of interest is within the data provided, raise execption otherwise
     if Ls_target <= areo.min() or Ls_target >=areo.max() :
         raise Exception("Error \nNo data found, requested  data :       Ls %.2f <-- (%.2f)--> %.2f\n However, data in file only ranges      Ls %.2f <-- (%.2f)--> %.2f"%(Ls_min,Ls_target,Ls_max,areo.min(),(areo.min()+areo.max())/2.,areo.max()))
-    '''
+    """
 
     if Ls_min < areo.min() or Ls_max > areo.max():
         print("In areo_avg() Warning: \nRequested  data ranging    Ls %.2f <-- (%.2f)--> %.2f" %
@@ -910,7 +924,7 @@ def areo_avg(VAR, areo, Ls_target, Ls_angle, symmetric=True):
 
 
 def mass_stream(v_avg, lat, level, type='pstd', psfc=700, H=8000., factor=1.e-8):
-    '''
+    """
     Compute the mass stream function.
                             P
                             ⌠
@@ -943,7 +957,7 @@ def mass_stream(v_avg, lat, level, type='pstd', psfc=700, H=8000., factor=1.e-8)
                                                             ⌠
     The integral is calculated using trapezoidal rule, e.g. ⌡ f(z)dz  = (Zn-Zn-1){f(Zn)+f(Zn-1)}/2
                                                             n-1
-    '''
+    """
     g = 3.72  # m/s2
     a = 3400*1000  # m
     nlev = len(level)
@@ -1002,7 +1016,7 @@ def mass_stream(v_avg, lat, level, type='pstd', psfc=700, H=8000., factor=1.e-8)
 
 
 def vw_from_MSF(msf, lat, lev, ztype='pstd', norm=True, psfc=700, H=8000.):
-    '''
+    """
     Return the [v] and [w] component of the circulation from the mass stream function.
 
     Args:
@@ -1020,7 +1034,7 @@ def vw_from_MSF(msf, lat, lev, ztype='pstd', norm=True, psfc=700, H=8000.):
     The components are:
         [v]=  g/(2 pi cos(lat)) dphi/dz
         [w]= -g/(2 pi cos(lat)) dphi/dlat
-    '''
+    """
     g = 3.72  # m/s2
 
     lat = lat*np.pi/180
@@ -1132,7 +1146,7 @@ def lon360_to_180(lon):
 
 
 def shiftgrid_360_to_180(lon, data):  # longitude is LAST
-    '''
+    """
     This function shift N dimensional data a 0->360 to a -180/+180 grid.
     Args:
         lon: 1D array of longitude 0->360
@@ -1140,7 +1154,7 @@ def shiftgrid_360_to_180(lon, data):  # longitude is LAST
     Returns:
         data: shifted data
     Note: Use np.ma.hstack instead of np.hstack to keep the masked array properties
-    '''
+    """
     lon = np.array(lon)
     lon[lon > 180] -= 360.  # convert to +/- 180
     data = np.concatenate(
@@ -1149,14 +1163,14 @@ def shiftgrid_360_to_180(lon, data):  # longitude is LAST
 
 
 def shiftgrid_180_to_360(lon, data):  # longitude is LAST
-    '''
+    """
     This function shift N dimensional data a -180/+180 grid to a 0->360
     Args:
         lon: 1D array of longitude -180/+180
         data: ND array with last dimension being the longitude (transpose first if necessary)
     Returns:
         data: shifted data
-    '''
+    """
     lon = np.array(lon)
     lon[lon < 0] += 360.  # convert to 0-360
     data = np.concatenate(
@@ -1197,7 +1211,7 @@ def sol_hhmmss(time_sol, lon_180=0.):
 
 
 def UT_LTtxt(UT_sol, lon_180=0., roundmin=None):
-    '''
+    """
     Returns the time in HH:MM:SS format at a certain longitude.
     Args:
         time_sol: a float, the time, eg. sols 2350.24
@@ -1205,7 +1219,7 @@ def UT_LTtxt(UT_sol, lon_180=0., roundmin=None):
         roundmin: round to the nearest X minute  Typical values are roundmin=1,15,60
     ***Note***
     If roundmin is requested, seconds are not shown
-    '''
+    """
     def round2num(number, interval):
         # Internal function to round a number to the closest  range.
         # e.g. round2num(26,5)=25 ,round2num(28,5)=30
@@ -1224,7 +1238,7 @@ def UT_LTtxt(UT_sol, lon_180=0., roundmin=None):
 
 
 def dvar_dh(arr, h=None):
-    '''
+    """
     Differentiate an array A(dim1,dim2,dim3...) with respect to h. The differentiated dimension must be the first dimension.
     > If h is 1D: h and dim1 must have the same length
     > If h is 2D, 3D or 4D, arr and h must have the same shape
@@ -1240,7 +1254,7 @@ def dvar_dh(arr, h=None):
      #First we transpose t so the vertical dimension comes first as T[LEV,time,lat,lon] and then we transpose back to get dTdz[time,LEV,lat,lon].
      dTdz=dvar_dh(t.transpose([1,0,2,3]),Zkm).transpose([1,0,2,3])
 
-    '''
+    """
     h = np.array(h)
     d_arr = np.zeros_like(arr)
     if h.any():
@@ -1272,7 +1286,7 @@ def dvar_dh(arr, h=None):
 
 
 def zonal_detrend(VAR):
-    '''
+    """
     Substract zonnally averaged mean value from a field
     Args:
         VAR: ND-array with detrending dimension last (e.g time,lev,lat,lon)
@@ -1282,14 +1296,14 @@ def zonal_detrend(VAR):
     ***NOTE***
     RuntimeWarnings are expected if the slice contains only NaN, which is the case below the surface
     and above the model's top in the interpolated files. We will disable those warnings temporarily
-    '''
+    """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
         return VAR-np.nanmean(VAR, axis=-1)[..., np.newaxis]
 
 
 def get_trend_2D(VAR, LON, LAT, type_trend='wmean'):
-    '''
+    """
     Extract spatial trend from data. The output can be directly substracted from the original field.
     Args:
         VAR:  Variable for decomposition, latitude is SECOND to LAST and longitude is LAST  e.g. (time,lat,lon) or (time,lev,lat,lon)
@@ -1300,7 +1314,7 @@ def get_trend_2D(VAR, LON, LAT, type_trend='wmean'):
                      '2D'   > use a 2D planar regression (not area-weighted)
     Returns:
         TREND      : trend, same size as VAR e.g. (time,lev,lat,lon)
-    '''
+    """
     var_shape = np.array(VAR.shape)
 
     # Type 'zonal' is the easiest as averaging is performed over 1 dimension only.
@@ -1330,7 +1344,7 @@ def get_trend_2D(VAR, LON, LAT, type_trend='wmean'):
 
 
 def regression_2D(X, Y, VAR, order=1):
-    '''
+    """
     Linear and quadratic regression on the plane.
     Args:
         X: 2D array of first coordinate
@@ -1353,7 +1367,7 @@ def regression_2D(X, Y, VAR, order=1):
             [n,3]           [3]       [n]
 
     The least square regression provides the solution that that minimizes  ||b – A x||**2
-    '''
+    """
     if order == 1:
         A = np.array([X.flatten(), Y.flatten(), np.ones_like(X.flatten())]).T
 
@@ -1388,7 +1402,7 @@ def regression_2D(X, Y, VAR, order=1):
 
 
 def daily_to_average(varIN, dt_in, nday=5, trim=True):
-    '''
+    """
     Bin a variable from an atmos_daily file to the atmos_average format.
     Args:
         varIN: ND-array with time dimension first (e.g ts(time,lat,lon))
@@ -1407,7 +1421,7 @@ def daily_to_average(varIN, dt_in, nday=5, trim=True):
     2) If daily file is 668 sols, that is =133x5 +3 leftover sols.
        >If trim=True,  the time is 133 and last 3 sols the are discarded
        >If trim=False, the time is 134 and last bin contains only 3 sols of data
-    '''
+    """
     vshape_in = varIN.shape
     Nin = vshape_in[0]  # time dimension
 
@@ -1438,7 +1452,7 @@ def daily_to_average(varIN, dt_in, nday=5, trim=True):
 
 
 def daily_to_diurn(varIN, time_in):
-    '''
+    """
     Bin a variable from an atmos_daily file into the atmos_diurn format.
     Args:
         varIN: ND-array with time dimension first (e.g ts(time,lat,lon))
@@ -1453,7 +1467,7 @@ def daily_to_diurn(varIN, time_in):
     > tod=[0.,6.,12.,18.] (for example)
 
     2) Since the time dimension remains first, the output variables may be passed to the daily_to_average() function for further binning.
-    '''
+    """
     dt_in = time_in[1]-time_in[0]
     iperday = int(np.round(1/dt_in))
     vshape_in = varIN.shape
@@ -1668,7 +1682,7 @@ def polar_warming(T, lat, outside_range=np.NaN):
 
 
 def tshift(array, lon, timeo, timex=None):
-    '''
+    """
     Conversion to uniform local time.
     Args:
         array: variable to be shifted. Assume longitude is the first dimension and time_of_day is the last dimension
@@ -1680,7 +1694,7 @@ def tshift(array, lon, timeo, timex=None):
 
     ***Note***
     If timex is not specified, the file is interpolated on the same time_of_day as the input
-    '''
+    """
     if np.shape(array) == len(array):
         print('Need longitude and time dimensions')
         return
@@ -1789,7 +1803,7 @@ def tshift(array, lon, timeo, timex=None):
 
 
 def lin_interp(X_in, X_ref, Y_ref):
-    '''
+    """
     Simple linear interpolation with no dependance on scipy
     Args:
         X_in (float or array): input values
@@ -1797,7 +1811,7 @@ def lin_interp(X_in, X_ref, Y_ref):
         Y_ref (array): y values
     Returns:
         Y_out: y value linearly interpolated at X_in
-    '''
+    """
     X_ref = np.array(X_ref)
     Y_ref = np.array(Y_ref)
     # ===Definition of the interpolating function=====
@@ -1845,7 +1859,7 @@ def add_cyclic(data, lon):
 
 
 def spherical_div(U, V, lon_deg, lat_deg, R=3400*1000., spacing='varying'):
-    '''
+    """
     Compute the divergence of the wind fields using finite difference.
     div = du/dx + dv/dy = 1/(r cos lat)[d(u)/dlon +d(v cos lat)/dlat]
     Args:
@@ -1858,7 +1872,7 @@ def spherical_div(U, V, lon_deg, lat_deg, R=3400*1000., spacing='varying'):
     Return:
         div: the horizonal divergence of the wind field   in [m-1]
 
-    '''
+    """
     lon = lon_deg*np.pi/180
     lat = lat_deg*np.pi/180
     var_shape = U.shape
@@ -1899,7 +1913,7 @@ def spherical_div(U, V, lon_deg, lat_deg, R=3400*1000., spacing='varying'):
 
 
 def spherical_curl(U, V, lon_deg, lat_deg, R=3400*1000., spacing='varying'):
-    '''
+    """
     Compute the vertical component of the relative vorticy using finite difference.
     curl = dv/dx -du/dy  = 1/(r cos lat)[d(v)/dlon +d(u(cos lat)/dlat]
     Args:
@@ -1912,7 +1926,7 @@ def spherical_curl(U, V, lon_deg, lat_deg, R=3400*1000., spacing='varying'):
     Return:
         curl: the vorticity of the wind field in [m-1]
 
-    '''
+    """
     lon = lon_deg*np.pi/180
     lat = lat_deg*np.pi/180
 
@@ -1955,7 +1969,7 @@ def spherical_curl(U, V, lon_deg, lat_deg, R=3400*1000., spacing='varying'):
 
 
 def frontogenesis(U, V, theta, lon_deg, lat_deg, R=3400*1000., spacing='varying'):
-    '''
+    """
     Compute the frontogenesis,i.e. local change in potential temperature gradient near a front.
     Following Richter et al. 2010 Toward a Physically Based Gravity Wave Source Parameterization in
      a General Circulation Model, JAS 67 we have Fn= 1/2 D(Del Theta)**2/Dt in [K/m/s]
@@ -1971,7 +1985,7 @@ def frontogenesis(U, V, theta, lon_deg, lat_deg, R=3400*1000., spacing='varying'
     Return:
         Fn: the frontogenesis field in [m-1]
 
-    '''
+    """
     lon = lon_deg*np.pi/180
     lat = lat_deg*np.pi/180
 
@@ -2048,7 +2062,7 @@ def frontogenesis(U, V, theta, lon_deg, lat_deg, R=3400*1000., spacing='varying'
 
 
 def MGSzmax_ls_lat(ls, lat):
-    '''
+    """
     Return the max altitude for the dust from "MGS scenario"
     from Montmessin et al. (2004), Origin and role of water ice clouds in the Martian
                                    water cycle as inferred from a general circulation model
@@ -2058,7 +2072,7 @@ def MGSzmax_ls_lat(ls, lat):
         lat : latitude in degree
     Returns:
         zmax : top altitude for the dusk in [km]
-    '''
+    """
     lat = np.array(lat)*np.pi/180
     ls_p = (np.array(ls)-158)*np.pi/180
 
@@ -2066,7 +2080,7 @@ def MGSzmax_ls_lat(ls, lat):
 
 
 def MGStau_ls_lat(ls, lat):
-    '''
+    """
     Return the max altitude for the dust from "MGS scenario"
     from Montmessin et al. (2004), Origin and role of water ice clouds in the Martian
                                    water cycle as inferred from a general circulation model
@@ -2076,7 +2090,7 @@ def MGStau_ls_lat(ls, lat):
         lat : latitude in degree
     Returns:
         zmax : top altitude for the dusk in [km]
-    '''
+    """
     lat = np.array(lat)
     ls_p = (np.array(ls)-250)*np.pi/180
 
@@ -2100,14 +2114,14 @@ def MGStau_ls_lat(ls, lat):
 
 
 def broadcast(var_1D, shape_out, axis):
-    '''
+    """
     Broadcast a 1D array based on a variable's dimensions
     Args:
         var_1D     (1D array), e.g. lat size (36), or time size (133)
         shape_out (ND list) : braodcasting shape e.g temp.shape= [133,(lev),36,(lon)]
     Return:
         var_b (ND array): broadcasted variables, e.g. size [1,36,1,1] for lat or [133,1,1,1] for time
-    '''
+    """
     var_1D = np.atleast_1d(
         var_1D)  # Special case where var_1D has only one element
     reshape_shape = [1 for i in range(0, len(shape_out))]
@@ -2116,7 +2130,7 @@ def broadcast(var_1D, shape_out, axis):
 
 
 def ref_atmosphere_Mars_PTD(Zi):
-    '''
+    """
     Analytical atmospheric model for Martian pressure, temperature and density,  [Alex Kling, June 2021]
     Args:
         Zi (float or 1D array): input altitude in m (must be >= 0)
@@ -2136,13 +2150,13 @@ def ref_atmosphere_Mars_PTD(Zi):
 
     Above ~120km P=P0 exp(-(z-z0)g/rT) is not a good approximation as the fluid is in molecula regime. For those altitude, we  provide
     fit in the form P=P0 exp(-az-bz**2),based on diurnal average of the MCD database at lat 0, Ls 150.
-    '''
+    """
     # =================================
     # =======Internal functions========
     # =================================
 
     def alt_to_temp_quad(Z, Z0, T0, gam, a):
-        '''
+        """
         Return the a representative globally and annually average temperature in the form T(z)= a(z-z0)**2 +b(z-z0) +T0
         Args:
             Z:  Altitude in [m]
@@ -2150,11 +2164,11 @@ def ref_atmosphere_Mars_PTD(Zi):
             T0,gam,a: quadratic coefficients.
         Returns:
             T: temperature at altitude Z [K]
-        '''
+        """
         return T0+gam*(Z-Z0)+a*(Z-Z0)**2
 
     def alt_to_press_quad(Z, Z0, P0, T0, gam, a, rgas, g):
-        '''
+        """
         Return the pressure in Pa in the troposphere as a function of height for a quadratic temperature profile.
         T(z)= T0+ gam(z-z0)+a*(z-z0)**2
         Args:
@@ -2166,7 +2180,7 @@ def ref_atmosphere_Mars_PTD(Zi):
             rgas,g:specific gas constant [J/kg/K] and gravity [m/s2]
         Returns:
             P: pressure at alitude Z [Pa]
-        '''
+        """
         delta = 4*a*T0-gam**2
 
         if delta >= 0:
@@ -2178,7 +2192,7 @@ def ref_atmosphere_Mars_PTD(Zi):
             return P0*(((2*a*(Z-Z0)+gam)-sq_delta)*(gam+sq_delta)/(((2*a*(Z-Z0)+gam)+sq_delta)*(gam-sq_delta)))**(-g/(rgas*sq_delta))
 
     def P_mars_120_300(Zi, Z0=120000., P0=0.00012043158397922564, p1=1.09019694e-04, p2=-3.37385416e-10):
-        '''
+        """
         Martian pressure from 120 to 300km . Above ~120km P=P0 exp(-(z-z0)g/rT) is not a good approximation as the fluid is in molecular
         regime
         Fit from a diurnal average of the MCD database at lat 0, Ls 150. from Alex K.
@@ -2187,7 +2201,7 @@ def ref_atmosphere_Mars_PTD(Zi):
             Z: altitude in [m]
         Returns:
             P: pressure in [Pa]
-        '''
+        """
         return P0*np.exp(-p1*(Zi-Z0)-p2*(Zi-Z0)**2)
     # The following is a best fit of globally averaged temperature profile from various sources: Legacy GCM, MCS, MCD
 
@@ -2221,19 +2235,19 @@ def ref_atmosphere_Mars_PTD(Zi):
 
 
 def press_to_alt_atmosphere_Mars(Pi):
-    '''
+    """
     Return the altitude in m as a function of pressure from the analytical calculations derived above.
     Args:
         Pi (float or 1D array): input pressure in Pa (must be <=610 Pa)
     Return:
         Z (float ot 1D array): corresponding altitude in m
-    '''
+    """
     # =================================
     # =======Internal functions========
     # =================================
 
     def press_to_alt_quad(P, Z0, P0, T0, gam, a, rgas, g):
-        '''
+        """
         Return the altitude in m as a function of pressure for a quadratic temperature profile.
         T(z)= T0+ gam(z-z0)+a*(z-z0)**2
         Args:
@@ -2245,7 +2259,7 @@ def press_to_alt_atmosphere_Mars(Pi):
             rgas,g:specific gas constant [J/kg/K] and gravity [m/s2]
         Returns:
             Z: altitude in m
-        '''
+        """
         delta = 4*a*T0-gam**2
 
         if delta >= 0:
@@ -2257,20 +2271,20 @@ def press_to_alt_atmosphere_Mars(Pi):
             return Z0+(gam-sq_delta)/(2*a)*(1-(P/P0)**(-rgas*sq_delta/g))/((gam-sq_delta)/(gam+sq_delta)*(P/P0)**(-rgas*sq_delta/g)-1)
 
     def press_to_alt_mars_120_300(P, Z0=120000., P0=0.00012043158397922564, p1=1.09019694e-04, p2=-3.37385416e-10):
-        '''
+        """
         Martian altitude as a function of pressure from 120 to 300km .
         Args:
             P: pressure in [m]
         Returns:
             Z: altitude in [m]
-        '''
+        """
         delta = p1**2-4*p2*np.log(P/P0)  # delta >0 on this pressure interval
         return (-p1+np.sqrt(delta))/(2*p2) + Z0
 
     def alt_analytic_scalar(Pi):
-        '''
+        """
         Analytical solution for altitude as a function of pressure.
-        '''
+        """
         if Pi >= 610:
             return 0.
         elif 610 > Pi >= 1.2415639872674782:  # This is the pressure from alt_to_press_quad at 57000. m
@@ -2288,24 +2302,24 @@ def press_to_alt_atmosphere_Mars(Pi):
 
 
 # ==================================Projections==================================
-'''
+"""
 The projections below were implemented by Alex Kling, following:
 An Album of Map Projections,
 USGS  Professional Paper 1453, (1994)
 >> https://pubs.usgs.gov/pp/1453/report.pdf
-'''
+"""
 # ===============================================================================
 
 
 def azimuth2cart(LAT, LON, lat0, lon0=0):
-    '''
+    """
     Azimuthal equidistant projection, convert from lat/lon to cartesian coordinates
     Args:
         LAT,LON: 1D or 2D array of latitudes, longitudes in degree, size [nlat,nlon]
         lat0,lon0:(floats) coordinates of the pole
     Returns:
         X,Y: cartesian coordinates for the latitudes and longitudes
-    '''
+    """
 
     LAT = LAT*np.pi/180
     lat0 = lat0*np.pi/180
@@ -2322,7 +2336,7 @@ def azimuth2cart(LAT, LON, lat0, lon0=0):
 
 
 def ortho2cart(LAT, LON, lat0, lon0=0):
-    '''
+    """
     Orthographic projection, convert from lat/lon to cartesian coordinates
     Args:
         LAT,LON: 1D or 2D array of latitudes, longitudes in degree, size [nlat,nlon]
@@ -2330,7 +2344,7 @@ def ortho2cart(LAT, LON, lat0, lon0=0):
     Returns:
         X,Y: cartesian coordinates for the latitudes and longitudes
         MASK: NaN array that is used to hide the back side of the planet
-    '''
+    """
 
     LAT = LAT*np.pi/180
     lat0 = lat0*np.pi/180
@@ -2349,22 +2363,22 @@ def ortho2cart(LAT, LON, lat0, lon0=0):
 
 
 def mollweide2cart(LAT, LON):
-    '''
+    """
     Mollweide projection, convert from lat/lon to cartesian coordinates
     Args:
         LAT,LON: 1D or 2D array of latitudes, longitudes in degree, size [nlat,nlon]
     Returns:
         X,Y: cartesian coordinates for the latitudes and longitudes
-    '''
+    """
 
     LAT = np.array(LAT)*np.pi/180
     LON = np.array(LON)*np.pi/180
     lon0 = 0
 
     def compute_theta(lat):
-        '''
+        """
         Internal function to compute theta, lat is in radians here
-        '''
+        """
         theta0 = lat
         sum = 0
         running = True
@@ -2403,13 +2417,13 @@ def mollweide2cart(LAT, LON):
 
 
 def robin2cart(LAT, LON):
-    '''
+    """
     Robinson projection, convert from lat/lon to cartesian coordinates
     Args:
         LAT,LON: floats, 1D or 2D array (nalt,nlon) of latitudes, longitudes in degree
     Returns:
         X,Y: cartesian coordinates for the latitudes and longitudes
-    '''
+    """
     lon0 = 0.
 
     LAT = np.array(LAT)*np.pi/180
@@ -2471,10 +2485,10 @@ def sol2ls(jld, cumulative=False):
     # ===Internal function 1 : calculate Ls with 0>360 using a numerical solver====
     # =============================================================================
     def sol2ls_mod(jld):
-        '''
+        """
         Based on Tanguys' aerols.py
         Also useful link: http://www.jgiesen.de/kepler/kepler.html
-        '''
+        """
         # Specify orbit eccentricity and angle of planets's inclination
 
         ec = .093  # orbit eccentricity
@@ -2520,13 +2534,13 @@ def sol2ls(jld, cumulative=False):
     # =============================================================================
 
     def sol2ls_cum(jld):
-        '''
+        """
         Calculate cumulative Ls.
         Contineous solar longitude Ls_c =0-359- 361.. 720  are obtained by adding +360 to the Ls at every equinox based on the sol number.
         Since sol2ls function uses a numerical solver, the equinox may return either 359.9999 or 0.0001. +360 should only be added in the later case to mitigate outlier points.
 
         For those edges cases where Ls is close to 359.9, the routine calculate again the Ls at a later time (say 1 sols) to check for outlier points.
-        '''
+        """
         # Calculate cumulative Ls using sol2ls function() and adding +360 for every mars year
         areols, MY = [np.zeros_like(jld) for _ in range(0, 2)]
         date = jld - zero_date
@@ -2563,7 +2577,7 @@ def sol2ls(jld, cumulative=False):
 
 
 def ls2sol(Ls_in):
-    '''
+    """
     Ls to sol converter.
     Args:
         Ls_in (float or 1D array) : Solar longitudes 0-360...720
@@ -2571,7 +2585,7 @@ def ls2sol(Ls_in):
         sol: the corresponding sol number
     ***NOTE***
     This function simply uses a numerical solver on the sol2ls() function.
-    '''
+    """
     #===Internal functions======
     from scipy import optimize
     def internal_func(Ls_in):

@@ -32,9 +32,7 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (
-    prYellow, prCyan, prRed, Yellow, Nclr, Green, Cyan
-)
+from amescap.Script_utils import (Yellow, Cyan, Red, Nclr, Green)
 
 # Load generic Python modules
 import argparse     # Parse arguments
@@ -997,8 +995,8 @@ def main():
             dz_to_dp_list or
             edit_var):
         print_fileContent(file_list[0])
-        prYellow("***Notice***  No operation requested. Use -add, "
-                 f"-zdiff, -zd, -col, -dp_to_dz, -rm, or -edit")
+        print(f"{Yellow}***Notice***  No operation requested. Use -add, "
+                 f"-zdiff, -zd, -col, -dp_to_dz, -rm, or -edit{Nclr}")
         exit()
 
     # For all the files
@@ -1041,7 +1039,7 @@ def main():
                 cmd_txt = f"mv {ifile_tmp} {ifile}"
                 p = subprocess.run(cmd_txt, universal_newlines=True,
                                    shell=True)
-                prCyan(f"{ifile} was updated")
+                print(f"{Cyan}{ifile} was updated{Nclr}")
 
         # ==============================================================
         # ======================== Extract =============================
@@ -1059,7 +1057,7 @@ def main():
             Log.copy_all_vars_from_Ncfile(f_IN, exclude_list)
             f_IN.close()
             Log.close()
-            prCyan(f"{ifile} was created")
+            print(f"{Cyan}{ifile} was created{Nclr}")
 
         # ==============================================================
         # ============================ Add =============================
@@ -1070,8 +1068,8 @@ def main():
         # Check if the variable to be added is currently supported.
         for ivar in add_list:
             if ivar not in VAR.keys():
-                prRed(f"Variable ``{ivar}`` is not supported and cannot "
-                      f"be added to the file. ")
+                print(f"{Red}Variable ``{ivar}`` is not supported and cannot "
+                      f"be added to the file.{Nclr}")
             else:
                 print(f"Processing: {ivar}...")
                 try:
@@ -1346,10 +1344,10 @@ def main():
                     if debug:
                         raise
                     if str(exception) == "NetCDF: String match to name in use":
-                        prYellow(f"***Error*** Variable already exists in "
-                                 f"file.\nDelete the existing variables "
+                        print(f"{Yellow}***Error*** Variable already exists "
+                                 f"in file.\nDelete the existing variables "
                                  f"{ivar} with "
-                                 f"``MarsVars.py {ifile} -rm {ivar}``")
+                                 f"``MarsVars.py {ifile} -rm {ivar}``{Nclr}")
 
         # ==============================================================
         # ================== Vertical Differentiation ==================
@@ -1362,9 +1360,8 @@ def main():
                 ak, bk = ak_bk_loader(fileNC)
 
             if idiff not in fileNC.variables.keys():
-                prRed(
-                    f"zdiff error: variable {idiff} is not present in {ifile}"
-                )
+                print(f"{Red}zdiff error: variable {idiff} is not present in "
+                      f"{ifile}{Nclr}")
                 fileNC.close()
             else:
                 print(f"Differentiating: {idiff}...")
@@ -1448,10 +1445,10 @@ def main():
                     if debug:
                         raise
                     if str(exception) == "NetCDF: String match to name in use":
-                        prYellow(f"***Error*** Variable already exists in "
-                                 f"file.\nDelete the existing variable "
+                        print(f"{Yellow}***Error*** Variable already exists "
+                                 f"in file.\nDelete the existing variable "
                                  f"d_dz_{idiff} with "
-                                 f"``MarsVars {ifile} -rm d_dz_{idiff}``")
+                                 f"``MarsVars {ifile} -rm d_dz_{idiff}``{Nclr}")
 
         # ==============================================================
         # ====================== Zonal Detrending ======================
@@ -1460,7 +1457,8 @@ def main():
             fileNC = Dataset(ifile, "a", format="NETCDF4_CLASSIC")
             f_type, interp_type = FV3_file_type(fileNC)
             if izdetrend not in fileNC.variables.keys():
-                prRed(f"zdiff error: variable {izdetrend} is not in {ifile}")
+                print(f"{Red}zdiff error: variable {izdetrend} is not in "
+                      f"{ifile}{Nclr}")
                 fileNC.close()
             else:
                 print(f"Detrending: {izdetrend}...")
@@ -1493,10 +1491,10 @@ def main():
                     if debug:
                         raise
                     if str(exception) == "NetCDF: String match to name in use":
-                        prYellow(f"***Error*** Variable already exists in "
-                                 f"file. Delete the existing variable "
+                        print(f"{Yellow}***Error*** Variable already exists "
+                                 f"in file. Delete the existing variable "
                                  f"d_dz_{idiff} with "
-                                 f"``MarsVars {ifile} -rm d_dz_{idiff}``")
+                                 f"``MarsVars {ifile} -rm d_dz_{idiff}``{Nclr}")
 
         # ==============================================================
         # ========= Opacity Conversion (dp_to_dz and dz_to_dp) =========
@@ -1506,9 +1504,8 @@ def main():
             fileNC = Dataset(ifile, "a", format="NETCDF4_CLASSIC")
             f_type, interp_type = FV3_file_type(fileNC)
             if idp_to_dz not in fileNC.variables.keys():
-                prRed(
-                    f"dp_to_dz error: variable {idp_to_dz} is not in {ifile}"
-                )
+                print(f"{Red}dp_to_dz error: variable {idp_to_dz} is not in "
+                      f"{ifile}{Nclr}")
                 fileNC.close()
             else:
                 print("Converting: {idp_to_dz}...")
@@ -1541,19 +1538,18 @@ def main():
                     if debug:
                         raise
                     if str(exception) == "NetCDF: String match to name in use":
-                        prYellow(f"***Error*** Variable already exists "
+                        print(f"{Yellow}***Error*** Variable already exists "
                               f"in file\nDelete the existing variable "
                               f"{idp_to_dz}_dp_to_dz with "
-                              f"``MarsVars {ifile} -rm {idp_to_dz}_dp_to_dz``")
+                              f"``MarsVars {ifile} -rm {idp_to_dz}_dp_to_dz``{Nclr}")
 
         for idz_to_dp in dz_to_dp_list:
             # ========= Case 2: dz_to_dp
             fileNC = Dataset(ifile, "a", format="NETCDF4_CLASSIC")
             f_type, interp_type = FV3_file_type(fileNC)
             if idz_to_dp not in fileNC.variables.keys():
-                prRed(
-                    f"dz_to_dp error: variable {idz_to_dp} is not in {ifile}"
-                )
+                print(f"{Red}dz_to_dp error: variable {idz_to_dp} is not in "
+                      f"{ifile}{Nclr}")
                 fileNC.close()
             else:
                 print(f"Converting: {idz_to_dp}...")
@@ -1586,11 +1582,11 @@ def main():
                     if debug:
                         raise
                     if str(exception) == "NetCDF: String match to name in use":
-                        prYellow(f"***Error*** Variable already exists in "
-                                 f"file.\nDelete the existing variable "
+                        print(f"{Yellow}***Error*** Variable already exists "
+                                 f"in file.\nDelete the existing variable "
                                  f"{idp_to_dz}_dp_to_dz with "
                                  f"``MarsVars.py {ifile} -rm "
-                                 f"{idp_to_dz}_dp_to_dz``")
+                                 f"{idp_to_dz}_dp_to_dz``{Nclr}")
 
         # ==============================================================
         # ====================== Column Integration ====================
@@ -1619,8 +1615,8 @@ def main():
                 ak, bk = ak_bk_loader(fileNC)
 
             if icol not in fileNC.variables.keys():
-                prRed(f"column integration error: variable {icol} is not "
-                      f"in {ifile}")
+                print(f"{Red}column integration error: variable {icol} is not "
+                      f"in {ifile}{Nclr}")
                 fileNC.close()
             else:
                 print(f"Performing column integration: {icol}...")
@@ -1677,10 +1673,10 @@ def main():
                     if debug:
                         raise
                     if str(exception) == "NetCDF: String match to name in use":
-                        prYellow(f"***Error*** Variable already exists in "
-                                 f"file.\nDelete the existing variable "
+                        print(f"{Yellow}***Error*** Variable already exists "
+                                 f"in file.\nDelete the existing variable "
                                  f"{icol}_col with "
-                                 f"``MarsVars {ifile} -rm {icol}_col``")
+                                 f"``MarsVars {ifile} -rm {icol}_col``{Nclr}")
         if edit_var:
             f_IN = Dataset(ifile, "r", format="NETCDF4_CLASSIC")
             ifile_tmp = f"{ifile[:-3]}_tmp.nc"
@@ -1723,7 +1719,7 @@ def main():
             cmd_txt = f"mv {ifile_tmp} {ifile}"
             subprocess.call(cmd_txt, shell=True)
 
-            prCyan(ifile+" was updated")
+            print(f"{Cyan}{ifile} was updated{Nclr}")
 
 # ======================================================
 #                  END OF PROGRAM

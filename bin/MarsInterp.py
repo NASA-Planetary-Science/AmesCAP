@@ -29,9 +29,7 @@ Third-party Requirements:
 """
 
 # make print statements appear in color
-from amescap.Script_utils import (
-    prCyan, prRed, Blue, Yellow, Nclr, Green, Cyan
-)
+from amescap.Script_utils import (Cyan, Red, Blue, Yellow, Nclr, Green, Cyan)
 
 # load generic Python modules
 import argparse     # Parse arguments
@@ -206,9 +204,9 @@ def main():
             zsurf = f_fixed.variables["zsurf"][:]
             f_fixed.close()
         except FileNotFoundError:
-            prRed(f"***Error*** Topography (zsurf) is required for "
+            print(f"{Red}***Error*** Topography (zsurf) is required for "
                   f"interpolation to zstd, but the file {name_fixed} "
-                  f"cannot be not found")
+                  f"cannot be not found{Nclr}")
             exit()
 
     # =========================== zagl ===========================
@@ -229,8 +227,8 @@ def main():
         else:
             lev_in = eval("np.array(zagl_default)")
     else:
-        prRed(f"Interpolation type {interp_type} is not supported, use "
-              f"``pstd``, ``zstd`` or ``zagl``")
+        print(f"{Red}Interpolation type {interp_type} is not supported, use "
+              f"``pstd``, ``zstd`` or ``zagl``{Nclr}")
         exit()
 
     if grid_out:
@@ -344,12 +342,12 @@ def main():
                 fNcdf.variables[ivar].dimensions == ("time", "pfull",
                                                      "grid_yt", "grid_xt")):
                 if compute_indices:
-                    prCyan("Computing indices ...")
+                    print(f"{Cyan}Computing indices ...{Nclr}")
                     index = find_n(L_3D_P, lev_in,
                                    reverse_input=need_to_reverse)
                     compute_indices = False
 
-                prCyan(f"Interpolating: {ivar} ...")
+                print(f"{Cyan}Interpolating: {ivar} ...{Nclr}")
                 varIN = fNcdf.variables[ivar][:]
                 # This with the loop suppresses "divide by zero" errors
                 with np.errstate(divide="ignore", invalid="ignore"):
@@ -389,7 +387,7 @@ def main():
                                 "pk", "bk", "pstd", "zstd", "zagl", tod_name,
                                 "grid_xt", "grid_yt"]:
                     #print("\r Copying over: %s..."%(ivar), end="")
-                    prCyan(f"Copying over: {ivar}...")
+                    print(f"{Cyan}Copying over: {ivar}...{Nclr}")
                     fnew.copy_Ncvar(fNcdf.variables[ivar])
 
         print("\r ", end="")

@@ -46,10 +46,6 @@ def prCyan(input_txt):
     print(f"{Cyan}{input_txt}{Nclr}")
 def prYellow(input_txt):
     print(f"{Yellow}{input_txt}{Nclr}")
-def prPurple(input_txt):
-    print(f"{Purple}{input_txt}{Nclr}")
-def prLightPurple(input_txt):
-    print(f"{Blue}{input_txt}{Nclr}")
 
 def MY_func(Ls_cont):
     """

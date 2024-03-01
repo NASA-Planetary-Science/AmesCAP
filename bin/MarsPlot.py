@@ -20,9 +20,7 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (
-    prYellow, prRed, prPurple, Blue, Yellow, Nclr, Green, Cyan, Red
-)
+from amescap.Script_utils import (Yellow, Red, Purple, Cyan, Nclr, Blue, Green)
 
 # Load generic Python modules
 import sys
@@ -289,8 +287,8 @@ def main():
                 # Confirm that the input date type is float
                 bound = np.asarray(parser.parse_args().date).astype(float)
             except Exception as e:
-                prRed("*** Syntax Error***\nPlease use: ``MarsPlot "
-                      "Custom.in -d XXXX [YYYY] -o out``")
+                print(f"{Red}*** Syntax Error***\nPlease use: ``MarsPlot "
+                      f"Custom.in -d XXXX [YYYY] -o out``{Nclr}")
                 exit()
         else:
             # If no optional [-d --date] argument is provided, default
@@ -591,7 +589,7 @@ def get_lon_index(lon_query_180, lons):
                 # Loop around (e.g., 160E>-40W)
                 loni = np.append(np.arange(loni_bounds[0], len(lons)),
                                  np.arange(0, loni_bounds[1]+1))
-                prPurple(lon360_to_180(lons[loni]))
+                print(f"{Purple}lon360_to_180(lons[loni]){Nclr}")
             lon_bounds_180 = lon360_to_180([lons[loni_bounds[0]],
                                             lons[loni_bounds[1]]])
 
@@ -1188,14 +1186,15 @@ def get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2):
     # Split to different blocks (e.g., lat = 3. and lon = 20)
     split_dim = overwrite_txt.split(";")
     if overwrite_txt.count(";") < (overwrite_txt.count("=")-1):
-        prYellow("*** Error: use semicolon ';' to separate dimensions '{}'")
+        print(f"{Yellow}*** Error: use semicolon ';' to separate dimensions "
+              f"'{{}}'{Nclr}")
 
     for i in range(0, ndim_update):
         # Check if the requested dimension exists:
         if split_dim[i].split("=")[0] not in ["ls", "lev", "lon", "lat", "tod"]:
-            prYellow(f"*** Warning*** Ignoring dimension: "
-                     f"{split_dim[i].split('=')[0]} because it is not "
-                     f"recognized. Valid dimensions = ls,lev,lon, lat or tod")
+            print(f"{Yellow}*** Warning*** Ignoring dimension: "
+                  f"{split_dim[i].split('=')[0]} because it is not recognized."
+                  f"Valid dimensions = ls,lev,lon, lat or tod{Nclr}")
 
         if plot_type == "2D_lon_lat":
             if split_dim[i].split("=")[0] == "ls":
@@ -1285,10 +1284,9 @@ def get_overwrite_dim_1D(varfull_bracket, t_in, lat_in, lon_in, lev_in, ftod_in)
         # Check if the requested dimension exists:
         if split_dim[i].split("=")[0] not in ["time", "lev", "lon", "lat",
                                               "tod"]:
-            prYellow(f"*** Warning*** ignoring dimension: "
-                     f"{split_dim[i].split('=')[0]} because it is not "
-                     f"recognized. Valid dimensions = time, lev, lon,lat "
-                     f"or tod")
+            print(f"{Yellow}*** Warning*** ignoring dimension: "
+                  f"{split_dim[i].split('=')[0]} because it is not recognized."
+                  f"Valid dimensions = time, lev, lon,lat or tod{Nclr}")
 
         if split_dim[i].split("=")[0] == "ls":
             t_out = filter_input(split_dim[i].split("=")[1], "float")
@@ -1566,9 +1564,9 @@ def namelist_parser(Custom_file):
     if int(version) != int(current_version):
         # Check if the main versions are compatible
         # (e.g., Versions 1.1 and 1.2 are OK but not 1.0 and 2.0)
-        prYellow(f"*** Warning ***\nUsing MarsPlot V{current_version} "
-                 f"but Custom.in template is deprecated (V{version})"
-                 f"\n***************")
+        print(f"{Yellow}*** Warning ***\nUsing MarsPlot V{current_version} "
+              f"but Custom.in template is deprecated (V{version})"
+              f"\n***************{Nclr}")
 
     while (customFileIN.readline()[0] != "<"):
         # Skip the header
@@ -1604,8 +1602,8 @@ def namelist_parser(Custom_file):
             break
         nsafe += 1
     if nsafe == 2000:
-        prRed("Custom.in is missing a 'START' keyword after the '====='"
-              "simulation block")
+        print(f"{Red}Custom.in is missing a 'START' keyword after the '====='"
+              f"simulation block{Nclr}")
 
     # Start reading the figure templates
     while True:
@@ -1692,7 +1690,7 @@ def namelist_parser(Custom_file):
 
                 # Debug only
                 # for ii in range(0,len(   subplotList)):
-                #    prCyan('[X,%i,%i,%i]'%(subplotList[ii],panelList[ii],addLineList[ii]))
+                #    print(f"{Cyan}[X,{subplotList[ii]},{panelList[ii]},{addLineList[ii]}]"
                 # =================
 
                 # Deprecated - an old way to attribute the plot numbers without using npage
@@ -1720,13 +1718,14 @@ def namelist_parser(Custom_file):
 
     if holding:
         # Make sure we are not still holding figures
-        prRed(f"*** Error ***\nMissing ``HOLD OFF`` statement in {Custom_file}")
+        print(f"{Red}*** Error ***\nMissing ``HOLD OFF`` statement in "
+              f"{Custom_file}{Nclr}")
         exit()
 
     if addLine:
         # Make sure we are not still holding figures
-        prRed(f"*** Error ***\nCannot have ``ADD LINE`` after the last figure "
-              f"in {Custom_file}")
+        print(f"{Red}*** Error ***\nCannot have ``ADD LINE`` after the last "
+              f"figure in {Custom_file}{Nclr}")
         exit()
 
     # Finished reading the file, distribute the number of figure and
@@ -1738,7 +1737,8 @@ def namelist_parser(Custom_file):
         objectList[i].layout = layoutList[i]
 
         # Debug only
-        # prPurple('%i:[%i,%i,%i]'%(i,objectList[i].subID,objectList[i].nPan,objectList[i].addLine))
+        # print(f"{Purple}{i}:[{objectList[i].subID},{objectList[i].nPan},"
+        #       f"{objectList[i].addLine}]{Nclr}")
     customFileIN.close()
 
 
@@ -1837,16 +1837,16 @@ def select_range(Ncdf_num, bound):
     if bound.size == 1:
         Ncdf_num = Ncdf_num[Ncdf_num == bound]
         if Ncdf_num.size == 0:
-            prRed(f"*** Error *** \n"
-                  f"File {int(bound):05}.fixed.nc not found")
+            print(f"{Red}*** Error *** \n"
+                  f"File {int(bound):05}.fixed.nc not found{Nclr}")
             exit()
     elif bound.size == 2:
         Ncdf_num = Ncdf_num[Ncdf_num >= bound[0]]
         Ncdf_num = Ncdf_num[Ncdf_num <= bound[1]]
         if Ncdf_num.size == 0:
-            prRed(f"*** Error ***\nNo fixed file with date between "
+            print(f"{Red}*** Error ***\nNo fixed file with date between "
                   f"[{int(bound[0]):05}-{int(bound[1]):05}] detected. Please "
-                  f"double check the range.")
+                  f"double check the range.{Nclr}")
             exit()
     return Ncdf_num
 
@@ -1902,14 +1902,14 @@ def path_to_template(custom_name):
         # First look for template file in ~/FV3/templates
         if not os.path.isfile(f"{shared_dir}/{custom_name}"):
             # Then look in /lou/.../MCMC/analysis/working/templates
-            prRed(f"*** Error ***\nFile {custom_name} not found in "
-                  f"{local_dir} nor in {shared_dir}")
+            print(f"{Red}*** Error ***\nFile {custom_name} not found in "
+                  f"{local_dir} nor in {shared_dir}{Nclr}")
 
             if not os.path.exists(local_dir):
                 # If a local ~/FV3/templates path is nonexistent,
                 # suggest creating it
-                prYellow(f"Note: directory: ~/FV3/templates does not "
-                         f"exist, create it with:\nmkdir {local_dir}")
+                print(f"{Yellow}Note: directory: ~/FV3/templates does not "
+                      f"exist, create it with:\nmkdir {local_dir}{Nclr}")
             exit()
         else:
             return f"{shared_dir}/{custom_name}"
@@ -2111,8 +2111,8 @@ class Fig_2D(object):
 
         # Various sanity checks
         if self.range and len(np.atleast_1d(self.range)) == 1:
-            prYellow(f"*** Warning *** In plot {self.varfull}, Cmin, Cmax "
-                     f"must be two values. Resetting to default")
+            print(f"{Yellow}*** Warning *** In plot {self.varfull}, Cmin, "
+                  f"Cmax must be two values. Resetting to default{Nclr}")
             self.range = None
 
     def data_loader_2D(self, varfull, plot_type):
@@ -2447,7 +2447,7 @@ class Fig_2D(object):
                             var_info)
 
     def plot_dimensions(self):
-        prYellow(f"{self.ax.get_position()}")
+        print(f"{Yellow}{self.ax.get_position()}{Nclr}")
 
     def make_title(self, var_info, xlabel, ylabel):
         if self.title:
@@ -2513,8 +2513,8 @@ class Fig_2D(object):
 
             if self.axis_opt2 == "log":
                 if self.range[0] <= 0 or self.range[1] <= 0:
-                    prRed("*** Error using log scale, bounds cannot be zero "
-                          "or negative")
+                    print(f"{Red}*** Error using log scale, bounds cannot be "
+                          f"zero or negative{Nclr}")
                 levs = np.logspace(
                     np.log10(self.range[0]), np.log10(self.range[1]), levels)
         return norm, levs
@@ -2525,7 +2525,7 @@ class Fig_2D(object):
         sys.stdout.write("\033[F")
         # Cursor up one line, then clear the lines previous output
         sys.stdout.write("\033[K")
-        prYellow(f"*** Warning *** {e}")
+        print(f"{Yellow}*** Warning *** {e}{Nclr}")
         ax.text(0.5, 0.5, f"ERROR: {e}",
             horizontalalignment="center",
             verticalalignment="center",
@@ -3445,11 +3445,11 @@ class Fig_1D(object):
             graph_type = "1D_diurn"
             ncheck += 1
         if ncheck == 0:
-            prYellow(f"*** Warning *** In 1D plot, {self.varfull}: use "
-                     f"``AXIS`` to set the varying dimension")
+            print(f"{Yellow}*** Warning *** In 1D plot, {self.varfull}: use "
+                  f"``AXIS`` to set the varying dimension{Nclr}")
         if ncheck > 1:
-            prYellow(f"*** Warning *** In 1D plot, {self.varfull}: ``AXIS`` "
-                     f"keyword can only be used once")
+            print(f"{Yellow}*** Warning *** In 1D plot, {self.varfull}: "
+                  f"``AXIS`` keyword can only be used once{Nclr}")
         return graph_type
 
     def data_loader_1D(self, varfull, plot_type):
@@ -3964,8 +3964,8 @@ class Fig_1D(object):
             raise
         sys.stdout.write("\033[F")
         sys.stdout.write("\033[K")
-        prYellow(f"*** Warning *** Attempting {self.plot_type} profile "
-                 f"for {self.varfull}: {str(e)}")
+        print(f"{Yellow}*** Warning *** Attempting {self.plot_type} profile "
+              f"for {self.varfull}: {str(e)}{Nclr}")
         ax.text(0.5, 0.5, f"ERROR:{str(e)}",
                 horizontalalignment="center",
                 verticalalignment="center",

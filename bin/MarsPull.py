@@ -18,9 +18,7 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (
-    prYellow, prCyan, Yellow, Nclr, Green, Cyan
-)
+from amescap.Script_utils import (Yellow, Cyan, Yellow, Nclr, Green, Cyan)
 
 # Load generic Python modules
 import sys          # System commands
@@ -166,12 +164,12 @@ def download(file_name, simulation_id):
     total_size = rsp.headers.get("content-length")
 
     if rsp.status_code == 404:
-        prYellow(f"ERROR File not found! Error code: {rsp.status_code}")
+        print(f"{Yellow}ERROR File not found! Error code: {rsp.status_code}{Nclr}")
         exit()
 
     else:
         # Download the data and show a progress bar
-        prCyan(f"Downloading {file_name}...")
+        print(f"{Cyan}Downloading {file_name}...{Nclr}")
 
         with open(filename, "wb") as f:
             downloaded = 0
@@ -204,8 +202,8 @@ def main():
     simulation_id = parser.parse_args().id
 
     if simulation_id is None:
-        prYellow("ERROR [-id, --id] is required. Use 'MarsPull.py -h' "
-                 f"for additional help.")
+        print(f"{Yellow}ERROR [-id, --id] is required. Use 'MarsPull.py -h' "
+                 f"for additional help.{Nclr}")
         exit()
 
     if parser.parse_args().ls:
@@ -229,7 +227,7 @@ def main():
                 i_end += 1
 
         num_files = np.arange(i_start, i_end+1)
-        prCyan(f"Saving {len(num_files)} file(s) to {SAVEDIR}")
+        print(f"{Cyan}Saving {len(num_files)} file(s) to {SAVEDIR}{Nclr}")
 
         for n in num_files:
             # For netCDF files
@@ -246,15 +244,15 @@ def main():
     elif parser.parse_args().filename:
         # If the user input an ID and a file name
         file_name_in = np.asarray(parser.parse_args().filename)
-        prCyan(f"Saving {len(file_name_in)} file(s) to {SAVEDIR}")
+        print(f"{Cyan}Saving {len(file_name_in)} file(s) to {SAVEDIR}{Nclr}")
         for file_name in file_name_in:
             # trigger the file download
             download(file_name, simulation_id)
     else:
         # If the user did not specify Ls or a file name
-        prYellow("ERROR No file requested. Use ``[-ls --ls]`` or "
+        print(f"{Yellow}ERROR No file requested. Use ``[-ls --ls]`` or "
                  "``[-f --filename]`` with ``[-id --id]`` to specify a file "
-                 "to download.")
+                 "to download.{Nclr}")
         exit()
 
 # ======================================================================

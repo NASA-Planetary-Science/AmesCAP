@@ -53,9 +53,7 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (
-    prYellow, prCyan, prRed, Blue, Yellow, Nclr, Green
-)
+from amescap.Script_utils import (Yellow, Cyan, Red, Blue, Yellow, Nclr, Green)
 
 # Load generic Python Modules
 import sys          # System commands
@@ -365,7 +363,7 @@ def combine_files(file_list, full_file_list):
     :param full_file_list: list of file names and full paths
     :type full_file_list: list
     """
-    prYellow("Using internal method for concatenation")
+    print(f"{Yellow}Using internal method for concatenation{Nclr}")
 
     # For fixed files, deleting all but the first file has the same
     # effect as combining files
@@ -376,10 +374,10 @@ def combine_files(file_list, full_file_list):
             # 1-N files ensures file number 0 is preserved
             rm_cmd += f" {full_file_list[i]}"
         p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
-        prCyan(f"Cleaned all but {file_list[0]}")
+        print(f"{Cyan}Cleaned all but {file_list[0]}{Nclr}")
         exit()
 
-    prCyan(f"Merging {num_files} files starting with {file_list[0]}...")
+    print(f"{Cyan}Merging {num_files} files starting with {file_list[0]}...{Nclr}")
 
     if parser.parse_args().include:
         # Exclude variables NOT listed after --include
@@ -418,7 +416,7 @@ def combine_files(file_list, full_file_list):
     cmd_txt = f"mv {tmp_file} {merged_file}"
     p = subprocess.run(rm_cmd, universal_newlines=True, shell=True)
     p = subprocess.run(cmd_txt, universal_newlines=True, shell=True)
-    prCyan(f"{merged_file} was created from a merge")
+    print(f"{Cyan}{merged_file} was created from a merge{Nclr}")
     return
 
 # ==================================================================
@@ -520,7 +518,7 @@ def time_shift(file_list):
         var_list = filter_vars(fdiurn, parser.parse_args().include)
 
         for var in var_list:
-            prCyan(f"Processing: {var}...")
+            print(f"{Cyan}Processing: {var}...{Nclr}")
             value = fdiurn.variables[var][:]
             dims = fdiurn.variables[var].dimensions
             longname_txt, units_txt = get_longname_units(fdiurn, var)
@@ -563,7 +561,7 @@ def main():
     data_dir = os.getcwd()
 
     if parser.parse_args().fv3 and parser.parse_args().combine:
-        prRed("Use --fv3 and --combine separately to avoid ambiguity")
+        print(f"{Red}Use --fv3 and --combine separately to avoid ambiguity")
         exit()
 
     # ==================================================================
@@ -575,8 +573,8 @@ def main():
     if parser.parse_args().fv3:
         for req_file in parser.parse_args().fv3:
             if req_file not in ["fixed", "average", "daily", "diurn"]:
-                prRed(f"{req_file} is invalid. Select ``fixed``, "
-                      f"``average``, ``daily``, or ``diurn``")
+                print(f"{Red}{req_file} is invalid. Select ``fixed``, "
+                      f"``average``, ``daily``, or ``diurn``{Nclr}")
 
         # Make a list of input files including the full path to the dir
         full_file_list = []
@@ -664,14 +662,14 @@ def main():
             bins_left = len(time) % dt_total
 
             if bins_left != 0:
-                prYellow(f"*** Warning *** Requested a {bin_period}-sol bin "
-                         f"period, but the file has a total of {len(time)} "
+                print(f"{Yellow}*** Warning *** Requested a {bin_period}-sol "
+                         f"bin period but the file has a total of {len(time)}"
                          f"timesteps ({dt_per_day} per sol) and {len(time)}/"
                          f"({bin_period}x{dt_per_day})={bins} is not a round "
                          f"number.\nWill use {bins_even} bins with "
                          f"{bin_period}x{dt_per_day}={dt_total} timesteps per "
                          f"bin ({bins_even*dt_total} timsteps total) and "
-                         f"discard {bins_left} timesteps.")
+                         f"discard {bins_left} timesteps.{Nclr}")
 
             # Define a netcdf object from the netcdf wrapper module
             fnew = Ncdf(output_file_name)
@@ -691,7 +689,7 @@ def main():
                 varNcf = fdaily.variables[ivar]
 
                 if "time" in varNcf.dimensions:
-                    prCyan(f"Processing: {ivar}")
+                    print(f"{Cyan}Processing: {ivar}{Nclr}")
                     var_out = daily_to_average(
                         varNcf[:], time_increment, bin_period
                     )
@@ -702,10 +700,10 @@ def main():
                 else:
                     if ivar in ["pfull", "lat", "lon", "phalf", "pk",
                                 "bk", "pstd", "zstd", "zagl"]:
-                        prCyan(f"Copying axis: {ivar}")
+                        print(f"{Cyan}Copying axis: {ivar}{Nclr}")
                         fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
                     else:
-                        prCyan(f"Copying variable: {ivar}")
+                        print(f"{Cyan}Copying variable: {ivar}{Nclr}")
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
 
@@ -771,7 +769,7 @@ def main():
 
                 # If time is the dimension (not just an array)
                 if "time" in varNcf.dimensions and ivar != "time":
-                    prCyan(f"Processing: {ivar}")
+                    print(f"{Cyan}Processing: {ivar}{Nclr}")
                     dims_in = varNcf.dimensions
                     dims_out = (dims_in[0],)+(tod_name,)+dims_in[1:]
                     var_out = daily_to_diurn(varNcf[:], time[0:dt_per_day])
@@ -785,10 +783,10 @@ def main():
                 else:
                     if ivar in ["pfull", "lat", "lon", "phalf", "pk",
                                 "bk", "pstd", "zstd", "zagl"]:
-                        prCyan(f"Copying axis: {ivar}")
+                        print(f"{Cyan}Copying axis: {ivar}{Nclr}")
                         fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
                     elif ivar != "time":
-                        prCyan(f"Copying variable: {ivar}")
+                        print(f"{Cyan}Copying variable: {ivar}{Nclr}")
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
 
@@ -811,7 +809,7 @@ def main():
                 parser.parse_args().high_pass_filter
                 ).astype(float)
             if len(np.atleast_1d(nsol)) != 1:
-                prRed("***Error*** sol_min accepts only one value")
+                print(f"{Red}***Error*** sol_min accepts only one value")
                 exit()
         if parser.parse_args().low_pass_filter:
             btype = "low"
@@ -820,7 +818,7 @@ def main():
                 parser.parse_args().low_pass_filter
                 ).astype(float)
             if len(np.atleast_1d(nsol)) != 1:
-                prRed("sol_max accepts only one value")
+                print(f"{Red}sol_max accepts only one value")
                 exit()
         if parser.parse_args().band_pass_filter:
             btype = "band"
@@ -829,7 +827,7 @@ def main():
                 parser.parse_args().band_pass_filter
                 ).astype(float)
             if len(np.atleast_1d(nsol)) != 2:
-                prRed("Requires two values: sol_min sol_max")
+                print(f"{Red}Requires two values: sol_min sol_max")
                 exit()
         if parser.parse_args().no_trend:
             out_ext = f"{out_ext}_no_trend"
@@ -858,8 +856,8 @@ def main():
 
             # Check if the frequency domain is allowed
             if any(nn <= 2*dt for nn in nsol):
-                prRed(f"***Error***  minimum cut-off cannot be smaller than "
-                      f"the Nyquist period of 2xdt={2*dt} sol")
+                print(f"{Red}***Error***  minimum cut-off cannot be smaller "
+                      f"than the Nyquist period of 2xdt={2*dt} sol{Nclr}")
                 exit()
 
             # Define a netcdf object from the netcdf wrapper module
@@ -898,7 +896,7 @@ def main():
 
                 if ("time" in varNcf.dimensions and
                     ivar not in ["time", "areo"]):
-                    prCyan(f"Processing: {ivar}")
+                    print(f"{Cyan}Processing: {ivar}{Nclr}")
                     var_out = zeroPhi_filter(
                         varNcf[:], btype, low_highcut, fs, axis=0, order=4,
                         no_trend=parser.parse_args().no_trend
@@ -909,10 +907,10 @@ def main():
                 else:
                     if ivar in ["pfull", "lat", "lon", "phalf", "pk",
                                 "bk", "pstd", "zstd", "zagl"]:
-                        prCyan(f"Copying axis: {ivar}")
+                        print(f"{Cyan}Copying axis: {ivar}{Nclr}")
                         fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
                     else:
-                        prCyan(f"Copying variable: {ivar}")
+                        print(f"{Cyan}Copying variable: {ivar}{Nclr}")
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
 
@@ -931,17 +929,17 @@ def main():
     #     if parser.parse_args().high_pass_zonal:
     #         btype="high";out_ext="_hpk";nk=np.asarray(parser.parse_args().high_pass_zonal).astype(int)
     #         if len(np.atleast_1d(nk))!=1:
-    #             prRed("***Error*** kmin accepts only one value")
+    #             print(f"{Red}***Error*** kmin accepts only one value")
     #             exit()
     #     if parser.parse_args().low_pass_zonal:
     #         btype="low";out_ext="_lpk";nk=np.asarray(parser.parse_args().low_pass_zonal).astype(int)
     #         if len(np.atleast_1d(nk))!=1:
-    #             prRed("kmax accepts only one value")
+    #             print(f"{Red}kmax accepts only one value")
     #             exit()
     #     if parser.parse_args().band_pass_zonal:
     #         btype="band";out_ext="_bpk";nk=np.asarray(parser.parse_args().band_pass_zonal).astype(int)
     #         if len(np.atleast_1d(nk))!=2:
-    #             prRed("Requires two values: kmin kmax")
+    #             print(f"{Red}Requires two values: kmin kmax")
     #             exit()
     #
     #     if parser.parse_args().no_trend:out_ext =f"{out_ext}_no_trend"
@@ -971,18 +969,18 @@ def main():
     #         # Check if the frequency domain is allowed and display some information
     #
     #         if any(nn > len(lat)/2 for nn in nk):
-    #             prRed(f"***Warning***  maximum wavenumber cut-off cannot be larger than the Nyquist criteria of nlat/2= {len(lat)/2)} sol")
+    #             print(f"{Red}***Warning***  maximum wavenumber cut-off cannot be larger than the Nyquist criteria of nlat/2= {len(lat)/2)} sol{Nclr}")
     #         elif btype=="low":
     #             L_max=(1./nk)*dx
-    #             prYellow("Low pass filter, allowing only wavelength > {L_max} km")
+    #             print(f"{Yellow}Low pass filter, allowing only wavelength > {L_max} km{Nclr}")
     #         elif btype=="high":
     #             L_min=(1./nk)*dx
-    #             prYellow("High pass filter, allowing only wavelength < {L_min} km")
+    #             print(f"{Yellow}High pass filter, allowing only wavelength < {L_min} km{Nclr}")
     #         elif btype=="band":
     #             L_min=(1./nk[1])*dx
     #             L_max=1./max(nk[0],1.e-20)*dx
     #             if L_max>1.e20:L_max=np.inf
-    #             prYellow("Band pass filter, allowing only {L_min} km < wavelength < {L_max} km")
+    #             print(f"{Yellow}Band pass filter, allowing only {L_min} km < wavelength < {L_max} km{Nclr}")
 
    ##
     #         fnew = Ncdf(output_file_name) # Define a netcdf object from the netcdf wrapper module
@@ -1004,7 +1002,7 @@ def main():
     #             varNcf = fname.variables[ivar]
     #
     #             if ("lat" in varNcf.dimensions) and ("lon" in varNcf.dimensions):
-    #                 prCyan(f"Processing: {ivar}...")
+    #                 print(f"{Cyan}Processing: {ivar}...{Nclr}")
     #
     #                 # Step 1 : Detrend the data
     #                 TREND=get_trend_2D(varNcf[:],LON,LAT, "wmean")
@@ -1021,10 +1019,10 @@ def main():
     #                 fnew.log_variable(ivar,var_out,varNcf.dimensions,varNcf.long_name,varNcf.units)
     #             else:
     #                 if  ivar in ["pfull", "lat", "lon", "phalf", "pk", "bk", "pstd", "zstd", "zagl", "time"]:
-    #                     prCyan(f"Copying axis: {ivar}...")
+    #                     print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
     #                     fnew.copy_Ncaxis_with_content(fname.variables[ivar])
     #                 else:
-    #                     prCyan(f"Copying variable: {ivar}...")
+    #                     print(f"{Cyan}Copying variable: {ivar}...{Nclr}")
     #                     fnew.copy_Ncvar(fname.variables[ivar])
     #         fnew.close()
 
@@ -1037,7 +1035,7 @@ def main():
         from amescap.Spectral_utils import diurn_extract, reconstruct_diurn
         N = parser.parse_args().tidal[0]
         if len(np.atleast_1d(N)) != 1:
-            prRed("***Error*** N accepts only one value")
+            print(f"{Red}***Error*** N accepts only one value")
             exit()
         out_ext = "_tidal"
         if parser.parse_args().reconstruct:
@@ -1106,7 +1104,7 @@ def main():
                 if (tod_name in varNcf.dimensions and
                     ivar not in [tod_name, "areo"] and
                     len(varNcf.shape) > 2):
-                    prCyan(f"Processing: {ivar}")
+                    print(f"{Cyan}Processing: {ivar}{Nclr}")
 
                     # Normalize the data
                     if parser.parse_args().normalize:
@@ -1149,16 +1147,16 @@ def main():
 
                 elif  ivar in ["pfull", "lat", "lon", "phalf", "pk",
                                "bk", "pstd", "zstd", "zagl", "time"]:
-                        prCyan(f"Copying axis: {ivar}...")
+                        print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
                         fnew.copy_Ncaxis_with_content(fdiurn.variables[ivar])
                 elif  ivar in ["areo"]:
                         if parser.parse_args().reconstruct:
                             #time_of_day is the same size as the
                             # original file
-                            prCyan(f"Copying axis: {ivar}...")
+                            print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
                             fnew.copy_Ncvar(fdiurn.variables["areo"])
                         else:
-                            prCyan(f"Processing: {ivar}...")
+                            print(f"{Cyan}Processing: {ivar}...{Nclr}")
                             #Create areo variable reflecting the
                             # new shape
                             areo_new=np.zeros((areo.shape[0], N, 1))
@@ -1218,12 +1216,12 @@ def main():
 
                 if  ivar in ["pfull", "lat", "lon", "phalf", "pk",
                              "bk", "pstd", "zstd", "zagl", "time", "areo"]:
-                        prCyan(f"Copying axis: {ivar}...")
+                        print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
                         fnew.copy_Ncaxis_with_content(fNcdf_t.variables[ivar])
                 elif varNcf.dimensions[-2:]==("lat", "lon"):
                     #Ignore variables like time_bounds, scalar_axis
                     # or grid_xt_bnds...
-                    prCyan(f"Regridding: {ivar}...")
+                    print(f"{Cyan}Regridding: {ivar}...{Nclr}")
                     var_OUT=regrid_Ncfile(varNcf, f_in, fNcdf_t)
                     fnew.log_variable(ivar, var_OUT, varNcf.dimensions,
                                       longname_txt, units_txt)
@@ -1272,7 +1270,7 @@ def main():
                 longname_txt,units_txt=get_longname_units(fdaily,ivar)
                 if ("lon" in varNcf.dimensions and
                     ivar not in ["lon", "grid_xt_bnds", "grid_yt_bnds"]):
-                    prCyan(f"Processing: {ivar}...")
+                    print(f"{Cyan}Processing: {ivar}...{Nclr}")
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore",
                                               category=RuntimeWarning)
@@ -1285,17 +1283,17 @@ def main():
                 else:
                     if ivar in ["pfull", "lat", "phalf", "pk",
                                 "bk", "pstd", "zstd", "zagl"]:
-                        prCyan("Copying axis: {ivar}")
+                        print(f"{Cyan}Copying axis: {ivar}{Nclr}{Nclr}")
                         fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
                     elif ivar in ["grid_xt_bnds", "grid_yt_bnds", "lon"]:
                         pass
 
                     else:
-                        prCyan(f"Copying variable: {ivar}")
+                        print(f"{Cyan}Copying variable: {ivar}{Nclr}")
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
     else:
-        prRed("Error: no action requested: use ``MarsFiles *nc --fv3 "
+        print(f"{Red}Error: no action requested: use ``MarsFiles *nc --fv3 "
               "--combine, --tshift, --bin_average, --bin_diurn etc ...``")
 
 # END of script

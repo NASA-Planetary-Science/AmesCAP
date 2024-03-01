@@ -22,7 +22,7 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (prCyan, Yellow, Nclr, Green)
+from amescap.Script_utils import (Cyan, Yellow, Nclr, Green)
 
 # Load generic Python modules
 import argparse     # Parse arguments
@@ -414,7 +414,7 @@ def main():
         # Pipe processed data to a new netCDF file
         DF.to_netcdf(output_file_name)
 
-        prCyan(f"{output_file_name} was created")
+        print(f"{Cyan}{output_file_name} was created{Nclr}")
 
 # ======================================================
 #                  END OF PROGRAM
