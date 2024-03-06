@@ -186,7 +186,7 @@ Functions
 
    Returns a sol number from the solar longitude.
 
-   :param Ls_deg: solar longitude in degrees
+   :param Ls_deg: solar longitude [°]
    :type Ls_deg: float
    :param offset: if True, force year to start at Ls 0
    :type offset: bool

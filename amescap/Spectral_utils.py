@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 """
-Spectral_utils contains wave analysis routines. Note the dependencies on 
+Spectral_utils contains wave analysis routines. Note the dependencies on
 scipy.signal.
 
 Third-party Requirements:
@@ -31,13 +31,13 @@ except Exception as exception:
 
 def init_shtools():
     """
-    The following code simply loads the pyshtools module and provides 
-    adequate referencing. Since dependencies may need to be solved by 
-    the user, the module import is wrapped in a function that can be 
+    The following code simply loads the pyshtools module and provides
+    adequate referencing. Since dependencies may need to be solved by
+    the user, the module import is wrapped in a function that can be
     called as needed.
-    
+
     :raises: Exception
-    
+
     :return: imported module pyshtools or error
     """
     try:
@@ -46,10 +46,11 @@ def init_shtools():
         print(f"{Yellow}__________________\n"
               f"Zonal decomposition relies on the pyshtools library, "
               f"referenced at:\n\n"
-              f"Mark A. Wieczorek and Matthias Meschede (2018). SHTools - "
-              f"Tools for working with spherical harmonics, Geochemistry, "
-              f"Geophysics, Geosystems, 2574-2592, doi:10.1029/2018GC007529\n"
-              f"Please consult installation instructions at:\n"
+              f"Mark A. Wieczorek and Matthias Meschede (2018). "
+              f"SHTools - Tools for working with spherical harmonics,"
+              f"Geochemistry, Geophysics, Geosystems, 2574-2592, "
+              f"doi:10.1029/2018GC007529\n Please consult installation "
+              f"instructions at:\n"
               f"{Cyan}https://pypi.org/project/pyshtools\n"
               f"{Yellow}And install with:\n"
               f"{Cyan}pip install pyshtools{Nclr}")
@@ -60,21 +61,21 @@ def init_shtools():
 
 def diurn_extract(VAR, N, tod, lon):
     """
-    Extract the diurnal component of a field. Original code by John 
+    Extract the diurnal component of a field. Original code by John
     Wilson. Adapted by Alex Kling April, 2021
 
     :param VAR: field to process. Time of day dimension must be first
         (e.g., ``[tod, time, lat, lon]`` or ``[tod]``
     :type VAR: 1D or ND array
-    :param N: number of harmonics to extract (``N=1`` for diurnal, 
+    :param N: number of harmonics to extract (``N=1`` for diurnal,
         ``N=2`` for diurnal AND semi diurnal, etc.)
     :type N: int
-    :param tod: universal time of day in sols (``0-1.``) If provided in 
+    :param tod: universal time of day in sols (``0-1.``) If provided in
         hours (``0-24``), it will be normalized.
     :type tod: 1D array
     :param lon: longitudes ``0-360``
     :type lon: 1D array or float
-    :return: the amplitudes & phases for the Nth first harmonics, 
+    :return: the amplitudes & phases for the Nth first harmonics,
         (e.g., size ``[Nh, time, lat, lon]``)
     :rtype: ND arrays
     """
@@ -95,14 +96,14 @@ def diurn_extract(VAR, N, tod, lon):
 
     # Dimensions for the output
     if len(dimsIN) == 1:
-        # if size(VAR) = [tod, time, lat, lon] then 
+        # if size(VAR) = [tod, time, lat, lon] then
         # size(dimsOUT) = [N, time, lat, lon]
         dimsOUT=[N, 1]
     else:
         dimsOUT=np.append([N], dimsIN[1:])
 
     # Reshape VAR as a 2D array (tod, Nelements) for generalization
-    # Ndim is the product of all dimensions except tod axis 
+    # Ndim is the product of all dimensions except tod axis
     # (e.g., ``time x lat x lon``)
     Ndim = int(np.prod(dimsIN[1:]))
     # Set the shape of the flattened arrays
@@ -118,16 +119,16 @@ def diurn_extract(VAR, N, tod, lon):
     if len(dimsIN) == 1:
         # If ``nargin > 3`` (Initial code, assume lon is provided)
         corr = np.array([lon])
-    else: 
+    else:
         # Repeat lon array to match the size of the input variables
         # minus the first (tod) axis.
         # Create an axis to expand the lon array
-        tilenm = np.append(dimsIN[1:-1], 1) 
-        # If VAR = [tod, time, lat, lon] then lonN is the lon repeated 
+        tilenm = np.append(dimsIN[1:-1], 1)
+        # If VAR = [tod, time, lat, lon] then lonN is the lon repeated
         # as [time,lat,lon]
         lonND = np.tile(lon, tilenm)
         corr = lonND.flatten()
-        
+
     for nn in range(1,N+1):
         # Python does zero-indexing, start at nn-1
         cosser = np.dot(VAR[:, ...].T, np.cos(nn * arg)).squeeze()
@@ -147,7 +148,7 @@ def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
     """
     Reconstructs a field wave based on its diurnal harmonics
 
-    :param amp: amplitude of the signal. Harmonics dimension FIRST 
+    :param amp: amplitude of the signal. Harmonics dimension FIRST
         (e.g., ``[N, time, lat, lon]``)
     :type amp: array
     :param phas: phase of the signal [hr]. Harmonics dimension FIRST
@@ -156,10 +157,10 @@ def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
     :type tod: 1D array
     :param lon: longitude for converting universal -> local time
     :type lon: 1D array or float
-    :param sumList: the harmonics to include when reconstructing the 
+    :param sumList: the harmonics to include when reconstructing the
         wave (e.g., ``sumN=[1, 2, 4]``), defaults to ``[]``
     :type sumList: list, optional
-    :return: a variable with reconstructed harmonics with N dimension 
+    :return: a variable with reconstructed harmonics with N dimension
         FIRST and time of day SECOND (``[N, tod, time, lat, lon]``). If
         sumList is provided, the wave output harmonics will be
         aggregated (i.e., size = ``[tod, time, lat, lon]``)
@@ -169,7 +170,7 @@ def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
     N = dimsIN[0]
     dimsSUM = np.append([len(tod)], dimsIN[1:])
     # Create dimensional array for 4D variables (e.g., [0, 1, 2, 3])
-    dimAXIS = np.arange(len(dimsSUM)) 
+    dimAXIS = np.arange(len(dimsSUM))
     dimsOUT = np.append([dimsIN[0], len(tod)], dimsIN[1:])
     varOUT = np.zeros(dimsOUT)
 
@@ -177,7 +178,7 @@ def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
     if len(np.atleast_1d(lon)) == 1:
         lon = np.array([lon])
 
-    #Reshape  lon array for broadcasting, e.g. lon[96] to  [1,1,1,96]
+    #Reshape  lon array for broadcasting, e.g. lon[96] -> [1,1,1,96]
     dimAXIS = np.arange(len(dimsSUM)); dimAXIS[:] = 1; dimAXIS[-1] = len(lon)
     lon = lon.reshape(dimAXIS)
     # Reshape tod array
@@ -190,11 +191,9 @@ def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
     varSUM  = np.zeros(dimsSUM)
     for nn in range(1, N+1):
         # Compute each harmonic
-        varOUT[nn-1, ...] = (amp[nn-1, ...] 
-                             * np.cos(nn * (tod-phas[nn-1, ...] + DT)
-                                      / 24*2*np.pi
-                                     )
-                            )
+        varOUT[nn-1, ...] = (amp[nn-1, ...]
+                             * np.cos(nn * (tod-phas[nn-1, ...]
+                                            + DT) / 24*2*np.pi))
         # If a sum of harmonics is requested, sum it
         if nn in sumList:
             varSUM += varOUT[nn-1, ...]
@@ -208,38 +207,38 @@ def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
 
 def space_time(lon, timex, varIN, kmx, tmx):
     """
-    Obtain west and east propagating waves. This is a Python 
-        implementation of John Wilson's ``space_time`` routine. 
+    Obtain west and east propagating waves. This is a Python
+        implementation of John Wilson's ``space_time`` routine.
         Alex Kling 2019.
-    
-    :param lon: longitude [degrees] (0-360)
+
+    :param lon: longitude [°] (0-360)
     :type lon: 1D array
-    :param timex: time [sol] (e.g., 1.5 days sampled every hour is 
+    :param timex: time [sol] (e.g., 1.5 days sampled every hour is
         ``[0/24, 1/24, 2/24,.. 1,.. 1.5]``)
     :type timex: 1D array
-    :param varIN: variable for the Fourier analysis. First axis must be 
-        ``lon`` and last axis must be ``time`` (e.g., 
-        ``varIN[lon, time]``, ``varIN[lon, lat, time]``, or 
+    :param varIN: variable for the Fourier analysis. First axis must be
+        ``lon`` and last axis must be ``time`` (e.g.,
+        ``varIN[lon, time]``, ``varIN[lon, lat, time]``, or
         ``varIN[lon, lev, lat, time]``)
     :type varIN: array
-    :param kmx: the number of longitudinal wavenumbers to extract 
+    :param kmx: the number of longitudinal wavenumbers to extract
         (max = ``nlon/2``)
     :type kmx: int
-    :param tmx: the number of tidal harmonics to extract 
+    :param tmx: the number of tidal harmonics to extract
         (max = ``nsamples/2``)
     :type tmx: int
 
-    :return: (ampe) East propagating wave amplitude [same unit as varIN];
-        (ampw) West propagating wave amplitude [same unit as varIN];
-        (phasee) East propagating phase [degree];
-        (phasew) West propagating phase [degree]
+    :return: (ampe) East propagating wave amplitude [same unit as
+        varIN]; (ampw) West propagating wave amplitude [same unit as
+        varIN]; (phasee) East propagating phase [°]; (phasew) West
+        propagating phase [°]
 
-    .. NOTE::   1. ``ampe``, ``ampw``, ``phasee``, and ``phasew`` have 
-        dimensions ``[kmx, tmx]`` or ``[kmx, tmx, lat]`` or 
+    .. NOTE::   1. ``ampe``, ``ampw``, ``phasee``, and ``phasew`` have
+        dimensions ``[kmx, tmx]`` or ``[kmx, tmx, lat]`` or
         ``[kmx, tmx, lev, lat]`` etc.\n
-        2. The x and y axes may be constructed as follows, which will 
+        2. The x and y axes may be constructed as follows, which will
         display the eastern and western modes::
-            
+
             klon = np.arange(0, kmx) # [wavenumber] [cycle/sol]
             ktime = np.append(-np.arange(tmx, 0, -1), np.arange(0, tmx))
             KTIME, KLON = np.meshgrid(ktime, klon)
@@ -247,21 +246,21 @@ def space_time(lon, timex, varIN, kmx, tmx):
             phase = np.concatenate((phasew[:, ::-1], phasee), axis = 1)
     """
     # Get input variable dimensions
-    dims = varIN.shape 
+    dims = varIN.shape
     lon_id = dims[0]
     time_id = dims[-1]
-    
+
     # Additional dimensions stacked in the middle
     dim_sup_id = dims[1:-1]
-    
+
     # jd = total number of dimensions in the middle (``varIN > 3D``)
-    jd = int(np.prod(dim_sup_id))     
-    
+    jd = int(np.prod(dim_sup_id))
+
     # Flatten the middle dimensions, if any
     varIN = np.reshape(varIN, (lon_id, jd, time_id))
 
     # Initialize 4 empty arrays
-    ampw, ampe, phasew, phasee = ([np.zeros((kmx, tmx, jd)) for _x 
+    ampw, ampe, phasew, phasee = ([np.zeros((kmx, tmx, jd)) for _x
                                    in range(0, 4)])
 
     #TODO not implemented yet:
@@ -274,8 +273,8 @@ def space_time(lon, timex, varIN, kmx, tmx):
     # If timex = [0/24, 1/24, 2/24,.. 1] arg cycles for m [0, 2Pi]
     arg =  timex * 2*np.pi
     # Nyquist cut off
-    rnormt =  2. / len(arg)  
-    
+    rnormt =  2. / len(arg)
+
     for kk in range(0, kmx):
         progress(kk, kmx)
         cosx = np.cos(kk * argx) * rnorm
@@ -285,7 +284,7 @@ def space_time(lon, timex, varIN, kmx, tmx):
         # cosine and sine contributions of the spatial variation
         acoef = np.dot(varIN.T, cosx)
         bcoef = np.dot(varIN.T, sinx)
-        
+
         for nn in range(0, tmx):
             # Get the cosine and sine series expansions of the temporal
             # variations of the acoef and bcoef spatial terms
@@ -321,14 +320,14 @@ def space_time(lon, timex, varIN, kmx, tmx):
     phasew = np.reshape(phasew, (kmx, tmx) + dim_sup_id)
     phasee = np.reshape(phasee, (kmx, tmx) + dim_sup_id)
 
-    # TODO implement zonal mean: zamp, zphas (standing wave k = 0, 
+    # TODO implement zonal mean: zamp, zphas (standing wave k = 0,
     # zonally  averaged) stamp, stphs (stationary component ktime = 0)
-    
+
     # # varIN = reshape(varIN, dims)
     # # if nargout < 5:
     # #     # only ampe, ampw, phasee, phasew are requested
     # #     return
-    
+
     # #   Now calculate the axisymmetric tides  zamp,zphas
 
     # zvarIN = np.mean(varIN, axis=0)
@@ -345,7 +344,7 @@ def space_time(lon, timex, varIN, kmx, tmx):
     #     sinser =  np.dot(zvarIN, sinray)
 
     #     zamp[:, nn] = np.sqrt(cosser[:]**2 + sinser[:]**2).T
-    #     zphas[:, nn] = np.mod(-np.arctan2(sinser, cosser) 
+    #     zphas[:, nn] = np.mod(-np.arctan2(sinser, cosser)
     #                           + tpi, tpi).T * 180/np.pi
 
     # zamp = zamp.T
@@ -364,26 +363,26 @@ def space_time(lon, timex, varIN, kmx, tmx):
     # if len(dims) > 2:
     #     stamp = reshape(stamp, [kmx dims(2:end-1)])
     #     stphs = reshape(stphs, [kmx dims(2:end-1)])
-    
+
     return ampe, ampw, phasee, phasew
 
-def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4, 
+def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
                    no_trend=False):
     """
-    A temporal filter that uses a forward and backward pass to prevent 
+    A temporal filter that uses a forward and backward pass to prevent
     phase shift. Alex Kling 2020.
-    
-    :param VAR: values for filtering 1D or ND array. Filtered dimension 
+
+    :param VAR: values for filtering 1D or ND array. Filtered dimension
         must be FIRST. Adjusts axis as necessary.
     :type VAR: array
     :param btype: filter type (i.e., "low", "high" or "band")
     :type btype: str
-    :param low_high_cut: low, high, or [low, high] cutoff frequency 
+    :param low_high_cut: low, high, or [low, high] cutoff frequency
         depending on the filter [Hz or m-1]
     :type low_high_cut: int
     :param fs: sampling frequency [Hz or m-1]
     :type fs: int
-    :param axis: if data is an ND array, this identifies the filtering 
+    :param axis: if data is an ND array, this identifies the filtering
         dimension
     :type axis: int
     :param order: order for the filter
@@ -394,7 +393,7 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
 
     :return: the filtered data
 
-    .. NOTE:: ``Wn=[low, high]`` are expressed as a function of the 
+    .. NOTE:: ``Wn=[low, high]`` are expressed as a function of the
         Nyquist frequency
     """
     # Create the filter
@@ -402,13 +401,13 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
     nyq = 0.5*fs
     b, a = butter(order, low_highcut/nyq, btype = btype)
 
-    # Detrend the data, this is the equivalent of doing linear 
+    # Detrend the data, this is the equivalent of doing linear
     # regressions across the time axis at each grid point
     VAR_detrend = detrend(VAR, axis = axis, type = "linear")
-    
+
     # Trend = variable - detrend array
-    VAR_trend = VAR - VAR_detrend 
-    
+    VAR_trend = VAR - VAR_detrend
+
     VAR_f = filtfilt(b, a, VAR_detrend, axis = axis)
 
     if no_trend:
@@ -419,18 +418,18 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
 def zonal_decomposition(VAR):
     """
     Decomposition into spherical harmonics. [A. Kling, 2020]
-    
-    :param VAR: Detrend variable for decomposition. Lat is SECOND to 
-        LAST dimension and lon is LAST (e.g., ``[time,lat,lon]`` or 
+
+    :param VAR: Detrend variable for decomposition. Lat is SECOND to
+        LAST dimension and lon is LAST (e.g., ``[time,lat,lon]`` or
         ``[time,lev,lat,lon]``)
-    
-    :return: (COEFFS) coefficient for harmonic decomposion, shape is 
+
+    :return: (COEFFS) coefficient for harmonic decomposion, shape is
         flattened (e.g., ``[time, 2, lat/2, lat/2]``
         ``[time x lev, 2, lat/2, lat/2]``);
-        (power_per_l) power spectral density, shape is re-organized 
+        (power_per_l) power spectral density, shape is re-organized
         (e.g., [time, lat/2] or [time, lev, lat/2])
-    
-    .. NOTE:: Output size is (``[...,lat/2, lat/2]``) as lat is the 
+
+    .. NOTE:: Output size is (``[...,lat/2, lat/2]``) as lat is the
         smallest dimension. This matches the Nyquist frequency.
     """
     # TODO: Not optimal but prevent issues when library is not installed
@@ -443,7 +442,7 @@ def zonal_decomposition(VAR):
     reshape_flat = np.append(nflatten, var_shape[-2:])
     VAR = VAR.reshape(reshape_flat)
 
-    coeff_out_shape = np.append(var_shape[0:-2], 
+    coeff_out_shape = np.append(var_shape[0:-2],
                                 [2, var_shape[-2]//2, var_shape[-2]//2])
     psd_out_shape = np.append(var_shape[0:-2], var_shape[-2]//2)
     coeff_flat_shape = np.append(nflatten, coeff_out_shape[-3:])
@@ -457,23 +456,23 @@ def zonal_decomposition(VAR):
 
     return  COEFFS, psd.reshape(psd_out_shape)
 
-def zonal_construct(COEFFS_flat,VAR_shape,btype=None,low_highcut=None):
+def zonal_construct(COEFFS_flat, VAR_shape, btype=None, low_highcut=None):
     """
     Recomposition into spherical harmonics
-    
-    :param COEFFS_flat: Spherical harmonic coefficients as a flattened 
-        array, (e.g., ``[time, lat, lon]`` or 
+
+    :param COEFFS_flat: Spherical harmonic coefficients as a flattened
+        array, (e.g., ``[time, lat, lon]`` or
         ``[time x lev, 2, lat, lon]``)
     :type COEFFS_flat: array
     :param VAR_shape: shape of the original variable
     :type VAR_shape: tuple
-    :param btype: filter type: "low", "high", or "band". If None, 
+    :param btype: filter type: "low", "high", or "band". If None,
         returns reconstructed array using all zonal wavenumbers
     :type btype: str or None
     :param low_high_cut: low, high or [low, high] zonal wavenumber
     :type low_high_cut: int
 
-    :return: detrended variable reconstructed to original size 
+    :return: detrended variable reconstructed to original size
         (e.g., [time, lev, lat, lon])
 
     .. NOTE:: The minimum and maximum wavelenghts in [km] are computed::
@@ -482,25 +481,30 @@ def zonal_construct(COEFFS_flat,VAR_shape,btype=None,low_highcut=None):
         L_max = 1./max(kmin, 1.e-20) * dx
         if L_max > 1.e20:
             L_max = np.inf
-        print("(kmin,kmax) = ({kmin}, {kmax}) 
+        print("(kmin,kmax) = ({kmin}, {kmax})
               -> dx min = {L_min} km, dx max = {L_max} km")
     """
-    #init_shtools() #Not optimal but prevent issues when library is not installed
-    #--Initialization---
+    # Not optimal but prevent issues when library is not installed
+    #init_shtools()
 
-    nflatten=COEFFS_flat.shape[0]
-    kmin=0
-    kmax=COEFFS_flat.shape[-1]
+    # Initialization
+    nflatten = COEFFS_flat.shape[0]
+    kmin = 0
+    kmax = COEFFS_flat.shape[-1]
 
-    VAR=np.zeros((nflatten,VAR_shape[-2],VAR_shape[-1]))
+    VAR = np.zeros((nflatten, VAR_shape[-2], VAR_shape[-1]))
 
-    if btype == 'low':  kmax= int(low_highcut)
-    if btype == 'high': kmin= int(low_highcut)
-    if btype == 'band': kmin,kmax= int(low_highcut[0]), int(low_highcut[1])
+    if btype == "low":
+        kmax= int(low_highcut)
+    if btype == "high":
+        kmin= int(low_highcut)
+    if btype == "band":
+        kmin, kmax= int(low_highcut[0]), int(low_highcut[1])
 
-    for ii in range(0,nflatten):
-        #=========Filtering===========
-        COEFFS_flat[ii,:, :kmin, :] = 0.
-        COEFFS_flat[ii,:, kmax:, :] = 0.
-        VAR[ii,:,:] = pyshtools.expand.MakeGridDH(COEFFS_flat[ii,:,:], sampling=2)
+    for ii in range(0, nflatten):
+        # Filtering
+        COEFFS_flat[ii, :, :kmin, :] = 0.
+        COEFFS_flat[ii, :, kmax:, :] = 0.
+        VAR[ii, :, :] = pyshtools.expand.MakeGridDH(COEFFS_flat[ii, :, :],
+                                                  sampling = 2)
     return  VAR.reshape(VAR_shape)

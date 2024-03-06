@@ -80,7 +80,6 @@ parser.add_argument("-marswrf", "--marswrf", nargs="+",
 parser.add_argument("--debug", action="store_true",
     help = (f"Debug flag: do not bypass errors.\n\n"))
 
-
 # ======================================================================
 #                           DEFINITIONS
 # ======================================================================
@@ -117,10 +116,10 @@ def marswrf_to_mgcm(DS):
     ========== =============== ========== ================================
     ``XTIME``  ``time``        days       converted from minutes to
                                           days since simulation start
-    ``L_S``    ``areo``        degree
+    ``L_S``    ``areo``        °
     ``PSFC``   ``ps``          Pa
-    ``XLONG``  ``lon``         degree E
-    ``XLAT``   ``lat``         degree N
+    ``XLONG``  ``lon``         °E
+    ``XLAT``   ``lat``         °N
     ``HGT``    ``zsurf``       meters
     ``U``      ``ucomp``       m/s        Requires interpolation to a
                                           regular grid
@@ -148,7 +147,6 @@ def marswrf_to_mgcm(DS):
         ``phalf`` (array) Half pressure levels\n
         ``pfull`` (array) Full pressure levels\n
     """
-
     # Find shape of coordinates. Expecting [t,z,y,x]
     WRF_dims = np.shape(DS.T)
     Xmax = WRF_dims[3]  # x
@@ -167,7 +165,7 @@ def marswrf_to_mgcm(DS):
     pfull = DS.P_TOP[0] + DS.ZNU[0, :]*DS.P0
     phalf = DS.P_TOP[0] + DS.ZNW[0, :]*DS.P0
 
-    # Calculate level height above the Surface (i.e. above topo)
+    # Calculate level height above the Surface (i.e., above topo)
     zagl_lvl = ((DS.PH[:, :Zmax, :, :] + DS.PHB[0, :Zmax, :, :])
                 / DS.G
                 - DS.HGT[0, :, :])
@@ -201,13 +199,14 @@ def marswrf_to_mgcm(DS):
     zfull3D = 0.5*(zagl_lvl[:, :-1, :, :] + zagl_lvl[:, 1:, :, :])
 
     # Derive atmospheric temperature [K]
-    gamma = (DS.CP/(DS.CP - DS.R_D))
-    temp = (DS.T + DS.T0)*(pfull3D / DS.P0)**((gamma-1.)/gamma)
+    gamma = (DS.CP / (DS.CP - DS.R_D))
+    temp = (DS.T + DS.T0) * (pfull3D / DS.P0)**((gamma-1.)/gamma)
 
     # Derive ak, bk
     ak = np.zeros(len(phalf))
     bk = np.zeros(len(phalf))
-    ak[-1] = DS.P_TOP[0]  # in MarsWRF, pressure increases w/N
+    # In MarsWRF, pressure increases with N
+    ak[-1] = DS.P_TOP[0]
     bk[:] = DS.ZNW[0, :]
 
     # Archive variables
@@ -333,7 +332,7 @@ def main():
 
         print("Processing...")
 
-        input_DS = xr.open_dataset(input_file_name, decode_times=False)
+        input_DS = xr.open_dataset(input_file_name, decode_times = False)
 
         # If user indicated marsWRF data
         if parser.parse_args().marswrf:
@@ -349,27 +348,23 @@ def main():
         coord_attributes = {
             "time": ["time", "days"],
             "pfull": ["ref full pressure level", "Pa"],
-            "lat": ["latitudes", "degrees_N"],
-            "lon": ["longitudes", "degrees_E"],
-            "phalf": ["ref pressure at layer boundaries", "Pa"]
-        }
+            "lat": ["latitudes", "degree_N"],
+            "lon": ["longitudes", "degree_E"],
+            "phalf": ["ref pressure at layer boundaries", "Pa"]}
 
         coord_values = {
             "time": np.array(time),
             "phalf": np.array(phalf),
             "pfull": np.array(pfull),
             "lat": np.array(lat),
-            "lon": np.array(lon)
-        }
+            "lon": np.array(lon)}
 
         # Empty the dictionary
         var_DataArray = {}
         # Assign description and unit attributes to the dictionary
         for var in archive_vars.keys():
-            var_DataArray[var] = xr.DataArray(
-                np.array(archive_vars[var][0]),
-                dims = archive_vars[var][1]
-            )
+            var_DataArray[var] = xr.DataArray(np.array(archive_vars[var][0]),
+                                              dims = archive_vars[var][1])
             var_DataArray[var].attrs["long_name"] = archive_vars[var][2]
             var_DataArray[var].attrs["units"] =  archive_vars[var][3]
 
@@ -405,20 +400,20 @@ def main():
         # If areo does not have dimension scalar_axis, add it
         input_dimensions = DF.dims
         if "scalar_axis" not in input_dimensions:
-            scalar_axis = DF.assign_coords(scalar_axis=1)
+            scalar_axis = DF.assign_coords(scalar_axis = 1)
 
         # Ensure areo dimension order is (time, scalar_axis)
         if DF.areo.dims != ("time", scalar_axis):
-            DF["areo"] = DF.areo.expand_dims("scalar_axis", axis=1)
+            DF["areo"] = DF.areo.expand_dims("scalar_axis", axis = 1)
 
         # Pipe processed data to a new netCDF file
         DF.to_netcdf(output_file_name)
 
         print(f"{Cyan}{output_file_name} was created{Nclr}")
 
-# ======================================================
-#                  END OF PROGRAM
-# ======================================================
+# ======================================================================
+#                           END OF PROGRAM
+# ======================================================================
 
 if __name__ == "__main__":
     main()

@@ -165,9 +165,8 @@ def main():
         need_to_reverse = False
         interp_technic = "log"
 
-        content_txt = section_content_amescap_profile(
-            "Pressure definitions for pstd"
-        )
+        content_txt = section_content_amescap_profile("Pressure definitions "
+                                                      "for pstd")
         # Load all variables in that section
         exec(content_txt)
 
@@ -183,9 +182,8 @@ def main():
         need_to_reverse = True
         interp_technic = "lin"
 
-        content_txt = section_content_amescap_profile(
-            "Altitude definitions for zstd"
-        )
+        content_txt = section_content_amescap_profile("Altitude definitions "
+                                                      "for zstd")
         # Load all variables in that section
         exec(content_txt)
 
@@ -216,9 +214,8 @@ def main():
         need_to_reverse = True
         interp_technic = "lin"
 
-        content_txt = section_content_amescap_profile(
-            "Altitude definitions for zagl"
-        )
+        content_txt = section_content_amescap_profile("Altitude definitions "
+                                                      "for zagl")
         # Load all variables in that section
         exec(content_txt)
 
@@ -248,15 +245,14 @@ def main():
             newname = (f"{filepath}/{ifile[:-3]}_{interp_type}.nc")
 
         # ==============================================================
-        # ======================== Interpolation =======================
+        #                       Interpolation
         # ==============================================================
 
-        fNcdf = Dataset(ifile, "r", format="NETCDF4_CLASSIC")
+        fNcdf = Dataset(ifile, "r", format = "NETCDF4_CLASSIC")
         # Load pk, bk, and ps for 3D pressure field calculation.
         # Read the pk and bk for each file in case the vertical
         # resolution has changed.
         ak, bk = ak_bk_loader(fNcdf)
-
         ps = np.array(fNcdf.variables["ps"])
 
         # For pstd only: Uncommenting the following line will use
@@ -267,46 +263,41 @@ def main():
             do_diurn = False
             tod_name = "not_used"
             # Put vertical axis first for 4D variable,
-            # e.g (time, lev, lat, lon) >>> (lev, time, lat, lon)
+            # e.g., [time, lev, lat, lon] -> [lev, time, lat, lon]
             permut = [1, 0, 2, 3]
-            # ( 0 1 2 3 ) >>> ( 1 0 2 3 )
+            # [0 1 2 3] -> [1 0 2 3]
         elif len(ps.shape) == 4:
             do_diurn = True
             # Find time_of_day variable name
             tod_name = find_tod_in_diurn(fNcdf)
             # Same for diurn files,
-            # e.g (time, time_of_day_XX, lev, lat, lon)
-            # >>> (lev, time_of_day_XX, time, lat, lon)
+            # e.g., [time, time_of_day_XX, lev, lat, lon]
+            # -> [lev, time_of_day_XX, time, lat, lon]
             permut = [2, 1, 0, 3, 4]
-            # ( 0 1 2 3 4) >>> ( 2 1 0 3 4 )
+            # [0 1 2 3 4] -> [2 1 0 3 4]
 
         # Compute levels in the file, these are permutted arrays
         # Suppress "divide by zero" error
-        with np.errstate(divide="ignore", invalid="ignore"):
+        with np.errstate(divide = "ignore", invalid = "ignore"):
             if interp_type == "pstd":
-                # Permute by default dimension, e.g lev is first
-                L_3D_P = fms_press_calc(ps, ak, bk, lev_type="full")
+                # Permute by default dimension, e.g., lev is first
+                L_3D_P = fms_press_calc(ps, ak, bk, lev_type = "full")
 
             elif interp_type == "zagl":
                 temp = fNcdf.variables["temp"][:]
-                L_3D_P = fms_Z_calc(ps, ak, bk,
-                                    temp.transpose(permut),
-                                    topo=0.,
-                                    lev_type="full")
+                L_3D_P = fms_Z_calc(ps, ak, bk, temp.transpose(permut),
+                                    topo = 0., lev_type = "full")
 
             elif interp_type == "zstd":
                 temp = fNcdf.variables["temp"][:]
                 # Expand the zsurf array to the time dimension
-                zflat = np.repeat(zsurf[np.newaxis, :], ps.shape[0], axis=0)
+                zflat = np.repeat(zsurf[np.newaxis, :], ps.shape[0], axis = 0)
                 if do_diurn:
-                    zflat = np.repeat(zflat[:, np.newaxis, :, :],
-                                      ps.shape[1],
-                                      axis=1)
+                    zflat = np.repeat(zflat[:, np.newaxis, :, :], ps.shape[1],
+                                      axis = 1)
 
-                L_3D_P = fms_Z_calc(ps, ak, bk,
-                                    temp.transpose(permut),
-                                    topo=zflat,
-                                    lev_type="full")
+                L_3D_P = fms_Z_calc(ps, ak, bk, temp.transpose(permut),
+                                    topo = zflat, lev_type = "full")
 
         fnew = Ncdf(newname, "Pressure interpolation using MarsInterp.py")
 
@@ -335,8 +326,8 @@ def main():
         # Re-use the indices for each file, speeds up the calculation
         compute_indices = True
         for ivar in var_list:
-            if (fNcdf.variables[ivar].dimensions == ("time", "pfull",
-                                                     "lat", "lon") or
+            if (fNcdf.variables[ivar].dimensions == ("time", "pfull", "lat",
+                                                     "lon") or
                 fNcdf.variables[ivar].dimensions == ("time", tod_name, "pfull",
                                                      "lat", "lon") or
                 fNcdf.variables[ivar].dimensions == ("time", "pfull",
@@ -344,17 +335,18 @@ def main():
                 if compute_indices:
                     print(f"{Cyan}Computing indices ...{Nclr}")
                     index = find_n(L_3D_P, lev_in,
-                                   reverse_input=need_to_reverse)
+                                   reverse_input = need_to_reverse)
                     compute_indices = False
 
                 print(f"{Cyan}Interpolating: {ivar} ...{Nclr}")
                 varIN = fNcdf.variables[ivar][:]
                 # This with the loop suppresses "divide by zero" errors
-                with np.errstate(divide="ignore", invalid="ignore"):
-                    varOUT = vinterp(
-                        varIN.transpose(permut), L_3D_P, lev_in,
-                        type_int=interp_technic, reverse_input=need_to_reverse,
-                        masktop=True, index=index).transpose(permut)
+                with np.errstate(divide = "ignore", invalid = "ignore"):
+                    varOUT = vinterp(varIN.transpose(permut), L_3D_P, lev_in,
+                                     type_int = interp_technic,
+                                     reverse_input = need_to_reverse,
+                                     masktop = True,
+                                     index = index).transpose(permut)
 
                 long_name_txt = getattr(fNcdf.variables[ivar], "long_name", "")
                 units_txt = getattr(fNcdf.variables[ivar], "units", "")
@@ -363,30 +355,28 @@ def main():
 
                 if not do_diurn:
                     if "tile" in ifile:
-                        fnew.log_variable(
-                            ivar, varOUT, ("time", interp_type,
-                                           "grid_yt", "grid_xt"),
-                            long_name_txt, units_txt)
+                        fnew.log_variable(ivar, varOUT, ("time", interp_type,
+                                                         "grid_yt", "grid_xt"),
+                                          long_name_txt, units_txt)
                     else:
-                        fnew.log_variable(
-                            ivar, varOUT, ("time", interp_type, "lat", "lon"),
-                            long_name_txt, units_txt)
+                        fnew.log_variable(ivar, varOUT, ("time", interp_type,
+                                                         "lat", "lon"),
+                                          long_name_txt, units_txt)
                 else:
                     if "tile" in ifile:
-                        fnew.log_variable(
-                            ivar, varOUT, ("time", tod_name, interp_type,
-                                           "grid_yt", "grid_xt"),
-                            long_name_txt, units_txt)
+                        fnew.log_variable(ivar, varOUT, ("time", tod_name,
+                                                         interp_type,
+                                                         "grid_yt", "grid_xt"),
+                                          long_name_txt, units_txt)
                     else:
-                        fnew.log_variable(
-                            ivar, varOUT, ("time", tod_name, interp_type,
-                                           "lat", "lon"),
-                            long_name_txt, units_txt)
+                        fnew.log_variable(ivar, varOUT, ("time", tod_name,
+                                                         interp_type, "lat",
+                                                         "lon"),
+                                          long_name_txt, units_txt)
             else:
                 if ivar not in ["time", "pfull", "lat", "lon", "phalf", "ak",
                                 "pk", "bk", "pstd", "zstd", "zagl", tod_name,
                                 "grid_xt", "grid_yt"]:
-                    #print("\r Copying over: %s..."%(ivar), end="")
                     print(f"{Cyan}Copying over: {ivar}...{Nclr}")
                     fnew.copy_Ncvar(fNcdf.variables[ivar])
 

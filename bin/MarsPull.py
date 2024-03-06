@@ -91,39 +91,35 @@ global SAVEDIR, ls_0, ls_N
 
 SAVEDIR = (f"{os.getcwd()}/")
 
-# available files by Ls:
+# Available files by Ls:
 Ls_ini = np.array([
     0, 5, 10, 15, 19, 24, 29, 34, 38, 43, 48, 52, 57, 61, 66, 70, 75,
     79, 84, 88, 93, 97, 102, 106, 111, 116, 121, 125, 130, 135, 140,
     146, 151, 156, 162, 167, 173, 179, 184, 190, 196, 202, 209, 215,
     221, 228, 234, 241, 247, 254, 260, 266, 273, 279, 286, 292, 298,
-    304, 310, 316,322, 328, 333, 339, 344, 350, 355
-])
-# available files by Ls:
+    304, 310, 316,322, 328, 333, 339, 344, 350, 355])
+
+# Available files by Ls:
 ls_0 = np.array([
     0, 5, 10, 15, 19, 24, 29, 34, 38, 43, 48, 52, 57, 61, 66, 70, 75,
     79, 84, 88, 93, 97, 102, 106, 111, 116, 121, 125, 130, 135, 140,
     146, 151, 156, 162, 167, 173, 179, 184, 190, 196, 202, 209, 215,
     221, 228, 234, 241, 247, 254, 260, 266, 273, 279, 286, 292, 298,
-    304, 310, 316,322, 328, 333, 339, 344, 350, 355
-])
+    304, 310, 316,322, 328, 333, 339, 344, 350, 355])
 
 Ls_end = np.array([
     4, 9, 14, 19, 24, 29, 33, 38, 42, 47, 52, 56, 61, 65, 70, 74, 79,
     83, 88, 92, 97, 101, 106, 111, 115, 120, 125, 130, 135, 140, 145,
     150, 156, 161, 167, 172, 178, 184, 190, 196, 202, 208, 214, 221,
     227, 233, 240, 246, 253, 259, 266, 272, 279, 285, 291, 297, 304,
-    310, 316, 321, 327, 333, 338, 344, 349, 354, 0
-])
+    310, 316, 321, 327, 333, 338, 344, 349, 354, 0])
 
 ls_N = np.array([
     4, 9, 14, 19, 24, 29, 33, 38, 42, 47, 52, 56, 61, 65, 70, 74, 79,
     83, 88, 92, 97, 101, 106, 111, 115, 120, 125, 130, 135, 140, 145,
     150, 156, 161, 167, 172, 178, 184, 190, 196, 202, 208, 214, 221,
     227, 233, 240, 246, 253, 259, 266, 272, 279, 285, 291, 297, 304,
-    310, 316, 321, 327, 333, 338, 344, 349, 354, 0
-])
-
+    310, 316, 321, 327, 333, 338, 344, 349, 354, 0])
 
 def download(file_name, simulation_id):
     """
@@ -158,19 +154,18 @@ def download(file_name, simulation_id):
     filename = SAVEDIR + file_name
 
     # Use a context manager to make an HTTP request and file
-    rsp = requests.get(URL, stream=True)
+    rsp = requests.get(URL, stream = True)
 
     # Get the total size, in bytes, from the response header
     total_size = rsp.headers.get("content-length")
 
     if rsp.status_code == 404:
-        print(f"{Yellow}ERROR File not found! Error code: {rsp.status_code}{Nclr}")
+        print(f"{Yellow}ERROR File not found! Error code: "
+              f"{rsp.status_code}{Nclr}")
         exit()
-
     else:
         # Download the data and show a progress bar
         print(f"{Cyan}Downloading {file_name}...{Nclr}")
-
         with open(filename, "wb") as f:
             downloaded = 0
             if total_size:
@@ -191,7 +186,6 @@ def download(file_name, simulation_id):
                 sys.stdout.write(f"\r[{'#'*status}{'.'*(50-status)}]")
                 sys.stdout.flush()
         sys.stdout.write("\n")
-
 
 # ======================================================================
 #                           MAIN PROGRAM
@@ -230,14 +224,13 @@ def main():
         print(f"{Cyan}Saving {len(num_files)} file(s) to {SAVEDIR}{Nclr}")
 
         for n in num_files:
-            # For netCDF files
             if simulation_id == "ACTIVECLDS_NCDF":
-                file_name = (
-                    f"LegacyGCM_Ls{ls_0[n]:03d}_Ls{ls_N[n]:03d}.nc"
-                )
-            # For fort.11 files
+                # For netCDF files
+                file_name = (f"LegacyGCM_Ls{ls_0[n]:03d}_Ls{ls_N[n]:03d}.nc")
             else:
+                # For fort.11 files
                 file_name = (f"fort.11_{(670 + n):04d}")
+            
             # Trigger the file download
             download(file_name, simulation_id)
 
@@ -246,7 +239,7 @@ def main():
         file_name_in = np.asarray(parser.parse_args().filename)
         print(f"{Cyan}Saving {len(file_name_in)} file(s) to {SAVEDIR}{Nclr}")
         for file_name in file_name_in:
-            # trigger the file download
+            # Trigger the file download
             download(file_name, simulation_id)
     else:
         # If the user did not specify Ls or a file name

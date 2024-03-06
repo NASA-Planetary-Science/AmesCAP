@@ -72,10 +72,10 @@ Functions
    ========== =============== ========== ================================
    ``XTIME``  ``time``        days       converted from minutes to
                                          days since simulation start
-   ``L_S``    ``areo``        degree
+   ``L_S``    ``areo``        °
    ``PSFC``   ``ps``          Pa
-   ``XLONG``  ``lon``         degree E
-   ``XLAT``   ``lat``         degree N
+   ``XLONG``  ``lon``         °E
+   ``XLAT``   ``lat``         °N
    ``HGT``    ``zsurf``       meters
    ``U``      ``ucomp``       m/s        Requires interpolation to a
                                          regular grid

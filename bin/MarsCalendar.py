@@ -111,7 +111,6 @@ def parse_array(len_input):
         ``input_as_arr=[300]``. If ``len_input = 300 310 2``, then
         ``input_as_arr = [300, 302, 304, 306, 308]``.\n
     """
-
     if len(len_input) == 1:
         input_as_arr = len_input
 
@@ -121,7 +120,8 @@ def parse_array(len_input):
 
     else:
         print(f"{Red}ERROR either ``[-ls --ls]`` or ``[-sol --sol]`` are "
-              f"required. See ``MarsCalendar.py -h`` for additional help.{Nclr}")
+              f"required. See ``MarsCalendar.py -h`` for additional "
+              f"help.{Nclr}")
         exit()
     return(input_as_arr)
 
@@ -164,9 +164,9 @@ def main():
 
     print("\n")
 
-# ======================================================
-#                  END OF PROGRAM
-# ======================================================
+# ======================================================================
+#                           END OF PROGRAM
+# ======================================================================
 
 if __name__ == "__main__":
     main()

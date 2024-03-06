@@ -421,7 +421,7 @@ Functions
 
 .. py:function:: format_lon_lat(lon_lat, type)
 
-   Format latitude and longitude as labels (e.g., 30S, 30N, 45W, 45E)
+   Format latitude and longitude as labels (e.g., 30°S, 30°N, 45°W, 45°E)
 
    :param lon_lat: latitude or longitude (+180/-180)
    :type lon_lat: float
