@@ -431,11 +431,11 @@ def time_shift(file_list):
     :type file_list: list
     """
     if parser.parse_args().tshift == 999:
-        target_list = None # target local times requested by user
+        # Target local times requested by user
+        target_list = None 
     else:
-        target_list = np.fromstring(
-            parser.parse_args().tshift, dtype = float, sep=" "
-        )
+        target_list = np.fromstring(parser.parse_args().tshift, 
+                                    dtype = float, sep=" ")
 
     for file in file_list:
         # Add path unless full path is provided
@@ -519,11 +519,12 @@ def time_shift(file_list):
             value = fdiurn.variables[var][:]
             dims = fdiurn.variables[var].dimensions
             longname_txt, units_txt = get_longname_units(fdiurn, var)
-
-            y = dims.index("lat")
-            x = dims.index("lon")
-            t = dims.index("time")
-            tod = dims.index(tod_name_in)
+            
+            if (len(dims) >= 4):
+                y = dims.index("lat")
+                x = dims.index("lon")
+                t = dims.index("time")
+                tod = dims.index(tod_name_in)
 
             if (len(dims) == 4):
                 # time, tod, lat, lon
