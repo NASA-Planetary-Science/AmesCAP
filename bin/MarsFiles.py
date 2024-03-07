@@ -557,6 +557,14 @@ def main():
     file_list = parser.parse_args().input_file
     data_dir = os.getcwd()
 
+    # Make a list of input files including the full path to the dir
+    full_file_list = []
+    for file in file_list:
+        if not ("/" in file):
+            full_file_list.append(f"{data_dir}/{file}")
+        else:
+            full_file_list.append(f"{file}")
+            
     if parser.parse_args().fv3 and parser.parse_args().combine:
         print(f"{Red}Use --fv3 and --combine separately to avoid ambiguity")
         exit()
@@ -572,14 +580,6 @@ def main():
             if req_file not in ["fixed", "average", "daily", "diurn"]:
                 print(f"{Red}{req_file} is invalid. Select ``fixed``, "
                       f"``average``, ``daily``, or ``diurn``{Nclr}")
-
-        # Make a list of input files including the full path to the dir
-        full_file_list = []
-        for file in file_list:
-            if not ("/" in file):
-                full_file_list.append(f"{data_dir}/{file}")
-            else:
-                full_file_list.append(f"{file}")
 
         # lsmin = None
         # lsmax = None
@@ -612,13 +612,13 @@ def main():
                     file_name.write_to_daily()
                 if "diurn" in parser.parse_args().fv3:
                     file_name.write_to_diurn()
-
-    # Combine files along the time dimension
+                    
     elif parser.parse_args().combine:
+        # Combine files along the time dimension
         combine_files(file_list, full_file_list)
-
-    # Time-shift files
+        
     elif parser.parse_args().tshift:
+        # Time-shift files
         time_shift(file_list)
 
     # ==================================================================

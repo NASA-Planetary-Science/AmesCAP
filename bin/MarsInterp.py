@@ -28,7 +28,7 @@ Third-party Requirements:
     * ``matplotlib``
 """
 
-# make print statements appear in color
+# Make print statements appear in color
 from amescap.Script_utils import (Cyan, Red, Blue, Yellow, Nclr, Green, Cyan)
 
 # load generic Python modules
@@ -42,7 +42,7 @@ from netCDF4 import Dataset
 # Force matplotlib NOT load Xwindows backend
 matplotlib.use("Agg")
 
-# load amesCAP modules
+# Load amesCAP modules
 from amescap.FV3_utils import (
     fms_press_calc, fms_Z_calc, vinterp,find_n
 )
