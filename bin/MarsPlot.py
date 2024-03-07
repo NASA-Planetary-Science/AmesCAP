@@ -1842,12 +1842,12 @@ def create_name(root_name):
 
     if os.path.isfile(new_name):
         # If example.png already exists, create example_01.png
-        new_name = f"{root_name[0:-(len_ext+1)]}_{n:02}.ext"
+        new_name = f"{root_name[0:-(len_ext+1)]}_{n:02}.{ext}"
 
-    while os.path.isfile(f"{root_name[0:-(len_ext+1)]}_{n:02}.ext"):
+    while os.path.isfile(f"{root_name[0:-(len_ext+1)]}_{n:02}.{ext}"):
         # If example_01.png already exists, create example_02.png etc
         n = n+1
-        new_name = f"{root_name[0:-(len_ext+1)]}_{n:02}.ext"
+        new_name = f"{root_name[0:-(len_ext+1)]}_{n:02}.{ext}"
     return new_name
 
 def path_to_template(custom_name):

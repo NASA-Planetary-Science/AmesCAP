@@ -710,7 +710,7 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int="lin",
             # element array) and the values are NOT cyclic.
             n = 0
         if type_int == "log":
-            alpha = np.log(xi[k]/x[np1]) / np.log(x[n]/x[np1])
+            alpha = (np.log(xi[k]/x[np1]) / np.log(x[n]/x[np1]))
         elif type_int == "lin":
             if modulo is None:
                 alpha = (xi[k] - x[np1]) / (x[n] - x[np1])
