@@ -341,7 +341,7 @@ def main():
             fig_list = list()
             if objectList[i_list].subID == objectList[i_list].nPan:
                 if (i_list < len(objectList)-1 and not
-                    objectList[i_list+1].addLine):
+                    objectList[i_list + 1].addLine):
                     fig_list.append(objectList[i_list].fig_name)
                 if i_list == len(objectList)-1:
                     fig_list.append(objectList[i_list].fig_name)
@@ -863,7 +863,7 @@ def get_time_index(Ls_query_360, LsDay):
             Ls_query_beg = Ls_query_360[0] + (MY_beg-1)*360.
             ti_beg = np.argmin(np.abs(Ls_query_beg - LsDay))
 
-        ti = np.arange(ti_beg, ti_last+1)
+        ti = np.arange(ti_beg, ti_last + 1)
         Ls_bounds = [LsDay[ti[0]], LsDay[ti[-1]]]
         txt_time = (f", Ls= avg [(MY{MY_beg:02}) "
                     f"{np.mod(Ls_bounds[0], 360.):.2f} <-> (MY{MY_last:02}) "
@@ -1373,78 +1373,78 @@ def make_template():
     # Create header with instructions
     # Add the version number to the title
     customFileIN.write(
-        f"===================== |MarsPlot V{current_version}| ===================\n")
+        f"===================== |MarsPlot V{str(current_version)}| ===================\n")
     if parser.parse_args().template:
         # Additional instructions if requested
         customFileIN.write(
-            lh+"================================================= INSTRUCTIONS =================================================\n")
-        customFileIN.write(lh+"- Copy/paste template for the desired plot type. - Do not modify text left of an equal ``=`` sign. \n")
-        customFileIN.write(lh+"- Add comments using ``#``                         - Skip plots by setting <<<< Plot = False >>>> \n")
-        customFileIN.write(lh+"- Capitalize ``True``, ``False``, and ``None``.        - Do not use quotes ("") anywhere in this file. \n")
-        customFileIN.write(lh+"\n")
-        customFileIN.write(lh+"Group figures onto pages using``HOLD ON`` and ``HOLD OFF``. \n")
-        customFileIN.write(lh+"Optionally, use ``row,col`` to specify the layout: HOLD ON 2,3``. \n")
-        customFileIN.write(lh+"Use ``ADD LINE`` between 1D plots to overplot on the same figure. \n")
-        customFileIN.write(lh+"Figures templates must appear after ``START`` and before ``STOP``. \n")
-        customFileIN.write(lh+"Set the colorbar range with ``Cmin, Cmax``. Scientific notation (e.g., 1e-6, 2e3) is supported. \n")
-        customFileIN.write(lh+"Set the colorbar intervals directly by providing a list (e.g., 1e-6, 1e-4, 1e-2, 1e-0). \n")
-        customFileIN.write(lh+"Set the contour intervals for ``2nd Variable`` in a list (e.g., 150, 200, 250, 300, 350). \n")
-        customFileIN.write(lh+"The vertical grid of the *.nc file used in the plot determines what ``Level`` refers to.\n")
-        customFileIN.write(lh+"   ``Level`` can be: ``level``, ``pfull``, ``pstd``, ``plevs`` [Pa] or ``zstd``, ``zagl``, or ``zgrid`` [m].\n")
-        customFileIN.write(lh+"\n")
-        customFileIN.write(lh+"============================================ ALGEBRA ============================================\n")
-        customFileIN.write(lh+"Use square brackets ``[]`` for element-wise operations: \n")
-        customFileIN.write(lh+"   ``[fixed.zsurf]/(10.**3)``            Convert between units ([m] to [km], in this case).\n")
-        customFileIN.write(lh+"   ``[file.var1]/[file.var2]*610``       Multiply variables together.\n")
-        customFileIN.write(lh+"   ``[file.var]-[file@2.var]``           Difference plot of ``var`` from 2 simulations.\n")
-        customFileIN.write(lh+"   ``[file.var]-[file.var{lev=10}]``     Difference plot of ``var`` at two levels.\n")
-        customFileIN.write(lh+"Square brackets support the following expressions: sqrt, log, exp, abs, min, max, & mean.\n")
-        customFileIN.write(lh+"\n")
-        customFileIN.write(lh+"========================================= FREE DIMENSIONS =========================================\n")
-        customFileIN.write(lh+"Dimensions can be ``time``, ``lev``, ``lat``, ``lon``, or ``tod``.\n")
-        customFileIN.write(lh+"Dimensions default to None when a value or range is not specified. None corresponds to: \n")
-        customFileIN.write(lh+"   time  =  -1      The last (most recent) timestep (Nt).\n")
-        customFileIN.write(lh+"   lev   =  sfc     Nz for *.nc files, 0 for *_pstd.nc files.\n")
-        customFileIN.write(lh+"   lat   =  0       Equator\n")
-        customFileIN.write(lh+"   lon   =  ``all``   Zonal average over all longitudes\n")
-        customFileIN.write(lh+"   tod   =  ``15``    3 PM UT \n")
-        customFileIN.write(lh+"Setting a dimension equal to a number finds the value closest to that number. \n")
-        customFileIN.write(lh+"Setting a dimension equal to ``all`` averages the dimension over all values. \n")
-        customFileIN.write(lh+"Setting a dimension equal to a range averages the dimension over the values in the range. \n")
-        customFileIN.write(lh+"You can also overwrite a dimension in the Main Variable input using curvy brackets ``{}`` and the\n")
-        customFileIN.write(lh+"   dimension name. Separate the arguments with semi-colons ``;`` \n")
-        customFileIN.write(lh+"       e.g., Main Variable  = atmos_average.temp{ls = 90; lev= 5.,10; lon= all; lat=45} \n")
-        customFileIN.write(lh+"   Values must correspond to the units of the variable in the file: \n")
-        customFileIN.write(lh+"       time [Ls], lev [Pa/m], lon [+/-180°], and lat [°]. \n")
-        customFileIN.write(lh+"* You can only select a time of day (tod) in diurn files using this syntax: \n")
-        customFileIN.write(lh+"       e.g., Main Variable  = atmos_diurn.ps{tod = 20} \n")
-        customFileIN.write(lh+"You can also specify the fontsize in Title using curvy brackets and ``size``:\n")
-        customFileIN.write(lh+"       e.g., Title = Temperature [K] {size = 20}.\n")
-        customFileIN.write(lh+"\n")
-        customFileIN.write(lh+"==================================== TIME SERIES AND 1D PLOTS ====================================\n")
-        customFileIN.write(lh+"Set the X axis variable by indicating AXIS after the appropriate dimension: \n")
-        customFileIN.write(lh+"       e.g., Ls = AXIS \n")
-        customFileIN.write(lh+"The other dimensions remain FREE DIMENSIONS and accept values as described above. \n")
-        customFileIN.write(lh+"The ``Diurnal [hr]`` dimension only accepts ``AXIS`` or ``None``. Indicate time of day only using the``\n")
-        customFileIN.write(lh+"   ``tod`` syntax as described in FREE DIMENSIONS. \n")
-        customFileIN.write(lh+"\n")
-        customFileIN.write(lh+"================================== AXIS OPTIONS AND PROJECTIONS ==================================\n")
-        customFileIN.write(lh+"Set the X and Y axis limits, map projection, colormap, and linestyle under Axis Options. \n")
-        customFileIN.write(lh+"All Matplolib styles are supported. \n")
-        customFileIN.write(lh+"   ``cmap``  colormap    ``jet`` (winds), ``nipy_spectral`` (temperature), ``bwr`` (diff plot), etc. \n")
-        customFileIN.write(lh+"   ``scale`` gradient    ``lin`` (linear), ``log`` (logarithmic; Cmin, Cmax is typically expected. \n")
-        customFileIN.write(lh+"   ``line``  linestyle   ``-r`` (solid red), ``--g`` (dashed green), ``-ob`` (solid blue + markers). \n")
-        customFileIN.write(lh+"   ``proj``  projection  Cylindrical: ``cart`` (Cartesian), ``robin`` (Robinson), ``moll`` (Mollweide), \n")
-        customFileIN.write(lh+"                       Azithumal: ``Npole lat`` (North Pole), ``Spole lat`` (South Pole),\n")
-        customFileIN.write(lh+"                       ``ortho lon,lat`` (Orthographic). \n")
-        customFileIN.write(lh+"\n")
-        customFileIN.write(lh+"===================== FILES FROM MULTIPLE SIMULATIONS =====================\n")
-        customFileIN.write(lh+"Under <<< Simulations >>>, there are numbered lines (``N>``) for you to use to indicate the \n")
-        customFileIN.write(lh+"   path to the *.nc file you want to reference. Empty fields are ignored. \n")
-        customFileIN.write(lh+"Provide the FULL PATH on the line, e.g., ``2> /u/User/FV3/path/to/history``. \n")
-        customFileIN.write(lh+"Specify the *.nc file from which to plot using the ``@`` symbol + the simulation number:\n")
-        customFileIN.write(lh+"   in the call to Main Variable, e.g., Main Variable = atmos_average@2.temp \n")
-        customFileIN.write(lh+"\n")
+            "# ================================================= INSTRUCTIONS =================================================\n")
+        customFileIN.write("# - Copy/paste template for the desired plot type. - Do not modify text left of an equal ``=`` sign. \n")
+        customFileIN.write("# - Add comments using ``#``                         - Skip plots by setting <<<< Plot = False >>>> \n")
+        customFileIN.write("# - Capitalize ``True``, ``False``, and ``None``.        - Do not use quotes ("") anywhere in this file. \n")
+        customFileIN.write("# \n")
+        customFileIN.write("# Group figures onto pages using``HOLD ON`` and ``HOLD OFF``. \n")
+        customFileIN.write("# Optionally, use ``row,col`` to specify the layout: HOLD ON 2,3``. \n")
+        customFileIN.write("# Use ``ADD LINE`` between 1D plots to overplot on the same figure. \n")
+        customFileIN.write("# Figures templates must appear after ``START`` and before ``STOP``. \n")
+        customFileIN.write("# Set the colorbar range with ``Cmin, Cmax``. Scientific notation (e.g., 1e-6, 2e3) is supported. \n")
+        customFileIN.write("# Set the colorbar intervals directly by providing a list (e.g., 1e-6, 1e-4, 1e-2, 1e-0). \n")
+        customFileIN.write("# Set the contour intervals for ``2nd Variable`` in a list (e.g., 150, 200, 250, 300, 350). \n")
+        customFileIN.write("# The vertical grid of the *.nc file used in the plot determines what ``Level`` refers to.\n")
+        customFileIN.write("#    ``Level`` can be: ``level``, ``pfull``, ``pstd``, ``plevs`` [Pa] or ``zstd``, ``zagl``, or ``zgrid`` [m].\n")
+        customFileIN.write("# \n")
+        customFileIN.write("# ============================================ ALGEBRA ============================================\n")
+        customFileIN.write("# Use square brackets ``[]`` for element-wise operations: \n")
+        customFileIN.write("#    ``[fixed.zsurf]/(10.**3)``            Convert between units ([m] to [km], in this case).\n")
+        customFileIN.write("#    ``[file.var1]/[file.var2]*610``       Multiply variables together.\n")
+        customFileIN.write("#    ``[file.var]-[file@2.var]``           Difference plot of ``var`` from 2 simulations.\n")
+        customFileIN.write("#    ``[file.var]-[file.var{lev=10}]``     Difference plot of ``var`` at two levels.\n")
+        customFileIN.write("# Square brackets support the following expressions: sqrt, log, exp, abs, min, max, & mean.\n")
+        customFileIN.write("# \n")
+        customFileIN.write("# ========================================= FREE DIMENSIONS =========================================\n")
+        customFileIN.write("# Dimensions can be ``time``, ``lev``, ``lat``, ``lon``, or ``tod``.\n")
+        customFileIN.write("# Dimensions default to None when a value or range is not specified. None corresponds to: \n")
+        customFileIN.write("#    time  =  -1      The last (most recent) timestep (Nt).\n")
+        customFileIN.write("#    lev   =  sfc     Nz for *.nc files, 0 for *_pstd.nc files.\n")
+        customFileIN.write("#    lat   =  0       Equator\n")
+        customFileIN.write("#    lon   =  ``all``   Zonal average over all longitudes\n")
+        customFileIN.write("#    tod   =  ``15``    3 PM UT \n")
+        customFileIN.write("# Setting a dimension equal to a number finds the value closest to that number. \n")
+        customFileIN.write("# Setting a dimension equal to ``all`` averages the dimension over all values. \n")
+        customFileIN.write("# Setting a dimension equal to a range averages the dimension over the values in the range. \n")
+        customFileIN.write("# You can also overwrite a dimension in the Main Variable input using curvy brackets ``{}`` and the\n")
+        customFileIN.write("#    dimension name. Separate the arguments with semi-colons ``;`` \n")
+        customFileIN.write("#        e.g., Main Variable  = atmos_average.temp{ls = 90; lev= 5.,10; lon= all; lat=45} \n")
+        customFileIN.write("#    Values must correspond to the units of the variable in the file: \n")
+        customFileIN.write("#        time [Ls], lev [Pa/m], lon [+/-180°], and lat [°]. \n")
+        customFileIN.write("# * You can only select a time of day (tod) in diurn files using this syntax: \n")
+        customFileIN.write("#        e.g., Main Variable  = atmos_diurn.ps{tod = 20} \n")
+        customFileIN.write("# You can also specify the fontsize in Title using curvy brackets and ``size``:\n")
+        customFileIN.write("#        e.g., Title = Temperature [K] {size = 20}.\n")
+        customFileIN.write("# \n")
+        customFileIN.write("# ==================================== TIME SERIES AND 1D PLOTS ====================================\n")
+        customFileIN.write("# Set the X axis variable by indicating AXIS after the appropriate dimension: \n")
+        customFileIN.write("#        e.g., Ls = AXIS \n")
+        customFileIN.write("# The other dimensions remain FREE DIMENSIONS and accept values as described above. \n")
+        customFileIN.write("# The ``Diurnal [hr]`` dimension only accepts ``AXIS`` or ``None``. Indicate time of day only using the``\n")
+        customFileIN.write("#    ``tod`` syntax as described in FREE DIMENSIONS. \n")
+        customFileIN.write("# \n")
+        customFileIN.write("# ================================== AXIS OPTIONS AND PROJECTIONS ==================================\n")
+        customFileIN.write("# Set the X and Y axis limits, map projection, colormap, and linestyle under Axis Options. \n")
+        customFileIN.write("# All Matplolib styles are supported. \n")
+        customFileIN.write("#    ``cmap``  colormap    ``jet`` (winds), ``nipy_spectral`` (temperature), ``bwr`` (diff plot), etc. \n")
+        customFileIN.write("#    ``scale`` gradient    ``lin`` (linear), ``log`` (logarithmic; Cmin, Cmax is typically expected. \n")
+        customFileIN.write("#    ``line``  linestyle   ``-r`` (solid red), ``--g`` (dashed green), ``-ob`` (solid blue + markers). \n")
+        customFileIN.write("#    ``proj``  projection  Cylindrical: ``cart`` (Cartesian), ``robin`` (Robinson), ``moll`` (Mollweide), \n")
+        customFileIN.write("#                        Azithumal: ``Npole lat`` (North Pole), ``Spole lat`` (South Pole),\n")
+        customFileIN.write("#                        ``ortho lon,lat`` (Orthographic). \n")
+        customFileIN.write("# \n")
+        customFileIN.write("# ===================== FILES FROM MULTIPLE SIMULATIONS =====================\n")
+        customFileIN.write("# Under <<< Simulations >>>, there are numbered lines (``N>``) for you to use to indicate the \n")
+        customFileIN.write("#    path to the *.nc file you want to reference. Empty fields are ignored. \n")
+        customFileIN.write("# Provide the FULL PATH on the line, e.g., ``2> /u/User/FV3/path/to/history``. \n")
+        customFileIN.write("# Specify the *.nc file from which to plot using the ``@`` symbol + the simulation number:\n")
+        customFileIN.write("#    in the call to Main Variable, e.g., Main Variable = atmos_average@2.temp \n")
+        customFileIN.write("# \n")
     customFileIN.write(
         "<<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>\n")
     customFileIN.write("ref> None\n")
@@ -1842,12 +1842,12 @@ def create_name(root_name):
 
     if os.path.isfile(new_name):
         # If example.png already exists, create example_01.png
-        new_name = f"{root_name[0:-(len_ext+1)]}_{n:02}.{ext}"
+        new_name = f"{root_name[0:-(len_ext + 1)]}_{n:02}.{ext}"
 
-    while os.path.isfile(f"{root_name[0:-(len_ext+1)]}_{n:02}.{ext}"):
+    while os.path.isfile(f"{root_name[0:-(len_ext + 1)]}_{n:02}.{ext}"):
         # If example_01.png already exists, create example_02.png etc
-        n = n+1
-        new_name = f"{root_name[0:-(len_ext+1)]}_{n:02}.{ext}"
+        n = n + 1
+        new_name = f"{root_name[0:-(len_ext + 1)]}_{n:02}.{ext}"
     return new_name
 
 def path_to_template(custom_name):
@@ -1900,7 +1900,7 @@ def progress(k, Nmax, txt="", success=True):
     progress = float(k)/Nmax
     barLength = 10
     block = int(round(barLength*progress))
-    bar = f"[{('#'*block )+ ('-'*(barLength-block))}]"
+    bar = f"[{('#'*block ) + ('-'*(barLength-block))}]"
     if success == True:
         status = f"{100*progress:03} % {Green}{txt}{Nclr}"
     elif success == False:
@@ -1964,7 +1964,7 @@ def prep_file(var_name, file_type, simuID, sol_array):
         if file_has_sol_number:
             # Include sol number
             file_list[i] = (f"{input_paths[simuID]}/"
-                            f"{(Sol_num_current[i])+file_type:05}.nc")
+                            f"{int(Sol_num_current[i]):05}.{file_type}.nc")
         else:  # No sol number
             file_list[i] = f"{input_paths[simuID]}/{file_type}.nc"
 
@@ -3997,10 +3997,8 @@ class Fig_1D(object):
                     # Does not do anything otherwise
                     sensitive_name = self.varfull.split("{")[0].strip()
                 else:
-                    sensitive_name = ("expression_"
-                                      + get_list_varfull(
-                                          self.varfull
-                                        )[0].split("{")[0].strip())
+                    sensitive_name = ("expression_" + get_list_varfull(
+                        self.varfull)[0].split("{")[0].strip())
             else:  # Multipanel
                 sensitive_name = "multi_panel"
 
@@ -4018,7 +4016,7 @@ class Fig_1D(object):
             if i_list == len(objectList)-1:
                 plt.savefig(self.fig_name, dpi=my_dpi)
                 if out_format != "pdf":
-                    print(f"Saved: + {self.fig_name}")
+                    print(f"Saved: {self.fig_name}")
 
     def do_plot(self):
         # Create figure

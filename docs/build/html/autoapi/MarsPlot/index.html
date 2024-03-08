@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MarsPlot &mdash; AmesCAP 1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=f2a433a1"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="MarsCalendar" href="../MarsCalendar/index.html" />
+    <link rel="prev" title="MarsInterp" href="../MarsInterp/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            AmesCAP
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MarsPull/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPull</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MarsFormat/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsFormat</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MarsFiles/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsFiles</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MarsVars/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsVars</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MarsInterp/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsInterp</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPlot</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module Contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#functions">Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.mean_func"><code class="docutils literal notranslate"><span class="pre">mean_func()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.shift_data"><code class="docutils literal notranslate"><span class="pre">shift_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.MY_func"><code class="docutils literal notranslate"><span class="pre">MY_func()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.get_lon_index"><code class="docutils literal notranslate"><span class="pre">get_lon_index()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.get_lat_index"><code class="docutils literal notranslate"><span class="pre">get_lat_index()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.get_tod_index"><code class="docutils literal notranslate"><span class="pre">get_tod_index()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.get_level_index"><code class="docutils literal notranslate"><span class="pre">get_level_index()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.get_time_index"><code class="docutils literal notranslate"><span class="pre">get_time_index()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.filter_input"><code class="docutils literal notranslate"><span class="pre">filter_input()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.rT"><code class="docutils literal notranslate"><span class="pre">rT()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.read_axis_options"><code class="docutils literal notranslate"><span class="pre">read_axis_options()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.split_varfull"><code class="docutils literal notranslate"><span class="pre">split_varfull()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.remove_whitespace"><code class="docutils literal notranslate"><span class="pre">remove_whitespace()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.clean_comma_whitespace"><code class="docutils literal notranslate"><span class="pre">clean_comma_whitespace()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.get_list_varfull"><code class="docutils literal notranslate"><span class="pre">get_list_varfull()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.get_overwrite_dim_2D"><code class="docutils literal notranslate"><span class="pre">get_overwrite_dim_2D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.get_overwrite_dim_1D"><code class="docutils literal notranslate"><span class="pre">get_overwrite_dim_1D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.fig_layout"><code class="docutils literal notranslate"><span class="pre">fig_layout()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.make_template"><code class="docutils literal notranslate"><span class="pre">make_template()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.give_permission"><code class="docutils literal notranslate"><span class="pre">give_permission()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.namelist_parser"><code class="docutils literal notranslate"><span class="pre">namelist_parser()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.get_figure_header"><code class="docutils literal notranslate"><span class="pre">get_figure_header()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.format_lon_lat"><code class="docutils literal notranslate"><span class="pre">format_lon_lat()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.get_Ncdf_num"><code class="docutils literal notranslate"><span class="pre">get_Ncdf_num()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.select_range"><code class="docutils literal notranslate"><span class="pre">select_range()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.create_name"><code class="docutils literal notranslate"><span class="pre">create_name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.path_to_template"><code class="docutils literal notranslate"><span class="pre">path_to_template()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.progress"><code class="docutils literal notranslate"><span class="pre">progress()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.prep_file"><code class="docutils literal notranslate"><span class="pre">prep_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MarsPlot.CustomTicker"><code class="docutils literal notranslate"><span class="pre">CustomTicker</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../MarsCalendar/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsCalendar</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../amescap/Spectral_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">amescap.Spectral_utils</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples &amp; Use Cases</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">AmesCAP</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPlot</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/autoapi/MarsPlot/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-MarsPlot">
+<span id="marsplot"></span><h1><a class="reference internal" href="#module-MarsPlot" title="MarsPlot"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPlot</span></code></a><a class="headerlink" href="#module-MarsPlot" title="Link to this heading"></a></h1>
+<p>The MarsPlot executable is for generating plots from Custom.in template
+files. It sources variables from netCDF files in a specified directory.</p>
+<dl class="simple">
+<dt>The executable requires:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[-template</span> <span class="pre">--template]</span></code> generates blank Custom.in template</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-i</span> <span class="pre">--inspect]</span></code>         triggers ncdump-like text to console</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[Custom.in]</span></code>            to create plots in Custom.in template</p></li>
+</ul>
+</dd>
+<dt>Third-party Requirements:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">numpy</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">netCDF4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sys</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argparse</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">os</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">warnings</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">subprocess</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">matplotlib</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.CustomTicker" title="MarsPlot.CustomTicker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CustomTicker</span></code></a></p></td>
+<td><p>Format values following scientific notation in a logarithmic axis.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.mean_func" title="MarsPlot.mean_func"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean_func</span></code></a>(arr, axis)</p></td>
+<td><p>This function calculates a mean over the selected axis, ignoring or</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.shift_data" title="MarsPlot.shift_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shift_data</span></code></a>(lon, data)</p></td>
+<td><p>Shifts the longitude data from 0/360 to -180/+180 and vice versa.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.MY_func" title="MarsPlot.MY_func"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MY_func</span></code></a>(Ls_cont)</p></td>
+<td><p>Returns the Mars Year</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_lon_index" title="MarsPlot.get_lon_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_lon_index</span></code></a>(lon_query_180, lons)</p></td>
+<td><p>Returns the indices that will extract data from the netCDF file</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.get_lat_index" title="MarsPlot.get_lat_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_lat_index</span></code></a>(lat_query, lats)</p></td>
+<td><p>Returns the indices that will extract data from the netCDF file</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_tod_index" title="MarsPlot.get_tod_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_tod_index</span></code></a>(tod_query, tods)</p></td>
+<td><p>Returns the indices that will extract data from the netCDF file</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.get_level_index" title="MarsPlot.get_level_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_level_index</span></code></a>(level_query, levs)</p></td>
+<td><p>Returns the indices that will extract data from the netCDF file</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_time_index" title="MarsPlot.get_time_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_time_index</span></code></a>(Ls_query_360, LsDay)</p></td>
+<td><p>Returns the indices that will extract data from the netCDF file</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.filter_input" title="MarsPlot.filter_input"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_input</span></code></a>(txt[, typeIn])</p></td>
+<td><p>Read template for the type of data expected</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.rT" title="MarsPlot.rT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rT</span></code></a>([typeIn])</p></td>
+<td><p>Read template for the type of data expected. Returns value to</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.read_axis_options" title="MarsPlot.read_axis_options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_axis_options</span></code></a>(axis_options_txt)</p></td>
+<td><p>Return axis customization options.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.split_varfull" title="MarsPlot.split_varfull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_varfull</span></code></a>(varfull)</p></td>
+<td><p>Split <code class="docutils literal notranslate"><span class="pre">varfull</span></code> object into its component parts</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.remove_whitespace" title="MarsPlot.remove_whitespace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_whitespace</span></code></a>(raw_input)</p></td>
+<td><p>Remove whitespace inside an expression.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.clean_comma_whitespace" title="MarsPlot.clean_comma_whitespace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clean_comma_whitespace</span></code></a>(raw_input)</p></td>
+<td><p>Remove commas and whitespaces inside an expression.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.get_list_varfull" title="MarsPlot.get_list_varfull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_list_varfull</span></code></a>(raw_input)</p></td>
+<td><p>Return requested variable from a complex <code class="docutils literal notranslate"><span class="pre">varfull</span></code> object with <code class="docutils literal notranslate"><span class="pre">[]</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_overwrite_dim_2D" title="MarsPlot.get_overwrite_dim_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_overwrite_dim_2D</span></code></a>(varfull_bracket, plot_type, ...)</p></td>
+<td><p>Return new dimensions that will overwrite default dimensions for a</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.get_overwrite_dim_1D" title="MarsPlot.get_overwrite_dim_1D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_overwrite_dim_1D</span></code></a>(varfull_bracket, t_in, lat_in, ...)</p></td>
+<td><p>Return new dimensions that will overwrite default dimensions for a</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.fig_layout" title="MarsPlot.fig_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fig_layout</span></code></a>(subID, nPan[, vertical_page])</p></td>
+<td><p>Return figure layout.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.make_template" title="MarsPlot.make_template"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_template</span></code></a>()</p></td>
+<td><p>Generate the <code class="docutils literal notranslate"><span class="pre">Custom.in</span></code> template file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.give_permission" title="MarsPlot.give_permission"><code class="xref py py-obj docutils literal notranslate"><span class="pre">give_permission</span></code></a>(filename)</p></td>
+<td><p>Sets group permissions for files created on NAS.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.namelist_parser" title="MarsPlot.namelist_parser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">namelist_parser</span></code></a>(Custom_file)</p></td>
+<td><p>Parse a <code class="docutils literal notranslate"><span class="pre">Custom.in</span></code> template.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_figure_header" title="MarsPlot.get_figure_header"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_figure_header</span></code></a>(line_txt)</p></td>
+<td><p>Returns the plot type by confirming that template = <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.format_lon_lat" title="MarsPlot.format_lon_lat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_lon_lat</span></code></a>(lon_lat, type)</p></td>
+<td><p>Format latitude and longitude as labels (e.g., 30°S, 30°N, 45°W, 45°E)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_Ncdf_num" title="MarsPlot.get_Ncdf_num"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_Ncdf_num</span></code></a>()</p></td>
+<td><p>Return the prefix numbers for the netCDF files in the directory.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.select_range" title="MarsPlot.select_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_range</span></code></a>(Ncdf_num, bound)</p></td>
+<td><p>Return the prefix numbers for the netCDF files in the directory</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.create_name" title="MarsPlot.create_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_name</span></code></a>(root_name)</p></td>
+<td><p>Modify file name if a file with that name already exists.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.path_to_template" title="MarsPlot.path_to_template"><code class="xref py py-obj docutils literal notranslate"><span class="pre">path_to_template</span></code></a>(custom_name)</p></td>
+<td><p>Locate the <code class="docutils literal notranslate"><span class="pre">Custom.in</span></code> template file requested by the user.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.progress" title="MarsPlot.progress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">progress</span></code></a>(k, Nmax[, txt, success])</p></td>
+<td><p>Display a progress bar when performing heavy calculations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.prep_file" title="MarsPlot.prep_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prep_file</span></code></a>(var_name, file_type, simuID, sol_array)</p></td>
+<td><p>Open the file as a Dataset or MFDataset object depending on its</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.mean_func">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">mean_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.mean_func" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>This function calculates a mean over the selected axis, ignoring or
+including NaN values as specified by <code class="docutils literal notranslate"><span class="pre">show_NaN_in_slice</span></code> in</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">~/.amescap_profile</span></code>.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param arr<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the array to be averaged</p>
+</dd>
+<dt class="field-even">type arr<span class="colon">:</span></dt>
+<dd class="field-even"><p>array</p>
+</dd>
+<dt class="field-odd">param axis<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the axis over which to average the array</p>
+</dd>
+<dt class="field-even">type axis<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">return<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the mean over the time axis</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.shift_data">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">shift_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.shift_data" title="Link to this definition"></a></dt>
+<dd><p>Shifts the longitude data from 0/360 to -180/+180 and vice versa.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lon</strong> (<em>array</em><em> [</em><em>lon</em><em>]</em>) – 1D array of longitude</p></li>
+<li><p><strong>data</strong> (<em>array</em><em> [</em><em>1</em><em>,</em><em>lon</em><em>]</em>) – 2D array with last dimension = longitude</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Longitude coordinate type is not recognized.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>longitude (-180/+180)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [lon]</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>shifted data</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [1,lon]</p>
+</dd>
+<dt class="field-odd">Note<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Use <code class="docutils literal notranslate"><span class="pre">np.ma.hstack</span></code> instead of <code class="docutils literal notranslate"><span class="pre">np.hstack</span></code> to keep the
+masked array properties</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.MY_func">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">MY_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ls_cont</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.MY_func" title="Link to this definition"></a></dt>
+<dd><p>Returns the Mars Year</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>Ls_cont</strong> (<em>array</em><em> [</em><em>areo</em><em>]</em>) – solar longitude (<code class="docutils literal notranslate"><span class="pre">areo</span></code>; continuous)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the Mars year</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.get_lon_index">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_lon_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon_query_180</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lons</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_lon_index" title="Link to this definition"></a></dt>
+<dd><p>Returns the indices that will extract data from the netCDF file
+according to a range of <em>longitudes</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lon_query_180</strong> (<em>list</em>) – longitudes in -180/+180: value,
+<code class="docutils literal notranslate"><span class="pre">[min,</span> <span class="pre">max]</span></code>, or <cite>None</cite></p></li>
+<li><p><strong>lons</strong> (<em>array</em><em> [</em><em>lon</em><em>]</em>) – longitude in 0/360</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>1D array of file indices</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>text descriptor for the extracted longitudes</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Note<span class="colon">:</span></dt>
+<dd class="field-even"><p>the keyword <code class="docutils literal notranslate"><span class="pre">all</span></code> is passed as <code class="docutils literal notranslate"><span class="pre">-99999</span></code> by the rT()
+functions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.get_lat_index">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_lat_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat_query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lats</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_lat_index" title="Link to this definition"></a></dt>
+<dd><p>Returns the indices that will extract data from the netCDF file
+according to a range of <em>latitudes</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lat_query</strong> (<em>list</em>) – requested latitudes (-90/+90)</p></li>
+<li><p><strong>lats</strong> (<em>array</em><em> [</em><em>lat</em><em>]</em>) – latitude</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>1d array of file indices</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>text descriptor for the extracted longitudes</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+<dt class="field-odd">Note<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the keyword <code class="docutils literal notranslate"><span class="pre">all</span></code> is passed as <code class="docutils literal notranslate"><span class="pre">-99999</span></code> by the <code class="docutils literal notranslate"><span class="pre">rt()</span></code>
+function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.get_tod_index">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_tod_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tod_query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tods</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_tod_index" title="Link to this definition"></a></dt>
+<dd><p>Returns the indices that will extract data from the netCDF file
+according to a range of <em>times of day</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tod_query</strong> (<em>list</em>) – requested time of day (0-24)</p></li>
+<li><p><strong>tods</strong> (<em>array</em><em> [</em><em>tod</em><em>]</em>) – times of day</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>file indices</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array [tod]</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>descriptor for the extracted time of day</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Note<span class="colon">:</span></dt>
+<dd class="field-even"><p>the keyword <code class="docutils literal notranslate"><span class="pre">all</span></code> is passed as <code class="docutils literal notranslate"><span class="pre">-99999</span></code> by the <code class="docutils literal notranslate"><span class="pre">rT()</span></code>
+function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.get_level_index">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_level_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level_query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">levs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_level_index" title="Link to this definition"></a></dt>
+<dd><p>Returns the indices that will extract data from the netCDF file
+according to a range of <em>pressures</em> (resp. depth for <code class="docutils literal notranslate"><span class="pre">zgrid</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level_query</strong> (<em>float</em>) – requested pressure [Pa] (depth [m])</p></li>
+<li><p><strong>levs</strong> (<em>array</em><em> [</em><em>lev</em><em>]</em>) – levels (in the native coordinates)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>file indices</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>descriptor for the extracted pressure (depth)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Note<span class="colon">:</span></dt>
+<dd class="field-even"><p>the keyword <code class="docutils literal notranslate"><span class="pre">all</span></code> is passed as <code class="docutils literal notranslate"><span class="pre">-99999</span></code> by the <code class="docutils literal notranslate"><span class="pre">rT()</span></code>
+functions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.get_time_index">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_time_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ls_query_360</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LsDay</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_time_index" title="Link to this definition"></a></dt>
+<dd><p>Returns the indices that will extract data from the netCDF file
+according to a range of solar longitudes [0-360].</p>
+<p>First try the Mars Year of the last timestep, then try the year
+before that. Use whichever Ls period is closest to the requested
+date.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Ls_query_360</strong> (<em>list</em>) – requested solar longitudes</p></li>
+<li><p><strong>LsDay</strong> (<em>array</em><em> [</em><em>areo</em><em>]</em>) – continuous solar longitudes</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>file indices</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>descriptor for the extracted solar longitudes</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Note<span class="colon">:</span></dt>
+<dd class="field-even"><p>the keyword <code class="docutils literal notranslate"><span class="pre">all</span></code> is passed as <code class="docutils literal notranslate"><span class="pre">-99999</span></code> by the <code class="docutils literal notranslate"><span class="pre">rT()</span></code>
+function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.filter_input">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">filter_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typeIn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'char'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.filter_input" title="Link to this definition"></a></dt>
+<dd><p>Read template for the type of data expected</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>txt</strong> (<em>str</em>) – text input into <code class="docutils literal notranslate"><span class="pre">Custom.in</span></code> to the right of an equal
+sign</p></li>
+<li><p><strong>typeIn</strong> (<em>str</em><em>, </em><em>optional</em>) – type of data expected: <code class="docutils literal notranslate"><span class="pre">char</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>,
+<code class="docutils literal notranslate"><span class="pre">bool</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">char</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>text input reformatted to <code class="docutils literal notranslate"><span class="pre">[val1,</span> <span class="pre">val2]</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.rT">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">rT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typeIn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'char'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.rT" title="Link to this definition"></a></dt>
+<dd><p>Read template for the type of data expected. Returns value to
+<code class="docutils literal notranslate"><span class="pre">filter_input()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>typeIn</strong> (<em>str</em><em>, </em><em>optional</em>) – type of data expected: <code class="docutils literal notranslate"><span class="pre">char</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>,
+<code class="docutils literal notranslate"><span class="pre">bool</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">char</span></code></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>text input reformatted to <code class="docutils literal notranslate"><span class="pre">[val1,</span> <span class="pre">val2]</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.read_axis_options">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">read_axis_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis_options_txt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.read_axis_options" title="Link to this definition"></a></dt>
+<dd><p>Return axis customization options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>axis_options_txt</strong> (<em>str</em>) – a copy of the last line <code class="docutils literal notranslate"><span class="pre">Axis</span> <span class="pre">Options</span></code>
+in <code class="docutils literal notranslate"><span class="pre">Custom.in</span></code> templates</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>X-axis bounds as a numpy array or <code class="docutils literal notranslate"><span class="pre">None</span></code> if undedefined</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array or None</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Y-axis bounds as a numpy array or <code class="docutils literal notranslate"><span class="pre">None</span></code> if undedefined</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array or None</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>colormap (e.g., <code class="docutils literal notranslate"><span class="pre">jet</span></code>, <code class="docutils literal notranslate"><span class="pre">nipy_spectral</span></code>) or line
+options (e.g., <code class="docutils literal notranslate"><span class="pre">--r</span></code> for dashed red)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>linear (<code class="docutils literal notranslate"><span class="pre">lin</span></code>) or logarithmic (<code class="docutils literal notranslate"><span class="pre">log</span></code>) color scale</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>projection (e.g., <code class="docutils literal notranslate"><span class="pre">ortho</span> <span class="pre">-125,45</span></code>)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.split_varfull">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">split_varfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varfull</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.split_varfull" title="Link to this definition"></a></dt>
+<dd><p>Split <code class="docutils literal notranslate"><span class="pre">varfull</span></code> object into its component parts</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>varfull</strong> (<em>str</em>) – a <code class="docutils literal notranslate"><span class="pre">varfull</span></code> object (e.g,
+<code class="docutils literal notranslate"><span class="pre">atmos_average&#64;2.zsurf</span></code>, <code class="docutils literal notranslate"><span class="pre">02400.atmos_average&#64;2.zsurf</span></code>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(sol_array) a sol number or <code class="docutils literal notranslate"><span class="pre">None</span></code> (if none provided)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int or None</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(filetype) file type (e.g, <code class="docutils literal notranslate"><span class="pre">atmos_average</span></code>)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(var) variable of interest (e.g, <code class="docutils literal notranslate"><span class="pre">zsurf</span></code>)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(<code class="docutils literal notranslate"><span class="pre">simuID</span></code>) simulation ID (Python indexing starts at 0)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.remove_whitespace">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">remove_whitespace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.remove_whitespace" title="Link to this definition"></a></dt>
+<dd><p>Remove whitespace inside an expression.</p>
+<p>This is different from the <code class="docutils literal notranslate"><span class="pre">.strip()</span></code> method, which only removes
+whitespaces at the edges of a string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_input</strong> (<em>str</em>) – user input for variable, (e.g.,
+<code class="docutils literal notranslate"><span class="pre">[atmos_average.temp]</span> <span class="pre">+</span> <span class="pre">2)</span></code></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>raw_input without whitespaces (e.g.,
+<code class="docutils literal notranslate"><span class="pre">[atmos_average.temp]+2)</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.clean_comma_whitespace">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">clean_comma_whitespace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.clean_comma_whitespace" title="Link to this definition"></a></dt>
+<dd><p>Remove commas and whitespaces inside an expression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_input</strong> (<em>str</em>) – dimensions specified by user input to Variable
+(e.g., <code class="docutils literal notranslate"><span class="pre">lat=3.</span> <span class="pre">,</span> <span class="pre">lon=2</span> <span class="pre">,</span> <span class="pre">lev</span> <span class="pre">=</span> <span class="pre">10.</span></code>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>raw_input without whitespaces (e.g.,
+<code class="docutils literal notranslate"><span class="pre">lat=3.,lon=2,lev=10.</span></code>)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.get_list_varfull">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_list_varfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_list_varfull" title="Link to this definition"></a></dt>
+<dd><p>Return requested variable from a complex <code class="docutils literal notranslate"><span class="pre">varfull</span></code> object with <code class="docutils literal notranslate"><span class="pre">[]</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_input</strong> (<em>str</em>) – complex user input to Variable (e.g.,
+<code class="docutils literal notranslate"><span class="pre">2*[atmos_average.temp]+[atmos_average2.ucomp]*1000</span></code>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list required variables (e.g., [<code class="docutils literal notranslate"><span class="pre">atmos_average.temp</span></code>,
+<code class="docutils literal notranslate"><span class="pre">atmos_average2.ucomp</span></code>])</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.get_overwrite_dim_2D">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_overwrite_dim_2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varfull_bracket</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdim1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdim2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_overwrite_dim_2D" title="Link to this definition"></a></dt>
+<dd><p>Return new dimensions that will overwrite default dimensions for a
+varfull object with <code class="docutils literal notranslate"><span class="pre">{}</span></code> on a 2D plot.</p>
+<p><code class="docutils literal notranslate"><span class="pre">2D_lon_lat:</span>&#160; <span class="pre">fdim1</span> <span class="pre">=</span> <span class="pre">ls,</span>&#160; <span class="pre">fdim2</span> <span class="pre">=</span> <span class="pre">lev</span></code>
+<code class="docutils literal notranslate"><span class="pre">2D_lat_lev:</span>&#160; <span class="pre">fdim1</span> <span class="pre">=</span> <span class="pre">ls,</span>&#160; <span class="pre">fdim2</span> <span class="pre">=</span> <span class="pre">lon</span></code>
+<code class="docutils literal notranslate"><span class="pre">2D_time_lat:</span> <span class="pre">fdim1</span> <span class="pre">=</span> <span class="pre">lon,</span> <span class="pre">fdim2</span> <span class="pre">=</span> <span class="pre">lev</span></code>
+<code class="docutils literal notranslate"><span class="pre">2D_lon_lev:</span>&#160; <span class="pre">fdim1</span> <span class="pre">=</span> <span class="pre">ls,</span>&#160; <span class="pre">fdim2</span> <span class="pre">=</span> <span class="pre">lat</span></code>
+<code class="docutils literal notranslate"><span class="pre">2D_time_lev:</span> <span class="pre">fdim1</span> <span class="pre">=</span> <span class="pre">lat,</span> <span class="pre">fdim2</span> <span class="pre">=</span> <span class="pre">lon</span></code>
+<code class="docutils literal notranslate"><span class="pre">2D_lon_time:</span> <span class="pre">fdim1</span> <span class="pre">=</span> <span class="pre">lat,</span> <span class="pre">fdim2</span> <span class="pre">=</span> <span class="pre">lev</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>varfull_bracket</strong> (<em>str</em>) – a <code class="docutils literal notranslate"><span class="pre">varfull</span></code> object with <code class="docutils literal notranslate"><span class="pre">{}</span></code> (e.g.,
+<code class="docutils literal notranslate"><span class="pre">atmos_average.temp{lev=10;ls=350;lon=155;lat=25}</span></code>)</p></li>
+<li><p><strong>plot_type</strong> (<em>str</em>) – the type of the plot template</p></li>
+<li><p><strong>fdim1</strong> (<em>str</em>) – X axis dimension for plot</p></li>
+<li><p><strong>fdim2</strong> (<em>str</em>) – Y axis dimension for plot</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(varfull) required file and variable (e.g.,
+<code class="docutils literal notranslate"><span class="pre">atmos_average.temp</span></code>);
+(fdim_out1) X axis dimension for plot;
+(fdim_out2) Y axis dimension for plot;
+(ftod_out) if X or Y axis dimension is time of day</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.get_overwrite_dim_1D">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_overwrite_dim_1D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varfull_bracket</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lev_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ftod_in</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_overwrite_dim_1D" title="Link to this definition"></a></dt>
+<dd><p>Return new dimensions that will overwrite default dimensions for a
+varfull object with <code class="docutils literal notranslate"><span class="pre">{}</span></code> for a 1D plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>varfull_bracket</strong> (<em>str</em>) – a <code class="docutils literal notranslate"><span class="pre">varfull</span></code> object with <code class="docutils literal notranslate"><span class="pre">{}</span></code> (e.g.,
+<code class="docutils literal notranslate"><span class="pre">atmos_average.temp{lev=10;ls=350;lon=155;lat=25}</span></code>)</p></li>
+<li><p><strong>t_in</strong> (<em>array</em><em> [</em><em>time</em><em>]</em>) – self.t variable</p></li>
+<li><p><strong>lat_in</strong> (<em>array</em><em> [</em><em>lat</em><em>]</em>) – self.lat variable</p></li>
+<li><p><strong>lon_in</strong> (<em>array</em><em> [</em><em>lon</em><em>]</em>) – self.lon variable</p></li>
+<li><p><strong>lev_in</strong> (<em>array</em><em> [</em><em>lev</em><em>]</em>) – self.lev variable</p></li>
+<li><p><strong>ftod_in</strong> (<em>array</em><em> [</em><em>tod</em><em>]</em>) – self.ftod variable</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">varfull</span></code> object without brackets (e.g.,
+<code class="docutils literal notranslate"><span class="pre">atmos_average.temp</span></code>);
+:return: (t_out) dimension to update;
+:return: (lat_out) dimension to update;
+:return: (lon_out) dimension to update;
+:return: (lev_out) dimension to update;
+:return: (ftod_out) dimension to update;</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.fig_layout">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">fig_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subID</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nPan</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertical_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.fig_layout" title="Link to this definition"></a></dt>
+<dd><p>Return figure layout.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>subID</strong> (<em>int</em>) – current subplot number</p></li>
+<li><p><strong>nPan</strong> (<em>int</em>) – number of panels desired on page (max = 64, 8x8)</p></li>
+<li><p><strong>vertical_page</strong> (<em>bool</em>) – reverse the tuple for portrait format if
+<code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>plot layout (e.g., <code class="docutils literal notranslate"><span class="pre">plt.subplot(nrows</span> <span class="pre">=</span> <span class="pre">out[0],</span> <span class="pre">ncols</span> <span class="pre">=</span>
+<span class="pre">out[1],</span> <span class="pre">plot_number</span> <span class="pre">=</span> <span class="pre">out[2])</span></code>)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.make_template">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">make_template</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.make_template" title="Link to this definition"></a></dt>
+<dd><p>Generate the <code class="docutils literal notranslate"><span class="pre">Custom.in</span></code> template file.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
+<dl class="field-list simple">
+<dt class="field-odd">return<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Custom.in blank template</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.give_permission">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">give_permission</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.give_permission" title="Link to this definition"></a></dt>
+<dd><p>Sets group permissions for files created on NAS.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>str</em>) – name of the file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.namelist_parser">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">namelist_parser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Custom_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.namelist_parser" title="Link to this definition"></a></dt>
+<dd><p>Parse a <code class="docutils literal notranslate"><span class="pre">Custom.in</span></code> template.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>Custom_file</strong> (<em>str</em>) – full path to <code class="docutils literal notranslate"><span class="pre">Custom.in</span></code> file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>updated global variables, <code class="docutils literal notranslate"><span class="pre">FigLayout</span></code>, <code class="docutils literal notranslate"><span class="pre">objectList</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.get_figure_header">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_figure_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line_txt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_figure_header" title="Link to this definition"></a></dt>
+<dd><p>Returns the plot type by confirming that template = <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>line_txt</strong> (<em>str</em>) – template header from Custom.in (e.g.,
+<code class="docutils literal notranslate"><span class="pre">&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;|</span> <span class="pre">Plot</span> <span class="pre">2D</span> <span class="pre">lon</span> <span class="pre">X</span> <span class="pre">lat</span> <span class="pre">=</span> <span class="pre">True</span> <span class="pre">|&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;</span></code>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(figtype) figure type (e.g., <code class="docutils literal notranslate"><span class="pre">Plot</span> <span class="pre">2D</span> <span class="pre">lon</span> <span class="pre">X</span> <span class="pre">lat</span></code>)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(boolPlot) whether to plot (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or skip (<code class="docutils literal notranslate"><span class="pre">False</span></code>)
+figure</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.format_lon_lat">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">format_lon_lat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.format_lon_lat" title="Link to this definition"></a></dt>
+<dd><p>Format latitude and longitude as labels (e.g., 30°S, 30°N, 45°W, 45°E)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lon_lat</strong> (<em>float</em>) – latitude or longitude (+180/-180)</p></li>
+<li><p><strong>type</strong> (<em>str</em>) – <code class="docutils literal notranslate"><span class="pre">lat</span></code> or <code class="docutils literal notranslate"><span class="pre">lon</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>formatted label</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.get_Ncdf_num">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">get_Ncdf_num</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.get_Ncdf_num" title="Link to this definition"></a></dt>
+<dd><p>Return the prefix numbers for the netCDF files in the directory.
+Requires at least one <code class="docutils literal notranslate"><span class="pre">fixed</span></code> file in the directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>a sorted array of sols</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.select_range">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">select_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ncdf_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bound</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.select_range" title="Link to this definition"></a></dt>
+<dd><p>Return the prefix numbers for the netCDF files in the directory
+within the user-defined range.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Ncdf_num</strong> (<em>array</em>) – a sorted array of sols</p></li>
+<li><p><strong>bound</strong> (<em>int</em><em> or </em><em>array</em>) – a sol (e.g., 0350) or range of sols <code class="docutils literal notranslate"><span class="pre">[min</span> <span class="pre">max]</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a sorted array of sols within the bounds</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.create_name">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">create_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.create_name" title="Link to this definition"></a></dt>
+<dd><p>Modify file name if a file with that name already exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>root_name</strong> (<em>str</em>) – path + default name for the file type (e.g.,
+<code class="docutils literal notranslate"><span class="pre">/path/custom.in</span></code> or <code class="docutils literal notranslate"><span class="pre">/path/figure.png</span></code>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the modified name if the file already exists
+(e.g., <code class="docutils literal notranslate"><span class="pre">/path/custom_01.in</span></code> or <code class="docutils literal notranslate"><span class="pre">/path/figure_01.png</span></code>)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.path_to_template">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">path_to_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">custom_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.path_to_template" title="Link to this definition"></a></dt>
+<dd><p>Locate the <code class="docutils literal notranslate"><span class="pre">Custom.in</span></code> template file requested by the user.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>custom_name</strong> (<em>str</em>) – name of the template file.
+Accepted formats are <code class="docutils literal notranslate"><span class="pre">some_name</span></code> or <code class="docutils literal notranslate"><span class="pre">some_name.in</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the full path to the template file (e.g.,
+<code class="docutils literal notranslate"><span class="pre">/u/$USER/FV3/templates/my_custom.in</span></code>).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.progress">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">success</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.progress" title="Link to this definition"></a></dt>
+<dd><p>Display a progress bar when performing heavy calculations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>k</strong> (<em>float</em>) – current iteration of the outer loop</p></li>
+<li><p><strong>Nmax</strong> (<em>float</em>) – max iteration of the outer loop</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>progress bar (EX: <code class="docutils literal notranslate"><span class="pre">Running...</span> <span class="pre">[#---------]</span> <span class="pre">10.64</span> <span class="pre">%</span></code>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsPlot.prep_file">
+<span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">prep_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simuID</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sol_array</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.prep_file" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Open the file as a Dataset or MFDataset object depending on its</dt><dd><p>status on Lou. Note that the input arguments are typically
+extracted from a <code class="docutils literal notranslate"><span class="pre">varfull</span></code> object (e.g.,
+<code class="docutils literal notranslate"><span class="pre">03340.atmos_average.ucomp</span></code>) and not from a file whose disk
+status is known beforehand.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>var_name</strong> (<em>str</em>) – variable to extract (e.g., <code class="docutils literal notranslate"><span class="pre">ucomp</span></code>)</p></li>
+<li><p><strong>file_type</strong> – MGCM output file type (e.g., <code class="docutils literal notranslate"><span class="pre">average</span></code>)</p></li>
+<li><p><strong>simuID</strong> (<em>int</em>) – simulation ID number (e.g., 2 for 2nd simulation)</p></li>
+<li><p><strong>sol_array</strong> (<em>list</em>) – date in file name (e.g., [3340,4008])</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dataset or MFDataset object;
+(var_info) longname and units;
+(dim_info) dimensions e.g., (<code class="docutils literal notranslate"><span class="pre">time</span></code>, <code class="docutils literal notranslate"><span class="pre">lat</span></code>,``lon``);
+(dims) shape of the array e.g., [133,48,96]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="MarsPlot.CustomTicker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">CustomTicker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labelOnlyBase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minor_thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linthresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.CustomTicker" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">matplotlib.ticker.LogFormatterSciNotation</span></code></p>
+<p>Format values following scientific notation in a logarithmic axis.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="MarsPlot.CustomTicker.base">
+<span class="sig-name descname"><span class="pre">base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.CustomTicker.base" title="Link to this definition"></a></dt>
+<dd><p>Change the <em>base</em> for labeling.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Should always match the base used for <code class="xref py py-class docutils literal notranslate"><span class="pre">LogLocator</span></code></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="MarsPlot.CustomTicker.label_minor">
+<span class="sig-name descname"><span class="pre">label_minor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labelOnlyBase</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.CustomTicker.label_minor" title="Link to this definition"></a></dt>
+<dd><p>Switch minor tick labeling on or off.</p>
+<section id="id1">
+<h4>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>labelOnlyBase<span class="classifier">bool</span></dt><dd><p>If True, label ticks only at integer powers of base.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="MarsPlot.CustomTicker.set_locs">
+<span class="sig-name descname"><span class="pre">set_locs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">locs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.CustomTicker.set_locs" title="Link to this definition"></a></dt>
+<dd><p>Use axis view limits to control which ticks are labeled.</p>
+<p>The <em>locs</em> parameter is ignored in the present algorithm.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="MarsPlot.CustomTicker.format_data">
+<span class="sig-name descname"><span class="pre">format_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.CustomTicker.format_data" title="Link to this definition"></a></dt>
+<dd><p>Return the full string representation of the value with the
+position unspecified.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="MarsPlot.CustomTicker.format_data_short">
+<span class="sig-name descname"><span class="pre">format_data_short</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.CustomTicker.format_data_short" title="Link to this definition"></a></dt>
+<dd><p>Return a short string version of the tick value.</p>
+<p>Defaults to the position-independent long value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="MarsPlot.CustomTicker.format_ticks">
+<span class="sig-name descname"><span class="pre">format_ticks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.CustomTicker.format_ticks" title="Link to this definition"></a></dt>
+<dd><p>Return the tick labels for all the ticks at once.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="MarsPlot.CustomTicker.fix_minus">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fix_minus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.CustomTicker.fix_minus" title="Link to this definition"></a></dt>
+<dd><p>Some classes may want to replace a hyphen for minus with the proper
+unicode symbol (U+2212) for typographical correctness.  This is a
+helper method to perform such a replacement when it is enabled via
+<a href="#id2"><span class="problematic" id="id3">:rc:`axes.unicode_minus`</span></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../MarsInterp/index.html" class="btn btn-neutral float-left" title="MarsInterp" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../MarsCalendar/index.html" class="btn btn-neutral float-right" title="MarsCalendar" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Alex Kling, Courtney Batterson, &amp; Victoria Hartwick (Mars Climate Modeling Center | NASA Ames Research Center).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
