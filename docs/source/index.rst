@@ -33,7 +33,6 @@ CAP is currently compatible with output from the MCMC’s `Legacy <https://githu
    autoapi/MarsInterp/index
    autoapi/MarsPlot/index
    autoapi/MarsCalendar/index
-   autoapi/amescap/Spectral_utils/index
    examples
 
 
