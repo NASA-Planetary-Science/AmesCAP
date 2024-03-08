@@ -230,11 +230,11 @@ def main():
     # Set figure dimensions
     pixel_width = parser.parse_args().pwidth
     if vertical_page:
-        width_inch = pixel_width/1.4/my_dpi
-        height_inch = pixel_width/my_dpi
+        width_inch = pixel_width / 1.4 / my_dpi
+        height_inch = pixel_width / my_dpi
     else:
-        width_inch = pixel_width/my_dpi
-        height_inch = pixel_width/1.4/my_dpi
+        width_inch = pixel_width / my_dpi
+        height_inch = pixel_width / 1.4 / my_dpi
 
     objectList = [Fig_2D_lon_lat("fixed.zsurf", True),
                   Fig_2D_lat_lev("atmos_average.ucomp", True),
@@ -255,7 +255,7 @@ def main():
     if parser.parse_args().inspect_file:
         # [-i --inspect] argument: Inspect content of a netcdf file
         # NAS-specific, check if the file is on tape (Lou only)
-        check_file_tape(parser.parse_args().inspect_file, abort=False)
+        check_file_tape(parser.parse_args().inspect_file, abort = False)
         if parser.parse_args().dump:
             # Print variable content to screen
             print_varContent(parser.parse_args().inspect_file,
@@ -313,7 +313,7 @@ def main():
         if not dir_plot_present:
             os.makedirs(f"{output_path}/plots")
 
-        # ============ Update progressbar ============
+        # ============ Update Progress Bar ============
         global i_list
         for i_list in range(0, len(objectList)):
 
@@ -331,7 +331,7 @@ def main():
                 # Flush previous output
                 sys.stdout.write("\033[K")
 
-            status = (f"{objectList[i_list].plot_type} :"
+            status = (f"{objectList[i_list].plot_type}:"
                       f"{objectList[i_list].varfull}"
                       f"{objectList[i_list].fdim_txt}")
             progress(i_list, len(objectList), status,
@@ -421,8 +421,8 @@ def main():
                 subprocess.check_call(cmd_txt, shell = True, stdout = fdump,
                                       stderr = fdump)
                 # If successful, execute the command
-                subprocess.call(cmd_txt, shell = True,
-                                stdout = fdump, stderr = fdump)
+                subprocess.call(cmd_txt, shell = True, stdout = fdump, 
+                                stderr = fdump)
                 # Delete the individual figures the multipage PDF was
                 # created from
                 cmd_txt = (f"rm -f {all_fig}")
@@ -488,14 +488,14 @@ def mean_func(arr, axis):
         return np.nanmean(arr, axis = axis)
 def shift_data(lon, data):
     """
-    Shifts the longitude data from 0/360 to -180/+180 and vice versa.
+    Shifts the longitude data from 0-360 to -180/180 and vice versa.
 
     :param lon: 1D array of longitude
     :type lon: array [lon]
     :param data: 2D array with last dimension = longitude
     :type data: array [1,lon]
     :raises ValueError: Longitude coordinate type is not recognized.
-    :return: longitude (-180/+180)
+    :return: longitude (-180/180)
     :rtype: array [lon]
     :return: shifted data
     :rtype: array [1,lon]
@@ -536,10 +536,10 @@ def get_lon_index(lon_query_180, lons):
     Returns the indices that will extract data from the netCDF file
     according to a range of *longitudes*.
 
-    :param lon_query_180: longitudes in -180/+180: value,
+    :param lon_query_180: longitudes in -180/180: value,
         ``[min, max]``, or `None`
     :type lon_query_180: list
-    :param lons: longitude in 0/360
+    :param lons: longitude in 0-360
     :type lons: array [lon]
     :return: 1D array of file indices
     :rtype: array
@@ -557,7 +557,7 @@ def get_lon_index(lon_query_180, lons):
 
     if lons.max() > 180:
         # ============== FV3 format ==============
-        # If lon = 0/360, convert to -180/+180
+        # If lon = 0-360, convert to -180/180
         # ========================================
         if lon_query_180.size == 1:
             # If one longitude is provided
@@ -587,18 +587,17 @@ def get_lon_index(lon_query_180, lons):
                 loni = np.append(np.arange(loni_bounds[0], len(lons)),
                                  np.arange(0, loni_bounds[1] + 1))
                 print(f"{Purple}lon360_to_180(lons[loni]){Nclr}")
+            
             lon_bounds_180 = lon360_to_180([lons[loni_bounds[0]],
                                             lons[loni_bounds[1]]])
-
             # if lon_bounds_180[0] > lon_bounds_180[1]:
             #   lon_bounds_180 = np.flipud(lon_bounds_180)
             # lon should be also increasing for display
             txt_lon = (f", lon=avg[{lon_bounds_180[0]:.1f}"
                        f"<->{lon_bounds_180[1]:.1f}]")
-
     else:
         # =========== Legacy Format ===========
-        # Lon = -180/+180
+        # Lon = -180/180
         # =====================================
         if lon_query_180.size == 1:
             # If one longitude is provided
@@ -615,7 +614,6 @@ def get_lon_index(lon_query_180, lons):
             # If a range of longitudes is provided
             loni_bounds = np.array([np.argmin(np.abs(lon_query_180[0]-lons)),
                                     np.argmin(np.abs(lon_query_180[1]-lons))])
-
             if loni_bounds[0] < loni_bounds[1]:
                 # Normal case (e.g., -45 °W > 45 °E)
                 loni = np.arange(loni_bounds[0], loni_bounds[1]+1)
@@ -648,7 +646,6 @@ def get_lat_index(lat_query, lats):
     if lat_query.any() == None:
         # If None, set to default (i.e.equator)
         lat_query = np.array(0.)
-
     if lat_query.size == 1:
         # If one latitude is provided
         # Request meridional average
@@ -659,7 +656,6 @@ def get_lat_index(lat_query, lats):
             # Get closest value
             lati = np.argmin(np.abs(lat_query-lats))
             txt_lat = f", lat={lats[lati]:g}"
-
     elif lat_query.size == 2:
         # If a range of latitudes are provided
         lat_bounds = np.array([np.argmin(np.abs(lat_query[0] - lats)),
@@ -704,12 +700,10 @@ def get_tod_index(tod_query, tods):
             todi = np.argmin(np.abs(tod_query-tods))
             txt_tmp = UT_LTtxt(tods[todi]/24., lon_180 = 0., roundmin = 1)
             txt_tod = f", tod= {txt_tmp}"
-
     elif tod_query.size == 2:
         # If a range of times of day are provided
         tod_bounds = np.array([np.argmin(np.abs(tod_query[0] - tods)),
                                np.argmin(np.abs(tod_query[1] - tods))])
-
         if tod_bounds[0] < tod_bounds[1]:
             # Normal case (e.g., 4 am > 10am)
             todi = np.arange(tod_bounds[0], tod_bounds[1]+1)
@@ -744,7 +738,6 @@ def get_level_index(level_query, levs):
         # If None, set to default (surface)
         # If level_query >>> Psfc (even for a 10-bar Early Mars sim)
         level_query = np.array(2*10**7)
-
     if level_query.size == 1:
         # If one level is provided
         if level_query == -99999:
@@ -761,7 +754,6 @@ def get_level_index(level_query, levs):
             else:
                 #txt_level=", lev=%g Pa"%(levs[levi])
                 txt_level = f", lev={levs[levi]:1.2e} Pa/m"
-
     elif level_query.size == 2:
         # Bounds are provided
         levi_bounds = np.array([np.argmin(np.abs(level_query[0] - levs)),
@@ -798,9 +790,8 @@ def get_time_index(Ls_query_360, LsDay):
     :note: the keyword ``all`` is passed as ``-99999`` by the ``rT()``
         function
     """
-
     if len(np.atleast_1d(LsDay)) == 1:
-        # Special case: file has 1 timestep, transform LsDay to array:
+        # Special case: file has 1 timestep, transform LsDay to array
         LsDay = np.array([LsDay])
 
     Nt = len(LsDay)
@@ -820,7 +811,7 @@ def get_time_index(Ls_query_360, LsDay):
             MY_end = MY_func(LsDay[-1])
             if MY_end >= 1:
                 # Check if the desired Ls is available in this Mars Year
-                Ls_query = Ls_query_360 + (MY_end-1)*360.
+                Ls_query = Ls_query_360 + (MY_end - 1)*360.
                 # (MY starts at 1, not zero)
             else:
                 Ls_query = Ls_query_360
@@ -828,10 +819,9 @@ def get_time_index(Ls_query_360, LsDay):
             if Ls_query > LsDay[-1] and MY_end > 1:
                 # If this time > the last Ls, look one year back
                 MY_end -= 1
-                Ls_query = Ls_query_360 + (MY_end-1)*360.
-            ti = np.argmin(np.abs(Ls_query-LsDay))
+                Ls_query = Ls_query_360 + (MY_end - 1)*360.
+            ti = np.argmin(np.abs(Ls_query - LsDay))
             txt_time = f", Ls= (MY{MY_end:02}) {np.mod(LsDay[ti], 360.):.2f}"
-
     elif Ls_query_360.size == 2:
         # If a range of times are provided
         # Get the Mars Year of the last timestep in the file
@@ -841,7 +831,6 @@ def get_time_index(Ls_query_360, LsDay):
             Ls_query_last = Ls_query_360[1] + (MY_last-1)*360.
         else:
             Ls_query_last = Ls_query_360[1]
-
         # First consider the further end of the desired range
         # If this time is greater that the last Ls, look one year back
         if Ls_query_last > LsDay[-1] and MY_last > 1:
@@ -956,7 +945,6 @@ def rT(typeIn="char"):
             if raw_input[i] == "=":
                 record = True
         txt = current_varfull.strip()
-
     return filter_input(txt, typeIn)
 
 def read_axis_options(axis_options_txt):
@@ -1039,15 +1027,19 @@ def split_varfull(varfull):
         # Default case: no sol number provided (e.g.,
         # atmos_average2.zsurf). Extract variables and file from varfull
         sol_array = np.array([None])
-        filetypeID = varfull.split(".")[0].strip()  # File and ID
-        var = varfull.split(".")[1].strip()         # Variable name
+        # File and ID
+        filetypeID = varfull.split(".")[0].strip()
+        # Variable name
+        var = varfull.split(".")[1].strip()
 
     # Case 2: sol number is provided (e.g., 02400.atmos_average2.zsurf)
     elif varfull.count(".") == 2:
-        sol_array = np.array(
-            [int(varfull.split(".")[0].strip())])   # Sol number
-        filetypeID = varfull.split(".")[1].strip()  # File and ID
-        var = varfull.split(".")[2].strip()         # Variable name
+        # Sol number
+        sol_array = np.array([int(varfull.split(".")[0].strip())])
+        # File and ID
+        filetypeID = varfull.split(".")[1].strip()
+        # Variable name
+        var = varfull.split(".")[2].strip()
     # Split filename and simulation ID
 
     if "@" in filetypeID:
@@ -1055,7 +1047,7 @@ def split_varfull(varfull):
         # Simulation ID starts at zero in the code
         simuID = int(filetypeID.split("@")[1].strip()) - 1
     else:
-        # No digit (i.e. reference simulation)
+        # No digit (i.e., reference simulation)
         simuID = 0
         filetype = filetypeID
     return sol_array, filetype, var, simuID
@@ -1175,8 +1167,7 @@ def get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2):
             ["ls", "lev", "lon", "lat", "tod"]):
             print(f"{Yellow}*** Warning*** Ignoring dimension: "
                   f"{split_dim[i].split('=')[0]} because it is not recognized."
-                  f"Valid dimensions = ls,lev,lon, lat or tod{Nclr}")
-
+                  f"Valid dimensions = ls, lev, lon, lat, or tod{Nclr}")
         if plot_type == "2D_lon_lat":
             if split_dim[i].split("=")[0] == "ls":
                 fdim_out1 = filter_input(split_dim[i].split("=")[1], "float")
@@ -1212,9 +1203,8 @@ def get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2):
         if split_dim[i].split("=")[0] == "tod":
             # Always get time of day
             ftod_out = filter_input(split_dim[i].split("=")[1], "float")
-
-    # NOTE: filter_input() converts text (3 or 4,5) to variable:
-    # (e.g., numpy.array([3.]) or numpy.array([4.,5.]))
+    # NOTE: filter_input() converts text (3 or 4, 5) to variable:
+    # (e.g., numpy.array([3.]) or numpy.array([4., 5.]))
     return varfull_no_bracket, fdim_out1, fdim_out2, ftod_out
 
 def get_overwrite_dim_1D(varfull_bracket, t_in, lat_in, lon_in, lev_in,
@@ -1267,8 +1257,7 @@ def get_overwrite_dim_1D(varfull_bracket, t_in, lat_in, lon_in, lev_in,
                                               "tod"]:
             print(f"{Yellow}*** Warning*** ignoring dimension: "
                   f"{split_dim[i].split('=')[0]} because it is not recognized."
-                  f"Valid dimensions = time, lev, lon,lat or tod{Nclr}")
-
+                  f"Valid dimensions = time, lev, lon, lat, or tod{Nclr}")
         if split_dim[i].split("=")[0] == "ls":
             t_out = filter_input(split_dim[i].split("=")[1], "float")
         if split_dim[i].split("=")[0] == "lat":
@@ -1284,7 +1273,6 @@ def get_overwrite_dim_1D(varfull_bracket, t_in, lat_in, lon_in, lev_in,
             ftod_out = filter_input(split_dim[i].split("=")[1], "float")
     # NOTE: filter_input() converts text ("3" or "4,5") to variable:
     # (e.g., numpy.array([3.]) or numpy.array([4.,5.]))
-
     return varfull_no_bracket, t_out, lat_out, lon_out, lev_out, ftod_out
 
 def create_exec(raw_input, varfull_list):
@@ -1489,7 +1477,6 @@ def give_permission(filename):
         subprocess.check_call(["setfacl -v"], shell = True,
                               stdout = open(os.devnull, "w"),
                               stderr = open(os.devnull, "w"))
-
         cmd_txt = f"setfacl -R -m g:s0846:r {filename}"
         subprocess.call(cmd_txt, shell = True)
     except subprocess.CalledProcessError:
@@ -1509,25 +1496,24 @@ def namelist_parser(Custom_file):
     global input_paths
 
     # A Custom.in file is provided, flush the default figures in main()
-    objectList  = []    # All individual plots
-    panelList   = []    # List of panels
+    objectList = []     # All individual plots
+    panelList = []      # List of panels
     subplotList = []    # Layout of figures
     addLineList = []    # Add several lines to plot on the same graph
-    layoutList  = []
-    nobj        = 0     # Number for the object. nobj = 1,[2,3],4 would
+    layoutList = []
+    nobj = 0            # Number for the object. nobj = 1,[2,3],4 would
                         # have plots 2 & 3  plotted in a two-panel plot
-    npanel      = 1     # Number of panels plotted along this object.
+    npanel = 1          # Number of panels plotted along this object.
                         # npanel = 1 = object 1, 2 = objects 2 & 3
-    subplotID   = 1     # Subplot ID for each object. = 1 = object 1,
+    subplotID = 1       # Subplot ID for each object. = 1 = object 1,
                         # 1 = object 2, and 2 = object 3
-    holding     = False
-    addLine     = False
-    addedLines  = 0     # Line plots
+    holding = False
+    addLine = False
+    addedLines = 0     # Line plots
     # Plot number at the start of a new page (HOLD ON). Used if layout
     # is provided with HOLD ON (e.g., HOLD ON 2,3)
-    npage       = 0
-    layout      = None
-
+    npage = 0
+    layout = None
     customFileIN = open(Custom_file, "r")
 
     # Get version number in the header
@@ -1545,6 +1531,7 @@ def namelist_parser(Custom_file):
     while (customFileIN.readline()[0] != "<"):
         # Skip the header
         pass
+    
     while True:
         # Read paths under ``<<<<<<<<<< Simulations >>>>>>>>>>>``
         line = customFileIN.readline()
@@ -1597,11 +1584,9 @@ def namelist_parser(Custom_file):
                 layout = [int(tmp.split(",")[0]), int(tmp.split(",")[1])]
             else:
                 layout = None
-
         if line.strip() == "ADD LINE":
             # Overplot 1D plot
             addLine = True
-
         if line[0] == "<":
             # If new figure
             figtype, boolPlot = get_figure_header(line)
@@ -1624,16 +1609,12 @@ def namelist_parser(Custom_file):
                     objectList.append(Fig_1D())
                 objectList[nobj].read_template()
                 nobj += 1
-
                 # Debug only
                 #print(f"------nobj= {nobj} npage={npage}-----------")
-                # ===================
-
                 if holding and not addLine:
                     subplotList.append(subplotID)
                     panelList.append(subplotID)
                     subplotID += 1
-
                     for iobj in range(npage, nobj-1):
                         # Add +1 panel to all plots on current page
                         panelList[iobj] += 1
@@ -1652,7 +1633,6 @@ def namelist_parser(Custom_file):
                 else:
                     layoutList.append(None)
                 # ====================
-
                 if addLine:
                     addedLines += 1
                     addLineList.append(addedLines)
@@ -1661,7 +1641,7 @@ def namelist_parser(Custom_file):
                     addLineList.append(0)
                     # Reset line counter
                     addedLines = 0
-
+                    
                 # #Debug only
                 # for ii in range(0, len(subplotList)):
                 #    print(f"{Cyan}[X, {subplotList[ii]}, {panelList[ii]},
@@ -1698,13 +1678,11 @@ def namelist_parser(Custom_file):
         print(f"{Red}*** Error ***\nMissing ``HOLD OFF`` statement in "
               f"{Custom_file}{Nclr}")
         exit()
-
     if addLine:
         # Make sure we are not still holding figures
         print(f"{Red}*** Error ***\nCannot have ``ADD LINE`` after the last "
               f"figure in {Custom_file}{Nclr}")
         exit()
-
     # Finished reading the file, distribute the number of figure and
     # panels for each plot
     for i in range(0, nobj):
@@ -1712,7 +1690,6 @@ def namelist_parser(Custom_file):
         objectList[i].nPan = panelList[i]
         objectList[i].addLine = addLineList[i]
         objectList[i].layout = layoutList[i]
-
         # Debug only
         # print(f"{Purple}{i}:[{objectList[i].subID},{objectList[i].nPan},"
         #       f"{objectList[i].addLine}]{Nclr}")
@@ -1734,14 +1711,15 @@ def get_figure_header(line_txt):
     # Plot 2D lon X lat = True
     line_cmd = line_txt.split("|")[1].strip()
     # Plot 2D lon X lat
-    figtype  = line_cmd.split("=")[0].strip()
+    figtype = line_cmd.split("=")[0].strip()
     # Return True
     boolPlot = line_cmd.split("=")[1].strip() == "True"
     return figtype, boolPlot
 
 def format_lon_lat(lon_lat, type):
     """
-    Format latitude and longitude as labels (e.g., 30°S, 30°N, 45°W, 45°E)
+    Format latitude and longitude as labels (e.g., 30°S, 30°N, 45°W, 
+    45°E)
 
     :param lon_lat: latitude or longitude (+180/-180)
     :type lon_lat: float
@@ -1750,7 +1728,6 @@ def format_lon_lat(lon_lat, type):
     :return: formatted label
     :rtype: str
     """
-
     letter = ""
     if type == "lon":
         if lon_lat < 0:
@@ -1767,7 +1744,6 @@ def format_lon_lat(lon_lat, type):
     lon_lat = abs(lon_lat)
     return f"{lon_lat}{letter}"
 
-
 # ======================================================================
 #                       FILE SYSTEM UTILITIES
 # ======================================================================
@@ -1779,12 +1755,11 @@ def get_Ncdf_num():
     :return: a sorted array of sols
     :rtype: array
     """
-    list_dir = os.listdir(input_paths[0]) # e.g., 00350.fixed.nc
+    # e.g., 00350.fixed.nc
+    list_dir = os.listdir(input_paths[0]) 
     avail_fixed = [k for k in list_dir if ".fixed.nc" in k]
-
     # Remove .fixed.nc (returning 00350 or 00000)
     list_num = [item[0:5] for item in avail_fixed]
-
     # Transform to array (returning [0, 350])
     Ncdf_num = np.sort(np.asarray(list_num).astype(float))
     if Ncdf_num.size == 0:
@@ -1902,11 +1877,11 @@ def progress(k, Nmax, txt="", success=True):
     block = int(round(barLength*progress))
     bar = f"[{('#'*block ) + ('-'*(barLength-block))}]"
     if success == True:
-        status = f"{100*progress:03} % {Green}{txt}{Nclr}"
+        status = f"{int(100*progress):>3} % {Green}({txt}){Nclr}"
     elif success == False:
-        status = f"{100*progress:03} % {reversed}{txt}{Nclr}"
+        status = f"{int(100*progress):>3} % {Red}({txt}){Nclr}"
     elif success == None:
-        status = f"{100*progress:03} % {txt}"
+        status = f"{int(100*progress):>3} % ({txt})"
     text = (f"\r{bar}{status}\n")
     sys.stdout.write(text)
     if not debug:
@@ -1935,8 +1910,10 @@ def prep_file(var_name, file_type, simuID, sol_array):
         (dims) shape of the array e.g., [133,48,96]
     """
     global input_paths
-    global Ncdf_num # Holds sol numbers (e.g., [1500,2400])
-    Sol_num_current = [0] # Specific sol requested (e.g., [2400])
+    # Holds sol numbers (e.g., [1500,2400])
+    global Ncdf_num
+    # Specific sol requested (e.g., [2400])
+    Sol_num_current = [0] 
 
     if os.path.isfile(f"{input_paths[simuID]}/{file_type}.nc"):
         # First check if the file exist on tape without a sol number
@@ -1968,7 +1945,7 @@ def prep_file(var_name, file_type, simuID, sol_array):
         else:  # No sol number
             file_list[i] = f"{input_paths[simuID]}/{file_type}.nc"
 
-        check_file_tape(file_list[i], abort=False)
+        check_file_tape(file_list[i], abort = False)
 
     try:
         # We know the files exist on tape, now open it with MFDataset
@@ -1989,10 +1966,9 @@ def prep_file(var_name, file_type, simuID, sol_array):
 class CustomTicker(LogFormatterSciNotation):
     def __call__(self, x, pos=None):
         if x < 0:
-            return LogFormatterSciNotation.__call__(self, x, pos=None)
+            return LogFormatterSciNotation.__call__(self, x, pos = None)
         else:
-            return "{x:g}".format(x=x)
-
+            return "{x:g}".format(x = x)
 
 # ======================================================================
 #                           FIGURE DEFINITIONS
@@ -2000,16 +1976,16 @@ class CustomTicker(LogFormatterSciNotation):
 class Fig_2D(object):
     def __init__(self, varfull="fileYYY.XXX", doPlot=False, varfull2=None):
 
-        self.title    = None
-        self.varfull  = varfull
-        self.range    = None
-        self.fdim1    = None
-        self.fdim2    = None
-        self.ftod     = None  # Time of day
+        self.title = None
+        self.varfull = varfull
+        self.range = None
+        self.fdim1 = None
+        self.fdim2 = None
+        self.ftod = None # Time of day
         self.varfull2 = varfull2
         self.contour2 = None
         # Logic
-        self.doPlot    = doPlot
+        self.doPlot = doPlot
         self.plot_type = self.__class__.__name__[4:]
 
         # Extract filetype, variable, and simulation ID (initialized
@@ -2027,14 +2003,14 @@ class Fig_2D(object):
              self.simuID2) = split_varfull(self.varfull2)
 
         # Multipanel
-        self.nPan   = 1
-        self.subID  = 1
+        self.nPan = 1
+        self.subID = 1
         self.layout = None  # e.g., [2,3], used only if HOLD ON 2,3
 
         # Annotation for free dimensions
-        self.fdim_txt  = ""
-        self.success   = False
-        self.addLine   = False
+        self.fdim_txt = ""
+        self.success = False
+        self.addLine = False
         self.vert_unit = "" # m or Pa
 
         # Axis options
@@ -2067,11 +2043,11 @@ class Fig_2D(object):
                 f"[None,None] | cmap = jet |scale = lin \n")
 
     def read_template(self):
-        self.title    = rT("char")  # 1
-        self.varfull  = rT("char")  # 2
-        self.range    = rT("float") # 3
-        self.fdim1    = rT("float") # 4
-        self.fdim2    = rT("float") # 5
+        self.title = rT("char")  # 1
+        self.varfull= rT("char")  # 2
+        self.range = rT("float") # 3
+        self.fdim1 = rT("float") # 4
+        self.fdim2 = rT("float") # 5
         self.varfull2 = rT("char")  # 6
         self.contour2 = rT("float") # 7
         (self.Xlim,
@@ -2115,12 +2091,12 @@ class Fig_2D(object):
             # Recognize an operation on the variables
             VAR = []
             # Extract individual variables and prepare for execution
-            varfull         = remove_whitespace(varfull)
-            varfull_list    = get_list_varfull(varfull)
+            varfull = remove_whitespace(varfull)
+            varfull_list = get_list_varfull(varfull)
             # Initialize list of requested dimensions
-            fdim1_list      = [None]*len(varfull_list)
-            fdim2_list      = [None]*len(varfull_list)
-            ftod_list       = [None]*len(varfull_list)
+            fdim1_list = [None]*len(varfull_list)
+            fdim2_list = [None]*len(varfull_list)
+            ftod_list = [None]*len(varfull_list)
             expression_exec = create_exec(varfull, varfull_list)
 
             for i in range(0, len(varfull_list)):
@@ -3834,7 +3810,7 @@ class Fig_1D(object):
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         else:
             # Find name of time of day variable
-            # (i.e. time_of_day_16 or time_of_day_24)
+            # (i.e., time_of_day_16 or time_of_day_24)
             tod_dim_name = find_tod_in_diurn(f)
             tod = f.variables[tod_dim_name][:]
             todi = np.arange(0, len(tod))
