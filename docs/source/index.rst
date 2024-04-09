@@ -32,7 +32,7 @@ CAP is currently compatible with output from the MCMC’s `Legacy <https://githu
    autoapi/MarsVars/index
    autoapi/MarsInterp/index
    autoapi/MarsPlot/index
-   autoapi/MarsCalendar/index
+   .. autoapi/MarsCalendar/index
    examples
 
 

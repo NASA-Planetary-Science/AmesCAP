@@ -20,7 +20,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="MarsCalendar" href="../MarsCalendar/index.html" />
+    <link rel="next" title="Examples &amp; Use Cases" href="../../examples.html" />
     <link rel="prev" title="MarsInterp" href="../MarsInterp/index.html" /> 
 </head>
 
@@ -91,8 +91,6 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../MarsCalendar/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsCalendar</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../amescap/Spectral_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">amescap.Spectral_utils</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples &amp; Use Cases</a></li>
 </ul>
 
@@ -163,7 +161,7 @@ files. It sources variables from netCDF files in a specified directory.</p>
 <td><p>This function calculates a mean over the selected axis, ignoring or</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.shift_data" title="MarsPlot.shift_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shift_data</span></code></a>(lon, data)</p></td>
-<td><p>Shifts the longitude data from 0/360 to -180/+180 and vice versa.</p></td>
+<td><p>Shifts the longitude data from 0-360 to -180/180 and vice versa.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.MY_func" title="MarsPlot.MY_func"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MY_func</span></code></a>(Ls_cont)</p></td>
 <td><p>Returns the Mars Year</p></td>
@@ -226,7 +224,7 @@ files. It sources variables from netCDF files in a specified directory.</p>
 <td><p>Returns the plot type by confirming that template = <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#MarsPlot.format_lon_lat" title="MarsPlot.format_lon_lat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_lon_lat</span></code></a>(lon_lat, type)</p></td>
-<td><p>Format latitude and longitude as labels (e.g., 30°S, 30°N, 45°W, 45°E)</p></td>
+<td><p>Format latitude and longitude as labels (e.g., 30°S, 30°N, 45°W,</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#MarsPlot.get_Ncdf_num" title="MarsPlot.get_Ncdf_num"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_Ncdf_num</span></code></a>()</p></td>
 <td><p>Return the prefix numbers for the netCDF files in the directory.</p></td>
@@ -280,7 +278,7 @@ including NaN values as specified by <code class="docutils literal notranslate">
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.shift_data">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">shift_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.shift_data" title="Link to this definition"></a></dt>
-<dd><p>Shifts the longitude data from 0/360 to -180/+180 and vice versa.</p>
+<dd><p>Shifts the longitude data from 0-360 to -180/180 and vice versa.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -292,7 +290,7 @@ including NaN values as specified by <code class="docutils literal notranslate">
 <dd class="field-even"><p><strong>ValueError</strong> – Longitude coordinate type is not recognized.</p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>longitude (-180/+180)</p>
+<dd class="field-odd"><p>longitude (-180/180)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>array [lon]</p>
@@ -335,9 +333,9 @@ according to a range of <em>longitudes</em>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>lon_query_180</strong> (<em>list</em>) – longitudes in -180/+180: value,
+<li><p><strong>lon_query_180</strong> (<em>list</em>) – longitudes in -180/180: value,
 <code class="docutils literal notranslate"><span class="pre">[min,</span> <span class="pre">max]</span></code>, or <cite>None</cite></p></li>
-<li><p><strong>lons</strong> (<em>array</em><em> [</em><em>lon</em><em>]</em>) – longitude in 0/360</p></li>
+<li><p><strong>lons</strong> (<em>array</em><em> [</em><em>lon</em><em>]</em>) – longitude in 0-360</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -812,7 +810,8 @@ figure</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsPlot.format_lon_lat">
 <span class="sig-prename descclassname"><span class="pre">MarsPlot.</span></span><span class="sig-name descname"><span class="pre">format_lon_lat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsPlot.format_lon_lat" title="Link to this definition"></a></dt>
-<dd><p>Format latitude and longitude as labels (e.g., 30°S, 30°N, 45°W, 45°E)</p>
+<dd><p>Format latitude and longitude as labels (e.g., 30°S, 30°N, 45°W,
+45°E)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1020,7 +1019,7 @@ helper method to perform such a replacement when it is enabled via
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../MarsInterp/index.html" class="btn btn-neutral float-left" title="MarsInterp" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../MarsCalendar/index.html" class="btn btn-neutral float-right" title="MarsCalendar" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../../examples.html" class="btn btn-neutral float-right" title="Examples &amp; Use Cases" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -91,14 +91,14 @@ Functions
 
 .. py:function:: shift_data(lon, data)
 
-   Shifts the longitude data from 0/360 to -180/+180 and vice versa.
+   Shifts the longitude data from 0-360 to -180/180 and vice versa.
 
    :param lon: 1D array of longitude
    :type lon: array [lon]
    :param data: 2D array with last dimension = longitude
    :type data: array [1,lon]
    :raises ValueError: Longitude coordinate type is not recognized.
-   :return: longitude (-180/+180)
+   :return: longitude (-180/180)
    :rtype: array [lon]
    :return: shifted data
    :rtype: array [1,lon]
@@ -121,10 +121,10 @@ Functions
    Returns the indices that will extract data from the netCDF file
    according to a range of *longitudes*.
 
-   :param lon_query_180: longitudes in -180/+180: value,
+   :param lon_query_180: longitudes in -180/180: value,
        ``[min, max]``, or `None`
    :type lon_query_180: list
-   :param lons: longitude in 0/360
+   :param lons: longitude in 0-360
    :type lons: array [lon]
    :return: 1D array of file indices
    :rtype: array
@@ -421,7 +421,8 @@ Functions
 
 .. py:function:: format_lon_lat(lon_lat, type)
 
-   Format latitude and longitude as labels (e.g., 30°S, 30°N, 45°W, 45°E)
+   Format latitude and longitude as labels (e.g., 30°S, 30°N, 45°W, 
+   45°E)
 
    :param lon_lat: latitude or longitude (+180/-180)
    :type lon_lat: float

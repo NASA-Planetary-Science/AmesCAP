@@ -508,8 +508,8 @@ def compute_w_net(Vg, wvar):
 # =====================================================================
 def compute_theta(p_3D, ps, temp, f_type):
     """
-    Compute the potential temperature.
-
+    Compute the potential temperature. 
+    
     :param p_3D: The full 3D pressure array (Pa)
     :type p_3D: array [time, lev, lat, lon]
     :param ps: Surface pressure (Pa)
@@ -517,7 +517,7 @@ def compute_theta(p_3D, ps, temp, f_type):
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
     :param f_type: The FV3 file type: diurn, daily, or average
-    :type f_stype: str
+    :type f_type: str
 
     :raises:
 
