@@ -11,6 +11,7 @@ import re         # string matching module to handle time_of_day_XX
 # ==========
 from amescap.FV3_utils import fms_press_calc, fms_Z_calc, vinterp, find_n, polar2XYZ, interp_KDTree, axis_interp
 from amescap.Script_utils import check_file_tape, prYellow, prRed, prCyan, prGreen, prPurple, print_fileContent
+from amescap.Script_utils import read_variable_dict_amescap_profile
 from amescap.Script_utils import section_content_amescap_profile, find_tod_in_diurn, filter_vars, find_fixedfile, ak_bk_loader
 from amescap.Ncdf_wrapper import Ncdf
 # ==========
@@ -108,15 +109,21 @@ def main():
         units_txt       = 'Pa'
         need_to_reverse = False
         interp_technic  = 'log'
-
-        content_txt = section_content_amescap_profile(
-            'Pressure definitions for pstd')
-        exec(content_txt)  # Load all variables in that section
-
         if custom_level:
+            content_txt = section_content_amescap_profile(
+                'Pressure definitions for pstd')
+            # print(content_txt)
+            exec(content_txt)  # Load all variables in that section
+            # Copy requested variable
             lev_in = eval('np.array('+custom_level+')')
         else:
-            lev_in = eval('np.array(pstd_default)')
+            # Default levels, this is size 36
+            lev_in = np.array([1.0e+03, 9.5e+02, 9.0e+02, 8.5e+02, 8.0e+02, 7.5e+02, 7.0e+02,
+                               6.5e+02, 6.0e+02, 5.5e+02, 5.0e+02, 4.5e+02, 4.0e+02, 3.5e+02,
+                               3.0e+02, 2.5e+02, 2.0e+02, 1.5e+02, 1.0e+02, 7.0e+01, 5.0e+01,
+                               3.0e+01, 2.0e+01, 1.0e+01, 7.0e+00, 5.0e+00, 3.0e+00, 2.0e+00,
+                               1.0e+00, 5.0e-01, 3.0e-01, 2.0e-01, 1.0e-01, 5.0e-02, 3.0e-02,
+                               1.0e-02])
 
     # =========================== zstd ===========================
     elif interp_type == 'zstd':
@@ -124,23 +131,27 @@ def main():
         units_txt       = 'm'
         need_to_reverse = True
         interp_technic  = 'lin'
-
-        content_txt = section_content_amescap_profile(
-            'Altitude definitions for zstd')
-        exec(content_txt)  # Load all variables in that section
-
         if custom_level:
+            content_txt = section_content_amescap_profile(
+                'Altitude definitions for zstd')
+            exec(content_txt)  # Load all variables in that section
+            # Copy requested variable
             lev_in = eval('np.array('+custom_level+')')
         else:
-            lev_in = eval('np.array(zstd_default)')
             # Default levels, this is size 45
+            lev_in = np.array([-7000, -6000, -5000, -4500, -4000, -3500, -3000, -2500, -2000, -1500, -1000,
+                               -500, 0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000,
+                               6000, 7000, 8000, 9000, 10000, 12000, 14000, 16000, 18000,
+                               20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000,
+                               60000, 70000, 80000, 90000, 100000])
 
         # The fixed file is necessary if pk, bk are not in the requested file, or
         # to load the topography if zstd output is requested.
         name_fixed = find_fixedfile(file_list[0])
         try:
             f_fixed = Dataset(name_fixed, 'r')
-            zsurf = f_fixed.variables['zsurf'][:]
+            model=read_variable_dict_amescap_profile(f_fixed)
+            zsurf = f_fixed.variables[model.zsurf][:]
             f_fixed.close()
         except FileNotFoundError:
             prRed('***Error*** Topography (zsurf) is required for interpolation to zstd, but the')
@@ -153,15 +164,19 @@ def main():
         units_txt       = 'm'
         need_to_reverse = True
         interp_technic  = 'lin'
-
-        content_txt = section_content_amescap_profile(
-            'Altitude definitions for zagl')
-        exec(content_txt)  # Load all variables in that section
-
         if custom_level:
+            content_txt = section_content_amescap_profile(
+                'Altitude definitions for zagl')
+            # print(content_txt)
+            exec(content_txt)  # Load all variables in that section
+            # Copy requested variable
             lev_in = eval('np.array('+custom_level+')')
         else:
-            lev_in = eval('np.array(zagl_default)')
+            # Default levels, this is size 45
+            lev_in = np.array([0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000,
+                               6000, 7000, 8000, 9000, 10000, 12000, 14000, 16000, 18000,
+                               20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000,
+                               60000, 70000, 80000, 90000, 100000, 110000])
     else:
         prRed("Interpolation type '%s' is not supported, use  'pstd','zstd' or 'zagl'" % (
             interp_type))
@@ -190,13 +205,11 @@ def main():
         fNcdf = Dataset(ifile, 'r', format='NETCDF4_CLASSIC')
         # Load pk, bk, and ps for 3D pressure field calculation.
         # Read the pk and bk for each file in case the vertical resolution has changed.
-
+        model=read_variable_dict_amescap_profile(fNcdf)
         ak, bk = ak_bk_loader(fNcdf)
 
-        ps = np.array(fNcdf.variables['ps'])
+        ps = np.array(fNcdf.variables[model.ps])
 
-        #For pstd only, uncommenting the following line will use pfull as default layers:
-        #if interp_type == 'pstd':lev_in=fNcdf.variables['pfull'][::-1]
         if len(ps.shape) == 3:
             do_diurn = False
             tod_name = 'not_used'
@@ -219,12 +232,12 @@ def main():
                 L_3D_P = fms_press_calc(ps, ak, bk, lev_type='full')
 
             elif interp_type == 'zagl':
-                temp = fNcdf.variables['temp'][:]
+                temp = fNcdf.variables[model.temp][:]
                 L_3D_P = fms_Z_calc(ps, ak, bk, temp.transpose(
                     permut), topo=0., lev_type='full')
 
             elif interp_type == 'zstd':
-                temp = fNcdf.variables['temp'][:]
+                temp = fNcdf.variables[model.temp][:]
                 # Expand the 'zsurf' array to the 'time' dimension
                 zflat = np.repeat(zsurf[np.newaxis, :], ps.shape[0], axis=0)
                 if do_diurn:
@@ -250,10 +263,10 @@ def main():
             fnew.copy_Ncaxis_with_content(fNcdf.variables['grid_xt'])
             fnew.copy_Ncaxis_with_content(fNcdf.variables['grid_yt'])
         else:
-            fnew.copy_Ncaxis_with_content(fNcdf.variables['lon'])
-            fnew.copy_Ncaxis_with_content(fNcdf.variables['lat'])
+            fnew.copy_Ncaxis_with_content(fNcdf.variables[model.lon])
+            fnew.copy_Ncaxis_with_content(fNcdf.variables[model.lat])
 
-        fnew.copy_Ncaxis_with_content(fNcdf.variables['time'])
+        fnew.copy_Ncaxis_with_content(fNcdf.variables[model.time])
 
         if do_diurn:
             fnew.copy_Ncaxis_with_content(fNcdf.variables[tod_name])
@@ -299,7 +312,7 @@ def main():
                                           long_name_txt, units_txt)
             else:
 
-                if ivar not in ['time', 'pfull', 'lat', 'lon', 'phalf', 'ak', 'pk', 'bk', 'pstd', 'zstd', 'zagl', tod_name, 'grid_xt', 'grid_yt']:
+                if ivar not in [model.time, model.pfull, model.lat, model.lon, 'phalf', 'ak', 'pk', 'bk', model.pstd, model.zstd, model.zagl, tod_name, 'grid_xt', 'grid_yt']:
                     #print("\r Copying over: %s..."%(ivar), end='')
                     prCyan("Copying over: %s..." % (ivar))
                     fnew.copy_Ncvar(fNcdf.variables[ivar])
