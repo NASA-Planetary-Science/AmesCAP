@@ -3,3 +3,4 @@ matplotlib
 netCDF4
 requests
 scipy
+xarray
