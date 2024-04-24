@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>amescap.FV3_utils &mdash; AmesCAP 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=f2a433a1"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            AmesCAP
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MarsPull/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPull</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples &amp; Use Cases</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">AmesCAP</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">amescap.FV3_utils</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/autoapi/amescap/FV3_utils/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-amescap.FV3_utils">
+<span id="amescap-fv3-utils"></span><h1><a class="reference internal" href="#module-amescap.FV3_utils" title="amescap.FV3_utils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">amescap.FV3_utils</span></code></a><a class="headerlink" href="#module-amescap.FV3_utils" title="Link to this heading"></a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.fms_press_calc" title="amescap.FV3_utils.fms_press_calc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fms_press_calc</span></code></a>(psfc, ak, bk[, lev_type])</p></td>
+<td><p>Returns the 3D pressure field from the surface pressure and the ak/bk coefficients.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.fms_Z_calc" title="amescap.FV3_utils.fms_Z_calc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fms_Z_calc</span></code></a>(psfc, ak, bk, T[, topo, lev_type])</p></td>
+<td><p>Returns the 3D altitude field in [m] AGL or above aeroid.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.find_n0" title="amescap.FV3_utils.find_n0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_n0</span></code></a>(Lfull_IN, Llev_OUT[, reverse_input])</p></td>
+<td><p>Return the index for the level(s) just below Llev_OUT.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.find_n" title="amescap.FV3_utils.find_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_n</span></code></a>(X_IN, X_OUT[, reverse_input, modulo])</p></td>
+<td><p>Map the closest index from a 1D input array to a ND output array just below the input values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.expand_index" title="amescap.FV3_utils.expand_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expand_index</span></code></a>(Nindex, VAR_shape_axis_FIRST, axis_list)</p></td>
+<td><p>Repeat interpolation indices along an axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.vinterp" title="amescap.FV3_utils.vinterp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vinterp</span></code></a>(varIN, Lfull, Llev[, type_int, reverse_input, ...])</p></td>
+<td><p>Vertical linear or logarithmic interpolation for pressure or altitude.   Alex Kling 5-27-20</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.axis_interp" title="amescap.FV3_utils.axis_interp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">axis_interp</span></code></a>(var_IN, x, xi, axis[, reverse_input, ...])</p></td>
+<td><p>One dimensional linear /log interpolation along one axis. [Alex Kling, May 2021]</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.layers_mid_point_to_boundary" title="amescap.FV3_utils.layers_mid_point_to_boundary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">layers_mid_point_to_boundary</span></code></a>(pfull, sfc_val)</p></td>
+<td><p>A general description for the layer boundaries is p_half= ps*bk +pk</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.polar2XYZ" title="amescap.FV3_utils.polar2XYZ"><code class="xref py py-obj docutils literal notranslate"><span class="pre">polar2XYZ</span></code></a>(lon, lat, alt[, Re])</p></td>
+<td><p>Spherical to cartesian coordinates transformation</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.interp_KDTree" title="amescap.FV3_utils.interp_KDTree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">interp_KDTree</span></code></a>(var_IN, lat_IN, lon_IN, lat_OUT, lon_OUT)</p></td>
+<td><p>Inverse-distance-weighted interpolation using nearest neighboor for ND variables.  [Alex Kling , May 2021]</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.cart_to_azimut_TR" title="amescap.FV3_utils.cart_to_azimut_TR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cart_to_azimut_TR</span></code></a>(u, v[, mode])</p></td>
+<td><p>Convert cartesian coordinates or wind vectors to radian,using azimut angle.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.sfc_area_deg" title="amescap.FV3_utils.sfc_area_deg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sfc_area_deg</span></code></a>(lon1, lon2, lat1, lat2[, R])</p></td>
+<td><p>Return the surface between two set of latitudes/longitudes</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.area_meridional_cells_deg" title="amescap.FV3_utils.area_meridional_cells_deg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">area_meridional_cells_deg</span></code></a>(lat_c, dlon, dlat[, ...])</p></td>
+<td><p>Return area of invidual cells for a meridional band of thickness dlon</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.area_weights_deg" title="amescap.FV3_utils.area_weights_deg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">area_weights_deg</span></code></a>(var_shape, lat_c[, axis])</p></td>
+<td><p>Return weights for averaging of the variable var.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.areo_avg" title="amescap.FV3_utils.areo_avg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">areo_avg</span></code></a>(VAR, areo, Ls_target, Ls_angle[, symmetric])</p></td>
+<td><p>Return a value average over a central solar longitude</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.mass_stream" title="amescap.FV3_utils.mass_stream"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mass_stream</span></code></a>(v_avg, lat, level[, type, psfc, H, factor])</p></td>
+<td><p>Compute the mass stream function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.vw_from_MSF" title="amescap.FV3_utils.vw_from_MSF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vw_from_MSF</span></code></a>(msf, lat, lev[, ztype, norm, psfc, H])</p></td>
+<td><p>Return the [v] and [w] component of the circulation from the mass stream function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.alt_KM" title="amescap.FV3_utils.alt_KM"><code class="xref py py-obj docutils literal notranslate"><span class="pre">alt_KM</span></code></a>(press[, scale_height_KM, reference_press])</p></td>
+<td><p>Gives the approximate altitude in km for a given pressure</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.press_pa" title="amescap.FV3_utils.press_pa"><code class="xref py py-obj docutils literal notranslate"><span class="pre">press_pa</span></code></a>(alt_KM[, scale_height_KM, reference_press])</p></td>
+<td><p>Gives the approximate altitude in km for a given pressure</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.shiftgrid_360_to_180" title="amescap.FV3_utils.shiftgrid_360_to_180"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shiftgrid_360_to_180</span></code></a>(lon, data)</p></td>
+<td><p>This function shift N dimensional data a 0-&gt;360 to a -180/+180 grid.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.shiftgrid_180_to_360" title="amescap.FV3_utils.shiftgrid_180_to_360"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shiftgrid_180_to_360</span></code></a>(lon, data)</p></td>
+<td><p>This function shift N dimensional data a -180/+180 grid to a 0-&gt;360</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.second_hhmmss" title="amescap.FV3_utils.second_hhmmss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">second_hhmmss</span></code></a>(seconds[, lon_180])</p></td>
+<td><p>Given the time in seconds return Local true Solar Time at a certain longitude</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.sol_hhmmss" title="amescap.FV3_utils.sol_hhmmss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sol_hhmmss</span></code></a>(time_sol[, lon_180])</p></td>
+<td><p>Given the time in days, return the Local true Solar Time at a certain longitude</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.UT_LTtxt" title="amescap.FV3_utils.UT_LTtxt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UT_LTtxt</span></code></a>(UT_sol[, lon_180, roundmin])</p></td>
+<td><p>Returns the time in HH:MM:SS format at a certain longitude.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.dvar_dh" title="amescap.FV3_utils.dvar_dh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dvar_dh</span></code></a>(arr[, h])</p></td>
+<td><p>Differentiate an array A(dim1,dim2,dim3...) with respect to h. The differentiated dimension must be the first dimension.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.zonal_detrend" title="amescap.FV3_utils.zonal_detrend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zonal_detrend</span></code></a>(VAR)</p></td>
+<td><p>Substract zonnally averaged mean value from a field</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.get_trend_2D" title="amescap.FV3_utils.get_trend_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_trend_2D</span></code></a>(VAR, LON, LAT[, type_trend])</p></td>
+<td><p>Extract spatial trend from data. The output can be directly substracted from the original field.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.regression_2D" title="amescap.FV3_utils.regression_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">regression_2D</span></code></a>(X, Y, VAR[, order])</p></td>
+<td><p>Linear and quadratic regression on the plane.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.daily_to_average" title="amescap.FV3_utils.daily_to_average"><code class="xref py py-obj docutils literal notranslate"><span class="pre">daily_to_average</span></code></a>(varIN, dt_in[, nday, trim])</p></td>
+<td><p>Bin a variable from an atmos_daily file to the atmos_average format.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.daily_to_diurn" title="amescap.FV3_utils.daily_to_diurn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">daily_to_diurn</span></code></a>(varIN, time_in)</p></td>
+<td><p>Bin a variable from an atmos_daily file into the atmos_diurn format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.gauss_profile" title="amescap.FV3_utils.gauss_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gauss_profile</span></code></a>(x, alpha[, x0])</p></td>
+<td><p>Return Gaussian line shape at x This can be used to generate a bell-shaped mountain</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.compute_uneven_sigma" title="amescap.FV3_utils.compute_uneven_sigma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_uneven_sigma</span></code></a>(num_levels, N_scale_heights, ...)</p></td>
+<td><p>Construct an initial array of sigma based on the number of levels, an exponent</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.transition" title="amescap.FV3_utils.transition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transition</span></code></a>(pfull[, p_sigma, p_press])</p></td>
+<td><p>Return the transition factor to construct the ak and bk</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.swinbank" title="amescap.FV3_utils.swinbank"><code class="xref py py-obj docutils literal notranslate"><span class="pre">swinbank</span></code></a>(plev, psfc[, ptrans])</p></td>
+<td><p>Compute ak and bk values with a transition based on Swinbank</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.polar_warming" title="amescap.FV3_utils.polar_warming"><code class="xref py py-obj docutils literal notranslate"><span class="pre">polar_warming</span></code></a>(T, lat[, outside_range])</p></td>
+<td><p>Return the polar warming, following  [McDunn et al. 2013]: Characterization of middle-atmosphere polar warming at Mars, JGR</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.tshift" title="amescap.FV3_utils.tshift"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tshift</span></code></a>(array, lon, timeo[, timex])</p></td>
+<td><p>Conversion to uniform local time.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.lin_interp" title="amescap.FV3_utils.lin_interp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lin_interp</span></code></a>(X_in, X_ref, Y_ref)</p></td>
+<td><p>Simple linear interpolation with no dependance on scipy</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.add_cyclic" title="amescap.FV3_utils.add_cyclic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_cyclic</span></code></a>(data, lon)</p></td>
+<td><p>Add an additional cyclic (overlapping) point to a 2D array, useful for azimuth and orthographic projections</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.spherical_div" title="amescap.FV3_utils.spherical_div"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spherical_div</span></code></a>(U, V, lon_deg, lat_deg[, R, spacing])</p></td>
+<td><p>Compute the divergence of the wind fields using finite difference.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.spherical_curl" title="amescap.FV3_utils.spherical_curl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spherical_curl</span></code></a>(U, V, lon_deg, lat_deg[, R, spacing])</p></td>
+<td><p>Compute the vertical component of the relative vorticy using finite difference.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.frontogenesis" title="amescap.FV3_utils.frontogenesis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">frontogenesis</span></code></a>(U, V, theta, lon_deg, lat_deg[, R, spacing])</p></td>
+<td><p>Compute the frontogenesis,i.e. local change in potential temperature gradient near a front.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.MGSzmax_ls_lat" title="amescap.FV3_utils.MGSzmax_ls_lat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MGSzmax_ls_lat</span></code></a>(ls, lat)</p></td>
+<td><p>Return the max altitude for the dust from &quot;MGS scenario&quot;</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.MGStau_ls_lat" title="amescap.FV3_utils.MGStau_ls_lat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MGStau_ls_lat</span></code></a>(ls, lat)</p></td>
+<td><p>Return the max altitude for the dust from &quot;MGS scenario&quot;</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.broadcast" title="amescap.FV3_utils.broadcast"><code class="xref py py-obj docutils literal notranslate"><span class="pre">broadcast</span></code></a>(var_1D, shape_out, axis)</p></td>
+<td><p>Broadcast a 1D array based on a variable's dimensions</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.ref_atmosphere_Mars_PTD" title="amescap.FV3_utils.ref_atmosphere_Mars_PTD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ref_atmosphere_Mars_PTD</span></code></a>(Zi)</p></td>
+<td><p>Analytical atmospheric model for Martian pressure, temperature and density,  [Alex Kling, June 2021]</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.press_to_alt_atmosphere_Mars" title="amescap.FV3_utils.press_to_alt_atmosphere_Mars"><code class="xref py py-obj docutils literal notranslate"><span class="pre">press_to_alt_atmosphere_Mars</span></code></a>(Pi)</p></td>
+<td><p>Return the altitude in m as a function of pressure from the analytical calculations derived above.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.azimuth2cart" title="amescap.FV3_utils.azimuth2cart"><code class="xref py py-obj docutils literal notranslate"><span class="pre">azimuth2cart</span></code></a>(LAT, LON, lat0[, lon0])</p></td>
+<td><p>Azimuthal equidistant projection, convert from lat/lon to cartesian coordinates</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.ortho2cart" title="amescap.FV3_utils.ortho2cart"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ortho2cart</span></code></a>(LAT, LON, lat0[, lon0])</p></td>
+<td><p>Orthographic projection, convert from lat/lon to cartesian coordinates</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.mollweide2cart" title="amescap.FV3_utils.mollweide2cart"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mollweide2cart</span></code></a>(LAT, LON)</p></td>
+<td><p>Mollweide projection, convert from lat/lon to cartesian coordinates</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.robin2cart" title="amescap.FV3_utils.robin2cart"><code class="xref py py-obj docutils literal notranslate"><span class="pre">robin2cart</span></code></a>(LAT, LON)</p></td>
+<td><p>Robinson projection, convert from lat/lon to cartesian coordinates</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.FV3_utils.sol2ls" title="amescap.FV3_utils.sol2ls"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sol2ls</span></code></a>(jld[, cummulative])</p></td>
+<td><p>Return the solar longitude Ls as a function of the sol number. Sol 0 is spring equinox.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.FV3_utils.ls2sol" title="amescap.FV3_utils.ls2sol"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls2sol</span></code></a>(Ls_in)</p></td>
+<td><p>Ls to sol converter.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.fms_press_calc">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">fms_press_calc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psfc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ak</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lev_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'full'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.fms_press_calc" title="Link to this definition"></a></dt>
+<dd><p>Returns the 3D pressure field from the surface pressure and the ak/bk coefficients.</p>
+<dl>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>psfc:       the surface pressure in [Pa] or</dt><dd><p>an array of surface pressures (1D, 2D, or 3D if time dimension)</p>
+</dd>
+</dl>
+<p>ak:         1st vertical coordinate parameter
+bk:         2nd vertical coordinate parameter
+lev_type:   “full” (layer midpoints) or  “half” (layer interfaces).</p>
+<blockquote>
+<div><p>Defaults to “full.”</p>
+</div></blockquote>
+</dd>
+<dt>Returns:</dt><dd><p>The 3D pressure field at the full PRESS_f(Nk-1:,:,:) or half-levels PRESS_h(Nk,:,:,) in [Pa]</p>
+</dd>
+</dl>
+<p>— 0 — TOP        ========  p_half
+— 1 —</p>
+<blockquote>
+<div><p>——–  p_full</p>
+<p>========  p_half</p>
+</div></blockquote>
+<p>—Nk-1—           ——–  p_full
+— Nk — SFC       ========  p_half</p>
+<blockquote>
+<div><p>/ / / / /</p>
+</div></blockquote>
+<dl class="simple">
+<dt><em>NOTE</em></dt><dd><p>Some literature uses pk (pressure) instead of ak.
+With (p3d = ps * bk + P_ref * ak) vs the current (p3d = ps * bk + ak)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.fms_Z_calc">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">fms_Z_calc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psfc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ak</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lev_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'full'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.fms_Z_calc" title="Link to this definition"></a></dt>
+<dd><p>Returns the 3D altitude field in [m] AGL or above aeroid.</p>
+<dl>
+<dt>Args:</dt><dd><p>psfc:       The surface pressure [Pa] or array of surface pressures (1D, 2D, or 3D).
+ak:         1st vertical coordinate parameter.
+bk:         2nd vertical coordinate parameter.
+T:          The air temperature profile. 1D array (for a single grid point),</p>
+<blockquote>
+<div><p>N-dimensional array with VERTICAL AXIS FIRST.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>topo:       The surface elevation. Same dimension as ‘psfc’. If None is provided,</dt><dd><p>AGL is returned.</p>
+</dd>
+</dl>
+<p>lev_type:   “full” (layer midpoint) or “half” (layer interfaces). Defaults to “full”.</p>
+</dd>
+<dt>Returns:</dt><dd><p>The layer altitude at the full level Z_f(:, :, Nk-1) or half-level Z_h(:, :, Nk) in [m].
+Z_f and Z_h are AGL if topo = None.
+Z_f and Z_h are above aeroid if topo is provided.</p>
+</dd>
+</dl>
+<p>— 0 — TOP        ========  z_half
+— 1 —</p>
+<blockquote>
+<div><p>——–  z_full</p>
+<p>========  z_half</p>
+</div></blockquote>
+<p>—Nk-1—           ——–  z_full
+— Nk — SFC       ========  z_half</p>
+<blockquote>
+<div><p>/ / / / /</p>
+</div></blockquote>
+<dl class="simple">
+<dt><em>NOTE</em></dt><dd><dl class="simple">
+<dt>Expands to the time dimension using:</dt><dd><p>topo = np.repeat(zsurf[np.newaxis, :], ps.shape[0], axis = 0)</p>
+</dd>
+</dl>
+</dd>
+<dt><em>NOTE</em></dt><dd><dl class="simple">
+<dt>Expands topo to the time dimension using:</dt><dd><p>topo = np.repeat(zsurf[np.newaxis, :], ps.shape[0], axis = 0)</p>
+</dd>
+<dt>Calculation is derived from ./atmos_cubed_sphere_mars/Mars_phys.F90:</dt><dd><p>(dp/dz = -rho g) =&gt; (dz = dp/(-rho g)) and
+(rho= p/(r T)) =&gt; (dz=rT/g * (-dp/p))</p>
+</dd>
+<dt>Define log-pressure (u) as:</dt><dd><p>u = ln(p)</p>
+</dd>
+<dt>Then:</dt><dd><p>du = {du/dp}*dp = {1/p)*dp} = dp/p</p>
+</dd>
+<dt>Finally, dz for the half-layers:</dt><dd><p>(dz = rT/g * -(du)) =&gt; (dz = rT/g <a href="#id1"><span class="problematic" id="id2">*</span></a>(+dp/p))
+with N layers defined from top to bottom.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<section id="z-half-calculation">
+<h4>Z_half calculation:<a class="headerlink" href="#z-half-calculation" title="Link to this heading"></a></h4>
+<p>Hydrostatic relation within the layer &gt; (P(k+1)/P(k) = exp(-DZ(k)/H))
+&gt; DZ(k) = rT/g * -(du)         (layer thickness)
+&gt; Z_h(k) = Z_h(k+1)  +DZ_h(h)  (previous layer altitude + thickness of layer)</p>
+</section>
+<section id="z-full-calculation">
+<h4>Z_full calculation:<a class="headerlink" href="#z-full-calculation" title="Link to this heading"></a></h4>
+<dl>
+<dt>Z_f(k) = Z_f(k+1) + (0.5 DZ(k) + 0.5 DZ(k+1)) (previous altitude + half the thickness</dt><dd><blockquote>
+<div><p>of previous layer and half of current layer)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>= Z_f(k+1) + DZ(k) + 0.5 (DZ(k+1) - DZ(k)) (Added ‘+0.5 DZ(k)-0.5 DZ(k)=0’ and</dt><dd><p>re-organized the equation)</p>
+</dd>
+</dl>
+<p>= Z_h(k+1) + 0.5 (DZ(k+1) - DZ(k))</p>
+</dd>
+</dl>
+<p>The  specific heat ratio       γ  = cp/cv (cv = cp-R) =&gt; γ = cp/(cp-R) Also (γ-1)/γ=R/cp
+The dry adiabatic lapse rate   Γ  = g/cp =&gt; Γ = (gγ)/R
+The isentropic relation        T2 = T1(p2/p1)**(R/cp)</p>
+<dl class="simple">
+<dt>therefore, T_half[k+1]/Tfull[k] = (p_half[k+1]/p_full[k])**(R/Cp)            =====Thalf=====zhalf[k]                                                                                                                                                                                                                             From the lapse rate, assume T decreases linearly within the layer:           —–Tfull—–zfull[k]     T(z)= To-Γ (z-zo)</dt><dd><p>T_half[k+1] = T_full[k] + Γ(Z_full[k]-Z_half[k+1])                                                            (Tfull &lt; Thalf and Γ &gt; 0)                                                                                      Z_full[k] = Z_half[k] + (T_half[k+1]-T_full[k])/Γ                        =====Thalf=====zhalf[k+1]          Pulling out Tfull from above equation and using  Γ = (gγ)/R:
+Z_full[k] = Z_half[k+1] + (R Tfull[k])/(gγ)(T_half[k+1]/T_full[k] - 1)</p>
+</dd>
+<dt>Using the isentropic relation above:</dt><dd><p>Z_full = Z_half[k+1] + (R Tfull[k])/(gγ)(p_half[k+1]/p_full[k])**(R/Cp)-1)</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.find_n0">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">find_n0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Lfull_IN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Llev_OUT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.find_n0" title="Link to this definition"></a></dt>
+<dd><p>Return the index for the level(s) just below Llev_OUT.
+This assumes Lfull_IN is increasing in the array (e.g p(0) = 0Pa, p(N) = 1000Pa)</p>
+<dl>
+<dt>Args:</dt><dd><p>Lfull_IN (array):               input pressure [pa] or altitude [m] at layer midpoints. ‘Level’ dimension is FIRST.
+Llev_OUT (float or 1D array):   Desired level type for interpolation [Pa] or [m].
+reverse_input (boolean):        Reverse array (e.g if z(0) = 120 km, z(N) = 0km – which is typical – or if</p>
+<blockquote>
+<div><p>input data is p(0) = 1000Pa, p(N) = 0Pa).</p>
+</div></blockquote>
+</dd>
+<dt>Returns:</dt><dd><p>n:    index for the level(s) where the pressure is just below ‘plev’.</p>
+</dd>
+<dt><strong>*NOTE*</strong></dt><dd><ul class="simple">
+<li><p>if Lfull_IN is 1D array and Llev_OUT is a float then n is a float.</p></li>
+<li><p>if Lfull_IN is ND [lev, time, lat, lon] and Llev_OUT is a 1D array of size ‘klev’ then
+‘n’ is an array of size [klev, Ndim] with ‘Ndim’ = (time x lat x lon).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.find_n">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">find_n</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_IN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_OUT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.find_n" title="Link to this definition"></a></dt>
+<dd><p>Map the closest index from a 1D input array to a ND output array just below the input values.
+Args:</p>
+<blockquote>
+<div><p>X_IN (float or 1D array):   source level [Pa] or [m].
+X_OUT (ND array):           desired pressure [pa] or altitude [m] at layer midpoints. ‘Level’ dimension is FIRST.
+reverse_input (boolean):    if input array is decreasing (e.g if z(0) = 120 km, z(N)=0km – which is typical – or</p>
+<blockquote>
+<div><p>data is p(0) = 1000Pa, p(N) = 0Pa – which is uncommon in MGCM output</p>
+</div></blockquote>
+</div></blockquote>
+<dl>
+<dt>Returns:</dt><dd><blockquote>
+<div><p>n:    index for the level(s) where the pressure is just below ‘plev’.</p>
+<p>Case 1:      Case 2:      Case 3:        Case 4:
+(ND)   (1D)  (1D)  (1D)   (1D)   (ND)    (ND)        (ND)</p>
+</div></blockquote>
+<p><a href="#id15"><span class="problematic" id="id16">|x|x|</span></a>         <a href="#id17"><span class="problematic" id="id18">|x|</span></a>            <a href="#id19"><span class="problematic" id="id20">|x|</span></a>            <a href="#id21"><span class="problematic" id="id22">|x|x|</span></a>
+<a href="#id23"><span class="problematic" id="id24">|x|x|</span></a> &gt; <a href="#id25"><span class="problematic" id="id26">|x|</span></a>   <a href="#id27"><span class="problematic" id="id28">|x|</span></a> &gt; <a href="#id29"><span class="problematic" id="id30">|x|</span></a>      <a href="#id31"><span class="problematic" id="id32">|x|</span></a> &gt; <a href="#id33"><span class="problematic" id="id34">|x|x|</span></a>    <a href="#id35"><span class="problematic" id="id36">|x|x|</span></a>  &gt;  <a href="#id37"><span class="problematic" id="id38">|x|x|</span></a>
+<a href="#id39"><span class="problematic" id="id40">|x|x|</span></a>   <a href="#id41"><span class="problematic" id="id42">|x|</span></a>   <a href="#id43"><span class="problematic" id="id44">|x|</span></a>   <a href="#id45"><span class="problematic" id="id46">|x|</span></a>      <a href="#id47"><span class="problematic" id="id48">|x|</span></a>   <a href="#id49"><span class="problematic" id="id50">|x|x|</span></a>    <a href="#id51"><span class="problematic" id="id52">|x|x|</span></a>     <a href="#id53"><span class="problematic" id="id54">|x|x|</span></a>  (case 4, must have same number of
+<a href="#id55"><span class="problematic" id="id56">|x|x|</span></a>   <a href="#id57"><span class="problematic" id="id58">|x|</span></a>   <a href="#id59"><span class="problematic" id="id60">|x|</span></a>   <a href="#id61"><span class="problematic" id="id62">|x|</span></a>      <a href="#id63"><span class="problematic" id="id64">|x|</span></a>   <a href="#id65"><span class="problematic" id="id66">|x|x|</span></a>    <a href="#id67"><span class="problematic" id="id68">|x|x|</span></a>     <a href="#id69"><span class="problematic" id="id70">|x|x|</span></a>  elements along the other dimensions)</p>
+<p><strong>* Note on cyclic values *</strong></p>
+<p><strong>* Note *</strong>
+Cyclic array are handled naturally (e.g. time of day 0.5 ..23.5 &gt; 0.5) or longitudes 0 &gt;… 359 &gt;0
+&gt;&gt;&gt; if first (0) array element is above requested value, (e.g 0.2 is requested from [0.5 1.5… 23.5], n is set to 0-1=-1 which refers to the last element, 23.5 here)
+&gt;&gt;&gt; last element in array is always inferior or equal to selected value: (e.g 23.8 is requested from [0.5 1.5… 23.5], 23.5 will be selected</p>
+<p>Therefore, the cyclic values must therefore be handled during the interpolation but not at this stage.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.expand_index">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">expand_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Nindex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">VAR_shape_axis_FIRST</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.expand_index" title="Link to this definition"></a></dt>
+<dd><p>Repeat interpolation indices along an axis.
+Args:</p>
+<blockquote>
+<div><p>Nindex: inteprolation indices, size is (n_axis, Nfull= time x lat x lon)
+VAR_shape_axis_FIRST: shape for the variable to interpolate with interpolation axis first e.g. (tod,time,lev,lat,lon)
+axis_list (int or list): position or list of positions for axis to insert, e.g. ‘2’ for LEV in (tod,time,LEV,lat,lon), ‘[2,4]’ for LEV and LON</p>
+<blockquote>
+<div><p>The axis position are those for the final shape (VAR_shape_axis_FIRST) and must be INCREASING</p>
+</div></blockquote>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>LFULL: a 2D array size(n_axis, NfFULL= time x LEV x lat x lon) with the indices expended  along the LEV dimensions and flattened</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+Example of application:</p>
+<blockquote>
+<div><p>Observational time of day  may the same at all vertical levels so the interpolation of a 5D variable</p>
+</div></blockquote>
+<p>(tod,time,LEV,lat,lon) only requires the interpolation indices for (tod,time,lat,lon).
+This routines expands the indices from (tod,time,lat,lon) to (tod,time,LEV,lat,lon) with Nfull=time x lev x lat x lon for use in interpolation</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.vinterp">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">vinterp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varIN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Lfull</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Llev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_int</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'log'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masktop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.vinterp" title="Link to this definition"></a></dt>
+<dd><p>Vertical linear or logarithmic interpolation for pressure or altitude.   Alex Kling 5-27-20
+Args:</p>
+<blockquote>
+<div><p>varIN: variable to interpolate (N-dimensional array with VERTICAL AXIS FIRST)
+Lfull: pressure [Pa] or altitude [m] at full layers same dimensions as varIN
+Llev : desired level for interpolation as a 1D array in [Pa] or [m] May be either increasing or decreasing as the output levels are processed one at the time.
+reverse_input (boolean) : reverse input arrays, e.g if zfull(0)=120 km, zfull(N)=0km (which is typical) or if your input data is pfull(0)=1000Pa, pfull(N)=0Pa
+type_int : ‘log’ for logarithmic (typically pressure), ‘lin’ for linear (typically altitude)
+masktop: set to NaN values if above the model top
+index: indices for the interpolation, already processed as [klev,Ndim]</p>
+<blockquote>
+<div><p>Indices will be recalculated if not provided.</p>
+</div></blockquote>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>varOUT: variable interpolated on the Llev pressure or altitude levels</p>
+</dd>
+</dl>
+<p><strong>* IMPORTANT NOTE*</strong>
+This interpolation assumes pressure are increasing downward, i.e:</p>
+<blockquote>
+<div><p>—  0  — TOP   [0 Pa]   : [120 km]|    X_OUT= Xn*A + (1-A)*Xn+1
+—  1  —                :         |</p>
+<blockquote>
+<div><p>:         |</p>
+</div></blockquote>
+<dl class="simple">
+<dt>—  n  —  pn   [30 Pa]<span class="classifier">[800 m] | Xn</span></dt><dd><p>:         |</p>
+</dd>
+</dl>
+</div></blockquote>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="o">---</span>  <span class="n">k</span>  <span class="o">---</span>  <span class="n">Llev</span> <span class="p">[</span><span class="mi">100</span> <span class="n">Pa</span><span class="p">]</span> <span class="p">:</span> <span class="p">[</span><span class="mi">500</span> <span class="n">m</span><span class="p">]</span> <span class="o">|</span> <span class="n">X_OUT</span>
+<span class="go">    --- n+1 ---  pn+1 [200 Pa] : [200 m] | Xn+1</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>— SFC —
+/ / / / / /</p>
+</div></blockquote>
+<dl class="simple">
+<dt>with A = log(Llev/pn+1)/log(pn/pn+1) in ‘log’ mode</dt><dd><p>A =    (zlev-zn+1)/(zn-zn+1)    in ‘lin’ mode</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.axis_interp">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">axis_interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_IN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_int</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lin'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.axis_interp" title="Link to this definition"></a></dt>
+<dd><p>One dimensional linear /log interpolation along one axis. [Alex Kling, May 2021]
+Args:</p>
+<blockquote>
+<div><p>var_IN (N-D array): N-Dimensional variable, e.g.  [lev,lat,lon],[time,lev,lat,lon] on a REGULAR grid.
+x (1D array)      : original position array (e.g. time)
+xi (1D array)     : target array to interpolate the array on
+axis (int)        : position of  the interpolation axis (e.g. 0 if time interpolation for [time,lev,lat,lon])
+reverse_input (boolean) : reverse input arrays, e.g if zfull(0)=120 km, zfull(N)=0km (which is typical)
+type_int : ‘log’ for logarithmic (typically pressure), ‘lin’ for linear
+modulo (float)    : for ‘lin’ interpolation only, use cyclic input (e.g when using modulo = 24 for time of day, 23.5 and 00am are considered 30 min appart, not 23.5hr)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>VAR_OUT: interpolated data on the requested axis</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+&gt; This routine is similar, but simpler, than the vertical interpolation vinterp()  as the  interpolation axis is assumed to be fully defined by a 1D</p>
+<blockquote>
+<div><p>array (e.g. ‘time’, ‘pstd’ or ‘zstd) unlike  pfull or zfull which are 3D arrays.</p>
+</div></blockquote>
+<p>&gt; For lon/lat interpolation, you may consider using  interp_KDTree() instead</p>
+<p>We have:</p>
+<p>X_OUT= Xn*A + (1-A)*Xn+1
+with A = log(xi/xn+1)/log(xn/xn+1) in ‘log’ mode</p>
+<blockquote>
+<div><p>A =    (xi-xn+1)/(xn-xn+1)    in ‘lin’ mode</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.layers_mid_point_to_boundary">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">layers_mid_point_to_boundary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pfull</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sfc_val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.layers_mid_point_to_boundary" title="Link to this definition"></a></dt>
+<dd><p>A general description for the layer boundaries is p_half= ps*bk +pk
+This routine convert  p_full or bk, the coordinate  of the layer MIDPOINTS into the coordinate of the layers
+BOUNDARIES, p_half. The surface value must be provided    [A. Kling, 2022]</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>p_full : 1D array of presure/sigma values for the layers’s MIDPOINTS, INCREASING with N (e.g. [0.01… 720] or [0.001.. 1])
+sfc_val : the surface value for the lowest layer’s boundary p_half[N], e.g. sfc_val=720Pa or sfc_val=1. for sigma coordinates</p>
+</dd>
+<dt>Returns:</dt><dd><p>p_half: the pressure at the layers boundaries, the size is N+1</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong></p>
+<p>— 0 — TOP        ========  p_half
+— 1 —</p>
+<blockquote>
+<div><p>——–  p_full</p>
+<p>========  p_half</p>
+</div></blockquote>
+<p>—Nk-1—           ——–  p_full
+— Nk — SFC       ========  p_half</p>
+<blockquote>
+<div><p>/ / / / /</p>
+</div></blockquote>
+<p>We have pfull[N]= (phalf[N]-phalf[N-1])/np.log(phalf[N]/phalf[N-1])</p>
+<dl class="simple">
+<dt>=&gt; phalf[N-1]- pfull[N] log(phalf[N-1])= phalf[N]-pfull[N] log(phalf[N]) . We want to solve for phalf[N-1]=X</dt><dd><p>v                v                             v
+X      - pfull[N]       log(X)   =             B</p>
+</dd>
+</dl>
+<p>==&gt; X= - pfull[N] W{-exp(-B/pfull[N])/pfull[N]}  with B = phalf[N] - pfull[N] log(phalf[N]) (known at N)
+and W the product-log (Lambert)   function</p>
+<p>Though the product-log function is available in python, we use an approximation for portability
+(e.g. Appendix in Kling et al. 2020, Icarus)</p>
+<p>This was tested on a L30 simulation:
+The value of phalf are reconstruted from pfull with a max error of 100*(phalh-phalf_reconstruct)/phalf &lt; 0.4% at the top.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.polar2XYZ">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">polar2XYZ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Re</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3400</span> <span class="pre">*</span> <span class="pre">10**3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.polar2XYZ" title="Link to this definition"></a></dt>
+<dd><p>Spherical to cartesian coordinates transformation
+Args:</p>
+<blockquote>
+<div><p>lon,lat (ND array): longitude and latitude, in [rad]
+alt (ND array): altitude in [m]</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Return:</dt><dd><p>X,Y,Z in cartesian coordinates [m]</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+This is a classic polar coordinate system with colat = pi/2 -lat,  the colatitude and cos(colat) = sin(lat)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.interp_KDTree">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">interp_KDTree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_IN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_IN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_IN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_OUT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_OUT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N_nearest</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.interp_KDTree" title="Link to this definition"></a></dt>
+<dd><p>Inverse-distance-weighted interpolation using nearest neighboor for ND variables.  [Alex Kling , May 2021]
+Args:</p>
+<blockquote>
+<div><p>var_IN: N-Dimensional variable to regrid, e.g.  [lev,lat,lon],[time,lev,lat,lon]… with [lat, lon] dimensions LAST in [deg]
+lat_IN,lon_IN        (1D or 2D):   lat, lon 1D arrays or LAT[y,x] LON[y,x] for irregular grids in [deg]
+lat_OUT,lon_OUT(1D or 2D):lat,lon for the TARGET grid structure , e.g. lat1,lon1 or LAT1[y,x], LON1[y,x] for irregular grids in [deg]
+N_nearest: integer, number of nearest neighbours for the search.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>VAR_OUT: interpolated data on the target grid</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+&gt; This implementation is much FASTER than griddata and supports unstructured grids (e.g. FV3 tile)
+&gt; The nearest neighbour interpolation is only done on the lon/lat axis, (not level).  Although this interpolation work well on the 3D field (x,y,z),
+this is typically not what is expected: In a 4°x4° run, the closest points East, West, North and South, on the target grid  are 100’s of km away
+while the closest points in the vertical are a few 10’s -100’s meter in the PBL, which would results in excessive weighting in the vertical.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.cart_to_azimut_TR">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">cart_to_azimut_TR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'from'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.cart_to_azimut_TR" title="Link to this definition"></a></dt>
+<dd><p>Convert cartesian coordinates or wind vectors to radian,using azimut angle.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>x,y: 1D arrays for the cartesian coordinate
+mode=’to’ direction towards the vector is pointing, ‘from’: direction from the vector is coming</p>
+</dd>
+<dt>Returns:</dt><dd><p>Theta [deg], R the polar coordinates</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.sfc_area_deg">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">sfc_area_deg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3390000.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.sfc_area_deg" title="Link to this definition"></a></dt>
+<dd><p>Return the surface between two set of latitudes/longitudes
+S= Int[R**2 dlon cos(lat) dlat]     _____lat2
+Args:                                          lon1,lon2: in [degree]           ____lat1</p>
+<blockquote>
+<div><p>lat1,lat2: in [degree]        lon1    lon2
+R: planetary radius in [m]</p>
+</div></blockquote>
+<p><strong>* NOTE*</strong>
+Lon and Lat define the corners of the area, not the grid cells’ centers</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.area_meridional_cells_deg">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">area_meridional_cells_deg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat_c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dlon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dlat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3390000.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.area_meridional_cells_deg" title="Link to this definition"></a></dt>
+<dd><p>Return area of invidual cells for a meridional band of thickness dlon
+S= Int[R**2 dlon cos(lat) dlat]
+with  sin(a)-sin(b)=2 cos((a+b)/2)sin((a+b)/2)
+&gt;&gt;&gt; S= 2 R**2 dlon 2 cos(lat)sin(dlat/2)         _________lat+dlat/2
+Args:                                               lat             ^</p>
+<blockquote>
+<div><p>lat_c: latitude of cell center in [degree]    lon +              | dlat
+dlon : cell angular width  in [degree]         ________lat-dlat/2 v
+dlat : cell angular height in [degree]   lon-dlon/2      lon+dlon/2
+R: planetary radius in [m]                       &lt;——&gt;
+normalize: if True, sum of output elements is 1.   dlon</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>S: areas of the cells, same size as lat_c in [m2] or normalized by the total area</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.area_weights_deg">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">area_weights_deg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.area_weights_deg" title="Link to this definition"></a></dt>
+<dd><p>Return weights for averaging of the variable var.
+Args:</p>
+<blockquote>
+<div><p>var_shape: variable’s shape, e.g. [133,36,48,46] typically obtained with ‘var.shape’
+Expected dimensions are:                      (lat) [axis not needed]</p>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>(lat, lon) [axis=-2 or axis=0]</p>
+</div></blockquote>
+<p>(time, lat, lon) [axis=-2 or axis=1]</p>
+</div></blockquote>
+<p>(time, lev, lat, lon) [axis=-2 or axis=2]</p>
+</div></blockquote>
+<p>(time, time_of_day_24, lat, lon) [axis=-2 or axis=2]</p>
+</div></blockquote>
+<p>(time, time_of_day_24, lev, lat, lon) [axis=-2 or axis=3]</p>
+</div></blockquote>
+<p>lat_c: latitude of cell centers in [degree]
+axis: Position of the latitude axis for 2D and higher-dimensional arrays. The default is the SECOND TO LAST dimension, e.g: axis=-2</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Because</span> <span class="n">dlat</span> <span class="ow">is</span> <span class="n">computed</span> <span class="k">as</span> <span class="n">lat_c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">lat_c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="n">lat_c</span> <span class="n">may</span> <span class="n">be</span> <span class="n">truncated</span> <span class="n">on</span> <span class="n">either</span> <span class="n">end</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span> <span class="n">lat</span><span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">20</span> <span class="o">...</span><span class="p">,</span><span class="mf">0.</span><span class="o">..</span> <span class="o">+</span><span class="mi">50</span><span class="p">])</span> <span class="n">but</span> <span class="n">must</span> <span class="n">be</span> <span class="n">contineous</span><span class="o">.</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>W: weights for var, ready for standard averaging as np.mean(var*W) [condensed form] or np.average(var,weights=W) [expended form]</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+Given a variable var:</p>
+<blockquote>
+<div><p>var= [v1,v2,…vn]</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Regular average is:</dt><dd><p>AVG = (v1+v2+… vn)/N</p>
+</dd>
+<dt>Weighted average is:</dt><dd><p>AVG_W= (v1*w1+v2*w2+… vn*wn)/(w1+w2+…wn)</p>
+</dd>
+<dt>This function returns:</dt><dd><p>W= [w1,w2,… ,wn]*N/(w1+w2+…wn)</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Therfore</span> <span class="n">taking</span> <span class="n">a</span> <span class="n">regular</span> <span class="n">average</span> <span class="n">of</span> <span class="p">(</span><span class="n">var</span><span class="o">*</span><span class="n">W</span><span class="p">)</span> <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">var</span><span class="o">*</span><span class="n">W</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">var</span><span class="p">,</span><span class="n">weights</span><span class="o">=</span><span class="n">W</span><span class="p">)</span> <span class="n">returns</span> <span class="n">the</span> <span class="n">weighted</span><span class="o">-</span><span class="n">average</span> <span class="n">of</span> <span class="n">var</span>
+<span class="go">Use np.average(var,weights=W,axis=X) to average over a specific axis</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.areo_avg">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">areo_avg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">VAR</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">areo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ls_target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ls_angle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symmetric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.areo_avg" title="Link to this definition"></a></dt>
+<dd><p>Return a value average over a central solar longitude</p>
+<dl>
+<dt>Args:</dt><dd><p>VAR: a ND variable variable with the 1st dimensions being the time, e.g (time,lev,lat,lon)
+areo: 1D array of solar longitude of the input variable in degree (0-&gt;720)
+Ls_target: central solar longitude of interest.
+Ls_angle:  requested window angle centered around    Ls_target
+symmetric: a boolean (default =True) If True, and if the requested window is out of range, Ls_angle is reduced</p>
+<blockquote>
+<div><p>If False, the time average is done on the data available</p>
+</div></blockquote>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>The variable VAR averaged over solar longitudes  Ls_target-Ls_angle/2 to Ls_target+Ls_angle/2</dt><dd><p>E.g in our example the size would (lev,lat,lon)</p>
+</dd>
+</dl>
+</dd>
+<dt>Expl:  Ls_target= 90.</dt><dd><p>Ls_angle = 10.</p>
+<p>—&gt; Nominally, the time average is done over solar longitudes      85 &lt;Ls_target &lt; 95 (10 degree)</p>
+<dl class="simple">
+<dt>—&gt; If  symmetric =True and the input data ranges from Ls 88 to 100     88 &lt;Ls_target &lt; 92 (4  degree, symmetric)</dt><dd><p>If  symmetric =False and the input data ranges from Ls 88 to 100    88 &lt;Ls_target &lt; 95 (7  degree, assymetric)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p><em>NOTE</em></p>
+<p>[Alex] The routine will bin data from muliples Mars years if provided</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.mass_stream">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">mass_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v_avg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pstd'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psfc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">700</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.mass_stream" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Compute the mass stream function.</dt><dd><p>P
+⌠</p>
+</dd>
+<dt>Phi=(2 pi a) cos(lat)/g ⎮vz_tavg dp</dt><dd><p>⌡
+p_top</p>
+</dd>
+</dl>
+<p>Args:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>v_avg:  zonal winds  [m/s] with ‘level’ dimensions FIRST and ‘lat’ dimension SECOND e.g (pstd,lat), (pstd,lat,lon) or (pstd,lat,lon,time)</dt><dd><p>&gt;&gt; This routine is set-up so the time and zonal averages may be done either ahead or after the MSF calculation.</p>
+</dd>
+</dl>
+<p>lat  :1D array of latitudes in [degree]
+level: interpolated layers in [Pa] or [m]
+type : interpolation type, i.e. ‘pstd’, ‘zstd’ or ‘zagl’
+psfc : reference surface pressure in [Pa]
+H    : reference scale height in [m] when pressure are used.
+factor: normalize the mass stream function by a factor, use factor =1. to obtain [kg/s]</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>MSF: The meridional mass stream function in factor*[kg/s]</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+[Alex. K] : The expressions for the MSF I have seen uses log(pressure) Z coordinate, which I assume integrates better numerically.</p>
+<p>With p=p_sfc exp(-Z/H)  i.e. Z= H log(p_sfc/p) ==&gt; dp= -p_sfc/H exp(-Z/H) dZ, we have:</p>
+<blockquote>
+<div><blockquote>
+<div><p>Z_top</p>
+</div></blockquote>
+<p>⌠</p>
+</div></blockquote>
+<dl>
+<dt>Phi=+(2 pi a) cos(lat)psfc/(g H) ⎮v_rmv exp(-Z/H) dZ  With p=p_sfc exp(-Z/H)</dt><dd><p>⌡
+Z</p>
+<blockquote>
+<div><blockquote>
+<div><p>n</p>
+</div></blockquote>
+<p>⌠</p>
+</div></blockquote>
+</dd>
+<dt>The integral is calculated using trapezoidal rule, e.g. ⌡ f(z)dz  = (Zn-Zn-1){f(Zn)+f(Zn-1)}/2</dt><dd><p>n-1</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.vw_from_MSF">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">vw_from_MSF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ztype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pstd'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psfc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">700</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8000.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.vw_from_MSF" title="Link to this definition"></a></dt>
+<dd><p>Return the [v] and [w] component of the circulation from the mass stream function.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>msf  : the mass stream function with ‘level’ SECOND to LAST and the ‘latitude’ dimension LAST, e.g. (lev,lat), (time,lev,lat), (time,lon,lev,lat)…
+lat  : 1D latitude array in [degree]
+lev  : 1D level array  in [Pa] or [m]  e.g. pstd, zagl, zstd
+ztype: Use ‘pstd’ for pressure so vertical differentation is done in log space.
+norm : if  True, normalize  the lat and lev before differentiation avoid having to rescale manually  the vectors in quiver plots
+psfc : surface  pressure for pseudo-height when ztype =’pstd’
+H    : scale height for pseudo-height when ztype =’pstd’</p>
+</dd>
+<dt>Return:</dt><dd><p>V,W the meditional and altitude component of the mass stream function, to be plotted as quiver or streamlines.</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+The components are:</p>
+<blockquote>
+<div><p>[v]=  g/(2 pi cos(lat)) dphi/dz
+[w]= -g/(2 pi cos(lat)) dphi/dlat</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.alt_KM">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">alt_KM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">press</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_height_KM</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_press</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">610.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.alt_KM" title="Link to this definition"></a></dt>
+<dd><p>Gives the approximate altitude in km for a given pressure
+Args:</p>
+<blockquote>
+<div><p>press: the pressure in [Pa]
+scale_height_KM: a scale height in [km], (default is 8 km, an isothermal at 155K)
+reference_press: reference surface pressure in [Pa], (default is 610 Pa)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>z_KM: the equivalent altitude for that pressure level in [km]</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+Scale height is H=rT/g</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.press_pa">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">press_pa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alt_KM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_height_KM</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_press</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">610.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.press_pa" title="Link to this definition"></a></dt>
+<dd><p>Gives the approximate altitude in km for a given pressure
+Args:</p>
+<blockquote>
+<div><p>alt_KM: the altitude in  [km]
+scale_height_KM: a scale height in [km], (default is 8 km, an isothermal at 155K)
+reference_press: reference surface pressure in [Pa], (default is 610 Pa)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>press_pa: the equivalent pressure at that altitude in [Pa]</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+Scale height is H=rT/g</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.shiftgrid_360_to_180">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">shiftgrid_360_to_180</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.shiftgrid_360_to_180" title="Link to this definition"></a></dt>
+<dd><p>This function shift N dimensional data a 0-&gt;360 to a -180/+180 grid.
+Args:</p>
+<blockquote>
+<div><p>lon: 1D array of longitude 0-&gt;360
+data: ND array with last dimension being the longitude (transpose first if necessary)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>data: shifted data</p>
+</dd>
+</dl>
+<p>Note: Use np.ma.hstack instead of np.hstack to keep the masked array properties</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.shiftgrid_180_to_360">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">shiftgrid_180_to_360</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.shiftgrid_180_to_360" title="Link to this definition"></a></dt>
+<dd><p>This function shift N dimensional data a -180/+180 grid to a 0-&gt;360
+Args:</p>
+<blockquote>
+<div><p>lon: 1D array of longitude -180/+180
+data: ND array with last dimension being the longitude (transpose first if necessary)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>data: shifted data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.second_hhmmss">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">second_hhmmss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seconds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_180</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.second_hhmmss" title="Link to this definition"></a></dt>
+<dd><p>Given the time in seconds return Local true Solar Time at a certain longitude
+Args:</p>
+<blockquote>
+<div><p>seconds: a float, the time in seconds
+lon_180: a float, the longitude in -/+180 coordinate</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>hours: float, the local time or  (hours,minutes, seconds)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.sol_hhmmss">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">sol_hhmmss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_sol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_180</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.sol_hhmmss" title="Link to this definition"></a></dt>
+<dd><p>Given the time in days, return the Local true Solar Time at a certain longitude
+Args:</p>
+<blockquote>
+<div><p>time_sol: a float, the time, eg. sols 2350.24
+lon_180: a float, the longitude in a -/+180 coordinate</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>hours: float, the local time or  (hours,minutes, seconds)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.UT_LTtxt">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">UT_LTtxt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UT_sol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_180</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roundmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.UT_LTtxt" title="Link to this definition"></a></dt>
+<dd><p>Returns the time in HH:MM:SS format at a certain longitude.
+Args:</p>
+<blockquote>
+<div><p>time_sol: a float, the time, eg. sols 2350.24
+lon_180: a float, the center longitude in  -/+180 coordinate. Increment by 1hr every 15 deg
+roundmin: round to the nearest X minute  Typical values are roundmin=1,15,60</p>
+</div></blockquote>
+<p><strong>*Note*</strong>
+If roundmin is requested, seconds are not shown</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.dvar_dh">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">dvar_dh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.dvar_dh" title="Link to this definition"></a></dt>
+<dd><p>Differentiate an array A(dim1,dim2,dim3…) with respect to h. The differentiated dimension must be the first dimension.
+&gt; If h is 1D: h and dim1 must have the same length
+&gt; If h is 2D, 3D or 4D, arr and h must have the same shape
+Args:</p>
+<blockquote>
+<div><p>arr:   an array of dimension n
+h:     the dimension, eg Z, P, lat, lon</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>d_arr: the array differentiated with respect to h, e.g d(array)/dh</p>
+</dd>
+<dt><em>Example</em></dt><dd><p>#Compute dT/dz where T[time,LEV,lat,lon] is the temperature and Zkm is the array of  level heights in Km:
+#First we transpose t so the vertical dimension comes first as T[LEV,time,lat,lon] and then we transpose back to get dTdz[time,LEV,lat,lon].
+dTdz=dvar_dh(t.transpose([1,0,2,3]),Zkm).transpose([1,0,2,3])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.zonal_detrend">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">zonal_detrend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">VAR</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.zonal_detrend" title="Link to this definition"></a></dt>
+<dd><p>Substract zonnally averaged mean value from a field
+Args:</p>
+<blockquote>
+<div><p>VAR: ND-array with detrending dimension last (e.g time,lev,lat,lon)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>OUT: detrented field (same size as input)</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+RuntimeWarnings are expected if the slice contains only NaN, which is the case below the surface
+and above the model’s top in the interpolated files. We will disable those warnings temporarily</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.get_trend_2D">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">get_trend_2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">VAR</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LON</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LAT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_trend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'wmean'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.get_trend_2D" title="Link to this definition"></a></dt>
+<dd><p>Extract spatial trend from data. The output can be directly substracted from the original field.
+Args:</p>
+<blockquote>
+<div><p>VAR:  Variable for decomposition, latitude is SECOND to LAST and longitude is LAST  e.g. (time,lat,lon) or (time,lev,lat,lon)
+LON,LAT: 2D arrays of coordinates
+type_trend:  ‘mean’ &gt; use a constant average over all latitude/longitude</p>
+<blockquote>
+<div><p>‘wmean’&gt; use a area-weighted average over all latitude/longitude
+‘zonal’&gt; detrend over the zonal axis only
+‘2D’   &gt; use a 2D planar regression (not area-weighted)</p>
+</div></blockquote>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>TREND      : trend, same size as VAR e.g. (time,lev,lat,lon)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.regression_2D">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">regression_2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">VAR</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.regression_2D" title="Link to this definition"></a></dt>
+<dd><p>Linear and quadratic regression on the plane.
+Args:</p>
+<blockquote>
+<div><p>X: 2D array of first coordinate
+Y: 2D array of decond coordinate
+VAR: 2D array, same size as X
+order : 1 (linear) or 2 (quadratic)</p>
+</div></blockquote>
+<p><strong>*NOTE*</strong>
+With order =1, the equation is: aX + bY + C = Z
+With order =2, the equation is:  a X**2 + 2b X*Y +c Y**2 +2dX +2eY+f = Z</p>
+<p>For the linear case:
+&gt; ax + by + c = z is re-writtent as A X =b with:</p>
+<blockquote>
+<div><p><a href="#id71"><span class="problematic" id="id72">|x0   y0   1|</span></a>        <a href="#id3"><span class="problematic" id="id4">|</span></a>a      <a href="#id5"><span class="problematic" id="id6">|</span></a>z0</p>
+</div></blockquote>
+<dl>
+<dt>A = <a href="#id73"><span class="problematic" id="id74">|x1   y1   1|</span></a>    X = <a href="#id7"><span class="problematic" id="id8">|</span></a>b   b= |</dt><dd><div class="line-block">
+<div class="line">…  |        <a href="#id9"><span class="problematic" id="id10">|</span></a>c      <a href="#id11"><span class="problematic" id="id12">|</span></a>…</div>
+</div>
+<p><a href="#id75"><span class="problematic" id="id76">|xn   yn   1|</span></a>                <a href="#id13"><span class="problematic" id="id14">|</span></a>zn</p>
+<blockquote>
+<div><p>[n,3]           [3]       [n]</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>The least square regression provides the solution that that minimizes  ||b – A x||**2</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.daily_to_average">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">daily_to_average</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varIN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nday</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.daily_to_average" title="Link to this definition"></a></dt>
+<dd><p>Bin a variable from an atmos_daily file to the atmos_average format.
+Args:</p>
+<blockquote>
+<div><p>varIN: ND-array with time dimension first (e.g ts(time,lat,lon))
+dt_in: Delta of time betwen timesteps in sols, e.g. dt_in=time[1]-time[0]
+nday : bining period in sols, default is 5 sols
+trim : discard any leftover data at the end of file before binning.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>varOUT: the variable bin over nday</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong></p>
+<ol class="arabic simple">
+<li><p>If varIN(time,lat,lon) from atmos_daily = (160,48,96) and has 4 timestep per day (every 6 hours), the resulting variable  for nday=5 is
+varOUT(160/(4x5),48,96)=varOUT(8,48,96)</p></li>
+<li><p>If daily file is 668 sols, that is =133x5 +3 leftover sols.
+&gt;If trim=True,  the time is 133 and last 3 sols the are discarded
+&gt;If trim=False, the time is 134 and last bin contains only 3 sols of data</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.daily_to_diurn">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">daily_to_diurn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varIN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_in</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.daily_to_diurn" title="Link to this definition"></a></dt>
+<dd><p>Bin a variable from an atmos_daily file into the atmos_diurn format.
+Args:</p>
+<blockquote>
+<div><p>varIN: ND-array with time dimension first (e.g ts(time,lat,lon))
+time_in: Time array in sols. Only the first N elements (e.g. time[0:N]) are actually needed (if saving memory is important).</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>varOUT: the variable bined in the atmos_diurn format, e.g. ts(time,time_of_day,lat,lon)
+tod   : time of day in [hours]</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+1) If varIN(time,lat,lon) from atmos_daily = (40,48,96) and has 4 timestep per day (every 6 hours):
+&gt; The resulting variable is varOUT(10,4,48,96)=(time,time_of_day,lat,lon)
+&gt; tod=[0.,6.,12.,18.] (for example)</p>
+<ol class="arabic simple" start="2">
+<li><p>Since the time dimension remains first, the output variables may be passed to the daily_to_average() function for further binning.</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.gauss_profile">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">gauss_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.gauss_profile" title="Link to this definition"></a></dt>
+<dd><p>Return Gaussian line shape at x This can be used to generate a bell-shaped mountain</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.compute_uneven_sigma">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">compute_uneven_sigma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_levels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N_scale_heights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surf_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exponent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero_top</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.compute_uneven_sigma" title="Link to this definition"></a></dt>
+<dd><p>Construct an initial array of sigma based on the number of levels, an exponent
+Args:</p>
+<blockquote>
+<div><p>num_levels: the number of levels
+N_scale_heights: the number of scale heights to the top of the model (e.g scale_heights =12.5 ~102km assuming 8km scale height)
+surf_res: the resolution at the surface
+exponent: an exponent to increase th thickness of the levels
+zero_top: if True, force the top pressure boundary (in N=0) to 0 Pa</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>b: an array of sigma layers</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.transition">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">transition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pfull</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_press</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.transition" title="Link to this definition"></a></dt>
+<dd><p>Return the transition factor to construct the ak and bk
+Args:</p>
+<blockquote>
+<div><p>pfull: the pressure in Pa
+p_sigma: the pressure level where the vertical grid starts transitioning from sigma to pressure
+p_press: the pressure level above those  the vertical grid is pure (constant) pressure</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>t: the transition factor =1 for pure sigma, 0 for pure pressure and 0&lt;t&lt;1 for the transition</p>
+</dd>
+</dl>
+<p>NOTE:
+In the FV code full pressure are computed from:</p>
+<blockquote>
+<div><blockquote>
+<div><p>del(phalf)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>pfull = —————————–</dt><dd><p>log(phalf(k+1/2)/phalf(k-1/2))</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.swinbank">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">swinbank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psfc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ptrans</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.swinbank" title="Link to this definition"></a></dt>
+<dd><p>Compute ak and bk values with a transition based on Swinbank
+Args:</p>
+<blockquote>
+<div><p>plev: the pressure levels in Pa
+psfc: the surface pressure in Pa
+ptrans:the transition pressure in Pa</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>aknew, bknew,ks: the coefficients for the new layers</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.polar_warming">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">polar_warming</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outside_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.NaN</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.polar_warming" title="Link to this definition"></a></dt>
+<dd><p>Return the polar warming, following  [McDunn et al. 2013]: Characterization of middle-atmosphere polar warming at Mars, JGR
+A. Kling
+Args:</p>
+<blockquote>
+<div><p>T:   temperature array, 1D, 2D or ND, with the latitude dimension FIRST (transpose as needed)
+lat: latitude array
+outside_range: values to set the polar warming to outside the range. Default is Nan but ‘zero’ may be desirable.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>DT_PW:   The polar warming in [K]</p>
+</dd>
+</dl>
+<p><em>NOTE</em>  polar_warming() concatenates the results from both hemispheres obtained from the nested function PW_half_hemisphere()</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.tshift">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">tshift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.tshift" title="Link to this definition"></a></dt>
+<dd><p>Conversion to uniform local time.
+Args:</p>
+<blockquote>
+<div><p>array: variable to be shifted. Assume longitude is the first dimension and time_of_day is the last dimension
+lon: longitude
+timeo : time_of_day index from input file
+timex (optional) : local time (hr) to shift to, e.g. ‘3. 15.’</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>tshift: array shifted to uniform local time.</p>
+</dd>
+</dl>
+<p><strong>*Note*</strong>
+If timex is not specified, the file is interpolated on the same time_of_day as the input</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.lin_interp">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">lin_interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y_ref</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.lin_interp" title="Link to this definition"></a></dt>
+<dd><p>Simple linear interpolation with no dependance on scipy
+Args:</p>
+<blockquote>
+<div><p>X_in (float or array): input values
+X_ref (array): x values
+Y_ref (array): y values</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>Y_out: y value linearly interpolated at X_in</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.add_cyclic">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">add_cyclic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.add_cyclic" title="Link to this definition"></a></dt>
+<dd><p>Add an additional cyclic (overlapping) point to a 2D array, useful for azimuth and orthographic projections
+Args:</p>
+<blockquote>
+<div><p>data: 2D array of size (nlat,nlon)
+lon: 1D array of longitudes</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>data_c: 2D array of size (nlat,nlon+1), with last column identical to the 1st
+lon_c: 1D array of longitudes size nlon+1 where the last element is lon[-1]+dlon</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.spherical_div">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">spherical_div</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_deg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_deg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3400</span> <span class="pre">*</span> <span class="pre">1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'varying'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.spherical_div" title="Link to this definition"></a></dt>
+<dd><p>Compute the divergence of the wind fields using finite difference.
+div = du/dx + dv/dy = 1/(r cos lat)[d(u)/dlon +d(v cos lat)/dlat]
+Args:</p>
+<blockquote>
+<div><p>U,V    : wind field with latitude second to last and longitude as last dimensions  e.g. (lat,lon) or (time,lev,lat,lon)…
+lon_deg: 1D array of longitude in [degree] or 2D (lat,lon) if irregularly-spaced
+lat_deg: 1D array of latitude  in [degree] or 2D (lat,lon) if irregularly-spaced
+R      : planetary radius in [m]
+spacing : When lon, lat are  1D arrays, using spacing =’varying’ differentiate lat and lon (default)</p>
+<blockquote>
+<div><p>If spacing=’regular’, only uses uses dx=lon[1]-lon[0], dy=lat[1]-lat[0] and the numpy.gradient() method</p>
+</div></blockquote>
+</div></blockquote>
+<dl class="simple">
+<dt>Return:</dt><dd><p>div: the horizonal divergence of the wind field   in [m-1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.spherical_curl">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">spherical_curl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_deg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_deg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3400</span> <span class="pre">*</span> <span class="pre">1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'varying'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.spherical_curl" title="Link to this definition"></a></dt>
+<dd><p>Compute the vertical component of the relative vorticy using finite difference.
+curl = dv/dx -du/dy  = 1/(r cos lat)[d(v)/dlon +d(u(cos lat)/dlat]
+Args:</p>
+<blockquote>
+<div><p>U,V    : wind fields with latitude second to last and longitude as last dimensions  e.g. (lat,lon) or (time,lev,lat,lon)…
+lon_deg: 1D array of longitude in [degree] or 2D (lat,lon) if irregularly-spaced
+lat_deg: 1D array of latitude  in [degree] or 2D (lat,lon) if irregularly-spaced
+R      : planetary radius in [m]
+spacing : When lon, lat are  1D arrays, using spacing =’varying’ differentiate lat and lon (default)</p>
+<blockquote>
+<div><p>If spacing=’regular’, only uses uses dx=lon[1]-lon[0], dy=lat[1]-lat[0] and the numpy.gradient() method</p>
+</div></blockquote>
+</div></blockquote>
+<dl class="simple">
+<dt>Return:</dt><dd><p>curl: the vorticity of the wind field in [m-1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.frontogenesis">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">frontogenesis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_deg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_deg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3400</span> <span class="pre">*</span> <span class="pre">1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'varying'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.frontogenesis" title="Link to this definition"></a></dt>
+<dd><p>Compute the frontogenesis,i.e. local change in potential temperature gradient near a front.
+Following Richter et al. 2010 Toward a Physically Based Gravity Wave Source Parameterization in</p>
+<blockquote>
+<div><p>a General Circulation Model, JAS 67 we have Fn= 1/2 D(Del Theta)**2/Dt in [K/m/s]</p>
+</div></blockquote>
+<dl>
+<dt>Args:</dt><dd><p>U,V    : wind fields with latitude second to last and longitude as last dimensions  e.g. (lat,lon) or (time,lev,lat,lon)…
+theta  : potential temperature [K]
+lon_deg: 1D array of longitude in [degree] or 2D (lat,lon) if irregularly-spaced
+lat_deg: 1D array of latitude  in [degree] or 2D (lat,lon) if irregularly-spaced
+R      : planetary radius in [m]
+spacing : When lon, lat are  1D arrays, using spacing =’varying’ differentiate lat and lon (default)</p>
+<blockquote>
+<div><p>If spacing=’regular’, only uses uses dx=lon[1]-lon[0], dy=lat[1]-lat[0] and the numpy.gradient() method</p>
+</div></blockquote>
+</dd>
+<dt>Return:</dt><dd><p>Fn: the frontogenesis field in [m-1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.MGSzmax_ls_lat">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">MGSzmax_ls_lat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.MGSzmax_ls_lat" title="Link to this definition"></a></dt>
+<dd><p>Return the max altitude for the dust from “MGS scenario”
+from Montmessin et al. (2004), Origin and role of water ice clouds in the Martian</p>
+<blockquote>
+<div><p>water cycle as inferred from a general circulation model</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Args:</dt><dd><p>ls  : solar longitude in degree
+lat : latitude in degree</p>
+</dd>
+<dt>Returns:</dt><dd><p>zmax : top altitude for the dusk in [km]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.MGStau_ls_lat">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">MGStau_ls_lat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.MGStau_ls_lat" title="Link to this definition"></a></dt>
+<dd><p>Return the max altitude for the dust from “MGS scenario”
+from Montmessin et al. (2004), Origin and role of water ice clouds in the Martian</p>
+<blockquote>
+<div><p>water cycle as inferred from a general circulation model</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Args:</dt><dd><p>ls  : solar longitude in degree
+lat : latitude in degree</p>
+</dd>
+<dt>Returns:</dt><dd><p>zmax : top altitude for the dusk in [km]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.broadcast">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">broadcast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_1D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape_out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.broadcast" title="Link to this definition"></a></dt>
+<dd><p>Broadcast a 1D array based on a variable’s dimensions
+Args:</p>
+<blockquote>
+<div><p>var_1D     (1D array), e.g. lat size (36), or time size (133)
+shape_out (ND list) : braodcasting shape e.g temp.shape= [133,(lev),36,(lon)]</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Return:</dt><dd><p>var_b (ND array): broadcasted variables, e.g. size [1,36,1,1] for lat or [133,1,1,1] for time</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.ref_atmosphere_Mars_PTD">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">ref_atmosphere_Mars_PTD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Zi</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.ref_atmosphere_Mars_PTD" title="Link to this definition"></a></dt>
+<dd><p>Analytical atmospheric model for Martian pressure, temperature and density,  [Alex Kling, June 2021]
+Args:</p>
+<blockquote>
+<div><p>Zi (float or 1D array): input altitude in m (must be &gt;= 0)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Return:</dt><dd><p>P,T,D (floats ot 1D arrays): tuple of corresponding pressure [Pa], temperature [K] and density  [kg/m3]</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong></p>
+<p>This model was obtained by  fitting globally and annually averaged reference temperature profiles derived from the Legacy GCM, MCS observations,
+and Mars Climate  Database.</p>
+<p>The temperature fit was constructed using quadratic temperature T(z)= T0+ gam(z-z0)+a*(z-z0)**2
+over 4 segments (0&gt;57 km, 57&gt;110km, 110&gt;120 km and 120&gt;300km)</p>
+<dl class="simple">
+<dt>From the ground to 120km, he pressure is obtained be integrating analytically  the hydrostatic equation:</dt><dd><p>dp/dz=-g. p/(rT) with T(z)= T0+ gam(z-z0)+a*(z-z0)**2 .</p>
+</dd>
+</dl>
+<p>Above ~120km P=P0 exp(-(z-z0)g/rT) is not a good approximation as the fluid is in molecula regime. For those altitude, we  provide
+fit in the form P=P0 exp(-az-bz**2),based on diurnal average of the MCD database at lat 0, Ls 150.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.press_to_alt_atmosphere_Mars">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">press_to_alt_atmosphere_Mars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Pi</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.press_to_alt_atmosphere_Mars" title="Link to this definition"></a></dt>
+<dd><p>Return the altitude in m as a function of pressure from the analytical calculations derived above.
+Args:</p>
+<blockquote>
+<div><p>Pi (float or 1D array): input pressure in Pa (must be &lt;=610 Pa)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Return:</dt><dd><p>Z (float ot 1D array): corresponding altitude in m</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.azimuth2cart">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">azimuth2cart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LAT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LON</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.azimuth2cart" title="Link to this definition"></a></dt>
+<dd><p>Azimuthal equidistant projection, convert from lat/lon to cartesian coordinates
+Args:</p>
+<blockquote>
+<div><p>LAT,LON: 1D or 2D array of latitudes, longitudes in degree, size [nlat,nlon]
+lat0,lon0:(floats) coordinates of the pole</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>X,Y: cartesian coordinates for the latitudes and longitudes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.ortho2cart">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">ortho2cart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LAT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LON</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.ortho2cart" title="Link to this definition"></a></dt>
+<dd><p>Orthographic projection, convert from lat/lon to cartesian coordinates
+Args:</p>
+<blockquote>
+<div><p>LAT,LON: 1D or 2D array of latitudes, longitudes in degree, size [nlat,nlon]
+lat0,lon0:(floats) coordinates of the pole</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>X,Y: cartesian coordinates for the latitudes and longitudes
+MASK: NaN array that is used to hide the back side of the planet</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.mollweide2cart">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">mollweide2cart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LAT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LON</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.mollweide2cart" title="Link to this definition"></a></dt>
+<dd><p>Mollweide projection, convert from lat/lon to cartesian coordinates
+Args:</p>
+<blockquote>
+<div><p>LAT,LON: 1D or 2D array of latitudes, longitudes in degree, size [nlat,nlon]</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>X,Y: cartesian coordinates for the latitudes and longitudes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.robin2cart">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">robin2cart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LAT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LON</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.robin2cart" title="Link to this definition"></a></dt>
+<dd><p>Robinson projection, convert from lat/lon to cartesian coordinates
+Args:</p>
+<blockquote>
+<div><p>LAT,LON: floats, 1D or 2D array (nalt,nlon) of latitudes, longitudes in degree</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>X,Y: cartesian coordinates for the latitudes and longitudes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.sol2ls">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">sol2ls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jld</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cummulative</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.sol2ls" title="Link to this definition"></a></dt>
+<dd><p>Return the solar longitude Ls as a function of the sol number. Sol 0 is spring equinox.
+Args:</p>
+<blockquote>
+<div><p>jld [float or 1D array]: sol number after perihelion
+cummulative [bool]     : if True, result is cummulative Ls 0&gt;360&gt;720 etc..</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>Ls: The corresponding solar longitude Ls</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.FV3_utils.ls2sol">
+<span class="sig-prename descclassname"><span class="pre">amescap.FV3_utils.</span></span><span class="sig-name descname"><span class="pre">ls2sol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ls_in</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.FV3_utils.ls2sol" title="Link to this definition"></a></dt>
+<dd><p>Ls to sol converter.
+Args:</p>
+<blockquote>
+<div><p>Ls_in (float or 1D array) : Solar longitudes 0-360…720</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Return:</dt><dd><p>sol: the corresponding sol number</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+This function simply uses a numerical solver on the sol2ls() function.</p>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Alex Kling, Courtney Batterson, &amp; Victoria Hartwick (Mars Climate Modeling Center | NASA Ames Research Center).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

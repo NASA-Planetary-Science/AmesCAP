@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>amescap.Spectral_utils &mdash; AmesCAP 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=f2a433a1"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            AmesCAP
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MarsPull/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPull</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples &amp; Use Cases</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">AmesCAP</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">amescap.Spectral_utils</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/autoapi/amescap/Spectral_utils/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-amescap.Spectral_utils">
+<span id="amescap-spectral-utils"></span><h1><a class="reference internal" href="#module-amescap.Spectral_utils" title="amescap.Spectral_utils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">amescap.Spectral_utils</span></code></a><a class="headerlink" href="#module-amescap.Spectral_utils" title="Link to this heading"></a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Spectral_utils.init_shtools" title="amescap.Spectral_utils.init_shtools"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_shtools</span></code></a>()</p></td>
+<td><p>The following code simply loads the pyshtools module and provides adequate referencing.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.Spectral_utils.diurn_extract" title="amescap.Spectral_utils.diurn_extract"><code class="xref py py-obj docutils literal notranslate"><span class="pre">diurn_extract</span></code></a>(VAR, N, tod, lon)</p></td>
+<td><p>Extract the diurnal component of a field. Original code by J.Wilson adapted by A. Kling. April, 2021</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Spectral_utils.reconstruct_diurn" title="amescap.Spectral_utils.reconstruct_diurn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reconstruct_diurn</span></code></a>(amp, phas, tod, lon[, sumList])</p></td>
+<td><p>Reconstruct a field wave based on its diurnal harmonics</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.Spectral_utils.space_time" title="amescap.Spectral_utils.space_time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">space_time</span></code></a>(lon, timex, varIN, kmx, tmx)</p></td>
+<td><p>Obtain west and east propagating waves. This is a Python implementation of John Wilson's  space_time routine by [A. Kling, 2019]</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Spectral_utils.zeroPhi_filter" title="amescap.Spectral_utils.zeroPhi_filter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeroPhi_filter</span></code></a>(VAR, btype, low_highcut, fs[, axis, ...])</p></td>
+<td><p>Temporal filter: use a forward pass and a backward pass to prevent phase shift. [A. Kling, 2020]</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.Spectral_utils.zonal_decomposition" title="amescap.Spectral_utils.zonal_decomposition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zonal_decomposition</span></code></a>(VAR)</p></td>
+<td><p>Decomposition into spherical harmonics. [A. Kling, 2020]</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Spectral_utils.zonal_construct" title="amescap.Spectral_utils.zonal_construct"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zonal_construct</span></code></a>(COEFFS_flat, VAR_shape[, btype, ...])</p></td>
+<td><p>Recomposition into spherical harmonics</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.Spectral_utils.init_shtools">
+<span class="sig-prename descclassname"><span class="pre">amescap.Spectral_utils.</span></span><span class="sig-name descname"><span class="pre">init_shtools</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Spectral_utils.init_shtools" title="Link to this definition"></a></dt>
+<dd><p>The following code simply loads the pyshtools module and provides adequate referencing.
+Since dependencies may need to be solved by the user, the module import is wrapped in a function
+that may be called when needed.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.Spectral_utils.diurn_extract">
+<span class="sig-prename descclassname"><span class="pre">amescap.Spectral_utils.</span></span><span class="sig-name descname"><span class="pre">diurn_extract</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">VAR</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Spectral_utils.diurn_extract" title="Link to this definition"></a></dt>
+<dd><p>Extract the diurnal component of a field. Original code by J.Wilson adapted by A. Kling. April, 2021
+Args:</p>
+<blockquote>
+<div><p>VAR (1D or ND array)   : field to process with time of day dimension FIRST, e.g (tod,time,lat,lon) or (tod)
+N   (int)              : number of harmonics to extract (N=1 for diurnal,N=2  for diurnal + semi diurnal etc…)
+tod (1D array)         : universal time of day in sols (0&gt;1.) If provided in hours (0&gt;24), it  will  be  normalized.
+lon (1D array or float): longitudes 0&gt;360</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Return:</dt><dd><p>amp (ND array)  :  the amplitudes for the Nth first harmonics, e.g. size (Nh,time,lat,lon)
+phase (ND array):  the phases for the Nth first harmonics, e.g. size (Nh,time,lat,lon)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.Spectral_utils.reconstruct_diurn">
+<span class="sig-prename descclassname"><span class="pre">amescap.Spectral_utils.</span></span><span class="sig-name descname"><span class="pre">reconstruct_diurn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sumList</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Spectral_utils.reconstruct_diurn" title="Link to this definition"></a></dt>
+<dd><p>Reconstruct a field wave based on its diurnal harmonics
+Args:</p>
+<blockquote>
+<div><p>amp   : amplitude of the signal, with  harmonics dimension FIRST, e.g. (N,time,lat,lon)
+phas : phase of the signal, in [hr], with harmonics dimension FIRST
+tod   : 1D array for the time of day, in UT [hr]
+lon   : 1D array  or float for the longitudes, used to convert UT to LT
+sumList : (optional) list containing the harmonics to include when reconstructing the wave, e.g. sumN=[1,2,4]</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Return:</dt><dd><dl class="simple">
+<dt>VAR<span class="classifier">a variable with reconstructed harmonics with N dimension FIRST and time of day SECOND, e.g. (N,tod,time,lat,lon)</span></dt><dd><p>if  sumList is provided, the wave output has the harmonics already agregated, e.g. size is    (tod,time,lat,lon)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.Spectral_utils.space_time">
+<span class="sig-prename descclassname"><span class="pre">amescap.Spectral_utils.</span></span><span class="sig-name descname"><span class="pre">space_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">varIN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Spectral_utils.space_time" title="Link to this definition"></a></dt>
+<dd><p>Obtain west and east propagating waves. This is a Python implementation of John Wilson’s  space_time routine by [A. Kling, 2019]
+Args:</p>
+<blockquote>
+<div><p>lon:   longitude array in [degrees]   0-&gt;360
+timex: 1D time array in units of [day]. Expl 1.5 days sampled every hour is  [0/24,1/24, 2/24,.. 1,.. 1.5]
+varIN: input array for the Fourier analysis.</p>
+<blockquote>
+<div><p>First axis must be longitude and last axis must be time.  Expl: varIN[lon,time] varIN[lon,lat,time],varIN[lon,lev,lat,time]</p>
+</div></blockquote>
+<p>kmx: an integer for the number of longitudinal wavenumber to extract   (max allowable number of wavenumbers is nlon/2)
+tmx: an integer for the number of tidal harmonics to extract           (max allowable number of harmonics  is nsamples/2)</p>
+</div></blockquote>
+<dl>
+<dt>Returns:</dt><dd><p>ampe:   East propagating wave amplitude [same unit as varIN]
+ampw:   West propagating wave amplitude [same unit as varIN]
+phasee: East propagating phase [degree]
+phasew: West propagating phase [degree]</p>
+</dd>
+<dt><em>NOTE</em>  1. ampe,ampw,phasee,phasew have dimensions [kmx,tmx] or [kmx,tmx,lat] [kmx,tmx,lev,lat] etc…</dt><dd><ol class="arabic" start="2">
+<li><p>The x and y axis may be constructed as follow to display the easter and western modes:</p>
+<blockquote>
+<div><p>klon=np.arange(0,kmx)  [wavenumber]  [cycle/sol]
+ktime=np.append(-np.arange(tmx,0,-1),np.arange(0,tmx))
+KTIME,KLON=np.meshgrid(ktime,klon)</p>
+<p>amplitude=np.concatenate((ampw[:,::-1], ampe), axis=1)
+phase=    np.concatenate((phasew[:,::-1], phasee), axis=1)</p>
+</div></blockquote>
+</li>
+</ol>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.Spectral_utils.zeroPhi_filter">
+<span class="sig-prename descclassname"><span class="pre">amescap.Spectral_utils.</span></span><span class="sig-name descname"><span class="pre">zeroPhi_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">VAR</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">btype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_highcut</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_trend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Spectral_utils.zeroPhi_filter" title="Link to this definition"></a></dt>
+<dd><p>Temporal filter: use a forward pass and a backward pass to prevent phase shift. [A. Kling, 2020]
+Args:</p>
+<blockquote>
+<div><p>VAR:  values to filter 1D or ND array. Filtered dimension is FIRST, otherwise, adjust axis
+btype: filter type: ‘low’, ‘high’ or ‘band’
+low_high_cut: low , high or [low,high] cutoff frequency depending on the filter [Hz or m-1]
+fs:     sampling frequency [Hz or m-1]
+axis:  if data is N-dimensional array, the filtering dimension
+order: order for the filter
+no_trend: if True, only return the filtered-output, not TREND+ FILTER</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>out: the filtered data</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+Wn=[low, high] are expressed as a function of the Nyquist frequency</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.Spectral_utils.zonal_decomposition">
+<span class="sig-prename descclassname"><span class="pre">amescap.Spectral_utils.</span></span><span class="sig-name descname"><span class="pre">zonal_decomposition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">VAR</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Spectral_utils.zonal_decomposition" title="Link to this definition"></a></dt>
+<dd><p>Decomposition into spherical harmonics. [A. Kling, 2020]
+Args:</p>
+<blockquote>
+<div><p>VAR:  Detrend variable for decomposition, latitude is SECOND to LAST and longitude is LAST  e.g. (time,lat,lon) or (time,lev,lat,lon)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>COEFFS      : coefficient for harmonic decomposion, shape is flatten e.g. (time,2,lat/2, lat/2) (time x lev,2,lat/2, lat/2)
+power_per_l : power spectral density, shape is re-organized, e.g. (time, lat/2) or  (time,lev,lat/2)</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+Output size is (…,lat/2, lat/2) as latitude is the smallest dimension and to match the Nyquist frequency</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.Spectral_utils.zonal_construct">
+<span class="sig-prename descclassname"><span class="pre">amescap.Spectral_utils.</span></span><span class="sig-name descname"><span class="pre">zonal_construct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">COEFFS_flat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">VAR_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">btype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_highcut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Spectral_utils.zonal_construct" title="Link to this definition"></a></dt>
+<dd><p>Recomposition into spherical harmonics
+Args:</p>
+<blockquote>
+<div><p>COEFFS_flat:  Spherical harmonics coefficients as flatten array, e.g. (time,lat,lon) or (time x lev,2, lat,lon)
+VAR_shape:    Shape of the original variable e.g. VAR_shape=temp.shape
+btype: filter type: ‘low’, ‘high’ or ‘band’. If None, returns array as reconstructed using all zonal wavenumber
+low_high_cut: low , high or [low,high] cutoff zonal wavenumber(s)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>VAR      : reconstructed output, size is same as original detrened variable e.g. (time,lev,lat,lon)</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+# The minimum and maximum wavelenghts in [km] may be computed as follows:
+dx=2*np.pi*3400
+L_min=(1./kmax)*dx
+L_max=1./max(kmin,1.e-20)*dx ; if L_max&gt;1.e20:L_max=np.inf
+print(‘(kmin,kmax)=(#g,#g)&gt;&gt;dx min= #g km,dx max= #g km’#(kmin,kmax,L_min,L_max))</p>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Alex Kling, Courtney Batterson, &amp; Victoria Hartwick (Mars Climate Modeling Center | NASA Ames Research Center).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

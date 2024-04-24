@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>amescap.pdf2image &mdash; AmesCAP 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=f2a433a1"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            AmesCAP
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MarsPull/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPull</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples &amp; Use Cases</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">AmesCAP</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">amescap.pdf2image</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/autoapi/amescap/pdf2image/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-amescap.pdf2image">
+<span id="amescap-pdf2image"></span><h1><a class="reference internal" href="#module-amescap.pdf2image" title="amescap.pdf2image"><code class="xref py py-mod docutils literal notranslate"><span class="pre">amescap.pdf2image</span></code></a><a class="headerlink" href="#module-amescap.pdf2image" title="Link to this heading"></a></h1>
+<blockquote>
+<div><p>pdf2image is a light wrapper for the poppler-utils tools that can convert your
+PDFs into Pillow images.</p>
+</div></blockquote>
+<p>Reference:
+<a class="reference external" href="https://github.com/Belval/pdf2image">https://github.com/Belval/pdf2image</a></p>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.pdf2image.convert_from_path" title="amescap.pdf2image.convert_from_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convert_from_path</span></code></a>(pdf_path[, dpi, output_folder, ...])</p></td>
+<td><p>Description: Convert PDF to Image will throw whenever one of the condition is reached</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amescap.pdf2image.convert_from_bytes" title="amescap.pdf2image.convert_from_bytes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convert_from_bytes</span></code></a>(pdf_file[, dpi, output_folder, ...])</p></td>
+<td><p>Description: Convert PDF to Image will throw whenever one of the condition is reached</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.pdf2image.convert_from_path">
+<span class="sig-prename descclassname"><span class="pre">amescap.pdf2image.</span></span><span class="sig-name descname"><span class="pre">convert_from_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pdf_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ppm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thread_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">userpw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cropbox</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.pdf2image.convert_from_path" title="Link to this definition"></a></dt>
+<dd><p>Description: Convert PDF to Image will throw whenever one of the condition is reached
+Parameters:</p>
+<blockquote>
+<div><p>pdf_path -&gt; Path to the PDF that you want to convert
+dpi -&gt; Image quality in DPI (default 200)
+output_folder -&gt; Write the resulting images to a folder (instead of directly in memory)
+first_page -&gt; First page to process
+last_page -&gt; Last page to process before stopping
+fmt -&gt; Output image format
+thread_count -&gt; How many threads we are allowed to spawn for processing
+userpw -&gt; PDF’s password
+use_cropbox -&gt; Use cropbox instead of mediabox</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.pdf2image.convert_from_bytes">
+<span class="sig-prename descclassname"><span class="pre">amescap.pdf2image.</span></span><span class="sig-name descname"><span class="pre">convert_from_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pdf_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ppm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thread_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">userpw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cropbox</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.pdf2image.convert_from_bytes" title="Link to this definition"></a></dt>
+<dd><p>Description: Convert PDF to Image will throw whenever one of the condition is reached
+Parameters:</p>
+<blockquote>
+<div><p>pdf_file -&gt; Bytes representing the PDF file
+dpi -&gt; Image quality in DPI
+output_folder -&gt; Write the resulting images to a folder (instead of directly in memory)
+first_page -&gt; First page to process
+last_page -&gt; Last page to process before stopping
+fmt -&gt; Output image format
+thread_count -&gt; How many threads we are allowed to spawn for processing
+userpw -&gt; PDF’s password
+use_cropbox -&gt; Use cropbox instead of mediabox</p>
+</div></blockquote>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Alex Kling, Courtney Batterson, &amp; Victoria Hartwick (Mars Climate Modeling Center | NASA Ames Research Center).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
