@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MarsFiles &mdash; AmesCAP 1.0 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=045299b1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -15,7 +17,7 @@
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../../_static/documentation_options.js?v=f2a433a1"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -74,42 +76,200 @@
              
   <section id="module-MarsFiles">
 <span id="marsfiles"></span><h1><a class="reference internal" href="#module-MarsFiles" title="MarsFiles"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsFiles</span></code></a><a class="headerlink" href="#module-MarsFiles" title="Link to this heading"></a></h1>
+<p>The MarsFiles executable has functions for manipulating entire files.
+The capabilities include time-shifting, binning, and regridding data,
+as well as band pass filtering, tide analysis, zonal averaging, and
+extracting variables from files.</p>
+<dl class="simple">
+<dt>The executable requires:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[input_file]</span></code>                  the file for manipulation</p></li>
+</ul>
+</dd>
+<dt>and optionally accepts:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">[-fv3,</span> <span class="pre">--fv3]</span></code>                 produce MGCM <code class="docutils literal notranslate"><span class="pre">fixed</span></code>,</dt><dd><p><code class="docutils literal notranslate"><span class="pre">diurn</span></code>, <code class="docutils literal notranslate"><span class="pre">average</span></code> and <code class="docutils literal notranslate"><span class="pre">daily</span></code> files from Legacy output</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">[-c,</span> <span class="pre">--combine]</span></code>               Combine sequential files of</dt><dd><p>the same type into one file</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">[-t,</span> <span class="pre">--tshift]</span></code>                apply a time-shift to</dt><dd><p><code class="docutils literal notranslate"><span class="pre">diurn</span></code> files</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">[-ba,</span> <span class="pre">--bin_average]</span></code>          bin MGCM <code class="docutils literal notranslate"><span class="pre">daily</span></code> files like</dt><dd><p><code class="docutils literal notranslate"><span class="pre">average</span></code> files</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">[-bd,</span> <span class="pre">--bin_diurn]</span></code>            bin MGCM <code class="docutils literal notranslate"><span class="pre">daily</span></code> files like</dt><dd><p><code class="docutils literal notranslate"><span class="pre">diurn</span></code> files</p>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-hp,</span> <span class="pre">--high_pass_filter]</span></code>     temporal filtering: high-pass</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-lp,</span> <span class="pre">--low_pass_filter]</span></code>      temporal filtering: low-pass</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-bp,</span> <span class="pre">--band_pass_filter]</span></code>     temporal filtering: band-pass</p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">[-no_trend,</span> <span class="pre">--no_trend]</span></code>       filter and compute amplitudes</dt><dd><p>only (use with filtering)</p>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-hpk,</span> <span class="pre">--high_pass_zonal]</span></code>     spatial filtering: high-pass</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-lpk,</span> <span class="pre">--low_pass_zonal]</span></code>      spatial filtering: low-pass</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-bpk,</span> <span class="pre">--band_pass_zonal]</span></code>     spatial filtering: band-pass</p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">[-tidal,</span> <span class="pre">--tidal]</span></code>             extracts diurnal tide and its</dt><dd><p>harmonics</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">[-reconstruct,</span> <span class="pre">--reconstruct]</span></code> reconstructs the first N</dt><dd><p>harmonics</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">[-norm,</span> <span class="pre">--normalize]</span></code>          provides <code class="docutils literal notranslate"><span class="pre">-tidal</span></code> result in</dt><dd><p>percent amplitude</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">[-rs,</span> <span class="pre">--regrid_source]</span></code>        regrid a target file to match</dt><dd><p>a source file</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">[-za,</span> <span class="pre">--zonal_avg]</span></code>            zonally average all variables</dt><dd><p>in a file</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">[-include,</span> <span class="pre">--include]</span></code>         only include specific</dt><dd><p>variables from the target file</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">[-e,</span> <span class="pre">--ext]</span></code>                   create a new file with a</dt><dd><p>unique extension instead of overwriting current file</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>Third-party Requirements:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">numpy</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">netCDF4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sys</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argparse</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">os</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">subprocess</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">warnings</span></code></p></li>
+</ul>
+</dd>
+</dl>
 <section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
 <section id="functions">
 <h3>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h3>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsFiles.make_FV3_files" title="MarsFiles.make_FV3_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_FV3_files</span></code></a>(fpath, typelistfv3[, renameFV3, cwd])</p></td>
-<td><p>Make MGCM-like 'average', 'daily', and 'diurn' files.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsFiles.combine_files" title="MarsFiles.combine_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">combine_files</span></code></a>(file_list, full_file_list)</p></td>
+<td><p>Concatenates sequential output files in chronological order.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsFiles.change_vname_longname_unit" title="MarsFiles.change_vname_longname_unit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_vname_longname_unit</span></code></a>(vname, longname_txt, units_txt)</p></td>
-<td><p>Update variable name, longname, and units.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsFiles.time_shift" title="MarsFiles.time_shift"><code class="xref py py-obj docutils literal notranslate"><span class="pre">time_shift</span></code></a>(file_list)</p></td>
+<td><p>This function converts the data in diurn files with a time_of_day_XX</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsFiles.replace_dims" title="MarsFiles.replace_dims"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_dims</span></code></a>(dims, todflag)</p></td>
-<td><p>Function to replace dimensions with MGCM-like names and remove 'time_of_day'.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsFiles.make_FV3_files" title="MarsFiles.make_FV3_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_FV3_files</span></code></a>(fpath, typelistfv3[, renameFV3])</p></td>
+<td><p>Make MGCM-like <code class="docutils literal notranslate"><span class="pre">average</span></code>, <code class="docutils literal notranslate"><span class="pre">daily</span></code>, and <code class="docutils literal notranslate"><span class="pre">diurn</span></code> files.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsFiles.replace_at_index" title="MarsFiles.replace_at_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_at_index</span></code></a>(tuple_dims, idx, new_name)</p></td>
-<td><p>Function to update dimensions.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsFiles.do_avg_vars" title="MarsFiles.do_avg_vars"><code class="xref py py-obj docutils literal notranslate"><span class="pre">do_avg_vars</span></code></a>(histfile, newf, avgtime, avgtod[, bin_period])</p></td>
+<td><p>Performs a time average over all fields in a file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsFiles.ls2sol_1year" title="MarsFiles.ls2sol_1year"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls2sol_1year</span></code></a>(Ls_deg[, offset, round10])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsFiles.change_vname_longname_unit" title="MarsFiles.change_vname_longname_unit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_vname_longname_unit</span></code></a>(vname, longname_txt, units_txt)</p></td>
+<td><p>Update variable <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">longname</span></code>, and <code class="docutils literal notranslate"><span class="pre">units</span></code>. This is</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsFiles.replace_dims" title="MarsFiles.replace_dims"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_dims</span></code></a>(dims, todflag)</p></td>
+<td><p>Replaces dimensions with MGCM-like names. Removes <code class="docutils literal notranslate"><span class="pre">time_of_day</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsFiles.replace_at_index" title="MarsFiles.replace_at_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_at_index</span></code></a>(tuple_dims, idx, new_name)</p></td>
+<td><p>Updates variable dimensions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsFiles.ls2sol_1year" title="MarsFiles.ls2sol_1year"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls2sol_1year</span></code></a>(Ls_deg[, offset, round10])</p></td>
 <td><p>Returns a sol number from the solar longitude.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py function">
+<dt class="sig sig-object py" id="MarsFiles.combine_files">
+<span class="sig-prename descclassname"><span class="pre">MarsFiles.</span></span><span class="sig-name descname"><span class="pre">combine_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_file_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFiles.combine_files" title="Link to this definition"></a></dt>
+<dd><p>Concatenates sequential output files in chronological order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_list</strong> (<em>list</em>) – list of file names</p></li>
+<li><p><strong>full_file_list</strong> (<em>list</em>) – list of file names and full paths</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsFiles.time_shift">
+<span class="sig-prename descclassname"><span class="pre">MarsFiles.</span></span><span class="sig-name descname"><span class="pre">time_shift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFiles.time_shift" title="Link to this definition"></a></dt>
+<dd><p>This function converts the data in diurn files with a time_of_day_XX
+dimension to universal local time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_list</strong> (<em>list</em>) – list of file names</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="MarsFiles.make_FV3_files">
-<span class="sig-prename descclassname"><span class="pre">MarsFiles.</span></span><span class="sig-name descname"><span class="pre">make_FV3_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typelistfv3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renameFV3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFiles.make_FV3_files" title="Link to this definition"></a></dt>
-<dd><p>Make MGCM-like ‘average’, ‘daily’, and ‘diurn’ files.
-Args:</p>
-<blockquote>
-<div><p>fpath       : full path to the Legacy netcdf files
-typelistfv3 : MGCM-like file type: ‘average’, ‘daily’, or ‘diurn’
-renameFV3   : rename the files from Legacy_Lsxxx_Lsyyy.nc to XXXXX.atmos_average.nc following MGCM output conventions
-cwd         : the output path</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>atmos_average, atmos_daily, atmos_diurn</p>
+<span class="sig-prename descclassname"><span class="pre">MarsFiles.</span></span><span class="sig-name descname"><span class="pre">make_FV3_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typelistfv3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renameFV3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFiles.make_FV3_files" title="Link to this definition"></a></dt>
+<dd><p>Make MGCM-like <code class="docutils literal notranslate"><span class="pre">average</span></code>, <code class="docutils literal notranslate"><span class="pre">daily</span></code>, and <code class="docutils literal notranslate"><span class="pre">diurn</span></code> files.
+Used if call to [<code class="docutils literal notranslate"><span class="pre">-fv3</span> <span class="pre">--fv3</span></code>] is made AND Legacy files are in
+netCDFformat (not fort.11).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fpath</strong> (<em>str</em>) – Full path to the Legacy netcdf files</p></li>
+<li><p><strong>typelistfv3</strong> (<em>list</em>) – MGCM-like file type: <code class="docutils literal notranslate"><span class="pre">average</span></code>, <code class="docutils literal notranslate"><span class="pre">daily</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">diurn</span></code></p></li>
+<li><p><strong>renameFV3</strong> (<em>bool</em>) – Rename the files from Legacy_LsXXX_LsYYY.nc to
+<code class="docutils literal notranslate"><span class="pre">XXXXX.atmos_average.nc</span></code> following MGCM output conventions</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The MGCM-like files: <code class="docutils literal notranslate"><span class="pre">XXXXX.atmos_average.nc</span></code>,
+<code class="docutils literal notranslate"><span class="pre">XXXXX.atmos_daily.nc</span></code>, <code class="docutils literal notranslate"><span class="pre">XXXXX.atmos_diurn.nc</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsFiles.do_avg_vars">
+<span class="sig-prename descclassname"><span class="pre">MarsFiles.</span></span><span class="sig-name descname"><span class="pre">do_avg_vars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">newf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avgtime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avgtod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFiles.do_avg_vars" title="Link to this definition"></a></dt>
+<dd><p>Performs a time average over all fields in a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>histfile</strong> (<em>str</em>) – file to perform time average on</p></li>
+<li><p><strong>newf</strong> (<em>str</em>) – path to target file</p></li>
+<li><p><strong>avgtime</strong> (<em>bool</em>) – whether <code class="docutils literal notranslate"><span class="pre">histfile</span></code> has averaged fields
+(e.g., <code class="docutils literal notranslate"><span class="pre">atmos_average</span></code>)</p></li>
+<li><p><strong>avgtod</strong> (<em>bool</em>) – whether <code class="docutils literal notranslate"><span class="pre">histfile</span></code> has a diurnal time dimenion
+(e.g., <code class="docutils literal notranslate"><span class="pre">atmos_diurn</span></code>)</p></li>
+<li><p><strong>bin_period</strong> (<em>int</em><em>, </em><em>optional</em>) – the time binning period if <cite>histfile</cite> has
+averaged fields (i.e., if <code class="docutils literal notranslate"><span class="pre">avgtime==True</span></code>), defaults to 5</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a time-averaged file</p>
 </dd>
 </dl>
 </dd></dl>
@@ -117,45 +277,82 @@ cwd         : the output path</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsFiles.change_vname_longname_unit">
 <span class="sig-prename descclassname"><span class="pre">MarsFiles.</span></span><span class="sig-name descname"><span class="pre">change_vname_longname_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longname_txt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units_txt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFiles.change_vname_longname_unit" title="Link to this definition"></a></dt>
-<dd><p>Update variable name, longname, and units.
-This was designed specifically for LegacyCGM.nc files.</p>
+<dd><p>Update variable <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">longname</span></code>, and <code class="docutils literal notranslate"><span class="pre">units</span></code>. This is
+designed to work specifically with LegacyCGM.nc files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vname</strong> (<em>str</em>) – variable name</p></li>
+<li><p><strong>longname_txt</strong> (<em>str</em>) – variable description</p></li>
+<li><p><strong>units_txt</strong> (<em>str</em>) – variable units</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>variable name and corresponding description and unit</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsFiles.replace_dims">
 <span class="sig-prename descclassname"><span class="pre">MarsFiles.</span></span><span class="sig-name descname"><span class="pre">replace_dims</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">todflag</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFiles.replace_dims" title="Link to this definition"></a></dt>
-<dd><p>Function to replace dimensions with MGCM-like names and remove ‘time_of_day’.
-This was designed specifically for LegacyCGM.nc files.</p>
+<dd><p>Replaces dimensions with MGCM-like names. Removes <code class="docutils literal notranslate"><span class="pre">time_of_day</span></code>.
+This is designed to work specifically with LegacyCGM.nc files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dims</strong> (<em>str</em>) – dimensions of the variable</p></li>
+<li><p><strong>todflag</strong> (<em>bool</em>) – indicates whether there exists a <code class="docutils literal notranslate"><span class="pre">time_of_day</span></code>
+dimension</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>new dimension names for the variable</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsFiles.replace_at_index">
 <span class="sig-prename descclassname"><span class="pre">MarsFiles.</span></span><span class="sig-name descname"><span class="pre">replace_at_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tuple_dims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFiles.replace_at_index" title="Link to this definition"></a></dt>
-<dd><p>Function to update dimensions.
-Args:</p>
-<blockquote>
-<div><p>tup      : the dimensions as tuples e.g. (‘pfull’, ‘nlat’, ‘nlon’)
-idx      : index indicating axis with the dimensions to update (e.g. idx = 1  for ‘nlat’)
-new_name : new dimension name (e.g. ‘latitude’)</p>
-</div></blockquote>
+<dd><p>Updates variable dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tuple_dims</strong> (<em>tuple</em>) – the dimensions as tuples e.g. (<code class="docutils literal notranslate"><span class="pre">pfull</span></code>,
+<code class="docutils literal notranslate"><span class="pre">nlat</span></code>, <code class="docutils literal notranslate"><span class="pre">nlon</span></code>)</p></li>
+<li><p><strong>idx</strong> (<em>int</em>) – index indicating axis with the dimensions to update
+(e.g. <code class="docutils literal notranslate"><span class="pre">idx</span> <span class="pre">=</span> <span class="pre">1</span></code>  for <code class="docutils literal notranslate"><span class="pre">nlat</span></code>)</p></li>
+<li><p><strong>new_name</strong> (<em>str</em>) – new dimension name (e.g. <code class="docutils literal notranslate"><span class="pre">latitude</span></code>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>updated dimensions</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsFiles.ls2sol_1year">
 <span class="sig-prename descclassname"><span class="pre">MarsFiles.</span></span><span class="sig-name descname"><span class="pre">ls2sol_1year</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ls_deg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">round10</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsFiles.ls2sol_1year" title="Link to this definition"></a></dt>
-<dd><p>Returns a sol number from the solar longitude.
-Args:</p>
-<blockquote>
-<div><p>Ls_deg  : solar longitude in degrees
-offset  : if True, force year to start at Ls 0
-round10 : if True, round to the nearest 10 sols</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>Ds: sol number</p>
+<dd><p>Returns a sol number from the solar longitude.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Ls_deg</strong> (<em>float</em>) – solar longitude [°]</p></li>
+<li><p><strong>offset</strong> (<em>bool</em>) – if True, force year to start at Ls 0</p></li>
+<li><p><strong>round10</strong> (<em>bool</em>) – if True, round to the nearest 10 sols</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">Ds</span></code> the sol number</p>
 </dd>
 </dl>
-<p><strong>*NOTE*</strong>
-For the moment, this is consistent with Ls 0 -&gt; 359.99, but not for monotically increasing Ls.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For the moment, this is consistent with 0 &lt;= Ls &lt;=
+359.99, but not for monotically increasing Ls.</p>
+</div>
 </dd></dl>
 
 </section>

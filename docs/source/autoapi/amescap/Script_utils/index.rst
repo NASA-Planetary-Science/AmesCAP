@@ -53,6 +53,8 @@ Functions
    amescap.Script_utils.pretty_print_to_fv_eta
    amescap.Script_utils.replace_dims
    amescap.Script_utils.ak_bk_loader
+   amescap.Script_utils.read_variable_dict_amescap_profile
+   amescap.Script_utils.read_variable_dict_amescap_profile
 
 
 
@@ -412,5 +414,45 @@ Functions
    ``bk`` arrays may not be necessary for in the calculation as is the
    case for ``MarsVars.py XXXXX.atmos_average_psd.nc --add msf``, which
    operates on a pressure interpolated (``_pstd.nc``) file.
+
+
+.. py:function:: read_variable_dict_amescap_profile(f_Ncdf=None)
+
+   Inspect a Netcdf file and return the name of the variables and dimensions based on the content of ~/.amescap_profile.
+   Calling this function allows to remove hard-coded calls in CAP.
+   For example, to f.variables['ucomp'] is replaced by f.variables[model.ucomp], with model.ucomp taking the values of'ucomp', 'U'
+   Args:
+       f_Ncdf: An opened Netcdf file object
+   Returns:
+       model: a dictionary with the dimensions and variables, e.g. model.ucomp='U' or model.dim_lat='latitudes'
+
+   ***NOTE***
+   The defaut names for variables are defined in () parenthesis in  ~/.amescap_profile :
+   'X direction wind        [m/s]                   (ucomp)>'
+
+   The defaut names for dimensions are defined in {} parenthesis in  ~/.amescap_profile :
+   Ncdf Y latitude dimension    [integer]          {lat}>lats
+
+   The dimensions (lon,lat,pfull,pstd) are loaded in the dictionary as model.dim_lon, model.dim_lat
+
+
+.. py:function:: read_variable_dict_amescap_profile(f_Ncdf=None)
+
+   Inspect a Netcdf file and return the name of the variables and dimensions based on the content of ~/.amescap_profile.
+   Calling this function allows to remove hard-coded calls in CAP.
+   For example, to f.variables['ucomp'] is replaced by f.variables[model.ucomp], with model.ucomp taking the values of'ucomp', 'U'
+   Args:
+       f_Ncdf: An opened Netcdf file object
+   Returns:
+       model: a dictionary with the dimensions and variables, e.g. model.ucomp='U' or model.dim_lat='latitudes'
+
+   ***NOTE***
+   The defaut names for variables are defined in () parenthesis in  ~/.amescap_profile :
+   'X direction wind        [m/s]                   (ucomp)>'
+
+   The defaut names for dimensions are defined in {} parenthesis in  ~/.amescap_profile :
+   Ncdf Y latitude dimension    [integer]          {lat}>lats
+
+   The dimensions (lon,lat,pfull,pstd) are loaded in the dictionary as model.dim_lon, model.dim_lat
 
 

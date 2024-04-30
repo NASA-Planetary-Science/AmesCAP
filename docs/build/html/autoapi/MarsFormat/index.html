@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MarsFormat &mdash; AmesCAP 1.0 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=045299b1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -15,7 +17,7 @@
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../../_static/documentation_options.js?v=f2a433a1"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -74,6 +76,29 @@
              
   <section id="module-MarsFormat">
 <span id="marsformat"></span><h1><a class="reference internal" href="#module-MarsFormat" title="MarsFormat"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsFormat</span></code></a><a class="headerlink" href="#module-MarsFormat" title="Link to this heading"></a></h1>
+<p>The MarsFormat executable is a routine that transforms non-MGCM model
+output into MGCM-like model output for compatibility with CAP.</p>
+<p>MarsFormat changes variable names, dimension names, dimension order,
+and units to the configuration expected by CAP. In some cases, such as
+for MarsWRF, variables are derived and regridded onto a standard grid.</p>
+<dl class="simple">
+<dt>The executable requires:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[input_file]</span></code>              the file to be transformed</p></li>
+</ul>
+</dd>
+<dt>and optionally accepts:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[-openmars</span> <span class="pre">--openmars]</span></code>    convert openMars data to MGCM format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-marswrf</span> <span class="pre">--marswrf]</span></code>      convert MarsWRF data to MGCM format</p></li>
+</ul>
+</dd>
+<dt>Third-party Requirements:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">numpy</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">os</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argparse</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">xarray</span></code></p></li>
+</ul>
+</dd>
+</dl>
 </section>
 
 

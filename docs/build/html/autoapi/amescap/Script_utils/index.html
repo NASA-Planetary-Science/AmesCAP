@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>amescap.Script_utils &mdash; AmesCAP 1.0 documentation</title>
-      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=045299b1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -15,7 +17,7 @@
         <script src="../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../../../_static/documentation_options.js?v=f2a433a1"></script>
-        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -74,6 +76,22 @@
              
   <section id="module-amescap.Script_utils">
 <span id="amescap-script-utils"></span><h1><a class="reference internal" href="#module-amescap.Script_utils" title="amescap.Script_utils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">amescap.Script_utils</span></code></a><a class="headerlink" href="#module-amescap.Script_utils" title="Link to this heading"></a></h1>
+<p>Script_utils contains internal functions for processing netCDF files.
+These functions can be used on their own outside of CAP if they are
+imported as a module:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="o">/</span><span class="n">u</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">Script_utils</span> <span class="kn">import</span> <span class="nn">MY_func</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Third-party Requirements:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">numpy</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">netCDF4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">re</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">os</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">subprocess</span></code></p></li>
+</ul>
+</dd>
+</dl>
 <section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
 <section id="functions">
@@ -81,89 +99,98 @@
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Script_utils.MY_func" title="amescap.Script_utils.MY_func"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MY_func</span></code></a>(Ls_cont)</p></td>
-<td><p>This function return the Mars Year</p></td>
+<td><p>Returns the Mars Year</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#amescap.Script_utils.find_tod_in_diurn" title="amescap.Script_utils.find_tod_in_diurn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_tod_in_diurn</span></code></a>(fNcdf)</p></td>
-<td><p>Return the variable for the local time axis in diurn files.</p></td>
+<td><p>Returns the variable for the local time axis in diurn files</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Script_utils.print_fileContent" title="amescap.Script_utils.print_fileContent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_fileContent</span></code></a>(fileNcdf)</p></td>
-<td><p>Print the content of a Netcdf file in a compact format. Variables are sorted by dimensions.</p></td>
+<td><p>Prints the contents of a netCDF file to the screen. Variables sorted</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#amescap.Script_utils.print_varContent" title="amescap.Script_utils.print_varContent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_varContent</span></code></a>(fileNcdf, list_varfull[, print_stat])</p></td>
-<td><p>Print the content of a variable inside a Netcdf file</p></td>
+<td><p>Print variable contents from a variable in a netCDF file. Requires</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Script_utils.give_permission" title="amescap.Script_utils.give_permission"><code class="xref py py-obj docutils literal notranslate"><span class="pre">give_permission</span></code></a>(filename)</p></td>
-<td><p># NAS system only: set group permission to the file</p></td>
+<td><p>Sets group file permissions for the NAS system</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#amescap.Script_utils.check_file_tape" title="amescap.Script_utils.check_file_tape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_file_tape</span></code></a>(fileNcdf[, abort])</p></td>
-<td><p>Relevant for use on the NASA Advanced Supercomputing (NAS) environnment only</p></td>
+<td><p>For use in the NAS environnment only.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Script_utils.get_Ncdf_path" title="amescap.Script_utils.get_Ncdf_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_Ncdf_path</span></code></a>(fNcdf)</p></td>
-<td><p>Return the full path of a Netcdf object.</p></td>
+<td><p>Returns the full path for a netCDF file object.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#amescap.Script_utils.extract_path_basename" title="amescap.Script_utils.extract_path_basename"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_path_basename</span></code></a>(filename)</p></td>
-<td><p>Return the path and basename of a file. If only the filename is provided, assume it is the current directory</p></td>
+<td><p>Returns the path and basename of a file. If only the filename is</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Script_utils.FV3_file_type" title="amescap.Script_utils.FV3_file_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FV3_file_type</span></code></a>(fNcdf)</p></td>
-<td><p>Return the type of output files:</p></td>
+<td><p>Return the type of the netCDF file (i.e., <code class="docutils literal notranslate"><span class="pre">fixed</span></code>, <code class="docutils literal notranslate"><span class="pre">diurn</span></code>,</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#amescap.Script_utils.alt_FV3path" title="amescap.Script_utils.alt_FV3path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">alt_FV3path</span></code></a>(fullpaths, alt[, test_exist])</p></td>
-<td><p>Internal function. given an interpolated daily, diurn or average file</p></td>
+<td><p>Returns the original or fixed file given an interpolated daily,</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Script_utils.smart_reader" title="amescap.Script_utils.smart_reader"><code class="xref py py-obj docutils literal notranslate"><span class="pre">smart_reader</span></code></a>(fNcdf, var_list[, suppress_warning])</p></td>
-<td><p>Smarter alternative to using var=fNcdf.variables['var'][:] when handling PROCESSED files that also check</p></td>
+<td><p>Alternative to <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">=</span> <span class="pre">fNcdf.variables[&quot;var&quot;][:]</span></code> for handling</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#amescap.Script_utils.regrid_Ncfile" title="amescap.Script_utils.regrid_Ncfile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">regrid_Ncfile</span></code></a>(VAR_Ncdf, file_Nc_in, file_Nc_target)</p></td>
-<td><p>Regrid a Ncdf variable from one file's structure to match another file  [Alex Kling , May 2021]</p></td>
+<td><p>Regrid a netCDF variable from one file structure to another.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Script_utils.progress" title="amescap.Script_utils.progress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">progress</span></code></a>(k, Nmax)</p></td>
-<td><p>Display a progress bar to monitor heavy calculations.</p></td>
+<td><p>Displays a progress bar to monitor heavy calculations.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#amescap.Script_utils.section_content_amescap_profile" title="amescap.Script_utils.section_content_amescap_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">section_content_amescap_profile</span></code></a>(section_ID)</p></td>
-<td><p>Execude code section in /home/user/.amescap_profile</p></td>
+<td><p>Executes first code section in <code class="docutils literal notranslate"><span class="pre">~/.amescap_profile</span></code> to read in</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Script_utils.filter_vars" title="amescap.Script_utils.filter_vars"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_vars</span></code></a>(fNcdf[, include_list, giveExclude])</p></td>
-<td><p>Filter variable names in netcdf file for processing.</p></td>
+<td><p>Filters the variable names in a netCDF file for processing. Returns</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#amescap.Script_utils.find_fixedfile" title="amescap.Script_utils.find_fixedfile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_fixedfile</span></code></a>(filename)</p></td>
-<td><p>Batterson, Updated by Alex Nov 29 2022</p></td>
+<td><p>Finds the relevant fixed file for a given average, daily, or diurn</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Script_utils.get_longname_units" title="amescap.Script_utils.get_longname_units"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_longname_units</span></code></a>(fNcdf, varname)</p></td>
-<td><p>Return the 'long_name' and 'units'  attributes of a netcdf variable.</p></td>
+<td><p>Returns the longname and unit attributes of a variable in a netCDF</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#amescap.Script_utils.wbr_cmap" title="amescap.Script_utils.wbr_cmap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">wbr_cmap</span></code></a>()</p></td>
-<td><p>Returns a color map that goes from white&gt;blue&gt;green&gt;yellow&gt;red or 'wbr'</p></td>
+<td><p>Returns a color map that goes from</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Script_utils.rjw_cmap" title="amescap.Script_utils.rjw_cmap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rjw_cmap</span></code></a>()</p></td>
-<td><p>Returns a color map that goes from red&lt;jade&lt;wisteria or 'rjw'</p></td>
+<td><p>Returns John Wilson's preferred color map</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#amescap.Script_utils.dkass_dust_cmap" title="amescap.Script_utils.dkass_dust_cmap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dkass_dust_cmap</span></code></a>()</p></td>
-<td><p>Returns a color map that goes from yellow&gt;orange&gt;red&gt;purple</p></td>
+<td><p>Returns a color map useful for dust cross-sections.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Script_utils.dkass_temp_cmap" title="amescap.Script_utils.dkass_temp_cmap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dkass_temp_cmap</span></code></a>()</p></td>
-<td><p>Returns a color map that goes from black&gt;purple&gt;blue&gt;green&gt;yellow&gt;orange&gt;red</p></td>
+<td><p>Returns a color map that highlights the 200K temperatures.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#amescap.Script_utils.pretty_print_to_fv_eta" title="amescap.Script_utils.pretty_print_to_fv_eta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pretty_print_to_fv_eta</span></code></a>(var, varname[, nperline])</p></td>
-<td><p>Print the ak or bk coefficients to copy paste in fv_eta.f90</p></td>
+<td><p>Print the <code class="docutils literal notranslate"><span class="pre">ak</span></code> or <code class="docutils literal notranslate"><span class="pre">bk</span></code> coefficients for copying to</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Script_utils.replace_dims" title="amescap.Script_utils.replace_dims"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_dims</span></code></a>(Ncvar_dim[, vert_dim_name])</p></td>
-<td><p>Update the name for the variables dimension to match FV3's</p></td>
+<td><p>Updates the name of the variable dimension to match the format of</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#amescap.Script_utils.ak_bk_loader" title="amescap.Script_utils.ak_bk_loader"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ak_bk_loader</span></code></a>(fNcdf)</p></td>
-<td><p>Return the ak and bk. First look in the current netcdf file.</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">ak</span></code> and <code class="docutils literal notranslate"><span class="pre">bk</span></code> arrays from the current netCDF file. If</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="amescap.Script_utils.read_variable_dict_amescap_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_variable_dict_amescap_profile</span></code></a>([f_Ncdf])</p></td>
+<td><p>Inspect a Netcdf file and return the name of the variables and dimensions based on the content of ~/.amescap_profile.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id0" title="amescap.Script_utils.read_variable_dict_amescap_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_variable_dict_amescap_profile</span></code></a>([f_Ncdf])</p></td>
+<td><p>Inspect a Netcdf file and return the name of the variables and dimensions based on the content of ~/.amescap_profile.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.MY_func">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">MY_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ls_cont</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.MY_func" title="Link to this definition"></a></dt>
-<dd><p>This function return the Mars Year
-Args:</p>
-<blockquote>
-<div><p>Ls_cont: solar longitude, contineuous</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>MY : int the Mars year</p>
+<dd><p>Returns the Mars Year</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>Ls_cont</strong> (<em>array</em>) – solar longitude (continuous)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the Mars year</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
 </dd>
 </dl>
 </dd></dl>
@@ -171,14 +198,18 @@ Args:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.find_tod_in_diurn">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">find_tod_in_diurn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fNcdf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.find_tod_in_diurn" title="Link to this definition"></a></dt>
-<dd><p>Return the variable for the local time axis in diurn files.
-Original implementation by Victoria H.
-Args:</p>
-<blockquote>
-<div><p>fNcdf: an (open) Netcdf file object</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Return:</dt><dd><p>tod (string): ‘time_of_day_16’or ‘time_of_day_24’</p>
+<dd><p>Returns the variable for the local time axis in diurn files
+(e.g., time_of_day_24).
+Original implementation by Victoria H.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fNcdf</strong> (<em>netCDF file object</em>) – a netCDF file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the name of the time of day dimension</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -186,13 +217,14 @@ Args:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.print_fileContent">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">print_fileContent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fileNcdf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.print_fileContent" title="Link to this definition"></a></dt>
-<dd><p>Print the content of a Netcdf file in a compact format. Variables are sorted by dimensions.
-Args:</p>
-<blockquote>
-<div><p>fileNcdf: full path to netcdf file</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>None (print in the terminal)</p>
+<dd><p>Prints the contents of a netCDF file to the screen. Variables sorted
+by dimension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fileNcdf</strong> (<em>str</em>) – full path to the netCDF file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -200,16 +232,20 @@ Args:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.print_varContent">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">print_varContent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fileNcdf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_varfull</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_stat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.print_varContent" title="Link to this definition"></a></dt>
-<dd><p>Print the content of a variable inside a Netcdf file
-This test is based on the existence of a least one  00XXX.fixed.nc in the current directory.
-Args:</p>
-<blockquote>
-<div><p>fileNcdf:      full path to netcdf file
-list_varfull:  list of variable names and optional slices, e.g [‘lon’ ,’ps[:,10,20]’]
-print_stat:  if true, print min, mean and max instead of values</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>None (print in the terminal)</p>
+<dd><p>Print variable contents from a variable in a netCDF file. Requires
+a XXXXX.fixed.nc file in the current directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fileNcdf</strong> (<em>str</em>) – full path to a netcdf file</p></li>
+<li><p><strong>list_varfull</strong> (<em>list</em>) – list of variable names and optional slices
+(e.g., <code class="docutils literal notranslate"><span class="pre">[&quot;lon&quot;,</span> <span class="pre">&quot;ps[:,</span> <span class="pre">10,</span> <span class="pre">20]&quot;]</span></code>)</p></li>
+<li><p><strong>print_stat</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, print min, mean, and max. If False,
+print values. Defaults to False</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -217,22 +253,25 @@ print_stat:  if true, print min, mean and max instead of values</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.give_permission">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">give_permission</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.give_permission" title="Link to this definition"></a></dt>
-<dd><p># NAS system only: set group permission to the file</p>
+<dd><p>Sets group file permissions for the NAS system</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.check_file_tape">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">check_file_tape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fileNcdf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.check_file_tape" title="Link to this definition"></a></dt>
-<dd><p>Relevant for use on the NASA Advanced Supercomputing (NAS) environnment only
-Check if a file is present on the disk by running the NAS dmls -l data migration command.
-This avoid the program to stall if the files need to be migrated from the disk to the tape
-Args:</p>
-<blockquote>
-<div><p>fileNcdf: full path to netcdf file
-exit: boolean. If True, exit the program (avoid stalling the program if file is not on disk)</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>None (print status and abort program)</p>
+<dd><p>For use in the NAS environnment only.
+Checks whether a file is exists on the disk by running the command
+<code class="docutils literal notranslate"><span class="pre">dmls</span> <span class="pre">-l</span></code> on NAS. This prevents the program from stalling if the
+files need to be migrated from the disk to the tape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fileNcdf</strong> (<em>_type_</em>) – full path to a netcdf file</p></li>
+<li><p><strong>abort</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, exit the program. Defaults to False</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -240,15 +279,21 @@ exit: boolean. If True, exit the program (avoid stalling the program if file is 
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.get_Ncdf_path">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">get_Ncdf_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fNcdf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.get_Ncdf_path" title="Link to this definition"></a></dt>
-<dd><p>Return the full path of a Netcdf object.
-Note that ‘Dataset’ and multi-files dataset (i.e. ‘MFDataset’) have different
-attributes for the path, hence the need for this function.
-Args:</p>
-<blockquote>
-<div><p>fNcdf : Dataset or  MFDataset object</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns :</dt><dd><p>Path: string (list) for Dataset (MFDataset)</p>
+<dd><p>Returns the full path for a netCDF file object.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">Dataset</span></code> and multi-file dataset (<code class="docutils literal notranslate"><span class="pre">MFDataset</span></code>) have</p>
+</div>
+<p>different attributes for the path, hence the need for this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fNcdf</strong> (<em>netCDF file object</em>) – Dataset or MFDataset object</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>string list for the Dataset (MFDataset)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str(list)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -256,31 +301,37 @@ Args:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.extract_path_basename">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">extract_path_basename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.extract_path_basename" title="Link to this definition"></a></dt>
-<dd><p>Return the path and basename of a file. If only the filename is provided, assume it is the current directory
-Args:</p>
-<blockquote>
-<div><p>filename: e.g. ‘XXXXX.fixed.nc’, ‘./history/XXXXX.fixed.nc’ or ‘/home/user/history/XXXXX.fixed.nc’</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>filepath : ‘/home/user/history/XXXXX.fixed.nc’ in all the cases above
-basename:   XXXXX.fixed.nc in all the cases above</p>
+<dd><p>Returns the path and basename of a file. If only the filename is
+provided, assume it is in the current directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>str</em>) – name of the netCDF file (may include full path)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>full file path &amp; name of file</p>
 </dd>
 </dl>
-<p><strong>*NOTE*</strong>
-This routine does not check for file existence and only operates on the provided input string.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This routine does not confirm that the file exists.
+It operates on the provided input string.</p>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.FV3_file_type">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">FV3_file_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fNcdf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.FV3_file_type" title="Link to this definition"></a></dt>
-<dd><p>Return the type of output files:
-Args:</p>
-<blockquote>
-<div><p>fNcdf: an (open) Netcdf file object</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Return:</dt><dd><p>f_type (string): ‘fixed’, ‘contineous’, or ‘diurn’
-interp_type (string): ‘pfull’,’pstd’,’zstd’,’zagl’</p>
+<dd><p>Return the type of the netCDF file (i.e., <code class="docutils literal notranslate"><span class="pre">fixed</span></code>, <code class="docutils literal notranslate"><span class="pre">diurn</span></code>,
+<code class="docutils literal notranslate"><span class="pre">average</span></code>, <code class="docutils literal notranslate"><span class="pre">daily</span></code>) and the format of the Ls array <code class="docutils literal notranslate"><span class="pre">areo</span></code>
+(i.e., <code class="docutils literal notranslate"><span class="pre">fixed</span></code>, <code class="docutils literal notranslate"><span class="pre">continuous</span></code>, or <code class="docutils literal notranslate"><span class="pre">diurn</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fNcdf</strong> (<em>Netcdf file object</em>) – an open Netcdf file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The Ls array type (string, <code class="docutils literal notranslate"><span class="pre">fixed</span></code>, <code class="docutils literal notranslate"><span class="pre">continuous</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">diurn</span></code>) and the netCDF file type (string <code class="docutils literal notranslate"><span class="pre">fixed</span></code>,
+<code class="docutils literal notranslate"><span class="pre">diurn</span></code>, <code class="docutils literal notranslate"><span class="pre">average</span></code>, or <code class="docutils literal notranslate"><span class="pre">daily</span></code>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -288,22 +339,27 @@ interp_type (string): ‘pfull’,’pstd’,’zstd’,’zagl’</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.alt_FV3path">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">alt_FV3path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fullpaths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_exist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.alt_FV3path" title="Link to this definition"></a></dt>
-<dd><p>Internal function. given an interpolated daily, diurn or average file
-return the raw or fixed file. Accept string or list as input
-Args:</p>
-<blockquote>
-<div><dl class="simple">
-<dt>fullpaths<span class="classifier">e.g ‘/u/path/00010.atmos_average_pstd.nc’ or LIST</span></dt><dd><p>alt: alternative type ‘raw’ or ‘fixed’
-test_exist=True test file existence on disk</p>
+<dd><p>Returns the original or fixed file given an interpolated daily,
+diurn or average file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fullpaths</strong> (<em>str</em>) – full path to a file or a list of full paths to
+more than one file</p></li>
+<li><p><strong>alt</strong> (<em>str</em>) – type of file to return (i.e., original or fixed)</p></li>
+<li><p><strong>test_exist</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether file exists on the disk, defaults to True</p></li>
+</ul>
 </dd>
-</dl>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns :</dt><dd><dl class="simple">
-<dt>Alternative path to raw or fixed file, e.g.</dt><dd><p>‘/u/path/00010.atmos_average.nc’
-‘/u/path/00010.fixed.nc’</p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – _description_</p>
 </dd>
-</dl>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>path to original or fixed file
+(e.g., “/u/path/00010.atmos_average.nc” or
+“/u/path/00010.fixed.nc”)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -311,59 +367,95 @@ test_exist=True test file existence on disk</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.smart_reader">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">smart_reader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fNcdf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_warning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.smart_reader" title="Link to this definition"></a></dt>
-<dd><p>Smarter alternative to using var=fNcdf.variables[‘var’][:] when handling PROCESSED files that also check
-matching XXXXX.atmos_average.nc (or daily…) and XXXXX.fixed.nc files</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>fNcdf: Netcdf file object (i.e. already opened with Dataset or MFDataset)
-var_list: variable or list of variables, e.g ‘areo’ or [‘pk’,’bk’,’areo’]
-suppress_warning: Suppress debug statement, useful if variable is not expected to be found in the file anyway</p>
+<dd><p>Alternative to <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">=</span> <span class="pre">fNcdf.variables[&quot;var&quot;][:]</span></code> for handling
+<em>processed</em> files that also checks for a matching average or daily
+and XXXXX.fixed.nc file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fNcdf</strong> (<em>netCDF file object</em>) – an open netCDF file</p></li>
+<li><p><strong>var_list</strong> (<em>_type_</em>) – a variable or list of variables (e.g., <code class="docutils literal notranslate"><span class="pre">areo</span></code> or
+[<code class="docutils literal notranslate"><span class="pre">pk</span></code>, <code class="docutils literal notranslate"><span class="pre">bk</span></code>, <code class="docutils literal notranslate"><span class="pre">areo</span></code>])</p></li>
+<li><p><strong>suppress_warning</strong> (<em>bool</em><em>, </em><em>optional</em>) – suppress debug statement. Useful if a
+variable is not expected to be in the file anyway. Defaults to
+False</p></li>
+</ul>
 </dd>
-<dt>Returns:</dt><dd><p>out_list: variables content as singleton or values to unpack</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>variable content (single or values to unpack)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
 </dd>
 </dl>
-<p>from netCDF4 import Dataset</p>
-<p>fNcdf=Dataset(‘/u/akling/FV3/00668.atmos_average_pstd.nc’,’r’)</p>
-<p>ucomp= fNcdf.variables[‘ucomp’][:]   # &lt;&lt; this is the regular way
-vcomp= smart_reader(fNcdf,’vcomp’)   # &lt;&lt; this is exacly equivalent
-pk,bk,areo= smart_reader(fNcdf,[‘pk’,’bk’,’areo’])  # this will get ‘areo’ from 00668.atmos_average.nc is not available in the original _pstd.nc file</p>
-<blockquote>
-<div><p># if pk and bk are absent from 0668.atmos_average.nc, it will also check 00668.fixed.n</p>
-</div></blockquote>
-<dl class="simple">
-<dt><strong>* NOTE *</strong></dt><dd><p>-Only the variables’ content is returned, not the attributes</p>
-</dd>
-</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">netCDF4</span> <span class="kn">import</span> <span class="n">Dataset</span>
+
+<span class="n">fNcdf</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="s2">&quot;/u/akling/FV3/00668.atmos_average_pstd.nc&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+
+<span class="c1"># Approach using var = fNcdf.variables[&quot;var&quot;][:]</span>
+<span class="n">ucomp</span> <span class="o">=</span> <span class="n">fNcdf</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s2">&quot;ucomp&quot;</span><span class="p">][:]</span>
+<span class="c1"># New approach that checks for matching average/daily &amp; fixed</span>
+<span class="n">vcomp</span> <span class="o">=</span> <span class="n">smart_reader</span><span class="p">(</span><span class="n">fNcdf</span><span class="p">,</span> <span class="s2">&quot;vcomp&quot;</span><span class="p">)</span>
+
+<span class="c1"># This will pull &quot;areo&quot; from an original file if it is not</span>
+<span class="c1"># available in the interpolated file. If pk and bk are also not</span>
+<span class="c1"># in the average file, it will check for them in the fixed file.</span>
+<span class="n">pk</span><span class="p">,</span> <span class="n">bk</span><span class="p">,</span> <span class="n">areo</span> <span class="o">=</span> <span class="n">smart_reader</span><span class="p">(</span><span class="n">fNcdf</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;pk&quot;</span><span class="p">,</span> <span class="s2">&quot;bk&quot;</span><span class="p">,</span> <span class="s2">&quot;areo&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only the variable content is returned, not attributes</p>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.regrid_Ncfile">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">regrid_Ncfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">VAR_Ncdf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_Nc_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_Nc_target</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.regrid_Ncfile" title="Link to this definition"></a></dt>
-<dd><p>Regrid a Ncdf variable from one file’s structure to match another file  [Alex Kling , May 2021]
-Args:</p>
-<blockquote>
-<div><p>VAR_Ncdf: A netCDF4 variable OBJECT, e.g. ‘f_in.variables[‘temp’]’ from the source file
-file_Nc_in: The opened netcdf file object  for that input variable, e.g f_in=Dataset(‘fname’,’r’)
-file_Nc_target: An opened netcdf file object  for the target grid t e.g f_out=Dataset(‘fname’,’r’)</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>VAR_OUT: the VALUES of VAR_Ncdf[:], interpolated on the grid for the target file.</p>
+<dd><p>Regrid a netCDF variable from one file structure to another.
+Requires a file with the desired file structure to mimic.
+[Alex Kling, May 2021]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>VAR_Ncdf</strong> (<em>netCDF file variable</em>) – a netCDF variable object to regrid
+(e.g., <code class="docutils literal notranslate"><span class="pre">f_in.variable[&quot;temp&quot;]</span></code>)</p></li>
+<li><p><strong>file_Nc_in</strong> (<em>netCDF file object</em>) – an open netCDF file to source for the variable
+(e.g., <code class="docutils literal notranslate"><span class="pre">f_in</span> <span class="pre">=</span> <span class="pre">Dataset(&quot;filename&quot;,</span> <span class="pre">&quot;r&quot;)</span></code>)</p></li>
+<li><p><strong>file_Nc_target</strong> (<em>netCDF file object</em>) – an open netCDF file with the desired file
+structure (e.g., <code class="docutils literal notranslate"><span class="pre">f_out</span> <span class="pre">=</span> <span class="pre">Dataset(&quot;filename&quot;,</span> <span class="pre">&quot;r&quot;)</span></code>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the values of the variable interpolated to the target file
+grid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array</p>
 </dd>
 </dl>
-<p><strong>* Note*</strong>
-While the KDTree interpolation can handle a 3D dataset (lon/lat/lev instead of just 2D lon/lat) , the grid points in the vertical are just a few 10’s -100’s meter in the PBL vs few 10’-100’s km in the horizontal. This would results in excessive weighting in the vertical, which is why the vertical dimension is handled separately.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>While the KDTree interpolation can handle a 3D dataset</p>
+</div>
+<p>(lon/lat/lev instead of just 2D lon/lat), the grid points in the
+vertical are just a few (10–100s) meters in the PBL vs a few
+(10-100s) kilometers in the horizontal. This results in excessive
+weighting in the vertical, which is why the vertical dimension is
+handled separately.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.progress">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nmax</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.progress" title="Link to this definition"></a></dt>
-<dd><p>Display a progress bar to monitor heavy calculations.
-Args:</p>
-<blockquote>
-<div><p>k: current iteration of the outer loop
-Nmax: max iteration of the outer loop</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>Running… [#———] 10.64 %</p>
+<dd><p>Displays a progress bar to monitor heavy calculations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>k</strong> (<em>int</em>) – current iteration of the outer loop</p></li>
+<li><p><strong>Nmax</strong> (<em>int</em>) – max iteration of the outer loop</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -371,13 +463,15 @@ Nmax: max iteration of the outer loop</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.section_content_amescap_profile">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">section_content_amescap_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">section_ID</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.section_content_amescap_profile" title="Link to this definition"></a></dt>
-<dd><p>Execude code section in /home/user/.amescap_profile
-Args:</p>
-<blockquote>
-<div><p>section_ID: string defining the section to load, e.g ‘Pressure definitions for pstd’</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns</dt><dd><p>return line in that section as python code</p>
+<dd><p>Executes first code section in <code class="docutils literal notranslate"><span class="pre">~/.amescap_profile</span></code> to read in
+user-defined plot &amp; interpolation settings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>section_ID</strong> (<em>str</em>) – the section to load (e.g., Pressure definitions
+for pstd)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the relevant line with Python syntax</p>
 </dd>
 </dl>
 </dd></dl>
@@ -385,19 +479,26 @@ Args:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.filter_vars">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">filter_vars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fNcdf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">giveExclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.filter_vars" title="Link to this definition"></a></dt>
-<dd><p>Filter variable names in netcdf file for processing.
-Will return all dimensions (e.g. ‘lon’, ‘lat’…), the ‘areo’ variable, and any variable included in include_list
-Args:</p>
-<blockquote>
-<div><p>fNcdf: an open netcdf4 object pointing to a diurn, daily or average file
-include_list: a list of variables to include, e.g. [‘ucomp’,’vcomp’]
-giveExclude: if True, instead return the variables that must be excluded from the file, i.e.</p>
-<blockquote>
-<div><p>exclude_var = [all the variables] - [axis &amp; dimensions] - [include_list]</p>
-</div></blockquote>
-</div></blockquote>
+<dd><p>Filters the variable names in a netCDF file for processing. Returns
+all dimensions (<code class="docutils literal notranslate"><span class="pre">lon</span></code>, <code class="docutils literal notranslate"><span class="pre">lat</span></code>, etc.), the <code class="docutils literal notranslate"><span class="pre">areo</span></code> variable, and
+any other variable listed in <code class="docutils literal notranslate"><span class="pre">include_list</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fNcdf</strong> (<em>netCDF file object</em>) – an open netCDF object for a diurn, daily, or average
+file</p>
+</dd>
+</dl>
 <dl class="simple">
-<dt>Return:</dt><dd><p>var_list</p>
+<dt>:param include_list:list of variables to include (e.g., [<code class="docutils literal notranslate"><span class="pre">ucomp</span></code>,</dt><dd><p><code class="docutils literal notranslate"><span class="pre">vcomp</span></code>], defaults to None</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>giveExclude</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, returns variables to be excluded from
+the file, defaults to False</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of variable names to include in the processed file</p>
 </dd>
 </dl>
 </dd></dl>
@@ -405,88 +506,106 @@ giveExclude: if True, instead return the variables that must be excluded from th
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.find_fixedfile">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">find_fixedfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.find_fixedfile" title="Link to this definition"></a></dt>
-<dd><p>Batterson, Updated by Alex Nov 29 2022
-Args:</p>
-<blockquote>
-<div><dl class="simple">
-<dt>filename   =  name of FV3 data file in use, i.e.</dt><dd><p>‘atmos_average.tile6.nc’</p>
+<dd><p>Finds the relevant fixed file for a given average, daily, or diurn
+file.
+[Batterson, Updated by Alex Nov 29 2022]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>str</em>) – an average, daily, or diurn netCDF file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>full path to the correspnding fixed file</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
-</div></blockquote>
-<dl>
-<dt>Returns:</dt><dd><p>name_fixed: fullpath to correspnding fixed file</p>
-<blockquote>
-<div><p>DDDDD.atmos_average.nc  -&gt; DDDDD.fixed.nc
-atmos_average.tileX.nc  -&gt; fixed.tileX.nc</p>
-<p><em>variations of these work too</em></p>
-<p>DDDDD.atmos_average_plevs.nc            -&gt; DDDDD.fixed.nc
-DDDDD.atmos_average_plevs_custom.nc     -&gt; DDDDD.fixed.nc
-atmos_average.tileX_plevs.nc            -&gt; fixed.tileX.nc
-atmos_average.tileX_plevs_custom.nc     -&gt; fixed.tileX.nc
-atmos_average_custom.tileX_plevs.nc     -&gt; fixed.tileX.nc</p>
-</div></blockquote>
-</dd>
-</dl>
+<p>Compatible file types:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DDDDD</span><span class="o">.</span><span class="n">atmos_average</span><span class="o">.</span><span class="n">nc</span>                  <span class="o">-&gt;</span> <span class="n">DDDDD</span><span class="o">.</span><span class="n">fixed</span><span class="o">.</span><span class="n">nc</span>
+<span class="n">atmos_average</span><span class="o">.</span><span class="n">tileX</span><span class="o">.</span><span class="n">nc</span>                  <span class="o">-&gt;</span> <span class="n">fixed</span><span class="o">.</span><span class="n">tileX</span><span class="o">.</span><span class="n">nc</span>
+<span class="n">DDDDD</span><span class="o">.</span><span class="n">atmos_average_plevs</span><span class="o">.</span><span class="n">nc</span>            <span class="o">-&gt;</span> <span class="n">DDDDD</span><span class="o">.</span><span class="n">fixed</span><span class="o">.</span><span class="n">nc</span>
+<span class="n">DDDDD</span><span class="o">.</span><span class="n">atmos_average_plevs_custom</span><span class="o">.</span><span class="n">nc</span>     <span class="o">-&gt;</span> <span class="n">DDDDD</span><span class="o">.</span><span class="n">fixed</span><span class="o">.</span><span class="n">nc</span>
+<span class="n">atmos_average</span><span class="o">.</span><span class="n">tileX_plevs</span><span class="o">.</span><span class="n">nc</span>            <span class="o">-&gt;</span> <span class="n">fixed</span><span class="o">.</span><span class="n">tileX</span><span class="o">.</span><span class="n">nc</span>
+<span class="n">atmos_average</span><span class="o">.</span><span class="n">tileX_plevs_custom</span><span class="o">.</span><span class="n">nc</span>     <span class="o">-&gt;</span> <span class="n">fixed</span><span class="o">.</span><span class="n">tileX</span><span class="o">.</span><span class="n">nc</span>
+<span class="n">atmos_average_custom</span><span class="o">.</span><span class="n">tileX_plevs</span><span class="o">.</span><span class="n">nc</span>     <span class="o">-&gt;</span> <span class="n">fixed</span><span class="o">.</span><span class="n">tileX</span><span class="o">.</span><span class="n">nc</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.get_longname_units">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">get_longname_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fNcdf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">varname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.get_longname_units" title="Link to this definition"></a></dt>
-<dd><p>Return the ‘long_name’ and ‘units’  attributes of a netcdf variable.
-If the attributes are not present, this function will return blank strings instead of raising an error
-Args:</p>
-<blockquote>
-<div><p>fNcdf: an opened netcdf file
-varname:  A variable to extract the attribute from (e.g. ‘ucomp’)</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Return:</dt><dd><p>longname_txt : long_name attribute, e.g. ‘zonal winds’
-units_txt    : units attribute, e.g. [m/s]</p>
+<dd><p>Returns the longname and unit attributes of a variable in a netCDF
+file. If the attributes are unavailable, returns blank strings to
+avoid an error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fNcdf</strong> (<em>netCDF file object</em>) – an open netCDF file</p></li>
+<li><p><strong>varname</strong> (<em>str</em>) – variable to extract attribute from</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>longname and unit attributes</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
-<p><strong>* NOTE*</strong>
-Some functions in MarsVars edit the units, e.g. turn [kg]  to [kg/m], therefore the empty string is made 4
-characters in length (’    ‘ instead of ‘’) to allow for editing by editing units_txt[:-2] for example</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Some functions in MarsVars edit the units</p>
+</div>
+<p>(e.g., [kg] -&gt; [kg/m]), therefore the empty string is 4 characters
+in length (”    “ instead of “”) to allow for editing by
+<code class="docutils literal notranslate"><span class="pre">editing</span> <span class="pre">units_txt[:-2]</span></code>, for example.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.wbr_cmap">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">wbr_cmap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.wbr_cmap" title="Link to this definition"></a></dt>
-<dd><p>Returns a color map that goes from white&gt;blue&gt;green&gt;yellow&gt;red or ‘wbr’</p>
+<dd><p>Returns a color map that goes from
+white -&gt; blue -&gt; green -&gt; yellow -&gt; red</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.rjw_cmap">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">rjw_cmap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.rjw_cmap" title="Link to this definition"></a></dt>
-<dd><p>Returns a color map that goes from red&lt;jade&lt;wisteria or ‘rjw’</p>
+<dd><p>Returns John Wilson’s preferred color map
+(red -&gt; jade -&gt; wisteria)</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.dkass_dust_cmap">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">dkass_dust_cmap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.dkass_dust_cmap" title="Link to this definition"></a></dt>
-<dd><p>Returns a color map that goes from yellow&gt;orange&gt;red&gt;purple
-Provided by Courtney B.</p>
+<dd><p>Returns a color map useful for dust cross-sections.
+(yellow -&gt; orange -&gt; red -&gt; purple)
+Provided by Courtney Batterson.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.dkass_temp_cmap">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">dkass_temp_cmap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.dkass_temp_cmap" title="Link to this definition"></a></dt>
-<dd><p>Returns a color map that goes from black&gt;purple&gt;blue&gt;green&gt;yellow&gt;orange&gt;red
-Provided by Courtney B.</p>
+<dd><p>Returns a color map that highlights the 200K temperatures.
+(black -&gt; purple -&gt; blue -&gt; green -&gt; yellow -&gt; orange -&gt; red)
+Provided by Courtney Batterson.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.pretty_print_to_fv_eta">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">pretty_print_to_fv_eta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">varname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nperline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.pretty_print_to_fv_eta" title="Link to this definition"></a></dt>
-<dd><p>Print the ak or bk coefficients to copy paste in fv_eta.f90
-Args:</p>
-<blockquote>
-<div><p>data: ak or bk data
-varname: the variable name, ‘a’ or ‘b’
-nperline:the number of elements per line</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>The print statement ready to copy-paste in fv_eta.f90</p>
+<dd><p>Print the <code class="docutils literal notranslate"><span class="pre">ak</span></code> or <code class="docutils literal notranslate"><span class="pre">bk</span></code> coefficients for copying to
+<code class="docutils literal notranslate"><span class="pre">fv_eta.f90</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>var</strong> (<em>array</em>) – ak or bk data</p></li>
+<li><p><strong>varname</strong> (<em>str</em>) – the variable name (“a” or “b”)</p></li>
+<li><p><strong>nperline</strong> (<em>int</em><em>, </em><em>optional</em>) – the number of elements per line, defaults to 6</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a print statement for copying into <code class="docutils literal notranslate"><span class="pre">fv_eta.f90</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -494,14 +613,22 @@ nperline:the number of elements per line</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.replace_dims">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">replace_dims</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ncvar_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vert_dim_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.replace_dims" title="Link to this definition"></a></dt>
-<dd><p>Update the name for the variables dimension to match FV3’s
-Args:</p>
-<blockquote>
-<div><p>Ncvar_dim: Netcdf variable dimensions, e.g f_Ncdf.variables[‘temp’].dimensions
-vert_dim_name(optional): ‘pstd’, ‘zstd’, or ‘zagl’ if the vertical dimensions is ambigeous</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Return:</dt><dd><p>dims_out: updated dimensions matching FV3’s naming convention</p>
+<dd><p>Updates the name of the variable dimension to match the format of
+the new NASA Ames Mars GCM output files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Ncvar_dim</strong> (<em>str</em>) – netCDF variable dimensions
+(e.g., <code class="docutils literal notranslate"><span class="pre">f_Ncdf.variables[&quot;temp&quot;].dimensions</span></code>)</p></li>
+<li><p><strong>vert_dim_name</strong> (<em>str</em><em>, </em><em>optional</em>) – the vertical dimension if it is ambiguous
+(<code class="docutils literal notranslate"><span class="pre">pstd</span></code>, <code class="docutils literal notranslate"><span class="pre">zstd</span></code>, or <code class="docutils literal notranslate"><span class="pre">zagl</span></code>). Defaults to None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>updated dimensions</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -509,20 +636,70 @@ vert_dim_name(optional): ‘pstd’, ‘zstd’, or ‘zagl’ if the vertical d
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.Script_utils.ak_bk_loader">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">ak_bk_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fNcdf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.ak_bk_loader" title="Link to this definition"></a></dt>
-<dd><p>Return the ak and bk. First look in the current netcdf file.
-If not found, this routine will check the XXXXX.fixed.nc in the same directory and then in the XXXXX.fixed.tileX.nc files if present
-Args:</p>
-<blockquote>
-<div><p>fNcdf: an opened netcdf file</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>ak,bk : the ak, bk values</p>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">ak</span></code> and <code class="docutils literal notranslate"><span class="pre">bk</span></code> arrays from the current netCDF file. If
+these are not found in the current file, search the fixed file in
+the same directory. If not there, then search the tiled fixed files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fNcdf</strong> (<em>a netCDF file object</em>) – an open netCDF file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the <code class="docutils literal notranslate"><span class="pre">ak</span></code> and <code class="docutils literal notranslate"><span class="pre">bk</span></code> arrays</p>
 </dd>
 </dl>
-<p><strong>*NOTE*</strong></p>
-<p>This routine will look for both ‘ak’ and ‘pk’.</p>
-<p>There are cases when it is convenient to load the  pk, bk once at the begining of the files in MarsVars.py,
-However the pk, bk may not be used at all in the calculation. This is the case with MarsVars.py XXXXX.atmos_average_psd.nc –add msf (which operates on the _pstd.nc file)</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This routine will look for both <code class="docutils literal notranslate"><span class="pre">ak</span></code> and <code class="docutils literal notranslate"><span class="pre">bk</span></code>. There</p>
+</div>
+<p>are cases when it is convenient to load the <code class="docutils literal notranslate"><span class="pre">ak</span></code>, <code class="docutils literal notranslate"><span class="pre">bk</span></code> once when
+the files are first opened in <code class="docutils literal notranslate"><span class="pre">MarsVars.py</span></code>, but the <code class="docutils literal notranslate"><span class="pre">ak</span></code> and
+<code class="docutils literal notranslate"><span class="pre">bk</span></code> arrays may not be necessary for in the calculation as is the
+case for <code class="docutils literal notranslate"><span class="pre">MarsVars.py</span> <span class="pre">XXXXX.atmos_average_psd.nc</span> <span class="pre">--add</span> <span class="pre">msf</span></code>, which
+operates on a pressure interpolated (<code class="docutils literal notranslate"><span class="pre">_pstd.nc</span></code>) file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amescap.Script_utils.read_variable_dict_amescap_profile">
+<span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">read_variable_dict_amescap_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f_Ncdf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.read_variable_dict_amescap_profile" title="Link to this definition"></a></dt>
+<dd><p>Inspect a Netcdf file and return the name of the variables and dimensions based on the content of ~/.amescap_profile.
+Calling this function allows to remove hard-coded calls in CAP.
+For example, to f.variables[‘ucomp’] is replaced by f.variables[model.ucomp], with model.ucomp taking the values of’ucomp’, ‘U’
+Args:</p>
+<blockquote>
+<div><p>f_Ncdf: An opened Netcdf file object</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>model: a dictionary with the dimensions and variables, e.g. model.ucomp=’U’ or model.dim_lat=’latitudes’</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+The defaut names for variables are defined in () parenthesis in  ~/.amescap_profile :
+‘X direction wind        [m/s]                   (ucomp)&gt;’</p>
+<p>The defaut names for dimensions are defined in {} parenthesis in  ~/.amescap_profile :
+Ncdf Y latitude dimension    [integer]          {lat}&gt;lats</p>
+<p>The dimensions (lon,lat,pfull,pstd) are loaded in the dictionary as model.dim_lon, model.dim_lat</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">read_variable_dict_amescap_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f_Ncdf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd><p>Inspect a Netcdf file and return the name of the variables and dimensions based on the content of ~/.amescap_profile.
+Calling this function allows to remove hard-coded calls in CAP.
+For example, to f.variables[‘ucomp’] is replaced by f.variables[model.ucomp], with model.ucomp taking the values of’ucomp’, ‘U’
+Args:</p>
+<blockquote>
+<div><p>f_Ncdf: An opened Netcdf file object</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>model: a dictionary with the dimensions and variables, e.g. model.ucomp=’U’ or model.dim_lat=’latitudes’</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong>
+The defaut names for variables are defined in () parenthesis in  ~/.amescap_profile :
+‘X direction wind        [m/s]                   (ucomp)&gt;’</p>
+<p>The defaut names for dimensions are defined in {} parenthesis in  ~/.amescap_profile :
+Ncdf Y latitude dimension    [integer]          {lat}&gt;lats</p>
+<p>The dimensions (lon,lat,pfull,pstd) are loaded in the dictionary as model.dim_lon, model.dim_lat</p>
 </dd></dl>
 
 </section>
