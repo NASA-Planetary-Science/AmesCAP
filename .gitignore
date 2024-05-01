@@ -1,5 +1,9 @@
 # General
 .DS_Store
+docs/.DS_Store
+tutorial/.DS_Store
+docs/source/.DS_Store
+docs/source/autoapi/.DS_Store
 .AppleDouble
 .LSOverride
 
