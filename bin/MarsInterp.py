@@ -379,9 +379,11 @@ def main():
                                           long_name_txt, units_txt)
             else:
 
-                if ivar not in [model.time, model.pfull, model.lat, model.lon, 'phalf', 'ak', 'pk', 'bk', model.pstd, model.zstd, model.zagl, tod_name, 'grid_xt', 'grid_yt']:
-                    #print("\r Copying over: %s..."%(ivar), end='')
-                    prCyan("Copying over: %s..." % (ivar))
+                if ivar not in [model.time, model.pfull, model.lat, 
+                                model.lon, 'phalf', 'ak', 'pk', 'bk', 
+                                model.pstd, model.zstd, model.zagl, 
+                                tod_name, 'grid_xt', 'grid_yt']:
+                    print(f"{Cyan}Copying over: {ivar}...")
                     fnew.copy_Ncvar(fNcdf.variables[ivar])
 
         print("\r ", end="")
