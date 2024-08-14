@@ -91,10 +91,10 @@ def main():
         print("Processing...")
         # Load model variables, dimensions
         fNcdf = Dataset(fullnameIN, "r")
-        model = read_variable_dict_amescap_profile(fNcdf)
+        # model = read_variable_dict_amescap_profile(fNcdf)
         fNcdf.close()
-        print(f"{Cyan}Reading model attributes from ~.amescap_profile:\n"
-              f"{vars(model)}{Nclr}")
+        #print(f"{Cyan}Reading model attributes from ~.amescap_profile:\n"
+        #      f"{vars(model)}{Nclr}")
         # dataDIR = (f"{path}{filename}.nc")
         DS = xr.open_dataset(fullnameIN, decode_times=False)
 

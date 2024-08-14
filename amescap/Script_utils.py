@@ -351,7 +351,7 @@ def FV3_file_type(fNcdf):
     interp_type = "unknown"
     tod_name = "n/a"
     
-    model=read_variable_dict_amescap_profile(fNcdf)
+    # model=read_variable_dict_amescap_profile(fNcdf)
 
     if "time" not in fNcdf.dimensions.keys():
         # If ``time`` is not a dimension, assume it is a fixed file
