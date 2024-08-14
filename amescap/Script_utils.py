@@ -353,7 +353,7 @@ def FV3_file_type(fNcdf):
     
     model=read_variable_dict_amescap_profile(fNcdf)
 
-    if model.time not in fNcdf.dimensions.keys():
+    if "time" not in fNcdf.dimensions.keys():
         # If ``time`` is not a dimension, assume it is a fixed file
         f_type = "fixed"
     try:
@@ -365,16 +365,16 @@ def FV3_file_type(fNcdf):
         pass
 
     dims = fNcdf.dimensions.keys()
-    if model.pfull in dims:
-        interp_type = model.pfull
-    if model.pstd  in dims:
-        interp_type = model.pstd
-    if model.zstd  in dims:
-        interp_type = model.zstd
-    if model.zagl  in dims:
-        interp_type = model.zagl
-    if model.zgrid in dims:
-        interp_type = model.zgrid
+    if "pfull" in dims:
+        interp_type = "pfull"
+    if "pstd"  in dims:
+        interp_type = "pstd"
+    if "zstd"  in dims:
+        interp_type = "zstd"
+    if "zagl"  in dims:
+        interp_type = "zagl"
+    if "zgrid" in dims:
+        interp_type = "zgrid"
 
     return f_type, interp_type
 
@@ -1208,11 +1208,11 @@ def read_variable_dict_amescap_profile(f_Ncdf=None):
     '''
     Inspect a Netcdf file and return the name of the variables and dimensions based on the content of ~/.amescap_profile.
     Calling this function allows to remove hard-coded calls in CAP.
-    For example, to f.variables['ucomp'] is replaced by f.variables[model.ucomp], with model.ucomp taking the values of'ucomp', 'U'
+    For example, to f.variables['ucomp'] is replaced by f.variables["ucomp"], with "ucomp" taking the values of'ucomp', 'U'
     Args:
         f_Ncdf: An opened Netcdf file object
     Returns:
-        model: a dictionary with the dimensions and variables, e.g. model.ucomp='U' or model.dim_lat='latitudes'
+        model: a dictionary with the dimensions and variables, e.g. "ucomp"='U' or "dim_lat"='latitudes'
 
     ***NOTE***
     The defaut names for variables are defined in () parenthesis in  ~/.amescap_profile :
@@ -1221,7 +1221,7 @@ def read_variable_dict_amescap_profile(f_Ncdf=None):
     The defaut names for dimensions are defined in {} parenthesis in  ~/.amescap_profile :
     Ncdf Y latitude dimension    [integer]          {lat}>lats
 
-    The dimensions (lon,lat,pfull,pstd) are loaded in the dictionary as model.dim_lon, model.dim_lat
+    The dimensions (lon,lat,pfull,pstd) are loaded in the dictionary as "dim_lon", "dim_lat"
     '''
 
     if f_Ncdf is not None:

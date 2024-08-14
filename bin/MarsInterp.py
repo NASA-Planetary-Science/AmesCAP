@@ -205,7 +205,7 @@ def main():
         try:
             f_fixed = Dataset(name_fixed, 'r')
             model=read_variable_dict_amescap_profile(f_fixed)
-            zsurf = f_fixed.variables[model.zsurf][:]
+            zsurf = f_fixed.variables["zsurf"][:]
             f_fixed.close()
         except FileNotFoundError:
             print(f"{Red}***Error*** Topography (zsurf) is required for "
@@ -261,7 +261,7 @@ def main():
         ak, bk = ak_bk_loader(fNcdf)
         ps = np.array(fNcdf.variables["ps"])
 
-        ps = np.array(fNcdf.variables[model.ps])
+        ps = np.array(fNcdf.variables["ps"])
 
         if len(ps.shape) == 3:
             do_diurn = False
@@ -288,12 +288,12 @@ def main():
                 L_3D_P = fms_press_calc(ps, ak, bk, lev_type = "full")
 
             elif interp_type == 'zagl':
-                temp = fNcdf.variables[model.temp][:]
+                temp = fNcdf.variables["temp"][:]
                 L_3D_P = fms_Z_calc(ps, ak, bk, temp.transpose(
                     permut), topo=0., lev_type='full')
 
             elif interp_type == 'zstd':
-                temp = fNcdf.variables[model.temp][:]
+                temp = fNcdf.variables["temp"][:]
                 # Expand the 'zsurf' array to the 'time' dimension
                 zflat = np.repeat(zsurf[np.newaxis, :], ps.shape[0], axis=0)
                 if do_diurn:
@@ -319,10 +319,10 @@ def main():
             fnew.copy_Ncaxis_with_content(fNcdf.variables["grid_xt"])
             fnew.copy_Ncaxis_with_content(fNcdf.variables["grid_yt"])
         else:
-            fnew.copy_Ncaxis_with_content(fNcdf.variables[model.lon])
-            fnew.copy_Ncaxis_with_content(fNcdf.variables[model.lat])
+            fnew.copy_Ncaxis_with_content(fNcdf.variables["lon"])
+            fnew.copy_Ncaxis_with_content(fNcdf.variables["lat"])
 
-        fnew.copy_Ncaxis_with_content(fNcdf.variables[model.time])
+        fnew.copy_Ncaxis_with_content(fNcdf.variables["time"])
 
         if do_diurn:
             fnew.copy_Ncaxis_with_content(fNcdf.variables[tod_name])
@@ -379,9 +379,9 @@ def main():
                                           long_name_txt, units_txt)
             else:
 
-                if ivar not in [model.time, model.pfull, model.lat, 
-                                model.lon, 'phalf', 'ak', 'pk', 'bk', 
-                                model.pstd, model.zstd, model.zagl, 
+                if ivar not in ["time", "pfull", "lat", 
+                                "lon", 'phalf', 'ak', 'pk', 'bk', 
+                                "pstd", "zstd", "zagl", 
                                 tod_name, 'grid_xt', 'grid_yt']:
                     print(f"{Cyan}Copying over: {ivar}...")
                     fnew.copy_Ncvar(fNcdf.variables[ivar])

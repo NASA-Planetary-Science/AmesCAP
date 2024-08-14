@@ -518,7 +518,7 @@ Functions
 
    Format values following scientific notation in a logarithmic axis.
 
-   .. py:method:: base(base)
+   .. py:method:: set_base(base)
 
       Change the *base* for labeling.
 
@@ -526,7 +526,7 @@ Functions
          Should always match the base used for :class:`LogLocator`
 
 
-   .. py:method:: label_minor(labelOnlyBase)
+   .. py:method:: set_label_minor(labelOnlyBase)
 
       Switch minor tick labeling on or off.
 
@@ -565,7 +565,7 @@ Functions
       :staticmethod:
 
       Some classes may want to replace a hyphen for minus with the proper
-      unicode symbol (U+2212) for typographical correctness.  This is a
+      Unicode symbol (U+2212) for typographical correctness.  This is a
       helper method to perform such a replacement when it is enabled via
       :rc:`axes.unicode_minus`.
 
