@@ -29,7 +29,6 @@ import os           # Access operating system functions
 import subprocess   # Run command-line commands
 import matplotlib
 import numpy as np
-from netCDF4 import Dataset
 from warnings import filterwarnings
 import matplotlib.pyplot as plt
 from netCDF4 import Dataset, MFDataset
