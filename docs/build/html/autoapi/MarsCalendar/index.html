@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MarsCalendar &mdash; AmesCAP 1.0 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=045299b1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -15,7 +17,7 @@
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../../_static/documentation_options.js?v=f2a433a1"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -74,6 +76,67 @@
              
   <section id="module-MarsCalendar">
 <span id="marscalendar"></span><h1><a class="reference internal" href="#module-MarsCalendar" title="MarsCalendar"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsCalendar</span></code></a><a class="headerlink" href="#module-MarsCalendar" title="Link to this heading"></a></h1>
+<p>The MarsCalendar executable accepts an input Ls or day-of-year (sol)
+and returns the corresponding sol or Ls, respectively.</p>
+<dl class="simple">
+<dt>The executable requires 1 of the following arguments:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[-sol</span> <span class="pre">--sol]</span></code>          the sol to convert to Ls, OR</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-ls</span> <span class="pre">--ls]</span></code>            the Ls to convert to sol</p></li>
+</ul>
+</dd>
+<dt>and optionally accepts:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">[-my</span> <span class="pre">--marsyear]</span></code>      the Mars Year of the simulation to</dt><dd><p>compute sol or  Ls from, AND/OR</p>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-c</span> <span class="pre">--cumulative]</span></code>     returns Ls in cumulative form</p></li>
+</ul>
+</dd>
+<dt>Third-party Requirements:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">numpy</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argparse</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsCalendar.parse_array" title="MarsCalendar.parse_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_array</span></code></a>(len_input)</p></td>
+<td><p>Formats the input array for conversion.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsCalendar.parse_array">
+<span class="sig-prename descclassname"><span class="pre">MarsCalendar.</span></span><span class="sig-name descname"><span class="pre">parse_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">len_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsCalendar.parse_array" title="Link to this definition"></a></dt>
+<dd><p>Formats the input array for conversion.</p>
+<p>Confirms that either <code class="docutils literal notranslate"><span class="pre">[-ls</span> <span class="pre">--ls]</span></code> or <code class="docutils literal notranslate"><span class="pre">[-sol</span> <span class="pre">--sol]</span></code> was passed
+as an argument. Creates an array that ls2sol or sol2ls can read
+for the conversion from sol -&gt; Ls or Ls -&gt; sol.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>len_input</strong> (<em>float</em>) – The input Ls or sol to convert. Can either be
+onenumber (e.g., 300) or start stop step (e.g., 300 310 2).</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p>Error if neither <code class="docutils literal notranslate"><span class="pre">[-ls</span> <span class="pre">--ls]</span></code> or <code class="docutils literal notranslate"><span class="pre">[-sol</span> <span class="pre">--sol]</span></code> are
+provided.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">input_as_arr</span></code> An array formatted for input into
+<code class="docutils literal notranslate"><span class="pre">ls2sol</span></code> or <code class="docutils literal notranslate"><span class="pre">sol2ls</span></code>. If <code class="docutils literal notranslate"><span class="pre">len_input</span> <span class="pre">=</span> <span class="pre">300</span></code>, then
+<code class="docutils literal notranslate"><span class="pre">input_as_arr=[300]</span></code>. If <code class="docutils literal notranslate"><span class="pre">len_input</span> <span class="pre">=</span> <span class="pre">300</span> <span class="pre">310</span> <span class="pre">2</span></code>, then
+<code class="docutils literal notranslate"><span class="pre">input_as_arr</span> <span class="pre">=</span> <span class="pre">[300,</span> <span class="pre">302,</span> <span class="pre">304,</span> <span class="pre">306,</span> <span class="pre">308]</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
 </section>
 
 

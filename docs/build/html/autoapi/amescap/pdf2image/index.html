@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>amescap.pdf2image &mdash; AmesCAP 1.0 documentation</title>
-      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=045299b1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -15,7 +17,7 @@
         <script src="../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../../../_static/documentation_options.js?v=f2a433a1"></script>
-        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -74,12 +76,20 @@
              
   <section id="module-amescap.pdf2image">
 <span id="amescap-pdf2image"></span><h1><a class="reference internal" href="#module-amescap.pdf2image" title="amescap.pdf2image"><code class="xref py py-mod docutils literal notranslate"><span class="pre">amescap.pdf2image</span></code></a><a class="headerlink" href="#module-amescap.pdf2image" title="Link to this heading"></a></h1>
-<blockquote>
-<div><p>pdf2image is a light wrapper for the poppler-utils tools that can convert your
-PDFs into Pillow images.</p>
-</div></blockquote>
-<p>Reference:
-<a class="reference external" href="https://github.com/Belval/pdf2image">https://github.com/Belval/pdf2image</a></p>
+<p>pdf2image is a light wrapper for the poppler-utils tools that can
+convert PDFs into Pillow images.</p>
+<p>Reference: <a class="reference external" href="https://github.com/Belval/pdf2image">https://github.com/Belval/pdf2image</a></p>
+<dl class="simple">
+<dt>Third-party Requirements:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">io</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tempfile</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">re</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">os</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">subprocess</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PIL</span></code></p></li>
+</ul>
+</dd>
+</dl>
 <section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
 <section id="functions">
@@ -87,47 +97,56 @@ PDFs into Pillow images.</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#amescap.pdf2image.convert_from_path" title="amescap.pdf2image.convert_from_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convert_from_path</span></code></a>(pdf_path[, dpi, output_folder, ...])</p></td>
-<td><p>Description: Convert PDF to Image will throw whenever one of the condition is reached</p></td>
+<td><p>Convert PDF to Image will throw an error whenever one of the</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#amescap.pdf2image.convert_from_bytes" title="amescap.pdf2image.convert_from_bytes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convert_from_bytes</span></code></a>(pdf_file[, dpi, output_folder, ...])</p></td>
-<td><p>Description: Convert PDF to Image will throw whenever one of the condition is reached</p></td>
+<td><p>Convert PDF to Image will throw an error whenever one of the condition is reached</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.pdf2image.convert_from_path">
 <span class="sig-prename descclassname"><span class="pre">amescap.pdf2image.</span></span><span class="sig-name descname"><span class="pre">convert_from_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pdf_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ppm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thread_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">userpw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cropbox</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.pdf2image.convert_from_path" title="Link to this definition"></a></dt>
-<dd><p>Description: Convert PDF to Image will throw whenever one of the condition is reached
-Parameters:</p>
-<blockquote>
-<div><p>pdf_path -&gt; Path to the PDF that you want to convert
-dpi -&gt; Image quality in DPI (default 200)
-output_folder -&gt; Write the resulting images to a folder (instead of directly in memory)
-first_page -&gt; First page to process
-last_page -&gt; Last page to process before stopping
-fmt -&gt; Output image format
-thread_count -&gt; How many threads we are allowed to spawn for processing
-userpw -&gt; PDF’s password
-use_cropbox -&gt; Use cropbox instead of mediabox</p>
-</div></blockquote>
+<dd><p>Convert PDF to Image will throw an error whenever one of the
+conditions is reached.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pdf_path</strong> (<em>str</em>) – path to the PDF that you want to convert</p></li>
+<li><p><strong>dpi</strong> (<em>int</em>) – image quality in DPI (default 200)</p></li>
+<li><p><strong>output_folder</strong> (<em>str</em>) – folder to write the images to (instead of
+directly in memory)</p></li>
+<li><p><strong>first_page</strong> (<em>int</em>) – first page to process</p></li>
+<li><p><strong>last_page</strong> (<em>int</em>) – last page to process before stopping</p></li>
+<li><p><strong>fmt</strong> (<em>str</em>) – output image format</p></li>
+<li><p><strong>thread_count</strong> (<em>int</em>) – how many threads to spawn for processing</p></li>
+<li><p><strong>userpw</strong> (<em>str</em>) – PDF password</p></li>
+<li><p><strong>use_cropbox</strong> (<em>bool</em>) – use cropbox instead of mediabox</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="amescap.pdf2image.convert_from_bytes">
 <span class="sig-prename descclassname"><span class="pre">amescap.pdf2image.</span></span><span class="sig-name descname"><span class="pre">convert_from_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pdf_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ppm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thread_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">userpw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cropbox</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.pdf2image.convert_from_bytes" title="Link to this definition"></a></dt>
-<dd><p>Description: Convert PDF to Image will throw whenever one of the condition is reached
-Parameters:</p>
-<blockquote>
-<div><p>pdf_file -&gt; Bytes representing the PDF file
-dpi -&gt; Image quality in DPI
-output_folder -&gt; Write the resulting images to a folder (instead of directly in memory)
-first_page -&gt; First page to process
-last_page -&gt; Last page to process before stopping
-fmt -&gt; Output image format
-thread_count -&gt; How many threads we are allowed to spawn for processing
-userpw -&gt; PDF’s password
-use_cropbox -&gt; Use cropbox instead of mediabox</p>
-</div></blockquote>
+<dd><p>Convert PDF to Image will throw an error whenever one of the condition is reached</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pdf_file</strong> (<em>float</em>) – Bytes representing the PDF file</p></li>
+<li><p><strong>dpi</strong> (<em>int</em>) – image quality in DPI (default 200)</p></li>
+<li><p><strong>output_folder</strong> (<em>str</em>) – folder to write the images to (instead of
+directly in memory)</p></li>
+<li><p><strong>first_page</strong> (<em>int</em>) – first page to process</p></li>
+<li><p><strong>last_page</strong> (<em>int</em>) – last page to process before stopping</p></li>
+<li><p><strong>fmt</strong> (<em>str</em>) – output image format</p></li>
+<li><p><strong>thread_count</strong> (<em>int</em>) – how many threads to spawn for processing</p></li>
+<li><p><strong>userpw</strong> (<em>str</em>) – PDF password</p></li>
+<li><p><strong>use_cropbox</strong> (<em>bool</em>) – use cropbox instead of mediabox</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
