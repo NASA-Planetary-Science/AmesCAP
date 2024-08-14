@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MarsVars &mdash; AmesCAP 1.0 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=045299b1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -15,7 +17,7 @@
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../../_static/documentation_options.js?v=f2a433a1"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -74,6 +76,40 @@
              
   <section id="module-MarsVars">
 <span id="marsvars"></span><h1><a class="reference internal" href="#module-MarsVars" title="MarsVars"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsVars</span></code></a><a class="headerlink" href="#module-MarsVars" title="Link to this heading"></a></h1>
+<p>The MarsVars executable is for performing variable manipulations in
+existing files. Most often, it is used to derive and add variables to
+existing files, but it also differentiates variables with respect to
+(w.r.t) the Z axis, column-integrates variables, converts aerosol
+opacities from opacity per Pascal to opacity per meter, removes and
+extracts variables from files, and enables scaling variables or editing
+variable names, units, etc.</p>
+<dl class="simple">
+<dt>The executable requires:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[input_file]</span></code>          the file to be transformed</p></li>
+</ul>
+</dd>
+<dt>and optionally accepts:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[-add</span> <span class="pre">--add]</span></code>           derive and add variable to file</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-zdiff</span> <span class="pre">--zdiff]</span></code>       differentiate variable w.r.t. Z axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-col</span> <span class="pre">--col]</span></code>           column-integrate variable</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-zd</span> <span class="pre">--zonal_detrend]</span></code>  subtract zonal mean from variable</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-dp_to_dz</span> <span class="pre">--dp_to_dz]</span></code> convert aerosol opacity op/Pa -&gt; op/m</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-dz_to_dp</span> <span class="pre">--dz_to_dp]</span></code> convert aerosol opacity op/m -&gt; op/Pa</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-rm</span> <span class="pre">--remove]</span></code>         remove variable from file</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-extract</span> <span class="pre">--extract]</span></code>   copy variable to new file</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-edit</span> <span class="pre">--edit]</span></code>         edit variable attributes or scale it</p></li>
+</ul>
+</dd>
+<dt>Third-party Requirements:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">numpy</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">netCDF4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argparse</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">os</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">subprocess</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">matplotlib</span></code></p></li>
+</ul>
+</dd>
+</dl>
 <section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
 <section id="functions">
@@ -81,218 +117,580 @@
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_p_3D" title="MarsVars.compute_p_3D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_p_3D</span></code></a>(ps, ak, bk, shape_out)</p></td>
-<td><p>Return the 3D pressure field at the layer midpoint.</p></td>
+<td><p>Compute the 3D pressure at layer midpoints.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_rho" title="MarsVars.compute_rho"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_rho</span></code></a>(p_3D, temp)</p></td>
-<td><p>Returns density in [kg/m3].</p></td>
+<td><p>Compute density.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_xzTau" title="MarsVars.compute_xzTau"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_xzTau</span></code></a>(q, temp, lev, const, f_type)</p></td>
-<td><p>Returns dust or ice extinction in [km-1].</p></td>
+<td><p>Compute the dust or ice extinction rate.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_mmr" title="MarsVars.compute_mmr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_mmr</span></code></a>(xTau, temp, lev, const, f_type)</p></td>
-<td><p>Return dust or ice mixing ratio [kg/kg]</p></td>
+<td><p>Compute the dust or ice mixing ratio.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_Vg_sed" title="MarsVars.compute_Vg_sed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_Vg_sed</span></code></a>(xTau, nTau, temp)</p></td>
-<td><p>Returns the dust sedimentation rate.</p></td>
+<td><p>Calculate the sedimentation rate of the dust.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_w_net" title="MarsVars.compute_w_net"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_w_net</span></code></a>(Vg, wvar)</p></td>
-<td><p>Returns the net vertical wind (subtracts the sedimentation rate (Vg_sed)</p></td>
+<td><p>Computes the net vertical wind, which is the vertical wind (w)</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_theta" title="MarsVars.compute_theta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_theta</span></code></a>(p_3D, ps, temp, f_type)</p></td>
-<td><p>Returns the potential temperature in [K].</p></td>
+<td><p>Compute the potential temperature.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_zfull" title="MarsVars.compute_zfull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_zfull</span></code></a>(ps, ak, bk, temp)</p></td>
-<td><p>Returns the altitude of the layer midpoints AGL in [m].</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_w" title="MarsVars.compute_w"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_w</span></code></a>(rho, omega)</p></td>
+<td><p>Compute the vertical wind using the omega equation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_zhalf" title="MarsVars.compute_zhalf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_zhalf</span></code></a>(ps, ak, bk, temp)</p></td>
-<td><p>Returns the altitude of the layer interfaces AGL in [m]</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_zfull" title="MarsVars.compute_zfull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_zfull</span></code></a>(ps, ak, bk, temp)</p></td>
+<td><p>Calculate the altitude of the layer midpoints above ground level.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_DZ_full_pstd" title="MarsVars.compute_DZ_full_pstd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_DZ_full_pstd</span></code></a>(pstd, temp[, ftype])</p></td>
-<td><p>Returns the thickness of a layer (distance between two layers) from the</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_zhalf" title="MarsVars.compute_zhalf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_zhalf</span></code></a>(ps, ak, bk, temp)</p></td>
+<td><p>Calculate the altitude of the layer interfaces above ground level.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_N" title="MarsVars.compute_N"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_N</span></code></a>(theta, zfull)</p></td>
-<td><p>Returns the Brunt Vaisala freqency in [rad/s].</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_DZ_full_pstd" title="MarsVars.compute_DZ_full_pstd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_DZ_full_pstd</span></code></a>(pstd, temp[, ftype])</p></td>
+<td><p>Calculate the thickness of a layer from the midpoint of the</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_Tco2" title="MarsVars.compute_Tco2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_Tco2</span></code></a>(P_3D, temp)</p></td>
-<td><p>Returns the frost point of CO2 in [K].</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_N" title="MarsVars.compute_N"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_N</span></code></a>(theta, zfull)</p></td>
+<td><p>Calculate the Brunt Vaisala freqency.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_scorer" title="MarsVars.compute_scorer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_scorer</span></code></a>(N, ucomp, zfull)</p></td>
-<td><p>Returns the Scorer wavelength in [m].</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_Tco2" title="MarsVars.compute_Tco2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_Tco2</span></code></a>(P_3D)</p></td>
+<td><p>Calculate the frost point of CO2.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_DP_3D" title="MarsVars.compute_DP_3D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_DP_3D</span></code></a>(ps, ak, bk, shape_out)</p></td>
-<td><p>Returns the thickness of a layer in [Pa].</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_scorer" title="MarsVars.compute_scorer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_scorer</span></code></a>(N, ucomp, zfull)</p></td>
+<td><p>Calculate the Scorer wavelength.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_DZ_3D" title="MarsVars.compute_DZ_3D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_DZ_3D</span></code></a>(ps, ak, bk, temp, shape_out)</p></td>
-<td><p>Returns the layer thickness in [Pa].</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_DP_3D" title="MarsVars.compute_DP_3D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_DP_3D</span></code></a>(ps, ak, bk, shape_out)</p></td>
+<td><p>Calculate the thickness of a layer in pressure units.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_Ep" title="MarsVars.compute_Ep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_Ep</span></code></a>(temp)</p></td>
-<td><p>Returns the wave potential energy (Ep) in [J/kg].</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_DZ_3D" title="MarsVars.compute_DZ_3D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_DZ_3D</span></code></a>(ps, ak, bk, temp, shape_out)</p></td>
+<td><p>Calculate the thickness of a layer in altitude units.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_Ek" title="MarsVars.compute_Ek"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_Ek</span></code></a>(ucomp, vcomp)</p></td>
-<td><p>Returns the wave kinetic energy (Ek) in [J/kg].</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_Ep" title="MarsVars.compute_Ep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_Ep</span></code></a>(temp)</p></td>
+<td><p>Calculate wave potential energy:</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_MF" title="MarsVars.compute_MF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_MF</span></code></a>(UVcomp, w)</p></td>
-<td><p>Returns the zonal or meridional momentum fluxes (u'w' or v'w').</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_Ek" title="MarsVars.compute_Ek"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_Ek</span></code></a>(ucomp, vcomp)</p></td>
+<td><p>Calculate wave kinetic energ:</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_WMFF" title="MarsVars.compute_WMFF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_WMFF</span></code></a>(MF, rho, lev, interp_type)</p></td>
-<td><p>Returns the zonal or meridional wave-mean flow forcing</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#MarsVars.compute_MF" title="MarsVars.compute_MF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_MF</span></code></a>(UVcomp, w)</p></td>
+<td><p>Calculate zonal or meridional momentum fluxes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#MarsVars.compute_WMFF" title="MarsVars.compute_WMFF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_WMFF</span></code></a>(MF, rho, lev, interp_type)</p></td>
+<td><p>Calculate the zonal or meridional wave-mean flow forcing:</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_p_3D">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_p_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ak</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape_out</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_p_3D" title="Link to this definition"></a></dt>
-<dd><p>Return the 3D pressure field at the layer midpoint.
-<strong>* NOTE*</strong>
-The shape_out argument ensures that when time = 1 (one timestep), results are returned
-as (1, lev, lat, lon) not (lev, lat, lon)</p>
+<dd><p>Compute the 3D pressure at layer midpoints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ps</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Surface pressure (Pa)</p></li>
+<li><p><strong>ak</strong> (<em>array</em><em> [</em><em>phalf</em><em>]</em>) – Vertical coordinate pressure value (Pa)</p></li>
+<li><p><strong>bk</strong> (<em>array</em><em> [</em><em>phalf</em><em>]</em>) – Vertical coordinate sigma value (None)</p></li>
+<li><p><strong>shape_out</strong> (<em>float</em>) – Determines how to handle the dimensions of p_3D.
+If <code class="docutils literal notranslate"><span class="pre">len(time)</span> <span class="pre">=</span> <span class="pre">1</span></code> (one timestep), <code class="docutils literal notranslate"><span class="pre">p_3D</span></code> is returned as
+[1, lev, lat, lon] as opposed to [lev, lat, lon]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">p_3D</span></code> The full 3D pressure array (Pa)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_rho">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_rho</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_3D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_rho" title="Link to this definition"></a></dt>
-<dd><p>Returns density in [kg/m3].</p>
+<dd><p>Compute density.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p_3D</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Pressure (Pa)</p></li>
+<li><p><strong>temp</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Temperature (K)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Density (kg/m^3)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_xzTau">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_xzTau</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">const</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_xzTau" title="Link to this definition"></a></dt>
-<dd><p>Returns dust or ice extinction in [km-1].
-Adapted from Heavens et al. 2011, observations by MCS (JGR).</p>
+<dd><p>Compute the dust or ice extinction rate.
+Adapted from Heavens et al. (2011) observations from MCS (JGR).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Dust or ice mass mixing ratio (ppm)</p></li>
+<li><p><strong>temp</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Temperature (K)</p></li>
+<li><p><strong>lev</strong> (<em>array</em><em> [</em><em>lev</em><em>]</em>) – Vertical coordinate (e.g., pstd) (e.g., Pa)</p></li>
+<li><p><strong>const</strong> (<em>array</em>) – Dust or ice constant</p></li>
+<li><p><strong>f_type</strong> – The FV3 file type: diurn, daily, or average</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">xzTau</span></code> Dust or ice extinction rate (km-1)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_mmr">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_mmr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xTau</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">const</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_mmr" title="Link to this definition"></a></dt>
-<dd><p>Return dust or ice mixing ratio [kg/kg]
-Adapted from Heavens et al. 2011. observations by MCS (JGR)</p>
+<dd><p>Compute the dust or ice mixing ratio.
+Adapted from Heavens et al. (2011) observations from MCS (JGR).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xTau</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Dust or ice extinction rate (km-1)</p></li>
+<li><p><strong>temp</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Temperature (K)</p></li>
+<li><p><strong>lev</strong> (<em>array</em><em> [</em><em>lev</em><em>]</em>) – Vertical coordinate (e.g., pstd) (e.g., Pa)</p></li>
+<li><p><strong>const</strong> (<em>array</em>) – Dust or ice constant</p></li>
+<li><p><strong>f_type</strong> – The FV3 file type: diurn, daily, or average</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">q</span></code>, Dust or ice mass mixing ratio (ppm)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_Vg_sed">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_Vg_sed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xTau</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nTau</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_Vg_sed" title="Link to this definition"></a></dt>
-<dd><p>Returns the dust sedimentation rate.</p>
+<dd><p>Calculate the sedimentation rate of the dust.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xTau</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Dust or ice MASS mixing ratio (ppm)</p></li>
+<li><p><strong>nTau</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Dust or ice NUMBER mixing ratio (None)</p></li>
+<li><p><strong>temp</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Temperature (K)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">Vg</span></code> Dust sedimentation rate (m/s)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_w_net">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_w_net</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Vg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wvar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_w_net" title="Link to this definition"></a></dt>
-<dd><p>Returns the net vertical wind (subtracts the sedimentation rate (Vg_sed)
-from the vertical wind (w))
-w_net = w - Vg_sed</p>
+<dd><p>Computes the net vertical wind, which is the vertical wind (w)
+minus the sedimentation rate (<code class="docutils literal notranslate"><span class="pre">Vg_sed</span></code>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">w_net</span> <span class="o">=</span> <span class="n">w</span> <span class="o">-</span> <span class="n">Vg_sed</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Vg</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Dust sedimentation rate (m/s)</p></li>
+<li><p><strong>wvar</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Vertical wind (m/s)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>w_net</cite> Net vertical wind speed (m/s)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_theta">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_theta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_3D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_theta" title="Link to this definition"></a></dt>
-<dd><p>Returns the potential temperature in [K].</p>
+<dd><p>Compute the potential temperature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p_3D</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – The full 3D pressure array (Pa)</p></li>
+<li><p><strong>ps</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Surface pressure (Pa)</p></li>
+<li><p><strong>temp</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Temperature (K)</p></li>
+<li><p><strong>f_type</strong> (<em>str</em>) – The FV3 file type: diurn, daily, or average</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Potential temperature (K)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MarsVars.compute_w">
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_w</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_w" title="Link to this definition"></a></dt>
+<dd><p>Compute the vertical wind using the omega equation.</p>
+<p>Under hydrostatic balance, omega is proportional to the vertical
+wind velocity (<code class="docutils literal notranslate"><span class="pre">w</span></code>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">omega</span> <span class="o">=</span> <span class="n">dp</span><span class="o">/</span><span class="n">dt</span> <span class="o">=</span> <span class="p">(</span><span class="n">dp</span><span class="o">/</span><span class="n">dz</span><span class="p">)(</span><span class="n">dz</span><span class="o">/</span><span class="n">dt</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span><span class="n">dp</span><span class="o">/</span><span class="n">dz</span><span class="p">)</span> <span class="o">*</span> <span class="n">w</span>
+</pre></div>
+</div>
+<p>Under hydrostatic equilibrium:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dp</span><span class="o">/</span><span class="n">dz</span> <span class="o">=</span> <span class="o">-</span><span class="n">rho</span> <span class="o">*</span> <span class="n">g</span>
+</pre></div>
+</div>
+<p>So <code class="docutils literal notranslate"><span class="pre">omega</span></code> can be calculated as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">omega</span> <span class="o">=</span> <span class="o">-</span><span class="n">rho</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">w</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rho</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Atmospheric density (kg/m^3)</p></li>
+<li><p><strong>omega</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Rate of change in pressure at layer midpoint (Pa/s)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>vertical wind (m/s)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_zfull">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_zfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ak</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_zfull" title="Link to this definition"></a></dt>
-<dd><p>Returns the altitude of the layer midpoints AGL in [m].</p>
+<dd><p>Calculate the altitude of the layer midpoints above ground level.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ps</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Surface pressure (Pa)</p></li>
+<li><p><strong>ak</strong> (<em>array</em><em> [</em><em>phalf</em><em>]</em>) – Vertical coordinate pressure value (Pa)</p></li>
+<li><p><strong>bk</strong> (<em>array</em><em> [</em><em>phalf</em><em>]</em>) – Vertical coordinate sigma value (None)</p></li>
+<li><p><strong>temp</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Temperature (K)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">zfull</span></code> (m)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_zhalf">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_zhalf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ak</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_zhalf" title="Link to this definition"></a></dt>
-<dd><p>Returns the altitude of the layer interfaces AGL in [m]</p>
+<dd><p>Calculate the altitude of the layer interfaces above ground level.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ps</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Surface pressure (Pa)</p></li>
+<li><p><strong>ak</strong> (<em>array</em><em> [</em><em>phalf</em><em>]</em>) – Vertical coordinate pressure value (Pa)</p></li>
+<li><p><strong>bk</strong> (<em>array</em><em> [</em><em>phalf</em><em>]</em>) – Vertical coordinate sigma value (None)</p></li>
+<li><p><strong>temp</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Temperature (K)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">zhalf</span></code> (m)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_DZ_full_pstd">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_DZ_full_pstd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pstd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ftype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'average'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_DZ_full_pstd" title="Link to this definition"></a></dt>
-<dd><p>Returns the thickness of a layer (distance between two layers) from the
-midpoint of the standard pressure levels (‘pstd’).</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>pstd:   1D array of standard pressure in [Pa]
-temp:   3D array of temperature
-ftype: ‘daily’, ‘aveage’, or ‘diurn’</p>
-</dd>
-<dt>Returns:</dt><dd><p>DZ_full_pstd: 3D array of thicknesses</p>
-</dd>
-</dl>
-<p><strong>* NOTE*</strong>
-In this context, ‘pfull’ = ‘pstd’ with the layer interfaces defined somewhere
-in between successive layers.</p>
-<p>— Nk — TOP       ========  phalf
-— Nk-1 —</p>
-<blockquote>
-<div><dl>
-<dt>——–  pfull = pstd    ^</dt><dd><div class="line-block">
-<div class="line">DZ_full_pstd</div>
+<dd><p>Calculate the thickness of a layer from the midpoint of the
+standard pressure levels (<code class="docutils literal notranslate"><span class="pre">pstd</span></code>).</p>
+<p>In this context, <code class="docutils literal notranslate"><span class="pre">pfull=pstd</span></code> with the layer interfaces
+defined somewhere in between successive layers:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">---</span> <span class="n">Nk</span> <span class="o">---</span> <span class="n">TOP</span>       <span class="o">========</span>  <span class="n">phalf</span>
+<span class="o">---</span> <span class="n">Nk</span><span class="o">-</span><span class="mi">1</span> <span class="o">---</span>
+                     <span class="o">--------</span>  <span class="n">pfull</span> <span class="o">=</span> <span class="n">pstd</span>    <span class="o">^</span>
+                                               <span class="o">|</span> <span class="n">DZ_full_pstd</span>
+                     <span class="o">========</span>  <span class="n">phalf</span>           <span class="o">|</span>
+<span class="o">---</span> <span class="mi">1</span> <span class="o">---</span>            <span class="o">--------</span>  <span class="n">pfull</span> <span class="o">=</span> <span class="n">pstd</span>    <span class="n">v</span>
+<span class="o">---</span> <span class="mi">0</span> <span class="o">---</span> <span class="n">SFC</span>        <span class="o">========</span>  <span class="n">phalf</span>
+                      <span class="o">/</span> <span class="o">/</span> <span class="o">/</span> <span class="o">/</span>
+</pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pstd</strong> (<em>array</em><em> [</em><em>lev</em><em>]</em>) – Vertical coordinate (pstd; Pa)</p></li>
+<li><p><strong>temp</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Temperature (K)</p></li>
+<li><p><strong>f_type</strong> – The FV3 file type: diurn, daily, or average</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DZ_full_pstd, Layer thicknesses (Pa)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
 </dd>
 </dl>
-<p>========  phalf           |</p>
-</div></blockquote>
-<p>— 1 —            ——–  pfull = pstd    v
-— 0 — SFC        ========  phalf</p>
-<blockquote>
-<div><p>/ / / /</p>
-</div></blockquote>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_N">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_N</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zfull</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_N" title="Link to this definition"></a></dt>
-<dd><p>Returns the Brunt Vaisala freqency in [rad/s].</p>
+<dd><p>Calculate the Brunt Vaisala freqency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>theta</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Potential temperature (K)</p></li>
+<li><p><strong>zfull</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Altitude above ground level at the layer midpoint (m)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">N</span></code>, Brunt Vaisala freqency [rad/s]</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_Tco2">
-<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_Tco2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P_3D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_Tco2" title="Link to this definition"></a></dt>
-<dd><p>Returns the frost point of CO2 in [K].
-Adapted from Fannale, 1982. Mars: The regolith-atmosphere cap system and climate change. Icarus.</p>
+<span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_Tco2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P_3D</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_Tco2" title="Link to this definition"></a></dt>
+<dd><p>Calculate the frost point of CO2.
+Adapted from Fannale (1982) - Mars: The regolith-atmosphere cap
+system and climate change. Icarus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>P_3D</strong> – The full 3D pressure array (Pa)</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>CO2 frost point [K]</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_scorer">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_scorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ucomp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zfull</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_scorer" title="Link to this definition"></a></dt>
-<dd><p>Returns the Scorer wavelength in [m].</p>
+<dd><p>Calculate the Scorer wavelength.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> (<em>float</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Brunt Vaisala freqency (rad/s)</p></li>
+<li><p><strong>ucomp</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Zonal wind (m/s)</p></li>
+<li><p><strong>zfull</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Altitude above ground level at the layer midpoint (m)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">scorer_wl</span></code> Scorer horizontal wavelength (m)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_DP_3D">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_DP_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ak</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape_out</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_DP_3D" title="Link to this definition"></a></dt>
-<dd><p>Returns the thickness of a layer in [Pa].</p>
+<dd><p>Calculate the thickness of a layer in pressure units.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ps</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Surface pressure (Pa)</p></li>
+<li><p><strong>ak</strong> (<em>array</em><em> [</em><em>phalf</em><em>]</em>) – Vertical coordinate pressure value (Pa)</p></li>
+<li><p><strong>bk</strong> (<em>array</em><em> [</em><em>phalf</em><em>]</em>) – Vertical coordinate sigma value (None)</p></li>
+<li><p><strong>shape_out</strong> (<em>float</em>) – Determines how to handle the dimensions of DP_3D.
+If len(time) = 1 (one timestep), DP_3D is returned as
+[1, lev, lat, lon] as opposed to [lev, lat, lon]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">DP</span></code> Layer thickness in pressure units (Pa)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_DZ_3D">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_DZ_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ak</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape_out</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_DZ_3D" title="Link to this definition"></a></dt>
-<dd><p>Returns the layer thickness in [Pa].</p>
+<dd><p>Calculate the thickness of a layer in altitude units.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ps</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Surface pressure (Pa)</p></li>
+<li><p><strong>ak</strong> (<em>array</em><em> [</em><em>phalf</em><em>]</em>) – Vertical coordinate pressure value (Pa)</p></li>
+<li><p><strong>bk</strong> (<em>array</em><em> [</em><em>phalf</em><em>]</em>) – Vertical coordinate sigma value (None)</p></li>
+<li><p><strong>shape_out</strong> (<em>float</em>) – Determines how to handle the dimensions of DZ_3D.
+If len(time) = 1 (one timestep), DZ_3D is returned as
+[1, lev, lat, lon] as opposed to [lev, lat, lon]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">DZ</span></code> Layer thickness in altitude units (m)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_Ep">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_Ep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_Ep" title="Link to this definition"></a></dt>
-<dd><p>Returns the wave potential energy (Ep) in [J/kg].
-Ep = 1/2 (g/N)**2 (T’/T)**2</p>
+<dd><p>Calculate wave potential energy:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Ep</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="p">(</span><span class="n">g</span><span class="o">/</span><span class="n">N</span><span class="p">)</span><span class="o">^</span><span class="mi">2</span> <span class="p">(</span><span class="n">temp</span><span class="s1">&#39;/temp)^2</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>temp</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Temperature (K)</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">Ep</span></code> Wave potential energy (J/kg)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_Ek">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_Ek</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ucomp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vcomp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_Ek" title="Link to this definition"></a></dt>
-<dd><p>Returns the wave kinetic energy (Ek) in [J/kg].
-Ek= 1/2 (u’<a href="#id1"><span class="problematic" id="id2">**</span></a>2+v’<a href="#id3"><span class="problematic" id="id4">**</span></a>2)</p>
+<dd><p>Calculate wave kinetic energ:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Ek</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="p">(</span><span class="sa">u</span><span class="s1">&#39;**2+v&#39;</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ucomp</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Zonal wind (m/s)</p></li>
+<li><p><strong>vcomp</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Meridional wind (m/s)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">Ek</span></code> Wave kinetic energy (J/kg)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_MF">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_MF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UVcomp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_MF" title="Link to this definition"></a></dt>
-<dd><p>Returns the zonal or meridional momentum fluxes (u’w’ or v’w’).</p>
+<dd><p>Calculate zonal or meridional momentum fluxes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>UVcomp</strong> (<em>array</em>) – Zonal or meridional wind (ucomp or vcomp)(m/s)</p></li>
+<li><p><strong>w</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Vertical wind (m/s)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">u'w'</span></code> or <code class="docutils literal notranslate"><span class="pre">v'w'</span></code>, Zonal/meridional momentum flux (J/kg)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="MarsVars.compute_WMFF">
 <span class="sig-prename descclassname"><span class="pre">MarsVars.</span></span><span class="sig-name descname"><span class="pre">compute_WMFF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">MF</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MarsVars.compute_WMFF" title="Link to this definition"></a></dt>
-<dd><p>Returns the zonal or meridional wave-mean flow forcing
-ax= -1/rho d(rho u’w’)/dz in [m/s/s]
-ay= -1/rho d(rho v’w’)/dz in [m/s/s]</p>
-<dl class="simple">
-<dt>For ‘pstd’:</dt><dd><p>[du/dz = (du/dp).(dp/dz)] &gt; [du/dz = -rho g (du/dp)] with dp/dz = -rho g</p>
+<dd><p>Calculate the zonal or meridional wave-mean flow forcing:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ax</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">rho</span> <span class="n">d</span><span class="p">(</span><span class="n">rho</span> <span class="sa">u</span><span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">/</span><span class="n">dz</span>
+<span class="n">ay</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">rho</span> <span class="n">d</span><span class="p">(</span><span class="n">rho</span> <span class="n">v</span><span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">/</span><span class="n">dz</span>
+</pre></div>
+</div>
+<p>If interp_type == <code class="docutils literal notranslate"><span class="pre">pstd</span></code>, then:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">du</span><span class="o">/</span><span class="n">dz</span> <span class="o">=</span> <span class="p">(</span><span class="n">du</span><span class="o">/</span><span class="n">dp</span><span class="p">)</span><span class="o">.</span><span class="p">(</span><span class="n">dp</span><span class="o">/</span><span class="n">dz</span><span class="p">)]</span> <span class="o">&gt;</span> <span class="p">[</span><span class="n">du</span><span class="o">/</span><span class="n">dz</span> <span class="o">=</span> <span class="o">-</span><span class="n">rho</span><span class="o">*</span><span class="n">g</span> <span class="o">*</span> <span class="p">(</span><span class="n">du</span><span class="o">/</span><span class="n">dp</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>where:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dp</span><span class="o">/</span><span class="n">dz</span> <span class="o">=</span> <span class="o">-</span><span class="n">rho</span><span class="o">*</span><span class="n">g</span>
+<span class="p">[</span><span class="n">du</span><span class="o">/</span><span class="n">dz</span> <span class="o">=</span> <span class="p">(</span><span class="n">du</span><span class="o">/</span><span class="n">dp</span><span class="p">)</span><span class="o">.</span><span class="p">(</span><span class="o">-</span><span class="n">rho</span><span class="o">*</span><span class="n">g</span><span class="p">)]</span> <span class="o">&gt;</span> <span class="p">[</span><span class="n">du</span><span class="o">/</span><span class="n">dz</span> <span class="o">=</span> <span class="o">-</span><span class="n">rho</span><span class="o">*</span><span class="n">g</span> <span class="o">*</span> <span class="p">(</span><span class="n">du</span><span class="o">/</span><span class="n">dp</span><span class="p">)]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>MF</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Zonal/meridional momentum flux (J/kg)</p></li>
+<li><p><strong>rho</strong> (<em>array</em><em> [</em><em>time</em><em>, </em><em>lev</em><em>, </em><em>lat</em><em>, </em><em>lon</em><em>]</em>) – Atmospheric density (kg/m^3)</p></li>
+<li><p><strong>lev</strong> (<em>array</em><em> [</em><em>lev</em><em>]</em>) – Array for the vertical grid (zagl, zstd, pstd, or pfull)</p></li>
+<li><p><strong>interp_type</strong> (<em>str</em>) – The vertical grid type (<code class="docutils literal notranslate"><span class="pre">zagl</span></code>, <code class="docutils literal notranslate"><span class="pre">zstd</span></code>,
+<code class="docutils literal notranslate"><span class="pre">pstd</span></code>, or <code class="docutils literal notranslate"><span class="pre">pfull</span></code>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The zonal or meridional wave-mean flow forcing (m/s2)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array [time, lev, lat, lon]</p>
 </dd>
 </dl>
 </dd></dl>

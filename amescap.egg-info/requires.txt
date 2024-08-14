@@ -1,6 +1,6 @@
+requests
+netCDF4
 numpy
 matplotlib
-netCDF4
-requests
 scipy
 xarray
