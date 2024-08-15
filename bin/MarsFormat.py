@@ -91,10 +91,10 @@ def main():
         print("Processing...")
         # Load model variables, dimensions
         fNcdf = Dataset(fullnameIN, "r")
-        model = read_variable_dict_amescap_profile(fNcdf)
+        # model = read_variable_dict_amescap_profile(fNcdf)
         fNcdf.close()
-        print(f"{Cyan}Reading model attributes from ~.amescap_profile:\n"
-              f"{vars(model)}{Nclr}")
+        #print(f"{Cyan}Reading model attributes from ~.amescap_profile:\n"
+        #      f"{vars(model)}{Nclr}")
         # dataDIR = (f"{path}{filename}.nc")
         DS = xr.open_dataset(fullnameIN, decode_times=False)
 
@@ -118,13 +118,13 @@ def main():
                     var.attrs["long_name"] = var.attrs["description"] 
             
             # Reformat Dimension Variables/Coords as Needed
-            time = DS[model.time]/60/24
-            lat = DS[model.lat][0, :, 0]
-            lon2D = DS[model.lon][0, :]
+            time = DS["time"]/60/24
+            lat = DS["lat"][0, :, 0]
+            lon2D = DS["lon"][0, :]
             lon = np.squeeze(lon2D[0, :])
-            DS[model.lon] = lon
-            DS[model.lat] = lat
-            DS[model.time] = time
+            DS["lon"] = lon
+            DS["lat"] = lat
+            DS["time"] = time
             
             # Derive half and full reference pressure levels (Pa)
             pfull = DS.P_TOP[0] + DS.ZNU[0,:]*DS.P0 
@@ -142,27 +142,27 @@ def main():
             DS = DS.assign_coords(dimensions = "phalf")
 
             # Update Variable long_name
-            DS[model.lon].attrs["long_name"] = (
+            DS["lon"].attrs["long_name"] = (
                 "(MODIFIED POST-PROCESSING) "
-                + DS[model.lon].attrs["description"])
-            DS[model.lat].attrs["long_name"] = (
+                + DS["lon"].attrs["description"])
+            DS["lat"].attrs["long_name"] = (
                 "(MODIFIED POST-PROCESSING) "
-                + DS[model.lat].attrs["description"])
-            DS[model.time].attrs["long_name"] = (
+                + DS["lat"].attrs["description"])
+            DS["time"].attrs["long_name"] = (
                 "(MODIFIED POST-PROCESSING) days since simulation start "
                 "(time/60/24)")
             
             # Update Variable Description & Unit
-            DS[model.lon].attrs["description"] = (
+            DS["lon"].attrs["description"] = (
                 "(MODIFIED POST-PROCESSING) "
-                + DS[model.lon].attrs["description"])
-            DS[model.lat].attrs["description"] = (
+                + DS["lon"].attrs["description"])
+            DS["lat"].attrs["description"] = (
                 "(MODIFIED POST-PROCESSING) "
-                + DS[model.lat].attrs["description"])
-            DS[model.time].attrs["description"] = (
+                + DS["lat"].attrs["description"])
+            DS["time"].attrs["description"] = (
                 "(MODIFIED POST-PROCESSING) days since simulation start "
                 "(time/60/24)")
-            DS[model.time].attrs["units"] = (
+            DS["time"].attrs["units"] = (
                 "(MODIFIED POST-PROCESSING) days")
 
             # ==========================================================
@@ -199,7 +199,7 @@ def main():
                 # (time-invariant)
                 pfull3D = DS.P_TOP + DS.PB[0, :] 
             except NameError:
-                pfull3D = DS[model.ps][:, :-1, :-1] * DS.ZNU[:, :-1]
+                pfull3D = DS["ps"][:, :-1, :-1] * DS.ZNU[:, :-1]
 
             # ==========================================================
             # Derive atmospheric temperature [K]
@@ -350,12 +350,12 @@ def main():
             # Define Coordinates for New DataFrame
             #TODO this is added on to create ak/bk
             ref_press = 720
-            time = DS[model.dim_time] # Minutes since simulation start
-            lat = DS[model.dim_lat] # Replace DS.lat
-            lon = DS[model.dim_lon]
+            time = DS["dim_time"] # Minutes since simulation start
+            lat = DS["dim_lat"] # Replace DS.lat
+            lon = DS["dim_lon"]
 
             # Derive half and full reference pressure levels (Pa)
-            DS = DS.assign(pfull = DS[model.dim_pfull] * ref_press)
+            DS = DS.assign(pfull = DS["dim_pfull"] * ref_press)
             DS["pfull"].attrs["FIELDNAM"] = ("(MODIFIED IN POST-PROCESSING) " 
                                              + DS["pfull"].attrs["FIELDNAM"])
             DS["pfull"].attrs["long_name"] = ("(MODIFIED IN POST-PROCESSING) "
@@ -370,8 +370,8 @@ def main():
             # the array in the original openMars format with 
             # sigma[0] = 1, sigma[-1] = 0
             bk = layers_mid_point_to_boundary(
-                DS[model.dim_pfull][::-1], 1.)[::-1]
-            ak = np.zeros(len(DS[model.dim_pfull]) + 1)
+                DS["dim_pfull"][::-1], 1.)[::-1]
+            ak = np.zeros(len(DS["dim_pfull"]) + 1)
 
             DS["phalf"] = ak + ref_press*bk
             DS.phalf.attrs["long_name"] = (
@@ -380,9 +380,9 @@ def main():
                 "(ADDED POST-PROCESSING) pressure at layer interfaces")
             DS.phalf.attrs["units"] = "Pa"
             
-            DS = DS.assign(bk = (model.dim_phalf, np.array(bk)))
-            DS = DS.assign(ak = (model.dim_phalf, 
-                                 np.zeros(len(DS[model.dim_pfull]) + 1)))
+            DS = DS.assign(bk = ("dim_phalf", np.array(bk)))
+            DS = DS.assign(ak = ("dim_phalf", 
+                                 np.zeros(len(DS["dim_pfull"]) + 1)))
 
             # Update Variable Description & long_name
             DS["ak"].attrs["long_name"] = "(ADDED POST-PROCESSING)"
@@ -396,11 +396,11 @@ def main():
 
         # Check that vertical grid starts at TOA with highest level at 
         # surface
-        if DS[model.dim_pfull][0] != DS[model.dim_pfull].min(): 
+        if DS["dim_pfull"][0] != DS["dim_pfull"].min(): 
             # If TOA, lev = 0 = surface, flip dimensions
-            DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
+            DS = DS.isel(**{"dim_pfull": slice(None, None, -1)})
             # Also flip phalf, ak, & bk:
-            DS = DS.isel(**{model.dim_phalf: slice(None, None, -1)}) 
+            DS = DS.isel(**{"dim_phalf": slice(None, None, -1)}) 
             print(f"{Red}NOTE: all variables flipped along vertical "
                   f"dimension, so that the top of the atmosphere is now index "
                   f"0{Nclr}")
@@ -408,16 +408,16 @@ def main():
         # Reorder dimensions
         print(f"{Cyan}Transposing variable dimensions to match order expected "
               f"in CAP{Nclr}") 
-        DS = DS.transpose(model.dim_time, model.dim_pfull, 
-                          model.dim_lat, model.dim_lon, ...)
+        DS = DS.transpose("dim_time", "dim_pfull", 
+                          "dim_lat", "dim_lon", ...)
 
         # Change longitude from -180-179 -> 0-360
-        if min(DS[model.dim_lon]) < 0:      
-            tmp = np.array(DS[model.dim_lon])
+        if min(DS["dim_lon"]) < 0:      
+            tmp = np.array(DS["dim_lon"])
             tmp = np.where(tmp < 0, tmp + 360, tmp)
-            DS[model.dim_lon] = tmp
-            # DS = DS.assign_coords({model.dim_lon:(model.dim_lon, tmp, DS[model.dim_lon].attrs)})
-            DS = DS.sortby(model.dim_lon)
+            DS["dim_lon"] = tmp
+            # DS = DS.assign_coords({"dim_lon":("dim_lon", tmp, DS["dim_lon"].attrs)})
+            DS = DS.sortby("dim_lon")
             print(f"{Red}NOTE: Longitude changed to 0-360E and all variables "
                   f"appropriately reindexed{Nclr}")
 
@@ -427,11 +427,11 @@ def main():
         if "scalar_axis" not in inpt_dimlist:
             # Is scalar_axis is a dimension?
             scalar_axis = DS.assign_coords(scalar_axis = 1)
-        if DS[model.areo].dims != (model.time, scalar_axis):
-            DS[model.areo] = DS[model.areo].expand_dims("scalar_axis", axis=1)
-            DS[model.areo].attrs["long_name"] = (
+        if DS["areo"].dims != ("time", scalar_axis):
+            DS["areo"] = DS["areo"].expand_dims("scalar_axis", axis=1)
+            DS["areo"].attrs["long_name"] = (
                 "(scalar_axis ADDED POST-PROCESSING) " 
-                + DS[model.areo].attrs["long_name"]
+                + DS["areo"].attrs["long_name"]
                 )
             
             print(f"{Red}NOTE: scalar_axis dimension added to aero{Nclr}")
@@ -444,14 +444,14 @@ def main():
         fullnameOUT = f"{fullnameIN[:-3]}_atmos_average.nc"
 
         # Figure out number of timesteps there are in 5 sols
-        dt_in = DS[model.time][1] - DS[model.time][0]
+        dt_in = DS["time"][1] - DS["time"][0]
         iperday = int(np.round(1 / dt_in))
         combinedN = int(iperday * 5)
-        time = model.dim_time
+        time = "dim_time"
         
         # Coarsen the time dimension by a factor of 5 and average 
         # over each window
-        DS_average = DS.coarsen(**{model.dim_time: combinedN}).mean()
+        DS_average = DS.coarsen(**{"dim_time": combinedN}).mean()
 
         # Update the time dimension coordinate values to reflect the 
         # new time axis. Save the middle value of the time interval.
@@ -459,7 +459,7 @@ def main():
         # and jumping in groups of 5.
 
         # Update the time coordinate attribute
-        DS_average[model.time].attrs["long_name"] = "time averaged over 5 sols"
+        DS_average["time"].attrs["long_name"] = "time averaged over 5 sols"
 
         # Create new file
         DS_average.to_netcdf(fullnameOUT)
@@ -469,9 +469,9 @@ def main():
         fullnameOUT = f"{fullnameIN[:-3]}_atmos_diurn.nc"
 
         # Figure out number of timesteps there are in 5 sols
-        dt_in = DS[model.time][1] - DS[model.time][0]
+        dt_in = DS["time"][1] - DS["time"][0]
         iperday = int(np.round(1 / dt_in))
-        days = len(DS[model.time]) / iperday
+        days = len(DS["time"]) / iperday
 
         # Create a new time_of_day_XX dimension
         tod_name = f"time_of_day_{iperday:02d}"
@@ -479,7 +479,7 @@ def main():
         DS_diurn = DS.copy()
 
         # Get the time of day in hours
-        tod = np.mod(DS[model.time][0:iperday] * 24, 24).values
+        tod = np.mod(DS["time"][0:iperday] * 24, 24).values
         
         # Specify labels for new dimensions
         ind = pd.MultIndex.from_product((days,tod), names=("time", tod_name))
@@ -529,7 +529,7 @@ def main():
             )
 
         # Get the time of day in hours
-        tod = np.mod(DS[model.time][0:iperday]*24, 24).values
+        tod = np.mod(DS["time"][0:iperday]*24, 24).values
         print("tod=", tod)
 
         # Sort the time of day e.g. if TOD = [6, 12, 18, 0] re-arrange 
@@ -555,7 +555,7 @@ def main():
         print(DS_coarse["tsurf"][0, :, 0, 0])
 
         # Get the time of day in hours
-        tod = np.mod(DS[model.time][0:iperday]*24, 24).values
+        tod = np.mod(DS["time"][0:iperday]*24, 24).values
         DS_coarse.coords[tod_name] = (tod_name, tod)
 
         # Add time_of_day dim if time is a dim of the variable
@@ -584,7 +584,7 @@ def main():
 
         print(DS_diurn.tsurf[-1, :, 24, 48])
         # Get the time of day in hours
-        tod = np.mod(DS[model.time][0:iperday]*24, 24).values
+        tod = np.mod(DS["time"][0:iperday]*24, 24).values
         print("tod=", tod)
 
         # Sort the time of day e.g. if TOD = [6, 12, 18, 0] re-arrange 
@@ -605,11 +605,11 @@ def main():
         # Coarsen to a 5-sol resolution
         # combinedN = number of 5-sol groups in file
         combinedN = int(iperday * 5) 
-        time = model.dim_time
+        time = "dim_time"
         
         # Coarsen the time dimension by a factor of 5 and average 
         # over each window
-        DS_diurnave = DS_diurn.coarsen(**{model.dim_time: combinedN}).mean()
+        DS_diurnave = DS_diurn.coarsen(**{"dim_time": combinedN}).mean()
 
         # Update the time dimension's coordinate values to reflect the 
         # new time axis. Save the middle value of the time interval. 
@@ -617,7 +617,7 @@ def main():
         # and jumping in groups of 5
 
         # Update the time coordinate attribute
-        DS_diurnave[model.time].attrs["long_name"] = (
+        DS_diurnave["time"].attrs["long_name"] = (
             "time averaged over 5 sols")
 
         print(DS_diurnave)
@@ -638,7 +638,7 @@ def bin_average(fullnameIN, model):
     var_list = filter_vars(fdaily)
 
     # print(fdaily.dimensions) 
-    time_in = fdaily.variables[model.time][:]
+    time_in = fdaily.variables["time"][:]
     Nin = len(time_in)
     dt_in = time_in[1] - time_in[0]
     iperday = int(np.round(1 / dt_in))
@@ -671,7 +671,7 @@ def bin_average(fullnameIN, model):
     for ivar in var_list:
         varNcf = fdaily.variables[ivar]
         # print(ivar, varNcf.dimensions)
-        if model.time in varNcf.dimensions:
+        if "time" in varNcf.dimensions:
             print(f"{Cyan}Processing: {ivar}...{Nclr}")
             var_out = daily_to_average(varNcf[:], dt_in, nday)
             longname_txt, units_txt = get_longname_units(fdaily, ivar)

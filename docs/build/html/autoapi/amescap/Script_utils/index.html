@@ -1,15 +1,13 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="../../../">
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>amescap.Script_utils &mdash; AmesCAP 1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=045299b1" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
-
-  
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -17,7 +15,7 @@
         <script src="../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../../../_static/documentation_options.js?v=f2a433a1"></script>
-        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
         <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -47,6 +45,12 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../MarsPull/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPull</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MarsFormat/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsFormat</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MarsFiles/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsFiles</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MarsVars/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsVars</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MarsInterp/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsInterp</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MarsPlot/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsPlot</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../MarsCalendar/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">MarsCalendar</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples &amp; Use Cases</a></li>
 </ul>
 
@@ -170,10 +174,7 @@ imported as a module:</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#amescap.Script_utils.ak_bk_loader" title="amescap.Script_utils.ak_bk_loader"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ak_bk_loader</span></code></a>(fNcdf)</p></td>
 <td><p>Return <code class="docutils literal notranslate"><span class="pre">ak</span></code> and <code class="docutils literal notranslate"><span class="pre">bk</span></code> arrays from the current netCDF file. If</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="amescap.Script_utils.read_variable_dict_amescap_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_variable_dict_amescap_profile</span></code></a>([f_Ncdf])</p></td>
-<td><p>Inspect a Netcdf file and return the name of the variables and dimensions based on the content of ~/.amescap_profile.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id0" title="amescap.Script_utils.read_variable_dict_amescap_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_variable_dict_amescap_profile</span></code></a>([f_Ncdf])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amescap.Script_utils.read_variable_dict_amescap_profile" title="amescap.Script_utils.read_variable_dict_amescap_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_variable_dict_amescap_profile</span></code></a>([f_Ncdf])</p></td>
 <td><p>Inspect a Netcdf file and return the name of the variables and dimensions based on the content of ~/.amescap_profile.</p></td>
 </tr>
 </tbody>
@@ -557,7 +558,7 @@ avoid an error.</p>
 <p>Some functions in MarsVars edit the units</p>
 </div>
 <p>(e.g., [kg] -&gt; [kg/m]), therefore the empty string is 4 characters
-in length (”    “ instead of “”) to allow for editing by
+in length (”    ” instead of “”) to allow for editing by
 <code class="docutils literal notranslate"><span class="pre">editing</span> <span class="pre">units_txt[:-2]</span></code>, for example.</p>
 </dd></dl>
 
@@ -663,13 +664,13 @@ operates on a pressure interpolated (<code class="docutils literal notranslate">
 <span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">read_variable_dict_amescap_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f_Ncdf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amescap.Script_utils.read_variable_dict_amescap_profile" title="Link to this definition"></a></dt>
 <dd><p>Inspect a Netcdf file and return the name of the variables and dimensions based on the content of ~/.amescap_profile.
 Calling this function allows to remove hard-coded calls in CAP.
-For example, to f.variables[‘ucomp’] is replaced by f.variables[model.ucomp], with model.ucomp taking the values of’ucomp’, ‘U’
+For example, to f.variables[‘ucomp’] is replaced by f.variables[“ucomp”], with “ucomp” taking the values of’ucomp’, ‘U’
 Args:</p>
 <blockquote>
 <div><p>f_Ncdf: An opened Netcdf file object</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>model: a dictionary with the dimensions and variables, e.g. model.ucomp=’U’ or model.dim_lat=’latitudes’</p>
+<dt>Returns:</dt><dd><p>model: a dictionary with the dimensions and variables, e.g. “ucomp”=’U’ or “dim_lat”=’latitudes’</p>
 </dd>
 </dl>
 <p><strong>*NOTE*</strong>
@@ -677,29 +678,7 @@ The defaut names for variables are defined in () parenthesis in  ~/.amescap_prof
 ‘X direction wind        [m/s]                   (ucomp)&gt;’</p>
 <p>The defaut names for dimensions are defined in {} parenthesis in  ~/.amescap_profile :
 Ncdf Y latitude dimension    [integer]          {lat}&gt;lats</p>
-<p>The dimensions (lon,lat,pfull,pstd) are loaded in the dictionary as model.dim_lon, model.dim_lat</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-prename descclassname"><span class="pre">amescap.Script_utils.</span></span><span class="sig-name descname"><span class="pre">read_variable_dict_amescap_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f_Ncdf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
-<dd><p>Inspect a Netcdf file and return the name of the variables and dimensions based on the content of ~/.amescap_profile.
-Calling this function allows to remove hard-coded calls in CAP.
-For example, to f.variables[‘ucomp’] is replaced by f.variables[model.ucomp], with model.ucomp taking the values of’ucomp’, ‘U’
-Args:</p>
-<blockquote>
-<div><p>f_Ncdf: An opened Netcdf file object</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>model: a dictionary with the dimensions and variables, e.g. model.ucomp=’U’ or model.dim_lat=’latitudes’</p>
-</dd>
-</dl>
-<p><strong>*NOTE*</strong>
-The defaut names for variables are defined in () parenthesis in  ~/.amescap_profile :
-‘X direction wind        [m/s]                   (ucomp)&gt;’</p>
-<p>The defaut names for dimensions are defined in {} parenthesis in  ~/.amescap_profile :
-Ncdf Y latitude dimension    [integer]          {lat}&gt;lats</p>
-<p>The dimensions (lon,lat,pfull,pstd) are loaded in the dictionary as model.dim_lon, model.dim_lat</p>
+<p>The dimensions (lon,lat,pfull,pstd) are loaded in the dictionary as “dim_lon”, “dim_lat”</p>
 </dd></dl>
 
 </section>
