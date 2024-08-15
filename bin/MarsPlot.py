@@ -190,6 +190,7 @@ parser.add_argument("-dir", "--directory", default=os.getcwd(),
 parser.add_argument("--debug", action="store_true",
     help=(f"Debug flag: do not bypass errors.\n\n"))
 
+
 # ======================================================================
 #                           MAIN PROGRAM
 # ======================================================================
@@ -244,15 +245,13 @@ def main():
                   Fig_1D("atmos_average.temp", False)]
 
     # Group together the first two figures
-    objectList[0].subID = 1
-    # 1st object in a 2-panel figure
+    objectList[0].subID = 1 # 1st object in a 2-panel figure
     objectList[0].nPan = 2
-    objectList[1].subID = 2
-    # 2nd object in a 2-panel figure
+    objectList[1].subID = 2 # 2nd object in a 2-panel figure
     objectList[1].nPan = 2
 
     if parser.parse_args().inspect_file:
-        # [-i --inspect] argument: Inspect content of a netcdf file
+        # --inspect arg: Inspect content of a netcdf file
         # NAS-specific, check if the file is on tape (Lou only)
         check_file_tape(parser.parse_args().inspect_file, abort = False)
         if parser.parse_args().dump:
@@ -268,11 +267,11 @@ def main():
             print_fileContent(parser.parse_args().inspect_file)
 
     elif parser.parse_args().template or parser.parse_args().temp:
-        # [-template --template] argument: Generate a template file
+        # [-template --template] arg: Generate a template file
         make_template()
 
     else:
-        # [Custom.in] argument: generate plots from a Custom.in template
+        # [Custom.in] arg: generate plots from a Custom.in template
         if parser.parse_args().custom_file:
             # Case A: Use local Custom.in (most common option)
             print(f"Reading {parser.parse_args().custom_file.name}")
@@ -284,7 +283,7 @@ def main():
             namelist_parser(path_to_template(parser.parse_args().do))
 
         if parser.parse_args().date:
-            # If optional [-d --date] argument provided, use files
+            # If optional [-d --date] arg provided, use files
             # matching requested date(s)
             try:
                 # Confirm that the input date type is float
@@ -294,7 +293,7 @@ def main():
                       f"Custom.in -d XXXX [YYYY] -o out``{Nclr}")
                 exit()
         else:
-            # If no optional [-d --date] argument is provided, default
+            # If no optional [-d --date] arg is provided, default
             # to the date of the most recent fixed file in the directory
             bound = get_Ncdf_num()
             if bound is not None:
@@ -364,7 +363,7 @@ def main():
             try:
                 # Identify the name of the template file
                 if parser.parse_args().do:
-                    # If the template file is NOT named Custom.in,
+                    # If the template file is NOT Custom.in,
                     # extract the prefix for the PDF name:
                     # e.g., plots.in -> extract "plots" -> plots.pdf
                     basename = parser.parse_args().do[0]
@@ -422,8 +421,7 @@ def main():
                 # If successful, execute the command
                 subprocess.call(cmd_txt, shell = True, stdout = fdump, 
                                 stderr = fdump)
-                # Delete the individual figures the multipage PDF was
-                # created from
+                # Delete the individual figures
                 cmd_txt = (f"rm -f {all_fig}")
                 subprocess.call(cmd_txt, shell = True, stdout = fdump,
                                 stderr = fdump)
@@ -468,6 +466,8 @@ lon_coord_type = eval("np.array(lon_coordinate)")
 # Default FALSE = exclude NaNs (use np.nanmean).
 # Alternative TRUE = include NaNs (use np.mean).
 include_NaNs = eval("np.array(show_NaN_in_slice)")
+
+
 def mean_func(arr, axis):
     """
     This function calculates a mean over the selected axis, ignoring or
@@ -485,6 +485,8 @@ def mean_func(arr, axis):
         return np.mean(arr, axis = axis)
     else:
         return np.nanmean(arr, axis = axis)
+    
+    
 def shift_data(lon, data):
     """
     Shifts the longitude data from 0-360 to -180/180 and vice versa.
@@ -519,6 +521,8 @@ def shift_data(lon, data):
     if data.shape[0] == 1:
         data = np.squeeze(data)
     return lon_out, data
+
+
 def MY_func(Ls_cont):
     """
     Returns the Mars Year
@@ -529,6 +533,7 @@ def MY_func(Ls_cont):
     :rtype: int
     """
     return (Ls_cont)//(360.)+1
+
 
 def get_lon_index(lon_query_180, lons):
     """
@@ -560,8 +565,8 @@ def get_lon_index(lon_query_180, lons):
         # ========================================
         if lon_query_180.size == 1:
             # If one longitude is provided
-            # Request zonal average
             if lon_query_180 == -99999:
+                # Request zonal average
                 loni = np.arange(0, Nlon)
                 txt_lon = ", zonal avg"
             else:
@@ -575,8 +580,6 @@ def get_lon_index(lon_query_180, lons):
             lon_query_360 = lon180_to_360(lon_query_180)
             loni_bounds = np.array([np.argmin(np.abs(lon_query_360[0]-lons)),
                                     np.argmin(np.abs(lon_query_360[1]-lons))])
-            # if loni_bounds[0] > loni_bounds[1]:
-            #   loni_bounds = np.flipud(loni_bounds)
             # lon should be increasing for extraction # TODO
             # Normal case (e.g., -45°W > 45°E)
             if loni_bounds[0] < loni_bounds[1]:
@@ -589,8 +592,6 @@ def get_lon_index(lon_query_180, lons):
             
             lon_bounds_180 = lon360_to_180([lons[loni_bounds[0]],
                                             lons[loni_bounds[1]]])
-            # if lon_bounds_180[0] > lon_bounds_180[1]:
-            #   lon_bounds_180 = np.flipud(lon_bounds_180)
             # lon should be also increasing for display
             txt_lon = (f", lon=avg[{lon_bounds_180[0]:.1f}"
                        f"<->{lon_bounds_180[1]:.1f}]")
@@ -623,6 +624,7 @@ def get_lon_index(lon_query_180, lons):
             txt_lon = (f", lon=avg[{lons[loni_bounds[0]]:.1f}"
                        f"<->{lons[loni_bounds[1]]:.1f}]")
     return loni, txt_lon
+
 
 def get_lat_index(lat_query, lats):
     """
@@ -665,6 +667,8 @@ def get_lat_index(lat_query, lats):
         lati = np.arange(lat_bounds[0], lat_bounds[1]+1)
         txt_lat = f", lat=avg[{lats[lati[0]]:g}<->{lats[lati[-1]]:g}]"
     return lati, txt_lat
+
+
 def get_tod_index(tod_query, tods):
     """
     Returns the indices that will extract data from the netCDF file
@@ -714,6 +718,8 @@ def get_tod_index(tod_query, tods):
         txt_tmp2 = UT_LTtxt(tods[todi[-1]]/24., lon_180 = 0., roundmin = 1)
         txt_tod = f", tod=avg[{txt_tmp}<->{txt_tmp2}]"
     return todi, txt_tod
+
+
 def get_level_index(level_query, levs):
     """
     Returns the indices that will extract data from the netCDF file
@@ -751,7 +757,6 @@ def get_level_index(level_query, levs):
                 # # None (i.e.surface was requested)
                 txt_level = ", at sfc"
             else:
-                #txt_level=", lev=%g Pa"%(levs[levi])
                 txt_level = f", lev={levs[levi]:1.2e} Pa/m"
     elif level_query.size == 2:
         # Bounds are provided
@@ -768,6 +773,7 @@ def get_level_index(level_query, levs):
         txt_level = (f", lev=avg[{lev_bounds[0]:1.2e}"
                      f"<->{lev_bounds[1]:1.2e}] Pa/m")
     return levi, txt_level
+
 
 def get_time_index(Ls_query_360, LsDay):
     """
@@ -883,7 +889,6 @@ def filter_input(txt, typeIn="char"):
         answ = []
         for i in range(0, len(txt.split(","))):
             # For a char, read all text as one
-            #if typeIn=="char": answ.append(txt.split(",")[i].strip())
             if typeIn == "char":
                 answ = txt
             if typeIn == "float":
@@ -913,6 +918,7 @@ def filter_input(txt, typeIn="char"):
                 # True if text matches
                 answ = int(txt)
         return answ
+
 
 def rT(typeIn="char"):
     """
@@ -945,6 +951,7 @@ def rT(typeIn="char"):
                 record = True
         txt = current_varfull.strip()
     return filter_input(txt, typeIn)
+
 
 def read_axis_options(axis_options_txt):
     """
@@ -1006,6 +1013,7 @@ def read_axis_options(axis_options_txt):
             custom_line3 = None
     return Xaxis, Yaxis, custom_line1, custom_line2, custom_line3
 
+
 def split_varfull(varfull):
     """
     Split ``varfull`` object into its component parts
@@ -1051,6 +1059,7 @@ def split_varfull(varfull):
         filetype = filetypeID
     return sol_array, filetype, var, simuID
 
+
 def remove_whitespace(raw_input):
     """
     Remove whitespace inside an expression.
@@ -1071,6 +1080,7 @@ def remove_whitespace(raw_input):
             processed_input += raw_input[i]
     return processed_input
 
+
 def clean_comma_whitespace(raw_input):
     """
     Remove commas and whitespaces inside an expression.
@@ -1087,6 +1097,7 @@ def clean_comma_whitespace(raw_input):
         if raw_input[i] != ",":
             processed_input += raw_input[i]
     return remove_whitespace(processed_input)
+
 
 def get_list_varfull(raw_input):
     """
@@ -1112,6 +1123,7 @@ def get_list_varfull(raw_input):
         if raw_input[i] == "[":
             record = True
     return var_list
+
 
 def get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2):
     """
@@ -1206,6 +1218,7 @@ def get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2):
     # (e.g., numpy.array([3.]) or numpy.array([4., 5.]))
     return varfull_no_bracket, fdim_out1, fdim_out2, ftod_out
 
+
 def get_overwrite_dim_1D(varfull_bracket, t_in, lat_in, lon_in, lev_in,
                          ftod_in):
     """
@@ -1274,12 +1287,14 @@ def get_overwrite_dim_1D(varfull_bracket, t_in, lat_in, lon_in, lev_in,
     # (e.g., numpy.array([3.]) or numpy.array([4.,5.]))
     return varfull_no_bracket, t_out, lat_out, lon_out, lev_out, ftod_out
 
+
 def create_exec(raw_input, varfull_list):
     expression_exec = raw_input
     for i in range(0, len(varfull_list)):
         swap_txt = f"[{varfull_list[i]}]"
         expression_exec = expression_exec.replace(swap_txt, f"VAR[{i:0}]")
     return expression_exec
+
 
 def fig_layout(subID, nPan, vertical_page=False):
     """
@@ -1339,6 +1354,8 @@ def fig_layout(subID, nPan, vertical_page=False):
     out[2] = subID
 
     return out
+
+
 def make_template():
     """
     Generate the ``Custom.in`` template file.
@@ -1390,21 +1407,21 @@ def make_template():
         customFileIN.write("# ========================================= FREE DIMENSIONS =========================================\n")
         customFileIN.write("# Dimensions can be ``time``, ``lev``, ``lat``, ``lon``, or ``tod``.\n")
         customFileIN.write("# Dimensions default to None when a value or range is not specified. None corresponds to: \n")
-        customFileIN.write("#    time  =  -1      The last (most recent) timestep (Nt).\n")
-        customFileIN.write("#    lev   =  sfc     Nz for *.nc files, 0 for *_pstd.nc files.\n")
-        customFileIN.write("#    lat   =  0       Equator\n")
-        customFileIN.write("#    lon   =  ``all``   Zonal average over all longitudes\n")
-        customFileIN.write("#    tod   =  ``15``    3 PM UT \n")
+        customFileIN.write("#    time = -1      The last (most recent) timestep (Nt).\n")
+        customFileIN.write("#    lev  = sfc     Nz for *.nc files, 0 for *_pstd.nc files.\n")
+        customFileIN.write("#    lat  = 0       Equator\n")
+        customFileIN.write("#    lon  = ``all``   Zonal average over all longitudes\n")
+        customFileIN.write("#    tod  = ``15``    3 PM UT \n")
         customFileIN.write("# Setting a dimension equal to a number finds the value closest to that number. \n")
         customFileIN.write("# Setting a dimension equal to ``all`` averages the dimension over all values. \n")
         customFileIN.write("# Setting a dimension equal to a range averages the dimension over the values in the range. \n")
         customFileIN.write("# You can also overwrite a dimension in the Main Variable input using curvy brackets ``{}`` and the\n")
         customFileIN.write("#    dimension name. Separate the arguments with semi-colons ``;`` \n")
-        customFileIN.write("#        e.g., Main Variable  = atmos_average.temp{ls = 90; lev= 5.,10; lon= all; lat=45} \n")
+        customFileIN.write("#        e.g., Main Variable = atmos_average.temp{ls = 90; lev= 5.,10; lon= all; lat=45} \n")
         customFileIN.write("#    Values must correspond to the units of the variable in the file: \n")
         customFileIN.write("#        time [Ls], lev [Pa/m], lon [+/-180°], and lat [°]. \n")
         customFileIN.write("# * You can only select a time of day (tod) in diurn files using this syntax: \n")
-        customFileIN.write("#        e.g., Main Variable  = atmos_diurn.ps{tod = 20} \n")
+        customFileIN.write("#        e.g., Main Variable = atmos_diurn.ps{tod = 20} \n")
         customFileIN.write("# You can also specify the fontsize in Title using curvy brackets and ``size``:\n")
         customFileIN.write("#        e.g., Title = Temperature [K] {size = 20}.\n")
         customFileIN.write("# \n")
@@ -1463,6 +1480,8 @@ def make_template():
     # completion message
     give_permission(newname)
     print(f"{newname} was created")
+    
+    
 def give_permission(filename):
     """
     Sets group permissions for files created on NAS.
@@ -1480,6 +1499,7 @@ def give_permission(filename):
         subprocess.call(cmd_txt, shell = True)
     except subprocess.CalledProcessError:
         pass
+
 
 def namelist_parser(Custom_file):
     """
@@ -1640,30 +1660,6 @@ def namelist_parser(Custom_file):
                     addLineList.append(0)
                     # Reset line counter
                     addedLines = 0
-                    
-                # #Debug only
-                # for ii in range(0, len(subplotList)):
-                #    print(f"{Cyan}[X, {subplotList[ii]}, {panelList[ii]},
-                #          {addLineList[ii]}]")
-
-                # # Deprecated - an old way to attribute the plot numbers
-                # # without using ``npage``
-                # if holding:
-                #     subplotList.append(subplotID - addedLines)
-                #     panelList.append(subplotID - addedLines)
-                #     if not addLine:
-                #         # Add 1 to the number of panels for the previous
-                #         # plots
-                #         n = 1
-                #         while n <= subplotID - 1:
-                #             panelList[nobj - n - 1] += 1
-                #             #print(f"editing {subplotID-1} panels, "
-                #             #      f"now {nobj-n-1}")
-                #             n += 1
-                #     subplotID += 1
-                # else:
-                #     panelList.append(1)
-                #     subplotList.append(1)
 
             # Reset after reading each block
             addLine = False
@@ -1689,10 +1685,8 @@ def namelist_parser(Custom_file):
         objectList[i].nPan = panelList[i]
         objectList[i].addLine = addLineList[i]
         objectList[i].layout = layoutList[i]
-        # Debug only
-        # print(f"{Purple}{i}:[{objectList[i].subID},{objectList[i].nPan},"
-        #       f"{objectList[i].addLine}]{Nclr}")
     customFileIN.close()
+
 
 def get_figure_header(line_txt):
     """
@@ -1714,6 +1708,7 @@ def get_figure_header(line_txt):
     # Return True
     boolPlot = line_cmd.split("=")[1].strip() == "True"
     return figtype, boolPlot
+
 
 def format_lon_lat(lon_lat, type):
     """
@@ -1763,10 +1758,8 @@ def get_Ncdf_num():
     Ncdf_num = np.sort(np.asarray(list_num).astype(float))
     if Ncdf_num.size == 0:
         Ncdf_num = None
-    #    print(f"No fixed detected in {input_paths[0]}"")
-    #    # Exit cleanly
-    #    raise SystemExit
     return Ncdf_num
+
 
 def select_range(Ncdf_num, bound):
     """
@@ -1797,6 +1790,7 @@ def select_range(Ncdf_num, bound):
             exit()
     return Ncdf_num
 
+
 def create_name(root_name):
     """
     Modify file name if a file with that name already exists.
@@ -1823,6 +1817,7 @@ def create_name(root_name):
         n = n + 1
         new_name = f"{root_name[0:-(len_ext + 1)]}_{n:02}.{ext}"
     return new_name
+
 
 def path_to_template(custom_name):
     """
@@ -1860,6 +1855,7 @@ def path_to_template(custom_name):
             return f"{shared_dir}/{custom_name}"
     else:
         return f"{local_dir}/{custom_name}"
+    
 
 def progress(k, Nmax, txt="", success=True):
     """
@@ -1885,6 +1881,7 @@ def progress(k, Nmax, txt="", success=True):
     sys.stdout.write(text)
     if not debug:
         sys.stdout.flush()
+
 
 def prep_file(var_name, file_type, simuID, sol_array):
     """
@@ -2018,6 +2015,7 @@ class Fig_2D(object):
         self.axis_opt1 = "jet"
         self.axis_opt2 = "lin" # Linear or logscale
         self.axis_opt3 = None  # Place holder for projection type
+        
 
     def make_template(self, plot_txt, fdim1_txt, fdim2_txt, Xaxis_txt,
                       Yaxis_txt):
@@ -2041,6 +2039,7 @@ class Fig_2D(object):
                 f"Axis Options  : {Xaxis_txt} = [None,None] | {Yaxis_txt} = "
                 f"[None,None] | cmap = jet |scale = lin \n")
 
+
     def read_template(self):
         self.title = rT("char")  # 1
         self.varfull= rT("char")  # 2
@@ -2060,6 +2059,7 @@ class Fig_2D(object):
             print(f"{Yellow}*** Warning *** In plot {self.varfull}, Cmin, "
                   f"Cmax must be two values. Resetting to default{Nclr}")
             self.range = None
+            
 
     def data_loader_2D(self, varfull, plot_type):
         if not "[" in varfull:
@@ -2125,6 +2125,7 @@ class Fig_2D(object):
             var = eval(expression_exec)
 
         return xdata, ydata, var, var_info
+
 
     def read_NCDF_2D(self, var_name, file_type, simuID, sol_array, plot_type,
                      fdim1, fdim2, ftod):
@@ -2227,7 +2228,7 @@ class Fig_2D(object):
                         var_info)
 
         # ====== [time, lev, lat, lon] =======
-        if (dim_info   == ("time", "pfull", "lat", "lon")
+        if (dim_info == ("time", "pfull", "lat", "lon")
            or dim_info == ("time", "level", "lat", "lon")
            or dim_info == ("time", "pstd",  "lat", "lon")
            or dim_info == ("time", "zstd",  "lat", "lon")
@@ -2248,15 +2249,15 @@ class Fig_2D(object):
             if var_thin == True:
                 levs = f.variables[dim_info[0]][:]
                 # dim_info[0] = zgrid
-                zi   = np.arange(0, len(levs))
+                zi = np.arange(0, len(levs))
             elif var_thin == False:
                 # dim_info[1] is either pfull, level, pstd,
                 # zstd, zagl, or zgrid
                 levs = f.variables[dim_info[1]][:]
-                zi   = np.arange(0, len(levs))
-                t    = f.variables["time"][:]
-                LsDay   = np.squeeze(f.variables["areo"][:])
-                ti   = np.arange(0, len(t))
+                zi = np.arange(0, len(levs))
+                t = f.variables["time"][:]
+                LsDay = np.squeeze(f.variables["areo"][:])
+                ti = np.arange(0, len(t))
                 # For diurn file, change time_of_day[time, 24, 1] to
                 # time_of_day[time] at midnight UT
                 if f_type == "diurn" and len(LsDay.shape) > 1:
@@ -2278,52 +2279,52 @@ class Fig_2D(object):
                         self.fdim_txt += temp_txt
 
             if plot_type == "2D_time_lat":
-                loni, temp_txt  = get_lon_index(fdim1, lon)
+                loni, temp_txt = get_lon_index(fdim1, lon)
                 if add_fdim:
                     self.fdim_txt += temp_txt
-                zi, temp_txt    = get_level_index(fdim2, levs)
+                zi, temp_txt = get_level_index(fdim2, levs)
                 if add_fdim:
                     self.fdim_txt += temp_txt
 
             if plot_type == "2D_lat_lev":
                 if var_thin == True:
-                    loni, temp_txt  = get_lon_index(fdim2, lon)
+                    loni, temp_txt = get_lon_index(fdim2, lon)
                     if add_fdim:
                         self.fdim_txt += temp_txt
                 elif var_thin == False:
-                    ti, temp_txt    = get_time_index(fdim1, LsDay)
+                    ti, temp_txt = get_time_index(fdim1, LsDay)
                     if add_fdim:
                         self.fdim_txt += temp_txt
-                    loni, temp_txt  = get_lon_index(fdim2, lon)
+                    loni, temp_txt = get_lon_index(fdim2, lon)
                     if add_fdim:
                         self.fdim_txt += temp_txt
 
             if plot_type == "2D_lon_lev":
                 if var_thin == True:
-                    lati, temp_txt  = get_lat_index(fdim2, lat)
+                    lati, temp_txt = get_lat_index(fdim2, lat)
                     if add_fdim:
                         self.fdim_txt += temp_txt
                 elif var_thin == False:
-                    ti, temp_txt    = get_time_index(fdim1, LsDay)
+                    ti, temp_txt = get_time_index(fdim1, LsDay)
                     if add_fdim:
                         self.fdim_txt += temp_txt
-                    lati, temp_txt  = get_lat_index(fdim2, lat)
+                    lati, temp_txt = get_lat_index(fdim2, lat)
                     if add_fdim:
                         self.fdim_txt += temp_txt
 
             if plot_type == "2D_time_lev":
-                lati, temp_txt  = get_lat_index(fdim1, lat)
+                lati, temp_txt = get_lat_index(fdim1, lat)
                 if add_fdim:
                     self.fdim_txt += temp_txt
-                loni, temp_txt  = get_lon_index(fdim2, lon)
+                loni, temp_txt = get_lon_index(fdim2, lon)
                 if add_fdim:
                     self.fdim_txt += temp_txt
 
             if plot_type == "2D_lon_time":
-                lati, temp_txt  = get_lat_index(fdim1, lat)
+                lati, temp_txt = get_lat_index(fdim1, lat)
                 if add_fdim:
                     self.fdim_txt += temp_txt
-                zi, temp_txt    = get_level_index(fdim2, levs)
+                zi, temp_txt = get_level_index(fdim2, levs)
                 if add_fdim:
                     self.fdim_txt += temp_txt
 
@@ -2392,8 +2393,10 @@ class Fig_2D(object):
                                       axis = 1),
                             var_info)
 
+
     def plot_dimensions(self):
         print(f"{Yellow}{self.ax.get_position()}{Nclr}")
+
 
     def make_title(self, var_info, xlabel, ylabel):
         if self.title:
@@ -2419,6 +2422,7 @@ class Fig_2D(object):
         plt.xlabel(xlabel, fontsize = (label_size - self.nPan*label_factor))
         plt.ylabel(ylabel, fontsize = (label_size - self.nPan*label_factor))
 
+
     def make_colorbar(self, levs):
         if self.axis_opt2 == "log":
             formatter = LogFormatter(10, labelOnlyBase = False)
@@ -2437,6 +2441,7 @@ class Fig_2D(object):
 
         # Shrink the colorbar label as the number of subplots increases
         cbar.ax.tick_params(labelsize=(label_size - self.nPan*label_factor))
+
 
     def return_norm_levs(self):
         norm = None
@@ -2464,6 +2469,7 @@ class Fig_2D(object):
                 levs = np.logspace(
                     np.log10(self.range[0]), np.log10(self.range[1]), levels)
         return norm, levs
+    
 
     def exception_handler(self, e, ax):
         if debug:
@@ -2479,6 +2485,7 @@ class Fig_2D(object):
                         ec = (1., 0.5, 0.5),
                         fc = (1., 0.8, 0.8),),
             transform = ax.transAxes, wrap = True, fontsize = 16)
+
 
     def fig_init(self):
         # Create figure
@@ -2499,6 +2506,7 @@ class Fig_2D(object):
         ax.patch.set_color(".1")
         return ax
 
+
     def fig_save(self):
         # Save the figure
         if self.subID == self.nPan:
@@ -2514,7 +2522,8 @@ class Fig_2D(object):
                     expr = (get_list_varfull(
                         self.varfull)[0].split('{')[0].strip())
                     sensitive_name = (f"expression_{expr}")
-            else:  # Multipanel
+            else:  
+                # Multipanel
                 sensitive_name = "multi_panel"
             plt.tight_layout()
             self.fig_name = (f"{output_path}/plots/"
@@ -2523,6 +2532,7 @@ class Fig_2D(object):
             plt.savefig(self.fig_name, dpi=my_dpi)
             if out_format != "pdf":
                 print(f"Saved:{self.fig_name}")
+                
 
     def filled_contour(self, xdata, ydata, var):
         cmap = self.axis_opt1
@@ -2546,6 +2556,7 @@ class Fig_2D(object):
 
         self.make_colorbar(levs)
 
+
     def solid_contour(self, xdata, ydata, var, contours):
         # Prevent error message when drawing contours
         np.seterr(divide="ignore", invalid="ignore")
@@ -2564,11 +2575,13 @@ class Fig_2D(object):
 # ===============================
 
 class Fig_2D_lon_lat(Fig_2D):
+    
 
     # Make_template calls method from the parent class
     def make_template(self):
         super(Fig_2D_lon_lat, self).make_template(
             "Plot 2D lon X lat", "Ls 0-360", "Level Pa/m", "lon", "lat")
+
 
     def get_topo_2D(self, varfull, plot_type):
         """
@@ -2619,9 +2632,9 @@ class Fig_2D_lon_lat(Fig_2D):
             # return None
             zsurf = None
         return zsurf
+    
 
     def do_plot(self):
-
         # Create figure
         ax = super(Fig_2D_lon_lat, self).fig_init()
         try:
@@ -2976,13 +2989,14 @@ class Fig_2D_lon_lat(Fig_2D):
 
 class Fig_2D_time_lat(Fig_2D):
 
+
     def make_template(self):
         # Calls method from the parent class
         super(Fig_2D_time_lat, self).make_template("Plot 2D time X lat",
                                                    "Lon +/-180",
                                                    "Level [Pa/m]",
                                                    "Ls", "lat")
-        #self.fdim1,  self.fdim2, self.Xlim, self.Ylim
+        
 
     def do_plot(self):
         # Create figure
@@ -3049,12 +3063,13 @@ class Fig_2D_time_lat(Fig_2D):
 
 class Fig_2D_lat_lev(Fig_2D):
 
+
     def make_template(self):
         # Calls method from the parent class
         super(Fig_2D_lat_lev, self).make_template("Plot 2D lat X lev",
                                                   "Ls 0-360 ", "Lon +/-180",
                                                   "Lat", "level[Pa/m]")
-        # self.fdim1,  self.fdim2, self.Xlim,self.Ylim
+
 
     def do_plot(self):
         # Create figure
@@ -3107,11 +3122,13 @@ class Fig_2D_lat_lev(Fig_2D):
 
 class Fig_2D_lon_lev(Fig_2D):
 
+
     def make_template(self):
         """ Calls method from the parent class """
         super(Fig_2D_lon_lev, self).make_template("Plot 2D lon X lev",
                                                   "Ls 0-360 ", "Latitude",
                                                   "Lon +/-180", "level[Pa/m]")
+
 
     def do_plot(self):
         """ Create figure """
@@ -3166,12 +3183,15 @@ class Fig_2D_lon_lev(Fig_2D):
 
 
 class Fig_2D_time_lev(Fig_2D):
+    
 
     def make_template(self):
         # Calls method from the parent class
         super(Fig_2D_time_lev, self).make_template("Plot 2D time X lev",
                                                    "Latitude", "Lon +/-180",
                                                    "Ls", "level[Pa/m]")
+        
+        
     def do_plot(self):
         # Create figure
         ax = super(Fig_2D_time_lev, self).fig_init()
@@ -3241,12 +3261,14 @@ class Fig_2D_time_lev(Fig_2D):
 
 
 class Fig_2D_lon_time(Fig_2D):
+    
 
     def make_template(self):
         # Calls method from the parent class
         super(Fig_2D_lon_time, self).make_template("Plot 2D lon X time",
                                                    "Latitude", "Level [Pa/m]",
                                                    "Lon +/-180", "Ls")
+
 
     def do_plot(self):
         # Create figure
@@ -3353,6 +3375,7 @@ class Fig_1D(object):
         # Variable limit
         self.Vlim = None
         self.axis_opt1 = "-"
+        
 
     def make_template(self):
         customFileIN.write(
@@ -3369,6 +3392,7 @@ class Fig_1D(object):
             f"Axis Options  : lat,lon+/-180,[Pa/m],Ls = [None,None] | "
             f"var = [None,None] | linestyle = - | axlabel = None \n") # 9
 
+
     def read_template(self):
         self.title = rT("char")     # 1
         self.legend = rT("char")    # 2
@@ -3383,6 +3407,7 @@ class Fig_1D(object):
              customFileIN.readline()) # 7
 
         self.plot_type = self.get_plot_type()
+        
 
     def get_plot_type(self):
         """
@@ -3421,6 +3446,7 @@ class Fig_1D(object):
             print(f"{Yellow}*** Warning *** In 1D plot, {self.varfull}: "
                   f"``AXIS`` keyword can only be used once{Nclr}")
         return graph_type
+
 
     def data_loader_1D(self, varfull, plot_type):
 
@@ -3505,6 +3531,7 @@ class Fig_1D(object):
             var = eval(expression_exec)
 
         return xdata, var, var_info, leg_text, varlabel
+
 
     def read_NCDF_1D(self, var_name, file_type, simuID, sol_array,
                      plot_type, t_req, lat_req, lon_req, lev_req, ftod_req):
@@ -3923,6 +3950,7 @@ class Fig_1D(object):
                                             axis = 2),
                                   axis = 0),
                         var_info)
+                
 
     def exception_handler(self, e, ax):
         if debug:
@@ -3938,6 +3966,7 @@ class Fig_1D(object):
                           ec = (1., 0.5, 0.5),
                           fc = (1., 0.8, 0.8),),
                 transform = ax.transAxes, wrap = True, fontsize = 16)
+
 
     def fig_init(self):
         # Create figure
@@ -3959,9 +3988,9 @@ class Fig_1D(object):
             ax = plt.gca()
 
         return ax
+    
 
     def fig_save(self):
-
         # Save the figure
         if self.subID == self.nPan:
             # Last subplot
@@ -3993,6 +4022,7 @@ class Fig_1D(object):
                 if out_format != "pdf":
                     print(f"Saved: {self.fig_name}")
 
+
     def do_plot(self):
         # Create figure
         ax = self.fig_init()
@@ -4005,10 +4035,7 @@ class Fig_1D(object):
             if self.legend:
                 txt_label = self.legend
             else:
-                # Remove the first comma in fdim_txt to print to new
-                # line
-                # txt_label = var_info+"\n"+self.fdim_txt[1:]
-                # ============ CB vvv
+                # Remove first comma in fdim_txt to print to new line
                 if self.nPan > 1:
                     txt_label = leg_text
                 else:
@@ -4031,7 +4058,6 @@ class Fig_1D(object):
                 plt.title(f"{var_info}\n{self.fdim_txt[1:]}",
                           fontsize = (title_size - self.nPan*title_factor),
                           wrap = False)
-                # ============ CB ^^^
 
             if self.plot_type == "1D_lat":
                 plt.plot(var, xdata, self.axis_opt1, lw = 3,
@@ -4084,7 +4110,7 @@ class Fig_1D(object):
 
                 if parser.parse_args().stack_year:
                     # If simulations span different years,
-                    # # they can be stacked (overplotted)
+                    # they can be stacked (overplotted)
                     LsDay = np.mod(LsDay, 360)
 
                 plt.plot(LsDay, var, self.axis_opt1, lw = 3, ms = 7,
