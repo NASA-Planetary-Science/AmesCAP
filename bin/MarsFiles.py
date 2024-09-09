@@ -471,7 +471,7 @@ def split_files(file_list):
 
     fpath, fname = extract_path_basename(input_file_name)
     
-    fullnameOUT = f"{fpath}/{time_out[0]:.5d}{fname[5:-3]}_Ls{bounds[0]:.3d}_{bounds[1]:.3d}.nc"
+    fullnameOUT = f"{fpath}/{time_out[0]:5d}{fname[5:-3]}_Ls{bounds[0]:3d}_{bounds[1]:3d}.nc"
     
     print(f"{Cyan}{fullnameOUT}")
     Log = Ncdf(fullnameOUT)
