@@ -156,7 +156,7 @@ parser.add_argument("-col", "--col", nargs="+", default=[],
         f"A new a variable (``var_col``) in [kg/m2] will be added to "
         f"the file.\n"
         f"{Green}Usage:\n"
-        f"> MarsVars ****.atmos.average.nc -col ice_mass"
+        f"> MarsVars ****.atmos.average.nc -col ice_mass_mom"
         f"{Nclr}\n\n"
     )
 )
@@ -1136,15 +1136,15 @@ def main():
                     if ivar == "dzTau":
                         if "dst_mass_micro" in fileNC.variables.keys():
                             q = fileNC.variables["dst_mass_micro"][:]
-                        elif "dst_mass" in fileNC.variables.keys():
-                            q = fileNC.variables["dst_mass"][:]
+                        elif "dst_mass_mom" in fileNC.variables.keys():
+                            q = fileNC.variables["dst_mass_mom"][:]
                         OUT = compute_xzTau(q, temp, lev, C_dst, f_type)
 
                     if ivar == "izTau":
                         if "ice_mass_micro" in fileNC.variables.keys():
                             q = fileNC.variables["ice_mass_micro"][:]
-                        elif "ice_mass" in fileNC.variables.keys():
-                            q = fileNC.variables["ice_mass"][:]
+                        elif "ice_mass_mom" in fileNC.variables.keys():
+                            q = fileNC.variables["ice_mass_mom"][:]
                         OUT = compute_xzTau(q, temp, lev, C_ice, f_type)
 
                     if ivar == "dst_mass_micro":
@@ -1159,9 +1159,9 @@ def main():
                         if "dst_mass_micro" in fileNC.variables.keys():
                             xTau = fileNC.variables["dst_mass_micro"][:]
                             nTau = fileNC.variables["dst_num_micro"][:]
-                        elif "dst_mass" in fileNC.variables.keys():
-                            xTau = fileNC.variables["dst_mass"][:]
-                            nTau = fileNC.variables["dst_num"][:]
+                        elif "dst_mass_mom" in fileNC.variables.keys():
+                            xTau = fileNC.variables["dst_mass_mom"][:]
+                            nTau = fileNC.variables["dst_num_mom"][:]
                         OUT = compute_Vg_sed(xTau, nTau, temp)
 
                     if ivar == "w_net":

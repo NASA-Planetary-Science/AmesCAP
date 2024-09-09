@@ -69,7 +69,7 @@ from amescap.Ncdf_wrapper import (Ncdf, Fort)
 from amescap.FV3_utils import (tshift, daily_to_average, daily_to_diurn)
 from amescap.Script_utils import (find_tod_in_diurn, FV3_file_type, 
                                   filter_vars, regrid_Ncfile,
-                                  get_longname_units)
+                                  get_longname_units, extract_path_basename)
 
 # ======================================================================
 #                           ARGUMENT PARSER
@@ -114,6 +114,16 @@ parser.add_argument("-c", "--combine", action="store_true",
         f"To override, use --ext.{Nclr}\n"
         f"{Green}Usage:\n"
         f"> MarsFiles.py *.atmos_average.nc --combine"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument("-split", "--split", nargs="+",
+    help=(
+        f"Extract values between min and max solar longitudes 0-360 [°]\n"
+        f"This assumes all values in the file are from only one Mars Year.\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py 00668.atmos_average.nc --split 0 90 \n"
         f"{Nclr}\n\n"
     )
 )
@@ -387,7 +397,7 @@ def combine_files(file_list, full_file_list):
     else:
         exclude_list = []
 
-    # Create a temporaty file ending in _tmp.nc to work in
+    # Create a temporary file ending in _tmp.nc to work in
     tmp_file = f"{full_file_list[0][:-3]}_tmp.nc"
     Log = Ncdf(tmp_file, "Merged file")
     Log.merge_files_from_list(full_file_list, exclude_var=exclude_list)
@@ -415,6 +425,83 @@ def combine_files(file_list, full_file_list):
     p = subprocess.run(rm_cmd, universal_newlines = True, shell = True)
     p = subprocess.run(cmd_txt, universal_newlines = True, shell = True)
     print(f"{Cyan}{merged_file} was created from a merge{Nclr}")
+    
+    return
+
+def split_files(file_list):
+    bounds = np.asarray(parser.parse_args().split).astype(float)
+    
+    if len(np.atleast_1d(bounds)) != 2:
+        print(f"{Red}Requires two values: ls_min ls_max{Nclr}")
+        exit()
+        
+    # Add path unless full path is provided
+    if not ("/" in file_list[0]):
+        input_file_name = f"{data_dir}/{file_list[0]}"
+    else:
+        input_file_name = file_list[0]
+
+    fNcdf = Dataset(input_file_name, 'r', format = 'NETCDF4_CLASSIC')
+    var_list = filter_vars(
+        fNcdf, parser.parse_args().include) # Get all variables
+
+    time_in = fNcdf.variables['time'][:]
+
+    # Read areo variable
+    f_type, _ = FV3_file_type(fNcdf)
+
+    if f_type == 'diurn': 
+        # size = areo (133, 24, 1)
+        areo_in = np.squeeze(fNcdf.variables['areo'][:, 0, :]) % 360
+    else:
+        # size = areo (133, 1)
+        areo_in = np.squeeze(fNcdf.variables['areo'][:]) % 360
+
+    imin = np.argmin(np.abs(bounds[0] - areo_in))
+    imax = np.argmin(np.abs(bounds[1] - areo_in))
+
+    if imin == imax:
+        print(f"{Red}Warning, requested Ls min = {bounds[0]} and Ls max = {bounds[1]} are out of file range Ls({areo_in[0]:.1f}-{areo_in[-1]:.1f})")
+        exit()
+
+    time_out = time_in[imin:imax]
+    print(f"{Cyan}{time_in}")
+    print(f"{Cyan}{time_out}")
+    len_sols = time_out[-1] - time_out[0]
+
+    fpath, fname = extract_path_basename(input_file_name)
+    fullnameOUT = f"{fpath}/{int(time_out[0]):05d}{fname[5:-3]}_Ls{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
+    #fullnameOUT = f"{fpath}/{str(time_out[0]).zfill(5)}{fname[5:-3]}_Ls{str(bounds[0]).zfill(3)}_{str(bounds[1]).zfill(3)}.nc"
+    
+    print(f"{Cyan}{fullnameOUT}")
+    Log = Ncdf(fullnameOUT)
+    Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = ['time'])
+    Log.add_dimension('time', None)
+    Log.log_axis1D('time', time_out, 'time', longname_txt = "sol number",
+                   units_txt = 'days since 0000-00-00 00:00:00', 
+                   cart_txt = 'T')
+
+    # Loop over all variables in the file
+    for ivar in var_list:
+        varNcf = fNcdf.variables[ivar]
+
+        if 'time' in varNcf.dimensions and ivar != 'time':
+            print(f"{Cyan}Processing: %s ...{ivar}{Nclr}")
+            var_out = varNcf[imin:imax, ...]
+            longname_txt, units_txt = get_longname_units(fNcdf, ivar)
+            Log.log_variable(ivar, var_out, varNcf.dimensions,
+                             longname_txt, units_txt)
+
+        else:
+            if ivar in ['pfull', 'lat', 'lon', 'phalf', 'pk', 'bk',
+                        'pstd', 'zstd', 'zagl']:
+                print(f"{Cyan}Copying axis: %s...{ivar}{Nclr}")
+                Log.copy_Ncaxis_with_content(fNcdf.variables[ivar])
+            elif ivar!='time':
+                print(f"{Cyan}Copying variable: %s...{ivar}{Nclr}")
+                Log.copy_Ncvar(fNcdf.variables[ivar])
+    Log.close()
+    fNcdf.close()
     return
 
 # ==================================================================
@@ -617,6 +704,10 @@ def main():
     elif parser.parse_args().combine:
         # Combine files along the time dimension
         combine_files(file_list, full_file_list)
+    
+    elif parser.parse_args().split:
+        # Split file along the time dimension
+        split_files(file_list)
         
     elif parser.parse_args().tshift:
         # Time-shift files
