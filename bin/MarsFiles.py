@@ -436,10 +436,10 @@ def split_files(file_list):
         exit()
         
     # Add path unless full path is provided
-    if not ("/" in file_list):
-        input_file_name = f"{data_dir}/{file_list}"
+    if not ("/" in file_list[0]):
+        input_file_name = f"{data_dir}/{file_list[0]}"
     else:
-        input_file_name = file_list
+        input_file_name = file_list[0]
 
     fNcdf = Dataset(input_file_name, 'r', format = 'NETCDF4_CLASSIC')
     var_list = filter_vars(
