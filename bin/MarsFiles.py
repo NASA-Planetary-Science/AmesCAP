@@ -470,10 +470,6 @@ def split_files(file_list):
     len_sols = time_out[-1] - time_out[0]
 
     fpath, fname = extract_path_basename(input_file_name)
-    print(f"time_out[0] = {time_out[0]:05d}")
-    print(f"fname[5:-3] = {fname[5:-3]}")
-    print(f"bounds[0] = {bounds[0]:03d}")
-    print(f"bounds[1] = {bounds[1]:03d}")
     fullnameOUT = f"{fpath}/{str(time_out[0]).zfill(5)}{fname[5:-3]}_Ls{str(bounds[0]).zfill(3)}_{str(bounds[1]).zfill(3)}.nc"
     
     print(f"{Cyan}{fullnameOUT}")
