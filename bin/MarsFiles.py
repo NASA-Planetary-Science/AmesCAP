@@ -128,6 +128,16 @@ parser.add_argument("-split", "--split", nargs="+",
     )
 )
 
+parser.add_argument("-dim", "--dim", type=str, default = 'areo',
+    help=(
+        f"Flag to specify dimension to split on. Acceptable values are \n"
+        f"areo, lat, lon, lev. For use with --split.\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py 00668.atmos_average.nc --split 0 90 --dim areo"
+        f"{Nclr}\n\n"
+    )
+)
+
 parser.add_argument("-t", "--tshift", nargs="?", const=999, type=str,
     help=(
     f"Apply a time-shift to {Yellow}``diurn``{Nclr}  files.\n"
@@ -428,11 +438,13 @@ def combine_files(file_list, full_file_list):
     
     return
 
-def split_files(file_list):
+def split_files(file_list, split_dim):
+    if split_dim == 'areo':
+        split_dim = 'time'
     bounds = np.asarray(parser.parse_args().split).astype(float)
     
     if len(np.atleast_1d(bounds)) != 2:
-        print(f"{Red}Requires two values: ls_min ls_max{Nclr}")
+        print(f"{Red}Requires two values: [lower_bound] [upper_bound]{Nclr}")
         exit()
         
     # Add path unless full path is provided
@@ -447,7 +459,7 @@ def split_files(file_list):
 
     time_in = fNcdf.variables['time'][:]
 
-    # Read areo variable
+    # Get file type (diurn, average, daily, etc.)
     f_type, _ = FV3_file_type(fNcdf)
 
     if f_type == 'diurn': 
@@ -457,20 +469,24 @@ def split_files(file_list):
         # size = areo (133, 1)
         areo_in = np.squeeze(fNcdf.variables['areo'][:]) % 360
 
-    imin = np.argmin(np.abs(bounds[0] - areo_in))
-    imax = np.argmin(np.abs(bounds[1] - areo_in))
+    lower_bound = np.argmin(np.abs(bounds[0] - areo_in))
+    upper_bound = np.argmin(np.abs(bounds[1] - areo_in))
 
-    if imin == imax:
-        print(f"{Red}Warning, requested Ls min = {bounds[0]} and Ls max = {bounds[1]} are out of file range Ls({areo_in[0]:.1f}-{areo_in[-1]:.1f})")
+    if lower_bound == upper_bound:
+        print(f"{Red}Warning, requested {split_dim} min, max ({bounds[0]}, "
+              f"{bounds[1]}) are out of file range ({split_dim} = "
+              f"{areo_in[0]:.1f}-{areo_in[-1]:.1f})")
         exit()
 
-    time_out = time_in[imin:imax]
+    time_out = time_in[lower_bound:upper_bound]
     print(f"{Cyan}{time_in}")
     print(f"{Cyan}{time_out}")
     len_sols = time_out[-1] - time_out[0]
 
     fpath, fname = extract_path_basename(input_file_name)
-    fullnameOUT = f"{fpath}/{int(time_out[0]):05d}{fname[5:-3]}_Ls{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
+    if split_dim == 'time':
+        fullnameOUT = f"{fpath}/{int(time_out[0]):05d}{fname[5:-3]}_Ls{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
+    fullnameOUT = f"{fpath}/{int(time_out[0]):05d}{fname[5:-3]}_{split_dim}{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
     
     print(f"{Cyan}{fullnameOUT}")
     Log = Ncdf(fullnameOUT)
@@ -486,7 +502,7 @@ def split_files(file_list):
 
         if 'time' in varNcf.dimensions and ivar != 'time':
             print(f"{Cyan}Processing: %s ...{ivar}{Nclr}")
-            var_out = varNcf[imin:imax, ...]
+            var_out = varNcf[lower_bound:upper_bound, ...]
             longname_txt, units_txt = get_longname_units(fNcdf, ivar)
             Log.log_variable(ivar, var_out, varNcf.dimensions,
                              longname_txt, units_txt)
@@ -705,8 +721,9 @@ def main():
         combine_files(file_list, full_file_list)
     
     elif parser.parse_args().split:
-        # Split file along the time dimension
-        split_files(file_list)
+        # Split file along the specified dimension. If none specified,
+        # default to time dimension
+        split_files(file_list, parser.parse_args().dim)
         
     elif parser.parse_args().tshift:
         # Time-shift files
