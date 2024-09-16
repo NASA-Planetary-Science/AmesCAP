@@ -454,10 +454,10 @@ def split_files(file_list, split_dim):
         input_file_name = file_list[0]
 
     fNcdf = Dataset(input_file_name, 'r', format = 'NETCDF4_CLASSIC')
-    var_list = filter_vars(
-        fNcdf, parser.parse_args().include) # Get all variables
+    var_list = filter_vars(fNcdf, parser.parse_args().include)
+    print(f'\nvar_list={var_list}')
 
-    time_in = fNcdf.variables['time'][:]
+    time_in = fNcdf.variables[split_dim][:]
 
     # Get file type (diurn, average, daily, etc.)
     f_type, _ = FV3_file_type(fNcdf)
@@ -490,8 +490,10 @@ def split_files(file_list, split_dim):
     
     print(f"{Cyan}{fullnameOUT}")
     Log = Ncdf(fullnameOUT)
-    Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = ['time'])
-    Log.add_dimension('time', None)
+    
+    Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = [split_dim])
+    Log.add_dimension(split_dim, None)
+    
     Log.log_axis1D('time', time_out, 'time', longname_txt = "sol number",
                    units_txt = 'days since 0000-00-00 00:00:00', 
                    cart_txt = 'T')
@@ -499,20 +501,21 @@ def split_files(file_list, split_dim):
     # Loop over all variables in the file
     for ivar in var_list:
         varNcf = fNcdf.variables[ivar]
-
-        if 'time' in varNcf.dimensions and ivar != 'time':
+        if 'time' in varNcf.dimensions and ivar != 'time':  
+            # time is a dim of var but var is not time
             print(f"{Cyan}Processing: %s ...{ivar}{Nclr}")
             var_out = varNcf[lower_bound:upper_bound, ...]
             longname_txt, units_txt = get_longname_units(fNcdf, ivar)
             Log.log_variable(ivar, var_out, varNcf.dimensions,
                              longname_txt, units_txt)
-
         else:
+            # var is time OR time is not a dim of var
             if ivar in ['pfull', 'lat', 'lon', 'phalf', 'pk', 'bk',
                         'pstd', 'zstd', 'zagl']:
                 print(f"{Cyan}Copying axis: %s...{ivar}{Nclr}")
                 Log.copy_Ncaxis_with_content(fNcdf.variables[ivar])
-            elif ivar!='time':
+            elif ivar != 'time':
+                # var is not time or level
                 print(f"{Cyan}Copying variable: %s...{ivar}{Nclr}")
                 Log.copy_Ncvar(fNcdf.variables[ivar])
     Log.close()
