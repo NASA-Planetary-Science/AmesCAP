@@ -455,7 +455,6 @@ def split_files(file_list, split_dim):
 
     fNcdf = Dataset(input_file_name, 'r', format = 'NETCDF4_CLASSIC')
     var_list = filter_vars(fNcdf, parser.parse_args().include)
-    print(f'\nvar_list={var_list}')
 
     time_in = fNcdf.variables[split_dim][:]
 
@@ -494,16 +493,25 @@ def split_files(file_list, split_dim):
     Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = [split_dim])
     Log.add_dimension(split_dim, None)
     
-    Log.log_axis1D('time', time_out, 'time', longname_txt = "sol number",
-                   units_txt = 'days since 0000-00-00 00:00:00', 
-                   cart_txt = 'T')
+    if split_dim == 'time':
+        Log.log_axis1D('time', time_out, 'time', longname_txt = 'sol number',
+                       units_txt = 'days since 0000-00-00 00:00:00', 
+                       cart_txt = 'T')
+    elif split_dim == 'lat':
+        Log.log_axis1D('lat', time_out, 'lat', longname_txt = 'latitude',
+                       units_txt = 'degrees_N', 
+                       cart_txt = 'T')
+    elif split_dim == 'lon':
+        Log.log_axis1D('lon', time_out, 'lon', longname_txt = 'longitude',
+                       units_txt = 'degrees_E', 
+                       cart_txt = 'T')
 
     # Loop over all variables in the file
     for ivar in var_list:
         varNcf = fNcdf.variables[ivar]
-        if 'time' in varNcf.dimensions and ivar != 'time':  
+        if split_dim in varNcf.dimensions and ivar != split_dim:  
             # time is a dim of var but var is not time
-            print(f"{Cyan}Processing: %s ...{ivar}{Nclr}")
+            print(f'{Cyan}Processing: {ivar}...{Nclr}')
             var_out = varNcf[lower_bound:upper_bound, ...]
             longname_txt, units_txt = get_longname_units(fNcdf, ivar)
             Log.log_variable(ivar, var_out, varNcf.dimensions,
@@ -512,11 +520,11 @@ def split_files(file_list, split_dim):
             # var is time OR time is not a dim of var
             if ivar in ['pfull', 'lat', 'lon', 'phalf', 'pk', 'bk',
                         'pstd', 'zstd', 'zagl']:
-                print(f"{Cyan}Copying axis: %s...{ivar}{Nclr}")
+                print(f'{Cyan}Copying axis: {ivar}...{Nclr}')
                 Log.copy_Ncaxis_with_content(fNcdf.variables[ivar])
-            elif ivar != 'time':
+            elif ivar != split_dim:
                 # var is not time or level
-                print(f"{Cyan}Copying variable: %s...{ivar}{Nclr}")
+                print(f'{Cyan}Copying variable: {ivar}...{Nclr}')
                 Log.copy_Ncvar(fNcdf.variables[ivar])
     Log.close()
     fNcdf.close()
