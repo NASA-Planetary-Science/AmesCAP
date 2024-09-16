@@ -462,19 +462,25 @@ def split_files(file_list, split_dim):
     f_type, _ = FV3_file_type(fNcdf)
 
     if f_type == 'diurn': 
-        # size = areo (133, 24, 1)
-        areo_in = np.squeeze(fNcdf.variables['areo'][:, 0, :]) % 360
+        if split_dim == 'time':
+            # size = areo (133, 24, 1)
+            split_dim_vals = np.squeeze(fNcdf.variables['areo'][:, 0, :]) % 360
+        else:
+            split_dim_vals = np.squeeze(fNcdf.variables[split_dim][:, 0])
     else:
-        # size = areo (133, 1)
-        areo_in = np.squeeze(fNcdf.variables['areo'][:]) % 360
+        if split_dim == 'time':
+            # size = areo (133, 1)
+            split_dim_vals = np.squeeze(fNcdf.variables['areo'][:]) % 360
+        else:
+            split_dim_vals = np.squeeze(fNcdf.variables[split_dim][:])
 
-    lower_bound = np.argmin(np.abs(bounds[0] - areo_in))
-    upper_bound = np.argmin(np.abs(bounds[1] - areo_in))
+    lower_bound = np.argmin(np.abs(bounds[0] - split_dim_vals))
+    upper_bound = np.argmin(np.abs(bounds[1] - split_dim_vals))
 
     if lower_bound == upper_bound:
         print(f"{Red}Warning, requested {split_dim} min, max ({bounds[0]}, "
               f"{bounds[1]}) are out of file range ({split_dim} = "
-              f"{areo_in[0]:.1f}-{areo_in[-1]:.1f})")
+              f"{split_dim_vals[0]:.1f}-{split_dim_vals[-1]:.1f})")
         exit()
 
     time_out = time_in[lower_bound:upper_bound]
