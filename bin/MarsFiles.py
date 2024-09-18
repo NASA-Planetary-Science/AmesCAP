@@ -540,19 +540,19 @@ def split_files(file_list, split_dim):
             if split_dim == 'time':
                 var_out = varNcf[lower_bound:upper_bound, ...]
             elif split_dim == 'lat' and varNcf.ndim == 5:
-                var_out = varNcf[..., ..., ..., lower_bound:upper_bound, ...]
+                var_out = varNcf[:, :, :, lower_bound:upper_bound, :]
             elif split_dim == 'lat' and varNcf.ndim == 4:
-                var_out = varNcf[..., ..., lower_bound:upper_bound, ...]
+                var_out = varNcf[:, :, lower_bound:upper_bound, :]
             elif split_dim == 'lat' and varNcf.ndim == 3:
-                var_out = varNcf[..., lower_bound:upper_bound, ...]
+                var_out = varNcf[:, lower_bound:upper_bound, :]
             elif split_dim == 'lat' and varNcf.ndim == 2:
                 var_out = varNcf[lower_bound:upper_bound, ...]
             elif split_dim == 'lon' and varNcf.ndim == 5:
-                var_out = varNcf[..., ..., ..., ..., lower_bound:upper_bound]
+                var_out = varNcf[..., lower_bound:upper_bound]
             elif split_dim == 'lon' and varNcf.ndim == 4:
-                var_out = varNcf[..., ..., ..., lower_bound:upper_bound]
+                var_out = varNcf[..., lower_bound:upper_bound]
             elif split_dim == 'lon' and varNcf.ndim == 3:
-                var_out = varNcf[..., ..., lower_bound:upper_bound]
+                var_out = varNcf[..., lower_bound:upper_bound]
             elif split_dim == 'lon' and varNcf.ndim == 2:
                 var_out = varNcf[lower_bound:upper_bound, ...]
             longname_txt, units_txt = get_longname_units(fNcdf, ivar)
