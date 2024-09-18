@@ -533,7 +533,7 @@ def split_files(file_list, split_dim):
     for ivar in var_list:
         varNcf = fNcdf.variables[ivar]
         print(f'{Cyan}varNcf: {varNcf}...{Nclr}')
-        print(f'{Cyan}varNcf.ndims(): {varNcf.ndims()}...{Nclr}')
+        print(f'{Cyan}varNcf.ndim(): {varNcf.ndim()}...{Nclr}')
         if split_dim in varNcf.dimensions and ivar != split_dim:  
             # ivar is a dim of ivar but ivar is not ivar
             print(f'{Cyan}Processing: {ivar}...{Nclr}')
