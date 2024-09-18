@@ -464,7 +464,6 @@ def split_files(file_list, split_dim):
     var_list = filter_vars(fNcdf, parser.parse_args().include)
 
     dim_in = fNcdf.variables[split_dim][:]
-    print(f'\n{Yellow}dim_in = {dim_in}{Nclr}\n')
     
     # Get file type (diurn, average, daily, etc.)
     f_type, _ = FV3_file_type(fNcdf)
@@ -496,8 +495,8 @@ def split_files(file_list, split_dim):
         exit()
 
     dim_out = dim_in[lower_bound:upper_bound]
-    print(f"{Cyan}{dim_in}")
-    print(f"{Cyan}{dim_out}")
+    print(f"{Cyan}dim_in = {dim_in}")
+    print(f"{Cyan}dim_out = {dim_out}")
     len_sols = dim_out[-1] - dim_out[0]
 
     fpath, fname = extract_path_basename(input_file_name)
@@ -506,10 +505,14 @@ def split_files(file_list, split_dim):
     else:
         fullnameOUT = f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
     
-    print(f"{Cyan}{fullnameOUT}")
+    print(f"{Cyan}new filename = {fullnameOUT}")
     Log = Ncdf(fullnameOUT)
+    print(f'log = {Log}')
     
-    Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = [split_dim])
+    if split_dim == 'time':
+        Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = [split_dim])
+    else:
+        Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = [split_dim], time_unlimited=False)
     Log.add_dimension(split_dim, None)
     
     if split_dim == 'time':
