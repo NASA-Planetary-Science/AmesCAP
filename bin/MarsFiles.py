@@ -507,13 +507,14 @@ def split_files(file_list, split_dim):
     
     print(f"{Cyan}new filename = {fullnameOUT}")
     Log = Ncdf(fullnameOUT)
-    print(f'log = {Log}')
+    print(f'len(split_dim) = {len(split_dim)}')
     
     if split_dim == 'time':
         Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = [split_dim])
+        Log.add_dimension(split_dim, None)
     else:
         Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = [split_dim], time_unlimited=False)
-    Log.add_dimension(split_dim, None)
+        Log.add_dimension(split_dim, len(split_dim))
     
     if split_dim == 'time':
         Log.log_axis1D('time', dim_out, 'time', longname_txt = 'sol number',
