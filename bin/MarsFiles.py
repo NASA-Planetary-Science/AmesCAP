@@ -443,6 +443,9 @@ def split_files(file_list, split_dim):
         split_dim = 'time'
     bounds = np.asarray(parser.parse_args().split).astype(float)
     
+    print(f'\n{Yellow}split_dim = {split_dim}')
+    print(f'bounds = {bounds}{Nclr}\n')
+    
     if len(np.atleast_1d(bounds)) != 2:
         print(f"{Red}Requires two values: [lower_bound] [upper_bound]{Nclr}")
         exit()
@@ -452,26 +455,35 @@ def split_files(file_list, split_dim):
         input_file_name = f"{data_dir}/{file_list[0]}"
     else:
         input_file_name = file_list[0]
-
+    original_date = input_file_name.split('.')[0]
+    
+    print(f'\n{Yellow}input_file_name = {input_file_name}{Nclr}\n')
+    print(f'\n{Yellow}original_date = {original_date}{Nclr}\n')
+    
     fNcdf = Dataset(input_file_name, 'r', format = 'NETCDF4_CLASSIC')
     var_list = filter_vars(fNcdf, parser.parse_args().include)
 
-    time_in = fNcdf.variables[split_dim][:]
-
+    dim_in = fNcdf.variables[split_dim][:]
+    print(f'\n{Yellow}dim_in = {dim_in}{Nclr}\n')
+    
     # Get file type (diurn, average, daily, etc.)
     f_type, _ = FV3_file_type(fNcdf)
 
     if f_type == 'diurn': 
         if split_dim == 'time':
+            print(f'\n{Yellow}f_type = {f_type} (diurn) split_dim = {split_dim} (time){Nclr}\n')
             # size = areo (133, 24, 1)
             split_dim_vals = np.squeeze(fNcdf.variables['areo'][:, 0, :]) % 360
         else:
+            print(f'\n{Yellow}f_type = {f_type} (diurn) split_dim = {split_dim} (NOT time){Nclr}\n')
             split_dim_vals = np.squeeze(fNcdf.variables[split_dim][:, 0])
     else:
         if split_dim == 'time':
+            print(f'\n{Yellow}f_type = {f_type} (NOT diurn) split_dim = {split_dim} (time){Nclr}\n')
             # size = areo (133, 1)
             split_dim_vals = np.squeeze(fNcdf.variables['areo'][:]) % 360
         else:
+            print(f'\n{Yellow}f_type = {f_type} (NOT diurn) split_dim = {split_dim} (NOT time){Nclr}\n')
             split_dim_vals = np.squeeze(fNcdf.variables[split_dim][:])
 
     lower_bound = np.argmin(np.abs(bounds[0] - split_dim_vals))
@@ -483,15 +495,16 @@ def split_files(file_list, split_dim):
               f"{split_dim_vals[0]:.1f}-{split_dim_vals[-1]:.1f})")
         exit()
 
-    time_out = time_in[lower_bound:upper_bound]
-    print(f"{Cyan}{time_in}")
-    print(f"{Cyan}{time_out}")
-    len_sols = time_out[-1] - time_out[0]
+    dim_out = dim_in[lower_bound:upper_bound]
+    print(f"{Cyan}{dim_in}")
+    print(f"{Cyan}{dim_out}")
+    len_sols = dim_out[-1] - dim_out[0]
 
     fpath, fname = extract_path_basename(input_file_name)
     if split_dim == 'time':
-        fullnameOUT = f"{fpath}/{int(time_out[0]):05d}{fname[5:-3]}_Ls{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
-    fullnameOUT = f"{fpath}/{int(time_out[0]):05d}{fname[5:-3]}_{split_dim}{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
+        fullnameOUT = f"{fpath}/{int(dim_out[0]):05d}{fname[5:-3]}_Ls{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
+    else:
+        fullnameOUT = f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
     
     print(f"{Cyan}{fullnameOUT}")
     Log = Ncdf(fullnameOUT)
@@ -500,15 +513,15 @@ def split_files(file_list, split_dim):
     Log.add_dimension(split_dim, None)
     
     if split_dim == 'time':
-        Log.log_axis1D('time', time_out, 'time', longname_txt = 'sol number',
+        Log.log_axis1D('time', dim_out, 'time', longname_txt = 'sol number',
                        units_txt = 'days since 0000-00-00 00:00:00', 
                        cart_txt = 'T')
     elif split_dim == 'lat':
-        Log.log_axis1D('lat', time_out, 'lat', longname_txt = 'latitude',
+        Log.log_axis1D('lat', dim_out, 'lat', longname_txt = 'latitude',
                        units_txt = 'degrees_N', 
                        cart_txt = 'T')
     elif split_dim == 'lon':
-        Log.log_axis1D('lon', time_out, 'lon', longname_txt = 'longitude',
+        Log.log_axis1D('lon', dim_out, 'lon', longname_txt = 'longitude',
                        units_txt = 'degrees_E', 
                        cart_txt = 'T')
 
