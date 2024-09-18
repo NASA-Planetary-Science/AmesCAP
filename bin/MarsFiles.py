@@ -533,14 +533,24 @@ def split_files(file_list, split_dim):
     for ivar in var_list:
         varNcf = fNcdf.variables[ivar]
         print(f'{Cyan}varNcf: {varNcf}...{Nclr}')
-        print(f'{Cyan}varNcf.shape(): {varNcf.shape()}...{Nclr}')
+        print(f'{Cyan}varNcf.ndim: {varNcf.ndim}...{Nclr}')
         if split_dim in varNcf.dimensions and ivar != split_dim:  
             # ivar is a dim of ivar but ivar is not ivar
             print(f'{Cyan}Processing: {ivar}...{Nclr}')
             if split_dim == 'time':
                 var_out = varNcf[lower_bound:upper_bound, ...]
-            elif split_dim == 'lat':
+            elif split_dim == 'lat' and varNcf.ndim == 5:
+                var_out = varNcf[..., ..., ..., ..., lower_bound:upper_bound, ...]
+            elif split_dim == 'lat' and varNcf.ndim == 4:
+                var_out = varNcf[..., ..., ..., lower_bound:upper_bound, ...]
+            elif split_dim == 'lat' and varNcf.ndim == 3:
                 var_out = varNcf[..., ..., lower_bound:upper_bound, ...]
+            elif split_dim == 'lon' and varNcf.ndim == 5:
+                var_out = varNcf[..., ..., ..., ..., ..., lower_bound:upper_bound]
+            elif split_dim == 'lon' and varNcf.ndim == 4:
+                var_out = varNcf[..., ..., ..., ..., lower_bound:upper_bound]
+            elif split_dim == 'lon' and varNcf.ndim == 3:
+                var_out = varNcf[..., ..., ..., lower_bound:upper_bound]
             longname_txt, units_txt = get_longname_units(fNcdf, ivar)
             Log.log_variable(ivar, var_out, varNcf.dimensions,
                              longname_txt, units_txt)
