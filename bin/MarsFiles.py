@@ -509,11 +509,11 @@ def split_files(file_list, split_dim):
     Log = Ncdf(fullnameOUT)
     print(f'len(split_dim) = {len(split_dim)}')
     
+    Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = [split_dim])
+    
     if split_dim == 'time':
-        Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = [split_dim])
         Log.add_dimension(split_dim, None)
     else:
-        Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = [split_dim], time_unlimited=False)
         Log.add_dimension(split_dim, len(split_dim))
     
     if split_dim == 'time':
