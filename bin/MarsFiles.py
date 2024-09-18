@@ -455,7 +455,7 @@ def split_files(file_list, split_dim):
         input_file_name = f"{data_dir}/{file_list[0]}"
     else:
         input_file_name = file_list[0]
-    original_date = input_file_name.split('.')[0]
+    original_date = (input_file_name.split('.')[0]).split('/')[-1]
     
     print(f'\n{Yellow}input_file_name = {input_file_name}{Nclr}\n')
     print(f'\n{Yellow}original_date = {original_date}{Nclr}\n')
