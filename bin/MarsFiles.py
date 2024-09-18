@@ -528,25 +528,31 @@ def split_files(file_list, split_dim):
         Log.log_axis1D('lon', dim_out, 'lon', longname_txt = 'longitude',
                        units_txt = 'degrees_E', 
                        cart_txt = 'T')
-
+    print(f'Copied all dims from file, added dim {split_dim}')
     # Loop over all variables in the file
     for ivar in var_list:
         varNcf = fNcdf.variables[ivar]
+        print(f'{Cyan}varNcf: {varNcf}...{Nclr}')
+        print(f'{Cyan}varNcf.ndims(): {varNcf.ndims()}...{Nclr}')
         if split_dim in varNcf.dimensions and ivar != split_dim:  
-            # time is a dim of var but var is not time
+            # ivar is a dim of ivar but ivar is not ivar
             print(f'{Cyan}Processing: {ivar}...{Nclr}')
-            var_out = varNcf[lower_bound:upper_bound, ...]
+            if split_dim == 'time':
+                var_out = varNcf[lower_bound:upper_bound, ...]
+            elif split_dim == 'lat':
+                var_out = varNcf[..., ..., lower_bound:upper_bound, ...]
             longname_txt, units_txt = get_longname_units(fNcdf, ivar)
             Log.log_variable(ivar, var_out, varNcf.dimensions,
                              longname_txt, units_txt)
         else:
-            # var is time OR time is not a dim of var
+            # ivar is ivar OR ivar is not a dim of ivar
             if ivar in ['pfull', 'lat', 'lon', 'phalf', 'pk', 'bk',
-                        'pstd', 'zstd', 'zagl']:
+                        'pstd', 'zstd', 'zagl', 'time'] and ivar != split_dim:
+                # ivar is a dimension
                 print(f'{Cyan}Copying axis: {ivar}...{Nclr}')
                 Log.copy_Ncaxis_with_content(fNcdf.variables[ivar])
             elif ivar != split_dim:
-                # var is not time or level
+                # ivar is not itself and not a dimension of ivar
                 print(f'{Cyan}Copying variable: {ivar}...{Nclr}')
                 Log.copy_Ncvar(fNcdf.variables[ivar])
     Log.close()
