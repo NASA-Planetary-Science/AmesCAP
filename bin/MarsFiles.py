@@ -439,6 +439,14 @@ def combine_files(file_list, full_file_list):
     return
 
 def split_files(file_list, split_dim):
+    """
+    Extracts variables in the file along the time dimension, unless
+    other dimension is specified (lat or lon).
+
+    :param file_list: list of file names
+    :type split_dim: dimension along which to perform extraction
+    :returns: new file with sliced dimensions
+    """
     if split_dim not in ['time', 'areo', 'lat', 'lon']:
         print(f"{Red}Split dimension must be one of the following:"
               f"    time, areo, lat, lon{Nclr}")
@@ -492,7 +500,6 @@ def split_files(file_list, split_dim):
     dim_out = dim_var[lower_bound:upper_bound]
     print(f"{Yellow}dim_var = {dim_var}")
     print(f"{Yellow}dim_out = {dim_out}")
-    print(f"{Yellow}dim_out.ndim = {dim_out.ndim}{Nclr}")
 
     fpath, fname = extract_path_basename(input_file_name)
     if split_dim == 'time':
@@ -517,7 +524,6 @@ def split_files(file_list, split_dim):
         Log.add_dimension(split_dim, None)
     else:
         Log.add_dimension(split_dim, len(dim_out))
-        print(f"{Yellow}len(split_dim) = {len(dim_out)}{Nclr}")
     
     if split_dim == 'time':
         Log.log_axis1D(variable_name = 'time', 

@@ -184,10 +184,7 @@ class Ncdf(object):
         self.var_dict[variable_name].long_name = longname_txt
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name].cartesian_axis = cart_txt
-        print(f"\nDATAin = {DATAin}\n")
-        print(f"\nself.var_dict[variable_name][:] = {self.var_dict[variable_name][:]}\n")
         self.var_dict[variable_name][:] = DATAin
-        print(f"\nself.var_dict[variable_name][:] = {self.var_dict[variable_name][:]}\n")
 
     def add_dim_with_content(self, dimension_name, DATAin, longname_txt="",
                              units_txt="", cart_txt=''):
