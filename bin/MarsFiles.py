@@ -500,8 +500,10 @@ def split_files(file_list, split_dim):
                             f"Ls{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
     elif split_dim == 'lat':
         new_bounds = [str(b)+"S" if b < 0 else str(abs(b))+"N" for b in bounds]
+        print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
+        print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
         output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
-                            f"{new_bounds}_{new_bounds}.nc")
+                            f"{new_bounds[0]}_{new_bounds[1]}.nc")
     else:
         output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
                             f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
