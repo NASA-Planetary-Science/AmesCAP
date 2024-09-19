@@ -510,8 +510,8 @@ def split_files(file_list, split_dim):
     if split_dim == 'time':
         Log.add_dimension(split_dim, None)
     else:
-        Log.add_dimension(split_dim, len(split_dim))
-        print(f"{Yellow}len(split_dim) = {len(split_dim)}{Nclr}")
+        Log.add_dimension(split_dim, len(dim_out))
+        print(f"{Yellow}len(split_dim) = {len(dim_out)}{Nclr}")
     
     if split_dim == 'time':
         Log.log_axis1D(variable_name = 'time', 
