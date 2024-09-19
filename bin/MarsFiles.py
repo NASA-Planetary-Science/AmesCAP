@@ -439,12 +439,14 @@ def combine_files(file_list, full_file_list):
     return
 
 def split_files(file_list, split_dim):
+    if split_dim not in ['time', 'areo', 'lat', 'lon']:
+        print(f"{Red}Split dimension must be one of the following:"
+              f"    time, areo, lat, lon{Nclr}")
+        exit()
+        
     if split_dim == 'areo':
         split_dim = 'time'
     bounds = np.asarray(parser.parse_args().split).astype(float)
-    
-    print(f'\n{Yellow}split_dim = {split_dim}')
-    print(f'bounds = {bounds}{Nclr}\n')
     
     if len(np.atleast_1d(bounds)) != 2:
         print(f"{Red}Requires two values: [lower_bound] [upper_bound]{Nclr}")
@@ -457,9 +459,6 @@ def split_files(file_list, split_dim):
         input_file_name = file_list[0]
     original_date = (input_file_name.split('.')[0]).split('/')[-1]
     
-    print(f'\n{Yellow}input_file_name = {input_file_name}{Nclr}\n')
-    print(f'\n{Yellow}original_date = {original_date}{Nclr}\n')
-    
     fNcdf = Dataset(input_file_name, 'r', format = 'NETCDF4_CLASSIC')
     var_list = filter_vars(fNcdf, parser.parse_args().include)
 
@@ -470,19 +469,15 @@ def split_files(file_list, split_dim):
 
     if f_type == 'diurn': 
         if split_dim == 'time':
-            print(f'\n{Yellow}f_type = {f_type} (diurn) split_dim = {split_dim} (time){Nclr}\n')
             # size = areo (133, 24, 1)
             split_dim_vals = np.squeeze(fNcdf.variables['areo'][:, 0, :]) % 360
         else:
-            print(f'\n{Yellow}f_type = {f_type} (diurn) split_dim = {split_dim} (NOT time){Nclr}\n')
             split_dim_vals = np.squeeze(fNcdf.variables[split_dim][:, 0])
     else:
         if split_dim == 'time':
-            print(f'\n{Yellow}f_type = {f_type} (NOT diurn) split_dim = {split_dim} (time){Nclr}\n')
             # size = areo (133, 1)
             split_dim_vals = np.squeeze(fNcdf.variables['areo'][:]) % 360
         else:
-            print(f'\n{Yellow}f_type = {f_type} (NOT diurn) split_dim = {split_dim} (NOT time){Nclr}\n')
             split_dim_vals = np.squeeze(fNcdf.variables[split_dim][:])
 
     lower_bound = np.argmin(np.abs(bounds[0] - split_dim_vals))
@@ -507,7 +502,6 @@ def split_files(file_list, split_dim):
     
     print(f"{Cyan}new filename = {fullnameOUT}")
     Log = Ncdf(fullnameOUT)
-    print(f'len(split_dim) = {len(split_dim)}')
     
     Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = [split_dim])
     
@@ -528,12 +522,10 @@ def split_files(file_list, split_dim):
         Log.log_axis1D('lon', dim_out, 'lon', longname_txt = 'longitude',
                        units_txt = 'degrees_E', 
                        cart_txt = 'T')
-    print(f'Copied all dims from file, added dim {split_dim}')
+    
     # Loop over all variables in the file
     for ivar in var_list:
         varNcf = fNcdf.variables[ivar]
-        print(f'{Cyan}varNcf: {varNcf}...{Nclr}')
-        print(f'{Cyan}varNcf.ndim: {varNcf.ndim}...{Nclr}')
         if split_dim in varNcf.dimensions and ivar != split_dim:  
             # ivar is a dim of ivar but ivar is not ivar
             print(f'{Cyan}Processing: {ivar}...{Nclr}')
@@ -547,11 +539,7 @@ def split_files(file_list, split_dim):
                 var_out = varNcf[:, lower_bound:upper_bound, :]
             elif split_dim == 'lat' and varNcf.ndim == 2:
                 var_out = varNcf[lower_bound:upper_bound, ...]
-            elif split_dim == 'lon' and varNcf.ndim == 5:
-                var_out = varNcf[..., lower_bound:upper_bound]
-            elif split_dim == 'lon' and varNcf.ndim == 4:
-                var_out = varNcf[..., lower_bound:upper_bound]
-            elif split_dim == 'lon' and varNcf.ndim == 3:
+            elif split_dim == 'lon' and varNcf.ndim > 2:
                 var_out = varNcf[..., lower_bound:upper_bound]
             elif split_dim == 'lon' and varNcf.ndim == 2:
                 var_out = varNcf[lower_bound:upper_bound, ...]
