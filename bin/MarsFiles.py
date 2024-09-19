@@ -498,6 +498,10 @@ def split_files(file_list, split_dim):
     if split_dim == 'time':
         output_file_name = (f"{fpath}/{int(dim_out[0]):05d}{fname[5:-3]}_"
                             f"Ls{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
+    elif split_dim == 'lat':
+        new_bounds = [str(b)+"S" if b < 0 else str(abs(b))+"N" for b in bounds]
+        output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
+                            f"{new_bounds:03d}_{new_bounds:03d}.nc")
     else:
         output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
                             f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
