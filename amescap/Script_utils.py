@@ -469,7 +469,7 @@ def regrid_Ncfile(VAR_Ncdf,file_Nc_in,file_Nc_target):
     var_OUT=VAR_Ncdf[:]
 
     #STEP 1: Lat/lon interpolation are always performed unless target lon and lat are identical
-    if not (np.all(lat_in==lat_t) and np.all(lon_in==lon_t)) :
+    if not (np.array_equal(lat_in,lat_t) and np.array_equal(lon_in,lon_t)) :
         #Special case if input longitudes is 1 element (slice or zonal average). We only interpolate on the latitude axis
         if len(np.atleast_1d(lon_in))==1:
             var_OUT=axis_interp(var_OUT, lat_in,lat_t,axis=-2, reverse_input=False, type_int='lin')
