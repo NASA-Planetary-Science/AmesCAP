@@ -599,7 +599,7 @@ def regrid_Ncfile(VAR_Ncdf, file_Nc_in, file_Nc_target):
     var_OUT = VAR_Ncdf[:]
 
 
-    if not (np.all(lat_in == lat_t) and np.all(lon_in == lon_t)):
+    if not (np.array_equal(lat_in,lat_t) and np.array_equal(lon_in,lon_t)):
         # STEP 1: lat/lon interpolation are always performed unless
         # target lon and lat are identical
         if len(np.atleast_1d(lon_in)) == 1:
