@@ -11,7 +11,7 @@ rm -r AmesCAP # or whatever the name is for you
 
 # 2. Load the necessary modules:
 module purge
-module load ython3/3.11.5
+module load python3/3.11.5
 
 # 3. (Re)create the virtual environment
 python3.11 -m venv --system-site-packages AmesCAP
