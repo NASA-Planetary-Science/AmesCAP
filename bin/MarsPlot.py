@@ -1115,7 +1115,7 @@ def get_list_varfull(raw_input):
     return var_list
 
 
-def get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2):
+def get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2, ftod):
     """
     Return new dimensions that will overwrite default dimensions for a
     varfull object with ``{}`` on a 2D plot.

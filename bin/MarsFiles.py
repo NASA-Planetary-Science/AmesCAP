@@ -128,6 +128,16 @@ parser.add_argument("-split", "--split", nargs="+",
     )
 )
 
+parser.add_argument("-dim", "--dim", type=str, default = 'areo',
+    help=(
+        f"Flag to specify dimension to split on. Acceptable values are \n"
+        f"areo, lat, lon, lev. For use with --split.\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles.py 00668.atmos_average.nc --split 0 90 --dim areo"
+        f"{Nclr}\n\n"
+    )
+)
+
 parser.add_argument("-t", "--tshift", nargs="?", const=999, type=str,
     help=(
     f"Apply a time-shift to {Yellow}``diurn``{Nclr}  files.\n"
@@ -428,11 +438,26 @@ def combine_files(file_list, full_file_list):
     
     return
 
-def split_files(file_list):
+def split_files(file_list, split_dim):
+    """
+    Extracts variables in the file along the time dimension, unless
+    other dimension is specified (lat or lon).
+
+    :param file_list: list of file names
+    :type split_dim: dimension along which to perform extraction
+    :returns: new file with sliced dimensions
+    """
+    if split_dim not in ['time', 'areo', 'lat', 'lon']:
+        print(f"{Red}Split dimension must be one of the following:"
+              f"    time, areo, lat, lon{Nclr}")
+        exit()
+        
+    if split_dim == 'areo':
+        split_dim = 'time'
     bounds = np.asarray(parser.parse_args().split).astype(float)
     
     if len(np.atleast_1d(bounds)) != 2:
-        print(f"{Red}Requires two values: ls_min ls_max{Nclr}")
+        print(f"{Red}Requires two values: [lower_bound] [upper_bound]{Nclr}")
         exit()
         
     # Add path unless full path is provided
@@ -440,65 +465,122 @@ def split_files(file_list):
         input_file_name = f"{data_dir}/{file_list[0]}"
     else:
         input_file_name = file_list[0]
-
+    original_date = (input_file_name.split('.')[0]).split('/')[-1]
+    
     fNcdf = Dataset(input_file_name, 'r', format = 'NETCDF4_CLASSIC')
-    var_list = filter_vars(
-        fNcdf, parser.parse_args().include) # Get all variables
+    var_list = filter_vars(fNcdf, parser.parse_args().include)
 
-    time_in = fNcdf.variables['time'][:]
-
-    # Read areo variable
+    dim_var = fNcdf.variables[split_dim][:]
+    
+    # Get file type (diurn, average, daily, etc.)
     f_type, _ = FV3_file_type(fNcdf)
 
     if f_type == 'diurn': 
-        # size = areo (133, 24, 1)
-        areo_in = np.squeeze(fNcdf.variables['areo'][:, 0, :]) % 360
+        if split_dim == 'time':
+            # size = areo (133, 24, 1)
+            bounds_limit = np.squeeze(fNcdf.variables['areo'][:, 0, :]) % 360
+        else:
+            bounds_limit = np.squeeze(fNcdf.variables[split_dim][:, 0])
     else:
-        # size = areo (133, 1)
-        areo_in = np.squeeze(fNcdf.variables['areo'][:]) % 360
+        if split_dim == 'time':
+            # size = areo (133, 1)
+            bounds_limit = np.squeeze(fNcdf.variables['areo'][:]) % 360
+        else:
+            bounds_limit = np.squeeze(fNcdf.variables[split_dim][:])
 
-    imin = np.argmin(np.abs(bounds[0] - areo_in))
-    imax = np.argmin(np.abs(bounds[1] - areo_in))
+    lower_bound = np.argmin(np.abs(bounds[0] - bounds_limit))
+    upper_bound = np.argmin(np.abs(bounds[1] - bounds_limit))
 
-    if imin == imax:
-        print(f"{Red}Warning, requested Ls min = {bounds[0]} and Ls max = {bounds[1]} are out of file range Ls({areo_in[0]:.1f}-{areo_in[-1]:.1f})")
+    if lower_bound == upper_bound:
+        print(f"{Red}Warning, requested {split_dim} min, max ({bounds[0]}, "
+              f"{bounds[1]}) are out of file range ({split_dim} = "
+              f"{bounds_limit[0]:.1f}-{bounds_limit[-1]:.1f})")
         exit()
 
-    time_out = time_in[imin:imax]
-    print(f"{Cyan}{time_in}")
-    print(f"{Cyan}{time_out}")
-    len_sols = time_out[-1] - time_out[0]
+    dim_out = dim_var[lower_bound:upper_bound]
+    print(f"{Yellow}dim_var = {dim_var}")
+    print(f"{Yellow}dim_out = {dim_out}")
 
     fpath, fname = extract_path_basename(input_file_name)
-    fullnameOUT = f"{fpath}/{int(time_out[0]):05d}{fname[5:-3]}_Ls{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
-    #fullnameOUT = f"{fpath}/{str(time_out[0]).zfill(5)}{fname[5:-3]}_Ls{str(bounds[0]).zfill(3)}_{str(bounds[1]).zfill(3)}.nc"
+    if split_dim == 'time':
+        output_file_name = (f"{fpath}/{int(dim_out[0]):05d}{fname[5:-3]}_"
+                            f"Ls{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
+    elif split_dim == 'lat':
+        new_bounds = [str(abs(int(b)))+"S" if b < 0 else str(int(b))+"N" for b in bounds]
+        print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
+        print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
+        output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
+                            f"{new_bounds[0]}_{new_bounds[1]}.nc")
+    else:
+        output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
+                            f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
     
-    print(f"{Cyan}{fullnameOUT}")
-    Log = Ncdf(fullnameOUT)
-    Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = ['time'])
-    Log.add_dimension('time', None)
-    Log.log_axis1D('time', time_out, 'time', longname_txt = "sol number",
-                   units_txt = 'days since 0000-00-00 00:00:00', 
-                   cart_txt = 'T')
-
+    print(f"{Cyan}new filename = {output_file_name}")
+    Log = Ncdf(output_file_name)
+    
+    Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim = [split_dim])
+    
+    if split_dim == 'time':
+        Log.add_dimension(split_dim, None)
+    else:
+        Log.add_dimension(split_dim, len(dim_out))
+    
+    if split_dim == 'time':
+        Log.log_axis1D(variable_name = 'time', 
+                       DATAin = dim_out, 
+                       dim_name = 'time', 
+                       longname_txt = 'sol number',
+                       units_txt = 'days since 0000-00-00 00:00:00', 
+                       cart_txt = 'T')
+    elif split_dim == 'lat':
+        Log.log_axis1D(variable_name = 'lat', 
+                       DATAin = dim_out, 
+                       dim_name = 'lat', 
+                       longname_txt = 'latitude',
+                       units_txt = 'degrees_N', 
+                       cart_txt = 'T')
+    elif split_dim == 'lon':
+        Log.log_axis1D(variable_name = 'lon', 
+                       DATAin = dim_out, 
+                       dim_name = 'lon', 
+                       longname_txt = 'longitude',
+                       units_txt = 'degrees_E', 
+                       cart_txt = 'T')
+    
     # Loop over all variables in the file
     for ivar in var_list:
         varNcf = fNcdf.variables[ivar]
-
-        if 'time' in varNcf.dimensions and ivar != 'time':
-            print(f"{Cyan}Processing: %s ...{ivar}{Nclr}")
-            var_out = varNcf[imin:imax, ...]
+        if split_dim in varNcf.dimensions and ivar != split_dim:  
+            # ivar is a dim of ivar but ivar is not ivar
+            print(f'{Cyan}Processing: {ivar}...{Nclr}')
+            if split_dim == 'time':
+                var_out = varNcf[lower_bound:upper_bound, ...]
+            elif split_dim == 'lat' and varNcf.ndim == 5:
+                var_out = varNcf[:, :, :, lower_bound:upper_bound, :]
+            elif split_dim == 'lat' and varNcf.ndim == 4:
+                var_out = varNcf[:, :, lower_bound:upper_bound, :]
+            elif split_dim == 'lat' and varNcf.ndim == 3:
+                var_out = varNcf[:, lower_bound:upper_bound, :]
+            elif split_dim == 'lat' and varNcf.ndim == 2:
+                var_out = varNcf[lower_bound:upper_bound, ...]
+            elif split_dim == 'lon' and varNcf.ndim > 2:
+                var_out = varNcf[..., lower_bound:upper_bound]
+            elif split_dim == 'lon' and varNcf.ndim == 2:
+                var_out = varNcf[lower_bound:upper_bound, ...]
             longname_txt, units_txt = get_longname_units(fNcdf, ivar)
             Log.log_variable(ivar, var_out, varNcf.dimensions,
                              longname_txt, units_txt)
-
         else:
-            if ivar in ['pfull', 'lat', 'lon', 'phalf', 'pk', 'bk',
-                        'pstd', 'zstd', 'zagl']:
-                print(f"{Cyan}Copying axis: %s...{ivar}{Nclr}")
+            # ivar is ivar OR ivar is not a dim of ivar
+            if (ivar in ['pfull', 'lat', 'lon', 'phalf', 'pk', 'bk',
+                         'pstd', 'zstd', 'zagl', 'time'] and 
+                ivar != split_dim):
+                # ivar is a dimension
+                print(f'{Cyan}Copying axis: {ivar}...{Nclr}')
                 Log.copy_Ncaxis_with_content(fNcdf.variables[ivar])
-            elif ivar!='time':
-                print(f"{Cyan}Copying variable: %s...{ivar}{Nclr}")
+            elif ivar != split_dim:
+                # ivar is not itself and not a dimension of ivar
+                print(f'{Cyan}Copying variable: {ivar}...{Nclr}')
                 Log.copy_Ncvar(fNcdf.variables[ivar])
     Log.close()
     fNcdf.close()
@@ -706,8 +788,9 @@ def main():
         combine_files(file_list, full_file_list)
     
     elif parser.parse_args().split:
-        # Split file along the time dimension
-        split_files(file_list)
+        # Split file along the specified dimension. If none specified,
+        # default to time dimension
+        split_files(file_list, parser.parse_args().dim)
         
     elif parser.parse_args().tshift:
         # Time-shift files
