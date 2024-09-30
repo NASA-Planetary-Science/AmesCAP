@@ -172,10 +172,9 @@ def main():
     #URLbase='https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/'+simu_ID+'/'
     print('new URL base')
     if simu_ID in ['ACTIVECLDS','INERTCLDS', 'NEWBASE_ACTIVECLDS','ACTIVECLDS_NCDF']:
-        URLbase='https://data.nas.nasa.gov/mcmcref/legacygcmdata/'+simu_ID+'/'
+        URLbase='https://data.nas.nasa.gov/legacygcm/legacygcmdata/'+simu_ID+'/'
     elif simu_ID in ['FV3BETAOUT1']:
-        URLbase='https://data.nas.nasa.gov/mcmcref/fv3betaout1data/'
-
+        URLbase='https://data.nas.nasa.gov/legacygcm/fv3betaout1data/'
 
     if parser.parse_args().ls :
         data_input=np.asarray(parser.parse_args().ls)
