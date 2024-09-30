@@ -616,6 +616,11 @@ def get_lon_index(lon_query_180, lons):
                                  np.arange(0, loni_bounds[1]+1))
             txt_lon = (f", lon=avg[{lons[loni_bounds[0]]:.1f}"
                        f"<->{lons[loni_bounds[1]]:.1f}]")
+    #NOTE: is lon dimension is degenerate, e.g. (time,lev,lat,1)
+    #loni must be a scalar, otherwise f.variables['var'][time,lev,lat,loni] returns an error
+    if len(np.atleast_1d(loni))==1 and not np.isscalar(loni):
+        print("*******")
+        loni=loni[0]
     return loni, txt_lon
 
 
@@ -2292,15 +2297,6 @@ class Fig_2D(object):
                 var = mean_func(var, axis = 1)
 
             else:
-                print("=========================")
-                print(f.variables[var_name].shape)
-                print(">>>>>>>>>>>>>>>>>>>>>>>")
-                print([len(np.atleast_1d(ti)), len(np.atleast_1d(zi)), len(lati), len(np.atleast_1d(loni))])
-                print('NOW DO!!!')
-                print(zi)
-                print(f.variables[var_name][ti, zi, lati, loni].shape)
-
-                #print([len(np.atleast_1d(ti)), len(np.atleast_1d(zi)), len(lati), len(np.atleast_1d(loni))])
                 var = f.variables[var_name][ti, zi, lati, loni].reshape(
                     len(np.atleast_1d(ti)),
                     len(np.atleast_1d(zi)),
