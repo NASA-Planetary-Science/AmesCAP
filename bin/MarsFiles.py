@@ -334,7 +334,7 @@ parser.add_argument("-rs", "--regrid_source", nargs="+",
 parser.add_argument("-za", "--zonal_avg", action="store_true",
     help=(
         f"Zonally average all variables in a file.\n"
-        f"{Yellow}Generates a new file ending in ``_zonal_avg.nc``\n"
+        f"{Yellow}Generates a new file ending in ``_zavg.nc``\n"
         f"{Green}Usage:\n"
         "> MarsFiles.py *.atmos_diurn.nc -za"
         f"{Nclr}\n\n"
@@ -1432,7 +1432,7 @@ def main():
                 input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
-            output_file_name = f"{input_file_name[:-3]}_zonal_avg.nc"
+            output_file_name = f"{input_file_name[:-3]}_zavg.nc"
 
             # Append extension, if any:
             if parser.parse_args().ext:
