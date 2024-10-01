@@ -133,8 +133,8 @@ parser.add_argument("-temp", "--temp", action="store_true",
 parser.add_argument("-do", "--do", nargs=1, type=str, default=None,
     help=(
         f"(Re)use a template file (e.g., my_custom.in). Searches in "
-        f"~/amesCAP/mars_templates/ first, then in "
-        f"/u/mkahre/MCMC/analysis/working/shared_templates/.\n"
+        f"~/amesCAP/mars_templates/ first, then in  "
+        f"/path_to_shared_templates/ as defined in MarsPlot\n"
         f"{Green}Usage:\n"
         f"> MarsPlot -do my_custom [other options]"
         f"{Nclr}\n\n"
@@ -225,7 +225,7 @@ def main():
 
     # Directory (dir) containing shared templates
     global shared_dir
-    shared_dir = "/u/mkahre/MCMC/analysis/working/shared_templates"
+    shared_dir = "/path_to_shared_templates"
 
     # Set figure dimensions
     pixel_width = parser.parse_args().pwidth
