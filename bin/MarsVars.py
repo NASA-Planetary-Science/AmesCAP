@@ -508,8 +508,8 @@ def compute_w_net(Vg, wvar):
 # =====================================================================
 def compute_theta(p_3D, ps, temp, f_type):
     """
-    Compute the potential temperature. 
-    
+    Compute the potential temperature.
+
     :param p_3D: The full 3D pressure array (Pa)
     :type p_3D: array [time, lev, lat, lon]
     :param ps: Surface pressure (Pa)
@@ -1386,13 +1386,13 @@ def main():
                             # Z is the first axis
                             zfull = fms_Z_calc(ps, ak, bk,
                                                temp.transpose(lev_T),
-                                               topo=0., lev_type="full")
+                                               topo=0., lev_type="full").transpose(lev_T)
 
                         # Average file: zfull = [lev, time, lat, lon]
                         # Diurn file: zfull = [lev, tod, time, lat, lon]
                         # Differentiate the variable w.r.t. Z:
                         darr_dz = dvar_dh(var.transpose(lev_T),
-                                          zfull).transpose(lev_T)
+                                          zfull.transpose(lev_T)).transpose(lev_T)
 
                         # Note: lev_T swaps dims 0 & 1, ensuring level
                         # is the first dimension for the differentiation
