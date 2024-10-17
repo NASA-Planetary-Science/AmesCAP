@@ -11,10 +11,10 @@ rm -r AmesCAP # or whatever the name is for you
 
 # 2. Load the necessary modules:
 module purge
-module load python3/3.9.12
+module load python3/3.11.5
 
 # 3. (Re)create the virtual environment
-python3.9 -m venv --system-site-packages AmesCAP
+python3.11 -m venv --system-site-packages AmesCAP
 
 # 4. Activate the virtual environment using the appropriate syntax for your shell:
 #______________________________________________________________________________________________
@@ -23,15 +23,9 @@ python3.9 -m venv --system-site-packages AmesCAP
 source AmesCAP/bin/activate.csh                  |  source AmesCAP/bin/activate
 #----------------------------------------------------------------------------------------------
 
-# 5. Install these packages ~within~ the virtual environment:
 
-pip install --upgrade pip
-pip install cmake
-pip install setuptools --upgrade
-
-
-# 6. Install CAP in the virtual environment:
+# 5. Install CAP in the virtual environment:
 pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 
-# 7. Deactivate CAP with:
+# 6. Deactivate CAP with:
 deactivate
