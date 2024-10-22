@@ -604,7 +604,7 @@ def vinterp(varIN, Lfull, Llev, type_int="log", reverse_input=False,
         nindexp1 = (n + 1)*Ndim + Ndimall
 
         # Initialize alpha (size = ``[Ndim]``)
-        alpha = np.NaN * Ndimall
+        alpha = np.nan * Ndimall
         # Only calculate alpha where ``nindex < Nfull``
         Ndo = Ndimall[nindexp1 < Nfull*Ndim]
         if type_int == 'log':
@@ -618,7 +618,7 @@ def vinterp(varIN, Lfull, Llev, type_int="log", reverse_input=False,
 
         # Mask if ``Llev[k]`` < model top for the pressure interpolation
         if masktop:
-            alpha[Llev[k] < Lfull.flatten()[nindex]] = np.NaN
+            alpha[Llev[k] < Lfull.flatten()[nindex]] = np.nan
 
         # Ensure ``n+1`` is never > ``Nfull`` by setting ``n+1 = Nfull``
         # if ever ``n+1 > Nfull``. This does not affect the calculation
@@ -1300,7 +1300,7 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
 
     # Put NaNs back to where they initially were
     if isNan:
-        MSF[mask] = np.NaN
+        MSF[mask] = np.nan
     if isMasked:
         MSF = np.ma.array(MSF, mask = mask)
     return MSF.reshape(shape_out)
@@ -1993,7 +1993,7 @@ def swinbank(plev, psfc, ptrans=1.):
     # ``ks`` would be used for fortran indexing in ``fv_eta.f90``
     return aknew, bknew, ks
 
-def polar_warming(T, lat, outside_range=np.NaN):
+def polar_warming(T, lat, outside_range=np.nan):
     """
     Return the polar warming, following McDunn et al. 2013:
     Characterization of middle-atmosphere polar warming at Mars, JGR
@@ -2014,7 +2014,7 @@ def polar_warming(T, lat, outside_range=np.NaN):
         hemispheres obtained from the nested function
         ``PW_half_hemisphere()``
     """
-    def PW_half_hemisphere(T_half, lat_half, outside_range=np.NaN):
+    def PW_half_hemisphere(T_half, lat_half, outside_range=np.nan):
 
         # Easy case, T is a 1D on the latitude direction only
         if len(T_half.shape) == 1:
@@ -2241,7 +2241,7 @@ def lin_interp(X_in, X_ref, Y_ref):
     # Definition of the interpolating function
     def lin_oneElement(x, X_ref, Y_ref):
         if x < X_ref.min() or x > X_ref.max():
-            return np.NaN
+            return np.nan
 
         # Find closest left-hand size index
         n = np.argmin(np.abs(x-X_ref))
@@ -2974,7 +2974,7 @@ def ortho2cart(LAT, LON, lat0, lon0=0):
     # Filter values on the opposite side of Mars (i.e., ``cos(c) < 0``)
     cosc = (np.sin(lat0) * np.sin(LAT)
             + np.cos(lat0) * np.cos(LAT) * np.cos(LON - lon0))
-    MASK[cosc < 0] = np.NaN
+    MASK[cosc < 0] = np.nan
     return X, Y, MASK
 
 def mollweide2cart(LAT, LON):

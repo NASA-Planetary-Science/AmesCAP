@@ -531,7 +531,7 @@ def smart_reader(fNcdf, var_list, suppress_warning=False):
                           f"{full_path_try}, NOR in raw output or fixed file\n"
                           f"            >>> Assigning {ivar} to NaN")
                     f_tmp.close()
-                    out_list.append(np.NaN)
+                    out_list.append(np.nan)
 
     if one_element:
         out_list = out_list[0]

@@ -1326,8 +1326,8 @@ def main():
                         with warnings.catch_warnings():
                             warnings.simplefilter("ignore",
                                                   category = RuntimeWarning)
-                            OUT[OUT > 1.e30] = np.NaN
-                            OUT[OUT < -1.e30] = np.NaN
+                            OUT[OUT > 1.e30] = np.nan
+                            OUT[OUT < -1.e30] = np.nan
 
                     # Log the variable
                     var_Ncdf = fileNC.createVariable(ivar, "f4", dim_out)
