@@ -25,7 +25,7 @@ source AmesCAP/bin/activate.csh                  |  source AmesCAP/bin/activate
 
 
 # 5. Install CAP in the virtual environment:
-pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
+pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git@devel
 
 # 6. Deactivate CAP with:
 deactivate
