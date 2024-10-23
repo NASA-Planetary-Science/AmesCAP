@@ -29,7 +29,9 @@ import os           # Access operating system functions
 import subprocess   # Run command-line commands
 import matplotlib
 import numpy as np
+import warnings     # suppress errors triggered by NaNs
 from warnings import filterwarnings
+import warnings     # suppress errors triggered by NaNs
 import matplotlib.pyplot as plt
 from netCDF4 import Dataset, MFDataset
 from numpy import abs
@@ -54,7 +56,7 @@ filterwarnings("ignore", category = DeprecationWarning)
 
 degr = u"\N{DEGREE SIGN}"
 global current_version
-current_version = 3.4
+current_version = 3.5
 
 # ======================================================
 #                  ARGUMENT PARSER
@@ -311,6 +313,8 @@ def main():
 
         # ============ Update Progress Bar ============
         global i_list
+        # Create list of figures
+        fig_list = list()
         for i_list in range(0, len(objectList)):
 
             # Display status of figure in progress
@@ -333,8 +337,6 @@ def main():
             progress(i_list, len(objectList), status,
                      objectList[i_list].success)
 
-            # Create list of figures
-            fig_list = list()
             if objectList[i_list].subID == objectList[i_list].nPan:
                 if (i_list < len(objectList)-1 and not
                     objectList[i_list + 1].addLine):
@@ -474,10 +476,12 @@ def mean_func(arr, axis):
 
     :return: the mean over the time axis
     """
-    if include_NaNs:
-        return np.mean(arr, axis = axis)
-    else:
-        return np.nanmean(arr, axis = axis)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category = RuntimeWarning)
+        if include_NaNs:
+            return np.mean(arr, axis = axis)
+        else:
+            return np.nanmean(arr, axis = axis)
 
 
 def shift_data(lon, data):
@@ -548,7 +552,7 @@ def get_lon_index(lon_query_180, lons):
     Nlon = len(lons)
     lon_query_180 = np.array(lon_query_180)
 
-    if lon_query_180.any() == None:
+    if None in lon_query_180:
         # Zonal average
         lon_query_180 = np.array(-99999)
 
@@ -619,7 +623,6 @@ def get_lon_index(lon_query_180, lons):
     #NOTE: is lon dimension is degenerate, e.g. (time,lev,lat,1)
     #loni must be a scalar, otherwise f.variables['var'][time,lev,lat,loni] returns an error
     if len(np.atleast_1d(loni))==1 and not np.isscalar(loni):
-        print("*******")
         loni=loni[0]
     return loni, txt_lon
 
@@ -642,7 +645,7 @@ def get_lat_index(lat_query, lats):
     Nlat = len(lats)
     lat_query = np.array(lat_query)
 
-    if lat_query.any() == None:
+    if None in lat_query:
         # Default to equator
         lat_query = np.array(0.)
     if lat_query.size == 1:
@@ -686,7 +689,7 @@ def get_tod_index(tod_query, tods):
     Ntod = len(tods)
     tod_query = np.array(tod_query)
 
-    if tod_query.any() == None:
+    if None in tod_query:
         # Default to 3 pm
         tod_query = np.array(15)
 
@@ -737,7 +740,7 @@ def get_level_index(level_query, levs):
     level_query = np.array(level_query)
     Nz = len(levs)
 
-    if level_query.any() == None:
+    if None in level_query :
         # Default to surface
         # If level_query >>> Psfc (even for a 10-bar Early Mars sim)
         level_query = np.array(2*10**7)
@@ -799,8 +802,7 @@ def get_time_index(Ls_query_360, LsDay):
 
     Nt = len(LsDay)
     Ls_query_360 = np.array(Ls_query_360)
-
-    if Ls_query_360.any() == None:
+    if None in Ls_query_360:
         # Defaultto last timestep
         Ls_query_360 = np.mod(LsDay[-1], 360.)
     if Ls_query_360.size == 1:
@@ -2019,6 +2021,9 @@ class Fig_2D(object):
                 f"Axis Options  : {Xaxis_txt} = [None,None] | {Yaxis_txt} = "
                 f"[None,None] | cmap = jet | scale = lin | proj = cart \n")
         else:
+            #Special case of Xaxis_txt is Ls, the axis are set using the sol array
+            #This is useful in the case multiple years are displayed
+            if Xaxis_txt =='Ls': Xaxis_txt='Sol'
             customFileIN.write(
                 f"Axis Options  : {Xaxis_txt} = [None,None] | {Yaxis_txt} = "
                 f"[None,None] | cmap = jet |scale = lin \n")
@@ -2523,7 +2528,7 @@ class Fig_2D_lon_lat(Fig_2D):
     # Make_template calls method from parent class
     def make_template(self):
         super(Fig_2D_lon_lat, self).make_template(
-            "Plot 2D lon X lat", "Ls 0-360", "Level Pa/m", "lon", "lat")
+            "Plot 2D lon X lat", "Ls 0-360", "Level Pa/m", "Lon", "Lat")
 
 
     def get_topo_2D(self, varfull, plot_type):
@@ -2934,7 +2939,7 @@ class Fig_2D_time_lat(Fig_2D):
         super(Fig_2D_time_lat, self).make_template("Plot 2D time X lat",
                                                    "Lon +/-180",
                                                    "Level [Pa/m]",
-                                                   "Ls", "lat")
+                                                   "Ls", "Lat")
 
 
     def do_plot(self):
@@ -2978,6 +2983,9 @@ class Fig_2D_time_lat(Fig_2D):
                                  f"\nsol {SolDay[id]}")
                 else:
                     labels[i] = (f"{np.mod(Ls_ticks[i], 360.):g}{degr}")
+            #Clean-up Ls labels at the edges.
+            labels[0]='';labels[-1]=''
+            ax.set_xticks(Ls_ticks)
             ax.set_xticklabels(labels,
                                fontsize = (label_size - self.nPan*tick_factor),
                                rotation = 0)
@@ -3007,7 +3015,7 @@ class Fig_2D_lat_lev(Fig_2D):
         # Calls method from parent class
         super(Fig_2D_lat_lev, self).make_template("Plot 2D lat X lev",
                                                   "Ls 0-360 ", "Lon +/-180",
-                                                  "Lat", "level[Pa/m]")
+                                                  "Lat", "Level[Pa/m]")
 
 
     def do_plot(self):
@@ -3066,7 +3074,7 @@ class Fig_2D_lon_lev(Fig_2D):
         """ Calls method from parent class """
         super(Fig_2D_lon_lev, self).make_template("Plot 2D lon X lev",
                                                   "Ls 0-360 ", "Latitude",
-                                                  "Lon +/-180", "level[Pa/m]")
+                                                  "Lon +/-180", "Level[Pa/m]")
 
 
     def do_plot(self):
@@ -3128,7 +3136,7 @@ class Fig_2D_time_lev(Fig_2D):
         # Calls method from parent class
         super(Fig_2D_time_lev, self).make_template("Plot 2D time X lev",
                                                    "Latitude", "Lon +/-180",
-                                                   "Ls", "level[Pa/m]")
+                                                   "Ls", "Level[Pa/m]")
 
 
     def do_plot(self):
@@ -3170,6 +3178,9 @@ class Fig_2D_time_lev(Fig_2D):
                                  f"\nsol {SolDay[id]}")
                 else:
                     labels[i] = f"{np.mod(Ls_ticks[i], 360.)}{degr}"
+            #Clean-up Ls labels at the edges.
+            labels[0]='';labels[-1]=''
+            ax.set_xticks(Ls_ticks)
             ax.set_xticklabels(labels,
                                fontsize = label_size - self.nPan*tick_factor,
                                rotation = 0)
@@ -4057,7 +4068,9 @@ class Fig_1D(object):
                                      f"\nsol {SolDay[id]}")
                     else:
                         labels[i] = (f"{np.mod(Ls_ticks[i], 360.)}{degr}")
-
+                #Clean-up Ls labels at the edges.
+                labels[0]='';labels[-1]=''
+                ax.set_xticks(Ls_ticks)
                 ax.set_xticklabels(labels,
                                    fontsize = (label_size
                                                - self.nPan*tick_factor),
