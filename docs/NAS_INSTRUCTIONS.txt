@@ -14,13 +14,13 @@ module purge
 module load python3/3.11.5
 
 # 3. (Re)create the virtual environment
-python3.11 -m venv --system-site-packages AmesCAP
+python3.11 -m venv --system-site-packages AmesCAP-dev
 
 # 4. Activate the virtual environment using the appropriate syntax for your shell:
 #______________________________________________________________________________________________
 #               CSH/TSCH                         |               BASH
 #________________________________________________|_____________________________________________
-source AmesCAP/bin/activate.csh                  |  source AmesCAP/bin/activate
+source AmesCAP-dev/bin/activate.csh              |  source AmesCAP-dev/bin/activate
 #----------------------------------------------------------------------------------------------
 
 
