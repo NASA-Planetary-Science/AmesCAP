@@ -350,7 +350,7 @@ def FV3_file_type(fNcdf):
     f_type = "continuous"
     interp_type = "unknown"
     tod_name = "n/a"
-    
+
     # model=read_variable_dict_amescap_profile(fNcdf)
 
     if "time" not in fNcdf.dimensions.keys():
@@ -495,14 +495,14 @@ def smart_reader(fNcdf, var_list, suppress_warning=False):
             # Try to read in the original file
             out_list.append(fNcdf.variables[ivar][:])
         else:
-            full_path_try = alt_FV3path(Ncdf_path, alt = "raw", 
+            full_path_try = alt_FV3path(Ncdf_path, alt = "raw",
                                         test_exist = True)
-            
+
             if file_is_MF:
                 f_tmp = MFDataset(full_path_try, "r")
             else:
                 f_tmp = Dataset(full_path_try, "r")
-            
+
             if ivar in f_tmp.variables.keys():
                 out_list.append(f_tmp.variables[ivar][:])
                 if not suppress_warning:
@@ -514,12 +514,12 @@ def smart_reader(fNcdf, var_list, suppress_warning=False):
                 full_path_try = alt_FV3path(Ncdf_path,
                                             alt = "fixed",
                                             test_exist = True)
-                
+
                 if file_is_MF:
                     full_path_try = full_path_try[0]
 
                 f_tmp = Dataset(full_path_try, "r")
-                
+
                 if ivar in f_tmp.variables.keys():
                     out_list.append(f_tmp.variables[ivar][:])
                     f_tmp.close()
@@ -670,7 +670,7 @@ def progress(k, Nmax):
     :type Nmax: int
     """
     # For rounding to the 2nd digit
-    from math import ceil 
+    from math import ceil
     progress = float(k)/Nmax
     # Modify barLength to change length of progress bar
     barLength = 10
@@ -778,7 +778,7 @@ def filter_vars(fNcdf, include_list=None, giveExclude=False):
             baseline_var.append(ivar)
 
     out_list = baseline_var + input_list_filtered
-    
+
     if giveExclude:
         # Return the two lists
         exclude_list = list(var_list)
@@ -941,6 +941,50 @@ def rjw_cmap():
         [255, 148,  67], [255, 136,  64], [255, 124,  62], [255, 112,  60],
         [255, 100,  58], [255,  80,  46], [255,  60,  34], [255,  40,  23],
         [255,  20,  11], [255,   0,   0], [237,  17,   0]])/255.
+    return ListedColormap(tmp_cmap)
+
+def hot_cold_cmap():
+    """
+    Returns Dark blue > light blue>white>yellow>red colormap
+    Based on Matlab's bipolar colormap
+    """
+    from matplotlib.colors import ListedColormap
+    tmp_cmap = np.zeros((128,4))
+    tmp_cmap [:,3]=1. #set alpha
+    tmp_cmap[:,0:3]=np.array([
+    [0,0,255],[0,7,255],[0,15,255],[0,23,255],
+    [0,30,255],[1,38,255],[2,45,255],[3,52,255],
+    [4,60,255],[5,67,255],[6,73,255],[7,80,255],
+    [9,87,255],[10,93,255],[12,99,255],[14,105,255],
+    [16,112,255],[18,118,255],[20,124,255],[22,129,255],
+    [25,135,255],[27,140,255],[30,145,255],[33,151,255],
+    [36,156,255],[39,161,255],[42,166,255],[46,170,255],
+    [49,175,255],[53,179,255],[56,183,255],[60,188,255],
+    [64,192,255],[68,196,255],[73,199,255],[77,203,255],
+    [81,207,255],[86,210,255],[91,213,255],[96,216,255],
+    [101,220,255],[106,223,255],[111,225,255],[116,228,255],
+    [122,230,255],[127,233,255],[133,235,255],[139,237,255],
+    [145,239,255],[151,241,255],[158,243,255],[164,245,255],
+    [170,246,255],[177,248,255],[184,249,255],[191,250,255],
+    [198,251,255],[205,252,255],[212,253,255],[220,253,255],
+    [227,254,255],[235,254,255],[242,254,255],[250,254,255],
+    [255,254,250],[255,254,242],[255,254,235],[255,254,227],
+    [255,253,220],[255,253,212],[255,252,205],[255,251,198],
+    [255,250,191],[255,249,184],[255,248,177],[255,246,170],
+    [255,245,164],[255,243,158],[255,241,151],[255,239,145],
+    [255,237,139],[255,235,133],[255,233,127],[255,230,122],
+    [255,228,116],[255,225,111],[255,223,106],[255,220,101],
+    [255,216,96],[255,213,91],[255,210,86],[255,207,81],
+    [255,203,77],[255,199,73],[255,196,68],[255,192,64],
+    [255,188,60],[255,183,56],[255,179,53],[255,175,49],
+    [255,170,46],[255,166,42],[255,161,39],[255,156,36],
+    [255,151,33],[255,145,30],[255,140,27],[255,135,25],
+    [255,129,22],[255,124,20],[255,118,18],[255,112,16],
+    [255,105,14],[255,99,12],[255,93,10],[255,87,9],
+    [255,80,7],[255,73,6],[255,67,5],[255,60,4],
+    [255,52,3],[255,45,2],[255,38,1],[255,30,0],
+    [255,23,0],[255,15,0],[255,7,0],[255,0,0]])/255
+
     return ListedColormap(tmp_cmap)
 
 def dkass_dust_cmap():
