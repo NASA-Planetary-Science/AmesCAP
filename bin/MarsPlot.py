@@ -45,7 +45,7 @@ matplotlib.use("Agg") # Force matplotlib NOT to load Xwindows backend
 from amescap.Script_utils import (
     check_file_tape, section_content_amescap_profile, print_fileContent,
     print_varContent, FV3_file_type, find_tod_in_diurn, wbr_cmap,
-    rjw_cmap, dkass_temp_cmap,dkass_dust_cmap)
+    rjw_cmap, dkass_temp_cmap,dkass_dust_cmap,hot_cold_cmap)
 from amescap.FV3_utils import (
     lon360_to_180, lon180_to_360, UT_LTtxt, area_weights_deg,
     shiftgrid_180_to_360, shiftgrid_360_to_180, add_cyclic,
@@ -2493,7 +2493,8 @@ class Fig_2D(object):
             cmap = dkass_temp_cmap()
         if cmap == "dkass_dust":
             cmap = dkass_dust_cmap()
-
+        if cmap == "hot_cold":
+	        cmap = hot_cold_cmap()
         norm, levs = self.return_norm_levs()
 
         if self.range:
