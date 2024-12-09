@@ -1,0 +1,16 @@
+# Testing
+pytest>=7.0
+pytest-cov>=3.0
+tox>=3.24
+
+# Code quality
+black>=22.0
+isort>=5.10
+flake8>=4.0
+mypy>=0.950
+
+# Development tools
+pre-commit>=2.17
+
+# Install the package in editable mode
+-e .
