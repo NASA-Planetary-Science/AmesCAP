@@ -36,7 +36,7 @@ import requests     # download data from site
 parser = argparse.ArgumentParser(
     description=(
         f"{Yellow}Uility for querying files on the MCMC NAS Data "
-        f"Portal.{NoColor}"
+        f"Portal.{Nclr}"
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
@@ -47,11 +47,11 @@ parser.add_argument(
         f"Query data by simulation identifier corresponding to \n"
         f"a subdirectory of :\n"
         f"{Cyan}https://data.nas.nasa.gov/mcmcref/ \n"
-        f"Current options include: '{Yellow}FV3BETAOUT1{NoColor}' '{Yellow}ACTIVECLDS{NoColor}', "
-        f"'{Yellow}INERTCLDS{NoColor}', {Yellow}NEWBASE_ACTIVECLDS{NoColor}  and '{Yellow}ACTIVECLDS_NCDF\n"
+        f"Current options include: '{Yellow}FV3BETAOUT1{Nclr}' '{Yellow}ACTIVECLDS{Nclr}', "
+        f"'{Yellow}INERTCLDS{Nclr}', {Yellow}NEWBASE_ACTIVECLDS{Nclr}  and '{Yellow}ACTIVECLDS_NCDF\n"
         f"{Green}Usage:\n"
         f"> MarsPull.py -id  INERTCLDS..."
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
 
     )
 )
@@ -64,7 +64,7 @@ parser.add_argument(
         f"(--id)\n"
         f"{Green}Usage:\n"
         f"> MarsPull.py -id ACTIVECLDS -f fort.11_0730 fort.11_0731"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -76,7 +76,7 @@ parser.add_argument(
         f"{Green}Usage:\n"
         f"> MarsPull.py -id ACTIVECLDS -ls 90.\n"
         f"> MarsPull.py -id ACTIVECLDS -ls [start] [stop]"
-        f"{NoColor}\n\n"
+        f"{Nclr}\n\n"
     )
 )
 
