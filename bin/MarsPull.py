@@ -19,7 +19,7 @@ List of Functions:
 """
 
 # make print statements appear in color
-from amescap.Script_utils import prYellow, prCyan, Green,Yellow,NoColor,Cyan
+from amescap.Script_utils import prYellow, prCyan, Green, Yellow, Nclr, Cyan
 
 # load generic Python modules
 import sys          # system commands
