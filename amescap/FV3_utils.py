@@ -16,7 +16,6 @@ Third-party Requirements:
 # Load generic Python modules
 import warnings     # suppress errors triggered by NaNs
 import numpy as np
-from numpy import math
 from scipy import optimize
 
 # NOTE p_half = half-level = layer interfaces
@@ -3114,7 +3113,7 @@ def sol2ls(jld, cumulative=False):
     # Date of northern equinox for a 668-sol year
     equinox = 180
     small_value = 1.0e-7
-    pi = math.pi
+    pi = np.pi
     degrad = pi/180.0
 
     # If ``jld`` is a scalar, reshape to a 1-element array
@@ -3145,11 +3144,11 @@ def sol2ls(jld, cumulative=False):
         e = 1.0
         diff = 1.0
         while (diff > small_value):
-            ep = e - (e-ec*math.sin(e)-qq) / (1.0-ec*np.cos(e))
+            ep = e - (e-ec*np.sin(e)-qq) / (1.0-ec*np.cos(e))
             diff = abs(ep - e)
             e = ep
 
-        eq1 = 2.0 * math.atan(er * math.tan(0.5 * e))
+        eq1 = 2.0 * np.atan(er * np.tan(0.5 * e))
 
         # Determine true anomaly at current date (``w``)
         for i in range(0, len(jld)):
@@ -3160,7 +3159,7 @@ def sol2ls(jld, cumulative=False):
                 ep = e - (e-ec*np.sin(e)-em) / (1.0-ec*np.cos(e))
                 diff = abs(ep - e)
                 e = ep
-            w[i] = 2.0 * math.atan(er * math.tan(0.5*e))
+            w[i] = 2.0 * np.atan(er * np.tan(0.5*e))
 
         # Aerocentric Longitude (``als``)
         als = w - eq1
