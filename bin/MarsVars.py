@@ -330,6 +330,22 @@ C_dst = (4/3) * (rho_dst/Qext_dst) * Reff_dst # = 12114.286 [m-2]
 C_ice = (4/3) * (rho_ice/Qext_ice) * Reff_ice # = 2188.874 [m-2]
 
 # ===========================
+
+def interpolated_file_error(ivar, ifile):
+    return(
+        print(f"{Red}ERROR: variable {ivar} can only be added to a "
+              f"pressure-interpolated file.\nRun {Nclr}'MarsInterp.py "
+              f"{ifile} -t pstd' {Red}before trying again.{Nclr}")
+        )
+
+def non_interpolated_file_error(ivar, ifile):
+    return(
+        print(f"{Red}ERROR: variable {ivar} cannot be added to an "
+              f"interpolated file (pstd, zstd, or zagl).\n Please add "
+              f"the variable to the non-interpolated file, and then re-"
+              f"interpolate if necessary.{Nclr}")
+        )
+
 def compute_p_3D(ps, ak, bk, shape_out):
     """
     Compute the 3D pressure at layer midpoints.
@@ -1289,19 +1305,13 @@ def main():
                                 # ->  [time, lev, lat, lon]
                                 # [0 1 2 3] -> [1 2 3 0] -> [3 0 1 2]
                         else:
-                            print(f"{Red}ERROR: variable {ivar} can only be "
-                                  f"added to a pressure-interpolated file.\n"
-                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
-                                  f"{Red}before trying again.{Nclr}")
+                            interpolated_file_error(ivar, ifile)
                             
                     if ivar == "ep":
                         if interp_type == "pstd":
                             OUT = compute_Ep(temp)
                         else:
-                            print(f"{Red}ERROR: variable {ivar} can only be "
-                                  f"added to a pressure-interpolated file.\n"
-                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
-                                  f"{Red}before trying again.{Nclr}")
+                            interpolated_file_error(ivar, ifile)
 
                     if ivar == "ek":
                         if interp_type == "pstd":
@@ -1309,30 +1319,21 @@ def main():
                             vcomp = fileNC.variables["vcomp"][:]
                             OUT = compute_Ek(ucomp, vcomp)
                         else:
-                            print(f"{Red}ERROR: variable {ivar} can only be "
-                                  f"added to a pressure-interpolated file.\n"
-                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
-                                  f"{Red}before trying again.{Nclr}")
+                            interpolated_file_error(ivar, ifile)
 
                     if ivar == "mx":
                         if interp_type == "pstd":
                             OUT = compute_MF(fileNC.variables["ucomp"][:],
                                             fileNC.variables["w"][:])
                         else:
-                            print(f"{Red}ERROR: variable {ivar} can only be "
-                                  f"added to a pressure-interpolated file.\n"
-                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
-                                  f"{Red}before trying again.{Nclr}")
+                            interpolated_file_error(ivar, ifile)
 
                     if ivar == "my":
                         if interp_type == "pstd":
                             OUT = compute_MF(fileNC.variables["vcomp"][:],
                                             fileNC.variables["w"][:])
                         else:
-                            print(f"{Red}ERROR: variable {ivar} can only be "
-                                  f"added to a pressure-interpolated file.\n"
-                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
-                                  f"{Red}before trying again.{Nclr}")
+                            interpolated_file_error(ivar, ifile)
 
                     if ivar == "ax":
                         if interp_type == "pstd":
@@ -1341,10 +1342,7 @@ def main():
                             rho = fileNC.variables["rho"][:]
                             OUT = compute_WMFF(mx, rho, lev, interp_type)
                         else:
-                            print(f"{Red}ERROR: variable {ivar} can only be "
-                                  f"added to a pressure-interpolated file.\n"
-                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
-                                  f"{Red}before trying again.{Nclr}")
+                            interpolated_file_error(ivar, ifile)
 
                     if ivar == "ay":
                         if interp_type == "pstd":
@@ -1353,19 +1351,13 @@ def main():
                             rho = fileNC.variables["rho"][:]
                             OUT = compute_WMFF(my, rho, lev, interp_type)
                         else:
-                            print(f"{Red}ERROR: variable {ivar} can only be "
-                                  f"added to a pressure-interpolated file.\n"
-                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
-                                  f"{Red}before trying again.{Nclr}")
+                            interpolated_file_error(ivar, ifile)
 
                     if ivar == "tp_t":
                         if interp_type == "pstd":
                             OUT = zonal_detrend(temp)/temp
                         else:
-                            print(f"{Red}ERROR: variable {ivar} can only be "
-                                  f"added to a pressure-interpolated file.\n"
-                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
-                                  f"{Red}before trying again.{Nclr}")
+                            interpolated_file_error(ivar, ifile)
 
                     if interp_type == "pfull":
                         # Filter out NANs in the native files
