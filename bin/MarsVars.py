@@ -1268,24 +1268,30 @@ def main():
                         lev = fileNC.variables[interp_type][:]
 
                     if ivar == "msf":
-                        vcomp = fileNC.variables["vcomp"][:]
-                        lat = fileNC.variables["lat"][:]
-                        if f_type == "diurn":
-                            # [lev, lat, time, tod, lon]
-                            # -> [time, tod, lev, lat, lon]
-                            # [0 1 2 3 4] -> [2 3 0 1 4] -> [2 3 0 1 4]
-                            OUT = mass_stream(
-                                vcomp.transpose([2, 3, 0, 1, 4]), lat, lev,
-                                type=interp_type).transpose([2, 3, 0, 1, 4])
+                        if interp_type == "pstd":
+                            vcomp = fileNC.variables["vcomp"][:]
+                            lat = fileNC.variables["lat"][:]
+                            if f_type == "diurn":
+                                # [lev, lat, time, tod, lon]
+                                # -> [time, tod, lev, lat, lon]
+                                # [0 1 2 3 4] -> [2 3 0 1 4] -> [2 3 0 1 4]
+                                OUT = mass_stream(
+                                    vcomp.transpose([2, 3, 0, 1, 4]), lat, lev,
+                                    type=interp_type).transpose([2, 3, 0, 1, 4])
+                            else:
+                                OUT = mass_stream(
+                                    vcomp.transpose([1, 2, 3, 0]), lat, lev,
+                                    type=interp_type).transpose([3, 0, 1, 2])
+                                # [time, lev, lat, lon]
+                                # -> [lev, lat, lon, time]
+                                # ->  [time, lev, lat, lon]
+                                # [0 1 2 3] -> [1 2 3 0] -> [3 0 1 2]
                         else:
-                            OUT = mass_stream(
-                                vcomp.transpose([1, 2, 3, 0]), lat, lev,
-                                type=interp_type).transpose([3, 0, 1, 2])
-                            # [time, lev, lat, lon]
-                            # -> [lev, lat, lon, time]
-                            # ->  [time, lev, lat, lon]
-                            # [0 1 2 3] -> [1 2 3 0] -> [3 0 1 2]
-
+                            print(f"{Red}ERROR: variable {ivar} can only be "
+                                  f"added to a pressure-interpolated file. "
+                                  f"Run 'MarsInterp.py {ifile} -t pstd' "
+                                  f"before trying again.{Nclr}")
+                            
                     if ivar == "ep":
                         OUT = compute_Ep(temp)
 

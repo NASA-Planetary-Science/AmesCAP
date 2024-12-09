@@ -9,7 +9,7 @@ Welcome to AmesCAP's Documentation!
 
 CAP is inspired by the need for increased access to MGCM output. MGCM data products are notoriously complex because the output files are typically tens of GB in size, hold multi-dimensional arrays on model-specific computational grids, and require post-processing in order to make the data usable in scientific, engineering, and educational applications. From simple command-line calls to CAP executables, users can access functions that pressure-interpolate, regrid, perform tidal analyses and time averages (e.g., diurnal, hourly, composite days), and derive secondary variables from the data in MGCM output files.
 
-.. image:: ../MarsPlot_Cycle.png
+.. image:: ../sphinx_images/MarsPlot_Cycle.png
    :width: 800
    :alt: An image illustrating the CAP plot cycle.
 
