@@ -171,7 +171,7 @@ parser.add_argument("-o", "--output", default="pdf",
 parser.add_argument("-vert", "--vertical", action="store_true",
                     default=False,
     help=(
-        f"Output figures in portrain instead of landscape format.\n\n"
+        f"Output figures in portrait instead of landscape format.\n\n"
     )
 )
 
@@ -2494,7 +2494,7 @@ class Fig_2D(object):
         if cmap == "dkass_dust":
             cmap = dkass_dust_cmap()
         if cmap == "hot_cold":
-	        cmap = hot_cold_cmap()
+            cmap = hot_cold_cmap()
         norm, levs = self.return_norm_levs()
 
         if self.range:
