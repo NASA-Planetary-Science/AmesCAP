@@ -331,18 +331,18 @@ C_ice = (4/3) * (rho_ice/Qext_ice) * Reff_ice # = 2188.874 [m-2]
 
 # ===========================
 
-def interpolated_file_error(ivar, ifile):
+def err_req_interpolated_file(ivar, ifile):
     return(
         print(f"{Red}ERROR: variable {ivar} can only be added to a "
-              f"pressure-interpolated file.\nRun {Nclr}'MarsInterp.py "
+              f"pressure-interpolated file.\nRun {Yellow}'MarsInterp.py "
               f"{ifile} -t pstd' {Red}before trying again.{Nclr}")
         )
 
-def non_interpolated_file_error(ivar, ifile):
+def err_req_non_interpolated_file(ivar, ifile):
     return(
-        print(f"{Red}ERROR: variable {ivar} cannot be added to an "
-              f"interpolated file (pstd, zstd, or zagl).\n Please add "
-              f"the variable to the non-interpolated file, and then re-"
+        print(f"{Red}ERROR: variable {ivar} cannot be added to {ifile} "
+              f"as it is an interpolated file.\n Please add the "
+              f"variable to a non-interpolated file, and then re-"
               f"interpolate if necessary.{Nclr}")
         )
 
@@ -1150,109 +1150,160 @@ def main():
                             pass
 
                     if ivar == "dzTau":
-                        if "dst_mass_micro" in fileNC.variables.keys():
-                            q = fileNC.variables["dst_mass_micro"][:]
-                        elif "dst_mass_mom" in fileNC.variables.keys():
-                            q = fileNC.variables["dst_mass_mom"][:]
-                        OUT = compute_xzTau(q, temp, lev, C_dst, f_type)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            if "dst_mass_micro" in fileNC.variables.keys():
+                                q = fileNC.variables["dst_mass_micro"][:]
+                            elif "dst_mass_mom" in fileNC.variables.keys():
+                                q = fileNC.variables["dst_mass_mom"][:]
+                            OUT = compute_xzTau(q, temp, lev, C_dst, f_type)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "izTau":
-                        if "ice_mass_micro" in fileNC.variables.keys():
-                            q = fileNC.variables["ice_mass_micro"][:]
-                        elif "ice_mass_mom" in fileNC.variables.keys():
-                            q = fileNC.variables["ice_mass_mom"][:]
-                        OUT = compute_xzTau(q, temp, lev, C_ice, f_type)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            if "ice_mass_micro" in fileNC.variables.keys():
+                                q = fileNC.variables["ice_mass_micro"][:]
+                            elif "ice_mass_mom" in fileNC.variables.keys():
+                                q = fileNC.variables["ice_mass_mom"][:]
+                            OUT = compute_xzTau(q, temp, lev, C_ice, f_type)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "dst_mass_micro":
-                        xTau = fileNC.variables["dzTau"][:]
-                        OUT = compute_mmr(xTau, temp, lev, C_dst, f_type)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            xTau = fileNC.variables["dzTau"][:]
+                            OUT = compute_mmr(xTau, temp, lev, C_dst, f_type)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "ice_mass_micro":
-                        xTau = fileNC.variables["izTau"][:]
-                        OUT = compute_mmr(xTau, temp, lev, C_ice, f_type)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            xTau = fileNC.variables["izTau"][:]
+                            OUT = compute_mmr(xTau, temp, lev, C_ice, f_type)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "Vg_sed":
-                        if "dst_mass_micro" in fileNC.variables.keys():
-                            xTau = fileNC.variables["dst_mass_micro"][:]
-                            nTau = fileNC.variables["dst_num_micro"][:]
-                        elif "dst_mass_mom" in fileNC.variables.keys():
-                            xTau = fileNC.variables["dst_mass_mom"][:]
-                            nTau = fileNC.variables["dst_num_mom"][:]
-                        OUT = compute_Vg_sed(xTau, nTau, temp)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            if "dst_mass_micro" in fileNC.variables.keys():
+                                xTau = fileNC.variables["dst_mass_micro"][:]
+                                nTau = fileNC.variables["dst_num_micro"][:]
+                            elif "dst_mass_mom" in fileNC.variables.keys():
+                                xTau = fileNC.variables["dst_mass_mom"][:]
+                                nTau = fileNC.variables["dst_num_mom"][:]
+                            OUT = compute_Vg_sed(xTau, nTau, temp)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "w_net":
-                        Vg = fileNC.variables["Vg_sed"][:]
-                        wvar = fileNC.variables["w"][:]
-                        OUT = compute_w_net(Vg, wvar)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            Vg = fileNC.variables["Vg_sed"][:]
+                            wvar = fileNC.variables["w"][:]
+                            OUT = compute_w_net(Vg, wvar)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "pfull3D":
-                        OUT = p_3D
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            OUT = p_3D
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "DP":
-                        OUT = compute_DP_3D(ps, ak, bk, shape_out)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            OUT = compute_DP_3D(ps, ak, bk, shape_out)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "rho":
-                        OUT = compute_rho(p_3D, temp)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            OUT = compute_rho(p_3D, temp)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "theta":
-                        OUT = compute_theta(p_3D, ps, temp, f_type)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            OUT = compute_theta(p_3D, ps, temp, f_type)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "w":
-                        omega = fileNC.variables["omega"][:]
-                        rho = compute_rho(p_3D, temp)
-                        OUT = compute_w(rho, omega)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            omega = fileNC.variables["omega"][:]
+                            rho = compute_rho(p_3D, temp)
+                            OUT = compute_w(rho, omega)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "zfull":
-                        # TODO not with _pstd
-                        OUT = compute_zfull(ps, ak, bk, temp)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            OUT = compute_zfull(ps, ak, bk, temp)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "DZ":
-                        OUT = compute_DZ_3D(ps, ak, bk, temp, shape_out)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            OUT = compute_DZ_3D(ps, ak, bk, temp, shape_out)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "wspeed" or ivar == "wdir":
-                        ucomp = fileNC.variables["ucomp"][:]
-                        vcomp = fileNC.variables["vcomp"][:]
-                        theta, mag = cart_to_azimut_TR(
-                            ucomp, vcomp, mode="from")
-                        if ivar == "wdir":
-                            OUT = theta
-                        if ivar == "wspeed":
-                            OUT = mag
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            ucomp = fileNC.variables["ucomp"][:]
+                            vcomp = fileNC.variables["vcomp"][:]
+                            theta, mag = cart_to_azimut_TR(
+                                ucomp, vcomp, mode="from")
+                            if ivar == "wdir":
+                                OUT = theta
+                            if ivar == "wspeed":
+                                OUT = mag
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
-                    # TODO incompatible with pstd files
                     if ivar == "N":
-                        theta = compute_theta(p_3D, ps, temp, f_type)
-                        zfull = compute_zfull(ps, ak, bk, temp)
-                        OUT = compute_N(theta, zfull)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            theta = compute_theta(p_3D, ps, temp, f_type)
+                            zfull = compute_zfull(ps, ak, bk, temp)
+                            OUT = compute_N(theta, zfull)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
-                    # TODO incompatible with pstd files
                     if ivar == "Ri":
-                        theta = compute_theta(p_3D, ps, temp, f_type)
-                        zfull = compute_zfull(ps, ak, bk, temp)
-                        N = compute_N(theta, zfull)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            theta = compute_theta(p_3D, ps, temp, f_type)
+                            zfull = compute_zfull(ps, ak, bk, temp)
+                            N = compute_N(theta, zfull)
 
-                        ucomp = fileNC.variables["ucomp"][:]
-                        vcomp = fileNC.variables["vcomp"][:]
-                        du_dz = dvar_dh(
-                            ucomp.transpose(lev_T),
-                            zfull.transpose(lev_T)).transpose(lev_T)
-                        dv_dz = dvar_dh(
-                            vcomp.transpose(lev_T),
-                            zfull.transpose(lev_T)).transpose(lev_T)
-                        OUT = N**2/(du_dz**2+dv_dz**2)
+                            ucomp = fileNC.variables["ucomp"][:]
+                            vcomp = fileNC.variables["vcomp"][:]
+                            du_dz = dvar_dh(
+                                ucomp.transpose(lev_T),
+                                zfull.transpose(lev_T)).transpose(lev_T)
+                            dv_dz = dvar_dh(
+                                vcomp.transpose(lev_T),
+                                zfull.transpose(lev_T)).transpose(lev_T)
+                            OUT = N**2/(du_dz**2+dv_dz**2)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     # NOTE lev_T swaps dims 0 & 1, ensuring level is
                     # the first dimension for the differentiation
 
                     if ivar == "Tco2":
-                        OUT = compute_Tco2(p_3D)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            OUT = compute_Tco2(p_3D)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "scorer_wl":
-                        ucomp = fileNC.variables["ucomp"][:]
-                        theta = compute_theta(p_3D, ps, temp, f_type)
-                        zfull = compute_zfull(ps, ak, bk, temp)
-                        N = compute_N(theta, zfull)
-                        OUT = compute_scorer(N, ucomp, zfull)
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            ucomp = fileNC.variables["ucomp"][:]
+                            theta = compute_theta(p_3D, ps, temp, f_type)
+                            zfull = compute_zfull(ps, ak, bk, temp)
+                            N = compute_N(theta, zfull)
+                            OUT = compute_scorer(N, ucomp, zfull)
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar in ["div", "curl", "fn"]:
                         lat = fileNC.variables["lat"][:]
@@ -1261,20 +1312,29 @@ def main():
                         vcomp = fileNC.variables["vcomp"][:]
 
                     if ivar == "div":
-                        OUT = spherical_div(ucomp, vcomp, lon, lat,
-                                            R = 3400*1000.,
-                                            spacing = "regular")
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            OUT = spherical_div(ucomp, vcomp, lon, lat,
+                                                R = 3400*1000.,
+                                                spacing = "regular")
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "curl":
-                        OUT = spherical_curl(ucomp, vcomp, lon, lat,
-                                             R = 3400*1000.,
-                                             spacing = "regular")
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            OUT = spherical_curl(ucomp, vcomp, lon, lat,
+                                                R = 3400*1000.,
+                                                spacing = "regular")
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "fn":
-                        theta = fileNC.variables["theta"][:]
-                        OUT = frontogenesis(ucomp, vcomp, theta, lon, lat,
-                                            R = 3400*1000.,
-                                            spacing = "regular")
+                        if interp_type not in ("pstd", "zstd", "zagl"):
+                            theta = fileNC.variables["theta"][:]
+                            OUT = frontogenesis(ucomp, vcomp, theta, lon, lat,
+                                                R = 3400*1000.,
+                                                spacing = "regular")
+                        else:
+                            err_req_non_interpolated_file(ivar, ifile)
 
                     # ==================================================
                     #               Interpolated Files
@@ -1283,8 +1343,8 @@ def main():
                     if interp_type != "pfull":
                         lev = fileNC.variables[interp_type][:]
 
-                    # The next several variables can ONLY be added to pressure-
-                    # interpolated files.
+                    # The next several variables can ONLY be added to
+                    # pressure interpolated files.
                     if ivar == "msf":
                         if interp_type == "pstd":
                             vcomp = fileNC.variables["vcomp"][:]
@@ -1292,7 +1352,7 @@ def main():
                             if f_type == "diurn":
                                 # [lev, lat, time, tod, lon]
                                 # -> [time, tod, lev, lat, lon]
-                                # [0 1 2 3 4] -> [2 3 0 1 4] -> [2 3 0 1 4]
+                                # [0 1 2 3 4] -> [2 3 0 1 4]
                                 OUT = mass_stream(
                                     vcomp.transpose([2, 3, 0, 1, 4]), lat, lev,
                                     type=interp_type).transpose([2, 3, 0, 1, 4])
@@ -1305,13 +1365,13 @@ def main():
                                 # ->  [time, lev, lat, lon]
                                 # [0 1 2 3] -> [1 2 3 0] -> [3 0 1 2]
                         else:
-                            interpolated_file_error(ivar, ifile)
-                            
+                            err_req_interpolated_file(ivar, ifile)
+
                     if ivar == "ep":
                         if interp_type == "pstd":
                             OUT = compute_Ep(temp)
                         else:
-                            interpolated_file_error(ivar, ifile)
+                            err_req_interpolated_file(ivar, ifile)
 
                     if ivar == "ek":
                         if interp_type == "pstd":
@@ -1319,21 +1379,21 @@ def main():
                             vcomp = fileNC.variables["vcomp"][:]
                             OUT = compute_Ek(ucomp, vcomp)
                         else:
-                            interpolated_file_error(ivar, ifile)
+                            err_req_interpolated_file(ivar, ifile)
 
                     if ivar == "mx":
                         if interp_type == "pstd":
                             OUT = compute_MF(fileNC.variables["ucomp"][:],
-                                            fileNC.variables["w"][:])
+                                             fileNC.variables["w"][:])
                         else:
-                            interpolated_file_error(ivar, ifile)
+                            err_req_interpolated_file(ivar, ifile)
 
                     if ivar == "my":
                         if interp_type == "pstd":
                             OUT = compute_MF(fileNC.variables["vcomp"][:],
-                                            fileNC.variables["w"][:])
+                                             fileNC.variables["w"][:])
                         else:
-                            interpolated_file_error(ivar, ifile)
+                            err_req_interpolated_file(ivar, ifile)
 
                     if ivar == "ax":
                         if interp_type == "pstd":
@@ -1342,7 +1402,7 @@ def main():
                             rho = fileNC.variables["rho"][:]
                             OUT = compute_WMFF(mx, rho, lev, interp_type)
                         else:
-                            interpolated_file_error(ivar, ifile)
+                            err_req_interpolated_file(ivar, ifile)
 
                     if ivar == "ay":
                         if interp_type == "pstd":
@@ -1351,13 +1411,13 @@ def main():
                             rho = fileNC.variables["rho"][:]
                             OUT = compute_WMFF(my, rho, lev, interp_type)
                         else:
-                            interpolated_file_error(ivar, ifile)
+                            err_req_interpolated_file(ivar, ifile)
 
                     if ivar == "tp_t":
                         if interp_type == "pstd":
                             OUT = zonal_detrend(temp)/temp
                         else:
-                            interpolated_file_error(ivar, ifile)
+                            err_req_interpolated_file(ivar, ifile)
 
                     if interp_type == "pfull":
                         # Filter out NANs in the native files
