@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "amescap"
+version = "0.3"
+description = "Analysis pipeline for the NASA Ames MGCM"
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "MIT License"}
+authors = [
+    {name = "Mars Climate Modeling Center", email = "alexandre.m.kling@nasa.gov"}
+]
+urls = {Homepage = "https://github.com/NASA-Planetary-Science/AmesCAP"}
+dependencies = [
+    "requests>=2.31.0",
+    "netCDF4>=1.6.5",
+    "numpy>=1.26.2",
+    "matplotlib>=3.8.2",
+    "scipy>=1.11.4",
+    "xarray>=2023.5.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["amescap*"]
+
+[tool.setuptools.data-files]
+"mars_data" = ["mars_data/Legacy.fixed.nc"]
+"mars_templates" = [
+    "mars_templates/legacy.in",
+    "mars_templates/amescap_profile"
+]

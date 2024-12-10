@@ -1,6 +1,0 @@
-requests
-netCDF4
-numpy
-matplotlib
-scipy
-xarray

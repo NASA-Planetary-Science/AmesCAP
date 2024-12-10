@@ -1267,55 +1267,105 @@ def main():
                     if interp_type != "pfull":
                         lev = fileNC.variables[interp_type][:]
 
+                    # The next several variables can ONLY be added to pressure-
+                    # interpolated files.
                     if ivar == "msf":
-                        vcomp = fileNC.variables["vcomp"][:]
-                        lat = fileNC.variables["lat"][:]
-                        if f_type == "diurn":
-                            # [lev, lat, time, tod, lon]
-                            # -> [time, tod, lev, lat, lon]
-                            # [0 1 2 3 4] -> [2 3 0 1 4] -> [2 3 0 1 4]
-                            OUT = mass_stream(
-                                vcomp.transpose([2, 3, 0, 1, 4]), lat, lev,
-                                type=interp_type).transpose([2, 3, 0, 1, 4])
+                        if interp_type == "pstd":
+                            vcomp = fileNC.variables["vcomp"][:]
+                            lat = fileNC.variables["lat"][:]
+                            if f_type == "diurn":
+                                # [lev, lat, time, tod, lon]
+                                # -> [time, tod, lev, lat, lon]
+                                # [0 1 2 3 4] -> [2 3 0 1 4] -> [2 3 0 1 4]
+                                OUT = mass_stream(
+                                    vcomp.transpose([2, 3, 0, 1, 4]), lat, lev,
+                                    type=interp_type).transpose([2, 3, 0, 1, 4])
+                            else:
+                                OUT = mass_stream(
+                                    vcomp.transpose([1, 2, 3, 0]), lat, lev,
+                                    type=interp_type).transpose([3, 0, 1, 2])
+                                # [time, lev, lat, lon]
+                                # -> [lev, lat, lon, time]
+                                # ->  [time, lev, lat, lon]
+                                # [0 1 2 3] -> [1 2 3 0] -> [3 0 1 2]
                         else:
-                            OUT = mass_stream(
-                                vcomp.transpose([1, 2, 3, 0]), lat, lev,
-                                type=interp_type).transpose([3, 0, 1, 2])
-                            # [time, lev, lat, lon]
-                            # -> [lev, lat, lon, time]
-                            # ->  [time, lev, lat, lon]
-                            # [0 1 2 3] -> [1 2 3 0] -> [3 0 1 2]
-
+                            print(f"{Red}ERROR: variable {ivar} can only be "
+                                  f"added to a pressure-interpolated file.\n"
+                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
+                                  f"{Red}before trying again.{Nclr}")
+                            
                     if ivar == "ep":
-                        OUT = compute_Ep(temp)
+                        if interp_type == "pstd":
+                            OUT = compute_Ep(temp)
+                        else:
+                            print(f"{Red}ERROR: variable {ivar} can only be "
+                                  f"added to a pressure-interpolated file.\n"
+                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
+                                  f"{Red}before trying again.{Nclr}")
 
                     if ivar == "ek":
-                        ucomp = fileNC.variables["ucomp"][:]
-                        vcomp = fileNC.variables["vcomp"][:]
-                        OUT = compute_Ek(ucomp, vcomp)
+                        if interp_type == "pstd":
+                            ucomp = fileNC.variables["ucomp"][:]
+                            vcomp = fileNC.variables["vcomp"][:]
+                            OUT = compute_Ek(ucomp, vcomp)
+                        else:
+                            print(f"{Red}ERROR: variable {ivar} can only be "
+                                  f"added to a pressure-interpolated file.\n"
+                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
+                                  f"{Red}before trying again.{Nclr}")
 
                     if ivar == "mx":
-                        OUT = compute_MF(fileNC.variables["ucomp"][:],
-                                         fileNC.variables["w"][:])
+                        if interp_type == "pstd":
+                            OUT = compute_MF(fileNC.variables["ucomp"][:],
+                                            fileNC.variables["w"][:])
+                        else:
+                            print(f"{Red}ERROR: variable {ivar} can only be "
+                                  f"added to a pressure-interpolated file.\n"
+                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
+                                  f"{Red}before trying again.{Nclr}")
 
                     if ivar == "my":
-                        OUT = compute_MF(fileNC.variables["vcomp"][:],
-                                         fileNC.variables["w"][:])
+                        if interp_type == "pstd":
+                            OUT = compute_MF(fileNC.variables["vcomp"][:],
+                                            fileNC.variables["w"][:])
+                        else:
+                            print(f"{Red}ERROR: variable {ivar} can only be "
+                                  f"added to a pressure-interpolated file.\n"
+                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
+                                  f"{Red}before trying again.{Nclr}")
 
                     if ivar == "ax":
-                        mx = compute_MF(fileNC.variables["ucomp"][:],
-                                        fileNC.variables["w"][:])
-                        rho = fileNC.variables["rho"][:]
-                        OUT = compute_WMFF(mx, rho, lev, interp_type)
+                        if interp_type == "pstd":
+                            mx = compute_MF(fileNC.variables["ucomp"][:],
+                                            fileNC.variables["w"][:])
+                            rho = fileNC.variables["rho"][:]
+                            OUT = compute_WMFF(mx, rho, lev, interp_type)
+                        else:
+                            print(f"{Red}ERROR: variable {ivar} can only be "
+                                  f"added to a pressure-interpolated file.\n"
+                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
+                                  f"{Red}before trying again.{Nclr}")
 
                     if ivar == "ay":
-                        my = compute_MF(fileNC.variables["vcomp"][:],
-                                        fileNC.variables["w"][:])
-                        rho = fileNC.variables["rho"][:]
-                        OUT = compute_WMFF(my, rho, lev, interp_type)
+                        if interp_type == "pstd":
+                            my = compute_MF(fileNC.variables["vcomp"][:],
+                                            fileNC.variables["w"][:])
+                            rho = fileNC.variables["rho"][:]
+                            OUT = compute_WMFF(my, rho, lev, interp_type)
+                        else:
+                            print(f"{Red}ERROR: variable {ivar} can only be "
+                                  f"added to a pressure-interpolated file.\n"
+                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
+                                  f"{Red}before trying again.{Nclr}")
 
                     if ivar == "tp_t":
-                        OUT = zonal_detrend(temp)/temp
+                        if interp_type == "pstd":
+                            OUT = zonal_detrend(temp)/temp
+                        else:
+                            print(f"{Red}ERROR: variable {ivar} can only be "
+                                  f"added to a pressure-interpolated file.\n"
+                                  f"Run {Nclr}'MarsInterp.py {ifile} -t pstd' "
+                                  f"{Red}before trying again.{Nclr}")
 
                     if interp_type == "pfull":
                         # Filter out NANs in the native files
