@@ -456,8 +456,11 @@ def split_files(file_list, split_dim):
         split_dim = 'time'
     bounds = np.asarray(parser.parse_args().split).astype(float)
     
-    if len(np.atleast_1d(bounds)) != 2:
-        print(f"{Red}Requires two values: [lower_bound] [upper_bound]{Nclr}")
+    if len(np.atleast_1d(bounds)) > 2 or len(np.atleast_1d(bounds)) < 1:
+        print(f"{Red}Accepts only ONE or TWO values:"
+              f"[bound] to reduce one dimension to a single value"
+              f"[lower_bound] [upper_bound] to reduce one dimension to "
+              f"a range{Nclr}")
         exit()
         
     # Add path unless full path is provided
@@ -470,50 +473,71 @@ def split_files(file_list, split_dim):
     fNcdf = Dataset(input_file_name, 'r', format = 'NETCDF4_CLASSIC')
     var_list = filter_vars(fNcdf, parser.parse_args().include)
 
-    dim_var = fNcdf.variables[split_dim][:]
+    # reducing_dim = fNcdf.variables[split_dim][:]
     
     # Get file type (diurn, average, daily, etc.)
     f_type, _ = FV3_file_type(fNcdf)
 
+    # Remove all single dimensions from areo (scalar_axis)
     if f_type == 'diurn': 
         if split_dim == 'time':
-            # size = areo (133, 24, 1)
-            bounds_limit = np.squeeze(fNcdf.variables['areo'][:, 0, :]) % 360
+            # size areo = (time, tod, scalar_axis)
+            reducing_dim = np.squeeze(fNcdf.variables['areo'][:, 0, :]) % 360
         else:
-            bounds_limit = np.squeeze(fNcdf.variables[split_dim][:, 0])
+            reducing_dim = np.squeeze(fNcdf.variables[split_dim][:, 0])
     else:
         if split_dim == 'time':
-            # size = areo (133, 1)
-            bounds_limit = np.squeeze(fNcdf.variables['areo'][:]) % 360
+            # size areo = (time, scalar_axis)
+            reducing_dim = np.squeeze(fNcdf.variables['areo'][:]) % 360
         else:
-            bounds_limit = np.squeeze(fNcdf.variables[split_dim][:])
+            reducing_dim = np.squeeze(fNcdf.variables[split_dim][:])
 
-    lower_bound = np.argmin(np.abs(bounds[0] - bounds_limit))
-    upper_bound = np.argmin(np.abs(bounds[1] - bounds_limit))
-
-    if lower_bound == upper_bound:
-        print(f"{Red}Warning, requested {split_dim} min, max ({bounds[0]}, "
-              f"{bounds[1]}) are out of file range ({split_dim} = "
-              f"{bounds_limit[0]:.1f}-{bounds_limit[-1]:.1f})")
-        exit()
-
-    dim_out = dim_var[lower_bound:upper_bound]
-    print(f"{Yellow}dim_var = {dim_var}")
-    print(f"{Yellow}dim_out = {dim_out}")
+    print(f"\n{Yellow}All values in dimension:\n{reducing_dim}\n")
+    if len(np.atleast_1d(bounds)) < 2:
+        indices = [(np.abs(reducing_dim - bounds[0])).argmin()]
+        dim_out = reducing_dim[indices]
+        print(f"Requested value = {bounds[0]}\n"
+              f"Nearest value = {dim_out[0]}\n")
+    else:
+        indices = np.where((reducing_dim >= bounds[0]) & (reducing_dim <= bounds[1]))[0]
+        dim_out = reducing_dim[indices]
+        print(f"Requested range = {bounds[0]} - {bounds[1]}\n"
+              f"Corresponding values = {dim_out}\n")
+        if len(indices) == 0:
+            print(f"{Red}Warning, no values were found in the range {split_dim} "
+                f"{bounds[0]}, {bounds[1]}) ({split_dim} values range from "
+                f"{reducing_dim[0]:.1f} to {reducing_dim[-1]:.1f})")
+            exit()
+            
+    if split_dim == 'time':
+        time_dim = (np.squeeze(fNcdf.variables['time'][:]))[indices]
+        print(f"time_dim = {time_dim}")
 
     fpath, fname = extract_path_basename(input_file_name)
     if split_dim == 'time':
-        output_file_name = (f"{fpath}/{int(dim_out[0]):05d}{fname[5:-3]}_"
-                            f"Ls{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
+        if len(np.atleast_1d(bounds)) < 2:
+            output_file_name = (f"{fpath}/{int(time_dim):05d}{fname[5:-3]}_"
+                                f"nearest_Ls{int(bounds[0]):03d}.nc")
+        else:
+            output_file_name = (f"{fpath}/{int(time_dim[0]):05d}{fname[5:-3]}_"
+                                f"Ls{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
     elif split_dim == 'lat':
         new_bounds = [str(abs(int(b)))+"S" if b < 0 else str(int(b))+"N" for b in bounds]
-        print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
-        print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
-        output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
-                            f"{new_bounds[0]}_{new_bounds[1]}.nc")
+        if len(np.atleast_1d(bounds)) < 2:
+            output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
+                                f"nearest_{new_bounds[0]}.nc")
+        else:
+            print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
+            print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
+            output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
+                                f"{new_bounds[0]}_{new_bounds[1]}.nc")
     else:
-        output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
-                            f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
+        if len(np.atleast_1d(bounds)) < 2:
+            output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
+                                f"nearest_{int(bounds[0]):03d}.nc")
+        else:
+            output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
+                                f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
     
     print(f"{Cyan}new filename = {output_file_name}")
     Log = Ncdf(output_file_name)
@@ -554,19 +578,19 @@ def split_files(file_list, split_dim):
             # ivar is a dim of ivar but ivar is not ivar
             print(f'{Cyan}Processing: {ivar}...{Nclr}')
             if split_dim == 'time':
-                var_out = varNcf[lower_bound:upper_bound, ...]
+                var_out = varNcf[indices, ...]
             elif split_dim == 'lat' and varNcf.ndim == 5:
-                var_out = varNcf[:, :, :, lower_bound:upper_bound, :]
+                var_out = varNcf[:, :, :, indices, :]
             elif split_dim == 'lat' and varNcf.ndim == 4:
-                var_out = varNcf[:, :, lower_bound:upper_bound, :]
+                var_out = varNcf[:, :, indices, :]
             elif split_dim == 'lat' and varNcf.ndim == 3:
-                var_out = varNcf[:, lower_bound:upper_bound, :]
+                var_out = varNcf[:, indices, :]
             elif split_dim == 'lat' and varNcf.ndim == 2:
-                var_out = varNcf[lower_bound:upper_bound, ...]
+                var_out = varNcf[indices, ...]
             elif split_dim == 'lon' and varNcf.ndim > 2:
-                var_out = varNcf[..., lower_bound:upper_bound]
+                var_out = varNcf[..., indices]
             elif split_dim == 'lon' and varNcf.ndim == 2:
-                var_out = varNcf[lower_bound:upper_bound, ...]
+                var_out = varNcf[indices, ...]
             longname_txt, units_txt = get_longname_units(fNcdf, ivar)
             Log.log_variable(ivar, var_out, varNcf.dimensions,
                              longname_txt, units_txt)
