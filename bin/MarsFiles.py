@@ -120,20 +120,25 @@ parser.add_argument("-c", "--combine", action="store_true",
 
 parser.add_argument("-split", "--split", nargs="+",
     help=(
-        f"Extract values between min and max solar longitudes 0-360 [°]\n"
-        f"This assumes all values in the file are from only one Mars Year.\n"
+        f"Extract a range of values along a dimension. Defaults to Ls, unless "
+        f"otherwise specified using --dim. If the file contains multiple Mars "
+        f"Years of data, this function splits the file according to the Ls "
+        f"values from the first Mars Year.\n"
+        f"{Yellow}Use [-dim, --dim] to specify the dimension (see below).\n"
         f"{Green}Usage:\n"
-        f"> MarsFiles.py 00668.atmos_average.nc --split 0 90 \n"
+        f"> MarsFiles.py 00668.atmos_average.nc --split 0 90"
+        f"> MarsFiles.py 00668.atmos_average.nc --split 270"
         f"{Nclr}\n\n"
     )
 )
 
 parser.add_argument("-dim", "--dim", type=str, default = 'areo',
     help=(
-        f"Flag to specify dimension to split on. Acceptable values are \n"
+        f"Flag to specify the dimension to split. Acceptable values are \n"
         f"areo, lat, lon, lev. For use with --split.\n"
         f"{Green}Usage:\n"
         f"> MarsFiles.py 00668.atmos_average.nc --split 0 90 --dim areo"
+        f"> MarsFiles.py 00668.atmos_average.nc --split -70 --dim lat"
         f"{Nclr}\n\n"
     )
 )
