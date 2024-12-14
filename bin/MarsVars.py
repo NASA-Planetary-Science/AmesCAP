@@ -332,6 +332,20 @@ C_ice = (4/3) * (rho_ice/Qext_ice) * Reff_ice # = 2188.874 [m-2]
 # ===========================
 
 def err_req_interpolated_file(ivar, ifile):
+    """
+    Print message to the screen when user tries to add a variable to
+    an incompatible file type.
+
+    :param ivar: The requested variable to add
+    :type ivar: array [time, lev, lat, lon]
+    :param ifile: The file to add the variable into
+    :type ifile: str
+
+    :raises:
+
+    :return: print statement
+    :rtype: str
+    """
     return(
         print(f"{Red}ERROR: variable {ivar} can only be added to a "
               f"pressure-interpolated file.\nRun {Yellow}'MarsInterp.py "
@@ -339,6 +353,20 @@ def err_req_interpolated_file(ivar, ifile):
         )
 
 def err_req_non_interpolated_file(ivar, ifile):
+    """
+    Print message to the screen when user tries to add a variable to
+    an incompatible file type.
+
+    :param ivar: The requested variable to add
+    :type ivar: array [time, lev, lat, lon]
+    :param ifile: The file to add the variable into
+    :type ifile: str
+
+    :raises:
+
+    :return: print statement
+    :rtype: str
+    """
     return(
         print(f"{Red}ERROR: variable {ivar} cannot be added to {ifile} "
               f"as it is an interpolated file.\n Please add the "
@@ -1314,16 +1342,16 @@ def main():
                     if ivar == "div":
                         if interp_type not in ("pstd", "zstd", "zagl"):
                             OUT = spherical_div(ucomp, vcomp, lon, lat,
-                                                R = 3400*1000.,
-                                                spacing = "regular")
+                                                R=3400*1000.,
+                                                spacing="regular")
                         else:
                             err_req_non_interpolated_file(ivar, ifile)
 
                     if ivar == "curl":
                         if interp_type not in ("pstd", "zstd", "zagl"):
                             OUT = spherical_curl(ucomp, vcomp, lon, lat,
-                                                R = 3400*1000.,
-                                                spacing = "regular")
+                                                 R=3400*1000.,
+                                                 spacing="regular")
                         else:
                             err_req_non_interpolated_file(ivar, ifile)
 
@@ -1331,8 +1359,8 @@ def main():
                         if interp_type not in ("pstd", "zstd", "zagl"):
                             theta = fileNC.variables["theta"][:]
                             OUT = frontogenesis(ucomp, vcomp, theta, lon, lat,
-                                                R = 3400*1000.,
-                                                spacing = "regular")
+                                                R=3400*1000.,
+                                                spacing="regular")
                         else:
                             err_req_non_interpolated_file(ivar, ifile)
 
