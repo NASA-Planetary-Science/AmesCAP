@@ -228,7 +228,7 @@ parser.add_argument("--debug",  action="store_true",
 #                  DEFINITIONS
 # ======================================================
 
-# a list of supported variables for [-add --add]
+# List of supported variables for [-add --add]
 cap_str = "(derived using CAP)"
 VAR = {
     "rho": [f"Density {cap_str}", "kg/m^3"],
@@ -272,37 +272,37 @@ VAR = {
 # Fill values for NaN. np.NaN, raises errors when running runpinterp.
 fill_value = 0.
 
-# define constants
+# Define constants
 global rgas, psrf, Tpole, g, R, Rd, rho_air, rho_dst, rho_ice
 global Qext_dst, Qext_ice, n0, S0, T0, Cp, Na, amu, amu_co2, mass_co2
 global sigma, M_co2, N, C_dst, C_ice
 
-rgas = 189. # Gas const. CO2 [J/kg/K or m^2/s^2/K]
-psrf = 610. # Mars surface pressure [Pa or kg/m/s^2]
-Tpole = 150. # Polar temperature [K]
-g = 3.72 # Gravitational constant for Mars [m/s^2]
-R = 8.314 # Universal gas constant [J/mol/K]
-Rd = 192.0 # R for dry air on Mars [J/kg/K]
-rho_air = psrf/(rgas*Tpole) # Air density [kg/m^3]
-rho_dst = 2500. # Dust particle density [kg/m^3]
-#rho_dst = 3000 # Dust particle density [kg/m^3] (Kleinbohl et al. 2009)
-rho_ice = 900 # Ice particle density [kg/m^3] (Heavens et al. 2010)
-Qext_dst = 0.35 # Dust extinction efficiency (MCS) (Kleinbohl et al. 2009)
-Qext_ice = 0.773 # ice extinction efficiency (MCS) (Heavens et al. 2010)
-Reff_dst = 1.06 # Effective dust particle radius [micron] (Kleinbohl et al. 2009)
-Reff_ice = 1.41 # Effective ice particle radius [micron] (Heavens et al. 2010)
-n0 = 1.37*1.e-5 # Sutherland's law [N-s/m^2]
-S0 = 222 # Sutherland's law [K]
-T0 = 273.15 # Sutherland's law [K]
-Cp = 735.0 # [J/K]
-Na = 6.022*1.e23 # Avogadro's number [per mol]
-Kb = R/Na # Boltzmann constant [m^2*kg/s^2/K]
-amu = 1.66054*1.e-27 # Atomic mass Unit [kg/amu]
-amu_co2 = 44.0 # Molecular mass of CO2 [amu]
-mass_co2 = amu_co2*amu # Mass of 1 CO2 particle [kg]
-sigma = 0.63676 # Gives effective variance = 0.5 (Dust)
-M_co2 = 0.044 # Molar mass of CO2 [kg/mol]
-N = 0.01 # For wave potential energy calc. [rad/s]
+rgas = 189.  # Gas const. CO2 [J/kg/K or m^2/s^2/K]
+psrf = 610.  # Mars surface pressure [Pa or kg/m/s^2]
+Tpole = 150.  # Polar temperature [K]
+g = 3.72  # Gravitational constant for Mars [m/s^2]
+R = 8.314  # Universal gas constant [J/mol/K]
+Rd = 192.0  # R for dry air on Mars [J/kg/K]
+rho_air = psrf/(rgas*Tpole)  # Air density [kg/m^3]
+rho_dst = 2500.  # Dust particle density [kg/m^3]
+# rho_dst = 3000  # Dust particle density [kg/m^3] (Kleinbohl et al. 2009)
+rho_ice = 900  # Ice particle density [kg/m^3] (Heavens et al. 2010)
+Qext_dst = 0.35  # Dust extinction efficiency (MCS) (Kleinbohl et al. 2009)
+Qext_ice = 0.773  # Ice extinction efficiency (MCS) (Heavens et al. 2010)
+Reff_dst = 1.06  # Effective dust particle radius [µm] (Kleinbohl et al. 2009)
+Reff_ice = 1.41  # Effective ice particle radius [µm] (Heavens et al. 2010)
+n0 = 1.37*1.e-5  # Sutherland's law [N-s/m^2]
+S0 = 222  # Sutherland's law [K]
+T0 = 273.15  # Sutherland's law [K]
+Cp = 735.0  # [J/K]
+Na = 6.022*1.e23  # Avogadro's number [per mol]
+Kb = R/Na  # Boltzmann constant [m^2*kg/s^2/K]
+amu = 1.66054*1.e-27  # Atomic mass Unit [kg/amu]
+amu_co2 = 44.0  # Molecular mass of CO2 [amu]
+mass_co2 = amu_co2*amu  # Mass of 1 CO2 particle [kg]
+sigma = 0.63676  # Gives effective variance = 0.5 (Dust)
+M_co2 = 0.044  # Molar mass of CO2 [kg/mol]
+N = 0.01  # For wave potential energy calc. [rad/s]
 
 # For mmr <-> extinction rate calculations:
 C_dst = (4/3) * (rho_dst/Qext_dst) * Reff_dst # = 12114.286 [m-2]
