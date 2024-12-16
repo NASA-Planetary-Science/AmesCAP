@@ -132,11 +132,6 @@ parser.add_argument("-zdiff", "--zdiff", nargs="+", default=[],
         f"{Green}Usage:\n"
         f"> MarsVars ****.atmos.average.nc -zdiff temp"
         f"{Nclr}\n\n"
-        f"""Differentiate a variable w.r.t. the Z axis. A new variable\
-        ``d_dz_var`` in [Unit/m] will be added to the file.
-        {Green}Usage:
-        > MarsVars ****.atmos.average.nc -zdiff temp
-        {Nclr}\n\n"""
     )
 )
 
@@ -333,12 +328,8 @@ def err_req_interpolated_file(ivar, ifile):
     return(
         print(f"{Red}ERROR: variable {ivar} can only be added to a "
               f"pressure-interpolated file.\nRun {Yellow}'MarsInterp.py "
-              f"{ifile} -t pstd' {Red}before trying again.{Nclr}"
-        f"""{Red}ERROR: variable {ivar} can only be added to a \
-        pressure-interpolated file.
-        Run {Yellow}'MarsInterp.py \
-        {ifile} -t pstd' {Red}before trying again.{Nclr}""")
-    )
+              f"{ifile} -t pstd' {Red}before trying again.{Nclr}")
+        )
 
 def err_req_non_interpolated_file(ivar, ifile):
     """
