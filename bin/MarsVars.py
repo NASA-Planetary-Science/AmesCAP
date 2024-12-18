@@ -246,7 +246,8 @@ VAR = {
     "div": [f"Divergence of the wind field {cap_str}", "Hz"],
     "curl": [f"Relative vorticity {cap_str}","Hz"],
     "scorer_wl": [
-        f"Scorer horizontal wavelength [L=2.pi/sqrt(l^2)] {cap_str}", "m"
+        f"Scorer horizontal wavelength [L=2.pi/sqrt(l^2)] {cap_str}", 
+        "m"
     ],
     "msf": [f"Mass stream function {cap_str}","1.e8 x kg/s"],
     "ep": [f"Wave potential energy {cap_str}","J/kg"],
@@ -283,14 +284,14 @@ Tpole = 150.  # Polar temperature [K]
 g = 3.72  # Gravitational constant for Mars [m/s^2]
 R = 8.314  # Universal gas constant [J/mol/K]
 Rd = 192.0  # R for dry air on Mars [J/kg/K]
-rho_air = psrf/(rgas*Tpole)  # Air density [kg/m^3]
-rho_dst = 2500.  # Dust particle density [kg/m^3]
-# rho_dst = 3000  # Dust particle density [kg/m^3] (Kleinbohl et al. 2009)
-rho_ice = 900  # Ice particle density [kg/m^3] (Heavens et al. 2010)
-Qext_dst = 0.35  # Dust extinction efficiency (MCS) (Kleinbohl et al. 2009)
-Qext_ice = 0.773  # Ice extinction efficiency (MCS) (Heavens et al. 2010)
-Reff_dst = 1.06  # Effective dust particle radius [µm] (Kleinbohl et al. 2009)
-Reff_ice = 1.41  # Effective ice particle radius [µm] (Heavens et al. 2010)
+rho_air = psrf/(rgas*Tpole)  # Air density (ρ) [kg/m^3]
+rho_dst = 2500.  # Dust particle ρ [kg/m^3]
+# rho_dst = 3000  # Dust particle ρ [kg/m^3] (Kleinbohl, 2009)
+rho_ice = 900  # Ice particle ρ [kg/m^3] (Heavens, 2010)
+Qext_dst = 0.35  # Dust extinction efficiency (MCS) (Kleinbohl, 2009)
+Qext_ice = 0.773  # Ice extinction efficiency (MCS) (Heavens, 2010)
+Reff_dst = 1.06  # Effective dust particle radius [µm] (Kleinbohl, 2009)
+Reff_ice = 1.41  # Effective ice particle radius [µm] (Heavens, 2010)
 n0 = 1.37*1.e-5  # Sutherland's law [N-s/m^2]
 S0 = 222  # Sutherland's law [K]
 T0 = 273.15  # Sutherland's law [K]
@@ -310,7 +311,7 @@ C_ice = (4/3) * (rho_ice/Qext_ice) * Reff_ice # = 2188.874 [m-2]
 
 # ===========================
 
-def err_req_interpolated_file(ivar, ifile):
+def err_req_interpolated_file(ivar, ifile, itype):
     """
     Print message to the screen when user tries to add a variable to
     an incompatible file type.
@@ -325,10 +326,29 @@ def err_req_interpolated_file(ivar, ifile):
     :return: print statement
     :rtype: str
     """
-    return(
-        print(f"{Red}ERROR: variable {ivar} can only be added to a "
-              f"pressure-interpolated file.\nRun {Yellow}'MarsInterp.py "
-              f"{ifile} -t pstd' {Red}before trying again.{Nclr}")
+    if len(itype) == 1:
+        return(
+            print(f"{Red}ERROR: variable {ivar} can only be added to a "
+                  f"{itype[0]}-interpolated file.\nRun {Yellow}"
+                  f"'MarsInterp.py {ifile} -t {itype[0]}' {Red}before "
+                  f"trying again.{Nclr}")
+        )
+    elif len(itype) == 2:
+        return(
+            print(f"{Red}ERROR: variable {ivar} can only be added to a "
+                  f"{itype[0]}- or {itype[1]}-interpolated file.\nRun "
+                  f"{Yellow} 'MarsInterp.py {ifile} -t {itype[0]}' "
+                  f"{Red}or {Yellow} 'MarsInterp.py {ifile} -t "
+                  f"{itype[1]}' {Red}before trying again.{Nclr}")
+        )
+    else:
+        return(
+            print(f"{Red}ERROR: variable {ivar} can only be added to "
+                  f"an interpolated file.\nRun {Yellow} 'MarsInterp.py "
+                  f"{ifile} -t {itype[0]}' {Red}or {Yellow} "
+                  f" 'MarsInterp.py {ifile} -t {itype[1]}'{Red}or "
+                  f"{Yellow} 'MarsInterp.py {ifile} -t {itype[2]}' "
+                  f"{Red}before trying again.{Nclr}")
         )
 
 def err_req_non_interpolated_file(ivar, ifile):
@@ -418,22 +438,29 @@ def compute_xzTau(q, temp, lev, const, f_type):
     :rtype: array [time, lev, lat, lon]
     """
     if f_type == "diurn":
-        PT = np.repeat(lev, (q.shape[0]*q.shape[1]*q.shape[3]*q.shape[4]))
+        PT = np.repeat(
+            lev, 
+            (q.shape[0] * q.shape[1] * q.shape[3] * q.shape[4])
+        )
         PT = np.reshape(
-            PT, (q.shape[2], q.shape[0], q.shape[1], q.shape[3], q.shape[4])
+            PT, 
+            (q.shape[2], q.shape[0], q.shape[1], q.shape[3], q.shape[4])
         )
         # (lev, tim, tod, lat, lon) -> (tim, tod, lev, lat, lon)
         P = PT.transpose((1, 2, 0, 3, 4))
     else:
-        PT = np.repeat(lev, (q.shape[0]*q.shape[2]*q.shape[3]))
-        PT = np.reshape(PT, (q.shape[1], q.shape[0], q.shape[2], q.shape[3]))
+        PT = np.repeat(lev, (q.shape[0] * q.shape[2] * q.shape[3]))
+        PT = np.reshape(
+            PT, 
+            (q.shape[1], q.shape[0], q.shape[2], q.shape[3])
+        )
         # Swap dimensions 0 and 1 (time and lev)
         P = PT.transpose(lev_T)
 
     rho_z = P / (Rd*temp)
     # Converts mass mixing ratio (q) from kg/kg -> ppm (mg/kg)
     # Converts extinction (xzTau) from m-1 -> km-1
-    xzTau = (rho_z * (q*1.e6) / const) * 1000
+    xzTau = (rho_z * (q*1.e6)/const) * 1000
     return xzTau
 
 # =====================================================================
@@ -459,16 +486,18 @@ def compute_mmr(xTau, temp, lev, const, f_type):
     :rtype: array [time, lev, lat, lon]
     """
     if f_type == "diurn":
-        PT = np.repeat(lev,(xTau.shape[0]*xTau.shape[1]
-                            *xTau.shape[3]*xTau.shape[4]))
-        PT = np.reshape(PT, (xTau.shape[2], xTau.shape[0], xTau.shape[1],
-                             xTau.shape[3], xTau.shape[4]))
+        PT = np.repeat(lev,(xTau.shape[0] * xTau.shape[1]
+                            * xTau.shape[3] * xTau.shape[4]))
+        PT = np.reshape(PT, (xTau.shape[2], xTau.shape[0], 
+                             xTau.shape[1], xTau.shape[3], 
+                             xTau.shape[4]))
         # (lev, tim, tod, lat, lon) -> (tim, tod, lev, lat, lon)
         P = PT.transpose((1, 2, 0, 3, 4))
     else:
-        PT = np.repeat(lev, (xTau.shape[0]*xTau.shape[2]*xTau.shape[3]))
-        PT = np.reshape(PT,(xTau.shape[1], xTau.shape[0], xTau.shape[2],
-                            xTau.shape[3]))
+        PT = np.repeat(lev, (xTau.shape[0] * xTau.shape[2] 
+                             * xTau.shape[3]))
+        PT = np.reshape(PT,(xTau.shape[1], xTau.shape[0], 
+                            xTau.shape[2], xTau.shape[3]))
         # Swap dimensions 0 and 1 (time and lev)
         P = PT.transpose(lev_T)
 
@@ -551,7 +580,8 @@ def compute_theta(p_3D, ps, temp, f_type):
     # Broadcast dimensions
     if f_type == "diurn":
         # (time, tod, lat, lon) -> (time, tod, 1, lat, lon)
-        ps_shape = [ps.shape[0], ps.shape[1], 1, ps.shape[2], ps.shape[3]]
+        ps_shape = [ps.shape[0], ps.shape[1], 1, ps.shape[2], 
+                    ps.shape[3]]
     else:
         # (time, lat, lon) -> (time, 1, lat, lon)
         ps_shape = [ps.shape[0], 1, ps.shape[1], ps.shape[2]]
@@ -1002,7 +1032,7 @@ def main():
     # Reshape ``lev_T_out`` in zfull and zhalf calculation
     global lev_T_out
 
-    # Check if an operation is requested. Otherwise, print file content.
+    # Check if an operation is requested. Otherwise, print file content
     if not (add_list or
             zdiff_list or
             zdetrend_list or
@@ -1013,9 +1043,10 @@ def main():
             dz_to_dp_list or
             edit_var):
         print_fileContent(file_list[0])
-        print(f"{Yellow}***Notice***  No operation requested. Use -add, "
-                 f"-zdiff, -zd, -col, -dp_to_dz, -rm, or -edit{Nclr}")
-        exit()
+        print(f"{Yellow}***Notice***  No operation requested. Use "
+              f"-add, -zdiff, -zd, -col, -dp_to_dz, -rm, or -edit"
+              f"{Nclr}")
+        ()()
 
     # For all the files
     for ifile in file_list:
@@ -1037,9 +1068,11 @@ def main():
                     print(f"Creating new file {ifile} without {ivar}:")
                     cmd_txt = f"ncks -C -O -x -v {ivar} {ifile} {ifile}"
                     try:
-                        subprocess.check_call(cmd_txt, shell = True,
-                                              stdout = open(os.devnull, "w"),
-                                              stderr = open(os.devnull, "w"))
+                        subprocess.check_call(
+                            cmd_txt, shell = True,
+                            stdout = open(os.devnull, "w"),
+                            stderr = open(os.devnull, "w")
+                        )
                     except Exception as exception:
                         print(f"{exception.__class__.__name__ }: "
                               f"{exception.message}")
@@ -1066,7 +1099,8 @@ def main():
             f_IN = Dataset(ifile, "r", format = "NETCDF4_CLASSIC")
 
             # The variable to exclude
-            exclude_list = filter_vars(f_IN, parser.parse_args().extract,
+            exclude_list = filter_vars(f_IN, 
+                                       parser.parse_args().extract,
                                        giveExclude = True)
             print()
             ifile_tmp = f"{ifile[:-3]}_extract.nc"
@@ -1086,390 +1120,429 @@ def main():
         for ivar in add_list:
             if ivar not in VAR.keys():
                 # If the variable to be added is NOT supported
-                print(f"{Red}Variable ``{ivar}`` is not supported and cannot "
-                      f"be added to the file.{Nclr}")
-            else:
-                print(f"Processing: {ivar}...")
-                try:
-                    fileNC = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
-                    f_type, interp_type = FV3_file_type(fileNC)
+                print(f"{Red}Variable ``{ivar}`` is not supported and "
+                      f"cannot be added to the file.{Nclr}")
+                exit()
+                
+            print(f"Processing: {ivar}...")
+            try:
+                f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
+                f_type, interp_type = FV3_file_type(f)
 
-                    if interp_type == "pfull":
-                        # Load ak and bk for pressure calculation.
-                        # Usually required.
-                        ak, bk = ak_bk_loader(fileNC)
+                if interp_type == "pfull":
+                    # Load ak and bk for pressure calculation.
+                    # Usually required.
+                    ak, bk = ak_bk_loader(f)
 
-                    # temp and ps are always required. Get dimension
-                    dim_out = fileNC.variables["temp"].dimensions
-                    temp = fileNC.variables["temp"][:]
-                    shape_out = temp.shape
+                # temp and ps are always required. Get dimension
+                dim_out = f.variables["temp"].dimensions
+                temp = f.variables["temp"][:]
+                shape_out = temp.shape
 
-                    if f_type == "diurn":
-                        # [time, tod, lev, lat, lon]
-                        # -> [lev, tod, time, lat, lon]
-                        # -> [time, tod, lev, lat, lon]
-                        lev_T = [2, 1, 0, 3, 4]
-                        # [0 1 2 3 4] -> [2 1 0 3 4] -> [2 1 0 3 4]
-                        lev_T_out = [1, 2, 0, 3, 4]
-                        # In diurn file, level is the 3rd axis:
-                        # [time, tod, lev, lat, lon]
-                        lev_axis = 2
+                if f_type == "diurn":
+                    # [time, tod, lev, lat, lon]
+                    # -> [lev, tod, time, lat, lon]
+                    # -> [time, tod, lev, lat, lon]
+                    lev_T = [2, 1, 0, 3, 4]
+                    # [0 1 2 3 4] -> [2 1 0 3 4] -> [2 1 0 3 4]
+                    lev_T_out = [1, 2, 0, 3, 4]
+                    # In diurn file, level is the 3rd axis:
+                    # [time, tod, lev, lat, lon]
+                    lev_axis = 2
+                else:
+                    # [tim, lev, lat, lon]
+                    # -> [lev, time, lat, lon]
+                    # -> [tim, lev, lat, lon]
+                    lev_T = [1, 0, 2, 3]
+                    # [0 1 2 3] -> [1 0 2 3] -> [1 0 2 3]
+                    lev_T_out = lev_T
+                    # In average and daily files, level is the 2nd
+                    # axis = [time, lev, lat, lon]
+                    lev_axis = 1
+
+                # ==================================================
+                #               Non-Interpolated Files
+                # ==================================================
+
+                if interp_type == "pfull":
+                    # level, ps, and p_3d are often required.
+                    lev = f.variables["pfull"][:]
+                    ps = f.variables["ps"][:]
+                    p_3D = compute_p_3D(ps, ak, bk, shape_out)
+
+                elif interp_type == "pstd":
+                    # If file interpolated to pstd, calculate the 3D
+                    # pressure field.
+                    lev = f.variables["pstd"][:]
+                    # [0 1 2 3]
+                    rshp_shape = [1 for i in range(0, 
+                                                    len(shape_out))]
+                    # e.g [1, 28, 1, 1]
+                    rshp_shape[lev_axis] = len(lev)
+                    p_3D = lev.reshape(rshp_shape)
+
+                else:
+                    try:
+                        # If requested interp_type is zstd, or zagl,
+                        # pfull3D is required before interpolation.
+                        # Some computations (e.g. wind speed) do not
+                        # require pfull3D and will work without it,
+                        # so we use a try statement here.
+                        p_3D = f.variables["pfull3D"][:]
+                    except:
+                        pass
+
+                if ivar == "dzTau":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        if "dst_mass_micro" in f.variables.keys():
+                            q = f.variables["dst_mass_micro"][:]
+                        elif "dst_mass_mom" in f.variables.keys():
+                            q = f.variables["dst_mass_mom"][:]
+                        OUT = compute_xzTau(q, temp, lev, C_dst, 
+                                            f_type)
                     else:
-                        # [tim, lev, lat, lon]
-                        # -> [lev, time, lat, lon]
-                        # -> [tim, lev, lat, lon]
-                        lev_T = [1, 0, 2, 3]
-                        # [0 1 2 3] -> [1 0 2 3] -> [1 0 2 3]
-                        lev_T_out = lev_T
-                        # In average and daily files, level is the 2nd
-                        # axis = [time, lev, lat, lon]
-                        lev_axis = 1
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    # ==================================================
-                    #               Non-Interpolated Files
-                    # ==================================================
-
-                    if interp_type == "pfull":
-                        # level, ps, and p_3d are often required.
-                        lev = fileNC.variables["pfull"][:]
-                        ps = fileNC.variables["ps"][:]
-                        p_3D = compute_p_3D(ps, ak, bk, shape_out)
-
-                    elif interp_type == "pstd":
-                        # If file interpolated to pstd, calculate the 3D
-                        # pressure field.
-                        lev = fileNC.variables["pstd"][:]
-                        # [0 1 2 3]
-                        reshape_shape = [1 for i in range(0, len(shape_out))]
-                        # e.g [1, 28, 1, 1]
-                        reshape_shape[lev_axis] = len(lev)
-                        p_3D = lev.reshape(reshape_shape)
-
+                if ivar == "izTau":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        if "ice_mass_micro" in f.variables.keys():
+                            q = f.variables["ice_mass_micro"][:]
+                        elif "ice_mass_mom" in f.variables.keys():
+                            q = f.variables["ice_mass_mom"][:]
+                        OUT = compute_xzTau(q, temp, lev, C_ice, 
+                                            f_type)
                     else:
-                        try:
-                            # If requested interp_type is zstd, or zagl,
-                            # pfull3D is required before interpolation.
-                            # Some computations (e.g. wind speed) do not
-                            # require pfull3D and will work without it,
-                            # so we use a try statement here.
-                            p_3D = fileNC.variables["pfull3D"][:]
-                        except:
-                            pass
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "dzTau":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            if "dst_mass_micro" in fileNC.variables.keys():
-                                q = fileNC.variables["dst_mass_micro"][:]
-                            elif "dst_mass_mom" in fileNC.variables.keys():
-                                q = fileNC.variables["dst_mass_mom"][:]
-                            OUT = compute_xzTau(q, temp, lev, C_dst, f_type)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "dst_mass_micro":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        xTau = f.variables["dzTau"][:]
+                        OUT = compute_mmr(xTau, temp, lev, C_dst, 
+                                            f_type)
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "izTau":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            if "ice_mass_micro" in fileNC.variables.keys():
-                                q = fileNC.variables["ice_mass_micro"][:]
-                            elif "ice_mass_mom" in fileNC.variables.keys():
-                                q = fileNC.variables["ice_mass_mom"][:]
-                            OUT = compute_xzTau(q, temp, lev, C_ice, f_type)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "ice_mass_micro":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        xTau = f.variables["izTau"][:]
+                        OUT = compute_mmr(xTau, temp, lev, C_ice, 
+                                            f_type)
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "dst_mass_micro":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            xTau = fileNC.variables["dzTau"][:]
-                            OUT = compute_mmr(xTau, temp, lev, C_dst, f_type)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "Vg_sed":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        if "dst_mass_micro" in f.variables.keys():
+                            xTau = f.variables["dst_mass_micro"][:]
+                            nTau = f.variables["dst_num_micro"][:]
+                        elif "dst_mass_mom" in f.variables.keys():
+                            xTau = f.variables["dst_mass_mom"][:]
+                            nTau = f.variables["dst_num_mom"][:]
+                        OUT = compute_Vg_sed(xTau, nTau, temp)
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "ice_mass_micro":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            xTau = fileNC.variables["izTau"][:]
-                            OUT = compute_mmr(xTau, temp, lev, C_ice, f_type)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "w_net":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        Vg = f.variables["Vg_sed"][:]
+                        wvar = f.variables["w"][:]
+                        OUT = compute_w_net(Vg, wvar)
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "Vg_sed":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            if "dst_mass_micro" in fileNC.variables.keys():
-                                xTau = fileNC.variables["dst_mass_micro"][:]
-                                nTau = fileNC.variables["dst_num_micro"][:]
-                            elif "dst_mass_mom" in fileNC.variables.keys():
-                                xTau = fileNC.variables["dst_mass_mom"][:]
-                                nTau = fileNC.variables["dst_num_mom"][:]
-                            OUT = compute_Vg_sed(xTau, nTau, temp)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "pfull3D":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        OUT = p_3D
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "w_net":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            Vg = fileNC.variables["Vg_sed"][:]
-                            wvar = fileNC.variables["w"][:]
-                            OUT = compute_w_net(Vg, wvar)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "DP":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        OUT = compute_DP_3D(ps, ak, bk, shape_out)
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "pfull3D":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            OUT = p_3D
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "rho":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        OUT = compute_rho(p_3D, temp)
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "DP":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            OUT = compute_DP_3D(ps, ak, bk, shape_out)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "theta":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        OUT = compute_theta(p_3D, ps, temp, f_type)
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "rho":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            OUT = compute_rho(p_3D, temp)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "w":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        omega = f.variables["omega"][:]
+                        rho = compute_rho(p_3D, temp)
+                        OUT = compute_w(rho, omega)
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "theta":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            OUT = compute_theta(p_3D, ps, temp, f_type)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "zfull":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        OUT = compute_zfull(ps, ak, bk, temp)
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "w":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            omega = fileNC.variables["omega"][:]
-                            rho = compute_rho(p_3D, temp)
-                            OUT = compute_w(rho, omega)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "DZ":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        OUT = compute_DZ_3D(ps, ak, bk, temp, 
+                                            shape_out)
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "zfull":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            OUT = compute_zfull(ps, ak, bk, temp)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "wspeed" or ivar == "wdir":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        ucomp = f.variables["ucomp"][:]
+                        vcomp = f.variables["vcomp"][:]
+                        theta, mag = cart_to_azimut_TR(
+                            ucomp, vcomp, mode="from")
+                        if ivar == "wdir":
+                            OUT = theta
+                        if ivar == "wspeed":
+                            OUT = mag
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "DZ":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            OUT = compute_DZ_3D(ps, ak, bk, temp, shape_out)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "N":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        theta = compute_theta(p_3D, ps, temp, 
+                                                f_type)
+                        zfull = compute_zfull(ps, ak, bk, temp)
+                        OUT = compute_N(theta, zfull)
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "wspeed" or ivar == "wdir":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            ucomp = fileNC.variables["ucomp"][:]
-                            vcomp = fileNC.variables["vcomp"][:]
-                            theta, mag = cart_to_azimut_TR(
-                                ucomp, vcomp, mode="from")
-                            if ivar == "wdir":
-                                OUT = theta
-                            if ivar == "wspeed":
-                                OUT = mag
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "Ri":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        theta = compute_theta(p_3D, ps, temp, 
+                                                f_type)
+                        zfull = compute_zfull(ps, ak, bk, temp)
+                        N = compute_N(theta, zfull)
 
-                    if ivar == "N":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            theta = compute_theta(p_3D, ps, temp, f_type)
-                            zfull = compute_zfull(ps, ak, bk, temp)
-                            OUT = compute_N(theta, zfull)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                        ucomp = f.variables["ucomp"][:]
+                        vcomp = f.variables["vcomp"][:]
+                        du_dz = dvar_dh(
+                            ucomp.transpose(lev_T),
+                            zfull.transpose(lev_T)).transpose(lev_T)
+                        dv_dz = dvar_dh(
+                            vcomp.transpose(lev_T),
+                            zfull.transpose(lev_T)).transpose(lev_T)
+                        OUT = N**2 / (du_dz**2 + dv_dz**2)
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "Ri":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            theta = compute_theta(p_3D, ps, temp, f_type)
-                            zfull = compute_zfull(ps, ak, bk, temp)
-                            N = compute_N(theta, zfull)
+                # NOTE lev_T swaps dims 0 & 1, ensuring level is
+                # the first dimension for the differentiation
 
-                            ucomp = fileNC.variables["ucomp"][:]
-                            vcomp = fileNC.variables["vcomp"][:]
-                            du_dz = dvar_dh(
-                                ucomp.transpose(lev_T),
-                                zfull.transpose(lev_T)).transpose(lev_T)
-                            dv_dz = dvar_dh(
-                                vcomp.transpose(lev_T),
-                                zfull.transpose(lev_T)).transpose(lev_T)
-                            OUT = N**2/(du_dz**2+dv_dz**2)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "Tco2":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        OUT = compute_Tco2(p_3D)
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    # NOTE lev_T swaps dims 0 & 1, ensuring level is
-                    # the first dimension for the differentiation
+                if ivar == "scorer_wl":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        ucomp = f.variables["ucomp"][:]
+                        theta = compute_theta(p_3D, ps, temp, 
+                                                f_type)
+                        zfull = compute_zfull(ps, ak, bk, temp)
+                        N = compute_N(theta, zfull)
+                        OUT = compute_scorer(N, ucomp, zfull)
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar == "Tco2":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            OUT = compute_Tco2(p_3D)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar in ["div", "curl", "fn"]:
+                    lat = f.variables["lat"][:]
+                    lon = f.variables["lon"][:]
+                    ucomp = f.variables["ucomp"][:]
+                    vcomp = f.variables["vcomp"][:]
 
-                    if ivar == "scorer_wl":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            ucomp = fileNC.variables["ucomp"][:]
-                            theta = compute_theta(p_3D, ps, temp, f_type)
-                            zfull = compute_zfull(ps, ak, bk, temp)
-                            N = compute_N(theta, zfull)
-                            OUT = compute_scorer(N, ucomp, zfull)
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
+                if ivar == "div":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        OUT = spherical_div(ucomp, vcomp, lon, lat,
+                                            R=3400*1000.,
+                                            spacing="regular")
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    if ivar in ["div", "curl", "fn"]:
-                        lat = fileNC.variables["lat"][:]
-                        lon = fileNC.variables["lon"][:]
-                        ucomp = fileNC.variables["ucomp"][:]
-                        vcomp = fileNC.variables["vcomp"][:]
-
-                    if ivar == "div":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            OUT = spherical_div(ucomp, vcomp, lon, lat,
+                if ivar == "curl":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        OUT = spherical_curl(ucomp, vcomp, lon, lat,
                                                 R=3400*1000.,
                                                 spacing="regular")
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
-
-                    if ivar == "curl":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            OUT = spherical_curl(ucomp, vcomp, lon, lat,
-                                                 R=3400*1000.,
-                                                 spacing="regular")
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
-
-                    if ivar == "fn":
-                        if interp_type not in ("pstd", "zstd", "zagl"):
-                            theta = fileNC.variables["theta"][:]
-                            OUT = frontogenesis(ucomp, vcomp, theta, lon, lat,
-                                                R=3400*1000.,
-                                                spacing="regular")
-                        else:
-                            err_req_non_interpolated_file(ivar, ifile)
-
-                    # ==================================================
-                    #               Interpolated Files
-                    # ==================================================
-                    # All interpolated files have the following
-                    if interp_type != "pfull":
-                        lev = fileNC.variables[interp_type][:]
-
-                    # The next several variables can ONLY be added to
-                    # pressure interpolated files.
-                    if ivar == "msf":
-                        if interp_type == "pstd":
-                            vcomp = fileNC.variables["vcomp"][:]
-                            lat = fileNC.variables["lat"][:]
-                            if f_type == "diurn":
-                                # [lev, lat, time, tod, lon]
-                                # -> [time, tod, lev, lat, lon]
-                                # [0 1 2 3 4] -> [2 3 0 1 4]
-                                OUT = mass_stream(
-                                    vcomp.transpose([2, 3, 0, 1, 4]), lat, lev,
-                                    type=interp_type).transpose([2, 3, 0, 1, 4])
-                            else:
-                                OUT = mass_stream(
-                                    vcomp.transpose([1, 2, 3, 0]), lat, lev,
-                                    type=interp_type).transpose([3, 0, 1, 2])
-                                # [time, lev, lat, lon]
-                                # -> [lev, lat, lon, time]
-                                # ->  [time, lev, lat, lon]
-                                # [0 1 2 3] -> [1 2 3 0] -> [3 0 1 2]
-                        else:
-                            err_req_interpolated_file(ivar, ifile)
-
-                    if ivar == "ep":
-                        if interp_type == "pstd":
-                            OUT = compute_Ep(temp)
-                        else:
-                            err_req_interpolated_file(ivar, ifile)
-
-                    if ivar == "ek":
-                        if interp_type == "pstd":
-                            ucomp = fileNC.variables["ucomp"][:]
-                            vcomp = fileNC.variables["vcomp"][:]
-                            OUT = compute_Ek(ucomp, vcomp)
-                        else:
-                            err_req_interpolated_file(ivar, ifile)
-
-                    if ivar == "mx":
-                        if interp_type == "pstd":
-                            OUT = compute_MF(fileNC.variables["ucomp"][:],
-                                             fileNC.variables["w"][:])
-                        else:
-                            err_req_interpolated_file(ivar, ifile)
-
-                    if ivar == "my":
-                        if interp_type == "pstd":
-                            OUT = compute_MF(fileNC.variables["vcomp"][:],
-                                             fileNC.variables["w"][:])
-                        else:
-                            err_req_interpolated_file(ivar, ifile)
-
-                    if ivar == "ax":
-                        if interp_type == "pstd":
-                            mx = compute_MF(fileNC.variables["ucomp"][:],
-                                            fileNC.variables["w"][:])
-                            rho = fileNC.variables["rho"][:]
-                            OUT = compute_WMFF(mx, rho, lev, interp_type)
-                        else:
-                            err_req_interpolated_file(ivar, ifile)
-
-                    if ivar == "ay":
-                        if interp_type == "pstd":
-                            my = compute_MF(fileNC.variables["vcomp"][:],
-                                            fileNC.variables["w"][:])
-                            rho = fileNC.variables["rho"][:]
-                            OUT = compute_WMFF(my, rho, lev, interp_type)
-                        else:
-                            err_req_interpolated_file(ivar, ifile)
-
-                    if ivar == "tp_t":
-                        if interp_type == "pstd":
-                            OUT = zonal_detrend(temp)/temp
-                        else:
-                            err_req_interpolated_file(ivar, ifile)
-
-                    if interp_type == "pfull":
-                        # Filter out NANs in the native files
-                        OUT[np.isnan(OUT)] = fill_value
-
                     else:
-                        # Add NANs to the interpolated files
-                        with warnings.catch_warnings():
-                            warnings.simplefilter("ignore",
-                                                  category = RuntimeWarning)
-                            OUT[OUT > 1.e30] = np.nan
-                            OUT[OUT < -1.e30] = np.nan
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    # Log the variable
-                    var_Ncdf = fileNC.createVariable(ivar, "f4", dim_out)
-                    var_Ncdf.long_name = VAR[ivar][0]
-                    var_Ncdf.units = VAR[ivar][1]
-                    var_Ncdf[:] = OUT
-                    fileNC.close()
+                if ivar == "fn":
+                    if interp_type not in ("pstd", "zstd", "zagl"):
+                        theta = f.variables["theta"][:]
+                        OUT = frontogenesis(ucomp, vcomp, theta, 
+                                            lon, lat,
+                                            R=3400*1000.,
+                                            spacing="regular")
+                    else:
+                        err_req_non_interpolated_file(ivar, ifile)
 
-                    print(f"{ivar}: {Green}Done{Nclr}")
+                # ==================================================
+                #               Interpolated Files
+                # ==================================================
+                # All interpolated files have the following
+                if interp_type != "pfull":
+                    lev = f.variables[interp_type][:]
 
-                except Exception as exception:
-                    if debug:
-                        raise
-                    if str(exception) == "NetCDF: String match to name in use":
-                        print(f"{Yellow}***Error*** Variable already exists "
-                                 f"in file.\nDelete the existing variables "
-                                 f"{ivar} with "
-                                 f"``MarsVars.py {ifile} -rm {ivar}``{Nclr}")
+                # The next several variables can ONLY be added to
+                # pressure interpolated files.
+                if ivar == "msf":
+                    if interp_type in ["pstd", "zstd", "zagl"]:
+                        vcomp = f.variables["vcomp"][:]
+                        lat = f.variables["lat"][:]
+                        if f_type == "diurn":
+                            # [lev, lat, time, tod, lon]
+                            # -> [time, tod, lev, lat, lon]
+                            # [0 1 2 3 4] -> [2 3 0 1 4]
+                            OUT = mass_stream(
+                                vcomp.transpose([2, 3, 0, 1, 4]), 
+                                lat, 
+                                lev,
+                                type=interp_type
+                            ).transpose([2, 3, 0, 1, 4])
+                        else:
+                            OUT = mass_stream(
+                                vcomp.transpose([1, 2, 3, 0]), 
+                                lat, 
+                                lev,
+                                type=interp_type
+                            ).transpose([3, 0, 1, 2])
+                            # [time, lev, lat, lon]
+                            # -> [lev, lat, lon, time]
+                            # ->  [time, lev, lat, lon]
+                            # [0 1 2 3] -> [1 2 3 0] -> [3 0 1 2]
+                    else:
+                        err_req_interpolated_file(
+                            ivar, ifile, ["pstd", "zstd", "zagl"]
+                            )
+
+                if ivar == "ep":
+                    if interp_type == "pstd":
+                        OUT = compute_Ep(temp)
+                    else:
+                        err_req_interpolated_file(
+                            ivar, ifile, ["pstd"]
+                            )
+
+                if ivar == "ek":
+                    if interp_type == "pstd":
+                        ucomp = f.variables["ucomp"][:]
+                        vcomp = f.variables["vcomp"][:]
+                        OUT = compute_Ek(ucomp, vcomp)
+                    else:
+                        err_req_interpolated_file(
+                            ivar, ifile, ["pstd"]
+                            )
+
+                if ivar == "mx":
+                    if interp_type == "pstd":
+                        OUT = compute_MF(f.variables["ucomp"][:],
+                                            f.variables["w"][:])
+                    else:
+                        err_req_interpolated_file(
+                            ivar, ifile, ["pstd"]
+                            )
+
+                if ivar == "my":
+                    if interp_type == "pstd":
+                        OUT = compute_MF(f.variables["vcomp"][:],
+                                            f.variables["w"][:])
+                    else:
+                        err_req_interpolated_file(
+                            ivar, ifile, ["pstd"]
+                            )
+
+                if ivar == "ax":
+                    if interp_type == "pstd":
+                        mx = compute_MF(f.variables["ucomp"][:],
+                                        f.variables["w"][:])
+                        rho = f.variables["rho"][:]
+                        OUT = compute_WMFF(mx, rho, lev, 
+                                            interp_type)
+                    else:
+                        err_req_interpolated_file(
+                            ivar, ifile, ["pstd"]
+                            )
+
+                if ivar == "ay":
+                    if interp_type == "pstd":
+                        my = compute_MF(f.variables["vcomp"][:],
+                                        f.variables["w"][:])
+                        rho = f.variables["rho"][:]
+                        OUT = compute_WMFF(my, rho, lev, 
+                                            interp_type)
+                    else:
+                        err_req_interpolated_file(
+                            ivar, ifile, ["pstd"]
+                            )
+
+                if ivar == "tp_t":
+                    if interp_type == "pstd":
+                        OUT = zonal_detrend(temp)/temp
+                    else:
+                        err_req_interpolated_file(
+                            ivar, ifile, ["pstd"]
+                            )
+
+                if interp_type == "pfull":
+                    # Filter out NANs in the native files
+                    OUT[np.isnan(OUT)] = fill_value
+
+                else:
+                    # Add NANs to the interpolated files
+                    with warnings.catch_warnings():
+                        warnings.simplefilter(
+                            "ignore", category = RuntimeWarning
+                            )
+                        OUT[OUT > 1.e30] = np.nan
+                        OUT[OUT < -1.e30] = np.nan
+
+                # Log the variable
+                var_Ncdf = f.createVariable(ivar, "f4", dim_out)
+                var_Ncdf.long_name = VAR[ivar][0]
+                var_Ncdf.units = VAR[ivar][1]
+                var_Ncdf[:] = OUT
+                f.close()
+
+                print(f"{ivar}: {Green}Done{Nclr}")
+
+            except Exception as exception:
+                if debug:
+                    raise
+                if str(exception) == (
+                    "NetCDF: String match to name in use"
+                    ):
+                    print(f"{Yellow}***Error*** Variable already "
+                                f"exists in file.\nDelete the "
+                                f"existing variables {ivar} with "
+                                f"``MarsVars.py {ifile} -rm {ivar}``"
+                                f"{Nclr}")
 
         # ==============================================================
         #                   Vertical Differentiation
         # ==============================================================
         for idiff in zdiff_list:
-            fileNC = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
-            f_type, interp_type = FV3_file_type(fileNC)
+            f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
+            f_type, interp_type = FV3_file_type(f)
 
             if interp_type == "pfull":
-                ak, bk = ak_bk_loader(fileNC)
+                ak, bk = ak_bk_loader(f)
 
-            if idiff not in fileNC.variables.keys():
-                print(f"{Red}zdiff error: variable {idiff} is not present in "
-                      f"{ifile}{Nclr}")
-                fileNC.close()
+            if idiff not in f.variables.keys():
+                print(f"{Red}zdiff error: variable {idiff} is not "
+                      f"present in {ifile}{Nclr}")
+                f.close()
             else:
                 print(f"Differentiating: {idiff}...")
                 if f_type == "diurn":
@@ -1478,201 +1551,217 @@ def main():
                     # If [time, lat, lon] -> [lev, time, lat, lon]
                     lev_T = [1, 0, 2, 3]
                 try:
-                    var = fileNC.variables[idiff][:]
-                    longname_txt, units_txt = get_longname_units(fileNC, idiff)
+                    var = f.variables[idiff][:]
+                    lname_text, unit_text = get_longname_units(f, 
+                                                                 idiff)
                     # Remove the last ] to update the units (e.g [kg]
                     # to [kg/m])
-                    newUnits = f"{units_txt[:-2]}/m]"
-                    newLong_name = f"vertical gradient of {longname_txt}"
+                    new_units = f"{unit_text[:-2]}/m]"
+                    new_lname = f"vertical gradient of {lname_text}"
                     # temp and ps are always required. Get dimension
-                    dim_out = fileNC.variables["temp"].dimensions
+                    dim_out = f.variables["temp"].dimensions
                     if interp_type == "pfull":
-                        if "zfull" in fileNC.variables.keys():
-                            zfull = fileNC.variables["zfull"][:]
+                        if "zfull" in f.variables.keys():
+                            zfull = f.variables["zfull"][:]
                         else:
-                            temp = fileNC.variables["temp"][:]
-                            ps = fileNC.variables["ps"][:]
+                            temp = f.variables["temp"][:]
+                            ps = f.variables["ps"][:]
                             # Z is the first axis
-                            zfull = fms_Z_calc(ps, ak, bk,
-                                               temp.transpose(lev_T),
-                                               topo=0., lev_type="full").transpose(lev_T)
+                            zfull = fms_Z_calc(
+                                ps, ak, bk, temp.transpose(lev_T),
+                                topo=0., lev_type="full"
+                                ).transpose(lev_T)
 
                         # Average file: zfull = [lev, time, lat, lon]
                         # Diurn file: zfull = [lev, tod, time, lat, lon]
                         # Differentiate the variable w.r.t. Z:
-                        darr_dz = dvar_dh(var.transpose(lev_T),
-                                          zfull.transpose(lev_T)).transpose(lev_T)
+                        darr_dz = dvar_dh(
+                            var.transpose(lev_T), zfull.transpose(lev_T)
+                            ).transpose(lev_T)
 
                         # Note: lev_T swaps dims 0 & 1, ensuring level
                         # is the first dimension for the differentiation
 
                     elif interp_type == "pstd":
                         # If pstd, requires zfull
-                        if "zfull" in fileNC.variables.keys():
-                            zfull = fileNC.variables["zfull"][:]
+                        if "zfull" in f.variables.keys():
+                            zfull = f.variables["zfull"][:]
                             darr_dz = dvar_dh(
                                 var.transpose(lev_T),
                                 zfull.transpose(lev_T)).transpose(lev_T)
                         else:
-                            lev = fileNC.variables[interp_type][:]
-                            temp = fileNC.variables["temp"][:]
-                            dzfull_pstd = compute_DZ_full_pstd(lev, temp)
+                            lev = f.variables[interp_type][:]
+                            temp = f.variables["temp"][:]
+                            dzfull_pstd = compute_DZ_full_pstd(lev, 
+                                                               temp)
                             darr_dz = (dvar_dh(
                                 var.transpose(lev_T)).transpose(lev_T)
                                        / dzfull_pstd)
 
                     elif interp_type in ["zagl", "zstd"]:
-                        lev = fileNC.variables[interp_type][:]
-                        darr_dz = dvar_dh(var.transpose(lev_T),
-                                          lev).transpose(lev_T)
+                        lev = f.variables[interp_type][:]
+                        darr_dz = dvar_dh(
+                            var.transpose(lev_T), lev
+                            ).transpose(lev_T)
                     # Note: lev_T swaps dims 0 & 1, ensuring level is
                     # the first dimension for the differentiation
 
                     # Log the variable
-                    var_Ncdf = fileNC.createVariable(f"d_dz_{idiff}", "f4",
-                                                     dim_out)
-                    var_Ncdf.long_name = newLong_name
-                    var_Ncdf.units = newUnits
+                    var_Ncdf = f.createVariable(f"d_dz_{idiff}", "f4",
+                                                dim_out)
+                    var_Ncdf.long_name = new_lname
+                    var_Ncdf.units = new_units
                     var_Ncdf[:] = darr_dz
-                    fileNC.close()
+                    f.close()
 
                     print(f"d_dz_{idiff}: {Green}Done{Nclr}")
                 except Exception as exception:
                     if debug:
                         raise
-                    if str(exception) == "NetCDF: String match to name in use":
-                        print(f"{Yellow}***Error*** Variable already exists "
-                                 f"in file.\nDelete the existing variable "
-                                 f"d_dz_{idiff} with "
-                                 f"``MarsVars {ifile} -rm d_dz_{idiff}``"
-                                 f"{Nclr}")
+                    if str(exception) == (
+                        "NetCDF: String match to name in use"
+                        ):
+                        print(f"{Yellow}***Error*** Variable already "
+                              f"exists in file.\nDelete the existing "
+                                 f"variable d_dz_{idiff} with "
+                                 f"``MarsVars {ifile} -rm d_dz_{idiff}"
+                                 f"''{Nclr}")
 
         # ==============================================================
         #                       Zonal Detrending
         # ==============================================================
         for izdetrend in zdetrend_list:
-            fileNC = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
-            f_type, interp_type = FV3_file_type(fileNC)
-            if izdetrend not in fileNC.variables.keys():
-                print(f"{Red}zdiff error: variable {izdetrend} is not in "
-                      f"{ifile}{Nclr}")
-                fileNC.close()
+            f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
+            f_type, interp_type = FV3_file_type(f)
+            if izdetrend not in f.variables.keys():
+                print(f"{Red}zdiff error: variable {izdetrend} is not "
+                      f"in {ifile}{Nclr}")
+                f.close()
             else:
                 print(f"Detrending: {izdetrend}...")
                 try:
-                    var = fileNC.variables[izdetrend][:]
-                    longname_txt, units_txt = get_longname_units(
-                        fileNC, izdetrend)
-                    newLong_name = f"zonal perturbation of {longname_txt}"
+                    var = f.variables[izdetrend][:]
+                    lname_text, unit_text = get_longname_units(
+                        f, izdetrend)
+                    new_lname = f"zonal perturbation of {lname_text}"
 
                     # Get dimension
-                    dim_out = fileNC.variables[izdetrend].dimensions
+                    dim_out = f.variables[izdetrend].dimensions
 
                     # Log the variable
-                    var_Ncdf = fileNC.createVariable(izdetrend+"_p", "f4",
+                    var_Ncdf = f.createVariable(izdetrend+"_p", "f4",
                                                      dim_out)
-                    var_Ncdf.long_name = newLong_name
-                    var_Ncdf.units = units_txt
-                    #var_Ncdf.units = newUnits # alexs version
+                    var_Ncdf.long_name = new_lname
+                    var_Ncdf.units = unit_text
+                    #var_Ncdf.units = new_units # alexs version
                     var_Ncdf[:] = zonal_detrend(var)
-                    fileNC.close()
+                    f.close()
 
                     print(f"{izdetrend}_p: {Green}Done{Nclr}")
                 except Exception as exception:
                     if debug:
                         raise
-                    if str(exception) == "NetCDF: String match to name in use":
-                        print(f"{Yellow}***Error*** Variable already exists "
-                                 f"in file. Delete the existing variable "
-                                 f"d_dz_{idiff} with "
-                                 f"``MarsVars {ifile} -rm d_dz_{idiff}``{Nclr}")
+                    if str(exception) == (
+                        "NetCDF: String match to name in use"
+                        ):
+                        print(f"{Yellow}***Error*** Variable already "
+                              f"exists in file. Delete the existing "
+                              f"variable d_dz_{idiff} with "
+                              f"``MarsVars {ifile} -rm d_dz_{idiff}"
+                              f"``{Nclr}")
 
         # ==============================================================
         #           Opacity Conversion (dp_to_dz and dz_to_dp)
         # ==============================================================
         for idp_to_dz in dp_to_dz_list:
             # ========= Case 1: dp_to_dz
-            fileNC = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
-            f_type, interp_type = FV3_file_type(fileNC)
-            if idp_to_dz not in fileNC.variables.keys():
-                print(f"{Red}dp_to_dz error: variable {idp_to_dz} is not in "
-                      f"{ifile}{Nclr}")
-                fileNC.close()
+            f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
+            f_type, interp_type = FV3_file_type(f)
+            if idp_to_dz not in f.variables.keys():
+                print(f"{Red}dp_to_dz error: variable {idp_to_dz} is "
+                      f"not in {ifile}{Nclr}")
+                f.close()
             else:
                 print("Converting: {idp_to_dz}...")
 
                 try:
-                    var = fileNC.variables[idp_to_dz][:]
-                    newUnits = (getattr(fileNC.variables[idp_to_dz], "units",
-                                        "") + "/m")
-                    newLong_name = (getattr(fileNC.variables[idp_to_dz],
-                                            "long_name", "")
-                                    + " rescaled to meter-1")
+                    var = f.variables[idp_to_dz][:]
+                    new_units = (getattr(
+                        f.variables[idp_to_dz],  "units", ""
+                        ) + "/m")
+                    new_lname = (getattr(
+                        f.variables[idp_to_dz], "long_name", ""
+                        ) + " rescaled to meter-1")
                     # Get dimension
-                    dim_out = fileNC.variables[idp_to_dz].dimensions
+                    dim_out = f.variables[idp_to_dz].dimensions
 
                     # Log the variable
-                    var_Ncdf = fileNC.createVariable(f"{idp_to_dz}_dp_to_dz",
-                                                     "f4", dim_out)
-                    var_Ncdf.long_name = newLong_name
-                    var_Ncdf.units = newUnits
-                    var_Ncdf[:] = (var* fileNC.variables["DP"][:]
-                                   / fileNC.variables["DZ"][:])
-                    fileNC.close()
+                    var_Ncdf = f.createVariable(f"{idp_to_dz}_dp_to_dz",
+                                                "f4", dim_out)
+                    var_Ncdf.long_name = new_lname
+                    var_Ncdf.units = new_units
+                    var_Ncdf[:] = (var* f.variables["DP"][:]
+                                   / f.variables["DZ"][:])
+                    f.close()
 
                     print(f"{idp_to_dz}_dp_to_dz: {Green}Done{Nclr}")
 
                 except Exception as exception:
                     if debug:
                         raise
-                    if str(exception) == "NetCDF: String match to name in use":
-                        print(f"{Yellow}***Error*** Variable already exists "
-                              f"in file\nDelete the existing variable "
-                              f"{idp_to_dz}_dp_to_dz with "
-                              f"``MarsVars {ifile} -rm {idp_to_dz}_dp_to_dz``"
-                              f"{Nclr}")
+                    if str(exception) == (
+                        "NetCDF: String match to name in use"
+                        ):
+                        print(f"{Yellow}***Error*** Variable already "
+                              f"exists in file.\nDelete the existing "
+                              f"variable {idp_to_dz}_dp_to_dz with "
+                              f"``MarsVars {ifile} -rm {idp_to_dz}_dp_"
+                              f"to_dz``{Nclr}")
 
         for idz_to_dp in dz_to_dp_list:
             # ========= Case 2: dz_to_dp
-            fileNC = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
-            f_type, interp_type = FV3_file_type(fileNC)
-            if idz_to_dp not in fileNC.variables.keys():
-                print(f"{Red}dz_to_dp error: variable {idz_to_dp} is not in "
-                      f"{ifile}{Nclr}")
-                fileNC.close()
+            f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
+            f_type, interp_type = FV3_file_type(f)
+            if idz_to_dp not in f.variables.keys():
+                print(f"{Red}dz_to_dp error: variable {idz_to_dp} is "
+                      f"not in {ifile}{Nclr}")
+                f.close()
             else:
                 print(f"Converting: {idz_to_dp}...")
 
                 try:
-                    var = fileNC.variables[idz_to_dp][:]
-                    newUnits = (getattr(fileNC.variables[idz_to_dp],
-                                        "units", "") + "/m")
-                    newLong_name = (getattr(fileNC.variables[idz_to_dp],
-                                            "long_name", "")
-                                    + " rescaled to Pa-1")
+                    var = f.variables[idz_to_dp][:]
+                    new_units = (getattr(
+                        f.variables[idz_to_dp], "units", ""
+                        ) + "/m")
+                    new_lname = (getattr(
+                        f.variables[idz_to_dp], "long_name", ""
+                        ) + " rescaled to Pa-1")
                     # Get dimension
-                    dim_out = fileNC.variables[idz_to_dp].dimensions
+                    dim_out = f.variables[idz_to_dp].dimensions
 
                     # Log the variable
-                    var_Ncdf = fileNC.createVariable(f"{idz_to_dp}_dz_to_dp",
-                                                     "f4", dim_out)
-                    var_Ncdf.long_name = newLong_name
-                    var_Ncdf.units = newUnits
-                    var_Ncdf[:] = (var* fileNC.variables["DZ"][:]
-                                   / fileNC.variables["DP"][:])
-                    fileNC.close()
+                    var_Ncdf = f.createVariable(f"{idz_to_dp}_dz_to_dp",
+                                                "f4", dim_out)
+                    var_Ncdf.long_name = new_lname
+                    var_Ncdf.units = new_units
+                    var_Ncdf[:] = (var* f.variables["DZ"][:]
+                                   / f.variables["DP"][:])
+                    f.close()
 
                     print(f"{idz_to_dp}_dz_to_dp: {Green}Done{Nclr}")
 
                 except Exception as exception:
                     if debug:
                         raise
-                    if str(exception) == "NetCDF: String match to name in use":
-                        print(f"{Yellow}***Error*** Variable already exists "
-                                 f"in file.\nDelete the existing variable "
-                                 f"{idp_to_dz}_dp_to_dz with "
-                                 f"``MarsVars.py {ifile} -rm "
-                                 f"{idp_to_dz}_dp_to_dz``{Nclr}")
+                    if str(exception) == (
+                        "NetCDF: String match to name in use"
+                        ):
+                        print(f"{Yellow}***Error*** Variable already "
+                              f"exists in file.\nDelete the existing "
+                              f"variable {idp_to_dz}_dp_to_dz with "
+                              f"``MarsVars.py {ifile} -rm "
+                              f"{idp_to_dz}_dp_to_dz``{Nclr}")
 
         # ==============================================================
         #                    Column Integration
@@ -1693,34 +1782,35 @@ def main():
                             p_top
         """
         for icol in col_list:
-            fileNC = Dataset(ifile, "a")
-            f_type, interp_type = FV3_file_type(fileNC)
+            f = Dataset(ifile, "a")
+            f_type, interp_type = FV3_file_type(f)
 
             if interp_type == "pfull":
-                ak, bk = ak_bk_loader(fileNC)
-            if icol not in fileNC.variables.keys():
-                print(f"{Red}column integration error: variable {icol} is not "
-                      f"in {ifile}{Nclr}")
-                fileNC.close()
+                ak, bk = ak_bk_loader(f)
+            if icol not in f.variables.keys():
+                print(f"{Red}column integration error: variable {icol} "
+                      f"is not in {ifile}{Nclr}")
+                f.close()
             else:
                 print(f"Performing column integration: {icol}...")
                 try:
-                    var = fileNC.variables[icol][:]
-                    longname_txt, units_txt = get_longname_units(fileNC, icol)
+                    var = f.variables[icol][:]
+                    lname_text, unit_text = get_longname_units(f, icol)
                     # turn "kg/kg" -> "kg/m2"
-                    newUnits = f"{units_txt[:-3]}/m2"
-                    newLong_name = f"column integration of {longname_txt}"
+                    new_units = f"{unit_text[:-3]}/m2"
+                    new_lname = f"column integration of {lname_text}"
                     # temp and ps always required
                     # Get dimension
-                    dim_in = fileNC.variables["temp"].dimensions
-                    shape_in = fileNC.variables["temp"].shape
+                    dim_in = f.variables["temp"].dimensions
+                    shape_in = f.variables["temp"].shape
                     # TODO edge cases where time = 1
                     if f_type == "diurn":
                         # if [time, tod, lat, lon]
                         lev_T = [2, 1, 0, 3, 4]
                         # -> [lev, tod, time, lat, lon]
                         dim_out = tuple(
-                            [dim_in[0], dim_in[1], dim_in[3], dim_in[4]])
+                            [dim_in[0], dim_in[1], dim_in[3], dim_in[4]]
+                            )
                         # In diurn, lev is the 3rd axis (index 2):
                         # [time, tod, lev, lat, lon]
                         lev_axis = 2
@@ -1728,31 +1818,35 @@ def main():
                         # if [time, lat, lon]
                         lev_T = [1, 0, 2, 3]
                         # -> [lev, time, lat, lon]
-                        dim_out = tuple([dim_in[0], dim_in[2], dim_in[3]])
+                        dim_out = tuple(
+                            [dim_in[0], dim_in[2], dim_in[3]]
+                            )
                         lev_axis = 1
 
-                    ps = fileNC.variables["ps"][:]
+                    ps = f.variables["ps"][:]
                     DP = compute_DP_3D(ps, ak, bk, shape_in)
                     out = np.sum(var * DP/g, axis = lev_axis)
 
                     # Log the variable
-                    var_Ncdf = fileNC.createVariable(f"{icol}_col", "f4",
-                                                     dim_out)
-                    var_Ncdf.long_name = newLong_name
-                    var_Ncdf.units = newUnits
+                    var_Ncdf = f.createVariable(f"{icol}_col", "f4",
+                                                dim_out)
+                    var_Ncdf.long_name = new_lname
+                    var_Ncdf.units = new_units
                     var_Ncdf[:] = out
-                    fileNC.close()
+                    f.close()
 
                     print(f"{icol}_col: {Green}Done{Nclr}")
 
                 except Exception as exception:
                     if debug:
                         raise
-                    if str(exception) == "NetCDF: String match to name in use":
-                        print(f"{Yellow}***Error*** Variable already exists "
-                                 f"in file.\nDelete the existing variable "
-                                 f"{icol}_col with "
-                                 f"``MarsVars {ifile} -rm {icol}_col``{Nclr}")
+                    if str(exception) == (
+                        "NetCDF: String match to name in use"
+                        ):
+                        print(f"{Yellow}***Error*** Variable already "
+                              f"exists in file.\nDelete the existing "
+                              f"variable {icol}_col with ``MarsVars "
+                              f"{ifile} -rm {icol}_col``{Nclr}")
         if edit_var:
             f_IN = Dataset(ifile, "r", format = "NETCDF4_CLASSIC")
             ifile_tmp = f"{ifile[:-3]}_tmp.nc"
@@ -1765,28 +1859,28 @@ def main():
             # Read value, longname, units, name, and log the new var
             var_Ncdf = f_IN.variables[edit_var]
 
-            name_txt = edit_var
+            name_text = edit_var
             vals = var_Ncdf[:]
             dim_out = var_Ncdf.dimensions
-            longname_txt = getattr(var_Ncdf, "long_name", "")
-            units_txt = getattr(var_Ncdf, "units", "")
-            cart_txt = getattr(var_Ncdf, "cartesian_axis", "")
+            lname_text = getattr(var_Ncdf, "long_name", "")
+            unit_text = getattr(var_Ncdf, "units", "")
+            cart_text = getattr(var_Ncdf, "cartesian_axis", "")
 
             if parser.parse_args().rename:
-                name_txt = parser.parse_args().rename
+                name_text = parser.parse_args().rename
             if parser.parse_args().longname:
-                longname_txt = parser.parse_args().longname
+                lname_text = parser.parse_args().longname
             if parser.parse_args().unit:
-                units_txt = parser.parse_args().unit
+                unit_text = parser.parse_args().unit
             if parser.parse_args().multiply:
                 vals *= parser.parse_args().multiply
 
-            if cart_txt == "":
-                Log.log_variable(name_txt, vals, dim_out, longname_txt,
-                                 units_txt)
+            if cart_text == "":
+                Log.log_variable(name_text, vals, dim_out, lname_text,
+                                 unit_text)
             else:
-                Log.log_axis1D(name_txt, vals, dim_out, longname_txt,
-                               units_txt, cart_txt)
+                Log.log_axis1D(name_text, vals, dim_out, lname_text,
+                               unit_text, cart_text)
             f_IN.close()
             Log.close()
 
