@@ -1046,7 +1046,6 @@ def main():
         print(f"{Yellow}***Notice***  No operation requested. Use "
               f"-add, -zdiff, -zd, -col, -dp_to_dz, -rm, or -edit"
               f"{Nclr}")
-        ()()
 
     # For all the files
     for ifile in file_list:
