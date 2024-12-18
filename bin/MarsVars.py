@@ -329,25 +329,25 @@ def err_req_interpolated_file(ivar, ifile, itype):
     if len(itype) == 1:
         return(
             print(f"{Red}ERROR: variable {ivar} can only be added to a "
-                  f"{itype[0]}-interpolated file.\nRun {Yellow}"
-                  f"'MarsInterp.py {ifile} -t {itype[0]}' {Red}before "
+                  f"{itype[0]}-interpolated file. Run {Yellow} "
+                  f"MarsInterp.py {ifile} -t {itype[0]}\n{Red}before "
                   f"trying again.{Nclr}")
         )
     elif len(itype) == 2:
         return(
             print(f"{Red}ERROR: variable {ivar} can only be added to a "
-                  f"{itype[0]}- or {itype[1]}-interpolated file.\nRun "
-                  f"{Yellow} 'MarsInterp.py {ifile} -t {itype[0]}' "
-                  f"{Red}or {Yellow} 'MarsInterp.py {ifile} -t "
-                  f"{itype[1]}' {Red}before trying again.{Nclr}")
+                  f"{itype[0]}- or {itype[1]}-interpolated file. Run "
+                  f"{Yellow} MarsInterp.py {ifile} -t {itype[0]} "
+                  f"{Red}or\n{Yellow}MarsInterp.py {ifile} -t "
+                  f"{itype[1]}\n{Red}before trying again.{Nclr}")
         )
     else:
         return(
             print(f"{Red}ERROR: variable {ivar} can only be added to "
-                  f"an interpolated file.\nRun {Yellow} 'MarsInterp.py "
-                  f"{ifile} -t {itype[0]}' {Red}or {Yellow} "
-                  f" 'MarsInterp.py {ifile} -t {itype[1]}'{Red}or "
-                  f"{Yellow} 'MarsInterp.py {ifile} -t {itype[2]}' "
+                  f"an interpolated file. Run\n{Yellow}MarsInterp.py "
+                  f"{ifile} -t {itype[0]} {Red}or\n{Yellow}"
+                  f"MarsInterp.py {ifile} -t {itype[1]} {Red}or\n"
+                  f"{Yellow}MarsInterp.py {ifile} -t {itype[2]}\n"
                   f"{Red}before trying again.{Nclr}")
         )
 
