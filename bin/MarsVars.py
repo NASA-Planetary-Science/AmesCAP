@@ -53,9 +53,85 @@ from amescap.FV3_utils import (
 )
 from amescap.Script_utils import (
     check_file_tape, print_fileContent,FV3_file_type, filter_vars,
-    get_longname_units, ak_bk_loader
+    get_longname_unit, ak_bk_loader
 )
 from amescap.Ncdf_wrapper import Ncdf
+
+# ======================================================
+#                  DEFINITIONS
+# ======================================================
+
+# List of supported variables for [-add --add]
+cap_str = "(derived using CAP)"
+VAR = {
+    "rho": [f"Density {cap_str}", "kg/m^3", 
+            ["ps", "temp"], ["pfull"]],
+    "theta": [f"Potential temperature {cap_str}", "K", 
+              ["ps", "temp"], ["pfull"]],
+    "w": [f"Vertical wind {cap_str}", "m/s", 
+          ["ps", "temp", "omega"], ["pfull"]],
+    "pfull3D": [f"Pressure at layer midpoint {cap_str}", "Pa", 
+                ["ps", "temp"], ["pfull"]],
+    "DP": [f"Layer thickness (pressure) {cap_str}", "Pa", 
+           ["ps", "temp"], ["pfull"]],
+    "zfull": [f"Altitude AGL at layer midpoint {cap_str}", "m", 
+              ["ps", "temp"], ["pfull"]],
+    "DZ": [f"Layer thickness (altitude) {cap_str}", "m", 
+           ["ps", "temp"], ["pfull"]],
+    "wdir": [f"Wind direction {cap_str}", "degree", 
+             ["ucomp", "vcomp"], ["pfull", "pstd", "zstd", "zagl"]],
+    "wspeed": [f"Wind speed {cap_str}", "m/s", 
+               ["ucomp", "vcomp"], ["pfull", "pstd", "zstd", "zagl"]],
+    "N": [f"Brunt Vaisala frequency {cap_str}", "rad/s", 
+          ["ps", "temp"], ["pfull"]],
+    "Ri": [f"Richardson number {cap_str}", "none", 
+           ["ps", "temp", "uccomp", "vcomp"], ["pfull"]],
+    "Tco2": [f"CO2 condensation temperature {cap_str}", "K", 
+             ["ps", "temp"], ["pfull", "pstd"]],
+    "div": [f"Divergence of the wind field {cap_str}", "Hz", 
+            ["ucomp", "vcomp"], ["pfull", "pstd", "zstd", "zagl"]],
+    "curl": [f"Relative vorticity {cap_str}", "Hz", 
+             ["ucomp", "vcomp"], ["pfull", "pstd", "zstd", "zagl"]],
+    "scorer_wl": [f"Scorer horiz. wavelength [2pi/sqrt(l^2)] {cap_str}", 
+                  "m", ["ps", "temp", "ucomp"], ["pfull"]],
+    "dzTau": [f"Dust extinction rate {cap_str}", "km-1", 
+              ["dst_mass", "temp"], ["pfull"]],
+    "izTau": [f"Ice extinction rate {cap_str}", "km-1", 
+              ["ice_mass", "temp"], ["pfull"]],
+    "Vg_sed": [f"Sedimentation rate {cap_str}", "m/s", 
+               ["dst_mass", "temp"], ["pfull", "pstd", "zstd", "zagl"]],
+    "w_net": [f"Net vertical wind [w-Vg_sed] {cap_str}", "m/s", 
+              ["Vg_sed", "w"], ["pfull", "pstd", "zstd", "zagl"]],
+    "dst_mass": [f"Dust mass mixing ratio {cap_str}", "kg/kg", 
+                 ["dzTau", "temp"], ["pfull"]],
+    "ice_mass": [f"Ice mass mixing ratio {cap_str}", "kg/kg", 
+                 ["izTau", "temp"], ["pfull"]],
+    "msf": [f"Mass stream function {cap_str}", "1.e8 x kg/s", 
+            ["vcomp"], ["pstd", "zstd", "zagl"]],
+    "ep": [f"Wave potential energy {cap_str}", "J/kg", 
+           ["temp"], ["pstd", "zstd", "zagl"]],
+    "ek": [f"Wave kinetic energy {cap_str}", "J/kg", 
+           ["ucomp", "vcomp"], ["pstd", "zstd", "zagl"]],
+    "mx": [f"Vertical flux of zonal momentum {cap_str}", "J/kg", 
+           ["ucomp", "w"], ["pstd", "zstd", "zagl"]],
+    "my": [f"Vertical flux of merididional momentum{cap_str}", "J/kg", 
+           ["vcomp", "w"], ["pstd", "zstd", "zagl"]],
+    "ax": [f"Zonal wave-mean flow forcing {cap_str}", "m/s^2", 
+           ["ucomp", "w", "rho"], ["pstd", "zstd", "zagl"]],
+    "ay": [f"Meridional wave-mean flow forcing {cap_str}", "m/s^2", 
+           ["vcomp", "w", "rho"], ["pstd", "zstd", "zagl"]],
+    "tp_t": [f"Normalized temperature perturbation {cap_str}", "None", 
+             ["temp"], ["pstd", "zstd", "zagl"]],
+    "fn": [f"Frontogenesis {cap_str}", "K/m/s", 
+           ["ucomp", "vcomp", "theta"], ["pstd", "zstd", "zagl"]],
+}
+
+help_text = ""
+for ivar in VAR.keys():
+    lname, unit, reqd_var, compat_files = VAR[ivar]
+    help_text += (f"{lname} {unit} {reqd_var} {compat_files}\n")
+
+print(help_text)
 
 # ======================================================================
 #                           ARGUMENT PARSER
@@ -74,54 +150,55 @@ parser = argparse.ArgumentParser(
 parser.add_argument("input_file", nargs="+",
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
-parser.add_argument("-add", "--add", nargs="+", default=[],
-    help=(
-        f"Add a new variable to file. Variables that can be added are "
-        f"listed below.\n"
-        f" "
-        f"{Green}Usage:\n"
-        f"> MarsVars ****.atmos.average.nc -add varname\n"
-        f" "
-        f"{Cyan}ON NATIVE FILES:{Yellow}\n"
-        f"varname        full variable name             [required variables]{Cyan}\n"
-        f"rho            Density                        [ps, temp]\n"
-        f"theta          Potential Temperature          [ps, temp]\n"
-        f"pfull3D        Pressure at layer midpoint     [ps, temp]\n"
-        f"DP             Layer thickness [pressure]     [ps, temp]\n"
-        f"DZ             layer thickness [altitude]     [ps, temp]\n"
-        f"zfull          Altitude AGL                   [ps, temp]\n"
-        f"w              Vertical Wind                  [ps, temp, omega]\n"
-        f"wdir           Horiz. Wind Direction          [ucomp, vcomp]\n"
-        f"wspeed         Horiz. Wind Magnitude          [ucomp, vcomp]\n"
-        f"N              Brunt Vaisala Frequency        [ps, temp]\n"
-        f"Ri             Richardson Number              [ps, temp]\n"
-        f"Tco2           CO2 Condensation Temperature   [ps, temp]\n"
-        f"scorer_wl      Scorer Horiz. Wavelength       [ps, temp, ucomp]\n"
-        f"div            Divergence of Wind             [ucomp, vcomp]\n"
-        f"curl           Relative Vorticity             [ucomp, vcomp]\n"
-        f"fn             Frontogenesis                  [ucomp, vcomp, theta]\n"
-        f"dzTau          Dust Extinction Rate           [dst_mass_mom, temp]\n"
-        f"izTau          Ice Extinction Rate            [ice_mass_mom, temp]\n"
-        f"dst_mass_mom Dust Mass Mixing Ratio         [dzTau, temp]\n"
-        f"ice_mass_mom Ice Mass Mixing Ratio          [izTau, temp]\n"
-        f"Vg_sed         Sedimentation Rate             [dst_mass_mom, dst_num_mom, temp]\n"
-        f"w_net          Net Vertical Wind (w-Vg_sed)   [w, Vg_sed]\n"
-        f" "
-        f"{Nclr}NOTE: MarsVars offers some support on interpolated\n"
-        f"files, particularly if ``pfull3D`` and ``zfull`` are added \n"
-        f"to the file before interpolation.\n\n"
-        f"{Cyan}ON INTERPOLATED FILES (i.e. ``_pstd``, ``_zstd``, \n"
-        f"``_zagl``):{Yellow}\n"
-        f"varname        full variable name             [required variables]{Cyan}\n"
-        f"msf            Mass Stream Function           [vcomp]\n"
-        f"ep             Wave Potential Energy          [temp]\n"
-        f"ek             Wave Kinetic Energy            [ucomp, vcomp]\n"
-        f"mx             Vert. Flux of Zonal Momentum   [ucomp, w]\n"
-        f"my             Vert. Flux of Merid. Momentum  [vcomp, w]\n"
-        f"ax             Zonal Wave-Mean Flow Forcing   [ucomp, w, rho]\n"
-        f"ay             Merid. Wave-Mean Flow Forcing  [vcomp, w, rho]\n"
-        f"tp_t           Normalized Temp. Perturbation  [temp]\n"
-        f"{Nclr}\n"
+parser.add_argument("-add", "--add", nargs="+", default=[], help=(
+    f"TEST HELP:"
+    f"{help_text}\nTEST HELP\n\\n"
+    f"Add a new variable to file. Variables that can be added are "
+    f"listed below.\n"
+    f" "
+    f"{Green}Usage:\n"
+    f"> MarsVars ****.atmos.average.nc -add varname\n"
+    f" "
+    f"{Cyan}ON NATIVE FILES:{Yellow}\n"
+    f"varname        full variable name             [required variables]{Cyan}\n"
+    f"rho            Density                        [ps, temp]\n"
+    f"theta          Potential Temperature          [ps, temp]\n"
+    f"pfull3D        Pressure at layer midpoint     [ps, temp]\n"
+    f"DP             Layer thickness [pressure]     [ps, temp]\n"
+    f"DZ             layer thickness [altitude]     [ps, temp]\n"
+    f"zfull          Altitude AGL                   [ps, temp]\n"
+    f"w              Vertical Wind                  [ps, temp, omega]\n"
+    f"wdir           Horiz. Wind Direction          [ucomp, vcomp]\n"
+    f"wspeed         Horiz. Wind Magnitude          [ucomp, vcomp]\n"
+    f"N              Brunt Vaisala Frequency        [ps, temp]\n"
+    f"Ri             Richardson Number              [ps, temp]\n"
+    f"Tco2           CO2 Condensation Temperature   [ps, temp]\n"
+    f"scorer_wl      Scorer Horiz. Wavelength       [ps, temp, ucomp]\n"
+    f"div            Divergence of Wind             [ucomp, vcomp]\n"
+    f"curl           Relative Vorticity             [ucomp, vcomp]\n"
+    f"fn             Frontogenesis                  [ucomp, vcomp, theta]\n"
+    f"dzTau          Dust Extinction Rate           [dst_mass_mom, temp]\n"
+    f"izTau          Ice Extinction Rate            [ice_mass_mom, temp]\n"
+    f"dst_mass_mom Dust Mass Mixing Ratio         [dzTau, temp]\n"
+    f"ice_mass_mom Ice Mass Mixing Ratio          [izTau, temp]\n"
+    f"Vg_sed         Sedimentation Rate             [dst_mass_mom, dst_num_mom, temp]\n"
+    f"w_net          Net Vertical Wind (w-Vg_sed)   [w, Vg_sed]\n"
+    f" "
+    f"{Nclr}NOTE: MarsVars offers some support on interpolated\n"
+    f"files, particularly if ``pfull3D`` and ``zfull`` are added \n"
+    f"to the file before interpolation.\n\n"
+    f"{Cyan}ON INTERPOLATED FILES (i.e. ``_pstd``, ``_zstd``, \n"
+    f"``_zagl``):{Yellow}\n"
+    f"varname        full variable name             [required variables]{Cyan}\n"
+    f"msf            Mass Stream Function           [vcomp]\n"
+    f"ep             Wave Potential Energy          [temp]\n"
+    f"ek             Wave Kinetic Energy            [ucomp, vcomp]\n"
+    f"mx             Vert. Flux of Zonal Momentum   [ucomp, w]\n"
+    f"my             Vert. Flux of Merid. Momentum  [vcomp, w]\n"
+    f"ax             Zonal Wave-Mean Flow Forcing   [ucomp, w, rho]\n"
+    f"ay             Merid. Wave-Mean Flow Forcing  [vcomp, w, rho]\n"
+    f"tp_t           Normalized Temp. Perturbation  [temp]\n"
+    f"{Nclr}\n"
     )
 )
 
@@ -224,53 +301,12 @@ parser.add_argument("-multiply", "--multiply", type=float, default=None,
 parser.add_argument("--debug",  action="store_true",
     help=(f"Debug flag: do not bypass errors.\n\n"))
 
-# ======================================================
-#                  DEFINITIONS
-# ======================================================
-
-# List of supported variables for [-add --add]
-cap_str = "(derived using CAP)"
-VAR = {
-    "rho": [f"Density {cap_str}", "kg/m^3"],
-    "theta": [f"Potential temperature {cap_str}", "K"],
-    "w": [f"Vertical wind {cap_str}", "m/s"],
-    "pfull3D": [f"Pressure at layer midpoint {cap_str}", "Pa"],
-    "DP": [f"Layer thickness (pressure) {cap_str}", "Pa"],
-    "zfull": [f"Altitude AGL at layer midpoint {cap_str}", "m"],
-    "DZ": [f"Layer thickness (altitude) {cap_str}", "m"],
-    "wdir": [f"Wind direction {cap_str}", "degree"],
-    "wspeed": [f"Wind speed {cap_str}", "m/s"],
-    "N": [f"Brunt Vaisala frequency {cap_str}", "rad/s"],
-    "Ri": [f"Richardson number {cap_str}", "none"],
-    "Tco2": [f"CO2 condensation temperature {cap_str}", "K"],
-    "div": [f"Divergence of the wind field {cap_str}", "Hz"],
-    "curl": [f"Relative vorticity {cap_str}","Hz"],
-    "scorer_wl": [
-        f"Scorer horizontal wavelength [L=2.pi/sqrt(l^2)] {cap_str}", 
-        "m"
-    ],
-    "msf": [f"Mass stream function {cap_str}","1.e8 x kg/s"],
-    "ep": [f"Wave potential energy {cap_str}","J/kg"],
-    "ek": [f"Wave kinetic energy {cap_str}","J/kg"],
-    "mx": [f"Vertical flux of zonal momentum {cap_str}","J/kg"],
-    "my": [f"Vertical flux of merididional momentum{cap_str}","J/kg"],
-    "ax": [f"Zonal wave-mean flow forcing {cap_str}", "m/s^2"],
-    "ay": [f"Meridional wave-mean flow forcing {cap_str}", "m/s^2"],
-    "tp_t": [f"Normalized temperature perturbation {cap_str}", "None"],
-    "fn": [f"Frontogenesis {cap_str}", "K/m/s"],
-    "dzTau": [f"Dust extinction rate {cap_str}", "km-1"],
-    "izTau": [f"Ice extinction rate {cap_str}", "km-1"],
-    "dst_mass_mom": [f"Dust mass mixing ratio {cap_str}", "kg/kg"],
-    "ice_mass_mom": [f"Ice mass mixing ratio {cap_str}", "kg/kg"],
-    "Vg_sed": [f"Sedimentation rate {cap_str}", "m/s"],
-    "w_net": [f"Net vertical wind [w-Vg_sed] {cap_str}", "m/s"],
-}
 
 # ======================================================================
 # TODO : If only one timestep, reshape from
-#       (lev, lat, lon) to (time, lev, lat, lon)
+#       (lev, lat, lon) to (t, lev, lat, lon)
 
-# Fill values for NaN. np.NaN, raises errors when running runpinterp.
+# Fill values for NaN. np.NaN, raises errors when running runpinterp
 fill_value = 0.
 
 # Define constants
@@ -351,7 +387,7 @@ def err_req_interpolated_file(ivar, ifile, itype):
                   f"{Red}before trying again.{Nclr}")
         )
 
-def err_req_non_interpolated_file(ivar, ifile):
+def req_non_interp_file(ivar, ifile):
     """
     Print message to the screen when user tries to add a variable to
     an incompatible file type.
@@ -857,12 +893,12 @@ def compute_DP_3D(ps, ak, bk, shape_out):
     # Get the 3D pressure field from fms_press_calc
     p_half3D = fms_press_calc(ps, ak, bk, lev_type="half")
     # fms_press_calc will swap dimensions 0 and 1 so p_half3D has
-    # dimensions = [lev, time, lat, lon]
+    # dimensions = [lev, t, lat, lon]
 
     # Calculate the differences in pressure between each layer midpoint
     DP_3D = p_half3D[1:, ..., ] - p_half3D[0:-1, ...]
 
-    # Swap dimensions 0 and 1, back to [time, lev, lat, lon]
+    # Swap dimensions 0 and 1, back to [t, lev, lat, lon]
     DP_3D = DP_3D.transpose(lev_T)
 
     DP = DP_3D.reshape(shape_out)
@@ -894,13 +930,13 @@ def compute_DZ_3D(ps, ak, bk, temp, shape_out):
     z_half3D = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T), topo=0.,
                           lev_type="half")
     # fms_press_calc will swap dimensions 0 and 1 so p_half3D has
-    # dimensions = [lev, time, lat, lon]
+    # dimensions = [lev, t, lat, lon]
 
     # Calculate the differences in pressure between each layer midpoint
     DZ_3D = z_half3D[0:-1, ...]-z_half3D[1:, ..., ]
     # Note the reversed order: Z decreases with increasing levels
 
-    # Swap dimensions 0 and 1, back to [time, lev, lat, lon]
+    # Swap dimensions 0 and 1, back to [t, lev, lat, lon]
     DZ_3D = DZ_3D.transpose(lev_T)
 
     DZ = DZ_3D.reshape(shape_out)
@@ -995,7 +1031,7 @@ def compute_WMFF(MF, rho, lev, interp_type):
     # Differentiate the momentum flux (MF)
     darr_dz = dvar_dh((rho*MF).transpose(lev_T), lev).transpose(lev_T)
     # Manually swap dimensions 0 and 1 so lev_T has lev for first
-    # dimension [lev, time, lat, lon] for the differentiation
+    # dimension [lev, t, lat, lon] for the differentiation
 
     if interp_type == "pstd":
         # Computed du/dp, need to multiply by (-rho g) to obtain du/dz
@@ -1026,8 +1062,8 @@ def main():
     debug = parser.parse_args().debug
 
     # An array to swap vertical axis forward and backward:
-    # [1, 0, 2, 3] for [time, lev, lat, lon] and
-    # [2, 1, 0, 3, 4] for [time, tod, lev, lat, lon]
+    # [1, 0, 2, 3] for [t, lev, lat, lon] and
+    # [2, 1, 0, 3, 4] for [t, tod, lev, lat, lon]
     global lev_T
     # Reshape ``lev_T_out`` in zfull and zhalf calculation
     global lev_T_out
@@ -1139,24 +1175,24 @@ def main():
                 shape_out = temp.shape
 
                 if f_type == "diurn":
-                    # [time, tod, lev, lat, lon]
-                    # -> [lev, tod, time, lat, lon]
-                    # -> [time, tod, lev, lat, lon]
+                    # [t, tod, lev, lat, lon]
+                    # -> [lev, tod, t, lat, lon]
+                    # -> [t, tod, lev, lat, lon]
                     lev_T = [2, 1, 0, 3, 4]
                     # [0 1 2 3 4] -> [2 1 0 3 4] -> [2 1 0 3 4]
                     lev_T_out = [1, 2, 0, 3, 4]
                     # In diurn file, level is the 3rd axis:
-                    # [time, tod, lev, lat, lon]
+                    # [t, tod, lev, lat, lon]
                     lev_axis = 2
                 else:
-                    # [tim, lev, lat, lon]
-                    # -> [lev, time, lat, lon]
-                    # -> [tim, lev, lat, lon]
+                    # [t, lev, lat, lon]
+                    # -> [lev, t, lat, lon]
+                    # -> [t, lev, lat, lon]
                     lev_T = [1, 0, 2, 3]
                     # [0 1 2 3] -> [1 0 2 3] -> [1 0 2 3]
                     lev_T_out = lev_T
                     # In average and daily files, level is the 2nd
-                    # axis = [time, lev, lat, lon]
+                    # axis = [t, lev, lat, lon]
                     lev_axis = 1
 
                 # ==================================================
@@ -1200,7 +1236,7 @@ def main():
                         OUT = compute_xzTau(q, temp, lev, C_dst, 
                                             f_type)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "izTau":
                     if interp_type not in ("pstd", "zstd", "zagl"):
@@ -1211,7 +1247,7 @@ def main():
                         OUT = compute_xzTau(q, temp, lev, C_ice, 
                                             f_type)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "dst_mass_micro":
                     if interp_type not in ("pstd", "zstd", "zagl"):
@@ -1219,7 +1255,7 @@ def main():
                         OUT = compute_mmr(xTau, temp, lev, C_dst, 
                                             f_type)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "ice_mass_micro":
                     if interp_type not in ("pstd", "zstd", "zagl"):
@@ -1227,7 +1263,7 @@ def main():
                         OUT = compute_mmr(xTau, temp, lev, C_ice, 
                                             f_type)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "Vg_sed":
                     if interp_type not in ("pstd", "zstd", "zagl"):
@@ -1239,7 +1275,7 @@ def main():
                             nTau = f.variables["dst_num_mom"][:]
                         OUT = compute_Vg_sed(xTau, nTau, temp)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "w_net":
                     if interp_type not in ("pstd", "zstd", "zagl"):
@@ -1247,31 +1283,31 @@ def main():
                         wvar = f.variables["w"][:]
                         OUT = compute_w_net(Vg, wvar)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "pfull3D":
                     if interp_type not in ("pstd", "zstd", "zagl"):
                         OUT = p_3D
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "DP":
                     if interp_type not in ("pstd", "zstd", "zagl"):
                         OUT = compute_DP_3D(ps, ak, bk, shape_out)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "rho":
                     if interp_type not in ("pstd", "zstd", "zagl"):
                         OUT = compute_rho(p_3D, temp)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "theta":
                     if interp_type not in ("pstd", "zstd", "zagl"):
                         OUT = compute_theta(p_3D, ps, temp, f_type)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "w":
                     if interp_type not in ("pstd", "zstd", "zagl"):
@@ -1279,20 +1315,20 @@ def main():
                         rho = compute_rho(p_3D, temp)
                         OUT = compute_w(rho, omega)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "zfull":
                     if interp_type not in ("pstd", "zstd", "zagl"):
                         OUT = compute_zfull(ps, ak, bk, temp)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "DZ":
                     if interp_type not in ("pstd", "zstd", "zagl"):
                         OUT = compute_DZ_3D(ps, ak, bk, temp, 
                                             shape_out)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "wspeed" or ivar == "wdir":
                     if interp_type not in ("pstd", "zstd", "zagl"):
@@ -1305,7 +1341,7 @@ def main():
                         if ivar == "wspeed":
                             OUT = mag
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "N":
                     if interp_type not in ("pstd", "zstd", "zagl"):
@@ -1314,7 +1350,7 @@ def main():
                         zfull = compute_zfull(ps, ak, bk, temp)
                         OUT = compute_N(theta, zfull)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "Ri":
                     if interp_type not in ("pstd", "zstd", "zagl"):
@@ -1327,13 +1363,15 @@ def main():
                         vcomp = f.variables["vcomp"][:]
                         du_dz = dvar_dh(
                             ucomp.transpose(lev_T),
-                            zfull.transpose(lev_T)).transpose(lev_T)
+                            zfull.transpose(lev_T)
+                            ).transpose(lev_T)
                         dv_dz = dvar_dh(
                             vcomp.transpose(lev_T),
-                            zfull.transpose(lev_T)).transpose(lev_T)
+                            zfull.transpose(lev_T)
+                            ).transpose(lev_T)
                         OUT = N**2 / (du_dz**2 + dv_dz**2)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 # NOTE lev_T swaps dims 0 & 1, ensuring level is
                 # the first dimension for the differentiation
@@ -1342,7 +1380,7 @@ def main():
                     if interp_type not in ("pstd", "zstd", "zagl"):
                         OUT = compute_Tco2(p_3D)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "scorer_wl":
                     if interp_type not in ("pstd", "zstd", "zagl"):
@@ -1353,7 +1391,7 @@ def main():
                         N = compute_N(theta, zfull)
                         OUT = compute_scorer(N, ucomp, zfull)
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar in ["div", "curl", "fn"]:
                     lat = f.variables["lat"][:]
@@ -1367,7 +1405,7 @@ def main():
                                             R=3400*1000.,
                                             spacing="regular")
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "curl":
                     if interp_type not in ("pstd", "zstd", "zagl"):
@@ -1375,7 +1413,7 @@ def main():
                                                 R=3400*1000.,
                                                 spacing="regular")
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 if ivar == "fn":
                     if interp_type not in ("pstd", "zstd", "zagl"):
@@ -1385,7 +1423,7 @@ def main():
                                             R=3400*1000.,
                                             spacing="regular")
                     else:
-                        err_req_non_interpolated_file(ivar, ifile)
+                        req_non_interp_file(ivar, ifile)
 
                 # ==================================================
                 #               Interpolated Files
@@ -1401,8 +1439,8 @@ def main():
                         vcomp = f.variables["vcomp"][:]
                         lat = f.variables["lat"][:]
                         if f_type == "diurn":
-                            # [lev, lat, time, tod, lon]
-                            # -> [time, tod, lev, lat, lon]
+                            # [lev, lat, t, tod, lon]
+                            # -> [t, tod, lev, lat, lon]
                             # [0 1 2 3 4] -> [2 3 0 1 4]
                             OUT = mass_stream(
                                 vcomp.transpose([2, 3, 0, 1, 4]), 
@@ -1417,9 +1455,9 @@ def main():
                                 lev,
                                 type=interp_type
                             ).transpose([3, 0, 1, 2])
-                            # [time, lev, lat, lon]
-                            # -> [lev, lat, lon, time]
-                            # ->  [time, lev, lat, lon]
+                            # [t, lev, lat, lon]
+                            # -> [lev, lat, lon, t]
+                            # ->  [t, lev, lat, lon]
                             # [0 1 2 3] -> [1 2 3 0] -> [3 0 1 2]
                     else:
                         err_req_interpolated_file(
@@ -1447,7 +1485,7 @@ def main():
                 if ivar == "mx":
                     if interp_type == "pstd":
                         OUT = compute_MF(f.variables["ucomp"][:],
-                                            f.variables["w"][:])
+                                         f.variables["w"][:])
                     else:
                         err_req_interpolated_file(
                             ivar, ifile, ["pstd"]
@@ -1456,7 +1494,7 @@ def main():
                 if ivar == "my":
                     if interp_type == "pstd":
                         OUT = compute_MF(f.variables["vcomp"][:],
-                                            f.variables["w"][:])
+                                         f.variables["w"][:])
                     else:
                         err_req_interpolated_file(
                             ivar, ifile, ["pstd"]
@@ -1468,7 +1506,7 @@ def main():
                                         f.variables["w"][:])
                         rho = f.variables["rho"][:]
                         OUT = compute_WMFF(mx, rho, lev, 
-                                            interp_type)
+                                           interp_type)
                     else:
                         err_req_interpolated_file(
                             ivar, ifile, ["pstd"]
@@ -1480,7 +1518,7 @@ def main():
                                         f.variables["w"][:])
                         rho = f.variables["rho"][:]
                         OUT = compute_WMFF(my, rho, lev, 
-                                            interp_type)
+                                           interp_type)
                     else:
                         err_req_interpolated_file(
                             ivar, ifile, ["pstd"]
@@ -1510,7 +1548,9 @@ def main():
                 # Log the variable
                 var_Ncdf = f.createVariable(ivar, "f4", dim_out)
                 var_Ncdf.long_name = VAR[ivar][0]
-                var_Ncdf.units = VAR[ivar][1]
+                var_Ncdf.unit = VAR[ivar][1]
+                var_Ncdf.reqd_var = VAR[ivar][2]
+                var_Ncdf.compat_files = VAR[ivar][3]
                 var_Ncdf[:] = OUT
                 f.close()
 
@@ -1523,10 +1563,9 @@ def main():
                     "NetCDF: String match to name in use"
                     ):
                     print(f"{Yellow}***Error*** Variable already "
-                                f"exists in file.\nDelete the "
-                                f"existing variables {ivar} with "
-                                f"``MarsVars.py {ifile} -rm {ivar}``"
-                                f"{Nclr}")
+                          f"exists in file.\nDelete the existing "
+                          f"variables {ivar} with ``MarsVars.py "
+                          f"{ifile} -rm {ivar}``{Nclr}")
 
         # ==============================================================
         #                   Vertical Differentiation
@@ -1547,15 +1586,14 @@ def main():
                 if f_type == "diurn":
                     lev_T = [2, 1, 0, 3, 4]
                 else:
-                    # If [time, lat, lon] -> [lev, time, lat, lon]
+                    # If [t, lat, lon] -> [lev, t, lat, lon]
                     lev_T = [1, 0, 2, 3]
                 try:
                     var = f.variables[idiff][:]
-                    lname_text, unit_text = get_longname_units(f, 
-                                                                 idiff)
+                    lname_text, unit_text = get_longname_unit(f, idiff)
                     # Remove the last ] to update the units (e.g [kg]
                     # to [kg/m])
-                    new_units = f"{unit_text[:-2]}/m]"
+                    new_unit = f"{unit_text[:-2]}/m]"
                     new_lname = f"vertical gradient of {lname_text}"
                     # temp and ps are always required. Get dimension
                     dim_out = f.variables["temp"].dimensions
@@ -1571,8 +1609,8 @@ def main():
                                 topo=0., lev_type="full"
                                 ).transpose(lev_T)
 
-                        # Average file: zfull = [lev, time, lat, lon]
-                        # Diurn file: zfull = [lev, tod, time, lat, lon]
+                        # Average file: zfull = [lev, t, lat, lon]
+                        # Diurn file: zfull = [lev, tod, t, lat, lon]
                         # Differentiate the variable w.r.t. Z:
                         darr_dz = dvar_dh(
                             var.transpose(lev_T), zfull.transpose(lev_T)
@@ -1609,7 +1647,7 @@ def main():
                     var_Ncdf = f.createVariable(f"d_dz_{idiff}", "f4",
                                                 dim_out)
                     var_Ncdf.long_name = new_lname
-                    var_Ncdf.units = new_units
+                    var_Ncdf.unit = new_unit
                     var_Ncdf[:] = darr_dz
                     f.close()
 
@@ -1622,9 +1660,8 @@ def main():
                         ):
                         print(f"{Yellow}***Error*** Variable already "
                               f"exists in file.\nDelete the existing "
-                                 f"variable d_dz_{idiff} with "
-                                 f"``MarsVars {ifile} -rm d_dz_{idiff}"
-                                 f"''{Nclr}")
+                              f"variable d_dz_{idiff} with MarsVars "
+                              f"``{ifile} -rm d_dz_{idiff}''{Nclr}")
 
         # ==============================================================
         #                       Zonal Detrending
@@ -1640,7 +1677,7 @@ def main():
                 print(f"Detrending: {izdetrend}...")
                 try:
                     var = f.variables[izdetrend][:]
-                    lname_text, unit_text = get_longname_units(
+                    lname_text, unit_text = get_longname_unit(
                         f, izdetrend)
                     new_lname = f"zonal perturbation of {lname_text}"
 
@@ -1649,10 +1686,10 @@ def main():
 
                     # Log the variable
                     var_Ncdf = f.createVariable(izdetrend+"_p", "f4",
-                                                     dim_out)
+                                                dim_out)
                     var_Ncdf.long_name = new_lname
-                    var_Ncdf.units = unit_text
-                    #var_Ncdf.units = new_units # alexs version
+                    var_Ncdf.unit = unit_text
+                    #var_Ncdf.unit = new_unit # alexs version
                     var_Ncdf[:] = zonal_detrend(var)
                     f.close()
 
@@ -1665,9 +1702,8 @@ def main():
                         ):
                         print(f"{Yellow}***Error*** Variable already "
                               f"exists in file. Delete the existing "
-                              f"variable d_dz_{idiff} with "
-                              f"``MarsVars {ifile} -rm d_dz_{idiff}"
-                              f"``{Nclr}")
+                              f"variable d_dz_{idiff} with MarsVars "
+                              f"``{ifile} -rm d_dz_{idiff}``{Nclr}")
 
         # ==============================================================
         #           Opacity Conversion (dp_to_dz and dz_to_dp)
@@ -1685,7 +1721,7 @@ def main():
 
                 try:
                     var = f.variables[idp_to_dz][:]
-                    new_units = (getattr(
+                    new_unit = (getattr(
                         f.variables[idp_to_dz],  "units", ""
                         ) + "/m")
                     new_lname = (getattr(
@@ -1698,7 +1734,7 @@ def main():
                     var_Ncdf = f.createVariable(f"{idp_to_dz}_dp_to_dz",
                                                 "f4", dim_out)
                     var_Ncdf.long_name = new_lname
-                    var_Ncdf.units = new_units
+                    var_Ncdf.unit = new_unit
                     var_Ncdf[:] = (var* f.variables["DP"][:]
                                    / f.variables["DZ"][:])
                     f.close()
@@ -1730,7 +1766,7 @@ def main():
 
                 try:
                     var = f.variables[idz_to_dp][:]
-                    new_units = (getattr(
+                    new_unit = (getattr(
                         f.variables[idz_to_dp], "units", ""
                         ) + "/m")
                     new_lname = (getattr(
@@ -1743,7 +1779,7 @@ def main():
                     var_Ncdf = f.createVariable(f"{idz_to_dp}_dz_to_dp",
                                                 "f4", dim_out)
                     var_Ncdf.long_name = new_lname
-                    var_Ncdf.units = new_units
+                    var_Ncdf.unit = new_unit
                     var_Ncdf[:] = (var* f.variables["DZ"][:]
                                    / f.variables["DP"][:])
                     f.close()
@@ -1794,9 +1830,9 @@ def main():
                 print(f"Performing column integration: {icol}...")
                 try:
                     var = f.variables[icol][:]
-                    lname_text, unit_text = get_longname_units(f, icol)
+                    lname_text, unit_text = get_longname_unit(f, icol)
                     # turn "kg/kg" -> "kg/m2"
-                    new_units = f"{unit_text[:-3]}/m2"
+                    new_unit = f"{unit_text[:-3]}/m2"
                     new_lname = f"column integration of {lname_text}"
                     # temp and ps always required
                     # Get dimension
@@ -1804,19 +1840,19 @@ def main():
                     shape_in = f.variables["temp"].shape
                     # TODO edge cases where time = 1
                     if f_type == "diurn":
-                        # if [time, tod, lat, lon]
+                        # if [t, tod, lat, lon]
                         lev_T = [2, 1, 0, 3, 4]
-                        # -> [lev, tod, time, lat, lon]
+                        # -> [lev, tod, t, lat, lon]
                         dim_out = tuple(
                             [dim_in[0], dim_in[1], dim_in[3], dim_in[4]]
                             )
                         # In diurn, lev is the 3rd axis (index 2):
-                        # [time, tod, lev, lat, lon]
+                        # [t, tod, lev, lat, lon]
                         lev_axis = 2
                     else:
-                        # if [time, lat, lon]
+                        # if [t, lat, lon]
                         lev_T = [1, 0, 2, 3]
-                        # -> [lev, time, lat, lon]
+                        # -> [lev, t, lat, lon]
                         dim_out = tuple(
                             [dim_in[0], dim_in[2], dim_in[3]]
                             )
@@ -1830,7 +1866,7 @@ def main():
                     var_Ncdf = f.createVariable(f"{icol}_col", "f4",
                                                 dim_out)
                     var_Ncdf.long_name = new_lname
-                    var_Ncdf.units = new_units
+                    var_Ncdf.unit = new_unit
                     var_Ncdf[:] = out
                     f.close()
 
