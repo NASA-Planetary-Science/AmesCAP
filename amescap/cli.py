@@ -10,11 +10,11 @@ def get_install_info():
     cli_path = os.path.abspath(__file__)
     install_time = time.ctime(os.path.getctime(cli_path))
     return f"""
-{Yellow}CAP Installation Information{Nclr}
-------------------------
-Version: 0.3
-Install Date: {install_time}
-Install Location: {os.path.dirname(os.path.dirname(cli_path))}
+{Cyan}CAP Installation Information
+----------------------------{Nclr}
+{Cyan}Version:{Nclr} 0.3
+{Cyan}Install Date:{Nclr} {install_time}
+{Cyan}Install Location:{Nclr} {os.path.dirname(os.path.dirname(cli_path))}
 """
 
 def main():
