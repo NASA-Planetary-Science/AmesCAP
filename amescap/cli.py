@@ -8,7 +8,7 @@ def main():
     class CustomHelpFormatter(argparse.HelpFormatter):
         def format_help(self):
             help_message = f"""
-{Green}Welcome to the NASA Ames Community Analysis Pipeline (CAP)!
+{Cyan}Welcome to the NASA Ames Community Analysis Pipeline (CAP)!
 -----------------------------------------------------------{Nclr}
 The Community Analysis Pipeline (CAP) is a Python-based command-line tool that performs analysis and creates plots from netCDF files output by the Mars Global Climate Model (MGCM). The offical user guide for CAP is available on readthedocs at:
 {Yellow}https://amescap.readthedocs.io/en/latest/index.html{Nclr}
@@ -21,23 +21,25 @@ Below is a list of the executables in CAP. Use this list to find the executable 
 
 Then, change to the directory hosting your netCDF output files and pass an argument to a CAP executable to perform the operation. A good place to start is to use the example command shown below your desired operation.{Nclr}
 
-{Yellow}Available commands:{Nclr}
-{Green}MarsCalendar.py{Nclr} - Converts Ls into day-of-year (sol) and vice versa.
-{Green}MarsFiles.py{Nclr}    - Functions for manipulating entire files (e.g., time-shifting, binning, regridding, temporal and spatial filtering, tide analysis, zonal averaging, etc.)
-{Green}MarsFormat.py{Nclr}   - Transforms non-MGCM model output into MGCM-like model output for compatibility with CAP.
-{Green}MarsInterp.py{Nclr}   - Interpolates files to pressure or altitude coordinates.
-{Green}MarsPlot.py{Nclr}     - Generates plots from Custom.in template files.
-{Green}MarsPull.py{Nclr}     - Query data from the MGCM repository on the NASA NAS Data Portal (data.nas.nasa.gov/mcmc).
-{Green}MarsVars.py{Nclr}     - Performs variable manipulations (e.g., deriving secondary variables, column-integration, etc.)
+{Cyan}Available commands:{Nclr}
+{Yellow}MarsCalendar.py - Converts Ls into day-of-year (sol) and vice versa.
+{Cyan}MarsFiles.py    - Functions for manipulating entire files (e.g., time-shifting, binning, regridding, temporal and spatial filtering, tide analysis, zonal averaging, etc.)
+{Yellow}MarsFormat.py   - Transforms non-MGCM model output into MGCM-like model output for compatibility with CAP.
+{Cyan}MarsInterp.py   - Interpolates files to pressure or altitude coordinates.
+{Yellow}MarsPlot.py     - Generates plots from Custom.in template files.
+{Cyan}MarsPull.py     - Query data from the MGCM repository on the NASA NAS Data Portal (data.nas.nasa.gov/mcmc).
+{Yellow}MarsVars.py     - Performs variable manipulations (e.g., deriving secondary variables, column-integration, etc.)
 
 {Green}For detailed help on each command, use:
  <command> -h
  Example: MarsVars.py -h{Nclr}
 
-{Cyan}CAP is currently compatible with output from the MCMC's Legacy and FV3-based MGCMs, which are publicly available on GitHub, as well as output from the Mars Weather Research and Forecasting Model (MarsWRF) and OpenMars.
+{Cyan}Additional Information
+----------------------{Nclr}
+CAP is currently compatible with output from the MCMC's Legacy and FV3-based MGCMs, which are publicly available on GitHub, as well as output from the Mars Weather Research and Forecasting Model (MarsWRF) and OpenMars.
 
 CAP is developed and maintained by the Mars Climate Modeling Center (MCMC) at NASA's Ames Research Center in Mountain View, CA. For more information, visit our website at:
-https://www.nasa.gov/space-science-and-astrobiology-at-ames/division-overview/planetary-systems-branch-overview-stt/mars-climate-modeling-center/{Nclr}
+{Yellow}https://www.nasa.gov/space-science-and-astrobiology-at-ames/division-overview/planetary-systems-branch-overview-stt/mars-climate-modeling-center/{Nclr}
 """
             return help_message
 
