@@ -8,6 +8,11 @@ setup(
     author="Mars Climate Modeling Center",
     author_email="alexandre.m.kling@nasa.gov",
     license="MIT License",
+    entry_points={
+        'console_scripts': [
+            'amescap=bin.amescap_cli:main',
+        ],
+    },
     scripts=[
         "bin/MarsPull.py",
         "bin/MarsInterp.py",
