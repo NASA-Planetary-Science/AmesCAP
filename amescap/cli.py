@@ -1,10 +1,21 @@
 #!/usr/bin/env python3
 import argparse
 import sys
-from amescap.Script_utils import (Yellow, Nclr, Green, Red)
+from amescap.Script_utils import Yellow, Nclr, Green, Red
 
-def create_help_message():
-    return """
+def main():
+    parser = argparse.ArgumentParser(
+        description='Welcome to AMESCAP!',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        usage=argparse.SUPPRESS
+    )
+    
+    parser.add_argument('command', nargs='?', default='help',
+                       help=argparse.SUPPRESS)
+
+    args = parser.parse_args()
+
+    help_message = f"""
 Welcome to the NASA Ames Community Analysis Pipeline (CAP)!
 -----------------------------------------------------------
 
@@ -53,28 +64,7 @@ NASA’s Ames Research Center in Mountain View, CA. For more information, visit 
 our website at:
 https://www.nasa.gov/space-science-and-astrobiology-at-ames/division-overview/planetary-systems-branch-overview-stt/mars-climate-modeling-center/
     """
-        
-def main():
-    # Create custom formatter that uses our help message for all help requests
-    class CustomFormatter(argparse.HelpFormatter):
-        def format_help(self):
-            return create_help_message()
-
-    parser = argparse.ArgumentParser(
-        description='Welcome to AMESCAP!',
-        formatter_class=CustomFormatter
-    )
-    
-    parser.add_argument('command', nargs='?', default='help',
-                       help='Command to execute (use "help" for more information)')
-
-    args = parser.parse_args()
-
-    # Print help message for both 'help' command and no command
-    if len(sys.argv) == 1 or args.command == 'help':
-        print(create_help_message())
-        return 0
-
+    print(help_message)
     return 0
 
 if __name__ == '__main__':
