@@ -1,5 +1,12 @@
-from setuptools import setup
+from setuptools import setup, Command
+from setuptools.command.install import install
 
+class PostInstallCommand(install):
+    def run(self):
+        install.run(self)
+        # Import and run welcome after installation
+        from amescap import print_welcome
+        print_welcome()
 setup(
     name="amescap",
     version="0.3",
@@ -17,6 +24,12 @@ setup(
         "bin/MarsFormat.py",
         "bin/MarsCalendar.py"
     ],
+    packages=["amescap"],  # Make sure this is present
+    entry_points={
+        'console_scripts': [
+            'cap=amescap.cli:main',  # This will create the 'cap' command
+        ],
+    },
     install_requires=[
         "requests>=2.31.0",
         "netCDF4>=1.6.5",
@@ -25,7 +38,6 @@ setup(
         "scipy>=1.11.4",
         "xarray>=2023.5.0",
     ],
-    packages=["amescap"],
     data_files=[
         ("mars_data", ["mars_data/Legacy.fixed.nc"]),
         ("mars_templates", [

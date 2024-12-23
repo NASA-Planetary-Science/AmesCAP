@@ -22,6 +22,12 @@ dependencies = [
     "xarray>=2023.5.0",
 ]
 
+[project.scripts]
+cap = "amescap.cli:main"
+
+[project.entry-points."pip.post_install"]
+welcome = "amescap:print_welcome"
+
 [tool.setuptools.packages.find]
 include = ["amescap*"]
 

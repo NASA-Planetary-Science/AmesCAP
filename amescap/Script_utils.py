@@ -821,7 +821,7 @@ def find_fixedfile(filename):
         name_fixed = "FixedFileNotFound"
     return name_fixed
 
-def get_longname_units(fNcdf, varname):
+def get_longname_unit(fNcdf, varname):
     """
     Returns the longname and unit attributes of a variable in a netCDF
     file. If the attributes are unavailable, returns blank strings to
