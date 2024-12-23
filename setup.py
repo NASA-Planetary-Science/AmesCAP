@@ -15,7 +15,7 @@ setup(
         "bin/MarsVars.py",
         "bin/MarsFiles.py",
         "bin/MarsFormat.py",
-        "bin/MarsCalendar.py"
+        "bin/MarsCalendar.py",
         "bin/amescap.py"
     ],
     install_requires=[
