@@ -22,7 +22,6 @@ def main():
     class CustomHelpFormatter(argparse.HelpFormatter):
         def format_help(self):
             help_message = f"""
-            
 {Cyan}
 Welcome to the NASA Ames Community Analysis Pipeline (CAP)!
 -----------------------------------------------------------{Nclr}
