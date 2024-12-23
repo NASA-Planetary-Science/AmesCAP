@@ -8,11 +8,6 @@ setup(
     author="Mars Climate Modeling Center",
     author_email="alexandre.m.kling@nasa.gov",
     license="MIT License",
-    entry_points={
-        'console_scripts': [
-            'cap=amescap.cli:main',
-        ],
-    },
     scripts=[
         "bin/MarsPull.py",
         "bin/MarsInterp.py",
@@ -22,6 +17,12 @@ setup(
         "bin/MarsFormat.py",
         "bin/MarsCalendar.py"
     ],
+    packages=["amescap"],  # Make sure this is present
+    entry_points={
+        'console_scripts': [
+            'cap=amescap.cli:main',  # This will create the 'cap' command
+        ],
+    },
     install_requires=[
         "requests>=2.31.0",
         "netCDF4>=1.6.5",
@@ -30,7 +31,6 @@ setup(
         "scipy>=1.11.4",
         "xarray>=2023.5.0",
     ],
-    packages=["amescap"],
     data_files=[
         ("mars_data", ["mars_data/Legacy.fixed.nc"]),
         ("mars_templates", [
