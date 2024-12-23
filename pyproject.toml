@@ -24,7 +24,9 @@ dependencies = [
 
 [project.scripts]
 cap = "amescap.cli:main"
-post_install = "amescap:print_welcome"
+
+[project.entry-points."pip.post_install"]
+welcome = "amescap:print_welcome"
 
 [tool.setuptools.packages.find]
 include = ["amescap*"]
