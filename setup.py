@@ -1,5 +1,12 @@
-from setuptools import setup
+from setuptools import setup, Command
+from setuptools.command.install import install
 
+class PostInstallCommand(install):
+    def run(self):
+        install.run(self)
+        # Import and run welcome after installation
+        from amescap import print_welcome
+        print_welcome()
 setup(
     name="amescap",
     version="0.3",
