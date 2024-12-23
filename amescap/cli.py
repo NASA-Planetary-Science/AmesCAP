@@ -1,7 +1,21 @@
 #!/usr/bin/env python3
 import argparse
 import sys
+import os
+import time
 from amescap.Script_utils import Yellow, Nclr, Green, Cyan
+
+def get_install_info():
+    # Get the location and timestamp of cli.py 
+    cli_path = os.path.abspath(__file__)
+    install_time = time.ctime(os.path.getctime(cli_path))
+    return f"""
+{Yellow}CAP Installation Information{Nclr}
+------------------------
+Version: 0.3
+Install Date: {install_time}
+Install Location: {os.path.dirname(os.path.dirname(cli_path))}
+"""
 
 def main():
     # Custom help formatter to override the default help message
@@ -62,6 +76,11 @@ CAP is developed and maintained by the **Mars Climate Modeling Center (MCMC) at 
 
     args = parser.parse_args()
 
+    # Check for version/info command before printing help
+    if args.command in ['version', 'info']:
+        print(get_install_info())
+        return 0
+    
     # Print help for all cases
     parser.print_help()
     return 0
