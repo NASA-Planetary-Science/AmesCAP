@@ -67,9 +67,10 @@ from netCDF4 import Dataset
 # Load amesCAP modules
 from amescap.Ncdf_wrapper import (Ncdf, Fort)
 from amescap.FV3_utils import (tshift, daily_to_average, daily_to_diurn)
-from amescap.Script_utils import (find_tod_in_diurn, FV3_file_type, 
-                                  filter_vars, regrid_Ncfile,
-                                  get_longname_units, extract_path_basename)
+from amescap.Script_utils import (
+    find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile,
+    get_longname_unit, extract_path_basename
+    )
 
 # ======================================================================
 #                           ARGUMENT PARSER
@@ -457,8 +458,6 @@ def split_files(file_list, split_dim):
               f"    time, areo, lev, lat, lon{Nclr}")
         exit()
         
-    if split_dim == 'areo':
-        split_dim = 'time'
     bounds = np.asarray(parser.parse_args().split).astype(float)
     
     if len(np.atleast_1d(bounds)) > 2 or len(np.atleast_1d(bounds)) < 1:
@@ -478,10 +477,25 @@ def split_files(file_list, split_dim):
     fNcdf = Dataset(input_file_name, 'r', format = 'NETCDF4_CLASSIC')
     var_list = filter_vars(fNcdf, parser.parse_args().include)
 
-    # reducing_dim = fNcdf.variables[split_dim][:]
-    
     # Get file type (diurn, average, daily, etc.)
     f_type, interp_type = FV3_file_type(fNcdf)
+    
+    if split_dim == 'areo':
+        split_dim = 'time'
+    if split_dim == 'lev':
+        split_dim = interp_type
+        if interp_type == 'pstd':
+            unt_txt = 'Pa'
+            lnm_txt = 'standard pressure'
+        elif interp_type == 'zagl':
+            unt_txt = 'm'
+            lnm_txt = 'altitude above ground level'
+        elif interp_type == 'zstd':
+            unt_txt = 'm'
+            lnm_txt = 'standard altitude'
+        else:
+            unt_txt = 'mb'
+            lnm_txt = 'ref full pressure level'
 
     # Remove all single dimensions from areo (scalar_axis)
     if f_type == 'diurn': 
@@ -529,20 +543,37 @@ def split_files(file_list, split_dim):
     elif split_dim == 'lat':
         new_bounds = [str(abs(int(b)))+"S" if b < 0 else str(int(b))+"N" for b in bounds]
         if len(np.atleast_1d(bounds)) < 2:
-            output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
-                                f"_nearest_{new_bounds[0]}.nc")
+            output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_nearest_{split_dim}"
+                                f"_{new_bounds[0]}.nc")
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
             output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
-                                f"{new_bounds[0]}_{new_bounds[1]}.nc")
+                                f"_{new_bounds[0]}_{new_bounds[1]}.nc")
+    elif split_dim == interp_type:
+        if interp_type == 'pfull':
+            new_bounds = [str(abs(int(b*100)))+"Pa" if b < 1 else str(int(b))+unt_txt for b in bounds]
+        elif interp_type == 'pstd':
+            new_bounds = [str(abs(int(b*100)))+"hPa" if b < 1 else str(int(b))+unt_txt for b in bounds]
+        else:
+            new_bounds = [str(int(b))+unt_txt for b in bounds]
+        if len(np.atleast_1d(bounds)) < 2:
+            print(f"{Yellow}bounds = {bounds[0]}")
+            print(f"{Yellow}new_bounds = {new_bounds[0]}")
+            output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_nearest"
+                                f"_{new_bounds[0]:03d}.nc")
+        else:
+            print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
+            print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
+            output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}"
+                                f"_{new_bounds[0]:03d}_{new_bounds[1]:03d}.nc")
     else:
         if len(np.atleast_1d(bounds)) < 2:
-            output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
-                                f"_nearest_{int(bounds[0]):03d}.nc")
+            output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_nearest_{split_dim}"
+                                f"_{int(bounds[0]):03d}.nc")
         else:
             output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
-                                f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
+                                f"_{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
     
     print(f"{Cyan}new filename = {output_file_name}")
     Log = Ncdf(output_file_name)
@@ -575,18 +606,12 @@ def split_files(file_list, split_dim):
                        longname_txt = 'longitude',
                        units_txt = 'degrees_E', 
                        cart_txt = 'T')
-    elif split_dim == 'lev':
-        if interp_type == 'pfull':
-            unit_txt = 'native vertical grid'
-        elif interp_type == 'pstd':
-            unit_txt = 'Pa'
-        elif interp_type in ['zstd', 'zagl']:
-            unit_txt = 'm'
-        Log.log_axis1D(variable_name = 'lev', 
+    elif split_dim == interp_type:
+        Log.log_axis1D(variable_name = split_dim, 
                        DATAin = dim_out, 
-                       dim_name = 'lev', 
-                       longname_txt = 'level',
-                       units_txt = unit_txt, 
+                       dim_name = split_dim, 
+                       longname_txt = lnm_txt,
+                       units_txt = unt_txt, 
                        cart_txt = 'T')
     
     # Loop over all variables in the file
@@ -609,11 +634,11 @@ def split_files(file_list, split_dim):
                 var_out = varNcf[..., indices]
             elif split_dim == 'lon' and varNcf.ndim == 2:
                 var_out = varNcf[indices, ...]
-            elif split_dim == 'lev' and varNcf.ndim == 5:
+            elif split_dim == interp_type and varNcf.ndim == 5:
                 var_out = varNcf[:, :, indices, :, :]
-            elif split_dim == 'lev' and varNcf.ndim == 4:
+            elif split_dim == interp_type and varNcf.ndim == 4:
                 var_out = varNcf[:, indices, :, :]
-            longname_txt, units_txt = get_longname_units(fNcdf, ivar)
+            longname_txt, units_txt = get_longname_unit(fNcdf, ivar)
             Log.log_variable(ivar, var_out, varNcf.dimensions,
                              longname_txt, units_txt)
         else:
@@ -733,7 +758,7 @@ def time_shift(file_list):
             print(f"{Cyan}Processing: {var}...{Nclr}")
             value = fdiurn.variables[var][:]
             dims = fdiurn.variables[var].dimensions
-            longname_txt, units_txt = get_longname_units(fdiurn, var)
+            longname_txt, units_txt = get_longname_unit(fdiurn, var)
             
             if (len(dims) >= 4):
                 y = dims.index("lat")
@@ -910,7 +935,7 @@ def main():
                     print(f"{Cyan}Processing: {ivar}{Nclr}")
                     var_out = daily_to_average(varNcf[:], time_increment, 
                                                bin_period)
-                    longname_txt, units_txt = get_longname_units(fdaily, ivar)
+                    longname_txt, units_txt = get_longname_unit(fdaily, ivar)
                     fnew.log_variable(ivar, var_out, varNcf.dimensions,
                                       longname_txt, units_txt)
 
@@ -995,7 +1020,7 @@ def main():
                     if bin_period != 1:
                         # dt is 1 sol between two diurn timesteps
                         var_out = daily_to_average(var_out, 1., bin_period)
-                    longname_txt, units_txt = get_longname_units(fdaily, ivar)
+                    longname_txt, units_txt = get_longname_unit(fdaily, ivar)
                     fnew.log_variable(ivar, var_out, dims_out,
                                       longname_txt, units_txt)
 
@@ -1119,7 +1144,7 @@ def main():
                     var_out = zeroPhi_filter(
                         varNcf[:], btype, low_highcut, fs, axis = 0, order = 4,
                         no_trend = parser.parse_args().no_trend)
-                    longname_txt, units_txt = get_longname_units(fdaily, ivar)
+                    longname_txt, units_txt = get_longname_unit(fdaily, ivar)
                     fnew.log_variable(ivar, var_out, varNcf.dimensions,
                                       longname_txt, units_txt)
                 else:
@@ -1340,7 +1365,7 @@ def main():
             for ivar in var_list:
                 varNcf = fdiurn.variables[ivar]
                 varIN = varNcf[:]
-                longname_txt, units_txt = get_longname_units(fdiurn, ivar)
+                longname_txt, units_txt = get_longname_unit(fdiurn, ivar)
                 var_unit = getattr(varNcf, "units", "")
 
                 if (tod_name in varNcf.dimensions and
@@ -1451,7 +1476,7 @@ def main():
             # Loop over all variables in the file
             for ivar in var_list:
                 varNcf     = f_in.variables[ivar]
-                longname_txt,units_txt = get_longname_units(f_in, ivar)
+                longname_txt,units_txt = get_longname_unit(f_in, ivar)
 
                 if  ivar in ["pfull", "lat", "lon", "phalf", "pk",
                              "bk", "pstd", "zstd", "zagl", "time", "areo"]:
@@ -1505,7 +1530,7 @@ def main():
             # Loop over all variables in the file
             for ivar in var_list:
                 varNcf = fdaily.variables[ivar]
-                longname_txt,units_txt = get_longname_units(fdaily,ivar)
+                longname_txt,units_txt = get_longname_unit(fdaily,ivar)
                 if ("lon" in varNcf.dimensions and
                     ivar not in ["lon", "grid_xt_bnds", "grid_yt_bnds"]):
                     print(f"{Cyan}Processing: {ivar}...{Nclr}")
@@ -1708,7 +1733,7 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
         vshape = npvar.shape
         ntod = histfile.dimensions["ntod"]
 
-        # longname_txt, units_txt = get_longname_units(histfile, vname)
+        # longname_txt, units_txt = get_longname_unit(histfile, vname)
         longname_txt = getattr(histfile.variables[vname], "long_name", "")
 
         if longname_txt == "":
