@@ -13,6 +13,10 @@ Third-party Requirements:
 
 # Load generic Python modules
 import numpy as np
+#TODO fix import
+#import pyshtools as pyshtools
+
+
 from amescap.Script_utils import Yellow, Cyan, Nclr, progress
 
 try:
@@ -41,7 +45,8 @@ def init_shtools():
     :return: imported module pyshtools or error
     """
     try:
-        import pyshtools
+        import pyshtools as pyshtools
+        print('Successfully imported pyshtools')
     except ImportError as error_msg:
         print(f"{Yellow}__________________\n"
               f"Zonal decomposition relies on the pyshtools library, "
@@ -433,7 +438,7 @@ def zonal_decomposition(VAR):
         smallest dimension. This matches the Nyquist frequency.
     """
     # TODO: Not optimal but prevent issues when library is not installed
-    # init_shtools()
+    #init_shtools()
 
     var_shape = np.array(VAR.shape)
 
