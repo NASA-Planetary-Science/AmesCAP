@@ -135,7 +135,7 @@ parser.add_argument("-split", "--split", nargs="+",
 parser.add_argument("-dim", "--dim", type=str, default = 'areo',
     help=(
         f"Flag to specify the dimension to split. Acceptable values are \n"
-        f"areo, lat, lon, lev. For use with --split.\n"
+        f"time, areo, lev, lat, lon. For use with --split.\n"
         f"{Green}Usage:\n"
         f"> MarsFiles.py 00668.atmos_average.nc --split 0 90 --dim areo"
         f"> MarsFiles.py 00668.atmos_average.nc --split -70 --dim lat"
@@ -446,15 +446,15 @@ def combine_files(file_list, full_file_list):
 def split_files(file_list, split_dim):
     """
     Extracts variables in the file along the time dimension, unless
-    other dimension is specified (lat or lon).
+    other dimension is specified (lev, lat, or lon).
 
     :param file_list: list of file names
     :type split_dim: dimension along which to perform extraction
     :returns: new file with sliced dimensions
     """
-    if split_dim not in ['time', 'areo', 'lat', 'lon']:
+    if split_dim not in ['time', 'areo', 'lev', 'lat', 'lon']:
         print(f"{Red}Split dimension must be one of the following:"
-              f"    time, areo, lat, lon{Nclr}")
+              f"    time, areo, lev, lat, lon{Nclr}")
         exit()
         
     if split_dim == 'areo':
@@ -481,7 +481,7 @@ def split_files(file_list, split_dim):
     # reducing_dim = fNcdf.variables[split_dim][:]
     
     # Get file type (diurn, average, daily, etc.)
-    f_type, _ = FV3_file_type(fNcdf)
+    f_type, interp_type = FV3_file_type(fNcdf)
 
     # Remove all single dimensions from areo (scalar_axis)
     if f_type == 'diurn': 
@@ -530,7 +530,7 @@ def split_files(file_list, split_dim):
         new_bounds = [str(abs(int(b)))+"S" if b < 0 else str(int(b))+"N" for b in bounds]
         if len(np.atleast_1d(bounds)) < 2:
             output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
-                                f"nearest_{new_bounds[0]}.nc")
+                                f"_nearest_{new_bounds[0]}.nc")
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
@@ -539,7 +539,7 @@ def split_files(file_list, split_dim):
     else:
         if len(np.atleast_1d(bounds)) < 2:
             output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
-                                f"nearest_{int(bounds[0]):03d}.nc")
+                                f"_nearest_{int(bounds[0]):03d}.nc")
         else:
             output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
                                 f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
@@ -575,6 +575,19 @@ def split_files(file_list, split_dim):
                        longname_txt = 'longitude',
                        units_txt = 'degrees_E', 
                        cart_txt = 'T')
+    elif split_dim == 'lev':
+        if interp_type == 'pfull':
+            unit_txt = 'native vertical grid'
+        elif interp_type == 'pstd':
+            unit_txt = 'Pa'
+        elif interp_type in ['zstd', 'zagl']:
+            unit_txt = 'm'
+        Log.log_axis1D(variable_name = 'lev', 
+                       DATAin = dim_out, 
+                       dim_name = 'lev', 
+                       longname_txt = 'level',
+                       units_txt = unit_txt, 
+                       cart_txt = 'T')
     
     # Loop over all variables in the file
     for ivar in var_list:
@@ -596,6 +609,10 @@ def split_files(file_list, split_dim):
                 var_out = varNcf[..., indices]
             elif split_dim == 'lon' and varNcf.ndim == 2:
                 var_out = varNcf[indices, ...]
+            elif split_dim == 'lev' and varNcf.ndim == 5:
+                var_out = varNcf[:, :, indices, :, :]
+            elif split_dim == 'lev' and varNcf.ndim == 4:
+                var_out = varNcf[:, indices, :, :]
             longname_txt, units_txt = get_longname_units(fNcdf, ivar)
             Log.log_variable(ivar, var_out, varNcf.dimensions,
                              longname_txt, units_txt)
