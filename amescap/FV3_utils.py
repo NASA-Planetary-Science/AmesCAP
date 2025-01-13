@@ -3148,7 +3148,7 @@ def sol2ls(jld, cumulative=False):
             diff = abs(ep - e)
             e = ep
 
-        eq1 = 2.0 * np.atan(er * np.tan(0.5 * e))
+        eq1 = 2.0 * np.arctan(er * np.tan(0.5 * e))
 
         # Determine true anomaly at current date (``w``)
         for i in range(0, len(jld)):
@@ -3159,7 +3159,7 @@ def sol2ls(jld, cumulative=False):
                 ep = e - (e-ec*np.sin(e)-em) / (1.0-ec*np.cos(e))
                 diff = abs(ep - e)
                 e = ep
-            w[i] = 2.0 * np.atan(er * np.tan(0.5*e))
+            w[i] = 2.0 * np.arctan(er * np.tan(0.5*e))
 
         # Aerocentric Longitude (``als``)
         als = w - eq1
