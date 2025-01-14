@@ -24,29 +24,17 @@ dependencies = [
 
 [project.scripts]
 cap = "amescap.cli:main"
-MarsInterp = "bin.MarsInterp:main"
 MarsPull = "bin.MarsPull:main"
+MarsInterp = "bin.MarsInterp:main"
 MarsPlot = "bin.MarsPlot:main"
 MarsVars = "bin.MarsVars:main"
 MarsFiles = "bin.MarsFiles:main"
 MarsFormat = "bin.MarsFormat:main"
 MarsCalendar = "bin.MarsCalendar:main"
 
-[tool.setuptools.package-data]
-amescap = ["bin/*.py"]
-
 [tool.setuptools]
 packages = ["amescap", "bin"]
 package-dir = {""="."}
-script-files = [
-    "bin/MarsPull.py",
-    "bin/MarsInterp.py",
-    "bin/MarsPlot.py",
-    "bin/MarsVars.py",
-    "bin/MarsFiles.py",
-    "bin/MarsFormat.py",
-    "bin/MarsCalendar.py"
-]
 
 [tool.setuptools.data-files]
 "mars_data" = ["mars_data/Legacy.fixed.nc"]
