@@ -157,6 +157,9 @@ def main():
     custom_level = parser.parse_args().level # e.g. p44
     grid_out     = parser.parse_args().grid
 
+    # Create a namespace with numpy available
+    namespace = {'np': np}
+    
     # PRELIMINARY DEFINITIONS
     # =========================== pstd ===========================
     if interp_type == "pstd":
@@ -165,16 +168,16 @@ def main():
         need_to_reverse = False
         interp_technic = "log"
 
-        content_txt = section_content_amescap_profile("Pressure definitions "
-                                                      "for pstd")
-        print("Content:", content_txt)  # Add this line
-        # Load all variables in that section
-        exec(content_txt)
+        content_txt = section_content_amescap_profile("Pressure definitions for pstd")
+        print("Content:", content_txt)  # Debug line
+        
+        # Execute in controlled namespace
+        exec(content_txt, namespace)
 
         if custom_level:
-            lev_in = eval(f"np.array({custom_level})")
+            lev_in = eval(f"np.array({custom_level})", namespace)
         else:
-            lev_in = eval("np.array(pstd_default)")
+            lev_in = np.array(namespace['pstd_default'])
 
     # =========================== zstd ===========================
     elif interp_type == "zstd":

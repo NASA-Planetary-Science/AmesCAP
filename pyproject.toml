@@ -24,6 +24,13 @@ dependencies = [
 
 [project.scripts]
 cap = "amescap.cli:main"
+MarsInterp = "bin.MarsInterp:main"
+MarsPull = "bin.MarsPull:main"
+MarsPlot = "bin.MarsPlot:main"
+MarsVars = "bin.MarsVars:main"
+MarsFiles = "bin.MarsFiles:main"
+MarsFormat = "bin.MarsFormat:main"
+MarsCalendar = "bin.MarsCalendar:main"
 
 [tool.setuptools.package-data]
 amescap = ["bin/*.py"]
