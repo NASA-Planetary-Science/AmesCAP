@@ -1263,7 +1263,7 @@ def main():
             for ivar in var_list:
                 # Loop over all variables in the file
                 varNcf = fname.variables[ivar]
-    
+                longname_txt, units_txt = get_longname_unit(fname, ivar)
                 if ("lat" in varNcf.dimensions and 
                     "lon" in varNcf.dimensions):
                     print(f"{Cyan}Processing: {ivar}...{Nclr}")
@@ -1282,7 +1282,7 @@ def main():
                         var_out = VAR_filtered + TREND
     
                     fnew.log_variable(ivar, var_out, varNcf.dimensions, 
-                                      varNcf.long_name, varNcf.units)
+                                      longname_txt, units_txt)
                 else:
                     if  ivar in ["pfull", "lat", "lon", "phalf", "pk", "bk", 
                                  "pstd", "zstd", "zagl", "time"]:
