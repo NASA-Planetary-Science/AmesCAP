@@ -169,7 +169,6 @@ def main():
         interp_technic = "log"
 
         content_txt = section_content_amescap_profile("Pressure definitions for pstd")
-        print("Content:", content_txt)  # Debug line
         
         # Execute in controlled namespace
         exec(content_txt, namespace)
