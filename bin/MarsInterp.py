@@ -167,6 +167,7 @@ def main():
 
         content_txt = section_content_amescap_profile("Pressure definitions "
                                                       "for pstd")
+        print("Content:", content_txt)  # Add this line
         # Load all variables in that section
         exec(content_txt)
 
