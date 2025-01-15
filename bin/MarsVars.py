@@ -149,7 +149,7 @@ parser = argparse.ArgumentParser(
     description=(
         f"{Yellow} MarsVars, variable manager. Add to or remove "
         f"variables from the diagnostic files.\n"
-        f"Use MarsFiles.py ****.atmos.average.nc to view file content."
+        f"Use MarsFiles ****.atmos.average.nc to view file content."
         f"{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
@@ -244,9 +244,9 @@ parser.add_argument("-edit", "--edit", default=None,
         f"Use jointly with ``-rename`` ``-longname`` ``-unit`` or "
         f"``-multiply`` flags\n"
         f"{Green}Usage:\n"
-        f"> MarsVars.py *.atmos_average.nc --edit temp -rename "
+        f"> MarsVars *.atmos_average.nc --edit temp -rename "
         f"airtemp\n"
-        f"> MarsVars.py *.atmos_average.nc --edit ps -multiply 0.01\n"
+        f"> MarsVars *.atmos_average.nc --edit ps -multiply 0.01\n"
         f"  -longname 'new pressure' -unit 'mbar'"
         f"{Nclr}\n\n"
     )
@@ -1611,7 +1611,7 @@ def main():
                         print(f"{Yellow}***Error*** Variable already "
                               f"exists in file.\nDelete the existing "
                               f"variable {idp_to_dz}_dp_to_dz with "
-                              f"``MarsVars.py {ifile} -rm "
+                              f"``MarsVars {ifile} -rm "
                               f"{idp_to_dz}_dp_to_dz``{Nclr}")
 
         # ==============================================================

@@ -447,7 +447,7 @@ def main():
 global add_sol_time_axis, lon_coord_type, include_NaNs
 
 # Load preferences in Settings section of ~/.amescap_profile
-exec(section_content_amescap_profile("MarsPlot.py Settings"))
+exec(section_content_amescap_profile("MarsPlot Settings"))
 
 # Determine whether to include sol number in addition to Ls on
 # time axis. Default FALSE (= Ls only)
