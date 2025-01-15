@@ -1,7 +1,4 @@
-.. AmesCAP documentation master file, initially created by
-   sphinx-quickstart on Fri Jul 7 10:35:15 2023.
-   You can adapt this file completely to your liking, but it should
-   contain the root `toctree` directive.
+.. AmesCAP documentation master file, initially created by Courtney Batterson. It should always contain the root *`toctree`* directive.*
 
 Welcome to AmesCAP's Documentation!
 ===================================
@@ -22,19 +19,21 @@ CAP is currently compatible with output from the MCMC’s `Legacy <https://githu
    CAP is continually in development and we appreciate any feedback you have for us.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
 
    installation
-   autoapi/MarsPull/index
-   autoapi/MarsFormat/index
-   autoapi/MarsFiles/index
-   autoapi/MarsVars/index
-   autoapi/MarsInterp/index
-   autoapi/MarsPlot/index
-   autoapi/MarsCalendar/index
+   autoapi/index
+   autoapi/bin/MarsPull/index
+   autoapi/bin/MarsFormat/index
+   autoapi/bin/MarsFiles/index
+   autoapi/bin/MarsVars/index
+   autoapi/bin/MarsInterp/index
+   autoapi/bin/MarsPlot/index
+   autoapi/bin/MarsCalendar/index
+   autoapi/amescap/FV3_utils/index
+   autoapi/amescap/index
    examples
-
 
 Indices and tables
 ------------------
