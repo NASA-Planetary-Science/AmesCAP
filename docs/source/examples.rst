@@ -5,5 +5,5 @@ First example:
 
 .. code-block:: bash
 
-    MarsPlot.py --template # generates template
-    MarsPlot.py Custom.in  # runs plot routine
+    MarsPlot --template # generates template
+    MarsPlot Custom.in  # runs plot routine

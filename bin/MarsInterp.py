@@ -71,8 +71,8 @@ parser.add_argument("-t", "--type", type=str, default="pstd",
     help=(
         f"Interpolation type. Accepts ``pstd``, ``zstd``, or "
         f"``zagl``.\n{Green}Usage:\n"
-        f"> MarsInterp.py ****.atmos.average.nc\n"
-        f"> MarsInterp.py ****.atmos.average.nc -t zstd\n"
+        f"> MarsInterp ****.atmos.average.nc\n"
+        f"> MarsInterp ****.atmos.average.nc -t zstd\n"
         f"{Nclr}\n\n"
     )
 )
@@ -84,8 +84,8 @@ parser.add_argument("-l", "--level", type=str, default=None,
         f"{Cyan}cp ~/amesCAP/mars_templates/amescap_profile "
         f"~/.amescap_profile\n"
         f"{Green}Usage:\n"
-        f"> MarsInterp.py ****.atmos.average.nc -t pstd -l p44\n"
-        f"> MarsInterp.py ****.atmos.average.nc -t zstd -l phalf_mb\n"
+        f"> MarsInterp ****.atmos.average.nc -t pstd -l p44\n"
+        f"> MarsInterp ****.atmos.average.nc -t zstd -l phalf_mb\n"
         f"{Nclr}\n\n"
     )
 )
@@ -95,7 +95,7 @@ parser.add_argument("-include", "--include", nargs="+",
         f"Only include the listed variables. Dimensions and 1D "
         f"variables are always included.\n"
         f"{Green}Usage:\n"
-        f"> MarsInterp.py *.atmos_daily.nc --include ps ts temp\n"
+        f"> MarsInterp *.atmos_daily.nc --include ps ts temp\n"
         f"{Nclr}\n\n"
     )
 )
@@ -105,7 +105,7 @@ parser.add_argument("-e", "--ext", type=str, default=None,
         f"Append an extension (``_ext.nc``) to the output file instead"
         f" of replacing the existing file.\n"
         f"{Green}Usage:\n"
-        f"> MarsInterp.py ****.atmos.average.nc -ext B\n"
+        f"> MarsInterp ****.atmos.average.nc -ext B\n"
         f"  {Blue}Produces ****.atmos.average_pstd_B.nc.\n"
         f"{Nclr}\n\n"
     )
@@ -116,7 +116,7 @@ parser.add_argument("-g", "--grid", action="store_true",
         f"Output current grid information to standard output. This "
         f"will not run the interpolation.\n"
         f"{Green}Usage:\n"
-        f"> MarsInterp.py ****.atmos.average.nc -t pstd -l p44 -g\n"
+        f"> MarsInterp ****.atmos.average.nc -t pstd -l p44 -g\n"
         f"{Nclr}\n\n"
     )
 )
@@ -300,7 +300,7 @@ def main():
                 L_3D_P = fms_Z_calc(ps, ak, bk, temp.transpose(permut),
                                     topo = zflat, lev_type = "full")
 
-        fnew = Ncdf(newname, "Pressure interpolation using MarsInterp.py")
+        fnew = Ncdf(newname, "Pressure interpolation using MarsInterp")
 
         # Copy existing DIMENSIONS other than pfull
         # Get all variables in the file

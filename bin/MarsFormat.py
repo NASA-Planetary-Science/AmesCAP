@@ -12,7 +12,7 @@ from amescap.Ncdf_wrapper import Ncdf, Fort
 xr.set_options(keep_attrs=True)
 
 #---
-# MarsFormat.py
+# MarsFormat
 # Routine to Transform Model Input (variable names, dimension names, array order)
 # to expected configuration CAP
 
@@ -27,12 +27,12 @@ parser.add_argument('input_file', nargs='+',  # sys.stdin
 
 parser.add_argument('-t', '--type', type=str,
                     help=""">  --type can be 'openmars', 'marswrf' 'emars' 'pcm' or 'legacy' \n"""
-                    """>  Usage: MarsFormat.py ****.nc \n"""
-                    """          MarsFormat.py ****.nc -t openmars \n""")
+                    """>  Usage: MarsFormat ****.nc \n"""
+                    """          MarsFormat ****.nc -t openmars \n""")
 
 parser.add_argument('-com', '--common', action='store_true', default=False,
                     help=' Replace dimension and variable names with the standard FV3 convention \n'
-                    '> Usage: MarsFormat.py file.nc -model_flag -com \n')
+                    '> Usage: MarsFormat file.nc -model_flag -com \n')
 
 # ===========================
 path2data = os.getcwd()

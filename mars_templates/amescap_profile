@@ -37,7 +37,7 @@ dust mixing ratio       [kg/kg]                 (dust_mass)> dust_mass_micro
 ice mixing ratio        [kg/kg]                 (ice_mass) > ice_mass_micro
 
 
-<<<<<<<<<<<<<<| MarsPlot.py Settings |>>>>>>>>>>>>>
+<<<<<<<<<<<<<<| MarsPlot Settings |>>>>>>>>>>>>>
 # If True, displays sol numbers below Ls values on axis
 add_sol_to_time_axis = False
 # 180 for -180->180 or 360 for 0->360

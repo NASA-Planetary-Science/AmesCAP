@@ -1203,9 +1203,9 @@ def ak_bk_loader(fNcdf):
 
     .. NOTE:: This routine will look for both ``ak`` and ``bk``. There
     are cases when it is convenient to load the ``ak``, ``bk`` once when
-    the files are first opened in ``MarsVars.py``, but the ``ak`` and
+    the files are first opened in ``MarsVars``, but the ``ak`` and
     ``bk`` arrays may not be necessary for in the calculation as is the
-    case for ``MarsVars.py XXXXX.atmos_average_psd.nc --add msf``, which
+    case for ``MarsVars XXXXX.atmos_average_psd.nc --add msf``, which
     operates on a pressure interpolated (``_pstd.nc``) file.
     """
     # First try to read ak and bk in the current netCDF file:
