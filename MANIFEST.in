@@ -1,1 +1,7 @@
 include mars_data/Legacy.fixed.nc
+include mars_templates/legacy.in
+include mars_templates/amescap_profile
+include README.rst
+include README.md
+include LICENSE
+include CONTRIBUTING.rst
