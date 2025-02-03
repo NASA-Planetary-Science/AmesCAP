@@ -2,39 +2,40 @@
 # You may alter any of the above, or define new grid structure using a unique identifier of your choice.
 
 # Model-specific dictionaries for (variables), and {dimensions}
-#                                                              OPENMARS           MARSWRF       EMARS
+#                                                              OPENMARS           MARSWRF       EMARS   LMD
 <<<<<<<<<<<<<<| Variable dictionary |>>>>>>>>>>>>>
-Ncdf time dimension          [integer]          {time}>                           Time
-Ncdf X longitude dimension   [integer]          {lon}>                            west_east
-Ncdf Y latitude dimension    [integer]          {lat}>                            south_north
-Ncdf Z reference pressure dimension  [integer]  {pfull}>        lev,              bottom_top
+Ncdf time dimension          [integer]          {time}>                           Time,                 ALSO_Time              
+Ncdf X longitude dimension   [integer]          {lon}>                            west_east,            longitude
+Ncdf Y latitude dimension    [integer]          {lat}>                            south_north,          latitude
+Ncdf Z reference pressure dimension  [integer]  {pfull}>        lev,              bottom_top,           altitude
 Ncdf Z layer boundaries dimension     [integer] {phalf}>
 Ncdf Z interpol. pressure dimension  [integer]  {pstd} >
 Ncdf Z interpol. distance dimension  [integer]  {zstd} >
 Ncdf Z interpol. distance above ground [integer]{zagl} >
-time values               [days]                (time) >                             XTIME
-planetocentric longitudes [deg]                 (areo) >        Ls,                  L_S
+time values               [days]                (time) >                             XTIME,             Time
+planetocentric longitudes [deg]                 (areo) >        Ls,                  L_S,               ALSO_Ls
 longitudes                [deg]                 (lon)  >                             XLONG
 latitudes                 [deg]                 (lat)  >                             XLAT
 Z model reference pressure layers  [Pa]         (pfull)>
 Z model pressure layers boundaries [Pa]         (phalf)>
-vertical coordinate pressure value [Pa]         (ak)>
-vertical coordinate sigma value []              (bk)>
+vertical coordinate pressure value [Pa]         (ak)>                                                   ap
+vertical coordinate sigma value []              (bk)>                                                   bp
 pressure interpolated layers  [Pa]              (pstd) >
 vertically interpolated layers  [m]             (zstd) >
 vertically interpolated layers above ground  [m](zagl) >
 topography   [m]                                (zsurf)>                             HGT
-X direction wind        [m/s]                   (ucomp)>       u,                    U
-Y direction wind        [m/s]                   (vcomp)>       v,                    V
+X direction wind        [m/s]                   (ucomp)>       u,                    U,                 ALSO_u 
+Y direction wind        [m/s]                   (vcomp)>       v,                    V,                 ALSO_v
 Z direction wind        [m/s]                   (w)    >                             W
 vertical velocity       [Pa/s]                  (omega)>
 air temperature         [K]                     (temp) >
-surface temperature     [K]                     (ts)   >        tsurf,             TSK
+surface temperature     [K]                     (ts)   >        tsurf,             TSK,                 ALSO_tsurf
 surface pressure        [Pa]                    (ps)   >                           PSFC
 potential temperature   [K]                     (theta)>
 water mixing ratio      [kg/kg]                 (vap_mass) > vap_mass_micro
 dust mixing ratio       [kg/kg]                 (dust_mass)> dust_mass_micro
 ice mixing ratio        [kg/kg]                 (ice_mass) > ice_mass_micro
+pressure                [Pa]                    (pfull3D)  >                                             pressure
 
 
 <<<<<<<<<<<<<<| MarsPlot Settings |>>>>>>>>>>>>>
