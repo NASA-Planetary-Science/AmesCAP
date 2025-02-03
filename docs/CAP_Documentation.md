@@ -2,33 +2,33 @@
 
 <!-- TOC titleSize:2 tabSpaces:2 depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 skip:0 title:1 charForUnorderedList:* -->
 ## Table of Contents
-* [1. `MarsPull.py` - Downloading Raw MGCM Output](#1-marspullpy---downloading-raw-mgcm-output)
-* [2. `MarsFiles.py` - Reducing the Files](#2-marsfilespy---reducing-the-files)
-* [3. `MarsVars.py` - Performing Variable Operations](#3-marsvarspy---performing-variable-operations)
-* [4. `MarsInterp.py` - Interpolating the Vertical Grid](#4-marsinterppy---interpolating-the-vertical-grid)
-* [5. `MarsPlot.py` - Plotting the Results](#5-marsplotpy---plotting-the-results)
+* [1. `MarsPull` - Downloading Raw MGCM Output](#1-marspullpy---downloading-raw-mgcm-output)
+* [2. `MarsFiles` - Reducing the Files](#2-marsfilespy---reducing-the-files)
+* [3. `MarsVars` - Performing Variable Operations](#3-marsvarspy---performing-variable-operations)
+* [4. `MarsInterp` - Interpolating the Vertical Grid](#4-marsinterppy---interpolating-the-vertical-grid)
+* [5. `MarsPlot` - Plotting the Results](#5-marsplotpy---plotting-the-results)
 <!-- /TOC -->
 
 ***
 
 
-# 1. `MarsPull.py` - Downloading Raw MGCM Output
+# 1. `MarsPull` - Downloading Raw MGCM Output
 
 `MarsPull` is a utility for accessing MGCM output files hosted on the [MCMC Data portal](https://data.nas.nasa.gov/legacygcm/data_legacygcm.php). MGCM data is archived in 1.5 hour intervals (16x/day) and packaged in files containing 10 sols. The files are named fort.11_XXXX in the order they were produced, but  `MarsPull` maps those files to specific solar longitudes (L<sub>s</sub>, in °). This allows users to request a file at a specific L<sub>s</sub> or for a range of L<sub>s</sub> using the `-ls` flag. Additionally the `identifier` (`-id`) flag is used to route `MarsPull` through a particular simulation. The `filename` (`-f`) flag can be used to parse specific files within a particular directory.
 
 ```bash
-MarsPull.py -id INERTCLDS -ls 255 285
-MarsPull.py -id ACTIVECLDS -f fort.11_0720 fort.11_0723
+MarsPull -id INERTCLDS -ls 255 285
+MarsPull -id ACTIVECLDS -f fort.11_0720 fort.11_0723
 ```
 [Back to Top](#cheat-sheet)
 ***
 
-# 2. `MarsFiles.py` - Reducing the Files
+# 2. `MarsFiles` - Reducing the Files
 
 `MarsFiles` provides several tools for file manipulations, including code designed to create binned, averaged, and time-shifted files from MGCM output. The `-fv3` flag is used to convert fort.11 binaries to the Netcdf data format (you can select one or more of the file format listed below):
 
 ```bash
-(AmesCAP)>$ MarsFiles.py fort.11* -fv3 fixed average daily diurn
+(AmesCAP)>$ MarsFiles fort.11* -fv3 fixed average daily diurn
 ```
 
 These are the file formats that `MarsFiles` can create from the fort.11 MGCM output files.
@@ -55,12 +55,12 @@ These are the file formats that `MarsFiles` can create from the fort.11 MGCM out
 
 ***
 
-# 3. `MarsVars.py` - Performing Variable Operations
+# 3. `MarsVars` - Performing Variable Operations
 
 `MarsVars` provides several tools relating to variable operations such as adding and removing variables, and performing column integrations. With no other arguments, passing a file to `MarsVars` displays file content, much like `ncdump`:
 
 ```bash
-(AmesCAP)>$ MarsVars.py 00000.atmos_average.nc
+(AmesCAP)>$ MarsVars 00000.atmos_average.nc
 >
 > ===================DIMENSIONS==========================
 > ['bnds', 'time', 'lat', 'lon', 'pfull', 'scalar_axis', 'phalf']
@@ -75,13 +75,13 @@ A typical option of `MarsVars` would be to add the atmospheric density `rho` to 
 
 
 ```bash
-(AmesCAP)>$ MarsVars.py 00000.atmos_average.nc -add rho
+(AmesCAP)>$ MarsVars 00000.atmos_average.nc -add rho
 ```
 
 We can see that `rho` was added by calling `MarsVars` with no argument as before:
 
 ```bash
-(AmesCAP)>$ MarsVars.py 00000.atmos_average.nc
+(AmesCAP)>$ MarsVars 00000.atmos_average.nc
 >
 > ===================DIMENSIONS==========================
 > ['bnds', 'time', 'lat', 'lon', 'pfull', 'scalar_axis', 'phalf']
@@ -111,7 +111,7 @@ The `help` (`-h`) option provides information on available variables and needed 
 [Back to Top](#cheat-sheet)
 ***
 
-# 4. `MarsInterp.py` - Interpolating the Vertical Grid
+# 4. `MarsInterp` - Interpolating the Vertical Grid
 
 Native MGCM output files use a terrain-following pressure coordinate as the vertical coordinate (`pfull`), which means the geometric heights and the actual mid-layer pressure of atmospheric layers vary based on the location (i.e. between adjacent grid points). In order to do any rigorous spatial averaging, it is therefore necessary to interpolate each vertical column to a same (standard) pressure grid (`_pstd` grid):
 
@@ -122,14 +122,14 @@ Native MGCM output files use a terrain-following pressure coordinate as the vert
 `MarsInterp` is used to perform the vertical interpolation from *reference* (`pfull`) layers to *standard* (`pstd`) layers:
 
 ```bash
-(AmesCAP)>$ MarsInterp.py  00000.atmos_average.nc
+(AmesCAP)>$ MarsInterp  00000.atmos_average.nc
 ```
 
 An inspection of the file shows that the pressure level axis which was `pfull` (30 layers) has been replaced by a standard pressure coordinate `pstd` (36 layers), and all 3- and 4-dimensional variables reflect the new shape:
 
 ```bash
-(AmesCAP)>$ MarsInterp.py  00000.atmos_average.nc
-(AmesCAP)>$ MarsVars.py 00000.atmos_average_pstd.nc
+(AmesCAP)>$ MarsInterp  00000.atmos_average.nc
+(AmesCAP)>$ MarsVars 00000.atmos_average_pstd.nc
 >
 > ===================DIMENSIONS==========================
 > ['bnds', 'time', 'lat', 'lon', 'scalar_axis', 'phalf', 'pstd']
@@ -177,12 +177,12 @@ In the example above, the user custom-defined two vertical grids, one with 44 le
 You can use these by calling `MarsInterp` with the `-level` (`-l`) argument followed by the name of the new grid defined in `.amescap_profile`.
 
 ```bash
-(AmesCAP)>$ MarsInterp.py  00000.atmos_average.nc -t pstd -l  p44
+(AmesCAP)>$ MarsInterp  00000.atmos_average.nc -t pstd -l  p44
 ```
 [Back to Top](#cheat-sheet)
 ***
 
-# 5. `MarsPlot.py` - Plotting the Results
+# 5. `MarsPlot` - Plotting the Results
 
 
 [Back to Top](#cheat-sheet)

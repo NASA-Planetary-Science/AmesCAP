@@ -14,7 +14,7 @@ from amesgcm.Script_utils import Cyan
 # Routine to Transform Model Input (variable names, dimension names, array order)
 # to expected configuration CAP
 
-parser = argparse.ArgumentParser(description="""\033[93m openMars2FV3.py  Used to convert openMars output to FV3 format  \n \033[00m""",
+parser = argparse.ArgumentParser(description="""\033[93m openMars2FV3  Used to convert openMars output to FV3 format  \n \033[00m""",
                                 formatter_class=argparse.RawTextHelpFormatter)
 
 

@@ -44,8 +44,8 @@ parser.add_argument("-sol", "--sol", nargs="+", type=float,
         f"Input sol number. Required. Can either be one sol or a"
         f"range with an increment (``start stop step``).\n"
         f"{Green}Usage:\n"
-        f"> MarsCalendar.py -sol 750\n"
-        f"> MarsCalendar.py -sol 750 800 5"
+        f"> MarsCalendar -sol 750\n"
+        f"> MarsCalendar -sol 750 800 5"
         f"{Nclr}\n\n"
     )
 )
@@ -54,8 +54,8 @@ parser.add_argument("-ls", "--ls", nargs="+", type=float,
     help=(
         f"Return the sol number corresponding to this Ls.\n"
         f"{Green}Usage:\n"
-        f"> MarsCalendar.py -ls 350\n"
-        f"> MarsCalendar.py -ls 350 360 5"
+        f"> MarsCalendar -ls 350\n"
+        f"> MarsCalendar -ls 350 360 5"
         f"{Nclr}\n\n"
     )
 )
@@ -68,7 +68,7 @@ parser.add_argument(
         f"Req. ``[-ls --ls]`` or ``[-sol --sol]``. \n"
         f"``MY=0`` for sol=0-667, ``MY=1`` for sol=668-1335 etc.\n"
         f"{Green}Usage:\n"
-        f"> Usage: MarsCalendar.py -ls 350 -my 2"
+        f"> Usage: MarsCalendar -ls 350 -my 2"
         f"{Nclr}\n\n"
     )
 )
@@ -79,7 +79,7 @@ parser.add_argument("-c", "--cumulative", action="store_true",
         f"\nEX: Returns Ls=360-720 instead of Ls=0-360 for input "
         f"sol=669-1336 \n"
         f"{Green}Usage:\n"
-        f"> MarsCalendar.py -sol 700 -c"
+        f"> MarsCalendar -sol 700 -c"
         f"{Nclr}\n\n"
     )
 )
@@ -120,7 +120,7 @@ def parse_array(len_input):
 
     else:
         print(f"{Red}ERROR either ``[-ls --ls]`` or ``[-sol --sol]`` are "
-              f"required. See ``MarsCalendar.py -h`` for additional "
+              f"required. See ``MarsCalendar -h`` for additional "
               f"help.{Nclr}")
         exit()
     return(input_as_arr)

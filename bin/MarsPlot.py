@@ -228,7 +228,7 @@ def main():
     # Directory (dir) containing shared templates
     global shared_dir
     shared_dir = "/path_to_shared_templates"
-
+    
     # Set figure dimensions
     pixel_width = parser.parse_args().pwidth
     if vertical_page:
@@ -446,21 +446,23 @@ def main():
 # User Preferences from ~/.amescap_profile
 global add_sol_time_axis, lon_coord_type, include_NaNs
 
+# Create a namespace with numpy available
+namespace = {'np': np}
 # Load preferences in Settings section of ~/.amescap_profile
-exec(section_content_amescap_profile("MarsPlot.py Settings"))
+exec(section_content_amescap_profile("MarsPlot Settings"), namespace)
 
 # Determine whether to include sol number in addition to Ls on
 # time axis. Default FALSE (= Ls only)
-add_sol_time_axis = eval("np.array(add_sol_to_time_axis)")
+add_sol_time_axis = eval("np.array(add_sol_to_time_axis)", namespace)
 
 # Define longitude coordinates to use. Default = 360 (i.e., 0-360).
 # Alt. = 180 (i.e., -180-180)
-lon_coord_type = eval("np.array(lon_coordinate)")
+lon_coord_type = eval("np.array(lon_coordinate)", namespace)
 
 # Determine whether to include or ignore NaNs when computing means.
 # Default FALSE = exclude NaNs (use np.nanmean)
 # Alt. TRUE = include NaNs (use np.mean)
-include_NaNs = eval("np.array(show_NaN_in_slice)")
+include_NaNs = eval("np.array(show_NaN_in_slice)", namespace)
 
 
 def mean_func(arr, axis):
@@ -2109,7 +2111,7 @@ class Fig_2D(object):
 
                 VAR.append(temp)
             var_info = varfull
-            var = eval(expression_exec)
+            var = eval(expression_exec, namespace)
 
         return xdata, ydata, var, var_info
 
@@ -3477,7 +3479,7 @@ class Fig_1D(object):
                         f"{expression_exec.split(']')[-1]}")
             varlabel = f"{var}"
             var_info = varfull
-            var = eval(expression_exec)
+            var = eval(expression_exec, namespace)
 
         return xdata, var, var_info, leg_text, varlabel
 

@@ -16,7 +16,12 @@
 #
 import os
 import sys
+# Add parent directory to Python path for imports
+sys.path.insert(0, os.path.abspath('../..'))
+
+# Add package directories
 sys.path.insert(0, os.path.abspath('../../bin'))
+sys.path.insert(0, os.path.abspath('../../amescap'))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -47,11 +52,22 @@ extensions = [
 
 autoapi_type = 'python'
 autoapi_dirs = ['../../bin','../../amescap']
-autoapi_add_toctree_entry = False
+autoapi_template_dir = '_templates/autoapi'
+autoapi_file_patterns = ['*.py']
+autoapi_add_toctree_entry = True  # Change this to True
+autoapi_python_use_implicit_namespaces = True  # Add this line
+autoapi_generate_api_docs = True  # Add this line
 autoapi_keep_files = True
-# autoapi_options = [ 'members', 'inherited-members', 'show-inheritance', 'show-inheritance-diagram', 'show-module-summary', 'imported-members' ]
-autoapi_options = [ 'members', 'inherited-members', 'show-inheritance', 'show-module-summary', 'imported-members' ]
-
+autoapi_options = [
+    'members',
+    'undoc-members',
+    'inherited-members',
+    'show-inheritance',
+    'show-module-summary',
+    'imported-members'
+]
+autoapi_python_class_content = 'both'
+autoapi_member_order = 'groupwise'
 pygments_style = 'sas'
 
 # Add any paths that contain templates here, relative to this directory.

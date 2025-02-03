@@ -47,7 +47,7 @@ If you have a **pre-existing** virtual environment holding CAP, we recommend you
 
 .. code-block:: bash
 
-    MarsPlot.py -h
+    MarsPlot -h
 
 This should show the "help" documentation for MarsPlot.
 

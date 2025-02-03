@@ -6,7 +6,7 @@ import time
 from amescap.Script_utils import Yellow, Nclr, Green, Cyan
 
 def get_install_info():
-    # Get the location and timestamp of cli.py 
+    # Get the location and timestamp of cli 
     cli_path = os.path.abspath(__file__)
     install_time = time.ctime(os.path.getctime(cli_path))
     return f"""
@@ -33,19 +33,19 @@ The Community Analysis Pipeline (CAP) is a Python-based command-line tool that p
 Below is a list of the executables in CAP. Use this list to find the executable that performs the operation you desire. 
 To see the arguments for each executable, use:
 {Green}<command> -h
- Example: MarsVars.py -h{Nclr}
+ Example: MarsVars -h{Nclr}
 
 Then, change to the directory hosting your netCDF output files and pass an argument to a CAP executable to perform the operation. A good place to start is to use the example command shown below your desired operation.{Nclr}
 
 {Cyan}Available Commands
 ------------------{Nclr}
-{Green}MarsCalendar.py {Nclr}- Converts Ls into day-of-year (sol) and vice versa.
-{Green}MarsFiles.py    {Nclr}- Manipulates entire files (e.g., time-shift, regrid, filter, etc.)
-{Green}MarsFormat.py   {Nclr}- Transforms non-MGCM model output for compatibility with CAP.
-{Green}MarsInterp.py   {Nclr}- Interpolates files to pressure or altitude coordinates.
-{Green}MarsPlot.py     {Nclr}- Generates plots from Custom.in template files.
-{Green}MarsPull.py     {Nclr}- Queries data from the MGCM repository at data.nas.nasa.gov/mcmc
-{Green}MarsVars.py     {Nclr}- Performs variable manipulations (e.g., deriving secondary variables, column-integration, etc.)
+{Green}MarsCalendar {Nclr}- Converts Ls into day-of-year (sol) and vice versa.
+{Green}MarsFiles    {Nclr}- Manipulates entire files (e.g., time-shift, regrid, filter, etc.)
+{Green}MarsFormat   {Nclr}- Transforms non-MGCM model output for compatibility with CAP.
+{Green}MarsInterp   {Nclr}- Interpolates files to pressure or altitude coordinates.
+{Green}MarsPlot     {Nclr}- Generates plots from Custom.in template files.
+{Green}MarsPull     {Nclr}- Queries data from the MGCM repository at data.nas.nasa.gov/mcmc
+{Green}MarsVars     {Nclr}- Performs variable manipulations (e.g., deriving secondary variables, column-integration, etc.)
 
 {Cyan}Model Compatibility
 -------------------{Nclr}

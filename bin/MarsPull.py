@@ -50,7 +50,7 @@ parser.add_argument(
         f"Current options include: '{Yellow}FV3BETAOUT1{Nclr}' '{Yellow}ACTIVECLDS{Nclr}', "
         f"'{Yellow}INERTCLDS{Nclr}', {Yellow}NEWBASE_ACTIVECLDS{Nclr}  and '{Yellow}ACTIVECLDS_NCDF\n"
         f"{Green}Usage:\n"
-        f"> MarsPull.py -id  INERTCLDS..."
+        f"> MarsPull -id  INERTCLDS..."
         f"{Nclr}\n\n"
 
     )
@@ -63,7 +63,7 @@ parser.add_argument(
         f"Query data by file name. Requires a simulation identifier "
         f"(--id)\n"
         f"{Green}Usage:\n"
-        f"> MarsPull.py -id ACTIVECLDS -f fort.11_0730 fort.11_0731"
+        f"> MarsPull -id ACTIVECLDS -f fort.11_0730 fort.11_0731"
         f"{Nclr}\n\n"
     )
 )
@@ -74,8 +74,8 @@ parser.add_argument(
         f"Legacy GCM only: Query data by solar longitude (Ls). Requires a simulation "
         f"identifier (--id)\n"
         f"{Green}Usage:\n"
-        f"> MarsPull.py -id ACTIVECLDS -ls 90.\n"
-        f"> MarsPull.py -id ACTIVECLDS -ls [start] [stop]"
+        f"> MarsPull -id ACTIVECLDS -ls 90.\n"
+        f"> MarsPull -id ACTIVECLDS -ls [start] [stop]"
         f"{Nclr}\n\n"
     )
 )
@@ -166,7 +166,7 @@ def main():
     simu_ID=parser.parse_args().id
 
     if simu_ID is None :
-        prYellow("***Error*** simulation ID [-id --id] is required. See 'MarsPull.py -h' for help")
+        prYellow("***Error*** simulation ID [-id --id] is required. See 'MarsPull -h' for help")
         exit()
 
     #URLbase='https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/'+simu_ID+'/'
