@@ -26,21 +26,23 @@ parser.add_argument('input_file', nargs='+',  # sys.stdin
                     help='***.nc file or list of ***.nc files')
 
 parser.add_argument('-t', '--type', type=str,
-                    help=""">  --type can be 'openmars', 'marswrf' 'emars' 'pcm' or 'legacy' \n"""
+                    help=""">  --type can be 'openmars', 'marswrf' 'emars' 'pcm' \n"""
                     """>  Usage: MarsFormat.py ****.nc \n"""
                     """          MarsFormat.py ****.nc -t openmars \n""")
 
-parser.add_argument('-com', '--common', action='store_true', default=False,
-                    help=' Replace dimension and variable names with the standard FV3 convention \n'
-                    '> Usage: MarsFormat.py file.nc -model_flag -com \n')
+parser.add_argument('-nat', '--native', action='store_true', default=False,
+                    help="""" Preserve the native names of the GCM's  variables and dimensions\n"""
+                    """> Usage: MarsFormat.py file.nc -model_flag -nat \n""")
 
 # ===========================
 path2data = os.getcwd()
 
+ref_press=725 #TODO hard-codded
+
 def main():
 
    if not (parser.parse_args().type):
-         print(f"{Yellow}***Notice***  No operation requested. Use '-type' and specify openmars, marswrf, legacy, emars")
+         print(f"{Yellow}***Notice***  No operation requested. Use '-type' and specify openmars, marswrf, pcm, emars")
          exit()  # Exit cleanly
 
    path2data = os.getcwd()
@@ -183,7 +185,6 @@ def main():
           
             
             # Note that XLONG_U is cyclic, e.g. LON[x,0]=LON[x,-1]=0
-            # In xarray, sel(-1) returns the second to last values, not the last as in Python
             #Inspiration: pyhton-wrf destag.py  https://github.com/NCAR/wrf-python/blob/57116836593b7d7833e11cf11927453c6388487b/src/wrf/destag.py#L9
         
             transformed_var = 0.5 * (var.isel(west_east_stag=slice(None, -1)) + var.isel(west_east_stag=slice(1, None)))
@@ -212,7 +213,6 @@ def main():
             DS[var_name] = xr.DataArray(transformed_var, dims=new_dims, coords={'XLONG':DS['XLONG']})
            
             DS[var_name].attrs['description'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
-
             DS[var_name].attrs['long_name'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
             DS[var_name].attrs['stagger'] = 'USTAGGERED IN POST-PROCESSING'
          
@@ -258,15 +258,11 @@ def main():
          #==================================================================
          # Define Coordinates for New DataFrame
          #==================================================================
-         ref_press=725 #TODO this is added on to create ak/bk
+         
          time        = DS[model.dim_time]         # minutes since simulation start [m]
          lat = DS[model.dim_lat]  #Replace DS.lat
          lon = DS[model.dim_lon]
 
-         # Derive half and full reference pressure levels (Pa)
-         #DS = DS.assign(model.pfull=DS[model.dim_pfull]*ref_press)
-         
-         ###DS = DS.assign(pfull=(model.dim_pfull, np.array(model.pfull*ref_press)))
          DS = DS.assign(pfull=DS[model.dim_pfull]*ref_press)
          DS['pfull'].attrs['FIELDNAM']='(MODIFIED IN POST-PROCESSING) ' + DS['lev'].attrs['FIELDNAM']
          DS['pfull'].attrs['long_name']=DS['pfull'].attrs['FIELDNAM']
@@ -296,17 +292,22 @@ def main():
       # ===================Emars Specific Processing==================
       #=================================================================
       elif model_type == 'emars':
+         
          #==================================================================
          # Interpolate U, V, onto Regular Mass Grid (from staggered)
          #==================================================================
-         variables_with_latu = [var for var in DS.variables if 'latu' in DS[var].dims]
-
+   
          print(f"{Cyan}Interpolating Staggered Variables to Standard Grid")
+         variables_with_latu = [var for var in DS.variables if 'latu' in DS[var].dims]
+         variables_with_lonv = [var for var in DS.variables if 'lonv' in DS[var].dims]
          # Loop through, and unstagger. the dims_list process finds the dimensoins of the variable and replaces west_east_stag with west_east
          print('     From latu to lat: ' + ', '.join(variables_with_latu ))
          for var_name in variables_with_latu:
             var = getattr(DS, var_name)
             dims = var.dims
+            longname_txt=var.long_name
+            units_txt=var.units
+   
             # replace latu in dimensions with lat
             dims_list = list(dims)
             for i, dim in enumerate(dims_list):
@@ -315,22 +316,84 @@ def main():
                   break # Stop the loop once the replacement is made
             new_dims = tuple(dims_list)
             
-            lat1=DS.latu.isel(latu=slice(None, -1)).values
-            lat2=DS.latu.isel(latu=slice(1,  None)).values
-        
-            
-            transformed_var = 0.5 * (var.isel(latu=slice(None, -1)) + var.isel(latu=slice(1, None)))
-            #Add padding at the pole to conserve the same dimension as lat.
-            pad_var=transformed_var.pad(lat=(1,1), mode='edge') #TODO
-            print(pad_var.shape)
-            DS[var_name] = xr.DataArray(pad_var, dims=new_dims, coords={'lat':DS['lat']})
-           
-            DS[var_name].attrs['description'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
-            DS[var_name].attrs['long_name'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
-            DS[var_name].attrs['stagger'] = 'USTAGGERED IN POST-PROCESSING'
+            #TODO  Using  'values' as var.isel(latu=slice(None, -1)).values and var.isel(latu=slice(None, -1)) returns array of different size
+            #TODO the following reproduce the 'lat' array, but not if the keyword values is ommited
+            #latu1_val=ds.latu.isel(latu=slice(None, -1)).values
+            #latu2_val=ds.latu.isel(latu=slice(1,  None)).values
 
+            #newlat_val= 0.5 * (latu1 + latu2)
+            #newlat_val=np.append(newlat_val,0)
+            #newlat_val ==lat
+            transformed_var = 0.5 * (var.isel(latu=slice(None, -1)).values + var.isel(latu=slice(1, None)).values)
+            
+            # This is equal to lat[0:-1]
+            #Add padding at the pole to conserve the same dimension as lat.
+            list_pads=[]
+            for i, dim in enumerate(new_dims):
+               if dim == 'lat':
+                  list_pads.append((0,1)) #(begining,end)=(0,1), meaning 1 padding at the end of the array
+               else:
+                  list_pads.append((0,0)) #(begining,end)=(0,0), no pad on that axis
+            transformed_var=np.pad(transformed_var,list_pads,mode='constant',constant_values=0)
+            DS[var_name] = xr.DataArray(transformed_var, dims=new_dims, coords={'lat':DS['lat']})
+            DS[var_name].attrs['long_name'] = '(UNSTAGGERED IN POST-PROCESSING) ' + longname_txt
+            DS[var_name].attrs['units'] = units_txt
+         #==============
+         print('     From lonv to lon: ' + ', '.join(variables_with_lonv ))
+         for var_name in variables_with_lonv:
+            var = getattr(DS, var_name)
+            dims = var.dims
+            longname_txt=var.long_name
+            units_txt=var.units
+   
+            # replace lonv in dimensions with lon
+            dims_list = list(dims)
+            for i, dim in enumerate(dims_list):
+               if dim == 'lonv':
+                  dims_list[i]='lon'
+                  break # Stop the loop once the replacement is made
+            new_dims = tuple(dims_list)
+            
+            transformed_var = 0.5 * (var.isel(lonv=slice(None, -1)).values + var.isel(lonv=slice(1, None)).values)
+            # This is equal to lat[0:-1]
+            #Add padding at the pole to conserve the same dimension as lat.
+            list_pads=[]
+            for i, dim in enumerate(new_dims):
+               if dim == 'lon':
+                  list_pads.append((0,1)) #(begining,end)=(0,1), meaning 1 padding at the end of the array
+               else:
+                  list_pads.append((0,0)) #(begining,end)=(0,0), no pad on that axis
+            transformed_var=np.pad(transformed_var,list_pads,mode='wrap') #TODO with this method V[0] =V[-1]: can we add cyclic point before destaggering?
+            
+            DS[var_name] = xr.DataArray(transformed_var, dims=new_dims, coords={'lon':DS['lon']})
+            DS[var_name].attrs['long_name'] = '(UNSTAGGERED IN POST-PROCESSING) ' + longname_txt
+            DS[var_name].attrs['units'] = units_txt            
+
+      #=================================================================
+      # ===================PCM Specific Processing==================
+      #=================================================================        
         
-        
+      elif model_type == 'pcm':
+      
+         print(f"{Cyan}Processing pcm file")
+         #Adding long_name attibutes
+         for var_name in DS.data_vars:
+            var = DS[var_name]
+            if 'title' in var.attrs:
+               var.attrs['long_name'] = var.attrs['title']
+         
+         pfull=DS.aps.values + DS.bps.values*ref_press    
+         DS['pfull']=(['altitude'],  pfull)
+         #Adding a pfull variable
+         #DS = DS.assign_coords(pfull=altitude)
+         DS['pfull'].attrs['long_name']='(ADDED IN POST-PROCESSING), reference pressure' 
+         DS['pfull'].attrs['units']='Pa' 
+         
+         #DS[model.phalf]= ak + ref_press*bk
+         #DS.phalf.attrs['long_name'] = '(ADDED IN POST PROCESSING) pressure at layer interfaces'
+         #DS.phalf.attrs['description'] = '(ADDED IN POST PROCESSING) pressure at layer interfaces'
+         #DS.phalf.attrs['units'] = 'Pa'
+     
       #==================================================================
       # START PROCESSING FOR ALL MODELS
       #==================================================================
@@ -378,8 +441,10 @@ def main():
       # STANDARDIZED VARIABLES NAMES IF REQUESTED
       #=================================================
       
-      if parser.parse_args().common: 
-      
+      if parser.parse_args().native: 
+         print(f"{Purple}Preserving native names for variable and dimensions")
+         fullnameOUT=fullnameOUT[:-3]+'_nat.nc'
+      else:
          print(f"{Purple}Using standard FV3 names for variable and dimensions")
          
          #Model has {'ucomp':'U','temp':'T', 'dim_lon'='XLON'...}
@@ -407,10 +472,10 @@ def main():
          model_dims = {key: val for key, val in model_dims.items() if key != val}
          model_vars = {key: val for key, val in model_vars.items() if key != val}
          
+         
          DS=DS.swap_dims(dims_dict=model_dims)
       
          DS=DS.rename_vars(name_dict=model_vars)
-         fullnameOUT=fullnameOUT[:-3]+'_com.nc'
       #==================================================================
       # Output Processed Data to New **atmos_daily.nc File
       #==================================================================
