@@ -14,8 +14,8 @@ Ncdf Z interpol. distance dimension  [integer]  {zstd} >
 Ncdf Z interpol. distance above ground [integer]{zagl} >
 time values               [days]                (time) >                             XTIME,             Time
 planetocentric longitudes [deg]                 (areo) >        Ls,                  L_S,               ALSO_Ls
-longitudes                [deg]                 (lon)  >                             XLONG
-latitudes                 [deg]                 (lat)  >                             XLAT
+longitudes                [deg]                 (lon)  >                             XLONG,             longitude 
+latitudes                 [deg]                 (lat)  >                             XLAT,              latitude
 Z model reference pressure layers  [Pa]         (pfull)>
 Z model pressure layers boundaries [Pa]         (phalf)>
 vertical coordinate pressure value [Pa]         (ak)>                                                   ap

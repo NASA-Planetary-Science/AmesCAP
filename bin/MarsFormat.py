@@ -242,7 +242,9 @@ def main():
 
          # ALSO INTERPOLATE TO FIND *LAYER* HEIGHTS ABOVE THE SURFACE (i.e., above topography; m)
          zfull3D = 0.5 * (zagl_lvl[:,:-1,:,:] + zagl_lvl[:,1:,:,:])
-
+         
+         print(f"{Red} Dropping 'Times' variable with non-numerical values")
+         DS=DS.drop_vars("Times")
       #=================================================================
       # ===================OpenMars Specific Processing==================
       #=================================================================
@@ -395,9 +397,11 @@ def main():
          #DS.phalf.attrs['units'] = 'Pa'
      
       #==================================================================
-      # START PROCESSING FOR ALL MODELS
       #==================================================================
-
+      #                START PROCESSING FOR ALL MODELS
+      #==================================================================
+      #==================================================================
+      
       #==================================================================
       # check that vertical grid starts at toa with highest level at surface
       #==================================================================
@@ -474,12 +478,21 @@ def main():
          
          
          DS=DS.swap_dims(dims_dict=model_dims)
-      
          DS=DS.rename_vars(name_dict=model_vars)
+
+      #==================================================================
+      # Set time dimension as unlimitted 
+      #==================================================================         
+      if parser.parse_args().native:
+         dim_time_name=model.dim_time 
+      else:
+         dim_time_name='time'  
+                
+      DS.to_netcdf(fullnameOUT,unlimited_dims=dim_time_name)   
       #==================================================================
       # Output Processed Data to New **atmos_daily.nc File
       #==================================================================
-      DS.to_netcdf(fullnameOUT)
+      
       print(f"{Cyan}{fullnameOUT} was created")
       
 
