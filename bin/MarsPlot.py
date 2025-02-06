@@ -34,7 +34,7 @@ from warnings import filterwarnings
 import warnings     # suppress errors triggered by NaNs
 import matplotlib.pyplot as plt
 from netCDF4 import Dataset, MFDataset
-from numpy import abs
+from numpy import abs, sqrt, log, exp, abs, min, max,mean #imported to allow operations insquare brackets
 from matplotlib.ticker import (LogFormatter, NullFormatter,
                                LogFormatterSciNotation, MultipleLocator)
 from matplotlib.colors import LogNorm

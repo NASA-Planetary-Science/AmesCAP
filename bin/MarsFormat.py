@@ -456,7 +456,7 @@ def main():
       
       if parser.parse_args().native: 
          print(f"{Purple}Preserving native names for variable and dimensions")
-         ext+'_nat'
+         ext=ext+'_nat'
       else:
          print(f"{Purple}Using standard FV3 names for variable and dimensions")
          
