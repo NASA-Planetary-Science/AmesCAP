@@ -836,7 +836,11 @@ def time_shift(file_list):
         fnew.copy_Ncaxis_with_content(fdiurn.variables["lon"])
         fnew.copy_Ncaxis_with_content(fdiurn.variables["lat"])
         fnew.copy_Ncaxis_with_content(fdiurn.variables["time"])
-        fnew.copy_Ncaxis_with_content(fdiurn.variables["scalar_axis"])
+        try:
+            fnew.copy_Ncaxis_with_content(fdiurn.variables["scalar_axis"])
+        except:
+            print(f'{Red}Could not find scalar axis') 
+            
 
         # Only create a vertical axis if orig. file has 3D fields
         if zaxis in fdiurn.dimensions.keys():
