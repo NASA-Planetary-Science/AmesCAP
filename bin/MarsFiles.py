@@ -1569,14 +1569,16 @@ def main():
             fnew.copy_all_dims_from_Ncfile(fNcdf_t)
 
             # Loop over all variables in the file
+            print(var_list)
             for ivar in var_list:
                 varNcf     = f_in.variables[ivar]
                 longname_txt,units_txt = get_longname_unit(f_in, ivar)
 
                 if  ivar in ["pfull", "lat", "lon", "phalf", "pk",
                              "bk", "pstd", "zstd", "zagl", "time", "areo"]:
-                        print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
-                        fnew.copy_Ncaxis_with_content(fNcdf_t.variables[ivar])
+                        if ivar in fNcdf_t.variables.keys():          
+                            print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
+                            fnew.copy_Ncaxis_with_content(fNcdf_t.variables[ivar])
                 elif varNcf.dimensions[-2:]==("lat", "lon"):
                     #Ignore variables like time_bounds, scalar_axis
                     # or grid_xt_bnds...

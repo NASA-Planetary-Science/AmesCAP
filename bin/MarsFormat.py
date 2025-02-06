@@ -34,13 +34,23 @@ parser.add_argument('-nat', '--native', action='store_true', default=False,
                     help="""" Preserve the native names of the GCM's  variables and dimensions\n"""
                     """> Usage: MarsFormat.py file.nc -model_flag -nat \n""")
 
+                    
+parser.add_argument('-ba', '--bin_average',nargs="?", const=5,type=int,
+                    help="""" Bin into diurnal average file \n"""
+                    """> Usage: MarsFormat.py file.nc -model_flag -ba    >>> (default 5-sol binning)\n"""
+                    """>        MarsFormat.py file.nc -model_flag -ba 10 >>>(10 day binning) \n""")   
+                    
+parser.add_argument('-bd', '--bin_diurn', action='store_true', default=False,
+                    help="""" Bin into diurnal composite file \n"""
+                    """> Usage: MarsFormat.py file.nc -model_flag -bd \n"""
+                    """>        MarsFormat.py file.nc -model_flag -bd -ba 10 >>> (using -ba to change the default binning)\n""")                 
 # ===========================
 path2data = os.getcwd()
-
 ref_press=725 #TODO hard-codded
 
-def main():
 
+def main():
+   ext='' #Initialize empty extension
    if not (parser.parse_args().type):
          print(f"{Yellow}***Notice***  No operation requested. Use '-type' and specify openmars, marswrf, pcm, emars")
          exit()  # Exit cleanly
@@ -56,7 +66,7 @@ def main():
          fullnameIN = path2data + '/' + filei
       else:
          fullnameIN=filei
-      fullnameOUT = fullnameIN[:-3]+'_atmos_daily.nc'
+      
 
       print('Processing...')
       #Load model variables,dimensions
@@ -407,9 +417,9 @@ def main():
       #==================================================================
 
       if DS[model.dim_pfull][0] != DS[model.dim_pfull].min(): # if toa, lev = 0 is surface then flip
-          DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
-          DS=DS.isel(**{model.dim_phalf: slice(None, None, -1)}) #Also flip phalf,ak, bk
-          print(f"{Red}NOTE: all variables flipped along vertical dimension, so that the top of the atmosphere is now index 0")
+         DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
+         DS=DS.isel(**{model.dim_phalf: slice(None, None, -1)}) #Also flip phalf,ak, bk
+         print(f"{Red}NOTE: all variables flipped along vertical dimension, so that the top of the atmosphere is now index 0")
 
       #==================================================================
       # reorder dimensions
@@ -424,7 +434,6 @@ def main():
             tmp = np.array(DS[model.dim_lon])
             tmp = np.where(tmp<0,tmp+360,tmp)
             DS[model.dim_lon] = tmp
-#DS=DS.assign_coords({model.dim_lon:(model.dim_lon,tmp,DS[model.dim_lon].attrs)})
             DS = DS.sortby(model.dim_lon)
             print(f"{Red} NOTE: Longitude changed to 0-360E and all variables appropriately reindexed")
 
@@ -447,7 +456,7 @@ def main():
       
       if parser.parse_args().native: 
          print(f"{Purple}Preserving native names for variable and dimensions")
-         fullnameOUT=fullnameOUT[:-3]+'_nat.nc'
+         ext+'_nat'
       else:
          print(f"{Purple}Using standard FV3 names for variable and dimensions")
          
@@ -487,85 +496,102 @@ def main():
          dim_time_name=model.dim_time 
       else:
          dim_time_name='time'  
-                
-      DS.to_netcdf(fullnameOUT,unlimited_dims=dim_time_name)   
+               
+               
       #==================================================================
       # Output Processed Data to New **atmos_daily.nc File
       #==================================================================
-      
-      print(f"{Cyan}{fullnameOUT} was created")
-      
 
       #==================================================================
       # CREATE ATMOS_DAILY, ATMOS_AVERAGE, & ATMOS_DIURN FILES
       #==================================================================
       
-
-      '''
-      #==================================================================
-      # Output Binned Data to New **atmos_average.nc file
-      #==================================================================
-      fullnameOUT = fullnameIN[:-3]+'_atmos_average'+'.nc'
-
-      # Figure out number of timesteps per 5 sol
-      dt_in = DS[model.time][1]-DS[model.time][0]
-      iperday = int(np.round(1/dt_in))
-      combinedN = int(iperday*5)
-      time = model.dim_time
-      
-      # Coarsen the 'time' dimension by a factor of 5 and average over each window
-      DS_average = DS.coarsen(**{model.dim_time:combinedN}).mean()
-
-      # Update the time coordinate attribute
-      DS_average[model.time].attrs['long_name'] = 'time averaged over 5 sols'
-
-      # Create New File
-      DS_average.to_netcdf(fullnameOUT)
-      prCyan(fullnameOUT +' was created')
-
-      #==================================================================
-      # Output Binned Data to New  **atmos_diurn.nc file
-      #==================================================================
-      fullnameOUT = fullnameIN[:-3]+'_atmos_diurn'+'.nc'
-
-      # create a new time of day dimension
-      tod_name = 'time_of_day_%02d' %(iperday)
-      days = len(DS[model.time])/iperday
-
-      # initialize the new dataset
-      DS_diurn = None
-
-      # loop through coarsened grid, slicing time dimension in 5 sol groups 
-      for i in range(0, int(days/5)):
-       
-         # slice original dataset in 5 sol periods 
-         downselect = DS.isel(**{model.time:slice(i*combinedN, i*combinedN+combinedN)})
+      if parser.parse_args().bin_average:
+         ext=ext+'_average'
+         nday=parser.parse_args().bin_average
+        
+         #==================================================================
+         # Output Binned Data to New **atmos_average.nc file
+         #==================================================================
+         
+         # Figure out number of timesteps per 5 sol
+         dt_in = DS[model.time][1]-DS[model.time][0]
+         iperday = int(np.round(1/dt_in))
+         combinedN = int(iperday*nday)
+         time = model.dim_time
+         
+         # Coarsen the 'time' dimension by a factor of 5 and average over each window
+         DS_average = DS.coarsen(**{model.dim_time:combinedN}).mean()
    
-         # rename the time dimension to the time of day and find the LT equivalent
-         downselect = downselect.rename({model.time: tod_name})
-         downselect[tod_name] = np.mod(downselect[tod_name]*24, 24).values
-    
-         # Group up all instances of the same LT & take the mean
-         idx = downselect.groupby(tod_name).mean()
-    
-         # add back in the time dimensionn
-         idx = idx.expand_dims({model.time: [i]})  # Add 'time' dimension with integer values
-    
-         # concatenate into new diurn array with a LT and time dimension (stack along time)
-         if DS_diurn is None:
-            DS_diurn = idx
+         # Update the time coordinate attribute
+         DS_average[model.time].attrs['long_name'] = 'time averaged over %s sols'%(nday)
+   
+         # Create New File
+         fullnameOUT = fullnameIN[:-3]+ext+'.nc'
+         DS_average.to_netcdf(fullnameOUT,unlimited_dims=dim_time_name,format='NETCDF4_CLASSIC')
+   
+         
+      elif parser.parse_args().bin_diurn:
+         ext=ext+'_diurn'
+         
+         #Custom number of sol
+         if parser.parse_args().bin_average:
+            nday=parser.parse_args().bin_average
          else:
-            DS_diurn = xr.concat([DS_diurn, idx], dim=model.time)
+            nday=5   
+         
+         dt_in = DS[model.time][1]-DS[model.time][0]
+         iperday = int(np.round(1/dt_in))
+         combinedN = int(iperday*nday)
+         #==================================================================
+         # Output Binned Data to New  **atmos_diurn.nc file
+         #==================================================================
+         # create a new time of day dimension
+         tod_name = 'time_of_day_%02d' %(iperday)
+         days = len(DS[model.time])/iperday
+   
+         # initialize the new dataset
+         DS_diurn = None
+   
+         # loop through coarsened grid, slicing time dimension in 5 sol groups 
+         for i in range(0, int(days/nday)):
+         
+            # slice original dataset in 5 sol periods 
+            downselect = DS.isel(**{model.time:slice(i*combinedN, i*combinedN+combinedN)})
+      
+            # rename the time dimension to the time of day and find the LT equivalent
+            downselect = downselect.rename({model.time: tod_name})
+            downselect[tod_name] = np.mod(downselect[tod_name]*24, 24).values
+      
+            # Group up all instances of the same LT & take the mean
+            idx = downselect.groupby(tod_name).mean()
+      
+            # add back in the time dimensionn
+            idx = idx.expand_dims({model.time: [i]})  # Add 'time' dimension with integer values
+      
+            # concatenate into new diurn array with a LT and time dimension (stack along time)
+            if DS_diurn is None:
+               DS_diurn = idx
+            else:
+               DS_diurn = xr.concat([DS_diurn, idx], dim=model.time)
+   
+         # replace the time dimension with the time dimension from DS_average
+         DS_time=DS[model.time] 
+         DS_time_avg= DS_time.coarsen(**{model.dim_time:combinedN}).mean()
+         
+         DS_diurn[model.time] = DS_time_avg[model.time]
+         # Update the time coordinate attribute
+         DS_diurn[model.time].attrs['long_name'] = 'time averaged over %s sols'%(nday)
+   
+         # Create New File
+         fullnameOUT = fullnameIN[:-3]+ext+'.nc' 
+         DS_diurn.to_netcdf(fullnameOUT,unlimited_dims=dim_time_name,format='NETCDF4_CLASSIC')
 
-      # replace the time dimension with the time dimension from DS_average
-      DS_diurn[model.time] = DS_average[model.time]
- 
-      # Update the time coordinate attribute
-      DS_diurn[model.time].attrs['long_name'] = 'time averaged over 5 sols'
-  
-      # Create New File
-      DS_diurn.to_netcdf(fullnameOUT)
-      prCyan(fullnameOUT +' was created')
-      '''
+      else:   
+         ext=ext+'_daily'
+         fullnameOUT = fullnameIN[:-3]+ext+'.nc'         
+         DS.to_netcdf(fullnameOUT,unlimited_dims=dim_time_name,format='NETCDF4_CLASSIC') 
+      print(f"{Cyan}{fullnameOUT} was created") 
+      
 if __name__ == '__main__':
-    main()
+   main()

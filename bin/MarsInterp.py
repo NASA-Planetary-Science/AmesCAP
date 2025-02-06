@@ -377,24 +377,20 @@ def main():
                                           long_name_txt, units_txt)
             else:
 
-                #if ivar not in ["time", "pfull", "lat",
-                #                "lon", 'phalf', 'ak', 'pk', 'bk',
-                #                "pstd", "zstd", "zagl",
-                #                tod_name, 'grid_xt', 'grid_yt']:
-                #    #TODO quick work-around
-                #    try:
-                #        fnew.copy_Ncvar(fNcdf.variables[ivar])
-                #    except:
-                #        fnew.copy_Ncaxis_with_content(fNcdf.variables[ivar])
+                #TODO logic could be improved over here
+                if ivar not in ["time", "pfull", "lat",
+                                "lon", 'phalf', 'ak', 'pk', 'bk',
+                                "pstd", "zstd", "zagl",
+                                tod_name, 'grid_xt', 'grid_yt']:
 
-                dim_list=fNcdf.dimensions.keys()
+                    dim_list=fNcdf.dimensions.keys()
 
-                if 'pfull' not in fNcdf.variables[ivar].dimensions:
-                    print(f"{Cyan}Copying over: {ivar}...")
-                    if ivar in dim_list:
-                        fnew.copy_Ncaxis_with_content(fNcdf.variables[ivar])
-                    else:
-                        fnew.copy_Ncvar(fNcdf.variables[ivar])
+                    if 'pfull' not in fNcdf.variables[ivar].dimensions:
+                        print(f"{Cyan}Copying over: {ivar}...")
+                        if ivar in dim_list:
+                            fnew.copy_Ncaxis_with_content(fNcdf.variables[ivar])
+                        else:
+                            fnew.copy_Ncvar(fNcdf.variables[ivar])
 
 
 
