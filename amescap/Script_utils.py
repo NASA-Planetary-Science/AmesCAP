@@ -1334,3 +1334,25 @@ def read_variable_dict_amescap_profile(f_Ncdf=None):
                 prYellow('''***Warning*** more than one possible dimension '%s' found in file: %s'''%(FV3_var,found_list))
 
     return MOD
+
+def reset_FV3_names(MOD):
+    '''
+    This  function reset the model dictionary to the native FV3's variables, e.g.
+    model.dim_lat = 'latitude' > model.dim_lat = 'lat'
+    model.ucomp   = 'U'        > model.ucomp = 'ucomp'
+    etc...
+
+    Args:
+        model: a class object generated with  read_variable_dict_amescap_profile()
+    Returns:
+        model: same object with updated names for the dimensions and variables.
+    '''
+    atts_list=dir(MOD) #Get all attributes
+    vars_list=[k for k in atts_list if '__' not in k] #do not touch all the __init__ etc..
+
+    for ivar in vars_list:
+        name=ivar #get the native name, e.g ucomp
+        if 'dim_' in ivar:
+            name=ivar[4:] #if attribute is dim_lat, just get the 'lat' part
+        setattr(MOD,ivar,name) #reset the original names
+    return MOD

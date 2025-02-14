@@ -6,7 +6,7 @@ import numpy as np
 import xarray as xr
 from netCDF4 import Dataset
 import os
-from amescap.Script_utils import Green,Yellow, Red,Cyan, Purple,read_variable_dict_amescap_profile,filter_vars
+from amescap.Script_utils import Green,Yellow, Red,Cyan, Purple,read_variable_dict_amescap_profile,filter_vars,reset_FV3_names
 from amescap.FV3_utils import daily_to_average, daily_to_diurn,layers_mid_point_to_boundary
 from amescap.Ncdf_wrapper import Ncdf, Fort
 xr.set_options(keep_attrs=True)
@@ -50,8 +50,10 @@ ref_press=725 #TODO hard-codded
 
 
 def main():
+   
+   
    ext='' #Initialize empty extension
-   if not (parser.parse_args().type):
+   if parser.parse_args().type not in ['marswrf','openmars','pcm','emars']:
          print(f"{Yellow}***Notice***  No operation requested. Use '-type' and specify openmars, marswrf, pcm, emars")
          exit()  # Exit cleanly
 
@@ -266,6 +268,9 @@ def main():
             var = DS[var_name]
             if 'FIELDNAM' in var.attrs:
                var.attrs['long_name'] = var.attrs['FIELDNAM']
+            if 'UNITS' in var.attrs:
+               var.attrs['units'] = var.attrs['UNITS']   
+               
 
          #==================================================================
          # Define Coordinates for New DataFrame
@@ -276,8 +281,10 @@ def main():
          lon = DS[model.dim_lon]
 
          DS = DS.assign(pfull=DS[model.dim_pfull]*ref_press)
-         DS['pfull'].attrs['FIELDNAM']='(MODIFIED IN POST-PROCESSING) ' + DS['lev'].attrs['FIELDNAM']
-         DS['pfull'].attrs['long_name']=DS['pfull'].attrs['FIELDNAM']
+
+         DS['pfull'].attrs['long_name']='(MODIFIED IN POST-PROCESSING) ' + DS['lev'].attrs['FIELDNAM']
+         DS['pfull'].attrs['long_name']='Pa'
+         
 
          #==================================================================
          # add ak,bk as variables
@@ -297,8 +304,12 @@ def main():
          DS = DS.assign(ak=(model.dim_phalf, np.zeros(len(DS[model.dim_pfull]) + 1)))
  
          # Update Variable Description & Longname
-         DS['ak'].attrs['long_name'], DS['bk'].attrs['long_name'] = '(ADDED IN POST PROCESSING)', '(ADDED IN POST PROCESSING)'
-         DS['ak'].attrs['FIELDNAM'], DS['bk'].attrs['FIELDNAM'] = '(ADDED IN POST PROCESSING)', '(ADDED IN POST PROCESSING)'
+         DS['ak'].attrs['long_name']='(ADDED IN POST PROCESSING) pressure part of the hybrid coordinate'
+         DS['ak'].attrs['units']='Pa'
+         DS['bk'].attrs['long_name'] = '(ADDED IN POST PROCESSING) vertical coordinate sigma value'
+         DS['bk'].attrs['units']='None'
+          
+ 
         
       #=================================================================
       # ===================Emars Specific Processing==================
@@ -312,7 +323,7 @@ def main():
          print(f"{Cyan}Interpolating Staggered Variables to Standard Grid")
          variables_with_latu = [var for var in DS.variables if 'latu' in DS[var].dims]
          variables_with_lonv = [var for var in DS.variables if 'lonv' in DS[var].dims]
-         # Loop through, and unstagger. the dims_list process finds the dimensoins of the variable and replaces west_east_stag with west_east
+         # Loop through, and unstagger. the dims_list process finds the dimensions of the variable and replaces west_east_stag with west_east
          print('     From latu to lat: ' + ', '.join(variables_with_latu ))
          for var_name in variables_with_latu:
             var = getattr(DS, var_name)
@@ -435,8 +446,10 @@ def main():
             tmp = np.where(tmp<0,tmp+360,tmp)
             DS[model.dim_lon] = tmp
             DS = DS.sortby(model.dim_lon)
+            DS[model.lon].attrs['long_name']='(MODIFIED POST-PROCESSING) longitude' 
+            DS[model.lon].attrs['units']='degrees_E' 
             print(f"{Red} NOTE: Longitude changed to 0-360E and all variables appropriately reindexed")
-
+            
       #==================================================================
       # add scalar axis to areo [time, scalar_axis])
       #==================================================================
@@ -458,7 +471,7 @@ def main():
          print(f"{Purple}Preserving native names for variable and dimensions")
          ext=ext+'_nat'
       else:
-         print(f"{Purple}Using standard FV3 names for variable and dimensions")
+         print(f"{Purple}Using standard FV3 names for variables and dimensions")
          
          #Model has {'ucomp':'U','temp':'T', 'dim_lon'='XLON'...}
          #Create a reversed dictionaries, e.g. {'U':'ucomp','T':'temp'...}
@@ -485,18 +498,12 @@ def main():
          model_dims = {key: val for key, val in model_dims.items() if key != val}
          model_vars = {key: val for key, val in model_vars.items() if key != val}
          
-         
+         #Update dataset with new variables and names
          DS=DS.swap_dims(dims_dict=model_dims)
          DS=DS.rename_vars(name_dict=model_vars)
+         #Update CAP's internal variables dictionary
+         model=reset_FV3_names(model)
 
-      #==================================================================
-      # Set time dimension as unlimitted 
-      #==================================================================         
-      if parser.parse_args().native:
-         dim_time_name=model.dim_time 
-      else:
-         dim_time_name='time'  
-               
                
       #==================================================================
       # Output Processed Data to New **atmos_daily.nc File
@@ -509,26 +516,29 @@ def main():
       if parser.parse_args().bin_average:
          ext=ext+'_average'
          nday=parser.parse_args().bin_average
-        
+         
          #==================================================================
          # Output Binned Data to New **atmos_average.nc file
          #==================================================================
          
          # Figure out number of timesteps per 5 sol
-         dt_in = DS[model.time][1]-DS[model.time][0]
-         iperday = int(np.round(1/dt_in))
-         combinedN = int(iperday*nday)
-         time = model.dim_time
+         dt_in = DS[model.dim_time][1]-DS[model.dim_time][0]
          
+         iperday = int(np.round(1/dt_in)) #At least one per day
+         if iperday == 0:
+            print(f"{Red}***Error***: Operation not permitted because time sampling in file is less than one time step per day")
+            break
+            
+         combinedN = int(iperday*nday)
          # Coarsen the 'time' dimension by a factor of 5 and average over each window
          DS_average = DS.coarsen(**{model.dim_time:combinedN}).mean()
    
          # Update the time coordinate attribute
-         DS_average[model.time].attrs['long_name'] = 'time averaged over %s sols'%(nday)
+         DS_average[model.dim_time].attrs['long_name'] = 'time averaged over %s sols'%(nday)
    
-         # Create New File
+         # Create New File, set time dimension as unlimitted 
          fullnameOUT = fullnameIN[:-3]+ext+'.nc'
-         DS_average.to_netcdf(fullnameOUT,unlimited_dims=dim_time_name,format='NETCDF4_CLASSIC')
+         DS_average.to_netcdf(fullnameOUT,unlimited_dims=model.dim_time,format='NETCDF4_CLASSIC')
    
          
       elif parser.parse_args().bin_diurn:
@@ -540,15 +550,18 @@ def main():
          else:
             nday=5   
          
-         dt_in = DS[model.time][1]-DS[model.time][0]
+         dt_in = DS[model.dim_time][1]-DS[model.dim_time][0]
          iperday = int(np.round(1/dt_in))
+         if iperday == 0:
+            print(f"{Red}***Error***: Operation not permitted because time sampling in file is less than one time step per day")
+            break
          combinedN = int(iperday*nday)
          #==================================================================
          # Output Binned Data to New  **atmos_diurn.nc file
          #==================================================================
          # create a new time of day dimension
          tod_name = 'time_of_day_%02d' %(iperday)
-         days = len(DS[model.time])/iperday
+         days = len(DS[model.dim_time])/iperday
    
          # initialize the new dataset
          DS_diurn = None
@@ -557,40 +570,40 @@ def main():
          for i in range(0, int(days/nday)):
          
             # slice original dataset in 5 sol periods 
-            downselect = DS.isel(**{model.time:slice(i*combinedN, i*combinedN+combinedN)})
+            downselect = DS.isel(**{model.dim_time:slice(i*combinedN, i*combinedN+combinedN)})
       
             # rename the time dimension to the time of day and find the LT equivalent
-            downselect = downselect.rename({model.time: tod_name})
+            downselect = downselect.rename({model.dim_time: tod_name})
             downselect[tod_name] = np.mod(downselect[tod_name]*24, 24).values
       
             # Group up all instances of the same LT & take the mean
             idx = downselect.groupby(tod_name).mean()
       
             # add back in the time dimensionn
-            idx = idx.expand_dims({model.time: [i]})  # Add 'time' dimension with integer values
+            idx = idx.expand_dims({model.dim_time: [i]})  # Add 'time' dimension with integer values
       
             # concatenate into new diurn array with a LT and time dimension (stack along time)
             if DS_diurn is None:
                DS_diurn = idx
             else:
-               DS_diurn = xr.concat([DS_diurn, idx], dim=model.time)
+               DS_diurn = xr.concat([DS_diurn, idx], dim=model.dim_time)
    
          # replace the time dimension with the time dimension from DS_average
-         DS_time=DS[model.time] 
+         DS_time=DS[model.dim_time] 
          DS_time_avg= DS_time.coarsen(**{model.dim_time:combinedN}).mean()
          
-         DS_diurn[model.time] = DS_time_avg[model.time]
+         DS_diurn[model.dim_time] = DS_time_avg[model.dim_time]
          # Update the time coordinate attribute
-         DS_diurn[model.time].attrs['long_name'] = 'time averaged over %s sols'%(nday)
+         DS_diurn[model.dim_time].attrs['long_name'] = 'time averaged over %s sols'%(nday)
    
-         # Create New File
+         # Create New File, set time dimension as unlimitted 
          fullnameOUT = fullnameIN[:-3]+ext+'.nc' 
-         DS_diurn.to_netcdf(fullnameOUT,unlimited_dims=dim_time_name,format='NETCDF4_CLASSIC')
+         DS_diurn.to_netcdf(fullnameOUT,unlimited_dims=model.dim_time,format='NETCDF4_CLASSIC')
 
       else:   
          ext=ext+'_daily'
          fullnameOUT = fullnameIN[:-3]+ext+'.nc'         
-         DS.to_netcdf(fullnameOUT,unlimited_dims=dim_time_name,format='NETCDF4_CLASSIC') 
+         DS.to_netcdf(fullnameOUT,unlimited_dims=model.dim_time,format='NETCDF4_CLASSIC') 
       print(f"{Cyan}{fullnameOUT} was created") 
       
 if __name__ == '__main__':
