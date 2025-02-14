@@ -34,7 +34,7 @@ from warnings import filterwarnings
 import warnings     # suppress errors triggered by NaNs
 import matplotlib.pyplot as plt
 from netCDF4 import Dataset, MFDataset
-from numpy import abs
+from numpy import abs, sqrt, log, exp, abs, min, max,mean #imported to allow operations insquare brackets
 from matplotlib.ticker import (LogFormatter, NullFormatter,
                                LogFormatterSciNotation, MultipleLocator)
 from matplotlib.colors import LogNorm
@@ -228,7 +228,7 @@ def main():
     # Directory (dir) containing shared templates
     global shared_dir
     shared_dir = "/path_to_shared_templates"
-    
+
     # Set figure dimensions
     pixel_width = parser.parse_args().pwidth
     if vertical_page:
@@ -2111,7 +2111,7 @@ class Fig_2D(object):
 
                 VAR.append(temp)
             var_info = varfull
-            var = eval(expression_exec, namespace)
+            var = eval(expression_exec)#TODO removed ,namespace
 
         return xdata, ydata, var, var_info
 
@@ -3479,7 +3479,7 @@ class Fig_1D(object):
                         f"{expression_exec.split(']')[-1]}")
             varlabel = f"{var}"
             var_info = varfull
-            var = eval(expression_exec, namespace)
+            var = eval(expression_exec) #TODO removed ,namespace
 
         return xdata, var, var_info, leg_text, varlabel
 

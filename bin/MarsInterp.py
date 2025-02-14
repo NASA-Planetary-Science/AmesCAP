@@ -159,7 +159,7 @@ def main():
 
     # Create a namespace with numpy available
     namespace = {'np': np}
-    
+
     # PRELIMINARY DEFINITIONS
     # =========================== pstd ===========================
     if interp_type == "pstd":
@@ -169,7 +169,7 @@ def main():
         interp_technic = "log"
 
         content_txt = section_content_amescap_profile("Pressure definitions for pstd")
-        
+
         # Execute in controlled namespace
         exec(content_txt, namespace)
 
@@ -312,6 +312,7 @@ def main():
         # Add new vertical dimension
         fnew.add_dim_with_content(interp_type, lev_in, longname_txt, units_txt)
 
+        #TODO :this is fine but FV3-specific, is there a more flexible approach?
         if "tile" in ifile:
             fnew.copy_Ncaxis_with_content(fNcdf.variables["grid_xt"])
             fnew.copy_Ncaxis_with_content(fNcdf.variables["grid_yt"])
@@ -376,12 +377,28 @@ def main():
                                           long_name_txt, units_txt)
             else:
 
-                if ivar not in ["time", "pfull", "lat", 
-                                "lon", 'phalf', 'ak', 'pk', 'bk', 
-                                "pstd", "zstd", "zagl", 
+                #TODO logic could be improved over here
+                if ivar not in ["time", "pfull", "lat",
+                                "lon", 'phalf', 'ak', 'pk', 'bk',
+                                "pstd", "zstd", "zagl",
                                 tod_name, 'grid_xt', 'grid_yt']:
-                    print(f"{Cyan}Copying over: {ivar}...")
-                    fnew.copy_Ncvar(fNcdf.variables[ivar])
+
+                    dim_list=fNcdf.dimensions.keys()
+
+                    if 'pfull' not in fNcdf.variables[ivar].dimensions:
+                        print(f"{Cyan}Copying over: {ivar}...")
+                        if ivar in dim_list:
+                            fnew.copy_Ncaxis_with_content(fNcdf.variables[ivar])
+                        else:
+                            fnew.copy_Ncvar(fNcdf.variables[ivar])
+
+
+
+
+
+
+
+
 
         print("\r ", end="")
         fNcdf.close()

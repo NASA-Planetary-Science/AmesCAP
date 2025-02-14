@@ -6,13 +6,13 @@ import numpy as np
 import xarray as xr
 from netCDF4 import Dataset
 import os
-from amescap.Script_utils import Green,Yellow, Red,Cyan, Purple,read_variable_dict_amescap_profile,filter_vars
+from amescap.Script_utils import Green,Yellow, Red,Cyan, Purple,read_variable_dict_amescap_profile,filter_vars,reset_FV3_names
 from amescap.FV3_utils import daily_to_average, daily_to_diurn,layers_mid_point_to_boundary
 from amescap.Ncdf_wrapper import Ncdf, Fort
 xr.set_options(keep_attrs=True)
 
 #---
-# MarsFormat
+# MarsFormat.py
 # Routine to Transform Model Input (variable names, dimension names, array order)
 # to expected configuration CAP
 
@@ -26,21 +26,35 @@ parser.add_argument('input_file', nargs='+',  # sys.stdin
                     help='***.nc file or list of ***.nc files')
 
 parser.add_argument('-t', '--type', type=str,
-                    help=""">  --type can be 'openmars', 'marswrf' 'emars' 'pcm' or 'legacy' \n"""
-                    """>  Usage: MarsFormat ****.nc \n"""
-                    """          MarsFormat ****.nc -t openmars \n""")
+                    help=""">  --type can be 'openmars', 'marswrf' 'emars' 'pcm' \n"""
+                    """>  Usage: MarsFormat.py ****.nc \n"""
+                    """          MarsFormat.py ****.nc -t openmars \n""")
 
-parser.add_argument('-com', '--common', action='store_true', default=False,
-                    help=' Replace dimension and variable names with the standard FV3 convention \n'
-                    '> Usage: MarsFormat file.nc -model_flag -com \n')
+parser.add_argument('-nat', '--native', action='store_true', default=False,
+                    help="""" Preserve the native names of the GCM's  variables and dimensions\n"""
+                    """> Usage: MarsFormat.py file.nc -model_flag -nat \n""")
 
+                    
+parser.add_argument('-ba', '--bin_average',nargs="?", const=5,type=int,
+                    help="""" Bin into diurnal average file \n"""
+                    """> Usage: MarsFormat.py file.nc -model_flag -ba    >>> (default 5-sol binning)\n"""
+                    """>        MarsFormat.py file.nc -model_flag -ba 10 >>>(10 day binning) \n""")   
+                    
+parser.add_argument('-bd', '--bin_diurn', action='store_true', default=False,
+                    help="""" Bin into diurnal composite file \n"""
+                    """> Usage: MarsFormat.py file.nc -model_flag -bd \n"""
+                    """>        MarsFormat.py file.nc -model_flag -bd -ba 10 >>> (using -ba to change the default binning)\n""")                 
 # ===========================
 path2data = os.getcwd()
+ref_press=725 #TODO hard-codded
+
 
 def main():
-
-   if not (parser.parse_args().type):
-         print(f"{Yellow}***Notice***  No operation requested. Use '-type' and specify openmars, marswrf, legacy, emars")
+   
+   
+   ext='' #Initialize empty extension
+   if parser.parse_args().type not in ['marswrf','openmars','pcm','emars']:
+         print(f"{Yellow}***Notice***  No operation requested. Use '-type' and specify openmars, marswrf, pcm, emars")
          exit()  # Exit cleanly
 
    path2data = os.getcwd()
@@ -54,7 +68,7 @@ def main():
          fullnameIN = path2data + '/' + filei
       else:
          fullnameIN=filei
-      fullnameOUT = fullnameIN[:-3]+'_atmos_daily.nc'
+      
 
       print('Processing...')
       #Load model variables,dimensions
@@ -183,7 +197,6 @@ def main():
           
             
             # Note that XLONG_U is cyclic, e.g. LON[x,0]=LON[x,-1]=0
-            # In xarray, sel(-1) returns the second to last values, not the last as in Python
             #Inspiration: pyhton-wrf destag.py  https://github.com/NCAR/wrf-python/blob/57116836593b7d7833e11cf11927453c6388487b/src/wrf/destag.py#L9
         
             transformed_var = 0.5 * (var.isel(west_east_stag=slice(None, -1)) + var.isel(west_east_stag=slice(1, None)))
@@ -212,7 +225,6 @@ def main():
             DS[var_name] = xr.DataArray(transformed_var, dims=new_dims, coords={'XLONG':DS['XLONG']})
            
             DS[var_name].attrs['description'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
-
             DS[var_name].attrs['long_name'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
             DS[var_name].attrs['stagger'] = 'USTAGGERED IN POST-PROCESSING'
          
@@ -242,7 +254,9 @@ def main():
 
          # ALSO INTERPOLATE TO FIND *LAYER* HEIGHTS ABOVE THE SURFACE (i.e., above topography; m)
          zfull3D = 0.5 * (zagl_lvl[:,:-1,:,:] + zagl_lvl[:,1:,:,:])
-
+         
+         print(f"{Red} Dropping 'Times' variable with non-numerical values")
+         DS=DS.drop_vars("Times")
       #=================================================================
       # ===================OpenMars Specific Processing==================
       #=================================================================
@@ -254,22 +268,23 @@ def main():
             var = DS[var_name]
             if 'FIELDNAM' in var.attrs:
                var.attrs['long_name'] = var.attrs['FIELDNAM']
+            if 'UNITS' in var.attrs:
+               var.attrs['units'] = var.attrs['UNITS']   
+               
 
          #==================================================================
          # Define Coordinates for New DataFrame
          #==================================================================
-         ref_press=725 #TODO this is added on to create ak/bk
+         
          time        = DS[model.dim_time]         # minutes since simulation start [m]
          lat = DS[model.dim_lat]  #Replace DS.lat
          lon = DS[model.dim_lon]
 
-         # Derive half and full reference pressure levels (Pa)
-         #DS = DS.assign(model.pfull=DS[model.dim_pfull]*ref_press)
-         
-         ###DS = DS.assign(pfull=(model.dim_pfull, np.array(model.pfull*ref_press)))
          DS = DS.assign(pfull=DS[model.dim_pfull]*ref_press)
-         DS['pfull'].attrs['FIELDNAM']='(MODIFIED IN POST-PROCESSING) ' + DS['lev'].attrs['FIELDNAM']
-         DS['pfull'].attrs['long_name']=DS['pfull'].attrs['FIELDNAM']
+
+         DS['pfull'].attrs['long_name']='(MODIFIED IN POST-PROCESSING) ' + DS['lev'].attrs['FIELDNAM']
+         DS['pfull'].attrs['long_name']='Pa'
+         
 
          #==================================================================
          # add ak,bk as variables
@@ -289,24 +304,33 @@ def main():
          DS = DS.assign(ak=(model.dim_phalf, np.zeros(len(DS[model.dim_pfull]) + 1)))
  
          # Update Variable Description & Longname
-         DS['ak'].attrs['long_name'], DS['bk'].attrs['long_name'] = '(ADDED IN POST PROCESSING)', '(ADDED IN POST PROCESSING)'
-         DS['ak'].attrs['FIELDNAM'], DS['bk'].attrs['FIELDNAM'] = '(ADDED IN POST PROCESSING)', '(ADDED IN POST PROCESSING)'
+         DS['ak'].attrs['long_name']='(ADDED IN POST PROCESSING) pressure part of the hybrid coordinate'
+         DS['ak'].attrs['units']='Pa'
+         DS['bk'].attrs['long_name'] = '(ADDED IN POST PROCESSING) vertical coordinate sigma value'
+         DS['bk'].attrs['units']='None'
+          
+ 
         
       #=================================================================
       # ===================Emars Specific Processing==================
       #=================================================================
       elif model_type == 'emars':
+         
          #==================================================================
          # Interpolate U, V, onto Regular Mass Grid (from staggered)
          #==================================================================
-         variables_with_latu = [var for var in DS.variables if 'latu' in DS[var].dims]
-
+   
          print(f"{Cyan}Interpolating Staggered Variables to Standard Grid")
-         # Loop through, and unstagger. the dims_list process finds the dimensoins of the variable and replaces west_east_stag with west_east
+         variables_with_latu = [var for var in DS.variables if 'latu' in DS[var].dims]
+         variables_with_lonv = [var for var in DS.variables if 'lonv' in DS[var].dims]
+         # Loop through, and unstagger. the dims_list process finds the dimensions of the variable and replaces west_east_stag with west_east
          print('     From latu to lat: ' + ', '.join(variables_with_latu ))
          for var_name in variables_with_latu:
             var = getattr(DS, var_name)
             dims = var.dims
+            longname_txt=var.long_name
+            units_txt=var.units
+   
             # replace latu in dimensions with lat
             dims_list = list(dims)
             for i, dim in enumerate(dims_list):
@@ -315,34 +339,98 @@ def main():
                   break # Stop the loop once the replacement is made
             new_dims = tuple(dims_list)
             
-            lat1=DS.latu.isel(latu=slice(None, -1)).values
-            lat2=DS.latu.isel(latu=slice(1,  None)).values
-        
+            #TODO  Using  'values' as var.isel(latu=slice(None, -1)).values and var.isel(latu=slice(None, -1)) returns array of different size
+            #TODO the following reproduce the 'lat' array, but not if the keyword values is ommited
+            #latu1_val=ds.latu.isel(latu=slice(None, -1)).values
+            #latu2_val=ds.latu.isel(latu=slice(1,  None)).values
+
+            #newlat_val= 0.5 * (latu1 + latu2)
+            #newlat_val=np.append(newlat_val,0)
+            #newlat_val ==lat
+            transformed_var = 0.5 * (var.isel(latu=slice(None, -1)).values + var.isel(latu=slice(1, None)).values)
             
-            transformed_var = 0.5 * (var.isel(latu=slice(None, -1)) + var.isel(latu=slice(1, None)))
+            # This is equal to lat[0:-1]
             #Add padding at the pole to conserve the same dimension as lat.
-            pad_var=transformed_var.pad(lat=(1,1), mode='edge') #TODO
-            print(pad_var.shape)
-            DS[var_name] = xr.DataArray(pad_var, dims=new_dims, coords={'lat':DS['lat']})
-           
-            DS[var_name].attrs['description'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
-            DS[var_name].attrs['long_name'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
-            DS[var_name].attrs['stagger'] = 'USTAGGERED IN POST-PROCESSING'
+            list_pads=[]
+            for i, dim in enumerate(new_dims):
+               if dim == 'lat':
+                  list_pads.append((0,1)) #(begining,end)=(0,1), meaning 1 padding at the end of the array
+               else:
+                  list_pads.append((0,0)) #(begining,end)=(0,0), no pad on that axis
+            transformed_var=np.pad(transformed_var,list_pads,mode='constant',constant_values=0)
+            DS[var_name] = xr.DataArray(transformed_var, dims=new_dims, coords={'lat':DS['lat']})
+            DS[var_name].attrs['long_name'] = '(UNSTAGGERED IN POST-PROCESSING) ' + longname_txt
+            DS[var_name].attrs['units'] = units_txt
+         #==============
+         print('     From lonv to lon: ' + ', '.join(variables_with_lonv ))
+         for var_name in variables_with_lonv:
+            var = getattr(DS, var_name)
+            dims = var.dims
+            longname_txt=var.long_name
+            units_txt=var.units
+   
+            # replace lonv in dimensions with lon
+            dims_list = list(dims)
+            for i, dim in enumerate(dims_list):
+               if dim == 'lonv':
+                  dims_list[i]='lon'
+                  break # Stop the loop once the replacement is made
+            new_dims = tuple(dims_list)
+            
+            transformed_var = 0.5 * (var.isel(lonv=slice(None, -1)).values + var.isel(lonv=slice(1, None)).values)
+            # This is equal to lat[0:-1]
+            #Add padding at the pole to conserve the same dimension as lat.
+            list_pads=[]
+            for i, dim in enumerate(new_dims):
+               if dim == 'lon':
+                  list_pads.append((0,1)) #(begining,end)=(0,1), meaning 1 padding at the end of the array
+               else:
+                  list_pads.append((0,0)) #(begining,end)=(0,0), no pad on that axis
+            transformed_var=np.pad(transformed_var,list_pads,mode='wrap') #TODO with this method V[0] =V[-1]: can we add cyclic point before destaggering?
+            
+            DS[var_name] = xr.DataArray(transformed_var, dims=new_dims, coords={'lon':DS['lon']})
+            DS[var_name].attrs['long_name'] = '(UNSTAGGERED IN POST-PROCESSING) ' + longname_txt
+            DS[var_name].attrs['units'] = units_txt            
 
+      #=================================================================
+      # ===================PCM Specific Processing==================
+      #=================================================================        
         
-        
+      elif model_type == 'pcm':
+      
+         print(f"{Cyan}Processing pcm file")
+         #Adding long_name attibutes
+         for var_name in DS.data_vars:
+            var = DS[var_name]
+            if 'title' in var.attrs:
+               var.attrs['long_name'] = var.attrs['title']
+         
+         pfull=DS.aps.values + DS.bps.values*ref_press    
+         DS['pfull']=(['altitude'],  pfull)
+         #Adding a pfull variable
+         #DS = DS.assign_coords(pfull=altitude)
+         DS['pfull'].attrs['long_name']='(ADDED IN POST-PROCESSING), reference pressure' 
+         DS['pfull'].attrs['units']='Pa' 
+         
+         #DS[model.phalf]= ak + ref_press*bk
+         #DS.phalf.attrs['long_name'] = '(ADDED IN POST PROCESSING) pressure at layer interfaces'
+         #DS.phalf.attrs['description'] = '(ADDED IN POST PROCESSING) pressure at layer interfaces'
+         #DS.phalf.attrs['units'] = 'Pa'
+     
       #==================================================================
-      # START PROCESSING FOR ALL MODELS
       #==================================================================
-
+      #                START PROCESSING FOR ALL MODELS
+      #==================================================================
+      #==================================================================
+      
       #==================================================================
       # check that vertical grid starts at toa with highest level at surface
       #==================================================================
 
       if DS[model.dim_pfull][0] != DS[model.dim_pfull].min(): # if toa, lev = 0 is surface then flip
-          DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
-          DS=DS.isel(**{model.dim_phalf: slice(None, None, -1)}) #Also flip phalf,ak, bk
-          print(f"{Red}NOTE: all variables flipped along vertical dimension, so that the top of the atmosphere is now index 0")
+         DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
+         DS=DS.isel(**{model.dim_phalf: slice(None, None, -1)}) #Also flip phalf,ak, bk
+         print(f"{Red}NOTE: all variables flipped along vertical dimension, so that the top of the atmosphere is now index 0")
 
       #==================================================================
       # reorder dimensions
@@ -357,10 +445,11 @@ def main():
             tmp = np.array(DS[model.dim_lon])
             tmp = np.where(tmp<0,tmp+360,tmp)
             DS[model.dim_lon] = tmp
-#DS=DS.assign_coords({model.dim_lon:(model.dim_lon,tmp,DS[model.dim_lon].attrs)})
             DS = DS.sortby(model.dim_lon)
+            DS[model.lon].attrs['long_name']='(MODIFIED POST-PROCESSING) longitude' 
+            DS[model.lon].attrs['units']='degrees_E' 
             print(f"{Red} NOTE: Longitude changed to 0-360E and all variables appropriately reindexed")
-
+            
       #==================================================================
       # add scalar axis to areo [time, scalar_axis])
       #==================================================================
@@ -378,9 +467,11 @@ def main():
       # STANDARDIZED VARIABLES NAMES IF REQUESTED
       #=================================================
       
-      if parser.parse_args().common: 
-      
-         print(f"{Purple}Using standard FV3 names for variable and dimensions")
+      if parser.parse_args().native: 
+         print(f"{Purple}Preserving native names for variable and dimensions")
+         ext=ext+'_nat'
+      else:
+         print(f"{Purple}Using standard FV3 names for variables and dimensions")
          
          #Model has {'ucomp':'U','temp':'T', 'dim_lon'='XLON'...}
          #Create a reversed dictionaries, e.g. {'U':'ucomp','T':'temp'...}
@@ -407,87 +498,113 @@ def main():
          model_dims = {key: val for key, val in model_dims.items() if key != val}
          model_vars = {key: val for key, val in model_vars.items() if key != val}
          
+         #Update dataset with new variables and names
          DS=DS.swap_dims(dims_dict=model_dims)
-      
          DS=DS.rename_vars(name_dict=model_vars)
-         fullnameOUT=fullnameOUT[:-3]+'_com.nc'
+         #Update CAP's internal variables dictionary
+         model=reset_FV3_names(model)
+
+               
       #==================================================================
       # Output Processed Data to New **atmos_daily.nc File
       #==================================================================
-      DS.to_netcdf(fullnameOUT)
-      print(f"{Cyan}{fullnameOUT} was created")
-      
 
       #==================================================================
       # CREATE ATMOS_DAILY, ATMOS_AVERAGE, & ATMOS_DIURN FILES
       #==================================================================
       
-
-      '''
-      #==================================================================
-      # Output Binned Data to New **atmos_average.nc file
-      #==================================================================
-      fullnameOUT = fullnameIN[:-3]+'_atmos_average'+'.nc'
-
-      # Figure out number of timesteps per 5 sol
-      dt_in = DS[model.time][1]-DS[model.time][0]
-      iperday = int(np.round(1/dt_in))
-      combinedN = int(iperday*5)
-      time = model.dim_time
-      
-      # Coarsen the 'time' dimension by a factor of 5 and average over each window
-      DS_average = DS.coarsen(**{model.dim_time:combinedN}).mean()
-
-      # Update the time coordinate attribute
-      DS_average[model.time].attrs['long_name'] = 'time averaged over 5 sols'
-
-      # Create New File
-      DS_average.to_netcdf(fullnameOUT)
-      prCyan(fullnameOUT +' was created')
-
-      #==================================================================
-      # Output Binned Data to New  **atmos_diurn.nc file
-      #==================================================================
-      fullnameOUT = fullnameIN[:-3]+'_atmos_diurn'+'.nc'
-
-      # create a new time of day dimension
-      tod_name = 'time_of_day_%02d' %(iperday)
-      days = len(DS[model.time])/iperday
-
-      # initialize the new dataset
-      DS_diurn = None
-
-      # loop through coarsened grid, slicing time dimension in 5 sol groups 
-      for i in range(0, int(days/5)):
-       
-         # slice original dataset in 5 sol periods 
-         downselect = DS.isel(**{model.time:slice(i*combinedN, i*combinedN+combinedN)})
+      if parser.parse_args().bin_average:
+         ext=ext+'_average'
+         nday=parser.parse_args().bin_average
+         
+         #==================================================================
+         # Output Binned Data to New **atmos_average.nc file
+         #==================================================================
+         
+         # Figure out number of timesteps per 5 sol
+         dt_in = DS[model.dim_time][1]-DS[model.dim_time][0]
+         
+         iperday = int(np.round(1/dt_in)) #At least one per day
+         if iperday == 0:
+            print(f"{Red}***Error***: Operation not permitted because time sampling in file is less than one time step per day")
+            break
+            
+         combinedN = int(iperday*nday)
+         # Coarsen the 'time' dimension by a factor of 5 and average over each window
+         DS_average = DS.coarsen(**{model.dim_time:combinedN}).mean()
    
-         # rename the time dimension to the time of day and find the LT equivalent
-         downselect = downselect.rename({model.time: tod_name})
-         downselect[tod_name] = np.mod(downselect[tod_name]*24, 24).values
-    
-         # Group up all instances of the same LT & take the mean
-         idx = downselect.groupby(tod_name).mean()
-    
-         # add back in the time dimensionn
-         idx = idx.expand_dims({model.time: [i]})  # Add 'time' dimension with integer values
-    
-         # concatenate into new diurn array with a LT and time dimension (stack along time)
-         if DS_diurn is None:
-            DS_diurn = idx
+         # Update the time coordinate attribute
+         DS_average[model.dim_time].attrs['long_name'] = 'time averaged over %s sols'%(nday)
+   
+         # Create New File, set time dimension as unlimitted 
+         fullnameOUT = fullnameIN[:-3]+ext+'.nc'
+         DS_average.to_netcdf(fullnameOUT,unlimited_dims=model.dim_time,format='NETCDF4_CLASSIC')
+   
+         
+      elif parser.parse_args().bin_diurn:
+         ext=ext+'_diurn'
+         
+         #Custom number of sol
+         if parser.parse_args().bin_average:
+            nday=parser.parse_args().bin_average
          else:
-            DS_diurn = xr.concat([DS_diurn, idx], dim=model.time)
+            nday=5   
+         
+         dt_in = DS[model.dim_time][1]-DS[model.dim_time][0]
+         iperday = int(np.round(1/dt_in))
+         if iperday == 0:
+            print(f"{Red}***Error***: Operation not permitted because time sampling in file is less than one time step per day")
+            break
+         combinedN = int(iperday*nday)
+         #==================================================================
+         # Output Binned Data to New  **atmos_diurn.nc file
+         #==================================================================
+         # create a new time of day dimension
+         tod_name = 'time_of_day_%02d' %(iperday)
+         days = len(DS[model.dim_time])/iperday
+   
+         # initialize the new dataset
+         DS_diurn = None
+   
+         # loop through coarsened grid, slicing time dimension in 5 sol groups 
+         for i in range(0, int(days/nday)):
+         
+            # slice original dataset in 5 sol periods 
+            downselect = DS.isel(**{model.dim_time:slice(i*combinedN, i*combinedN+combinedN)})
+      
+            # rename the time dimension to the time of day and find the LT equivalent
+            downselect = downselect.rename({model.dim_time: tod_name})
+            downselect[tod_name] = np.mod(downselect[tod_name]*24, 24).values
+      
+            # Group up all instances of the same LT & take the mean
+            idx = downselect.groupby(tod_name).mean()
+      
+            # add back in the time dimensionn
+            idx = idx.expand_dims({model.dim_time: [i]})  # Add 'time' dimension with integer values
+      
+            # concatenate into new diurn array with a LT and time dimension (stack along time)
+            if DS_diurn is None:
+               DS_diurn = idx
+            else:
+               DS_diurn = xr.concat([DS_diurn, idx], dim=model.dim_time)
+   
+         # replace the time dimension with the time dimension from DS_average
+         DS_time=DS[model.dim_time] 
+         DS_time_avg= DS_time.coarsen(**{model.dim_time:combinedN}).mean()
+         
+         DS_diurn[model.dim_time] = DS_time_avg[model.dim_time]
+         # Update the time coordinate attribute
+         DS_diurn[model.dim_time].attrs['long_name'] = 'time averaged over %s sols'%(nday)
+   
+         # Create New File, set time dimension as unlimitted 
+         fullnameOUT = fullnameIN[:-3]+ext+'.nc' 
+         DS_diurn.to_netcdf(fullnameOUT,unlimited_dims=model.dim_time,format='NETCDF4_CLASSIC')
 
-      # replace the time dimension with the time dimension from DS_average
-      DS_diurn[model.time] = DS_average[model.time]
- 
-      # Update the time coordinate attribute
-      DS_diurn[model.time].attrs['long_name'] = 'time averaged over 5 sols'
-  
-      # Create New File
-      DS_diurn.to_netcdf(fullnameOUT)
-      prCyan(fullnameOUT +' was created')
-      '''
+      else:   
+         ext=ext+'_daily'
+         fullnameOUT = fullnameIN[:-3]+ext+'.nc'         
+         DS.to_netcdf(fullnameOUT,unlimited_dims=model.dim_time,format='NETCDF4_CLASSIC') 
+      print(f"{Cyan}{fullnameOUT} was created") 
+      
 if __name__ == '__main__':
-    main()
+   main()

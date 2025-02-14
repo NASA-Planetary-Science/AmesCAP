@@ -73,10 +73,67 @@ from amescap.Script_utils import (
 )
 
 # ======================================================================
+#                           Define Action
+# ======================================================================
+class ExtAction(argparse.Action):
+    def __init__(self, *args, ext_content=None, parser=None, **kwargs):
+        self.parser = parser
+        # Store the ext content that's specific to this argument
+        self.ext_content = ext_content
+        # For flag arguments, we need to handle nargs=0 and default=False
+        if kwargs.get('nargs') == 0:
+            kwargs['default'] = False
+            kwargs['const'] = True
+            kwargs['nargs'] = 0
+        super().__init__(*args, **kwargs)
+
+        # Store this action in the parser's list of actions
+        # We'll use this later to set up default info values
+        if self.parser:
+            if not hasattr(self.parser, '_ext_actions'):
+                self.parser._ext_actions = []
+            self.parser._ext_actions.append(self)
+    
+    def __call__(self, parser, namespace, values, option_string=None):
+        # Handle flags (store_true type arguments)
+        if self.nargs == 0:
+            setattr(namespace, self.dest, True)
+        # Handle other types
+        elif isinstance(values, list):
+            setattr(namespace, self.dest, values)
+        elif isinstance(values, str) and ',' in values:
+            # Handle comma-separated lists
+            setattr(namespace, self.dest, values.split(','))
+        else:
+            try:
+                # Try to convert to int if it's an integer argument
+                setattr(namespace, self.dest, int(values))
+            except ValueError:
+                setattr(namespace, self.dest, values)
+        
+        # Set the ext content using the argument name
+        ext_attr = f"{self.dest}_ext"
+        setattr(namespace, ext_attr, self.ext_content)
+
+class ExtArgumentParser(argparse.ArgumentParser):
+    def parse_args(self, *args, **kwargs):
+        # First get the regular parsed args
+        namespace = super().parse_args(*args, **kwargs)
+        
+        # Then set info attributes for any unused arguments
+        if hasattr(self, '_ext_actions'):
+            for action in self._ext_actions:
+                ext_attr = f"{action.dest}_ext"
+                if not hasattr(namespace, ext_attr):
+                    setattr(namespace, ext_attr, "")
+        
+        return namespace
+
+# ======================================================================
 #                           ARGUMENT PARSER
 # ======================================================================
 
-parser = argparse.ArgumentParser(
+parser = ExtArgumentParser(
     description=(
         f"{Yellow}MarsFiles is a file manager. Use it to modify a "
         f"netCDF file format.{Nclr}\n\n"
@@ -144,7 +201,10 @@ parser.add_argument("-dim", "--dim", type=str, default = 'areo',
     )
 )
 
-parser.add_argument("-t", "--tshift", nargs="?", const=999, type=str,
+parser.add_argument("-t", "--tshift", action=ExtAction,
+    ext_content="_T",
+    parser=parser,
+    nargs="?", const=999, type=str,
     help=(
     f"Apply a time-shift to {Yellow}``diurn``{Nclr}  files.\n"
         "Vertically interpolated ``diurn`` files OK.\n"
@@ -159,7 +219,10 @@ parser.add_argument("-t", "--tshift", nargs="?", const=999, type=str,
     )
 )
 
-parser.add_argument("-ba", "--bin_average", nargs="?", const=5,type=int,
+parser.add_argument("-ba", "--bin_average",action=ExtAction,
+    ext_content="_to_average",
+    parser=parser,
+    nargs="?", const=5,type=int,
     help=(
         f"Bin MGCM ``daily`` files like ``average`` files.\n"
         f"{Yellow}Generates a new file ending in ``_to_average.nc``\n"
@@ -172,7 +235,10 @@ parser.add_argument("-ba", "--bin_average", nargs="?", const=5,type=int,
     )
 )
 
-parser.add_argument("-bd", "--bin_diurn", action="store_true",
+parser.add_argument("-bd", "--bin_diurn", action=ExtAction,
+    ext_content="_to_diurn",
+    parser=parser,
+    nargs=0,
     help=(
         f"Bin MGCM ``daily`` files like ``diurn`` files.\n"
         f"May be used jointly with --bin_average.\n"
@@ -189,7 +255,10 @@ parser.add_argument("-bd", "--bin_diurn", action="store_true",
 )
 
 
-parser.add_argument("-hpf", "--high_pass_filter", nargs="+", type=float,
+parser.add_argument("-hpf", "--high_pass_filter", action=ExtAction,
+    ext_content="_hpf",
+    parser=parser,
+    nargs="+", type=float,
     help=(
         f"Temporal filtering utilities: low-, high-, and "
         f"band-pass filters.\n"
@@ -203,7 +272,10 @@ parser.add_argument("-hpf", "--high_pass_filter", nargs="+", type=float,
     )
 )
 
-parser.add_argument("-lpf", "--low_pass_filter", nargs="+", type=float,
+parser.add_argument("-lpf", "--low_pass_filter", action=ExtAction,
+    ext_content="_lpf",
+    parser=parser,
+    nargs="+", type=float,
     help=(
         f"Temporal filtering utilities: low-, high-, and "
         f"band-pass filters.\n"
@@ -217,7 +289,10 @@ parser.add_argument("-lpf", "--low_pass_filter", nargs="+", type=float,
     )
 )
 
-parser.add_argument("-bpf", "--band_pass_filter", nargs="+",
+parser.add_argument("-bpf", "--band_pass_filter", action=ExtAction,
+    ext_content="_bpf",
+    parser=parser,
+    nargs="+",
     help=(
         f"Temporal filtering utilities: low-, high-, and "
         f"band-pass filters.\n"
@@ -231,7 +306,10 @@ parser.add_argument("-bpf", "--band_pass_filter", nargs="+",
     )
 )
 
-parser.add_argument("-no_trend", "--no_trend", action="store_true",
+parser.add_argument("-no_trend", "--no_trend", action=ExtAction,
+    ext_content="_no_trend",
+    parser=parser,
+    nargs=0,
     help=(
         f"Filter and compute amplitudes only.\n"
         f"For use with temporal filtering utilities (``-lpf``, "
@@ -246,7 +324,10 @@ parser.add_argument("-no_trend", "--no_trend", action="store_true",
 )
 
 # Decomposition in zonal harmonics, disabled for initial CAP release:
-parser.add_argument("-hpk", "--high_pass_zonal", nargs="+", type=int,
+parser.add_argument("-hpk", "--high_pass_zonal", action=ExtAction,
+    ext_content="_hpk",
+    parser=parser,
+    nargs="+", type=int,
     help=(
         f"Spatial filtering utilities: low-, high-, and "
         f"band pass filters.\n"
@@ -260,7 +341,10 @@ parser.add_argument("-hpk", "--high_pass_zonal", nargs="+", type=int,
     )
 )
 
-parser.add_argument("-lpk", "--low_pass_zonal", nargs="+", type=int,
+parser.add_argument("-lpk", "--low_pass_zonal", action=ExtAction,
+    ext_content="_lpk",
+    parser=parser,
+    nargs="+", type=int,
     help=(
         f"Spatial filtering utilities: low-, high-, and "
         f"band pass filters.\n"
@@ -274,7 +358,10 @@ parser.add_argument("-lpk", "--low_pass_zonal", nargs="+", type=int,
     )
 )
 
-parser.add_argument("-bpk", "--band_pass_zonal", nargs="+",
+parser.add_argument("-bpk", "--band_pass_zonal", action=ExtAction,
+    ext_content="_bpk",
+    parser=parser,
+    nargs="+",
     help=(
         f"Spatial filtering utilities: low-, high-, and "
         f"band pass filters.\n"
@@ -288,7 +375,10 @@ parser.add_argument("-bpk", "--band_pass_zonal", nargs="+",
     )
 )
 
-parser.add_argument("-tidal", "--tidal", nargs="+", type=int,
+parser.add_argument("-tidal", "--tidal", action=ExtAction,
+    ext_content="_tidal",
+    parser=parser,
+    nargs="+", type=int,
     help=(
         f"Performs a tidal analyis on ``diurn`` files.\n"
         f"Extracts diurnal tide and its harmonics.\n"
@@ -301,7 +391,10 @@ parser.add_argument("-tidal", "--tidal", nargs="+", type=int,
     )
 )
 
-parser.add_argument("-reconstruct", "--reconstruct", action="store_true",
+parser.add_argument("-reconstruct", "--reconstruct", action=ExtAction,
+    ext_content="_reconstruct",
+    parser=parser,
+    nargs=0,
     help=(
         f"Reconstructs the first N harmonics.\n"
         f"{Yellow}Generates a new file ending in ``_reconstruct.nc``\n"
@@ -312,7 +405,10 @@ parser.add_argument("-reconstruct", "--reconstruct", action="store_true",
     )
 )
 
-parser.add_argument("-norm", "--normalize", action="store_true",
+parser.add_argument("-norm", "--normalize", action=ExtAction,
+    ext_content="_norm",
+    parser=parser,
+    nargs=0,
     help=(
         f"Provides result in percent amplitude.\n"
         f"{Yellow}Generates a new file ending in ``_norm.nc``\n"
@@ -323,7 +419,10 @@ parser.add_argument("-norm", "--normalize", action="store_true",
     )
 )
 
-parser.add_argument("-rs", "--regrid_source", nargs="+",
+parser.add_argument("-rs", "--regrid_source", action=ExtAction,
+    ext_content="_regrid",
+    parser=parser,
+    nargs="+",
     help=(
         f"Regrid a target file to match a source file.\n"
         f"Both source and target files should be vertically\n"
@@ -337,7 +436,10 @@ parser.add_argument("-rs", "--regrid_source", nargs="+",
     )
 )
 
-parser.add_argument("-za", "--zonal_avg", action="store_true",
+parser.add_argument("-za", "--zonal_avg", action=ExtAction,
+    ext_content="_zavg",
+    parser=parser,
+    nargs=0,
     help=(
         f"Zonally average all variables in a file.\n"
         f"{Yellow}Generates a new file ending in ``_zavg.nc``\n"
@@ -375,6 +477,36 @@ parser.add_argument("--debug", action="store_true",
     help=(f"Debug flag: release the exceptions.\n\n"))
 
 # ======================================================================
+#                               EXTENSIONS
+# ======================================================================
+"""
+Concatenates extensions to append to file depending on the provided arguments.
+"""
+args=parser.parse_args()
+
+out_ext = (f"{args.tshift_ext}"
+            f"{args.bin_average_ext}"
+            f"{args.bin_diurn_ext}"
+            f"{args.high_pass_filter_ext}"
+            f"{args.low_pass_filter_ext}"
+            f"{args.band_pass_filter_ext}"
+            f"{args.no_trend_ext}"
+            f"{args.high_pass_zonal_ext}"
+            f"{args.low_pass_zonal_ext}"
+            f"{args.band_pass_zonal_ext}"
+            f"{args.tidal_ext}"
+            f"{args.reconstruct_ext}"
+            f"{args.normalize_ext}"
+            f"{args.regrid_source_ext}"
+            f"{args.zonal_avg_ext}"
+            )
+
+if args.ext:
+    # Append extension, if any:
+    out_ext = (f"{out_ext}_"
+                f"{args.ext}")
+
+# ======================================================================
 #                               DEFINITIONS
 # ======================================================================
 
@@ -404,10 +536,10 @@ def combine_files(file_list, full_file_list):
     print(f"{Cyan}Merging {num_files} files starting with {file_list[0]}..."
           f"{Nclr}")
 
-    if parser.parse_args().include:
+    if args.include:
         # Exclude variables NOT listed after --include
         f = Dataset(file_list[0], "r")
-        exclude_list = filter_vars(f, parser.parse_args().include, 
+        exclude_list = filter_vars(f, args.include, 
                                    giveExclude = True)
         f.close()
     else:
@@ -458,7 +590,7 @@ def split_files(file_list, split_dim):
               f"    time, areo, lev, lat, lon{Nclr}")
         exit()
         
-    bounds = np.asarray(parser.parse_args().split).astype(float)
+    bounds = np.asarray(args.split).astype(float)
     
     if len(np.atleast_1d(bounds)) > 2 or len(np.atleast_1d(bounds)) < 1:
         print(f"{Red}Accepts only ONE or TWO values:"
@@ -475,7 +607,7 @@ def split_files(file_list, split_dim):
     original_date = (input_file_name.split('.')[0]).split('/')[-1]
     
     fNcdf = Dataset(input_file_name, 'r', format = 'NETCDF4_CLASSIC')
-    var_list = filter_vars(fNcdf, parser.parse_args().include)
+    var_list = filter_vars(fNcdf, args.include)
 
     # Get file type (diurn, average, daily, etc.)
     f_type, interp_type = FV3_file_type(fNcdf)
@@ -575,6 +707,10 @@ def split_files(file_list, split_dim):
             output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}"
                                 f"_{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
     
+    # Append extension, if any:
+    output_file_name = (f"{output_file_name[:-3]}"
+                        f"{out_ext}.nc")
+
     print(f"{Cyan}new filename = {output_file_name}")
     Log = Ncdf(output_file_name)
     
@@ -670,11 +806,11 @@ def time_shift(file_list):
     :param file_list: list of file names
     :type file_list: list
     """
-    if parser.parse_args().tshift == 999:
+    if args.tshift == 999:
         # Target local times requested by user
         target_list = None 
     else:
-        target_list = np.fromstring(parser.parse_args().tshift, 
+        target_list = np.fromstring(args.tshift, 
                                     dtype = float, sep=" ")
 
     for file in file_list:
@@ -683,12 +819,8 @@ def time_shift(file_list):
             input_file_name = f"{data_dir}/{file}"
         else:
             input_file_name = file
-        output_file_name = f"{input_file_name[:-3]}_T.nc"
-
-        if parser.parse_args().ext:
-            # Append extension, if any:
-            output_file_name = (f"{output_file_name[:-3]}_"
-                                f"{parser.parse_args().ext}.nc")
+        output_file_name = (f"{input_file_name[:-3]}"
+                        f"{out_ext}.nc")
 
         fdiurn = Dataset(input_file_name, "r", format = "NETCDF4_CLASSIC")
         # Define a netcdf object from the netcdf wrapper module
@@ -704,7 +836,11 @@ def time_shift(file_list):
         fnew.copy_Ncaxis_with_content(fdiurn.variables["lon"])
         fnew.copy_Ncaxis_with_content(fdiurn.variables["lat"])
         fnew.copy_Ncaxis_with_content(fdiurn.variables["time"])
-        fnew.copy_Ncaxis_with_content(fdiurn.variables["scalar_axis"])
+        try:
+            fnew.copy_Ncaxis_with_content(fdiurn.variables["scalar_axis"])
+        except:
+            print(f'{Red}Could not find scalar axis') 
+            
 
         # Only create a vertical axis if orig. file has 3D fields
         if zaxis in fdiurn.dimensions.keys():
@@ -752,7 +888,7 @@ def time_shift(file_list):
         # Read in 4D field(s) and do the time shift. Exclude vars
         # not listed after --include in var_list
         lons = np.array(fdiurn.variables["lon"])
-        var_list = filter_vars(fdiurn, parser.parse_args().include)
+        var_list = filter_vars(fdiurn, args.include)
 
         for var in var_list:
             print(f"{Cyan}Processing: {var}...{Nclr}")
@@ -795,7 +931,7 @@ def time_shift(file_list):
 
 def main():
     global data_dir
-    file_list = parser.parse_args().input_file
+    file_list = args.input_file
     data_dir = os.getcwd()
 
     # Make a list of input files including the full path to the dir
@@ -806,7 +942,7 @@ def main():
         else:
             full_file_list.append(f"{file}")
             
-    if parser.parse_args().fv3 and parser.parse_args().combine:
+    if args.fv3 and args.combine:
         print(f"{Red}Use --fv3 and --combine separately to avoid ambiguity")
         exit()
 
@@ -816,8 +952,8 @@ def main():
     # ==================================================================
 
     # Convert to MGCM Output Format
-    if parser.parse_args().fv3:
-        for req_file in parser.parse_args().fv3:
+    if args.fv3:
+        for req_file in args.fv3:
             if req_file not in ["fixed", "average", "daily", "diurn"]:
                 print(f"{Red}{req_file} is invalid. Select ``fixed``, "
                       f"``average``, ``daily``, or ``diurn``{Nclr}")
@@ -840,30 +976,30 @@ def main():
                 #     lsmax = ls_r
                 # else:
                 #     lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
-                make_FV3_files(f, parser.parse_args().fv3, True)
+                make_FV3_files(f, args.fv3, True)
         else:
             print("Processing fort.11 files")
             for f in full_file_list:
                 file_name = Fort(f)
-                if "fixed" in parser.parse_args().fv3:
+                if "fixed" in args.fv3:
                     file_name.write_to_fixed()
-                if "average" in parser.parse_args().fv3:
+                if "average" in args.fv3:
                     file_name.write_to_average()
-                if "daily" in parser.parse_args().fv3:
+                if "daily" in args.fv3:
                     file_name.write_to_daily()
-                if "diurn" in parser.parse_args().fv3:
+                if "diurn" in args.fv3:
                     file_name.write_to_diurn()
                     
-    elif parser.parse_args().combine:
+    elif args.combine:
         # Combine files along the time dimension
         combine_files(file_list, full_file_list)
     
-    elif parser.parse_args().split:
+    elif args.split:
         # Split file along the specified dimension. If none specified,
         # default to time dimension
-        split_files(file_list, parser.parse_args().dim)
+        split_files(file_list, args.dim)
         
-    elif parser.parse_args().tshift:
+    elif args.tshift:
         # Time-shift files
         time_shift(file_list)
 
@@ -871,27 +1007,23 @@ def main():
     #               Bin a daily file as an average file
     #                               Alex K.
     # ==================================================================
-    elif (parser.parse_args().bin_average and not
-          parser.parse_args().bin_diurn):
+    elif (args.bin_average and not
+          args.bin_diurn):
 
         # Generate output file name
-        bin_period = parser.parse_args().bin_average
+        bin_period = args.bin_average
         for file in file_list:
             # Add path unless full path is provided
             if not ("/" in file):
                 input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
-            output_file_name = f"{input_file_name[:-3]}_to_average.nc"
-
-            # Append extension, if any:
-            if parser.parse_args().ext:
-                output_file_name = (
-                    f"{output_file_name[:-3]}_{parser.parse_args().ext}.nc"
-                )
+            
+            output_file_name = (f"{input_file_name[:-3]}"
+                        f"{out_ext}.nc")
 
             fdaily = Dataset(input_file_name, "r", format = "NETCDF4_CLASSIC")
-            var_list = filter_vars(fdaily, parser.parse_args().include)
+            var_list = filter_vars(fdaily, args.include)
 
             time = fdaily.variables["time"][:]
 
@@ -953,12 +1085,12 @@ def main():
     #               Bin a daily file as a diurn file
     #                               Alex K.
     # ==================================================================
-    elif parser.parse_args().bin_diurn:
+    elif args.bin_diurn:
         # Use defaut binning period of 5 days (like average files)
-        if parser.parse_args().bin_average is None:
+        if args.bin_average is None:
             bin_period = 5
         else:
-            bin_period = parser.parse_args().bin_average
+            bin_period = args.bin_average
 
         for file in file_list:
             # Add path unless full path is provided
@@ -966,15 +1098,12 @@ def main():
                 input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
-            output_file_name = f"{input_file_name[:-3]}_to_diurn.nc"
-
-            # Append extension, if any:
-            if parser.parse_args().ext:
-                output_file_name = (f"{output_file_name[:-3]}_"
-                                    f"{parser.parse_args().ext}.nc")
+            
+            output_file_name = (f"{input_file_name[:-3]}"
+                        f"{out_ext}.nc")
 
             fdaily = Dataset(input_file_name, "r", format = "NETCDF4_CLASSIC")
-            var_list = filter_vars(fdaily, parser.parse_args().include)
+            var_list = filter_vars(fdaily, args.include)
 
             time = fdaily.variables["time"][:]
 
@@ -1039,42 +1168,37 @@ def main():
     #                       Alex K. & R. J. Wilson
     # ==================================================================
 
-    elif (parser.parse_args().high_pass_filter or
-          parser.parse_args().low_pass_filter or
-          parser.parse_args().band_pass_filter):
+    elif (args.high_pass_filter or
+          args.low_pass_filter or
+          args.band_pass_filter):
 
         # This functions requires scipy > 1.2.0. Import package here.
         from amescap.Spectral_utils import zeroPhi_filter
 
-        if parser.parse_args().high_pass_filter:
+        if args.high_pass_filter:
             btype = "high"
-            out_ext = "_hpf"
             nsol = np.asarray(
-                parser.parse_args().high_pass_filter
+                args.high_pass_filter
                 ).astype(float)
             if len(np.atleast_1d(nsol)) != 1:
                 print(f"{Red}***Error*** sol_min accepts only one value")
                 exit()
-        if parser.parse_args().low_pass_filter:
+        if args.low_pass_filter:
             btype = "low"
-            out_ext = "_lpf"
             nsol = np.asarray(
-                parser.parse_args().low_pass_filter
+                args.low_pass_filter
                 ).astype(float)
             if len(np.atleast_1d(nsol)) != 1:
                 print(f"{Red}sol_max accepts only one value")
                 exit()
-        if parser.parse_args().band_pass_filter:
+        if args.band_pass_filter:
             btype = "band"
-            out_ext = "_bpf"
             nsol = np.asarray(
-                parser.parse_args().band_pass_filter
+                args.band_pass_filter
                 ).astype(float)
             if len(np.atleast_1d(nsol)) != 2:
                 print(f"{Red}Requires two values: sol_min sol_max")
                 exit()
-        if parser.parse_args().no_trend:
-            out_ext = f"{out_ext}_no_trend"
 
         for file in file_list:
             if not ("/" in file):
@@ -1082,17 +1206,13 @@ def main():
                 input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
-            output_file_name = f"{input_file_name[:-3]}{out_ext}.nc"
-
-            # Append extension, if any:
-            if parser.parse_args().ext:
-                output_file_name = (
-                    f"{output_file_name[:-3]}_{parser.parse_args().ext}.nc"
-                )
+            
+            output_file_name = (f"{input_file_name[:-3]}"
+                        f"{out_ext}.nc")
 
             fdaily = Dataset(input_file_name, "r", format = "NETCDF4_CLASSIC")
 
-            var_list = filter_vars(fdaily, parser.parse_args().include)
+            var_list = filter_vars(fdaily, args.include)
 
             time = fdaily.variables["time"][:]
 
@@ -1143,7 +1263,7 @@ def main():
                     print(f"{Cyan}Processing: {ivar}{Nclr}")
                     var_out = zeroPhi_filter(
                         varNcf[:], btype, low_highcut, fs, axis = 0, order = 4,
-                        no_trend = parser.parse_args().no_trend)
+                        no_trend = args.no_trend)
                     longname_txt, units_txt = get_longname_unit(fdaily, ivar)
                     fnew.log_variable(ivar, var_out, varNcf.dimensions,
                                       longname_txt, units_txt)
@@ -1161,37 +1281,31 @@ def main():
     #                      Zonal Decomposition Analysis
     #                              Alex K.
     #==================================================================
-    elif (parser.parse_args().high_pass_zonal or 
-          parser.parse_args().low_pass_zonal or 
-          parser.parse_args().band_pass_zonal):
+    elif (args.high_pass_zonal or 
+          args.low_pass_zonal or 
+          args.band_pass_zonal):
         # This function requires scipy > 1.2.0. Import the package here
         from amescap.Spectral_utils import zonal_decomposition, zonal_construct,init_shtools
         # Load the module
         init_shtools()
-        if parser.parse_args().high_pass_zonal:
+        if args.high_pass_zonal:
             btype = "high"
-            out_ext = "_hpk"
-            nk = np.asarray(parser.parse_args().high_pass_zonal).astype(int)
+            nk = np.asarray(args.high_pass_zonal).astype(int)
             if len(np.atleast_1d(nk)) != 1:
                 print(f"{Red}***Error*** kmin accepts only one value")
                 exit()
-        if parser.parse_args().low_pass_zonal:
+        if args.low_pass_zonal:
             btype = "low"
-            out_ext = "_lpk"
-            nk = np.asarray(parser.parse_args().low_pass_zonal).astype(int)
+            nk = np.asarray(args.low_pass_zonal).astype(int)
             if len(np.atleast_1d(nk)) != 1:
                 print(f"{Red}kmax accepts only one value")
                 exit()
-        if parser.parse_args().band_pass_zonal:
+        if args.band_pass_zonal:
             btype = "band"
-            out_ext = "_bpk"
-            nk = np.asarray(parser.parse_args().band_pass_zonal).astype(int)
+            nk = np.asarray(args.band_pass_zonal).astype(int)
             if len(np.atleast_1d(nk)) != 2:
                 print(f"{Red}Requires two values: kmin kmax")
                 exit()
-    
-        if parser.parse_args().no_trend:
-            out_ext = f"{out_ext}_no_trend"
     
         for file in file_list:
             # Add path unless full path is provided
@@ -1199,16 +1313,13 @@ def main():
                 input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name=file
-            output_file_name = f"{input_file_name[:-3]}{out_ext}.nc"
-    
-            # Append extension, if any:
-            if parser.parse_args().ext:
-                output_file_name = (f"{output_file_name[:-3]}_"
-                                    f"{parser.parse_args().ext}.nc")
+            
+            output_file_name = (f"{input_file_name[:-3]}"
+                        f"{out_ext}.nc")
     
             fname = Dataset(input_file_name, "r", format = "NETCDF4_CLASSIC")
             # Get all variables
-            var_list = filter_vars(fname,parser.parse_args().include) 
+            var_list = filter_vars(fname,args.include) 
             lon = fname.variables["lon"][:]
             lat = fname.variables["lat"][:]
             LON, LAT = np.meshgrid(lon,lat)
@@ -1276,7 +1387,7 @@ def main():
                                                  btype = btype, 
                                                  low_highcut = low_highcut)
                     #Step 4: Add the trend, if requested
-                    if parser.parse_args().no_trend:
+                    if args.no_trend:
                         var_out = VAR_filtered
                     else:
                         var_out = VAR_filtered + TREND
@@ -1298,17 +1409,12 @@ def main():
     #                           Alex K. & R. J. Wilson
     # ==================================================================
 
-    elif parser.parse_args().tidal:
+    elif args.tidal:
         from amescap.Spectral_utils import diurn_extract, reconstruct_diurn
-        N = parser.parse_args().tidal[0]
+        N = args.tidal[0]
         if len(np.atleast_1d(N)) != 1:
             print(f"{Red}***Error*** N accepts only one value")
             exit()
-        out_ext = "_tidal"
-        if parser.parse_args().reconstruct:
-            out_ext = f"{out_ext}_reconstruct"
-        if parser.parse_args().normalize:
-            out_ext = f"{out_ext}_norm"
 
         for file in file_list:
             # Add path unless full path is provided
@@ -1316,16 +1422,13 @@ def main():
                 input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
-            output_file_name = f"{input_file_name[:-3]}{out_ext}.nc"
-
-            # Append extension, if any:
-            if parser.parse_args().ext:
-                output_file_name = (f"{output_file_name[:-3]}_"
-                                    f"{parser.parse_args().ext}.nc")
+            
+            output_file_name = (f"{input_file_name[:-3]}"
+                        f"{out_ext}.nc")
 
             fdiurn = Dataset(input_file_name, "r", format = "NETCDF4_CLASSIC")
 
-            var_list = filter_vars(fdiurn, parser.parse_args().include)
+            var_list = filter_vars(fdiurn, args.include)
 
             # Find time_of_day variable name
             tod_name = find_tod_in_diurn(fdiurn)
@@ -1341,7 +1444,7 @@ def main():
 
             # Harmonics to reconstruct the signal. We use the original
             # time_of_day array.
-            if parser.parse_args().reconstruct:
+            if args.reconstruct:
                 fnew.copy_all_dims_from_Ncfile(fdiurn)
                 # Copy time_of_day axis from initial files
                 fnew.copy_Ncaxis_with_content(fdiurn.variables[tod_name])
@@ -1374,7 +1477,7 @@ def main():
                     print(f"{Cyan}Processing: {ivar}{Nclr}")
 
                     # Normalize the data
-                    if parser.parse_args().normalize:
+                    if args.normalize:
                         # Normalize and reshape the array along the
                         # time_of_day dimension
                         norm = np.mean(varIN, axis = 1)[:, np.newaxis, ...]
@@ -1384,7 +1487,7 @@ def main():
 
                     amp, phas = diurn_extract(varIN.swapaxes(0, 1), N, 
                                               target_tod, lon)
-                    if parser.parse_args().reconstruct:
+                    if args.reconstruct:
                         VARN = reconstruct_diurn(amp, phas, target_tod, lon, 
                                                  sumList=[])
                         for nn in range(N):
@@ -1413,7 +1516,7 @@ def main():
                         print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
                         fnew.copy_Ncaxis_with_content(fdiurn.variables[ivar])
                 elif  ivar in ["areo"]:
-                        if parser.parse_args().reconstruct:
+                        if args.reconstruct:
                             #time_of_day is the same size as the
                             # original file
                             print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
@@ -1440,9 +1543,8 @@ def main():
     #                                 Alex K.
     # ==================================================================
 
-    elif parser.parse_args().regrid_source:
-        out_ext = "_regrid"
-        name_target = parser.parse_args().regrid_source[0]
+    elif args.regrid_source:
+        name_target = args.regrid_source[0]
 
         # Add path unless full path is provided
         if not ("/" in name_target):
@@ -1455,17 +1557,14 @@ def main():
                 input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
-            output_file_name = f"{input_file_name[:-3]}{out_ext}.nc"
-
-            # Append extension, if any:
-            if parser.parse_args().ext:
-                output_file_name = (f"{output_file_name[:-3]}_"
-                                    f"{parser.parse_args().ext}.nc")
+            
+            output_file_name = (f"{input_file_name[:-3]}"
+                        f"{out_ext}.nc")
 
             f_in = Dataset(input_file_name, "r", format = "NETCDF4_CLASSIC")
 
             var_list = filter_vars(
-                f_in, parser.parse_args().include)  # Get all variables
+                f_in, args.include)  # Get all variables
 
             # Define a netcdf object from the netcdf wrapper module
             fnew = Ncdf(output_file_name)
@@ -1474,14 +1573,16 @@ def main():
             fnew.copy_all_dims_from_Ncfile(fNcdf_t)
 
             # Loop over all variables in the file
+            print(var_list)
             for ivar in var_list:
                 varNcf     = f_in.variables[ivar]
                 longname_txt,units_txt = get_longname_unit(f_in, ivar)
 
                 if  ivar in ["pfull", "lat", "lon", "phalf", "pk",
                              "bk", "pstd", "zstd", "zagl", "time", "areo"]:
-                        print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
-                        fnew.copy_Ncaxis_with_content(fNcdf_t.variables[ivar])
+                        if ivar in fNcdf_t.variables.keys():          
+                            print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
+                            fnew.copy_Ncaxis_with_content(fNcdf_t.variables[ivar])
                 elif varNcf.dimensions[-2:]==("lat", "lon"):
                     #Ignore variables like time_bounds, scalar_axis
                     # or grid_xt_bnds...
@@ -1496,23 +1597,20 @@ def main():
     #                           Zonal Averaging
     #                              Alex K.
     # ==================================================================
-    elif parser.parse_args().zonal_avg:
+    elif args.zonal_avg:
         for file in file_list:
             if not ("/" in file):
                 # Add path unless full path is provided
                 input_file_name = f"{data_dir}/{file}"
             else:
                 input_file_name = file
-            output_file_name = f"{input_file_name[:-3]}_zavg.nc"
-
-            # Append extension, if any:
-            if parser.parse_args().ext:
-                output_file_name = (f"{output_file_name[:-3]}_"
-                                    f"{parser.parse_args().ext}.nc")
+            
+            output_file_name = (f"{input_file_name[:-3]}"
+                        f"{out_ext}.nc")
 
             fdaily = Dataset(input_file_name, "r", format = "NETCDF4_CLASSIC")
             var_list = filter_vars(
-                fdaily, parser.parse_args().include)  # Get all variables
+                fdaily, args.include)  # Get all variables
 
             lon_in = fdaily.variables["lon"][:]
 
