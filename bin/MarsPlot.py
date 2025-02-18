@@ -20,36 +20,45 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (Yellow, Red, Purple, Cyan, Nclr, Blue, Green)
+from amescap.Script_utils import (
+    Yellow, Red, Purple, Cyan, Nclr, Blue, Green
+)
 
 # Load generic Python modules
-import sys
+import sys          # System commands
 import argparse     # Parse arguments
 import os           # Access operating system functions
 import subprocess   # Run command-line commands
+import warnings     # Suppress errors triggered by NaNs
 import matplotlib
 import numpy as np
-import warnings     # suppress errors triggered by NaNs
-from warnings import filterwarnings
-import warnings     # suppress errors triggered by NaNs
-import matplotlib.pyplot as plt
 from netCDF4 import Dataset, MFDataset
-from numpy import abs, sqrt, log, exp, abs, min, max,mean #imported to allow operations insquare brackets
-from matplotlib.ticker import (LogFormatter, NullFormatter,
-                               LogFormatterSciNotation, MultipleLocator)
+from warnings import filterwarnings
+import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
-matplotlib.use("Agg") # Force matplotlib NOT to load Xwindows backend
+# Force matplotlib NOT to load Xwindows backend
+matplotlib.use("Agg")
+
+# Allows operations in square brackets in Custom.in
+from numpy import (abs, sqrt, log, exp, min, max, mean) 
+
+from matplotlib.ticker import (
+    LogFormatter, NullFormatter, LogFormatterSciNotation, 
+    MultipleLocator
+)
 
 # Load amesCAP modules
 from amescap.Script_utils import (
     check_file_tape, section_content_amescap_profile, print_fileContent,
     print_varContent, FV3_file_type, find_tod_in_diurn, wbr_cmap,
-    rjw_cmap, dkass_temp_cmap,dkass_dust_cmap,hot_cold_cmap)
+    rjw_cmap, dkass_temp_cmap,dkass_dust_cmap,hot_cold_cmap
+)
 from amescap.FV3_utils import (
     lon360_to_180, lon180_to_360, UT_LTtxt, area_weights_deg,
     shiftgrid_180_to_360, shiftgrid_360_to_180, add_cyclic,
-    azimuth2cart, mollweide2cart, robin2cart, ortho2cart)
+    azimuth2cart, mollweide2cart, robin2cart, ortho2cart
+)
 
 # Ignore deprecation warnings
 filterwarnings("ignore", category = DeprecationWarning)
@@ -93,7 +102,7 @@ parser.add_argument("-i", "--inspect_file", default=None,
         f"{Green}Usage:\n"
         f"> MarsPlot -i 00000.atmos_daily.nc\n"
         f"{Blue}Options: use --dump (variable content) and --stat "
-        f"(min, mean,max) jointly with --inspect{Green}\n"
+        f"(min, mean, max) jointly with --inspect{Green}\n"
         f"> MarsPlot -i 00000.atmos_daily.nc -dump pfull "
         f"``temp[6,:,30,10]``\n"
         f"{Blue}(quotes "" req. for browsing dimensions){Green}\n"
@@ -114,8 +123,8 @@ parser.add_argument("-d", "--date", nargs="+", default=None,
     help=(
         f"Specify the files to use. Default is the last file created.\n"
         f"{Green}Usage:\n"
-        f"> Usage: MarsPlot Custom.in -d 700\n"
-        f"         MarsPlot Custom.in -d 350 700 (start end)"
+        f"> MarsPlot Custom.in -d desired_ls\n"
+        f"> MarsPlot Custom.in -d start_ls end_ls"
         f"{Nclr}\n\n"
     )
 )
@@ -135,8 +144,8 @@ parser.add_argument("-temp", "--temp", action="store_true",
 parser.add_argument("-do", "--do", nargs=1, type=str, default=None,
     help=(
         f"(Re)use a template file (e.g., my_custom.in). Searches in "
-        f"~/amesCAP/mars_templates/ first, then in  "
-        f"/path_to_shared_templates/ as defined in MarsPlot\n"
+        f"path/to/amesCAP/mars_templates/ first, then in directories"
+        f"defined in MarsPlot.\n"
         f"{Green}Usage:\n"
         f"> MarsPlot -do my_custom [other options]"
         f"{Nclr}\n\n"
@@ -183,14 +192,17 @@ parser.add_argument("-dir", "--directory", default=os.getcwd(),
         f"Target directory if input files are not in current "
         f"directory.\n"
         f"{Green}Usage:\n"
-        f"> MarsPlot Custom.in [other options] -dir /u/akling/FV3/"
-        f"verona/c192L28_dliftA/history"
+        f"> MarsPlot Custom.in [other options] -dir path/to/dir"
         f"{Nclr}\n\n"
     )
 )
 
 parser.add_argument("--debug", action="store_true",
-    help=(f"Debug flag: do not bypass errors.\n\n"))
+    help=(
+        f"More verbosity in status and error messages when running CAP."
+        f"\n\n"
+    )
+ )
 
 
 # ======================================================================
@@ -280,7 +292,7 @@ def main():
             namelist_parser(parser.parse_args().custom_file.name)
 
         if parser.parse_args().do:
-            # Case B: Use ~/FV3/templates/Custom.in
+            # Case B: Use Custom.in from local template dir
             print(f"Reading {path_to_template(parser.parse_args().do)}")
             namelist_parser(path_to_template(parser.parse_args().do))
 
@@ -443,12 +455,12 @@ def main():
 #                       DATA OPERATION UTILITIES
 # ======================================================================
 
-# User Preferences from ~/.amescap_profile
+# User Preferences from amescap_profile
 global add_sol_time_axis, lon_coord_type, include_NaNs
 
 # Create a namespace with numpy available
 namespace = {'np': np}
-# Load preferences in Settings section of ~/.amescap_profile
+# Load preferences in Settings section of amescap_profile
 exec(section_content_amescap_profile("MarsPlot Settings"), namespace)
 
 # Determine whether to include sol number in addition to Ls on
@@ -469,7 +481,7 @@ def mean_func(arr, axis):
     """
     This function calculates a mean over the selected axis, ignoring or
     including NaN values as specified by ``show_NaN_in_slice`` in
-   ``~/.amescap_profile``.
+   ``amescap_profile``.
 
     :param arr: the array to be averaged
     :type arr: array
@@ -515,7 +527,7 @@ def shift_data(lon, data):
     else:
         raise ValueError("Longitude coordinate type invalid. Please "
                          "specify ``180`` or ``360`` after "
-                         "``lon_coordinate`` in ``~/.amescap_profile``")
+                         "``lon_coordinate`` in ``amescap_profile``")
     # If 1D plot, squeeze array
     if data.shape[0] == 1:
         data = np.squeeze(data)
@@ -1818,7 +1830,7 @@ def path_to_template(custom_name):
         Accepted formats are ``some_name`` or ``some_name.in``.
     :type custom_name: str
     :return: the full path to the template file (e.g.,
-        ``/u/$USER/FV3/templates/my_custom.in``).
+        ``/u/$USER/path/to/my_custom.in``).
     """
     local_dir = f"{sys.prefix}/mars_templates"
 
@@ -1830,15 +1842,15 @@ def path_to_template(custom_name):
         custom_name = f"{custom_name}.in"
 
     if not os.path.isfile(f"{local_dir}/{custom_name}"):
-        # First look for template in ~/FV3/templates
+        # First look for template in local_dir/custom_name
         if not os.path.isfile(f"{shared_dir}/{custom_name}"):
-            # Then look in /lou/.../MCMC/analysis/working/templates
+            # Then look in shared_dir/custom_name
             print(f"{Red}*** Error ***\nFile {custom_name} not found in "
                   f"{local_dir} nor in {shared_dir}{Nclr}")
 
             if not os.path.exists(local_dir):
-                # If no local ~/FV3/templates path, suggest creating it
-                print(f"{Yellow}Note: directory: ~/FV3/templates does not "
+                # If no local template dir exists, suggest creating it
+                print(f"{Yellow}Note: {local_dir} directory does not "
                       f"exist, create it with:\nmkdir {local_dir}{Nclr}")
             exit()
         else:

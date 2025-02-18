@@ -5,29 +5,30 @@ Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on \
 the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
 The executable requires 2 arguments:
-    * [-id --id]      The simulation identifier, AND
-    * [-ls --ls]      the desired solar longitude(s), OR
-    * [-f --filename] the name(s) of the desired file(s).
+    * ``[-id --id]``      The simulation identifier, AND
+    * ``[-ls --ls]``      the desired solar longitude(s), OR
+    * ``[-f --filename]`` the name(s) of the desired file(s).
 
 Third-party Requirements:
-    * numpy
-    * argparse
-    * requests
+    * ``numpy``
+    * ``argparse``
+    * ``requests``
 
 List of Functions:
     * download - Queries the requested file from the NAS Data Portal.
 """
 
 # make print statements appear in color
-from amescap.Script_utils import prYellow, prCyan, Green, Yellow, Nclr, Cyan
+from amescap.Script_utils import (
+    prYellow, prCyan, Green, Yellow, Nclr, Cyan
+)
 
-# load generic Python modules
-import sys          # system commands
-import os           # access operating system functions
+# Load generic Python modules
+import sys          # System commands
+import argparse     # Parse arguments
+import os           # Access operating system functions
+import requests     # Download data from website
 import numpy as np
-import argparse     # parse arguments
-import requests     # download data from site
-
 
 # ======================================================
 #                  ARGUMENT PARSER
@@ -41,8 +42,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument(
-    '-id', '--id', type=str,
+parser.add_argument("-id", "--id", type=str,
     help=(
         f"Query data by simulation identifier corresponding to \n"
         f"a subdirectory of :\n"
@@ -52,13 +52,10 @@ parser.add_argument(
         f"{Green}Usage:\n"
         f"> MarsPull -id  INERTCLDS..."
         f"{Nclr}\n\n"
-
     )
 )
 
-
-parser.add_argument(
-    '-f', '--filename', nargs='+', type=str,
+parser.add_argument("-f", "--filename", nargs="+", type=str,
     help=(
         f"Query data by file name. Requires a simulation identifier "
         f"(--id)\n"
@@ -68,8 +65,7 @@ parser.add_argument(
     )
 )
 
-parser.add_argument(
-    '-ls', '--ls', nargs='+', type=float,
+parser.add_argument("-ls", "--ls", nargs="+", type=float,
     help=(
         f"Legacy GCM only: Query data by solar longitude (Ls). Requires a simulation "
         f"identifier (--id)\n"
@@ -79,6 +75,13 @@ parser.add_argument(
         f"{Nclr}\n\n"
     )
 )
+
+parser.add_argument("--debug", action="store_true",
+    help=(
+        f"More verbosity in status and error messages when running CAP."
+        f"\n\n"
+    )
+ )
 
 # ======================================================
 #                  DEFINITIONS

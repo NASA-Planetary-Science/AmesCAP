@@ -53,7 +53,9 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (Yellow, Cyan, Red, Blue, Yellow, Nclr, Green)
+from amescap.Script_utils import (
+    Yellow, Cyan, Red, Blue, Yellow, Nclr, Green
+)
 
 # Load generic Python Modules
 import sys          # System commands
@@ -66,7 +68,9 @@ from netCDF4 import Dataset
 
 # Load amesCAP modules
 from amescap.Ncdf_wrapper import (Ncdf, Fort)
-from amescap.FV3_utils import (tshift, daily_to_average, daily_to_diurn, get_trend_2D)
+from amescap.FV3_utils import (
+    tshift, daily_to_average, daily_to_diurn, get_trend_2D
+)
 from amescap.Script_utils import (
     find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile,
     get_longname_unit, extract_path_basename
@@ -430,7 +434,7 @@ parser.add_argument("-rs", "--regrid_source", action=ExtAction,
         f"(e.g. zstd, zagl, pstd, etc.).\n"
         f"{Yellow}Generates a new file ending in ``_regrid.nc``\n"
         f"{Green}Usage:\n"
-        f"> MarsInterp *.atmos.average_pstd.nc -rs "
+        f"> MarsInterp *.atmos_average_pstd.nc -rs "
         f"simu2/00668.atmos_average_pstd.nc"
         f"{Nclr}\n\n"
     )
@@ -467,14 +471,18 @@ parser.add_argument("-e", "--ext", type=str, default = None,
         f"Do not overwrite file. Append the extension provided \n"
         f"after --ext to the new file.\n"
         f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos.average.nc --combine --ext _combined\n"
-        f"  {Blue}(produces *.atmos.average_combined.nc)"
+        f"> MarsFiles *.atmos_average.nc --combine --ext _combined\n"
+        f"  {Blue}(produces *.atmos_average_combined.nc)"
         f"{Nclr}\n\n"
     )
 )
 
 parser.add_argument("--debug", action="store_true",
-    help=(f"Debug flag: release the exceptions.\n\n"))
+    help=(
+        f"More verbosity in status and error messages when running CAP."
+        f"\n\n"
+    )
+ )
 
 # ======================================================================
 #                               EXTENSIONS

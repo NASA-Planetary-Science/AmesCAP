@@ -29,9 +29,11 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (Cyan, Red, Blue, Yellow, Nclr, Green, Cyan)
+from amescap.Script_utils import (
+    Cyan, Red, Blue, Yellow, Nclr, Green, Cyan
+)
 
-# load generic Python modules
+# Load generic Python modules
 import argparse     # Parse arguments
 import os           # Access operating system functions
 import time         # Monitor interpolation time
@@ -39,7 +41,7 @@ import matplotlib
 import numpy as np
 from netCDF4 import Dataset
 
-# Force matplotlib NOT load Xwindows backend
+# Force matplotlib NOT to load Xwindows backend
 matplotlib.use("Agg")
 
 # Load amesCAP modules
@@ -58,8 +60,8 @@ from amescap.Ncdf_wrapper import Ncdf
 
 parser = argparse.ArgumentParser(
     description=(
-        f"{Yellow}MarsInterp, pressure interpolation on fixed "
-        f"layers.{Nclr}\n\n"
+        f"{Yellow}Performs a pressure interpolation on the vertical "
+        f"coordinate of the netCDF file.{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
@@ -69,23 +71,23 @@ parser.add_argument("input_file", nargs="+",
 
 parser.add_argument("-t", "--type", type=str, default="pstd",
     help=(
-        f"Interpolation type. Accepts ``pstd``, ``zstd``, or "
-        f"``zagl``.\n{Green}Usage:\n"
-        f"> MarsInterp ****.atmos.average.nc\n"
-        f"> MarsInterp ****.atmos.average.nc -t zstd\n"
+        f"Interpolation type. Accepts ``pstd``, ``zstd``, or ``zagl``.\n"
+        f"{Green}Usage:\n"
+        f"> MarsInterp ****.atmos_average.nc\n"
+        f"> MarsInterp ****.atmos_average.nc -t zstd"
         f"{Nclr}\n\n"
     )
 )
 
 parser.add_argument("-l", "--level", type=str, default=None,
     help=(
-        f"Layer IDs as defined in ``~/.amescap_profile``. For first "
-        f"time use, copy ``~/.amescap_profile`` to ``~/amesCAP``:\n"
-        f"{Cyan}cp ~/amesCAP/mars_templates/amescap_profile "
+        f"Layer IDs as defined in ``amescap_profile``. For first "
+        f"time use, copy ``amescap_profile`` to your home directory:\n"
+        f"{Cyan}cp path/to/amesCAP/mars_templates/amescap_profile "
         f"~/.amescap_profile\n"
         f"{Green}Usage:\n"
-        f"> MarsInterp ****.atmos.average.nc -t pstd -l p44\n"
-        f"> MarsInterp ****.atmos.average.nc -t zstd -l phalf_mb\n"
+        f"> MarsInterp ****.atmos_average.nc -t pstd -l p44\n"
+        f"> MarsInterp ****.atmos_average.nc -t zstd -l phalf_mb"
         f"{Nclr}\n\n"
     )
 )
@@ -95,7 +97,7 @@ parser.add_argument("-include", "--include", nargs="+",
         f"Only include the listed variables. Dimensions and 1D "
         f"variables are always included.\n"
         f"{Green}Usage:\n"
-        f"> MarsInterp *.atmos_daily.nc --include ps ts temp\n"
+        f"> MarsInterp *.atmos_daily.nc --include ps ts temp"
         f"{Nclr}\n\n"
     )
 )
@@ -105,8 +107,8 @@ parser.add_argument("-e", "--ext", type=str, default=None,
         f"Append an extension (``_ext.nc``) to the output file instead"
         f" of replacing the existing file.\n"
         f"{Green}Usage:\n"
-        f"> MarsInterp ****.atmos.average.nc -ext B\n"
-        f"  {Blue}Produces ****.atmos.average_pstd_B.nc.\n"
+        f"> MarsInterp ****.atmos_average.nc -ext B\n"
+        f"  {Blue}Produces ****.atmos_average_pstd_B.nc."
         f"{Nclr}\n\n"
     )
 )
@@ -116,13 +118,17 @@ parser.add_argument("-g", "--grid", action="store_true",
         f"Output current grid information to standard output. This "
         f"will not run the interpolation.\n"
         f"{Green}Usage:\n"
-        f"> MarsInterp ****.atmos.average.nc -t pstd -l p44 -g\n"
+        f"> MarsInterp ****.atmos_average.nc -t pstd -l p44 -g"
         f"{Nclr}\n\n"
     )
 )
 
 parser.add_argument("--debug", action="store_true",
-    help=(f"Debug flag: do not bypass errors.\n\n"))
+    help=(
+        f"More verbosity in status and error messages when running CAP."
+        f"\n\n"
+    )
+ )
 
 # ======================================================================
 #                           DEFINITIONS

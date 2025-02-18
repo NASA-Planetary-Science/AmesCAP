@@ -32,7 +32,9 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (Yellow, Cyan, Red, Nclr, Green)
+from amescap.Script_utils import (
+    Yellow, Cyan, Red, Nclr, Green
+)
 
 # Load generic Python modules
 import argparse     # Parse arguments
@@ -149,7 +151,7 @@ parser = argparse.ArgumentParser(
     description=(
         f"{Yellow} MarsVars, variable manager. Add to or remove "
         f"variables from the diagnostic files.\n"
-        f"Use MarsFiles ****.atmos.average.nc to view file content."
+        f"Use MarsFiles ****.atmos_average.nc to view file content."
         f"{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
@@ -158,17 +160,17 @@ parser = argparse.ArgumentParser(
 parser.add_argument("input_file", nargs="+",
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
-parser.add_argument("-add", "--add", nargs="+", default=[], help=(
-    f"Add a new variable to file. Variables that can be added are "
-    f"listed below.\n"
-    f"{Green}Usage:\n"
-    f"> MarsVars ****.atmos.average.nc -add varname\n"
-    f"{Yellow}\n"
-    f"{add_help(master_list)}\n"
-    f"{Nclr}NOTE: MarsVars offers some support on interpolated\n"
-    f"files, particularly if ``pfull3D`` and ``zfull`` are added \n"
-    f"to the file before interpolation.\n\n"
-    f"{Nclr}\n"
+parser.add_argument("-add", "--add", nargs="+", default=[], 
+    help=(
+        f"Add a new variable to file. Variables that can be added are "
+        f"listed below.\n"
+        f"{Green}Usage:\n"
+        f"> MarsVars ****.atmos_average.nc -add varname\n{Yellow}\n"
+        f"{add_help(master_list)}\n"
+        f"{Nclr}NOTE: MarsVars offers some support on interpolated\n"
+        f"files, particularly if ``pfull3D`` and ``zfull`` are added \n"
+        f"to the file before interpolation.\n"
+        f"{Nclr}\n\n"
     )
 )
 
@@ -177,7 +179,7 @@ parser.add_argument("-zdiff", "--zdiff", nargs="+", default=[],
         f"Differentiate a variable w.r.t. the Z axis. A new variable\n"
         f"``d_dz_var`` in [Unit/m] will be added to the file.\n"
         f"{Green}Usage:\n"
-        f"> MarsVars ****.atmos.average.nc -zdiff temp"
+        f"> MarsVars ****.atmos_average.nc -zdiff temp"
         f"{Nclr}\n\n"
     )
 )
@@ -188,7 +190,7 @@ parser.add_argument("-col", "--col", nargs="+", default=[],
         f"A new a variable (``var_col``) in [kg/m2] will be added to "
         f"the file.\n"
         f"{Green}Usage:\n"
-        f"> MarsVars ****.atmos.average.nc -col ice_mass_mom"
+        f"> MarsVars ****.atmos_average.nc -col ice_mass_mom"
         f"{Nclr}\n\n"
     )
 )
@@ -199,7 +201,7 @@ parser.add_argument("-zd", "--zonal_detrend", nargs="+", default=[],
         f"A new a variable (``var_p``) (for prime) will be added to the"
         f" file.\n"
         f"{Green}Usage:\n"
-        f"> MarsVars ****.atmos.average.nc -zd ucomp"
+        f"> MarsVars ****.atmos_average.nc -zd ucomp"
         f"{Nclr}\n\n"
     )
 )
@@ -211,7 +213,7 @@ parser.add_argument("-dp_to_dz", "--dp_to_dz", nargs="+", default=[],
         f"A new a variable (``var_dp_to_dz``) will be added to the \n"
         f"file.\n"
         f"{Green}Usage:\n"
-        f"> MarsVars ****.atmos.average.nc -dp_to_dz opacity\n"
+        f"> MarsVars ****.atmos_average.nc -dp_to_dz opacity\n"
         f"{Nclr}Use -dz_to_dp to convert from [op/m] to [op/Pa]\n\n"
     )
 )
@@ -223,7 +225,7 @@ parser.add_argument("-rm", "--remove", nargs="+", default=[],
     help=(
         f"Remove a variable from a file.\n"
         f"{Green}Usage:\n"
-        f"> MarsVars ****.atmos.average.nc -rm rho theta"
+        f"> MarsVars ****.atmos_average.nc -rm rho theta"
         f"{Nclr}\n\n"
     )
 )
@@ -232,7 +234,7 @@ parser.add_argument("-extract", "--extract", nargs="+", default=[],
     help=(
         f"Extract variable(s) to a new ``_extract.nc`` file.\n"
         f"{Green}Usage:\n"
-        f"> MarsVars ****.atmos.average.nc -extract ps ts"
+        f"> MarsVars ****.atmos_average.nc -extract ps ts"
         f"{Nclr}\n\n"
     )
 )
@@ -269,7 +271,11 @@ parser.add_argument("-multiply", "--multiply", type=float, default=None,
 
 
 parser.add_argument("--debug",  action="store_true",
-    help=(f"Debug flag: do not bypass errors.\n\n"))
+    help=(
+        f"More verbosity in status and error messages when running CAP."
+        f"\n\n"
+    )
+ )
 
 
 # ======================================================================

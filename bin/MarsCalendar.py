@@ -18,7 +18,9 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (Yellow, Nclr, Green, Red)
+from amescap.Script_utils import (
+    Yellow, Nclr, Green, Red
+)
 
 # Load generic Python modules
 import argparse     # Parse arguments
@@ -85,7 +87,11 @@ parser.add_argument("-c", "--cumulative", action="store_true",
 )
 
 parser.add_argument("--debug", action="store_true",
-    help=(f"Debug flag: release the exceptions.\n\n"))
+    help=(
+        f"More verbosity in status and error messages when running CAP."
+        f"\n\n"
+    )
+ )
 
 # ======================================================================
 #                               DEFINITIONS
