@@ -6,17 +6,14 @@ pressure (``pstd``), standard altitude (``zstd``), altitude above
 ground level (``zagl``), or a custom vertical grid.
 
 The executable requires:
-    * ``[input_file]``          the file to be transformed
+    * ``[input_file]``          The file to be transformed
 
 and optionally accepts:
-    * ``[-t --type]``           type of interpolation to perform
-        (altitude, pressure, etc.)
-    * ``[-l --level]``          specific vertical grid to interpolate to
-    * ``[-include --include]``  variables to include in the new
-        interpolated file
-    * ``[-e --ext]``            custom extension for the new file
-    * ``[-g --grid]``           print the vertical grid chosen by
-        [-l --level] to the screen
+    * ``[-t --type]``           Type of interpolation to perform (altitude, pressure, etc.)
+    * ``[-l --level]``          Specific vertical grid to interpolate to
+    * ``[-include --include]``  Variables to include in the new interpolated file
+    * ``[-e --ext]``            Custom extension for the new file
+    * ``[-g --grid]``           Print the vertical grid to the screen
 
 
 Third-party Requirements:
@@ -97,7 +94,7 @@ parser.add_argument("-include", "--include", nargs="+",
         f"Only include the listed variables. Dimensions and 1D "
         f"variables are always included.\n"
         f"{Green}Usage:\n"
-        f"> MarsInterp *.atmos_daily.nc --include ps ts temp"
+        f"> MarsInterp *.atmos_daily.nc --include [var1] [var2]"
         f"{Nclr}\n\n"
     )
 )
@@ -108,8 +105,8 @@ parser.add_argument("-e", "--ext", type=str, default=None,
         f" of replacing the existing file.\n"
         f"{Green}Usage:\n"
         f"> MarsInterp ****.atmos_average.nc -ext B\n"
-        f"  {Blue}Produces ****.atmos_average_pstd_B.nc."
-        f"{Nclr}\n\n"
+        f"  {Blue}Produces ****.atmos_average_pstd_B.nc"
+        f"{Nclr}.\n\n"
     )
 )
 

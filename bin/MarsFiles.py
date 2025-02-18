@@ -6,41 +6,29 @@ as well as band pass filtering, tide analysis, zonal averaging, and
 extracting variables from files.
 
 The executable requires:
-    * ``[input_file]``                  the file for manipulation
+    * ``[input_file]``                  The file for manipulation
 
 and optionally accepts:
-    * ``[-fv3, --fv3]``                 produce MGCM ``fixed``,
-        ``diurn``, ``average`` and ``daily`` files from Legacy output
-    * ``[-c, --combine]``               Combine sequential files of
-        the same type into one file
-    * ``[-t, --tshift]``                apply a time-shift to
-        ``diurn`` files
-    * ``[-ba, --bin_average]``          bin MGCM ``daily`` files like
-        ``average`` files
-    * ``[-bd, --bin_diurn]``            bin MGCM ``daily`` files like
-        ``diurn`` files
-    * ``[-hp, --high_pass_filter]``     temporal filtering: high-pass
-    * ``[-lp, --low_pass_filter]``      temporal filtering: low-pass
-    * ``[-bp, --band_pass_filter]``     temporal filtering: band-pass
-    * ``[-no_trend, --no_trend]``       filter and compute amplitudes
+    * ``[-fv3, --fv3]``                 Produce MGCM ``fixed``, ``diurn``, ``average`` and ``daily`` files from Legacy output
+    * ``[-c, --combine]``               Combine sequential files of the same type into one file
+    * ``[-t, --tshift]``                Apply a time-shift to ``diurn`` files
+    * ``[-ba, --bin_average]``          Bin MGCM ``daily`` files like ``average`` files
+    * ``[-bd, --bin_diurn]``            Bin MGCM ``daily`` files like ``diurn`` files
+    * ``[-hp, --high_pass_filter]``     Temporal filtering: high-pass
+    * ``[-lp, --low_pass_filter]``      Temporal filtering: low-pass
+    * ``[-bp, --band_pass_filter]``     Temporal filtering: band-pass
+    * ``[-no_trend, --no_trend]``       Filter and compute amplitudes
         only (use with filtering)
-    * ``[-hpk, --high_pass_zonal]``     spatial filtering: high-pass
-    * ``[-lpk, --low_pass_zonal]``      spatial filtering: low-pass
-    * ``[-bpk, --band_pass_zonal]``     spatial filtering: band-pass
-    * ``[-tidal, --tidal]``             extracts diurnal tide and its
-        harmonics
-    * ``[-reconstruct, --reconstruct]`` reconstructs the first N
-        harmonics
-    * ``[-norm, --normalize]``          provides ``-tidal`` result in
-        percent amplitude
-    * ``[-rs, --regrid_source]``        regrid a target file to match
-        a source file
-    * ``[-za, --zonal_avg]``            zonally average all variables
-        in a file
-    * ``[-include, --include]``         only include specific
-        variables from the target file
-    * ``[-e, --ext]``                   create a new file with a
-        unique extension instead of overwriting current file
+    * ``[-hpk, --high_pass_zonal]``     Spatial filtering: high-pass
+    * ``[-lpk, --low_pass_zonal]``      Spatial filtering: low-pass
+    * ``[-bpk, --band_pass_zonal]``     Spatial filtering: band-pass
+    * ``[-tidal, --tidal]``             Extracts diurnal tide and its harmonics
+    * ``[-reconstruct, --reconstruct]`` Reconstructs the first N harmonics
+    * ``[-norm, --normalize]``          Provides ``-tidal`` result in percent amplitude
+    * ``[-rs, --regrid_source]``        Regrid a target file to match a source file
+    * ``[-za, --zonal_avg]``            Zonally average all variables in a file
+    * ``[-include, --include]``         Only include specific variables from the target file
+    * ``[-e, --ext]``                   Create a new file with a unique extension instead of overwriting current file
 
 Third-party Requirements:
     * ``numpy``
@@ -231,10 +219,8 @@ parser.add_argument("-ba", "--bin_average",action=ExtAction,
         f"Bin MGCM ``daily`` files like ``average`` files.\n"
         f"{Yellow}Generates a new file ending in ``_to_average.nc``\n"
         f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_daily.nc -ba\n"
-        f"  {Blue}(NC, bin 5 days){Green}\n"
-        f"> MarsFiles *.atmos_daily_pstd.nc -ba 10\n"
-        f"  {Blue}(bin 10 days)"
+        f"> MarsFiles *.atmos_daily.nc -ba {Blue}5-sol bin{Green}\n"
+        f"> MarsFiles *.atmos_daily_pstd.nc -ba 10 {Blue}10-sol bin"
         f"{Nclr}\n\n"
     )
 )
@@ -248,12 +234,11 @@ parser.add_argument("-bd", "--bin_diurn", action=ExtAction,
         f"May be used jointly with --bin_average.\n"
         f"{Yellow}Generates a new file ending in ``_to_diurn.nc``\n"
         f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_daily.nc -bd\n"
-        f"  {Blue}(default 5-day bin){Green}\n"
-        f"> MarsFiles *.atmos_daily_pstd.nc -bd -ba 10\n"
-        f"  {Blue}(10-day bin){Green}\n"
-        f"> MarsFiles *.atmos_daily_pstd.nc -bd -ba 1\n"
-        f"  {Blue}(No binning. Mimics raw Legacy output)"
+        f"> MarsFiles *.atmos_daily.nc -bd {Blue}5-sol bin{Green}\n"
+        f"> MarsFiles *.atmos_daily_pstd.nc -bd -ba 10 {Blue}10-sol bin"
+        f"{Green}\n"
+        f"> MarsFiles *.atmos_daily_pstd.nc -bd -ba 1 {Blue}No binning. "
+        f"Mimics raw Legacy output."
         f"{Nclr}\n\n"
     )
 )
@@ -264,8 +249,8 @@ parser.add_argument("-hpf", "--high_pass_filter", action=ExtAction,
     parser=parser,
     nargs="+", type=float,
     help=(
-        f"Temporal filtering utilities: low-, high-, and "
-        f"band-pass filters.\n"
+        f"Temporal filtering utilities: low-, high-, and  band-pass "
+        f"filters.\n"
         f"Use ``--no_trend`` to compute amplitudes only.\n"
         f"Data detrended before filtering.\n"
         f"{Yellow}Generates a new file ending in ``_hpf.nc``\n"
@@ -461,7 +446,7 @@ parser.add_argument("-include", "--include", nargs="+",
         f"{Yellow}Overwrites existing target file. To override, "
         f"use --ext.{Nclr}\n"
         f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_daily.nc -ba --include ps ts ucomp"
+        f"> MarsFiles *.atmos_daily.nc -ba --include [var1] [var2]"
         f"{Nclr}\n\n"
     )
 )
@@ -487,9 +472,9 @@ parser.add_argument("--debug", action="store_true",
 # ======================================================================
 #                               EXTENSIONS
 # ======================================================================
-"""
-Concatenates extensions to append to file depending on the provided arguments.
-"""
+# Concatenates extensions to append to the file name depending on 
+# user-provided arguments.
+
 args=parser.parse_args()
 
 out_ext = (f"{args.tshift_ext}"

@@ -4,9 +4,9 @@ The MarsPlot executable is for generating plots from Custom.in template
 files. It sources variables from netCDF files in a specified directory.
 
 The executable requires:
-    * ``[-template --template]`` generates blank Custom.in template
-    * ``[-i --inspect]``         triggers ncdump-like text to console
-    * ``[Custom.in]``            to create plots in Custom.in template
+    * ``[-template --template]`` Generates blank Custom.in template
+    * ``[-i --inspect]``         Triggers ncdump-like text to console
+    * ``[Custom.in]``            To create plots in Custom.in template
 
 Third-party Requirements:
     * ``numpy``
@@ -103,7 +103,7 @@ parser.add_argument("-i", "--inspect_file", default=None,
         f"> MarsPlot -i 00000.atmos_daily.nc\n"
         f"{Blue}Options: use --dump (variable content) and --stat "
         f"(min, mean, max) jointly with --inspect{Green}\n"
-        f"> MarsPlot -i 00000.atmos_daily.nc -dump pfull "
+        f"> MarsPlot -i 00000.atmos_daily.nc -dump [variable]"
         f"``temp[6,:,30,10]``\n"
         f"{Blue}(quotes "" req. for browsing dimensions){Green}\n"
         f"> MarsPlot -i 00000.atmos_daily.nc -stat ``ucomp[5,:,:,:]`` "
@@ -123,8 +123,8 @@ parser.add_argument("-d", "--date", nargs="+", default=None,
     help=(
         f"Specify the files to use. Default is the last file created.\n"
         f"{Green}Usage:\n"
-        f"> MarsPlot Custom.in -d desired_ls\n"
-        f"> MarsPlot Custom.in -d start_ls end_ls"
+        f"> MarsPlot Custom.in -d [desired_ls]\n"
+        f"> MarsPlot Custom.in -d [start_ls] [end_ls]"
         f"{Nclr}\n\n"
     )
 )

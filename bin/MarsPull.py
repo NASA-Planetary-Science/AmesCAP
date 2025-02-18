@@ -6,8 +6,8 @@ the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
 The executable requires 2 arguments:
     * ``[-id --id]``      The simulation identifier, AND
-    * ``[-ls --ls]``      the desired solar longitude(s), OR
-    * ``[-f --filename]`` the name(s) of the desired file(s).
+    * ``[-ls --ls]``      The desired solar longitude(s), OR
+    * ``[-f --filename]`` The name(s) of the desired file(s)
 
 Third-party Requirements:
     * ``numpy``

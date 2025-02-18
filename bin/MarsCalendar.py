@@ -4,13 +4,12 @@ The MarsCalendar executable accepts an input Ls or day-of-year (sol)
 and returns the corresponding sol or Ls, respectively.
 
 The executable requires 1 of the following arguments:
-    * ``[-sol --sol]``          the sol to convert to Ls, OR
-    * ``[-ls --ls]``            the Ls to convert to sol
+    * ``[-sol --sol]``          The sol to convert to Ls, OR
+    * ``[-ls --ls]``            The Ls to convert to sol
 
 and optionally accepts:
-    * ``[-my --marsyear]``      the Mars Year of the simulation to
-        compute sol or  Ls from, AND/OR
-    * ``[-c --cumulative]``     returns Ls in cumulative form
+    * ``[-my --marsyear]``      The Mars Year of the simulation to compute sol or Ls from, AND/OR
+    * ``[-c --cumulative]``     Returns Ls in cumulative form
 
 Third-party Requirements:
     * ``numpy``
@@ -46,8 +45,8 @@ parser.add_argument("-sol", "--sol", nargs="+", type=float,
         f"Input sol number. Required. Can either be one sol or a"
         f"range with an increment (``start stop step``).\n"
         f"{Green}Usage:\n"
-        f"> MarsCalendar -sol 750\n"
-        f"> MarsCalendar -sol 750 800 5"
+        f"> MarsCalendar -sol [sol_num]\n"
+        f"> MarsCalendar -sol [start] [stop] [step]"
         f"{Nclr}\n\n"
     )
 )
@@ -56,8 +55,8 @@ parser.add_argument("-ls", "--ls", nargs="+", type=float,
     help=(
         f"Return the sol number corresponding to this Ls.\n"
         f"{Green}Usage:\n"
-        f"> MarsCalendar -ls 350\n"
-        f"> MarsCalendar -ls 350 360 5"
+        f"> MarsCalendar -ls [ls_num]\n"
+        f"> MarsCalendar -ls [start] [stop] [step]"
         f"{Nclr}\n\n"
     )
 )
@@ -106,7 +105,7 @@ def parse_array(len_input):
     for the conversion from sol -> Ls or Ls -> sol.
 
     :param len_input: The input Ls or sol to convert. Can either be
-        onenumber (e.g., 300) or start stop step (e.g., 300 310 2).
+        one number (e.g., 300) or start stop step (e.g., 300 310 2).
     :type len_input: float
 
     :raises: Error if neither ``[-ls --ls]`` or ``[-sol --sol]`` are
