@@ -97,7 +97,7 @@ master_list = {
     'theta':    [f"Potential temp.", 'K', 
                  ['ps', 'temp'], ['pfull']],
     'Vg_sed':   [f"Sedimentation rate", 'm/s', 
-                 ['dst_mass', 'temp'], 
+                 ['dst_mass', 'dst_num', 'temp'], 
                  ['pfull', 'pstd', 'zstd', 'zagl']],
     'w':        [f"Vert. wind", 'm/s', 
                  ['ps', 'temp', 'omega'], ['pfull']],
