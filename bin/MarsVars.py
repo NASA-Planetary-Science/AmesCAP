@@ -187,7 +187,7 @@ parser.add_argument("-zdiff", "--zdiff", nargs="+", default=[],
 parser.add_argument("-col", "--col", nargs="+", default=[],
     help=(
         f"Integrate a mixing ratio of a variable through the column.\n"
-        f"Requires a variable with vertical coordinates."
+        f"*Requires a variable with a vertical dimension*\n"
         f"A new a variable (``var_col``) in [kg/m2] will be added to "
         f"the file.\n"
         f"{Green}Usage:\n"
