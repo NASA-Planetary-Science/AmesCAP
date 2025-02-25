@@ -192,18 +192,6 @@ parser.add_argument("-split", "--split", nargs="+",
     )
 )
 
-parser.add_argument("-dim", "--dim", type=str, default = 'areo',
-    help=(
-        f"Must be used with [-split --split]. Flag indicates the \n"
-        f"dimension on which to trim the file. Acceptable values are \n"
-        f"'time', 'areo', 'lev', 'lat', 'lon'.\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles 00668.atmos_average.nc --split 0 90 --dim areo"
-        f"> MarsFiles 00668.atmos_average.nc --split -70 --dim lat"
-        f"{Nclr}\n\n"
-    )
-)
-
 parser.add_argument("-t", "--tshift", action=ExtAction,
     ext_content="_T",
     parser=parser,
@@ -264,9 +252,9 @@ parser.add_argument("-hpf", "--high_pass_filter", action=ExtAction,
     parser=parser,
     nargs="+", type=float,
     help=(
-        f"Temporal high-pass filtering. Only works with 'daily' files. "
-        f"Requires a cutoff frequency in Sols.\n"
-        f"Use ``--no_trend`` to compute amplitudes only.\n"
+        f"Temporal high-pass filtering: removes low-frequency noise. "
+        f"Only works with 'daily' files. Requires a cutoff frequency "
+        f"in Sols. Use ``--no_trend`` to return amplitudes only.\n"
         f"Data detrended before filtering."
         f"\n{Yellow}Generates a new file ending in ``_hpf.nc``\n"
         f"{Green}Usage:\n"
@@ -281,9 +269,10 @@ parser.add_argument("-lpf", "--low_pass_filter", action=ExtAction,
     parser=parser,
     nargs="+", type=float,
     help=(
-        f"Temporal low-pass filtering. Only works with 'daily' files. "
-        f"Requires a cutoff frequency in Sols.\n"
-        f"Use ``--no_trend`` to compute amplitudes only.\n"
+        f"Temporal low-pass filtering: removes high-frequency noise "
+        f"(smoothing). Only works with 'daily' files. Requires a "
+        f"cutoff frequency in Sols. Use ``--no_trend`` to return "
+        f"amplitudes only.\n"
         f"Data detrended before filtering."
         f"\n{Yellow}Generates a new file ending in ``_lpf.nc``\n"
         f"{Green}Usage:\n"
@@ -298,32 +287,14 @@ parser.add_argument("-bpf", "--band_pass_filter", action=ExtAction,
     parser=parser,
     nargs="+",
     help=(
-        f"Temporal band-pass filtering. Only works with 'daily' files. "
-        f"Requires a cutoff frequency in Sols.\n"
-        f"Use ``--no_trend`` to compute amplitudes only.\n"
-        f"Data detrended before filtering."
+        f"Temporal band-pass filtering: filters out frequencies "
+        f"specified by user. Only works with 'daily' files. Requires a "
+        f"cutoff frequency in Sols. Use ``--no_trend`` to return "
+        f"amplitudes only.\nData detrended before filtering."
         f"\n{Yellow}Generates a new file ending in ``bpf.nc``\n"
         f"{Green}Usage:\n"
         f"> MarsFiles *.atmos_daily.nc -hpf 0.5 10.\n"
         f"  {Blue}(-bpf) --band_pass_filter sol_min sol max "
-        f"{Nclr}\n\n"
-    )
-)
-
-parser.add_argument("-no_trend", "--no_trend", action=ExtAction,
-    ext_content="_no_trend",
-    parser=parser,
-    nargs=0,
-    help=(
-        f"Return the temporal filter amplitudes only (omit phase from"
-        f"the output file).\n"
-        f"For use with temporal filtering utilities (``-lpf``, "
-        f"``-hpf``, ``-bpf``).\n"
-        f"{Yellow}Generates a new file ending in ``_no_trend.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_daily.nc -hpf 10. --no_trend\n"
-        f"> MarsFiles *.atmos_daily.nc -lpf 0.5 --no_trend\n"
-        f"> MarsFiles *.atmos_daily.nc -hpf 0.5 10. --no_trend"
         f"{Nclr}\n\n"
     )
 )
@@ -334,9 +305,9 @@ parser.add_argument("-hpk", "--high_pass_zonal", action=ExtAction,
     parser=parser,
     nargs="+", type=int,
     help=(
-        f"Spatial high-pass filter. Only works with 'daily' files.\n"
-        f"Use ``--no_trend`` to compute amplitudes only.\n"
-        f"Data detrended before filtering.\n"
+        f"Spatial high-pass filtering: removes low-frequency noise. "
+        f"Only works with 'daily' files. Requires a cutoff frequency "
+        f"in Sols. Use ``--no_trend`` to return amplitudes only.\n"
         f"{Yellow}Generates a new file ending in ``_hpk.nc``\n"
         f"{Green}Usage:\n"
         f"> MarsFiles *.atmos_daily.nc -hpk 10 --no_trend\n"
@@ -350,9 +321,10 @@ parser.add_argument("-lpk", "--low_pass_zonal", action=ExtAction,
     parser=parser,
     nargs="+", type=int,
     help=(
-        f"Spatial low-pass filter. Only works with 'daily' files.\n"
-        f"Use ``--no_trend`` to compute amplitudes only.\n"
-        f"Data detrended before filtering.\n"
+        f"Spatial low-pass filtering: removes high-frequency noise "
+        f"(smoothing). Only works with 'daily' files. Requires a "
+        f"cutoff frequency in Sols. Use ``--no_trend`` to return "
+        f"amplitudes only.\n"
         f"{Yellow}Generates a new file ending in ``_lpk.nc``\n"
         f"{Green}Usage:\n"
         f"> MarsFiles *.atmos_daily.nc -lpk 20 --no_trend\n"
@@ -366,9 +338,10 @@ parser.add_argument("-bpk", "--band_pass_zonal", action=ExtAction,
     parser=parser,
     nargs="+",
     help=(
-        f"Spatial band-pass filter. Only works with 'daily' files.\n"
-        f"Use ``--no_trend`` to compute amplitudes only.\n"
-        f"Data detrended before filtering.\n"
+        f"Spatial band-pass filtering: filters out frequencies "
+        f"specified by user. Only works with 'daily' files. Requires a "
+        f"cutoff frequency in Sols. Use ``--no_trend`` to return "
+        f"amplitudes only.\nData detrended before filtering."
         f"{Yellow}Generates a new file ending in ``_bpk.nc``\n"
         f"{Green}Usage:\n"
         f"> MarsFiles *.atmos_daily.nc -bpk 10 20 --no_trend\n"
@@ -383,45 +356,14 @@ parser.add_argument("-tidal", "--tidal", action=ExtAction,
     nargs="+", type=int,
     help=(
         f"Use fourier decomposition to break down the signal into N "
-        f"harmonics. Only works with 'diurn' files. Returns phase "
-        f"and amplitude.\n"
+        f"harmonics. Only works with 'diurn' files. Returns the phase "
+        f"and amplitude of the variable.\n"
         f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
         f"{Yellow}Generates a new file ending in ``_tidal.nc``\n"
         f"{Green}Usage:\n"
         f"> MarsFiles *.atmos_diurn.nc -tidal 2 --include ps temp\n"
         f"  {Blue}(extracts semi-diurnal tide component of ps and temp "
         f"variables; 2 harmonics)"
-        f"{Nclr}\n\n"
-    )
-)
-
-parser.add_argument("-norm", "--normalize", action=ExtAction,
-    ext_content="_norm",
-    parser=parser,
-    nargs=0,
-    help=(
-        f"Use fourier decomposition to break down the signal into N "
-        f"harmonics. For use on ``diurn`` files only. Returns the "
-        f"result in percent amplitude.\n"
-        f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
-        f"{Yellow}Generates a new file ending in ``_norm.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_diurn.nc -tidal 6 --include ps "
-        f"--normalize"
-        f"{Nclr}\n\n"
-    )
-)
-
-parser.add_argument("-reconstruct", "--reconstruct", action=ExtAction,
-    ext_content="_reconstruct",
-    parser=parser,
-    nargs=0,
-    help=(
-        f"Reconstructs the first N harmonics.\n"
-        f"{Yellow}Generates a new file ending in ``_reconstruct.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_diurn.nc -tidal 6 --include ps temp "
-        f"--reconstruct"
         f"{Nclr}\n\n"
     )
 )
@@ -449,10 +391,73 @@ parser.add_argument("-za", "--zonal_avg", action=ExtAction,
     nargs=0,
     help=(
         f"Zonally average the entire file over the longitudinal "
-        f"dimension.\n"
+        f"dimension. Does not work if the longitude dimension has "
+        f"length <= 1.\n"
         f"{Yellow}Generates a new file ending in ``_zavg.nc``\n"
         f"{Green}Usage:\n"
         "> MarsFiles *.atmos_diurn.nc -za"
+        f"{Nclr}\n\n"
+    )
+)
+
+# Secondary arguments: Used with some of the arguments above
+
+parser.add_argument("-dim", "--dim", type=str, default = 'areo',
+    help=(
+        f"Must be used with [-split --split]. Flag indicates the \n"
+        f"dimension on which to trim the file. Acceptable values are \n"
+        f"'time', 'areo', 'lev', 'lat', 'lon'.\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles 00668.atmos_average.nc --split 0 90 --dim areo"
+        f"> MarsFiles 00668.atmos_average.nc --split -70 --dim lat"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument("-norm", "--normalize", action=ExtAction,
+    ext_content="_norm",
+    parser=parser,
+    nargs=0,
+    help=(
+        f"For use with ``-tidal``: Returns the result in percent "
+        f"amplitude.\n"
+        f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
+        f"{Yellow}Generates a new file ending in ``_norm.nc``\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles *.atmos_diurn.nc -tidal 6 --include ps "
+        f"--normalize"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument("-no_trend", "--no_trend", action=ExtAction,
+    ext_content="_no_trend",
+    parser=parser,
+    nargs=0,
+    help=(
+        f"Return the temporal filter amplitudes only (omit phase from"
+        f"the output file).\n"
+        f"For use with temporal filtering utilities (``-lpf``, "
+        f"``-hpf``, ``-bpf``).\n"
+        f"{Yellow}Generates a new file ending in ``_no_trend.nc``\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles *.atmos_daily.nc -hpf 10. --no_trend\n"
+        f"> MarsFiles *.atmos_daily.nc -lpf 0.5 --no_trend\n"
+        f"> MarsFiles *.atmos_daily.nc -hpf 0.5 10. --no_trend"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument("-reconstruct", "--reconstruct", action=ExtAction,
+    ext_content="_reconstruct",
+    parser=parser,
+    nargs=0,
+    help=(
+        f"Reconstructs the first N harmonics.\n"
+        f"{Yellow}Generates a new file ending in ``_reconstruct.nc``\n"
+        f"{Green}Usage:\n"
+        f"> MarsFiles *.atmos_diurn.nc -tidal 6 --include ps temp "
+        f"--reconstruct"
         f"{Nclr}\n\n"
     )
 )
@@ -1529,22 +1534,22 @@ def main():
                         fnew.copy_Ncaxis_with_content(fdiurn.variables[ivar])
                 elif  ivar in ["areo"]:
                         if args.reconstruct:
-                            #time_of_day is the same size as the
+                            # time_of_day is the same size as the
                             # original file
                             print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
                             fnew.copy_Ncvar(fdiurn.variables["areo"])
                         else:
                             print(f"{Cyan}Processing: {ivar}...{Nclr}")
-                            #Create areo variable reflecting the
+                            # Create areo variable reflecting the
                             # new shape
                             areo_new=np.zeros((areo.shape[0], N, 1))
-                            #Copy areo
+                            # Copy areo
                             for xx in range(N):
                                 areo_new[:, xx, :] = areo[:, 0, :]
-                            #Update the dimensions
+                            # Update the dimensions
                             new_dim = list(varNcf.dimensions)
                             new_dim[1] = f"time_of_day_{N}"
-                            #fnew.log_variable(ivar, bareo_new, new_dim,
+                            # fnew.log_variable(ivar, bareo_new, new_dim,
                             # longname_txt, units_txt)
                             fnew.log_variable(ivar, areo_new, new_dim, 
                                               longname_txt, var_unit)
