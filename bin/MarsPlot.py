@@ -301,9 +301,18 @@ if args.trim_text and (args.generate_template is None):
                  f"MarsPlot -template -trim{Nclr}")
     exit()
 
-print(args.template_file)
-print(args.inspect_file)
-print(args.generate_template)
+print("template_file " + args.template_file)
+print("inspect_file " + args.inspect_file)
+print("generate_template " + args.generate_template)
+print("date " + args.date)
+print("figure_filetype " + args.figure_filetype)
+print("stack_years " + args.stack_years)
+print("portrait_mode " + args.portrait_mode)
+print("pixel_width " + args.pixel_width)
+print("directory " + args.directory)
+print("print_values " + args.print_values)
+print("statistics " + args.statistics)
+print("trim_text " + args.trim_text)
 # ======================================================================
 #                           MAIN PROGRAM
 # ======================================================================
