@@ -305,7 +305,6 @@ def main():
             print_fileContent(parser.parse_args().inspect_file)
 
     elif parser.parse_args().generate_template or parser.parse_args().something:
-        # --generate_template: Generate a template file
         make_template()
 
     else:
@@ -1412,7 +1411,7 @@ def make_template():
     # Create header with instructions. Add version number to title.
     customFileIN.write(
         f"===================== |MarsPlot V{str(current_version)}| ===================\n")
-    if parser.parse_args().generate_template:
+    if (parser.parse_args().something == False):
         # Additional instructions if requested
         customFileIN.write(
             "# ================================================= INSTRUCTIONS =================================================\n")
@@ -1483,14 +1482,15 @@ def make_template():
         customFileIN.write("# Specify the *.nc file from which to plot using the ``@`` symbol + the simulation number:\n")
         customFileIN.write("#    in the call to Main Variable, e.g., Main Variable = atmos_average@2.temp \n")
         customFileIN.write("# \n")
-        customFileIN.write(
-            "<<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>\n")
-        customFileIN.write("ref> None\n")
-        customFileIN.write("2> \n")
-        customFileIN.write("3>\n")
-        customFileIN.write(
-            "=======================================================\n")
-        customFileIN.write("START\n\n")
+    
+    customFileIN.write(
+        "<<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>\n")
+    customFileIN.write("ref> None\n")
+    customFileIN.write("2> \n")
+    customFileIN.write("3>\n")
+    customFileIN.write(
+        "=======================================================\n")
+    customFileIN.write("START\n\n")
     
     # For the default list of figures in main(), create a template.
     for i in range(0, len(objectList)):
