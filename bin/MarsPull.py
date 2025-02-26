@@ -47,10 +47,10 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument("directory_name", type=str,
+parser.add_argument('directory_name', type=str,
     choices=[
-        "FV3BETAOUT1", "ACTIVECLDS", "INERTCLDS", "NEWBASE_ACTIVECLDS",
-        "ACTIVECLDS_NCDF"],
+        'FV3BETAOUT1', 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
+        'ACTIVECLDS_NCDF'],
     help=(
         f"Mandatory flag. Selects the simulation directory from the "
         f"NAS data portal:\n"
@@ -66,7 +66,7 @@ parser.add_argument("directory_name", type=str,
     )
 )
 
-parser.add_argument("-f", "--filename", nargs="+", type=str,
+parser.add_argument('-f', '--filename', nargs='+', type=str,
     help=(
         f"The name(s) of the file(s) to download.\n"
         f"{Green}Example:\n"
@@ -75,7 +75,7 @@ parser.add_argument("-f", "--filename", nargs="+", type=str,
     )
 )
 
-parser.add_argument("-ls", "--ls", nargs="+", type=float,
+parser.add_argument('-ls', '--ls', nargs='+', type=float,
     help=(
         f"Selects the file(s) to download based on a range of solar "
         f"longitudes (Ls).\n"
@@ -90,7 +90,7 @@ parser.add_argument("-ls", "--ls", nargs="+", type=float,
 
 # Secondary arguments: Used with some of the arguments above
 
-parser.add_argument("--debug", action="store_true",
+parser.add_argument('--debug', action='store_true',
     help=(
         f"Use with any other argument to pass all Python errors and\n"
         f"status messages to the screen when running CAP.\n"

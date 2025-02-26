@@ -152,8 +152,8 @@ parser.add_argument('-sy', '--stack_years', action='store_true',
     )
 )
 
-parser.add_argument('-ftype', '--figure_filetype', default='pdf', type=str,
-    choices=['pdf', 'eps', 'png'],
+parser.add_argument('-ftype', '--figure_filetype', default='pdf', 
+    type=str, choices=['pdf', 'eps', 'png'],
     help=(
         f"Output file format.\n"
         f"Default is PDF if ghostscript (gs) is available, else PNG.\n"
@@ -193,7 +193,6 @@ parser.add_argument('-dir', '--directory', default=os.getcwd(),
 )
 
 # Secondary arguments: Used with some of the arguments above
-
 
 # to be used jointly with --generate_template
 parser.add_argument('-trim', '--trim_text', action='store_true',
@@ -274,9 +273,9 @@ if args.figure_filetype and (args.template_file is None and
                  f"{Nclr}")
     exit()
 
-if args.stack_years and (args.template_file is None and 
-                           args.generate_template is None and 
-                           args.inspect_file is False):
+if args.stack_years and (not args.template_file and
+                         not args.generate_template and
+                         not args.inspect_file):
     parser.error(f"{Red}The -sy argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -sy)"
                  f"{Nclr}")
