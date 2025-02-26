@@ -4,7 +4,7 @@ The MarsPlot executable is for generating plots from Custom.in template
 files. It sources variables from netCDF files in a specified directory.
 
 The executable requires:
-    * ``[-template --template]`` Generates blank Custom.in template
+    * ``[-template --generate_template]`` Generates a Custom.in template
     * ``[-i --inspect]``         Triggers ncdump-like text to console
     * ``[Custom.in]``            To create plots in Custom.in template
 
@@ -80,8 +80,8 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument(
-    "custom_file", nargs="?", type=argparse.FileType("r"), default=None,
+parser.add_argument('template_file', nargs='?', 
+    type=argparse.FileType('r'), default=None,
     help=(
         f"Use the Custom.in template file to create figures.\n"
         f"{Green}Example:\n"
@@ -96,7 +96,7 @@ parser.add_argument(
     )
 )
 
-parser.add_argument("-i", "--inspect_file", default=None,
+parser.add_argument('-i', '--inspect_file', default=None,
     help=(
         f"Print the content of a netCDF file to the screen. This is a "
         f"ncdump-like feature. Variables are sorted by dimension.\n"
@@ -106,7 +106,7 @@ parser.add_argument("-i", "--inspect_file", default=None,
     )
 )
 
-parser.add_argument("-d", "--date", nargs="+", default=None,
+parser.add_argument('-d', '--date', nargs='+', default=None,
     help=(
         f"Specify the files to use. Default is the last file created.\n"
         f"{Green}Example:\n"
@@ -116,7 +116,7 @@ parser.add_argument("-d", "--date", nargs="+", default=None,
     )
 )
 
-parser.add_argument("-template", "--template", action="store_true",
+parser.add_argument('-template', '--generate_template', action='store_true',
     help=(
         f"Generate a file called Custom.in that provides templates "
         f"for making plots with CAP.\n"
@@ -126,11 +126,12 @@ parser.add_argument("-template", "--template", action="store_true",
     )
 )
 
-parser.add_argument("-temp", "--temp", action="store_true",
+parser.add_argument('-something', '--something', action='store_true',
+    default=False,
     help=(
         f"Generate a file called Custom.in that provides templates "
-        f"for making plots with CAP without the instructions that "
-        f"appear as several lines of comments at top of the file.\n\n"
+        f"for making plots with CAP without the commented instructions "
+        f"at top of the file.\n\n"
     )
 )
 parser.add_argument("-do", "--do", nargs=1, type=str, default=None,
@@ -145,7 +146,7 @@ parser.add_argument("-do", "--do", nargs=1, type=str, default=None,
 )
 
 parser.add_argument("-sy", "--stack_year", action="store_true",
-                    default=False,
+    default=False,
     help=(
         f"Stack consecutive years in 1D time series plots "
         f"(recommended). "
@@ -303,16 +304,16 @@ def main():
             # Show information for all variables
             print_fileContent(parser.parse_args().inspect_file)
 
-    elif parser.parse_args().template or parser.parse_args().temp:
-        # --template: Generate a template file
+    elif parser.parse_args().generate_template or parser.parse_args().something:
+        # --generate_template: Generate a template file
         make_template()
 
     else:
         # Custom.in: generate plots from a Custom.in template
-        if parser.parse_args().custom_file:
+        if parser.parse_args().template_file:
             # Case A: Use local Custom.in (most common option)
-            print(f"Reading {parser.parse_args().custom_file.name}")
-            namelist_parser(parser.parse_args().custom_file.name)
+            print(f"Reading {parser.parse_args().template_file.name}")
+            namelist_parser(parser.parse_args().template_file.name)
 
         if parser.parse_args().do:
             # Case B: Use Custom.in from local template dir
@@ -407,7 +408,7 @@ def main():
                     # e.g., Custom.in -> Diagnostics.pdf, or
                     #       Custom_01.in -> Diagnostics_01.pdf
                     input_file = (f"{output_path}/"
-                                  f"{parser.parse_args().custom_file.name}")
+                                  f"{parser.parse_args().template_file.name}")
                     basename = input_file.split("/")[-1].split(".")[0].strip()
             except:
                 # Use default PDF basename "Diagnostics".
@@ -1411,7 +1412,7 @@ def make_template():
     # Create header with instructions. Add version number to title.
     customFileIN.write(
         f"===================== |MarsPlot V{str(current_version)}| ===================\n")
-    if parser.parse_args().template:
+    if parser.parse_args().generate_template:
         # Additional instructions if requested
         customFileIN.write(
             "# ================================================= INSTRUCTIONS =================================================\n")
@@ -1482,15 +1483,15 @@ def make_template():
         customFileIN.write("# Specify the *.nc file from which to plot using the ``@`` symbol + the simulation number:\n")
         customFileIN.write("#    in the call to Main Variable, e.g., Main Variable = atmos_average@2.temp \n")
         customFileIN.write("# \n")
-    customFileIN.write(
-        "<<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>\n")
-    customFileIN.write("ref> None\n")
-    customFileIN.write("2> \n")
-    customFileIN.write("3>\n")
-    customFileIN.write(
-        "=======================================================\n")
-    customFileIN.write("START\n\n")
-
+        customFileIN.write(
+            "<<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>\n")
+        customFileIN.write("ref> None\n")
+        customFileIN.write("2> \n")
+        customFileIN.write("3>\n")
+        customFileIN.write(
+            "=======================================================\n")
+        customFileIN.write("START\n\n")
+    
     # For the default list of figures in main(), create a template.
     for i in range(0, len(objectList)):
         if objectList[i].subID == 1 and objectList[i].nPan > 1:
@@ -2583,7 +2584,7 @@ class Fig_2D_lon_lat(Fig_2D):
         :param varfull: variable input to main_variable in Custom.in
             (e.g., ``03340.atmos_average.ucomp``)
         :type varfull: str
-        :param plot_type: plot template type (e.g.,
+        :param plot_type: plot type (e.g.,
             ``Plot 2D lon X time``)
         :type plot_type: str
         :return: topography or ``None`` if no matching ``fixed`` file

@@ -9,11 +9,11 @@ The executable requires:
     * ``[input_file]``          The file to be transformed
 
 and optionally accepts:
-    * ``[-t --type]``           Type of interpolation to perform (altitude, pressure, etc.)
-    * ``[-l --level]``          Specific vertical grid to interpolate to
-    * ``[-include --include]``  Variables to include in the new interpolated file
-    * ``[-e --ext]``            Custom extension for the new file
-    * ``[-g --grid]``           Print the vertical grid to the screen
+    * ``[-t --interp_type]``    Type of interpolation to perform (altitude, pressure, etc.)
+    * ``[-v --vertical_grid]``  Specific vertical grid to interpolate to
+    * ``[-incl --include]``     Variables to include in the new interpolated file
+    * ``[-ext --extension]``    Custom extension for the new file
+    * ``[-print --print_grid]`` Print the vertical grid to the screen
 
 
 Third-party Requirements:
@@ -65,12 +65,12 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument("input_file", nargs="+",
+parser.add_argument('input_file', nargs='+',
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
-parser.add_argument("-t", "--type", type=str, default="pstd",
+parser.add_argument("-t", "--interp_type", interp_=str, default="pstd",
     help=(
-        f"Interpolation type: ``pstd``, ``zstd``, or ``zagl``.\n"
+        f"Interpolation interp_: ``pstd``, ``zstd``, or ``zagl``.\n"
         f"{Green}Example:\n"
         f"> MarsInterp 00668.atmos_average.nc\n"
         f"> MarsInterp 00668.atmos_average.nc -t pstd"
@@ -80,49 +80,49 @@ parser.add_argument("-t", "--type", type=str, default="pstd",
 
 # Secondary arguments: Used with some of the arguments above
 
-parser.add_argument("-l", "--level", type=str, default=None,
+parser.add_argument('-v', '--vertical_grid', interp_=str, default=None,
     help=(
         f"Layer IDs as defined in ``amescap_profile``. For first "
         f"time use, copy ``amescap_profile`` to your home directory:\n"
         f"{Cyan}cp path/to/amesCAP/mars_templates/amescap_profile "
         f"~/.amescap_profile\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 00668.atmos_average.nc -t pstd -l p44\n"
-        f"> MarsInterp 00668.atmos_average.nc -t zstd -l phalf_mb"
+        f"> MarsInterp 00668.atmos_average.nc -t pstd -v p44\n"
+        f"> MarsInterp 00668.atmos_average.nc -t zstd -v phalf_mb"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-include", "--include", nargs="+",
+parser.add_argument('-incl', '--include', nargs='+',
     help=(
         f"Only include the listed variables. Dimensions and 1D "
         f"variables are always included.\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 00668.atmos_daily.nc -include temp ps ts"
+        f"> MarsInterp 00668.atmos_daily.nc -incl temp ps ts"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-g", "--grid", action="store_true",
+parser.add_argument('-print', '--print_grid', action='store_true',
     help=(
         f"Print the vertical grid to the screen. {Yellow}This does not "
         f"run the interpolation, it only prints grid information.\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 00668.atmos_average.nc -t pstd -l p44 -g"
+        f"> MarsInterp 00668.atmos_average.nc -t pstd -v p44 -print"
         f"{Nclr}\n\n"
     )
 )
 
 # Secondary arguments: Used with some of the arguments above
 
-parser.add_argument("-e", "--ext", type=str, default=None,
+parser.add_argument('-ext', '--extension', interp_=str, default=None,
     help=(
         f"Must be paired with an argument listed above.\nInstead of "
-        f"overwriting a file to perform a function, ``--ext``\ntells "
+        f"overwriting a file to perform a function, ``-ext``\ntells "
         f"CAP to create a new file with the extension name specified "
         f"here.\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 00334.atmos_average.nc -t pstd -e _dflt_levs\n"
+        f"> MarsInterp 00334.atmos_average.nc -t pstd -ext _dflt_levs\n"
         f"  {Blue} produces 00334.atmos_average_dflt_levs.nc and "
         f"preserves all other files."
         f"{Nclr}\n\n"
@@ -168,9 +168,9 @@ def main():
     debug        = parser.parse_args().debug
     # Load all of the netcdf files
     file_list    = parser.parse_args().input_file
-    interp_type  = parser.parse_args().type  # e.g. pstd
-    custom_level = parser.parse_args().level # e.g. p44
-    grid_out     = parser.parse_args().grid
+    interp_type  = parser.parse_args().interp_type  # e.g. pstd
+    custom_level = parser.parse_args().vertical_grid # e.g. p44
+    grid_out     = parser.parse_args().print_grid
 
     # Create a namespace with numpy available
     namespace = {'np': np}
@@ -242,7 +242,7 @@ def main():
         else:
             lev_in = eval("np.array(zagl_default)", namespace)
     else:
-        print(f"{Red}Interpolation type {interp_type} is not supported, use "
+        print(f"{Red}Interpolation interp_ {interp_type} is not supported, use "
               f"``pstd``, ``zstd`` or ``zagl``{Nclr}")
         exit()
 
@@ -256,9 +256,9 @@ def main():
         check_file_tape(ifile)
 
         # Append extension, if any
-        if parser.parse_args().ext:
+        if parser.parse_args().extension:
             newname = (f"{filepath}/{ifile[:-3]}_{interp_type}_"
-                       f"{parser.parse_args().ext}.nc")
+                       f"{parser.parse_args().extension}.nc")
         else:
             newname = (f"{filepath}/{ifile[:-3]}_{interp_type}.nc")
 

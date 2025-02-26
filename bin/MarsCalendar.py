@@ -9,7 +9,7 @@ The executable requires 1 of the following arguments:
 
 and optionally accepts:
     * ``[-my --marsyear]``      The Mars Year of the simulation to compute sol or Ls from, AND/OR
-    * ``[-c --cumulative]``     Returns Ls in cumulative form
+    * ``[-c --continuous]``     Returns Ls in continuous form
 
 Third-party Requirements:
     * ``numpy``
@@ -42,7 +42,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument("-sol", "--sol", nargs="+", type=float,
+parser.add_argument('-sol', '--sol', nargs='+', type=float,
     help=(
         f"Input sol number. Required. Can either be one sol or a"
         f"range with an increment ``[start stop step]``.\n"
@@ -53,7 +53,7 @@ parser.add_argument("-sol", "--sol", nargs="+", type=float,
     )
 )
 
-parser.add_argument("-ls", "--ls", nargs="+", type=float,
+parser.add_argument('-ls', '--ls', nargs='+', type=float,
     help=(
         f"Return the sol number corresponding to this Ls.\n"
         f"{Green}Example:\n"
@@ -63,8 +63,8 @@ parser.add_argument("-ls", "--ls", nargs="+", type=float,
     )
 )
 
-parser.add_argument(
-    "-my", "--marsyear", nargs="+", type=float, default = 0.,
+parser.add_argument('-my', '--marsyear', nargs='+', type=float, 
+    default = 0.,
     help=(
         f"Return the sol or Ls corresponding to the Ls or sol of a "
         f"particular year of the simulation. \n"
@@ -76,11 +76,11 @@ parser.add_argument(
     )
 )
 
-parser.add_argument("-c", "--cumulative", action="store_true",
+parser.add_argument('-c', '--continuous', action='store_true',
     help=(
-        f"Return Ls from sol in cumulative form. Req. ``[-sol --sol]``."
-        f"\nEX: Returns Ls=360-720 instead of Ls=0-360 for input "
-        f"sol=669-1336 \n"
+        f"Return Ls from sol in continuous form. Req. ``[-sol --sol]``."
+        f"\nEX: Returns Ls=360-720 instead of Ls=0-360 for "
+        f"sol=669-1336\n"
         f"{Green}Example:\n"
         f"> MarsCalendar -sol 700 -c"
         f"{Nclr}\n\n"
@@ -89,7 +89,7 @@ parser.add_argument("-c", "--cumulative", action="store_true",
 
 # Secondary arguments: Used with some of the arguments above
 
-parser.add_argument("--debug", action="store_true",
+parser.add_argument('--debug', action='store_true',
     help=(
         f"Use with any other argument to pass all Python errors and\n"
         f"status messages to the screen when running CAP.\n"
@@ -146,8 +146,8 @@ def main():
     MY = np.squeeze(parser.parse_args().marsyear)
     print(f"MARS YEAR = {MY}")
 
-    if parser.parse_args().cumulative:
-        # Set Ls to cumulative, if requested
+    if parser.parse_args().continuous:
+        # Set Ls to continuous, if requested
         accumulate = True
     else:
         accumulate = False
@@ -164,7 +164,7 @@ def main():
         input_num = np.asarray(parser.parse_args().sol).astype(float)
         head_text = "\n    SOL  |    Ls    \n-----------------------"
         input_arr = parse_array(input_num)
-        output_arr = sol2ls(input_arr, cumulative=accumulate)
+        output_arr = sol2ls(input_arr, continuous=accumulate)
 
     # If scalar, return as float
     output_arr = np.atleast_1d(output_arr)

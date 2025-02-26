@@ -8,10 +8,10 @@ data repository is available at data.nas.nasa.gov/mcmc.
 
 The executable requires 2 arguments:
     * ``[input_file]``         The file to be transformed
-    * ``[-t --type]``          The GCM output type
+    * ``[-gcm --gcm_name]``    The GCM from which the file originates
     
 and optionally accepts:
-    * ``[-nat --native]``      Preserve the original variable and dimension names
+    * ``[-rn --retain_names]`` Preserve original variable and dimension names
     * ``[-ba, --bin_average]`` Bin non-MGCM files like 'average' files
     * ``[-bd, --bin_diurn]``   Bin non-MGCM files like 'diurn' files
     
@@ -62,7 +62,7 @@ parser = argparse.ArgumentParser(
     ),
     formatter_class=argparse.RawTextHelpFormatter)
 
-parser.add_argument("input_file", nargs="+",
+parser.add_argument('input_file', nargs='+',
     help=(
         f"NetCDF file or list of NetCDF files."
         f"{Green}Example:\n"
@@ -71,18 +71,18 @@ parser.add_argument("input_file", nargs="+",
     )
 )
 
-parser.add_argument("-t", "--type", type=str,
+parser.add_argument('-gcm', '--gcm_name', type=str,
     choices=['marswrf', 'openmars', 'pcm', 'emars'],
     help=(
         f"Acceptable types include 'openmars', 'marswrf', 'emars', "
         f"and 'pcm' \n"
         f"{Green}Example:\n"
-        f"> MarsFormat openmars_file.nc -t openmars"
+        f"> MarsFormat openmars_file.nc -gcm openmars"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-ba", "--bin_average", nargs="?", const=5, 
+parser.add_argument('-ba', '--bin_average', nargs="?", const=5, 
     type=int,
     help=(
         f"Calculate 5-day averages from instantaneous data. Generates "
@@ -96,7 +96,8 @@ parser.add_argument("-ba", "--bin_average", nargs="?", const=5,
     )
 )
 
-parser.add_argument("-bd", "--bin_diurn", action="store_true", default=False,
+parser.add_argument('-bd', '--bin_diurn', action='store_true',
+    default=False,
     help=(
         f"Calculate 5-day averages binned by hour from instantaneous "
         f"data. Generates MGCM-like 'diurn' files.\n"
@@ -111,18 +112,18 @@ parser.add_argument("-bd", "--bin_diurn", action="store_true", default=False,
 
 # Secondary arguments: Used with some of the arguments above
 
-parser.add_argument("-nat", "--native", action="store_true", 
+parser.add_argument('-rn', '--retain_names', action='store_true', 
     default=False,
     help=(
         f"Preserves the names of the variables and dimensions in the"
         f"original file.\n"
         f"{Green}Example:\n"
-        f"> MarsFormat openmars_file.nc -t openmars -nat"
+        f"> MarsFormat openmars_file.nc -t openmars -rn"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("--debug", action="store_true",
+parser.add_argument('--debug', action='store_true',
     help=(
         f"Use with any other argument to pass all Python errors and\n"
         f"status messages to the screen when running CAP.\n"
@@ -141,15 +142,15 @@ def main():
 
 
    ext='' #Initialize empty extension
-   if parser.parse_args().type not in ['marswrf','openmars','pcm','emars']:
-         print(f"{Yellow}***Notice***  No operation requested. Use '-type' and specify openmars, marswrf, pcm, emars")
+   if parser.parse_args().gcm_name not in ['marswrf', 'openmars', 'pcm', 'emars']:
+         print(f"{Yellow}***Notice***  No operation requested. Use '-gcm' and specify openmars, marswrf, pcm, emars")
          exit()  # Exit cleanly
 
    path2data = os.getcwd()
 
    # Load all of the netcdf files
    file_list    = parser.parse_args().input_file
-   model_type  = parser.parse_args().type  # e.g. 'legacy'
+   model_type  = parser.parse_args().gcm_name  # e.g. 'legacy'
    for filei in file_list:
       #Add path unless full path is provided
       if not ('/' in filei):
@@ -555,8 +556,8 @@ def main():
       # STANDARDIZED VARIABLES NAMES IF REQUESTED
       #=================================================
 
-      if parser.parse_args().native:
-         print(f"{Purple}Preserving native names for variable and dimensions")
+      if parser.parse_args().retain_names:
+         print(f"{Purple}Preserving original names for variable and dimensions")
          ext=ext+'_nat'
       else:
          print(f"{Purple}Using standard FV3 names for variables and dimensions")

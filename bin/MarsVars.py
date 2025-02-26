@@ -157,10 +157,10 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument("input_file", nargs="+",
+parser.add_argument('input_file', nargs='+',
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
-parser.add_argument("-add", "--add", nargs="+", default=[], 
+parser.add_argument('-add', '--add', nargs='+', default=[], 
     help=(
         f"Add a new variable to file. Variables that can be added are "
         f"listed below.\n"
@@ -174,7 +174,7 @@ parser.add_argument("-add", "--add", nargs="+", default=[],
     )
 )
 
-parser.add_argument("-zdiff", "--zdiff", nargs="+", default=[],
+parser.add_argument('-zdiff', '--zdiff', nargs='+', default=[],
     help=(
         f"Differentiate a variable w.r.t. the Z axis.\n"
         f"*Requires a variable with a vertical dimension*\n"
@@ -187,7 +187,7 @@ parser.add_argument("-zdiff", "--zdiff", nargs="+", default=[],
     )
 )
 
-parser.add_argument("-col", "--col", nargs="+", default=[],
+parser.add_argument('-col', '--col', nargs='+', default=[],
     help=(
         f"Integrate a variable through the column.\n"
         f"*Requires a variable with a vertical dimension*\n"
@@ -200,7 +200,7 @@ parser.add_argument("-col", "--col", nargs="+", default=[],
     )
 )
 
-parser.add_argument("-zd", "--zonal_detrend", nargs="+", default=[],
+parser.add_argument('-zd', '--zonal_detrend', nargs='+', default=[],
     help=(
         f"Detrend a variable by substracting its zonal mean value.\n"
         f"A new a variable (``var_p``) (for prime) will be added to the"
@@ -212,7 +212,7 @@ parser.add_argument("-zd", "--zonal_detrend", nargs="+", default=[],
     )
 )
 
-parser.add_argument("-dp_to_dz", "--dp_to_dz", nargs="+", default=[],
+parser.add_argument('-dp_to_dz', '--dp_to_dz', nargs='+', default=[],
     help=(
         f"Convert aerosol opacity [op/Pa] to [op/m] (-dp_to_dz). "
         f"Requires ``DP`` & ``DZ`` to be present in the file already.\n"
@@ -225,7 +225,7 @@ parser.add_argument("-dp_to_dz", "--dp_to_dz", nargs="+", default=[],
     )
 )
 
-parser.add_argument("-dz_to_dp", "--dz_to_dp", nargs="+", default=[],
+parser.add_argument('-dz_to_dp', '--dz_to_dp', nargs='+', default=[],
     help=(
         f"Convert aerosol opacity [op/m] to [op/Pa] (-dz_to_dp). "
         f"Requires ``DP`` & ``DZ`` to be present in the file already.\n"
@@ -238,7 +238,7 @@ parser.add_argument("-dz_to_dp", "--dz_to_dp", nargs="+", default=[],
     )
 )
 
-parser.add_argument("-rm", "--remove", nargs="+", default=[],
+parser.add_argument('-rm', '--remove', nargs='+', default=[],
     help=(
         f"Remove a variable from a file.\n"
         f"{Green}Example:\n"
@@ -247,7 +247,7 @@ parser.add_argument("-rm", "--remove", nargs="+", default=[],
     )
 )
 
-parser.add_argument("-extract", "--extract", nargs="+", default=[],
+parser.add_argument('-extract', '--extract', nargs='+', default=[],
     help=(
         f"Copy one or more variables from a file into a new file of "
         f"the same name with the appended extension: '_extract'.\n"
@@ -260,7 +260,7 @@ parser.add_argument("-extract", "--extract", nargs="+", default=[],
     )
 )
 
-parser.add_argument("-edit", "--edit", default=None,
+parser.add_argument('-edit', '--edit', default=None,
     help=(
         f"Edit a variable's attributes or scale its values.\n"
         f"Requires the use of one or more of the following flags:\n"
@@ -275,7 +275,7 @@ parser.add_argument("-edit", "--edit", default=None,
 # Secondary arguments: Used with some of the arguments above
 
 # To be used jointly with --edit
-parser.add_argument("-rename", "--rename", type=str, default=None,
+parser.add_argument('-rename', '--rename', type=str, default=None,
     help=(
         f"Rename a variable. Requires ``-edit``.\n"
         f"{Green}Example:\n"
@@ -285,7 +285,7 @@ parser.add_argument("-rename", "--rename", type=str, default=None,
 )
 
 # To be used jointly with --edit
-parser.add_argument("-longname", "--longname", type=str, default=None,
+parser.add_argument('-longname', '--longname', type=str, default=None,
     help=(
         f"Change a variable's 'longname' attribute. Requires ``-edit``.\n"
         f"{Green}Example:\n"
@@ -296,7 +296,7 @@ parser.add_argument("-longname", "--longname", type=str, default=None,
 )
 
 # To be used jointly with --edit
-parser.add_argument("-unit", "--unit", type=str, default=None,
+parser.add_argument('-unit', '--unit', type=str, default=None,
     help=(
         f"Change a variable's unit text. Requires ``-edit``.\n"
         f"{Green}Example:\n"
@@ -306,7 +306,7 @@ parser.add_argument("-unit", "--unit", type=str, default=None,
 )
 
 # To be used jointly with --edit
-parser.add_argument("-multiply", "--multiply", type=float, default=None,
+parser.add_argument('-multiply', '--multiply', type=float, default=None,
     help=(
         f"Scale a variable's values. Requires ``-edit``.\n"
         f"{Green}Example:\n"
@@ -315,7 +315,7 @@ parser.add_argument("-multiply", "--multiply", type=float, default=None,
     )
 )
 
-parser.add_argument("--debug",  action="store_true",
+parser.add_argument('--debug',  action='store_true',
     help=(
         f"Use with any other argument to pass all Python errors and\n"
         f"status messages to the screen when running CAP.\n"
