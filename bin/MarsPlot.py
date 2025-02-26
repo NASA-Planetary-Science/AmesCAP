@@ -257,62 +257,53 @@ if args.inspect_file:
                      f"file{Nclr}")
         exit()
 
-if (args.template_file is None and 
-    args.generate_template is None and 
-    args.inspect_file is False):
-    print(args.date)
-    print(args.figure_filetype)
-    print(args.stack_years)
-    print(args.portrait_mode)
-    print(args.pixel_width)
-    print(args.directory)
-    print(args.trim_text)
-    print(args.print_values)
-    print(args.statistics)
-    if args.date:
-        parser.error(f"{Red}The -d argument requires a template file "
-                    f"like Custom.in (e.g., MarsPlot Custom.in -d 00668)"
-                    f"{Nclr}")
-        exit()
+if args.date and (args.template_file is None and 
+                           args.generate_template is None and 
+                           args.inspect_file is False):
+    parser.error(f"{Red}The -d argument requires a template file "
+                 f"like Custom.in (e.g., MarsPlot Custom.in -d 00668)"
+                 f"{Nclr}")
+    exit()
 
-    if args.figure_filetype:
-        parser.error(f"{Red}The -d argument requires a template file "
-                    f"like Custom.in (e.g., MarsPlot Custom.in -ftype png)"
-                    f"{Nclr}")
-        exit()
+if args.figure_filetype and (args.template_file is None and 
+                           args.generate_template is None and 
+                           args.inspect_file is False):
+    parser.error(f"{Red}The -d argument requires a template file "
+                 f"like Custom.in (e.g., MarsPlot Custom.in -ftype png)"
+                 f"{Nclr}")
+    exit()
 
-    if args.stack_years:
-        parser.error(f"{Red}The -sy argument requires a template file "
-                    f"like Custom.in (e.g., MarsPlot Custom.in -sy)"
-                    f"{Nclr}")
-        exit()
+if args.stack_years and (args.template_file is None and 
+                           args.generate_template is None and 
+                           args.inspect_file is False):
+    parser.error(f"{Red}The -sy argument requires a template file "
+                 f"like Custom.in (e.g., MarsPlot Custom.in -sy)"
+                 f"{Nclr}")
+    exit()
 
-    if args.portrait_mode:
-        parser.error(f"{Red}The -portrait argument requires a template "
-                    f"file like Custom.in (e.g., MarsPlot Custom.in "
-                    f"-portrait){Nclr}")
-        exit()
+if args.portrait_mode and (args.template_file is None and 
+                           args.generate_template is None and 
+                           args.inspect_file is False):
+    parser.error(f"{Red}The -portrait argument requires a template "
+                 f"file like Custom.in (e.g., MarsPlot Custom.in "
+                 f"-portrait){Nclr}")
+    exit()
 
-    if (args.statistics or args.print_values):
-        parser.error(f"{Red}The following arguments require -i followed by "
-                    f"a netCDF file: -values, -stats, e.g.:\n"
-                    f"MarsPlot -i 00668.atmos_daily.nc -values temp\n"
-                    f"MarsPlot -i 00668.atmos_daily.nc -stats temp{Nclr}")
-        exit()
+if (args.statistics or args.print_values) and (args.inspect_file is False):
+    parser.error(f"{Red}The following arguments require -i followed by "
+                 f"a netCDF file: -values, -stats, e.g.:\n"
+                 f"MarsPlot -i 00668.atmos_daily.nc -values temp\n"
+                 f"MarsPlot -i 00668.atmos_daily.nc -stats temp{Nclr}")
+    exit()
 
-    if args.trim_text:
-        parser.error(f"{Red}The -trim argument requires -template (e.g., "
-                    f"MarsPlot -template -trim{Nclr}")
-        exit()
-    
-    else:
-        # Nothing was passed to MarsPlot
-        parser.error(f"{Red}No valid argument was passed. Pass a "
-                    f"Custom.in template file or use -template or -i "
-                    f"to use MarsPlot. Type 'MarsPlot -h' if you need "
-                    f"more assistance.{Nclr}")
-        exit()
+if args.trim_text and (args.generate_template is None):
+    parser.error(f"{Red}The -trim argument requires -template (e.g., "
+                 f"MarsPlot -template -trim{Nclr}")
+    exit()
 
+print(args.template_file)
+print(args.inspect_file)
+print(args.generate_template)
 # ======================================================================
 #                           MAIN PROGRAM
 # ======================================================================
