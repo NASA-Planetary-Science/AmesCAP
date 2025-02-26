@@ -245,7 +245,13 @@ args = parser.parse_args()
 
 if args.template_file:
     if not re.search(".in", args.template_file.name):
-        print(f"{Red}*** Template file is not a '.in' file ***{Nclr}")
+        parser.error(f"{Red}Template file is not a '.in' file{Nclr}")
+        exit()
+
+if args.inspect_file:
+    if not re.search(".nc", args.inspect_file.name):
+        parser.error(f"{Red}{args.inspect_file.name} is not a netCDF "
+                     f"file{Nclr}")
         exit()
 
 if (args.trim_text or 
@@ -253,17 +259,17 @@ if (args.trim_text or
     args.figure_filetype or 
     args.stack_years or 
     args.portrait_mode) and (args.template_file is None):
-    parser.error("The following arguments require a Custom.in template: "
-                 "-trim, -d, -ftype, -sy, -portrait")
+    parser.error(f"{Red}The following arguments require a Custom.in"
+                 f" template:\n-trim, -d, -ftype, -sy, -portrait{Nclr}")
     exit()
 
 if (args.stats or args.values) and (args.inspect_file is None):
-    parser.error("The following arguments require -i followed by a "
-                 "netCDF file: -values, -stats")
+    parser.error(f"{Red}The following arguments require -i followed by "
+                 f"a netCDF file:\n-values, -stats{Nclr}")
     exit()
 
 if args.trim_text and args.generate_template is None:
-    parser.error("The -trim argument requires -template")
+    parser.error(f"{Red}The -trim argument requires -template{Nclr}")
     exit()
 
 # ======================================================================
