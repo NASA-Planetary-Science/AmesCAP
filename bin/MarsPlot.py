@@ -304,7 +304,7 @@ def main():
             # Show information for all variables
             print_fileContent(parser.parse_args().inspect_file)
 
-    elif parser.parse_args().generate_template or parser.parse_args().something:
+    elif parser.parse_args().generate_template:
         make_template()
 
     else:
