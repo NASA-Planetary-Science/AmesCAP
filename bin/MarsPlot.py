@@ -302,6 +302,9 @@ if args.trim_text and (args.generate_template is None):
                  f"MarsPlot -template -trim{Nclr}")
     exit()
 
+print(args.template_file)
+print(args.inspect_file)
+print(args.generate_template)
 # ======================================================================
 #                           MAIN PROGRAM
 # ======================================================================
@@ -547,7 +550,8 @@ def main():
     else:
         parser.error(f"{Red}No valid argument was passed. Pass a "
                      f"Custom.in template file, or use -template or -i"
-                     f"with MarsPlot{Nclr}")
+                     f"with MarsPlot.\nType 'MarsPlot -h' if you need "
+                     f"more assistance.{Nclr}")
         exit()
 # ======================================================================
 #                       DATA OPERATION UTILITIES
