@@ -99,7 +99,8 @@ req_group.add_argument('template_file', nargs='?',
     )
 )
 
-req_group.add_argument('-i', '--inspect_file', default=None,
+req_group.add_argument('-i', '--inspect_file', nargs=1,
+    type=argparse.FileType('r'),
     help=(
         f"Print the content of a netCDF file to the screen. This is a "
         f"ncdump-like feature. Variables are sorted by dimension.\n"
@@ -158,9 +159,7 @@ parser.add_argument('-ftype', '--figure_filetype', default='pdf', type=str,
         f"Output file format.\n"
         f"Default is PDF if ghostscript (gs) is available, else PNG.\n"
         f"{Green}Example:\n"
-        f"> MarsPlot Custom.in -ftype png\n"
-        f"> MarsPlot Custom.in -ftype png -pw 500 "
-        f"  {Blue}(sets pixel width to 500, default is 2000)"
+        f"> MarsPlot Custom.in -ftype png"
         f"{Nclr}\n\n"
     )
 )
@@ -176,7 +175,13 @@ parser.add_argument('-portrait', '--portrait_mode', action='store_true',
 )
 
 parser.add_argument('-pw', '--pixel_width', default=2000, type=float,
-    help=argparse.SUPPRESS)
+    help=(
+        f"Pixel width of the output figure. Default is 2000.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot Custom.in -pw 1000"
+        f"{Nclr}\n\n"
+    )
+)
 
 parser.add_argument('-dir', '--directory', default=os.getcwd(),
     help=(
@@ -223,7 +228,7 @@ parser.add_argument('-stats', '--statistics', nargs='+', default=None,
         f"For use with ``-i --inspect``: print the min, mean, and max "
         f"values of the specified variable to the screen.\n"
         f"{Green}Example:\n"
-        f"> MarsPlot -i 00668.atmos_daily.nc -statistics temp\n"
+        f"> MarsPlot -i 00668.atmos_daily.nc -stats temp\n"
         f"{Blue}(quotes '' req. for browsing dimensions){Green}\n"
         f"> MarsPlot -i 00668.atmos_daily.nc -stats ''temp[6,:,30,10]''"
         f"{Nclr}\n\n"
@@ -254,22 +259,40 @@ if args.inspect_file:
                      f"file{Nclr}")
         exit()
 
-if (args.trim_text or 
-    args.date or 
-    args.figure_filetype or 
-    args.stack_years or 
-    args.portrait_mode) and (args.template_file is None):
-    parser.error(f"{Red}The following arguments require a Custom.in"
-                 f" template:\n-trim, -d, -ftype, -sy, -portrait{Nclr}")
+if args.date and (args.template_file is None):
+    parser.error(f"{Red}The -d argument requires a template file "
+                 f"like Custom.in (e.g., MarsPlot Custom.in -d 00668)"
+                 f"{Nclr}")
+    exit()
+
+if args.figure_filetype and (args.template_file is None):
+    parser.error(f"{Red}The -d argument requires a template file "
+                 f"like Custom.in (e.g., MarsPlot Custom.in -ftype png)"
+                 f"{Nclr}")
+    exit()
+
+if args.stack_years and (args.template_file is None):
+    parser.error(f"{Red}The -sy argument requires a template file "
+                 f"like Custom.in (e.g., MarsPlot Custom.in -sy)"
+                 f"{Nclr}")
+    exit()
+
+if args.portrait_mode and (args.template_file is None):
+    parser.error(f"{Red}The -portrait argument requires a template "
+                 f"file like Custom.in (e.g., MarsPlot Custom.in "
+                 f"-portrait){Nclr}")
     exit()
 
 if (args.stats or args.values) and (args.inspect_file is None):
     parser.error(f"{Red}The following arguments require -i followed by "
-                 f"a netCDF file:\n-values, -stats{Nclr}")
+                 f"a netCDF file: -values, -stats, e.g.:\n"
+                 f"MarsPlot -i 00668.atmos_daily.nc -values temp\n"
+                 f"MarsPlot -i 00668.atmos_daily.nc -stats temp{Nclr}")
     exit()
 
 if args.trim_text and args.generate_template is None:
-    parser.error(f"{Red}The -trim argument requires -template{Nclr}")
+    parser.error(f"{Red}The -trim argument requires -template (e.g., "
+                 f"MarsPlot -template -trim{Nclr}")
     exit()
 
 # ======================================================================
