@@ -36,13 +36,16 @@ parser = argparse.ArgumentParser(
     prog=('MarsCalendar'),
     description=(
         f"{Yellow}Returns the solar longitude (Ls) corresponding to a "
-        f"sol or vice-versa. Adapted from areols.py."
+        f"sol or vice-versa. Adapted from areols.py by Tanguy Bertrand."
         f"{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
 
 group = parser.add_mutually_exclusive_group(required=True)
+group = parser.add_argument_group("Required Arguments", 
+                                  "MarsCalendar requires one of these"
+                                  "arguments.")
 
 group.add_argument('-sol', '--sol', nargs='+', type=float,
     help=(
@@ -64,6 +67,8 @@ group.add_argument('-ls', '--ls', nargs='+', type=float,
         f"{Nclr}\n\n"
     )
 )
+
+# Secondary arguments: Used with some of the arguments above
 
 parser.add_argument('-my', '--marsyear', nargs='+', type=float, 
     default = 0.,
@@ -89,8 +94,6 @@ parser.add_argument('-c', '--continuous', action='store_true',
     )
 )
 
-# Secondary arguments: Used with some of the arguments above
-
 parser.add_argument('--debug', action='store_true',
     help=(
         f"Use with any other argument to pass all Python errors and\n"
@@ -101,14 +104,7 @@ parser.add_argument('--debug', action='store_true',
     )
  )
 
-# Handle mutually in/exclusive arguments (e.g., -sy requires Custom.in)
 args = parser.parse_args()
-
-if args.marsyear is not None and (args.sol is None and args.ls is None):
-    parser.error(f"{Red}The -my argument requires -ls or -sol"
-                 f"(e.g., MarsCalendar -ls 350 -my 2"
-                 f"{Nclr}")
-    exit()
     
 # ======================================================================
 #                               DEFINITIONS
