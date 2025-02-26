@@ -310,6 +310,9 @@ def main():
     else:
         # Custom.in: generate plots from a Custom.in template
         if parser.parse_args().template_file:
+            if ".in" not in parser.parse_args().template_file.name:
+                print(f"{Red}*** Template file is not a .in file ***{Nclr}")
+                exit()
             # Case A: Use local Custom.in (most common option)
             print(f"Reading {parser.parse_args().template_file.name}")
             namelist_parser(parser.parse_args().template_file.name)
@@ -1411,7 +1414,7 @@ def make_template():
     # Create header with instructions. Add version number to title.
     customFileIN.write(
         f"===================== |MarsPlot V{str(current_version)}| ===================\n")
-    if (parser.parse_args().something == False):
+    if parser.parse_args().something:
         # Additional instructions if requested
         customFileIN.write(
             "# ================================================= INSTRUCTIONS =================================================\n")
