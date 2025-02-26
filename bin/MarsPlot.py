@@ -81,8 +81,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-req_group = parser.add_mutually_exclusive_group(required=True)
-
+req_group = parser.add_mutually_exclusive_group()
 
 req_group.add_argument('template_file', nargs='?', 
     type=argparse.FileType('r'),
