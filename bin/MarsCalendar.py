@@ -43,7 +43,7 @@ parser = argparse.ArgumentParser(
 )
 
 group = parser.add_argument_group("Required Arguments", 
-    "MarsCalendar requires either -ls or -sol.")
+    "\n{Yellow}MarsCalendar requires either -ls or -sol.{Nclr}\n")
 exclusive_group = parser.add_mutually_exclusive_group(required=True)
 
 exclusive_group.add_argument('-sol', '--sol', nargs='+', type=float,
