@@ -493,6 +493,35 @@ parser.add_argument('--debug', action='store_true',
 
 args = parser.parse_args()
 
+print("input file = "+ str(args.input_file))
+print("bin_files = "+ str(args.bin_files))
+print("concatenate = "+ str(args.concatenate))
+print("split = "+ str(args.split))
+print("time_shift = "+ str(args.time_shift))
+print("bin_average = "+ str(args.bin_average))
+print("bin_diurn = "+ str(args.bin_diurn))
+print("high_pass_temporal = "+ str(args.high_pass_temporal))
+print("low_pass_temporal = "+ str(args.low_pass_temporal))
+print("band_pass_temporal = "+ str(args.band_pass_temporal))
+print("add_trend = "+ str(args.add_trend))
+print("high_pass_spatial = "+ str(args.high_pass_spatial))
+print("low_pass_spatial = "+ str(args.low_pass_spatial))
+print("band_pass_spatial = "+ str(args.band_pass_spatial))
+print("tide_decomp = "+ str(args.tide_decomp))
+print("reconstruct = "+ str(args.reconstruct))
+print("normalize = "+ str(args.normalize))
+print("regrid_XY_to_match = "+ str(args.regrid_XY_to_match))
+print("zonal_average = "+ str(args.zonal_average))
+print("dimension = "+ str(args.dimension))
+print("normalize = "+ str(args.normalize))
+print("extension = "+ str(args.extension))
+
+# dimension split
+# normalize tide
+# add_trend lpt
+# reconstruct tide
+# include
+# extension
 # ======================================================================
 #                               EXTENSIONS
 # ======================================================================
