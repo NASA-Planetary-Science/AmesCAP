@@ -43,12 +43,10 @@ parser = argparse.ArgumentParser(
 )
 
 group = parser.add_argument_group("Required Arguments", 
-                                  "MarsCalendar requires one of these "
-                                  "arguments.")
+    "MarsCalendar requires either -ls or -sol.")
 exclusive_group = parser.add_mutually_exclusive_group(required=True)
 
 exclusive_group.add_argument('-sol', '--sol', nargs='+', type=float,
-    required=True,
     help=(
         f"Input sol number. Required. Can either be one sol or a"
         f"range with an increment ``[start stop step]``.\n"
@@ -60,7 +58,6 @@ exclusive_group.add_argument('-sol', '--sol', nargs='+', type=float,
 )
 
 exclusive_group.add_argument('-ls', '--ls', nargs='+', type=float,
-    required=True,
     help=(
         f"Return the sol number corresponding to this Ls.\n"
         f"{Green}Example:\n"
@@ -107,6 +104,12 @@ parser.add_argument('--debug', action='store_true',
  )
 
 args = parser.parse_args()
+
+if args.sol is None and args.ls is None:
+    parser.error(f"{Red}MarsCalendar requires either ``[-sol --sol]`` or "
+                 f"``[-ls --ls]``. See ``MarsCalendar -h`` for additional "
+                 f"help.{Nclr}")
+    exit()
     
 # ======================================================================
 #                               DEFINITIONS
