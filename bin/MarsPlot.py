@@ -97,7 +97,7 @@ parser.add_argument('template_file', nargs='?',
     )
 )
 
-parser.add_argument('-i', '--inspect_file', nargs='?',
+parser.add_argument('-i', '--inspect_file', nargs=1,
     type=argparse.FileType('r'),
     help=(
         f"Print the content of a netCDF file to the screen. This is a "
@@ -108,7 +108,7 @@ parser.add_argument('-i', '--inspect_file', nargs='?',
     )
 )
 
-parser.add_argument('-template', '--generate_template', nargs='?', 
+parser.add_argument('-template', '--generate_template', default=False,
     action='store_true',
     help=(
         f"Generate a file called Custom.in that provides templates "
