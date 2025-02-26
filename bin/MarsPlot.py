@@ -152,7 +152,7 @@ parser.add_argument('-sy', '--stack_years', action='store_true',
     )
 )
 
-parser.add_argument('-ftype', '--figure_filetype', default='pdf', 
+parser.add_argument('-ftype', '--figure_filetype', default=None, 
     type=str, choices=['pdf', 'eps', 'png'],
     help=(
         f"Output file format.\n"
@@ -208,7 +208,8 @@ parser.add_argument('-trim', '--trim_text', action='store_true',
 )
 
 # to be used jointly with --inspect
-parser.add_argument('-values', '--print_values', nargs='+', default=None,
+parser.add_argument('-values', '--print_values', nargs='+',
+    default=None,
     help=(
         f"For use with ``-i --inspect``: print the values of the "
         f"specified variable to the screen.\n"
@@ -268,7 +269,7 @@ if args.date and (args.template_file is None and
 if args.figure_filetype and (args.template_file is None and 
                            args.generate_template is False and 
                            args.inspect_file is None):
-    parser.error(f"{Red}The -d argument requires a template file "
+    parser.error(f"{Red}The -f argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -ftype png)"
                  f"{Nclr}")
     exit()
@@ -319,7 +320,7 @@ print("trim_text " + str(args.trim_text))
 def main():
     global output_path, input_paths, out_format, debug
     output_path = os.getcwd()
-    out_format = args.figure_filetype
+    out_format = 'pdf' if args.figure_filetype is None else args.figure_filetype
     debug = args.debug
     input_paths = []
     input_paths.append(args.directory)
