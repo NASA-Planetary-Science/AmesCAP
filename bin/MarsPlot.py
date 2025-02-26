@@ -247,13 +247,13 @@ parser.add_argument('--debug', action='store_true',
 args = parser.parse_args()
 
 if args.template_file:
-    if not re.search(".in", args.template_file.name):
+    if not re.search(".in", args.template_file):
         parser.error(f"{Red}Template file is not a '.in' file{Nclr}")
         exit()
 
 if args.inspect_file:
-    if not re.search(".nc", args.inspect_file.name):
-        parser.error(f"{Red}{args.inspect_file.name} is not a netCDF "
+    if not re.search(".nc", args.inspect_file):
+        parser.error(f"{Red}{args.inspect_file} is not a netCDF "
                      f"file{Nclr}")
         exit()
 
@@ -381,8 +381,8 @@ def main():
 
     else:
         # Case A: Use local Custom.in (most common option)
-        print(f"Reading {args.template_file.name}")
-        namelist_parser(args.template_file.name)
+        print(f"Reading {args.template_file}")
+        namelist_parser(args.template_file)
 
         if args.do:
             # Case B: Use Custom.in from local template dir
@@ -477,7 +477,7 @@ def main():
                     # e.g., Custom.in -> Diagnostics.pdf, or
                     #       Custom_01.in -> Diagnostics_01.pdf
                     input_file = (f"{output_path}/"
-                                  f"{args.template_file.name}")
+                                  f"{args.template_file}")
                     basename = input_file.split("/")[-1].split(".")[0].strip()
             except:
                 # Use default PDF basename "Diagnostics".
@@ -1481,7 +1481,7 @@ def make_template():
     # Create header with instructions. Add version number to title.
     customFileIN.write(
         f"===================== |MarsPlot V{str(current_version)}| ===================\n")
-    if args.trim_text:
+    if args.trim_text is not None:
         # Additional instructions if requested
         customFileIN.write(
             "# ================================================= INSTRUCTIONS =================================================\n")
