@@ -5,7 +5,8 @@ Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on \
 the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
 The executable requires 2 arguments:
-    * ``[-id --id]``      The simulation identifier, AND
+    * The directory from which to pull data from 
+    (https://data.nas.nasa.gov/mcmcref/), AND
     * ``[-ls --ls]``      The desired solar longitude(s), OR
     * ``[-f --filename]`` The name(s) of the desired file(s)
 
@@ -20,7 +21,7 @@ List of Functions:
 
 # make print statements appear in color
 from amescap.Script_utils import (
-    prYellow, prCyan, Green, Yellow, Nclr, Cyan
+    prYellow, prCyan, Green, Yellow, Nclr, Cyan, Blue, Red
 )
 
 # Load generic Python modules
@@ -35,51 +36,67 @@ import numpy as np
 # ======================================================
 
 parser = argparse.ArgumentParser(
+    prog=('MarsPull'),
     description=(
-        f"{Yellow}Uility for querying files on the MCMC NAS Data "
-        f"Portal.{Nclr}"
+        f"{Yellow}Uility for downloading NASA Ames Mars Global Climate "
+        f"Model output files from the NAS Data Portal at:"
+        f"{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}\n"
+        f"Requires the ``-id`` argument AND EITHER ``-f`` or ``-ls``."
+        f"{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument("-id", "--id", type=str,
+parser.add_argument("directory_name", type=str,
+    choices=[
+        "FV3BETAOUT1", "ACTIVECLDS", "INERTCLDS", "NEWBASE_ACTIVECLDS",
+        "ACTIVECLDS_NCDF"],
     help=(
-        f"Query data by simulation identifier corresponding to \n"
-        f"a subdirectory of :\n"
-        f"{Cyan}https://data.nas.nasa.gov/mcmcref/ \n"
-        f"Current options include: '{Yellow}FV3BETAOUT1{Nclr}' '{Yellow}ACTIVECLDS{Nclr}', "
-        f"'{Yellow}INERTCLDS{Nclr}', {Yellow}NEWBASE_ACTIVECLDS{Nclr}  and '{Yellow}ACTIVECLDS_NCDF\n"
-        f"{Green}Usage:\n"
-        f"> MarsPull -id  INERTCLDS..."
+        f"Mandatory flag. Selects the simulation directory from the "
+        f"NAS data portal:\n"
+        f"{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}\n"
+        f"Current options are: {Yellow}FV3BETAOUT1\nACTIVECLDS\n"
+        f"INERTCLDS\nNEWBASE_ACTIVECLDS\nACTIVECLDS_NCDF\n"
+        f"{Red}MUST be used with either ``-f`` or ``-ls``.\n"
+        f"{Green}Example:\n"
+        f"> MarsPull ACTIVECLDS -f fort.11_0730\n"
+        f"{Blue}OR{Green}\n"
+        f"> MarsPull ACTIVECLDS -ls 90\n"
         f"{Nclr}\n\n"
     )
 )
 
 parser.add_argument("-f", "--filename", nargs="+", type=str,
     help=(
-        f"Query data by file name. Requires a simulation identifier "
-        f"(--id)\n"
-        f"{Green}Usage:\n"
-        f"> MarsPull -id ACTIVECLDS -f fort.11_0730 fort.11_0731"
+        f"The name(s) of the file(s) to download.\n"
+        f"{Green}Example:\n"
+        f"> MarsPull ACTIVECLDS -f fort.11_0730 fort.11_0731"
         f"{Nclr}\n\n"
     )
 )
 
 parser.add_argument("-ls", "--ls", nargs="+", type=float,
     help=(
-        f"Legacy GCM only: Query data by solar longitude (Ls). Requires a simulation "
-        f"identifier (--id)\n"
-        f"{Green}Usage:\n"
-        f"> MarsPull -id ACTIVECLDS -ls 90.\n"
-        f"> MarsPull -id ACTIVECLDS -ls [start] [stop]"
+        f"Selects the file(s) to download based on a range of solar "
+        f"longitudes (Ls).\n"
+        f"This only works on data in the {Yellow}ACTIVECLDS{Nclr} and "
+        f"{Yellow}INERTCLDS{Nclr} folders.\n"
+        f"{Green}Example:\n"
+        f"> MarsPull ACTIVECLDS -ls 90\n"
+        f"> MarsPull ACTIVECLDS -ls 180 360"
         f"{Nclr}\n\n"
     )
 )
 
+# Secondary arguments: Used with some of the arguments above
+
 parser.add_argument("--debug", action="store_true",
     help=(
-        f"More verbosity in status and error messages when running CAP."
-        f"\n\n"
+        f"Use with any other argument to pass all Python errors and "
+        f"status messages to the screen when running CAP."
+        f"{Green}Example:\n"
+        f"> MarsPull ACTIVECLDS -ls 90 --debug"
+        f"{Nclr}\n\n"
     )
  )
 
@@ -166,11 +183,7 @@ def main():
 
     #Original
     #URLbase="https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/"
-    simu_ID=parser.parse_args().id
-
-    if simu_ID is None :
-        prYellow("***Error*** simulation ID [-id --id] is required. See 'MarsPull -h' for help")
-        exit()
+    simu_ID=parser.parse_args().directory_name
 
     #URLbase='https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/'+simu_ID+'/'
     print('new URL base')
@@ -218,8 +231,7 @@ def main():
             download(url,filename)
     else:
         prYellow("ERROR No file requested. Use [-ls --ls] or "
-                 "[-f --filename] with [-id --id] to specify a file to "
-                 "download.")
+                 "[-f --filename] to specify a file to download.")
         exit()
 
 # ======================================================

@@ -72,6 +72,7 @@ current_version = 3.5
 # ======================================================
 
 parser = argparse.ArgumentParser(
+    prog=('MarsPlot'),
     description=(
         f"{Yellow}Analysis Toolkit for the MGCM, V{current_version}."
         f"{Nclr}\n\n"
@@ -82,9 +83,9 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "custom_file", nargs="?", type=argparse.FileType("r"), default=None,
     help=(
-        f"Use optional input file Custom.in to create the graphs.\n"
-        f"{Green}Usage:\n"
-        f"> MarsPlot Custom.in [other options]\n"
+        f"Use the Custom.in template file to create figures.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot Custom.in\n"
         f"{Nclr}\n\n"
         f"Update CAP as needed with:{Cyan}\n"
         f"> pip install git+https://github.com/NASA-Planetary-Science/"
@@ -97,57 +98,48 @@ parser.add_argument(
 
 parser.add_argument("-i", "--inspect_file", default=None,
     help=(
-        f"Inspect netcdf file content. Variables are sorted by "
-        f"dimensions.\n"
-        f"{Green}Usage:\n"
-        f"> MarsPlot -i 00000.atmos_daily.nc\n"
-        f"{Blue}Options: use --dump (variable content) and --stat "
-        f"(min, mean, max) jointly with --inspect{Green}\n"
-        f"> MarsPlot -i 00000.atmos_daily.nc -dump [variable]"
-        f"``temp[6,:,30,10]``\n"
-        f"{Blue}(quotes "" req. for browsing dimensions){Green}\n"
-        f"> MarsPlot -i 00000.atmos_daily.nc -stat ``ucomp[5,:,:,:]`` "
-        f"``vcomp[5,:,:,:]``"
+        f"Print the content of a netCDF file to the screen. This is a "
+        f"ncdump-like feature. Variables are sorted by dimension.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot -i 00668.atmos_daily.nc"
         f"{Nclr}\n\n"
     )
 )
-# to be used jointly with --inspect
-parser.add_argument("--dump", "-dump", nargs="+", default=None,
-    help=argparse.SUPPRESS)
-
-# to be used jointly with --inspect
-parser.add_argument("--stat", "-stat", nargs="+", default=None,
-    help=argparse.SUPPRESS)
 
 parser.add_argument("-d", "--date", nargs="+", default=None,
     help=(
         f"Specify the files to use. Default is the last file created.\n"
-        f"{Green}Usage:\n"
-        f"> MarsPlot Custom.in -d [desired_ls]\n"
-        f"> MarsPlot Custom.in -d [start_ls] [end_ls]"
+        f"{Green}Example:\n"
+        f"> MarsPlot Custom.in -d 00668\n"
+        f"> MarsPlot Custom.in -d 00334 01002"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("--template", "-template", action="store_true",
+parser.add_argument("-template", "--template", action="store_true",
     help=(
-        f"Generate a template (Custom.in) for creating the plots.\n"
-        f"(Use ``--temp`` to create a Custom.in file without these "
-        f"instructions)\n\n"
+        f"Generate a file called Custom.in that provides templates "
+        f"for making plots with CAP.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot Custom.in -template\n"
+        f"{Nclr}\n\n"
     )
 )
 
-# Creates a Custom.in template without the instructions
 parser.add_argument("-temp", "--temp", action="store_true",
-    help=argparse.SUPPRESS)
-
+    help=(
+        f"Generate a file called Custom.in that provides templates "
+        f"for making plots with CAP without the instructions that "
+        f"appear as several lines of comments at top of the file.\n\n"
+    )
+)
 parser.add_argument("-do", "--do", nargs=1, type=str, default=None,
     help=(
-        f"(Re)use a template file (e.g., my_custom.in). Searches in "
+        f"(Re)use a template file (e.g., my_template.in). Searches in "
         f"path/to/amesCAP/mars_templates/ first, then in directories"
         f"defined in MarsPlot.\n"
-        f"{Green}Usage:\n"
-        f"> MarsPlot -do my_custom [other options]"
+        f"{Green}Example:\n"
+        f"> MarsPlot -do my_template.in"
         f"{Nclr}\n\n"
     )
 )
@@ -158,18 +150,18 @@ parser.add_argument("-sy", "--stack_year", action="store_true",
         f"Stack consecutive years in 1D time series plots "
         f"(recommended). "
         f"Otherwise, plot in monotonically increasing format.\n"
-        f"{Green}Usage:\n"
+        f"{Green}Example:\n"
         f"> MarsPlot Custom.in -sy"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-o", "--output", default="pdf",
+parser.add_argument("-o", "--output", default="pdf", type=str,
     choices=["pdf", "eps", "png"],
     help=(
         f"Output file format.\n"
         f"Default is PDF if ghostscript (gs) is available, else PNG.\n"
-        f"{Green}Usage:\n"
+        f"{Green}Example:\n"
         f"> MarsPlot Custom.in -o png\n"
         f"> MarsPlot Custom.in -o png -pw 500 "
         f"  {Blue}(sets pixel width to 500, default is 2000)"
@@ -178,7 +170,7 @@ parser.add_argument("-o", "--output", default="pdf",
 )
 
 parser.add_argument("-vert", "--vertical", action="store_true",
-                    default=False,
+    default=False,
     help=(
         f"Output figures in portrait instead of landscape format.\n\n"
     )
@@ -191,16 +183,47 @@ parser.add_argument("-dir", "--directory", default=os.getcwd(),
     help=(
         f"Target directory if input files are not in current "
         f"directory.\n"
-        f"{Green}Usage:\n"
-        f"> MarsPlot Custom.in [other options] -dir path/to/dir"
+        f"{Green}Example:\n"
+        f"> MarsPlot Custom.in -dir path/to/directory"
+        f"{Nclr}\n\n"
+    )
+)
+
+# Secondary arguments: Used with some of the arguments above
+
+# to be used jointly with --inspect
+parser.add_argument("-dump", "--dump", nargs="+", default=None,
+    help=(
+        f"For use with ``-i --inspect``: print the values of the "
+        f"specified variable to the screen.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot -i 00668.atmos_daily.nc -dump temp\n"
+        f"{Blue}(quotes '' req. for browsing dimensions){Green}\n"
+        f"> MarsPlot -i 00668.atmos_daily.nc -dump ''temp[6,:,30,10]''"
+        f"{Nclr}\n\n"
+    )
+)
+
+# to be used jointly with --inspect
+parser.add_argument("-stat", "--stat", nargs="+", default=None,
+    help=(
+        f"For use with ``-i --inspect``: print the min, mean, and max "
+        f"values of the specified variable to the screen.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot -i 00668.atmos_daily.nc -stat temp\n"
+        f"{Blue}(quotes '' req. for browsing dimensions){Green}\n"
+        f"> MarsPlot -i 00668.atmos_daily.nc -stat ''temp[6,:,30,10]''"
         f"{Nclr}\n\n"
     )
 )
 
 parser.add_argument("--debug", action="store_true",
     help=(
-        f"More verbosity in status and error messages when running CAP."
-        f"\n\n"
+        f"Use with any other argument to pass all Python errors and "
+        f"status messages to the screen when running CAP."
+        f"{Green}Example:\n"
+        f"> MarsPlot Custom.in --debug"
+        f"{Nclr}\n\n"
     )
  )
 

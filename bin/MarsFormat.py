@@ -55,6 +55,7 @@ xr.set_options(keep_attrs=True)
 #                  ARGUMENT PARSER
 # ======================================================
 parser = argparse.ArgumentParser(
+    prog=('MarsFormat'),
     description=(
         f"{Yellow} Converts model output to MGCM-like format."
         f"{Nclr}\n\n"
@@ -64,29 +65,19 @@ parser = argparse.ArgumentParser(
 parser.add_argument("input_file", nargs="+",
     help=(
         f"NetCDF file or list of NetCDF files."
-        f"{Green}Usage:\n"
-        f"> MarsFormat ****.nc \n"
+        f"{Green}Example:\n"
+        f"> MarsFormat marswrf_file1.nc\n"
         f"{Nclr}\n\n"
     )
 )
 
 parser.add_argument("-t", "--type", type=str,
+    choices=['marswrf', 'openmars', 'pcm', 'emars'],
     help=(
         f"Acceptable types include 'openmars', 'marswrf', 'emars', "
         f"and 'pcm' \n"
-        f"{Green}Usage:\n"
-        f"> MarsFormat ****.nc -t openmars"
-        f"{Nclr}\n\n"
-    )
-)
-
-parser.add_argument("-nat", "--native", action="store_true", 
-    default=False,
-    help=(
-        f"Preserves the names of the variables and dimensions in the"
-        f"original file.\n"
-        f"{Green}Usage:\n"
-        f"> MarsFormat file.nc -model_flag -nat"
+        f"{Green}Example:\n"
+        f"> MarsFormat openmars_file.nc -t openmars"
         f"{Nclr}\n\n"
     )
 )
@@ -94,30 +85,50 @@ parser.add_argument("-nat", "--native", action="store_true",
 parser.add_argument("-ba", "--bin_average", nargs="?", const=5, 
     type=int,
     help=(
-        f"Bin into a diurnal average file. Defaults to 5-sol bins. \n"
-        f"{Green}Usage:\n"
-        f"> MarsFormat file.nc -model_flag -ba {Blue}5-sol bin{Green}\n"
-        f"> MarsFormat file.nc -model_flag -ba 10 {Blue}10-sol bin"
+        f"Calculate 5-day averages from instantaneous data. Generates "
+        f"MGCM-like 'average' files.\n"
+        f"{Green}Example:\n"
+        f"> MarsFormat openmars_file.nc -t openmars -ba "
+        f"{Blue}5-sol bin{Green}\n"
+        f"> MarsFormat openmars_file.nc -t openmars -ba 10 "
+        f"{Blue}10-sol bin"
         f"{Nclr}\n\n"
     )
 )
 
 parser.add_argument("-bd", "--bin_diurn", action="store_true", default=False,
     help=(
-        f"Bin into a diurnal composite file. Creates a diurnal average"
-        f"file first, which can have custom bin sizes.\n"
-        f"{Green}Usage:\n"
-        f"> MarsFormat file.nc -model_flag -bd \n"
-        f"> MarsFormat file.nc -model_flag -bd -ba 10 {Blue} changes " 
-        f"the default bin size for averaging"
+        f"Calculate 5-day averages binned by hour from instantaneous "
+        f"data. Generates MGCM-like 'diurn' files.\n"
+        f"{Green}Example:\n"
+        f"> MarsFormat openmars_file.nc -t openmars -bd "
+        f"{Blue}uses a 5-sol bin{Green}\n"
+        f"> MarsFormat openmars_file.nc -t openmars -bd -ba 10 " 
+        f"{Blue}uses a 10-sol bin"
+        f"{Nclr}\n\n"
+    )
+)
+
+# Secondary arguments: Used with some of the arguments above
+
+parser.add_argument("-nat", "--native", action="store_true", 
+    default=False,
+    help=(
+        f"Preserves the names of the variables and dimensions in the"
+        f"original file.\n"
+        f"{Green}Example:\n"
+        f"> MarsFormat openmars_file.nc -t openmars -nat"
         f"{Nclr}\n\n"
     )
 )
 
 parser.add_argument("--debug", action="store_true",
     help=(
-        f"More verbosity in status and error messages when running CAP."
-        f"\n\n"
+        f"Use with any other argument to pass all Python errors and "
+        f"status messages to the screen when running CAP."
+        f"{Green}Example:\n"
+        f"> MarsFormat openmars_file.nc -t openmars --debug"
+        f"{Nclr}\n\n"
     )
  )
 

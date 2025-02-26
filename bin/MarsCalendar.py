@@ -33,9 +33,11 @@ from amescap.FV3_utils import (sol2ls, ls2sol)
 # ======================================================================
 
 parser = argparse.ArgumentParser(
+    prog=('MarsCalendar'),
     description=(
         f"{Yellow}Returns the solar longitude (Ls) corresponding to a "
-        f"sol or vice-versa. Adapted from areols.py.{Nclr}\n\n"
+        f"sol or vice-versa. Adapted from areols.py."
+        f"{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
@@ -43,10 +45,10 @@ parser = argparse.ArgumentParser(
 parser.add_argument("-sol", "--sol", nargs="+", type=float,
     help=(
         f"Input sol number. Required. Can either be one sol or a"
-        f"range with an increment (``start stop step``).\n"
-        f"{Green}Usage:\n"
-        f"> MarsCalendar -sol [sol_num]\n"
-        f"> MarsCalendar -sol [start] [stop] [step]"
+        f"range with an increment ``[start stop step]``.\n"
+        f"{Green}Example:\n"
+        f"> MarsCalendar -sol 10\n"
+        f"> MarsCalendar -sol 0 100 20"
         f"{Nclr}\n\n"
     )
 )
@@ -54,9 +56,9 @@ parser.add_argument("-sol", "--sol", nargs="+", type=float,
 parser.add_argument("-ls", "--ls", nargs="+", type=float,
     help=(
         f"Return the sol number corresponding to this Ls.\n"
-        f"{Green}Usage:\n"
-        f"> MarsCalendar -ls [ls_num]\n"
-        f"> MarsCalendar -ls [start] [stop] [step]"
+        f"{Green}Example:\n"
+        f"> MarsCalendar -ls 180\n"
+        f"> MarsCalendar -ls 90 180 10"
         f"{Nclr}\n\n"
     )
 )
@@ -68,7 +70,7 @@ parser.add_argument(
         f"particular year of the simulation. \n"
         f"Req. ``[-ls --ls]`` or ``[-sol --sol]``. \n"
         f"``MY=0`` for sol=0-667, ``MY=1`` for sol=668-1335 etc.\n"
-        f"{Green}Usage:\n"
+        f"{Green}Example:\n"
         f"> Usage: MarsCalendar -ls 350 -my 2"
         f"{Nclr}\n\n"
     )
@@ -79,16 +81,21 @@ parser.add_argument("-c", "--cumulative", action="store_true",
         f"Return Ls from sol in cumulative form. Req. ``[-sol --sol]``."
         f"\nEX: Returns Ls=360-720 instead of Ls=0-360 for input "
         f"sol=669-1336 \n"
-        f"{Green}Usage:\n"
+        f"{Green}Example:\n"
         f"> MarsCalendar -sol 700 -c"
         f"{Nclr}\n\n"
     )
 )
 
+# Secondary arguments: Used with some of the arguments above
+
 parser.add_argument("--debug", action="store_true",
     help=(
-        f"More verbosity in status and error messages when running CAP."
-        f"\n\n"
+        f"Use with any other argument to pass all Python errors and "
+        f"status messages to the screen when running CAP."
+        f"{Green}Example:\n"
+        f"> MarsCalendar -sol 700 --debug"
+        f"{Nclr}\n\n"
     )
  )
 

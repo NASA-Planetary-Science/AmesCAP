@@ -47,7 +47,8 @@ from amescap.FV3_utils import (
 )
 from amescap.Script_utils import (
     check_file_tape, section_content_amescap_profile, find_tod_in_diurn,
-    filter_vars, find_fixedfile, ak_bk_loader, read_variable_dict_amescap_profile
+    filter_vars, find_fixedfile, ak_bk_loader, 
+    read_variable_dict_amescap_profile
 )
 from amescap.Ncdf_wrapper import Ncdf
 
@@ -56,6 +57,7 @@ from amescap.Ncdf_wrapper import Ncdf
 # ======================================================================
 
 parser = argparse.ArgumentParser(
+    prog=('MarsInterp'),
     description=(
         f"{Yellow}Performs a pressure interpolation on the vertical "
         f"coordinate of the netCDF file.{Nclr}\n\n"
@@ -68,13 +70,15 @@ parser.add_argument("input_file", nargs="+",
 
 parser.add_argument("-t", "--type", type=str, default="pstd",
     help=(
-        f"Interpolation type. Accepts ``pstd``, ``zstd``, or ``zagl``.\n"
-        f"{Green}Usage:\n"
-        f"> MarsInterp ****.atmos_average.nc\n"
-        f"> MarsInterp ****.atmos_average.nc -t zstd"
+        f"Interpolation type: ``pstd``, ``zstd``, or ``zagl``.\n"
+        f"{Green}Example:\n"
+        f"> MarsInterp 00668.atmos_average.nc\n"
+        f"> MarsInterp 00668.atmos_average.nc -t pstd"
         f"{Nclr}\n\n"
     )
 )
+
+# Secondary arguments: Used with some of the arguments above
 
 parser.add_argument("-l", "--level", type=str, default=None,
     help=(
@@ -82,9 +86,9 @@ parser.add_argument("-l", "--level", type=str, default=None,
         f"time use, copy ``amescap_profile`` to your home directory:\n"
         f"{Cyan}cp path/to/amesCAP/mars_templates/amescap_profile "
         f"~/.amescap_profile\n"
-        f"{Green}Usage:\n"
-        f"> MarsInterp ****.atmos_average.nc -t pstd -l p44\n"
-        f"> MarsInterp ****.atmos_average.nc -t zstd -l phalf_mb"
+        f"{Green}Example:\n"
+        f"> MarsInterp 00668.atmos_average.nc -t pstd -l p44\n"
+        f"> MarsInterp 00668.atmos_average.nc -t zstd -l phalf_mb"
         f"{Nclr}\n\n"
     )
 )
@@ -93,37 +97,45 @@ parser.add_argument("-include", "--include", nargs="+",
     help=(
         f"Only include the listed variables. Dimensions and 1D "
         f"variables are always included.\n"
-        f"{Green}Usage:\n"
-        f"> MarsInterp *.atmos_daily.nc --include [var1] [var2]"
+        f"{Green}Example:\n"
+        f"> MarsInterp 00668.atmos_daily.nc -include temp ps ts"
         f"{Nclr}\n\n"
-    )
-)
-
-parser.add_argument("-e", "--ext", type=str, default=None,
-    help=(
-        f"Append an extension (``_ext.nc``) to the output file instead"
-        f" of replacing the existing file.\n"
-        f"{Green}Usage:\n"
-        f"> MarsInterp ****.atmos_average.nc -ext B\n"
-        f"  {Blue}Produces ****.atmos_average_pstd_B.nc"
-        f"{Nclr}.\n\n"
     )
 )
 
 parser.add_argument("-g", "--grid", action="store_true",
     help=(
-        f"Output current grid information to standard output. This "
-        f"will not run the interpolation.\n"
-        f"{Green}Usage:\n"
-        f"> MarsInterp ****.atmos_average.nc -t pstd -l p44 -g"
+        f"Print the vertical grid to the screen. {Yellow}This does not "
+        f"run the interpolation, it only prints grid information.\n"
+        f"{Green}Example:\n"
+        f"> MarsInterp 00668.atmos_average.nc -t pstd -l p44 -g"
+        f"{Nclr}\n\n"
+    )
+)
+
+# Secondary arguments: Used with some of the arguments above
+
+parser.add_argument("-e", "--ext", type=str, default=None,
+    help=(
+        f"Must be paired with an argument listed above. Instead of "
+        f"overwriting a file to perform a function, ``--ext`` tells "
+        f"CAP to create a new file with the extension name specified "
+        f"here.\n"
+        f"{Green}Example:\n"
+        f"> MarsInterp 00334.atmos_average.nc -t pstd -e _dflt_levs\n"
+        f"  {Blue} produces 00334.atmos_average_dflt_levs.nc and "
+        f"preserves all other files."
         f"{Nclr}\n\n"
     )
 )
 
 parser.add_argument("--debug", action="store_true",
     help=(
-        f"More verbosity in status and error messages when running CAP."
-        f"\n\n"
+        f"Use with any other argument to pass all Python errors and "
+        f"status messages to the screen when running CAP."
+        f"{Green}Example:\n"
+        f"> MarsInterp 00668.atmos_average.nc -t pstd --debug"
+        f"{Nclr}\n\n"
     )
  )
 
