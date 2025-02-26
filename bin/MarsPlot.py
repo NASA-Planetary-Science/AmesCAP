@@ -260,6 +260,15 @@ if args.inspect_file:
 if (args.template_file is None and 
     args.generate_template is None and 
     args.inspect_file is False):
+    print(args.date)
+    print(args.figure_filetype)
+    print(args.stack_years)
+    print(args.portrait_mode)
+    print(args.pixel_width)
+    print(args.directory)
+    print(args.trim_text)
+    print(args.print_values)
+    print(args.statistics)
     if args.date:
         parser.error(f"{Red}The -d argument requires a template file "
                     f"like Custom.in (e.g., MarsPlot Custom.in -d 00668)"
@@ -297,6 +306,7 @@ if (args.template_file is None and
         exit()
     
     else:
+        # Nothing was passed to MarsPlot
         parser.error(f"{Red}No valid argument was passed. Pass a "
                     f"Custom.in template file or use -template or -i "
                     f"to use MarsPlot. Type 'MarsPlot -h' if you need "
