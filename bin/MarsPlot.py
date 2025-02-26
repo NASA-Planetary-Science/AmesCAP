@@ -81,7 +81,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('template_file', nargs='?', 
+parser.add_argument('template_file', nargs=1, 
     type=argparse.FileType('r'),
     help=(
         f"Use the Custom.in template file to create figures.\n"
@@ -97,7 +97,7 @@ parser.add_argument('template_file', nargs='?',
     )
 )
 
-parser.add_argument('-i', '--inspect_file', nargs='?',
+parser.add_argument('-i', '--inspect_file', nargs=1,
     type=argparse.FileType('r'),
     help=(
         f"Print the content of a netCDF file to the screen. This is a "
