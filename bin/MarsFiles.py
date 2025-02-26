@@ -171,7 +171,7 @@ parser.add_argument("-c", "--combine", action="store_true",
         f"> MarsFiles *.atmos_average.nc --combine -e _combined\n"
         f"> ls\n"
         f"   00334.atmos_average.nc 00668.atmos_average.nc "
-        f"   00334.atmos_average_combined.nc"
+        f"00334.atmos_average_combined.nc\n"
         f"{Blue}(Produces 00334.atmos_average_combined.nc and "
         f" preserves all other files)"
         f"{Nclr}\n\n"
@@ -234,8 +234,8 @@ parser.add_argument("-bd", "--bin_diurn", action=ExtAction, type=int,
     nargs=0,
     help=(
         f"Calculate 5-day averages binned by hour from instantaneous "
-        f"data files (i.e., convert 'daily' files into 'diurn' "
-        f"files. May be used jointly with --bin_average.\n"
+        f"data files\n(i.e., convert 'daily' files into 'diurn' "
+        f"files.\nMay be used jointly with --bin_average.\n"
         f"Requires input file to be in MGCM 'daily' format.\n"
         f"{Yellow}Generates a new file ending in ``_to_diurn.nc``\n"
         f"{Green}Example:\n"
@@ -337,7 +337,7 @@ parser.add_argument("-bpk", "--band_pass_zonal", action=ExtAction,
         f"Spatial band-pass filtering: filters out frequencies "
         f"specified by user.\nOnly works with 'daily' files. Requires a "
         f"cutoff frequency in Sols.\nUse ``--no_trend`` to return "
-        f"amplitudes only.\nData detrended before filtering."
+        f"amplitudes only.\nData detrended before filtering.\n"
         f"{Yellow}Generates a new file ending in ``_bpk.nc``\n"
         f"{Green}Example:\n"
         f"> MarsFiles 00668.atmos_daily.nc -bpk 10 20 --no_trend\n"
@@ -356,8 +356,8 @@ parser.add_argument("-tidal", "--tidal", action=ExtAction,
         f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
         f"{Yellow}Generates a new file ending in ``_tidal.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_diurn.nc -tidal 2 --include ps temp\n"
-        f"  {Blue}(extracts semi-diurnal tide component of ps and temp "
+        f"> MarsFiles 00668.atmos_diurn.nc -tidal 2 --include ps temp "
+        f"{Blue}(extracts semi-diurnal tide component of ps and temp "
         f"variables; 2 harmonics)"
         f"{Nclr}\n\n"
     )
@@ -370,7 +370,7 @@ parser.add_argument("-rs", "--regrid_source", action=ExtAction,
     help=(
         f"Regrid the X and Y dimensions of a target file to match a "
         f"user-provided source file.\nBoth files must have the same "
-        f"vertical dimensions (i.e., should be vertically interpolated "
+        f"vertical dimensions (i.e., should be vertically\ninterpolated "
         f"to the same standard grid [zstd, zagl, pstd, etc.].\n"
         f"{Yellow}Generates a new file ending in ``_regrid.nc``\n"
         f"{Green}Example:\n"
@@ -477,9 +477,9 @@ parser.add_argument("-e", "--ext", type=str, default = None,
         f"CAP to create a new file with the extension name specified "
         f"here.\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00334.atmos_average.nc -c -e _comb\n"
-        f"  {Blue} produces 00334.atmos_average_comb.nc and "
-        f"preserves all other files."
+        f"> MarsFiles 00334.atmos_average.nc -c -e _comb"
+        f"  {Blue}(produces 00334.atmos_average_comb.nc and "
+        f"preserves all other files)"
         f"{Nclr}\n\n"
     )
 )
