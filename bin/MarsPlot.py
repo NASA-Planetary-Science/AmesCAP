@@ -81,9 +81,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-req_group = parser.add_mutually_exclusive_group()
-
-req_group.add_argument('template_file', nargs='?', 
+parser.add_argument('template_file', nargs='?', 
     type=argparse.FileType('r'),
     help=(
         f"Use the Custom.in template file to create figures.\n"
@@ -99,7 +97,7 @@ req_group.add_argument('template_file', nargs='?',
     )
 )
 
-req_group.add_argument('-i', '--inspect_file', nargs=1,
+parser.add_argument('-i', '--inspect_file', nargs='?',
     type=argparse.FileType('r'),
     help=(
         f"Print the content of a netCDF file to the screen. This is a "
@@ -110,7 +108,7 @@ req_group.add_argument('-i', '--inspect_file', nargs=1,
     )
 )
 
-req_group.add_argument('-template', '--generate_template', action='store_true',
+parser.add_argument('-template', '--generate_template', action='store_true',
     help=(
         f"Generate a file called Custom.in that provides templates "
         f"for making plots with CAP.\n"
@@ -290,7 +288,7 @@ if (args.stats or args.values) and (args.inspect_file is None):
                  f"MarsPlot -i 00668.atmos_daily.nc -stats temp{Nclr}")
     exit()
 
-if args.trim_text and args.generate_template is None:
+if args.trim_text and (args.generate_template is None):
     parser.error(f"{Red}The -trim argument requires -template (e.g., "
                  f"MarsPlot -template -trim{Nclr}")
     exit()
@@ -374,14 +372,9 @@ def main():
         make_template()
 
     else:
-        # Custom.in: generate plots from a Custom.in template
-        if args.template_file:
-            if not re.search(".in", args.template_file.name):
-                print(f"{Red}*** Template file is not a '.in' file ***{Nclr}")
-                exit()
-            # Case A: Use local Custom.in (most common option)
-            print(f"Reading {args.template_file.name}")
-            namelist_parser(args.template_file.name)
+        # Case A: Use local Custom.in (most common option)
+        print(f"Reading {args.template_file.name}")
+        namelist_parser(args.template_file.name)
 
         if args.do:
             # Case B: Use Custom.in from local template dir
