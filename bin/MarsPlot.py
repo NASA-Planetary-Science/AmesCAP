@@ -259,24 +259,26 @@ if args.inspect_file:
         exit()
 
 if args.date is not None and (args.template_file is None and 
-                           args.generate_template is False and 
-                           args.inspect_file is None):
+                              args.generate_template is False and 
+                              args.inspect_file is None):
     parser.error(f"{Red}The -d argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -d 00668)"
                  f"{Nclr}")
     exit()
 
-if args.figure_filetype is not None and (args.template_file is None and 
-                           args.generate_template is False and 
-                           args.inspect_file is None):
+if args.figure_filetype is not None and (
+    args.template_file is None and 
+    args.generate_template is False and 
+    args.inspect_file is None
+    ):
     parser.error(f"{Red}The -f argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -ftype png)"
                  f"{Nclr}")
     exit()
 
 if args.stack_years and (args.template_file is None and 
-                           args.generate_template is False and 
-                           args.inspect_file is None):
+                         args.generate_template is False and 
+                         args.inspect_file is None):
     parser.error(f"{Red}The -sy argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -sy)"
                  f"{Nclr}")
@@ -290,31 +292,23 @@ if args.portrait_mode and (args.template_file is None and
                  f"-portrait){Nclr}")
     exit()
 
-if (args.statistics is not None or 
-    args.print_values is not None ) and (args.inspect_file is None):
-    parser.error(f"{Red}The following arguments require -i followed by "
-                 f"a netCDF file: -values, -stats, e.g.:\n"
-                 f"MarsPlot -i 00668.atmos_daily.nc -values temp\n"
-                 f"MarsPlot -i 00668.atmos_daily.nc -stats temp{Nclr}")
+if args.statistics is not None and args.inspect_file is None:
+    parser.error(f"{Red}The -stat argument requires a template "
+                 f"file like Custom.in (e.g., MarsPlot -i "
+                 f"00668.atmos_daily.nc -stats temp{Nclr}")
     exit()
-
+    
+if args.print_values is not None and args.inspect_file is None:
+    parser.error(f"{Red}The -values argument requires a template "
+                 f"file like Custom.in (e.g., MarsPlot -i "
+                 f"00668.atmos_daily.nc -values temp{Nclr}")
+    exit()
+    
 if args.trim_text and (args.generate_template is False):
     parser.error(f"{Red}The -trim argument requires -template (e.g., "
                  f"MarsPlot -template -trim{Nclr}")
     exit()
 
-print("template_file " + str(args.template_file))
-print("inspect_file " + str(args.inspect_file))
-print("generate_template " + str(args.generate_template))
-print("date " + str(args.date))
-print("figure_filetype " + str(args.figure_filetype))
-print("stack_years " + str(args.stack_years))
-print("portrait_mode " + str(args.portrait_mode))
-print("pixel_width " + str(args.pixel_width))
-print("directory " + str(args.directory))
-print("print_values " + str(args.print_values))
-print("statistics " + str(args.statistics))
-print("trim_text " + str(args.trim_text))
 # ======================================================================
 #                           MAIN PROGRAM
 # ======================================================================

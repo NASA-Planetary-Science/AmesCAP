@@ -42,7 +42,9 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('-sol', '--sol', nargs='+', type=float,
+group = parser.add_mutually_exclusive_group(required=True)
+
+group.add_argument('-sol', '--sol', nargs='+', type=float,
     help=(
         f"Input sol number. Required. Can either be one sol or a"
         f"range with an increment ``[start stop step]``.\n"
@@ -53,7 +55,7 @@ parser.add_argument('-sol', '--sol', nargs='+', type=float,
     )
 )
 
-parser.add_argument('-ls', '--ls', nargs='+', type=float,
+group.add_argument('-ls', '--ls', nargs='+', type=float,
     help=(
         f"Return the sol number corresponding to this Ls.\n"
         f"{Green}Example:\n"
@@ -99,8 +101,15 @@ parser.add_argument('--debug', action='store_true',
     )
  )
 
+# Handle mutually in/exclusive arguments (e.g., -sy requires Custom.in)
 args = parser.parse_args()
 
+if args.marsyear is not None and (args.sol is None and args.ls is None):
+    parser.error(f"{Red}The -my argument requires -ls or -sol"
+                 f"(e.g., MarsCalendar -ls 350 -my 2"
+                 f"{Nclr}")
+    exit()
+    
 # ======================================================================
 #                               DEFINITIONS
 # ======================================================================
