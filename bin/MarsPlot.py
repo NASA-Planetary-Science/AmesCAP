@@ -31,6 +31,7 @@ import os           # Access operating system functions
 import subprocess   # Run command-line commands
 import warnings     # Suppress errors triggered by NaNs
 import matplotlib
+import re
 import numpy as np
 from netCDF4 import Dataset, MFDataset
 from warnings import filterwarnings
@@ -310,8 +311,8 @@ def main():
     else:
         # Custom.in: generate plots from a Custom.in template
         if parser.parse_args().template_file:
-            if ".in" not in parser.parse_args().template_file.name:
-                print(f"{Red}*** Template file is not a .in file ***{Nclr}")
+            if not re.search(".in", parser.parse_args().template_file.name):
+                print(f"{Red}*** Template file is not a '.in' file ***{Nclr}")
                 exit()
             # Case A: Use local Custom.in (most common option)
             print(f"Reading {parser.parse_args().template_file.name}")
