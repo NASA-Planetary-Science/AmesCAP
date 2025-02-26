@@ -219,8 +219,8 @@ parser.add_argument("-stat", "--stat", nargs="+", default=None,
 
 parser.add_argument("--debug", action="store_true",
     help=(
-        f"Use with any other argument to pass all Python errors and "
-        f"status messages to the screen when running CAP."
+        f"Use with any other argument to pass all Python errors and\n"
+        f"status messages to the screen when running CAP.\n"
         f"{Green}Example:\n"
         f"> MarsPlot Custom.in --debug"
         f"{Nclr}\n\n"

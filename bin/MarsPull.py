@@ -92,8 +92,8 @@ parser.add_argument("-ls", "--ls", nargs="+", type=float,
 
 parser.add_argument("--debug", action="store_true",
     help=(
-        f"Use with any other argument to pass all Python errors and "
-        f"status messages to the screen when running CAP."
+        f"Use with any other argument to pass all Python errors and\n"
+        f"status messages to the screen when running CAP.\n"
         f"{Green}Example:\n"
         f"> MarsPull ACTIVECLDS -ls 90 --debug"
         f"{Nclr}\n\n"

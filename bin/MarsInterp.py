@@ -117,8 +117,8 @@ parser.add_argument("-g", "--grid", action="store_true",
 
 parser.add_argument("-e", "--ext", type=str, default=None,
     help=(
-        f"Must be paired with an argument listed above. Instead of "
-        f"overwriting a file to perform a function, ``--ext`` tells "
+        f"Must be paired with an argument listed above.\nInstead of "
+        f"overwriting a file to perform a function, ``--ext``\ntells "
         f"CAP to create a new file with the extension name specified "
         f"here.\n"
         f"{Green}Example:\n"
@@ -131,8 +131,8 @@ parser.add_argument("-e", "--ext", type=str, default=None,
 
 parser.add_argument("--debug", action="store_true",
     help=(
-        f"Use with any other argument to pass all Python errors and "
-        f"status messages to the screen when running CAP."
+        f"Use with any other argument to pass all Python errors and\n"
+        f"status messages to the screen when running CAP.\n"
         f"{Green}Example:\n"
         f"> MarsInterp 00668.atmos_average.nc -t pstd --debug"
         f"{Nclr}\n\n"

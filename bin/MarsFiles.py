@@ -159,36 +159,35 @@ parser.add_argument("-fv3", "--fv3", nargs="+", type=str,
 parser.add_argument("-c", "--combine", action="store_true",
     help=(
         f"Combine sequential files of the same type into one file.\n"
-        f"Works with all file types (``fixed``, ``average``, ``daily`` "
         f"and ``diurn``).\n"
         f"{Green}Example:\n"
         f"> ls\n"
         f"00334.atmos_average.nc 00668.atmos_average.nc\n"
         f"> MarsFiles *.atmos_average.nc --combine\n"
         f"> ls\n"
-        f"00334.atmos_average.nc\n"
-        f" {Blue} overwrites 00334.atmos_average.nc with concatenated "
-        f"files. {Yellow}To override, use --ext:\n"
-        f"> MarsFiles *.atmos_average.nc --combine --ext _combined\n"
+        f"   00334.atmos_average.nc\n"
+        f"{Yellow}Overwrites 00334.atmos_average.nc with concatenated "
+        f"files. To override, use [-e --ext]:{Green}\n"
+        f"> MarsFiles *.atmos_average.nc --combine -e _combined\n"
         f"> ls\n"
-        f"00334.atmos_average.nc 00668.atmos_average.nc "
-        f"00334.atmos_average_combined.nc\n"
-        f"  {Blue} produces 00334.atmos_average_combined.nc and "
-        f"  preserves all other files."
+        f"   00334.atmos_average.nc 00668.atmos_average.nc "
+        f"   00334.atmos_average_combined.nc"
+        f"{Blue}(Produces 00334.atmos_average_combined.nc and "
+        f" preserves all other files)"
         f"{Nclr}\n\n"
     )
 )
 
 parser.add_argument("-split", "--split", nargs="+", type=float,
     help=(
-        f"Extract one value or a range of values along a dimension. "
+        f"Extract one value or a range of values along a dimension.\n"
         f"Defaults to ``areo`` (Ls) unless otherwise specified using "
-        f"--dim. If a file contains multiple Mars Years of data, the "
+        f"--dim.\nIf a file contains multiple Mars Years of data, the "
         f"function splits the file in the first Mars Year.\n"
         f"{Green}Example:\n"
         f"> MarsFiles 00668.atmos_average.nc --split 0 90"
-        f"> MarsFiles 00668.atmos_average.nc --split 270"
-        f"{Yellow}Use [-dim, --dim] to specify the dimension:\n"
+        f"> MarsFiles 00668.atmos_average.nc --split 270\n"
+        f"{Yellow}Use [-dim, --dim] to specify the dimension:{Green}\n"
         f"> MarsFiles 00668.atmos_average.nc --split 0 90 -dim lat"
         f"{Nclr}\n\n"
     )
@@ -200,15 +199,15 @@ parser.add_argument("-t", "--tshift", action=ExtAction, type=str,
     nargs="?", const=999,
     help=(
         f"Convert hourly binned ('diurn') files to universal local "
-        f"time. Useful for comparing data at a specific time of day "
-        f"across all longitudes. Works on vertically interpolated "
+        f"time.\nUseful for comparing data at a specific time of day "
+        f"across all longitudes.\nWorks on vertically interpolated "
         f"files.\n"
         f"{Yellow}Generates a new file ending in ``_T.nc``{Nclr}\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_diurn.nc -t\n"
-        f"  {Blue}(outputs data for all 24 local times){Green}\n"
-        f"> MarsFiles 00668.atmos_diurn.nc -t '3 15'\n"
-        f"  {Blue}(outputs data for target local times only)"
+        f"> MarsFiles 00668.atmos_diurn.nc -t"
+        f" {Blue}(outputs data for all 24 local times){Green}\n"
+        f"> MarsFiles 00668.atmos_diurn.nc -t '3 15'"
+        f" {Blue}(outputs data for target local times only)"
         f"{Nclr}\n\n"
     )
 )
@@ -218,13 +217,13 @@ parser.add_argument("-ba", "--bin_average", action=ExtAction, type=int,
     parser=parser,
     nargs="?", const=5,
     help=(
-        f"Calculate 5-day averages from instantaneous data files "
+        f"Calculate 5-day averages from instantaneous data files\n"
         f"(i.e., convert 'daily' files into 'average' files.\n"
         f"Requires input file to be in MGCM 'daily' format.\n"
         f"{Yellow}Generates a new file ending in ``_to_average.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_daily.nc -ba {Blue}5-sol bin{Green}\n"
-        f"> MarsFiles 00668.atmos_daily_pstd.nc -ba 10 {Blue}10-sol bin"
+        f"> MarsFiles 00668.atmos_daily.nc -ba {Blue}(5-sol bin){Green}\n"
+        f"> MarsFiles 00668.atmos_daily_pstd.nc -ba 10 {Blue}(10-sol bin)"
         f"{Nclr}\n\n"
     )
 )
@@ -240,11 +239,11 @@ parser.add_argument("-bd", "--bin_diurn", action=ExtAction, type=int,
         f"Requires input file to be in MGCM 'daily' format.\n"
         f"{Yellow}Generates a new file ending in ``_to_diurn.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_daily.nc -bd {Blue}5-sol bin{Green}\n"
+        f"> MarsFiles 00668.atmos_daily.nc -bd {Blue}(5-sol bin){Green}\n"
         f"> MarsFiles 00668.atmos_daily_pstd.nc -bd -ba 10 "
-        f"{Blue}10-sol bin{Green}\n"
+        f"{Blue}(10-sol bin){Green}\n"
         f"> MarsFiles 00668.atmos_daily_pstd.nc -bd -ba 1 "
-        f"{Blue}No binning. Mimics raw Legacy output."
+        f"{Blue}(no binning, mimics raw Legacy output)"
         f"{Nclr}\n\n"
     )
 )
@@ -254,9 +253,9 @@ parser.add_argument("-hpf", "--high_pass_filter", action=ExtAction,
     parser=parser,
     nargs="+", type=float,
     help=(
-        f"Temporal high-pass filtering: removes low-frequency noise. "
+        f"Temporal high-pass filtering: removes low-frequency noise.\n"
         f"Only works with 'daily' files. Requires a cutoff frequency "
-        f"in Sols. Use ``--no_trend`` to return amplitudes only.\n"
+        f"in Sols.\nUse ``--no_trend`` to return amplitudes only.\n"
         f"Data detrended before filtering."
         f"\n{Yellow}Generates a new file ending in ``_hpf.nc``\n"
         f"{Green}Example:\n"
@@ -271,8 +270,8 @@ parser.add_argument("-lpf", "--low_pass_filter", action=ExtAction,
     nargs="+", type=float,
     help=(
         f"Temporal low-pass filtering: removes high-frequency noise "
-        f"(smoothing). Only works with 'daily' files. Requires a "
-        f"cutoff frequency in Sols. Use ``--no_trend`` to return "
+        f"(smoothing).\nOnly works with 'daily' files. Requires a "
+        f"cutoff frequency in Sols.\nUse ``--no_trend`` to return "
         f"amplitudes only.\n"
         f"Data detrended before filtering."
         f"\n{Yellow}Generates a new file ending in ``_lpf.nc``\n"
@@ -288,8 +287,8 @@ parser.add_argument("-bpf", "--band_pass_filter", action=ExtAction,
     nargs="+", type=float,
     help=(
         f"Temporal band-pass filtering: filters out frequencies "
-        f"specified by user. Only works with 'daily' files. Requires a "
-        f"cutoff frequency in Sols. Use ``--no_trend`` to return "
+        f"specified by user.\nOnly works with 'daily' files. Requires a "
+        f"cutoff frequency in Sols.\nUse ``--no_trend`` to return "
         f"amplitudes only.\nData detrended before filtering."
         f"\n{Yellow}Generates a new file ending in ``bpf.nc``\n"
         f"{Green}Example:\n"
@@ -305,8 +304,8 @@ parser.add_argument("-hpk", "--high_pass_zonal", action=ExtAction,
     nargs="+", type=int,
     help=(
         f"Spatial high-pass filtering: removes low-frequency noise. "
-        f"Only works with 'daily' files. Requires a cutoff frequency "
-        f"in Sols. Use ``--no_trend`` to return amplitudes only.\n"
+        f"Only works with 'daily' files.\nRequires a cutoff frequency "
+        f"in Sols.\nUse ``--no_trend`` to return amplitudes only.\n"
         f"{Yellow}Generates a new file ending in ``_hpk.nc``\n"
         f"{Green}Example:\n"
         f"> MarsFiles 00668.atmos_daily.nc -hpk 10 --no_trend\n"
@@ -320,8 +319,8 @@ parser.add_argument("-lpk", "--low_pass_zonal", action=ExtAction,
     nargs="+", type=int,
     help=(
         f"Spatial low-pass filtering: removes high-frequency noise "
-        f"(smoothing). Only works with 'daily' files. Requires a "
-        f"cutoff frequency in Sols. Use ``--no_trend`` to return "
+        f"(smoothing).\nOnly works with 'daily' files. Requires a "
+        f"cutoff frequency in Sols.\nUse ``--no_trend`` to return "
         f"amplitudes only.\n"
         f"{Yellow}Generates a new file ending in ``_lpk.nc``\n"
         f"{Green}Example:\n"
@@ -336,8 +335,8 @@ parser.add_argument("-bpk", "--band_pass_zonal", action=ExtAction,
     nargs="+", type=int,
     help=(
         f"Spatial band-pass filtering: filters out frequencies "
-        f"specified by user. Only works with 'daily' files. Requires a "
-        f"cutoff frequency in Sols. Use ``--no_trend`` to return "
+        f"specified by user.\nOnly works with 'daily' files. Requires a "
+        f"cutoff frequency in Sols.\nUse ``--no_trend`` to return "
         f"amplitudes only.\nData detrended before filtering."
         f"{Yellow}Generates a new file ending in ``_bpk.nc``\n"
         f"{Green}Example:\n"
@@ -352,7 +351,7 @@ parser.add_argument("-tidal", "--tidal", action=ExtAction,
     nargs="+", type=int,
     help=(
         f"Use fourier decomposition to break down the signal into N "
-        f"harmonics. Only works with 'diurn' files. Returns the phase "
+        f"harmonics.\nOnly works with 'diurn' files.\nReturns the phase "
         f"and amplitude of the variable.\n"
         f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
         f"{Yellow}Generates a new file ending in ``_tidal.nc``\n"
@@ -370,9 +369,9 @@ parser.add_argument("-rs", "--regrid_source", action=ExtAction,
     nargs="+",
     help=(
         f"Regrid the X and Y dimensions of a target file to match a "
-        f"user-provided source file. Both files must have the same "
+        f"user-provided source file.\nBoth files must have the same "
         f"vertical dimensions (i.e., should be vertically interpolated "
-        f" to the same standard grid [zstd, zagl, pstd, etc.].\n"
+        f"to the same standard grid [zstd, zagl, pstd, etc.].\n"
         f"{Yellow}Generates a new file ending in ``_regrid.nc``\n"
         f"{Green}Example:\n"
         f"> MarsInterp sim1/00668.atmos_average_pstd.nc -rs "
@@ -387,7 +386,7 @@ parser.add_argument("-za", "--zonal_avg", action=ExtAction,
     nargs=0,
     help=(
         f"Zonally average the entire file over the longitudinal "
-        f"dimension. Does not work if the longitude dimension has "
+        f"dimension.\nDoes not work if the longitude dimension has "
         f"length <= 1.\n"
         f"{Yellow}Generates a new file ending in ``_zavg.nc``\n"
         f"{Green}Example:\n"
@@ -400,8 +399,8 @@ parser.add_argument("-za", "--zonal_avg", action=ExtAction,
 
 parser.add_argument("-dim", "--dim", type=str, default = 'areo',
     help=(
-        f"Must be used with [-split --split]. Flag indicates the \n"
-        f"dimension on which to trim the file. Acceptable values are \n"
+        f"Must be used with [-split --split]. Flag indicates the "
+        f"dimension on which to trim the file.\nAcceptable values are "
         f"'time', 'areo', 'lev', 'lat', 'lon'.\n"
         f"{Green}Example:\n"
         f"> MarsFiles 00668.atmos_average.nc --split 0 90 -dim areo"
@@ -473,8 +472,8 @@ parser.add_argument("-include", "--include", nargs="+",
 
 parser.add_argument("-e", "--ext", type=str, default = None,
     help=(
-        f"Must be paired with an argument listed above. Instead of "
-        f"overwriting a file to perform a function, ``--ext`` tells "
+        f"Must be paired with an argument listed above.\nInstead of "
+        f"overwriting a file to perform a function, ``--ext``\ntells "
         f"CAP to create a new file with the extension name specified "
         f"here.\n"
         f"{Green}Example:\n"
@@ -487,8 +486,8 @@ parser.add_argument("-e", "--ext", type=str, default = None,
 
 parser.add_argument("--debug", action="store_true",
     help=(
-        f"Use with any other argument to pass all Python errors and "
-        f"status messages to the screen when running CAP."
+        f"Use with any other argument to pass all Python errors and\n"
+        f"status messages to the screen when running CAP.\n"
         f"{Green}Example:\n"
         f"> MarsFiles 00668.atmos_average.nc -t '3 15' --debug"
         f"{Nclr}\n\n"

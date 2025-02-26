@@ -91,8 +91,8 @@ parser.add_argument("-c", "--cumulative", action="store_true",
 
 parser.add_argument("--debug", action="store_true",
     help=(
-        f"Use with any other argument to pass all Python errors and "
-        f"status messages to the screen when running CAP."
+        f"Use with any other argument to pass all Python errors and\n"
+        f"status messages to the screen when running CAP.\n"
         f"{Green}Example:\n"
         f"> MarsCalendar -sol 700 --debug"
         f"{Nclr}\n\n"
