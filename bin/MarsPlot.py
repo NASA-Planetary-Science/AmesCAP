@@ -248,13 +248,13 @@ parser.add_argument('--debug', action='store_true',
 args = parser.parse_args()
 
 if args.template_file:
-    if not re.search(".in", args.template_file):
+    if not re.search(".in", args.template_file.name):
         parser.error(f"{Red}Template file is not a '.in' file{Nclr}")
         exit()
 
 if args.inspect_file:
-    if not re.search(".nc", args.inspect_file):
-        parser.error(f"{Red}{args.inspect_file} is not a netCDF "
+    if not re.search(".nc", args.inspect_file.name):
+        parser.error(f"{Red}{args.inspect_file.name} is not a netCDF "
                      f"file{Nclr}")
         exit()
 
@@ -394,8 +394,8 @@ def main():
 
     elif args.template_file:
         # Case A: Use local Custom.in (most common option)
-        print(f"Reading {args.template_file}")
-        namelist_parser(args.template_file)
+        print(f"Reading {args.template_file.name}")
+        namelist_parser(args.template_file.name)
 
         if args.do:
             # Case B: Use Custom.in from local template dir
@@ -490,7 +490,7 @@ def main():
                     # e.g., Custom.in -> Diagnostics.pdf, or
                     #       Custom_01.in -> Diagnostics_01.pdf
                     input_file = (f"{output_path}/"
-                                  f"{args.template_file}")
+                                  f"{args.template_file.name}")
                     basename = input_file.split("/")[-1].split(".")[0].strip()
             except:
                 # Use default PDF basename "Diagnostics".
