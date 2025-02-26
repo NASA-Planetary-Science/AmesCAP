@@ -243,7 +243,7 @@ parser.add_argument('--debug', action='store_true',
     )
  )
 
-# Handle mutually inclusive arguments (e.g., -sy requires Custom.in)
+# Handle mutually in/exclusive arguments (e.g., -sy requires Custom.in)
 args = parser.parse_args()
 
 if args.template_file:
@@ -257,25 +257,33 @@ if args.inspect_file:
                      f"file{Nclr}")
         exit()
 
-if args.date and (args.template_file is None):
+if args.date and (args.template_file is None and 
+                           args.generate_template is None and 
+                           args.inspect_file is None):
     parser.error(f"{Red}The -d argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -d 00668)"
                  f"{Nclr}")
     exit()
 
-if args.figure_filetype and (args.template_file is None):
+if args.figure_filetype and (args.template_file is None and 
+                           args.generate_template is None and 
+                           args.inspect_file is None):
     parser.error(f"{Red}The -d argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -ftype png)"
                  f"{Nclr}")
     exit()
 
-if args.stack_years and (args.template_file is None):
+if args.stack_years and (args.template_file is None and 
+                           args.generate_template is None and 
+                           args.inspect_file is None):
     parser.error(f"{Red}The -sy argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -sy)"
                  f"{Nclr}")
     exit()
 
-if args.portrait_mode and (args.template_file is None):
+if args.portrait_mode and (args.template_file is None and 
+                           args.generate_template is None and 
+                           args.inspect_file is None):
     parser.error(f"{Red}The -portrait argument requires a template "
                  f"file like Custom.in (e.g., MarsPlot Custom.in "
                  f"-portrait){Nclr}")
