@@ -260,7 +260,7 @@ if args.inspect_file:
 
 if args.date and (args.template_file is None and 
                            args.generate_template is None and 
-                           args.inspect_file is None):
+                           args.inspect_file is False):
     parser.error(f"{Red}The -d argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -d 00668)"
                  f"{Nclr}")
@@ -268,7 +268,7 @@ if args.date and (args.template_file is None and
 
 if args.figure_filetype and (args.template_file is None and 
                            args.generate_template is None and 
-                           args.inspect_file is None):
+                           args.inspect_file is False):
     parser.error(f"{Red}The -d argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -ftype png)"
                  f"{Nclr}")
@@ -276,7 +276,7 @@ if args.figure_filetype and (args.template_file is None and
 
 if args.stack_years and (args.template_file is None and 
                            args.generate_template is None and 
-                           args.inspect_file is None):
+                           args.inspect_file is False):
     parser.error(f"{Red}The -sy argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -sy)"
                  f"{Nclr}")
@@ -284,13 +284,13 @@ if args.stack_years and (args.template_file is None and
 
 if args.portrait_mode and (args.template_file is None and 
                            args.generate_template is None and 
-                           args.inspect_file is None):
+                           args.inspect_file is False):
     parser.error(f"{Red}The -portrait argument requires a template "
                  f"file like Custom.in (e.g., MarsPlot Custom.in "
                  f"-portrait){Nclr}")
     exit()
 
-if (args.statistics or args.print_values) and (args.inspect_file is None):
+if (args.statistics or args.print_values) and (args.inspect_file is False):
     parser.error(f"{Red}The following arguments require -i followed by "
                  f"a netCDF file: -values, -stats, e.g.:\n"
                  f"MarsPlot -i 00668.atmos_daily.nc -values temp\n"
@@ -549,8 +549,8 @@ def main():
                     raise
     else:
         parser.error(f"{Red}No valid argument was passed. Pass a "
-                     f"Custom.in template file, or use -template or -i"
-                     f"with MarsPlot.\nType 'MarsPlot -h' if you need "
+                     f"Custom.in template file or use -template or -i "
+                     f"to use MarsPlot. Type 'MarsPlot -h' if you need "
                      f"more assistance.{Nclr}")
         exit()
 # ======================================================================
