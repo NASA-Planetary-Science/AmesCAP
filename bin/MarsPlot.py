@@ -289,7 +289,7 @@ if args.portrait_mode and (args.template_file is None and
                  f"-portrait){Nclr}")
     exit()
 
-if (args.stats or args.values) and (args.inspect_file is None):
+if (args.statistics or args.values) and (args.inspect_file is None):
     parser.error(f"{Red}The following arguments require -i followed by "
                  f"a netCDF file: -values, -stats, e.g.:\n"
                  f"MarsPlot -i 00668.atmos_daily.nc -values temp\n"
