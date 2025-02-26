@@ -81,8 +81,11 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('template_file', nargs='?', 
-    type=argparse.FileType('r'), default=None,
+req_group = parser.add_mutually_exclusive_group(required=True)
+
+
+req_group.add_argument('template_file', nargs='?', 
+    type=argparse.FileType('r'),
     help=(
         f"Use the Custom.in template file to create figures.\n"
         f"{Green}Example:\n"
@@ -97,12 +100,22 @@ parser.add_argument('template_file', nargs='?',
     )
 )
 
-parser.add_argument('-i', '--inspect_file', default=None,
+req_group.add_argument('-i', '--inspect_file', default=None,
     help=(
         f"Print the content of a netCDF file to the screen. This is a "
         f"ncdump-like feature. Variables are sorted by dimension.\n"
         f"{Green}Example:\n"
         f"> MarsPlot -i 00668.atmos_daily.nc"
+        f"{Nclr}\n\n"
+    )
+)
+
+req_group.add_argument('-template', '--generate_template', action='store_true',
+    help=(
+        f"Generate a file called Custom.in that provides templates "
+        f"for making plots with CAP.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot -template\n"
         f"{Nclr}\n\n"
     )
 )
@@ -117,25 +130,7 @@ parser.add_argument('-d', '--date', nargs='+', default=None,
     )
 )
 
-parser.add_argument('-template', '--generate_template', action='store_true',
-    help=(
-        f"Generate a file called Custom.in that provides templates "
-        f"for making plots with CAP.\n"
-        f"{Green}Example:\n"
-        f"> MarsPlot Custom.in -template\n"
-        f"{Nclr}\n\n"
-    )
-)
-
-parser.add_argument('-something', '--something', action='store_true',
-    default=False,
-    help=(
-        f"Generate a file called Custom.in that provides templates "
-        f"for making plots with CAP without the commented instructions "
-        f"at top of the file.\n\n"
-    )
-)
-parser.add_argument("-do", "--do", nargs=1, type=str, default=None,
+parser.add_argument('-do', '--do', nargs=1, type=str, default=None,
     help=(
         f"(Re)use a template file (e.g., my_template.in). Searches in "
         f"path/to/amesCAP/mars_templates/ first, then in directories"
@@ -146,7 +141,7 @@ parser.add_argument("-do", "--do", nargs=1, type=str, default=None,
     )
 )
 
-parser.add_argument("-sy", "--stack_year", action="store_true",
+parser.add_argument('-sy', '--stack_years', action='store_true',
     default=False,
     help=(
         f"Stack consecutive years in 1D time series plots "
@@ -158,30 +153,33 @@ parser.add_argument("-sy", "--stack_year", action="store_true",
     )
 )
 
-parser.add_argument("-o", "--output", default="pdf", type=str,
-    choices=["pdf", "eps", "png"],
+parser.add_argument('-ftype', '--figure_filetype', default='pdf', type=str,
+    choices=['pdf', 'eps', 'png'],
     help=(
         f"Output file format.\n"
         f"Default is PDF if ghostscript (gs) is available, else PNG.\n"
         f"{Green}Example:\n"
-        f"> MarsPlot Custom.in -o png\n"
-        f"> MarsPlot Custom.in -o png -pw 500 "
+        f"> MarsPlot Custom.in -ftype png\n"
+        f"> MarsPlot Custom.in -ftype png -pw 500 "
         f"  {Blue}(sets pixel width to 500, default is 2000)"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-vert", "--vertical", action="store_true",
+parser.add_argument('-portrait', '--portrait_mode', action='store_true',
     default=False,
     help=(
-        f"Output figures in portrait instead of landscape format.\n\n"
+        f"Output figures in portrait instead of landscape format.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot Custom.in -portrait"
+        f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-pw", "--pwidth", default=2000, type=float,
+parser.add_argument('-pw', '--pixel_width', default=2000, type=float,
     help=argparse.SUPPRESS)
 
-parser.add_argument("-dir", "--directory", default=os.getcwd(),
+parser.add_argument('-dir', '--directory', default=os.getcwd(),
     help=(
         f"Target directory if input files are not in current "
         f"directory.\n"
@@ -193,33 +191,47 @@ parser.add_argument("-dir", "--directory", default=os.getcwd(),
 
 # Secondary arguments: Used with some of the arguments above
 
+
+# to be used jointly with --generate_template
+parser.add_argument('-trim', '--trim_text', action='store_true',
+    default=False,
+    help=(
+        f"Generate a file called Custom.in that provides templates "
+        f"for making plots with CAP without the commented instructions "
+        f"at top of the file.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot -template -trim\n"
+        f"{Nclr}\n\n"
+    )
+)
+
 # to be used jointly with --inspect
-parser.add_argument("-dump", "--dump", nargs="+", default=None,
+parser.add_argument('-values', '--print_values', nargs='+', default=None,
     help=(
         f"For use with ``-i --inspect``: print the values of the "
         f"specified variable to the screen.\n"
         f"{Green}Example:\n"
-        f"> MarsPlot -i 00668.atmos_daily.nc -dump temp\n"
+        f"> MarsPlot -i 00668.atmos_daily.nc -values temp\n"
         f"{Blue}(quotes '' req. for browsing dimensions){Green}\n"
-        f"> MarsPlot -i 00668.atmos_daily.nc -dump ''temp[6,:,30,10]''"
+        f"> MarsPlot -i 00668.atmos_daily.nc -values ''temp[6,:,30,10]''"
         f"{Nclr}\n\n"
     )
 )
 
 # to be used jointly with --inspect
-parser.add_argument("-stat", "--stat", nargs="+", default=None,
+parser.add_argument('-stats', '--statistics', nargs='+', default=None,
     help=(
         f"For use with ``-i --inspect``: print the min, mean, and max "
         f"values of the specified variable to the screen.\n"
         f"{Green}Example:\n"
-        f"> MarsPlot -i 00668.atmos_daily.nc -stat temp\n"
+        f"> MarsPlot -i 00668.atmos_daily.nc -statistics temp\n"
         f"{Blue}(quotes '' req. for browsing dimensions){Green}\n"
-        f"> MarsPlot -i 00668.atmos_daily.nc -stat ''temp[6,:,30,10]''"
+        f"> MarsPlot -i 00668.atmos_daily.nc -stats ''temp[6,:,30,10]''"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("--debug", action="store_true",
+parser.add_argument('--debug', action='store_true',
     help=(
         f"Use with any other argument to pass all Python errors and\n"
         f"status messages to the screen when running CAP.\n"
@@ -229,6 +241,31 @@ parser.add_argument("--debug", action="store_true",
     )
  )
 
+# Handle mutually inclusive arguments (e.g., -sy requires Custom.in)
+args = parser.parse_args()
+
+if args.template_file:
+    if not re.search(".in", args.template_file.name):
+        print(f"{Red}*** Template file is not a '.in' file ***{Nclr}")
+        exit()
+
+if (args.trim_text or 
+    args.date or 
+    args.figure_filetype or 
+    args.stack_years or 
+    args.portrait_mode) and (args.template_file is None):
+    parser.error("The following arguments require a Custom.in template: "
+                 "-trim, -d, -ftype, -sy, -portrait")
+    exit()
+
+if (args.stats or args.values) and (args.inspect_file is None):
+    parser.error("The following arguments require -i followed by a "
+                 "netCDF file: -values, -stats")
+    exit()
+
+if args.trim_text and args.generate_template is None:
+    parser.error("The -trim argument requires -template")
+    exit()
 
 # ======================================================================
 #                           MAIN PROGRAM
@@ -236,10 +273,10 @@ parser.add_argument("--debug", action="store_true",
 def main():
     global output_path, input_paths, out_format, debug
     output_path = os.getcwd()
-    out_format = parser.parse_args().output
-    debug = parser.parse_args().debug
+    out_format = args.figure_filetype
+    debug = args.debug
     input_paths = []
-    input_paths.append(parser.parse_args().directory)
+    input_paths.append(args.directory)
 
     global Ncdf_num         # Hosts the simulation timestamps
     global objectList       # Contains all figure objects
@@ -260,14 +297,14 @@ def main():
     global vertical_page
 
     # Set portrait format for outout figures
-    vertical_page = parser.parse_args().vertical
+    vertical_page = args.portrait_mode
 
     # Directory (dir) containing shared templates
     global shared_dir
     shared_dir = "/path_to_shared_templates"
 
     # Set figure dimensions
-    pixel_width = parser.parse_args().pwidth
+    pixel_width = args.pixel_width
     if vertical_page:
         width_inch = pixel_width / 1.4 / my_dpi
         height_inch = pixel_width / my_dpi
@@ -289,45 +326,45 @@ def main():
     objectList[1].subID = 2 # 2nd object in a 2-panel figure
     objectList[1].nPan = 2
 
-    if parser.parse_args().inspect_file:
+    if args.inspect_file:
         # --inspect: Inspect content of netcdf file
         # NAS-specific, check if the file is on tape (Lou only)
-        check_file_tape(parser.parse_args().inspect_file, abort = False)
-        if parser.parse_args().dump:
+        check_file_tape(args.inspect_file, abort = False)
+        if args.print_values:
             # Print variable content to screen
-            print_varContent(parser.parse_args().inspect_file,
-                             parser.parse_args().dump, False)
-        elif parser.parse_args().stat:
+            print_varContent(args.inspect_file,
+                             args.print_values, False)
+        elif args.statistics:
             # Print variable stats (max, min, mean) to screen
-            print_varContent(parser.parse_args().inspect_file,
-                             parser.parse_args().stat, True)
+            print_varContent(args.inspect_file,
+                             args.statistics, True)
         else:
             # Show information for all variables
-            print_fileContent(parser.parse_args().inspect_file)
+            print_fileContent(args.inspect_file)
 
-    elif parser.parse_args().generate_template:
+    elif args.generate_template:
         make_template()
 
     else:
         # Custom.in: generate plots from a Custom.in template
-        if parser.parse_args().template_file:
-            if not re.search(".in", parser.parse_args().template_file.name):
+        if args.template_file:
+            if not re.search(".in", args.template_file.name):
                 print(f"{Red}*** Template file is not a '.in' file ***{Nclr}")
                 exit()
             # Case A: Use local Custom.in (most common option)
-            print(f"Reading {parser.parse_args().template_file.name}")
-            namelist_parser(parser.parse_args().template_file.name)
+            print(f"Reading {args.template_file.name}")
+            namelist_parser(args.template_file.name)
 
-        if parser.parse_args().do:
+        if args.do:
             # Case B: Use Custom.in from local template dir
-            print(f"Reading {path_to_template(parser.parse_args().do)}")
-            namelist_parser(path_to_template(parser.parse_args().do))
+            print(f"Reading {path_to_template(args.do)}")
+            namelist_parser(path_to_template(args.do))
 
-        if parser.parse_args().date:
+        if args.date:
             # If optional --date provided, use files matching date(s)
             try:
                 # Confirm that input date type = float
-                bound = np.asarray(parser.parse_args().date).astype(float)
+                bound = np.asarray(args.date).astype(float)
             except Exception as e:
                 print(f"{Red}*** Syntax Error***\nPlease use: ``MarsPlot "
                       f"Custom.in -d XXXX [YYYY] -o out``{Nclr}")
@@ -400,18 +437,18 @@ def main():
 
             try:
                 # Identify the name of the template file
-                if parser.parse_args().do:
+                if args.do:
                     # If template file NOT Custom.in, extract prefix
                     # for PDF name:
                     # e.g., plots.in -> extract "plots" -> plots.pdf
-                    basename = parser.parse_args().do[0]
+                    basename = args.do[0]
                 else:
                     # If template file = "Custom", use default
                     # PDF basename "Diagnostics":
                     # e.g., Custom.in -> Diagnostics.pdf, or
                     #       Custom_01.in -> Diagnostics_01.pdf
                     input_file = (f"{output_path}/"
-                                  f"{parser.parse_args().template_file.name}")
+                                  f"{args.template_file.name}")
                     basename = input_file.split("/")[-1].split(".")[0].strip()
             except:
                 # Use default PDF basename "Diagnostics".
@@ -425,7 +462,7 @@ def main():
                 # If template name = Custom_XX.in -> Diagnostics_XX.pdf
                 output_pdf = (f"{output_path}/Diagnostics_{basename[7:9]}.pdf")
             else:
-                # If template name is something else, use prefix to
+                # If template name is NOT Custom.in, use prefix to
                 # generate PDF name
                 output_pdf = (f"{output_path}/{basename}.pdf")
 
@@ -1415,7 +1452,7 @@ def make_template():
     # Create header with instructions. Add version number to title.
     customFileIN.write(
         f"===================== |MarsPlot V{str(current_version)}| ===================\n")
-    if parser.parse_args().something:
+    if args.trim_text:
         # Additional instructions if requested
         customFileIN.write(
             "# ================================================= INSTRUCTIONS =================================================\n")
@@ -4076,7 +4113,7 @@ class Fig_1D(object):
                 SolDay = xdata[0, :]
                 LsDay = xdata[1, :]
 
-                if parser.parse_args().stack_year:
+                if args.stack_years:
                     # If simulations span different years, stack (overplot)
                     LsDay = np.mod(LsDay, 360)
 
