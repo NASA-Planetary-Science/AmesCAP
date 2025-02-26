@@ -258,7 +258,7 @@ if args.inspect_file:
                      f"file{Nclr}")
         exit()
 
-if args.date and (args.template_file is None and 
+if args.date is not None and (args.template_file is None and 
                            args.generate_template is False and 
                            args.inspect_file is None):
     parser.error(f"{Red}The -d argument requires a template file "
@@ -266,7 +266,7 @@ if args.date and (args.template_file is None and
                  f"{Nclr}")
     exit()
 
-if args.figure_filetype and (args.template_file is None and 
+if args.figure_filetype is not None and (args.template_file is None and 
                            args.generate_template is False and 
                            args.inspect_file is None):
     parser.error(f"{Red}The -f argument requires a template file "
@@ -290,7 +290,8 @@ if args.portrait_mode and (args.template_file is None and
                  f"-portrait){Nclr}")
     exit()
 
-if (args.statistics or args.print_values) and (args.inspect_file is None):
+if (args.statistics is not None or 
+    args.print_values is not None ) and (args.inspect_file is None):
     parser.error(f"{Red}The following arguments require -i followed by "
                  f"a netCDF file: -values, -stats, e.g.:\n"
                  f"MarsPlot -i 00668.atmos_daily.nc -values temp\n"
