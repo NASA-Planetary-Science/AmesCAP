@@ -100,6 +100,8 @@ parser.add_argument("--debug", action="store_true",
     )
  )
 
+args = parser.parse_args()
+
 # ======================================================
 #                  DEFINITIONS
 # ======================================================
@@ -183,7 +185,7 @@ def main():
 
     #Original
     #URLbase="https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/"
-    simu_ID=parser.parse_args().directory_name
+    simu_ID=args.directory_name
 
     #URLbase='https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/'+simu_ID+'/'
     print('new URL base')
@@ -192,8 +194,8 @@ def main():
     elif simu_ID in ['FV3BETAOUT1']:
         URLbase='https://data.nas.nasa.gov/legacygcm/fv3betaout1data/'
 
-    if parser.parse_args().ls :
-        data_input=np.asarray(parser.parse_args().ls)
+    if args.ls :
+        data_input=np.asarray(args.ls)
         if len(data_input)==1: #query only  the file that contains this Ls
             i_start=np.argmin(np.abs(Ls_ini-data_input))
             if data_input<Ls_ini[i_start]:i_start-=1
@@ -222,8 +224,8 @@ def main():
             print('Downloading '+ url+ '...')
             download(url,filename)
 
-    elif parser.parse_args().filename:
-        f_input=np.asarray(parser.parse_args().filename)
+    elif args.filename:
+        f_input=np.asarray(args.filename)
         for ff in f_input :
             url = URLbase+ff
             filename=saveDir+ff

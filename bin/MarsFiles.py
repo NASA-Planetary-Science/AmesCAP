@@ -491,13 +491,13 @@ parser.add_argument('--debug', action='store_true',
     )
  )
 
+args = parser.parse_args()
+
 # ======================================================================
 #                               EXTENSIONS
 # ======================================================================
 # Concatenates extensions to append to the file name depending on 
 # user-provided arguments.
-
-args=parser.parse_args()
 
 out_ext = (f"{args.time_shift_ext}"
             f"{args.bin_average_ext}"

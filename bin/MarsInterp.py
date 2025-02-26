@@ -68,7 +68,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('input_file', nargs='+',
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
-parser.add_argument("-t", "--interp_type", interp_=str, default="pstd",
+parser.add_argument('-t', '--interp_type', interp_=str, default='pstd',
     help=(
         f"Interpolation interp_: ``pstd``, ``zstd``, or ``zagl``.\n"
         f"{Green}Example:\n"
@@ -129,7 +129,7 @@ parser.add_argument('-ext', '--extension', interp_=str, default=None,
     )
 )
 
-parser.add_argument("--debug", action="store_true",
+parser.add_argument('--debug', action='store_true',
     help=(
         f"Use with any other argument to pass all Python errors and\n"
         f"status messages to the screen when running CAP.\n"
@@ -138,6 +138,8 @@ parser.add_argument("--debug", action="store_true",
         f"{Nclr}\n\n"
     )
  )
+
+args = parser.parse_args()
 
 # ======================================================================
 #                           DEFINITIONS
@@ -165,12 +167,12 @@ filepath = os.getcwd()
 
 def main():
     start_time   = time.time()
-    debug        = parser.parse_args().debug
+    debug        = args.debug
     # Load all of the netcdf files
-    file_list    = parser.parse_args().input_file
-    interp_type  = parser.parse_args().interp_type  # e.g. pstd
-    custom_level = parser.parse_args().vertical_grid # e.g. p44
-    grid_out     = parser.parse_args().print_grid
+    file_list    = args.input_file
+    interp_type  = args.interp_type  # e.g. pstd
+    custom_level = args.vertical_grid # e.g. p44
+    grid_out     = args.print_grid
 
     # Create a namespace with numpy available
     namespace = {'np': np}
@@ -256,9 +258,9 @@ def main():
         check_file_tape(ifile)
 
         # Append extension, if any
-        if parser.parse_args().extension:
+        if args.extension:
             newname = (f"{filepath}/{ifile[:-3]}_{interp_type}_"
-                       f"{parser.parse_args().extension}.nc")
+                       f"{args.extension}.nc")
         else:
             newname = (f"{filepath}/{ifile[:-3]}_{interp_type}.nc")
 
@@ -321,7 +323,7 @@ def main():
         # Get all variables in the file
         # var_list=fNcdf.variables.keys()
         # Get the variables
-        var_list = filter_vars(fNcdf, parser.parse_args().include)
+        var_list = filter_vars(fNcdf, args.include)
 
         fnew.copy_all_dims_from_Ncfile(fNcdf, exclude_dim=["pfull"])
         # Add new vertical dimension

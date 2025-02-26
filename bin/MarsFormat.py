@@ -133,6 +133,8 @@ parser.add_argument('--debug', action='store_true',
     )
  )
 
+args = parser.parse_args()
+
 # ===========================
 path2data = os.getcwd()
 ref_press=725 #TODO hard-codded
@@ -142,15 +144,15 @@ def main():
 
 
    ext='' #Initialize empty extension
-   if parser.parse_args().gcm_name not in ['marswrf', 'openmars', 'pcm', 'emars']:
+   if args.gcm_name not in ['marswrf', 'openmars', 'pcm', 'emars']:
          print(f"{Yellow}***Notice***  No operation requested. Use '-gcm' and specify openmars, marswrf, pcm, emars")
          exit()  # Exit cleanly
 
    path2data = os.getcwd()
 
    # Load all of the netcdf files
-   file_list    = parser.parse_args().input_file
-   model_type  = parser.parse_args().gcm_name  # e.g. 'legacy'
+   file_list    = args.input_file
+   model_type  = args.gcm_name  # e.g. 'legacy'
    for filei in file_list:
       #Add path unless full path is provided
       if not ('/' in filei):
@@ -556,7 +558,7 @@ def main():
       # STANDARDIZED VARIABLES NAMES IF REQUESTED
       #=================================================
 
-      if parser.parse_args().retain_names:
+      if args.retain_names:
          print(f"{Purple}Preserving original names for variable and dimensions")
          ext=ext+'_nat'
       else:
@@ -602,9 +604,9 @@ def main():
       # CREATE ATMOS_DAILY, ATMOS_AVERAGE, & ATMOS_DIURN FILES
       #==================================================================
 
-      if parser.parse_args().bin_average:
+      if args.bin_average:
          ext=ext+'_average'
-         nday=parser.parse_args().bin_average
+         nday=args.bin_average
 
          #==================================================================
          # Output Binned Data to New **atmos_average.nc file
@@ -630,12 +632,12 @@ def main():
          DS_average.to_netcdf(fullnameOUT,unlimited_dims=model.dim_time,format='NETCDF4_CLASSIC')
 
 
-      elif parser.parse_args().bin_diurn:
+      elif args.bin_diurn:
          ext=ext+'_diurn'
 
          #Custom number of sol
-         if parser.parse_args().bin_average:
-            nday=parser.parse_args().bin_average
+         if args.bin_average:
+            nday=args.bin_average
          else:
             nday=5
 

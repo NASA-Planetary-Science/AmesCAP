@@ -325,6 +325,7 @@ parser.add_argument('--debug',  action='store_true',
     )
  )
 
+args = parser.parse_args()
 
 # ======================================================================
 # TODO : If only one timestep, reshape from
@@ -1011,17 +1012,17 @@ filepath = os.getcwd()
 
 def main():
     # Load all the .nc files
-    file_list = parser.parse_args().input_file
-    add_list = parser.parse_args().add
-    zdiff_list = parser.parse_args().zdiff
-    zdetrend_list = parser.parse_args().zonal_detrend
-    dp_to_dz_list = parser.parse_args().dp_to_dz
-    dz_to_dp_list = parser.parse_args().dz_to_dp
-    col_list = parser.parse_args().col
-    remove_list = parser.parse_args().remove
-    extract_list = parser.parse_args().extract
-    edit_var = parser.parse_args().edit
-    debug = parser.parse_args().debug
+    file_list = args.input_file
+    add_list = args.add
+    zdiff_list = args.zdiff
+    zdetrend_list = args.zonal_detrend
+    dp_to_dz_list = args.dp_to_dz
+    dz_to_dp_list = args.dz_to_dp
+    col_list = args.col
+    remove_list = args.remove
+    extract_list = args.extract
+    edit_var = args.edit
+    debug = args.debug
 
     # An array to swap vertical axis forward and backward:
     # [1, 0, 2, 3] for [t, lev, lat, lon] and
@@ -1097,7 +1098,7 @@ def main():
 
             # The variable to exclude
             exclude_list = filter_vars(f_IN, 
-                                       parser.parse_args().extract,
+                                       args.extract,
                                        giveExclude = True)
             print()
             ifile_tmp = f"{ifile[:-3]}_extract.nc"
@@ -1774,14 +1775,14 @@ def main():
             unit_text = getattr(var_Ncdf, "units", "")
             cart_text = getattr(var_Ncdf, "cartesian_axis", "")
 
-            if parser.parse_args().rename:
-                name_text = parser.parse_args().rename
-            if parser.parse_args().longname:
-                lname_text = parser.parse_args().longname
-            if parser.parse_args().unit:
-                unit_text = parser.parse_args().unit
-            if parser.parse_args().multiply:
-                vals *= parser.parse_args().multiply
+            if args.rename:
+                name_text = args.rename
+            if args.longname:
+                lname_text = args.longname
+            if args.unit:
+                unit_text = args.unit
+            if args.multiply:
+                vals *= args.multiply
 
             if cart_text == "":
                 Log.log_variable(

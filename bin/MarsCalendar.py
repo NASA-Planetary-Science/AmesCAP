@@ -99,6 +99,8 @@ parser.add_argument('--debug', action='store_true',
     )
  )
 
+args = parser.parse_args()
+
 # ======================================================================
 #                               DEFINITIONS
 # ======================================================================
@@ -143,25 +145,25 @@ def parse_array(len_input):
 
 def main():
     # Load in user-specified Mars year, if any. Default = 0
-    MY = np.squeeze(parser.parse_args().marsyear)
+    MY = np.squeeze(args.marsyear)
     print(f"MARS YEAR = {MY}")
 
-    if parser.parse_args().continuous:
+    if args.continuous:
         # Set Ls to continuous, if requested
         accumulate = True
     else:
         accumulate = False
 
-    if parser.parse_args().ls:
+    if args.ls:
         # If [-Ls --Ls] is input, return sol
-        input_num = np.asarray(parser.parse_args().ls).astype(float)
+        input_num = np.asarray(args.ls).astype(float)
         head_text = "\n   Ls    |    Sol    \n-----------------------"
         input_arr = parse_array(input_num)
         output_arr = ls2sol(input_arr)
 
-    elif parser.parse_args().sol:
+    elif args.sol:
         # If [-sol --sol] is input, return Ls
-        input_num = np.asarray(parser.parse_args().sol).astype(float)
+        input_num = np.asarray(args.sol).astype(float)
         head_text = "\n    SOL  |    Ls    \n-----------------------"
         input_arr = parse_array(input_num)
         output_arr = sol2ls(input_arr, continuous=accumulate)
