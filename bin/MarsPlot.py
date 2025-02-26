@@ -108,7 +108,8 @@ parser.add_argument('-i', '--inspect_file', nargs='?',
     )
 )
 
-parser.add_argument('-template', '--generate_template', action='store_true',
+parser.add_argument('-template', '--generate_template', 
+    action='store_true',
     help=(
         f"Generate a file called Custom.in that provides templates "
         f"for making plots with CAP.\n"
@@ -379,7 +380,7 @@ def main():
     elif args.generate_template:
         make_template()
 
-    else:
+    elif args.template_file:
         # Case A: Use local Custom.in (most common option)
         print(f"Reading {args.template_file}")
         namelist_parser(args.template_file)
@@ -543,7 +544,11 @@ def main():
                       "try a different format, such as PNG.")
                 if debug:
                     raise
-
+    else:
+        parser.error(f"{Red}No valid argument was passed. Pass a "
+                     f"Custom.in template file, or use -template or -i"
+                     f"with MarsPlot{Nclr}")
+        exit()
 # ======================================================================
 #                       DATA OPERATION UTILITIES
 # ======================================================================
