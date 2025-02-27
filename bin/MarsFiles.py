@@ -134,7 +134,7 @@ parser = ExtArgumentParser(
     formatter_class = argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('input_file', nargs='+',
+parser.add_argument('input_file', nargs='+', type=argparse.FileType('r'),
     help=(
         f"A netCDF file or list of netCDF files.\n\n"
     )
