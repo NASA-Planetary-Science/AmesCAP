@@ -34,6 +34,7 @@ from amescap.Script_utils import (
 # Load generic Python modules
 import argparse     # Parse arguments
 import os           # Access operating system functions
+import re           # Regular expressions
 import numpy as np
 import xarray as xr
 from netCDF4 import Dataset
@@ -135,6 +136,12 @@ parser.add_argument('--debug', action='store_true',
 
 args = parser.parse_args()
 
+if args.input_file:
+    if not re.search(".nc", args.input_file.name):
+        parser.error(f"{Red}{args.input_file.name} is not a netCDF "
+                     f"file{Nclr}")
+        exit()
+        
 # ===========================
 path2data = os.getcwd()
 ref_press=725 #TODO hard-codded

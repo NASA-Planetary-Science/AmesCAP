@@ -50,6 +50,7 @@ import argparse     # Parse arguments
 import os           # Access operating system functions
 import subprocess   # Run command-line commands
 import warnings     # Suppress errors triggered by NaNs
+import re           # Regular expressions
 import numpy as np
 from netCDF4 import Dataset
 
@@ -394,11 +395,11 @@ parser.add_argument('-zavg', '--zonal_average', action=ExtAction,
 
 # Secondary arguments: Used with some of the arguments above
 
-parser.add_argument('-dim', '--dimension', type=str, default='areo',
+parser.add_argument('-dim', '--select_dim', type=str, default=None,
     help=(
         f"Must be used with [-split --split]. Flag indicates the "
         f"dimension on which to trim the file.\nAcceptable values are "
-        f"'time', 'areo', 'lev', 'lat', 'lon'.\n"
+        f"'time', 'areo', 'lev', 'lat', 'lon'. Default = 'areo'.\n"
         f"{Green}Example:\n"
         f"> MarsFiles 00668.atmos_average.nc --split 0 90 -dim areo"
         f"> MarsFiles 00668.atmos_average.nc --split -70 -dim lat"
@@ -512,16 +513,56 @@ print("reconstruct = "+ str(args.reconstruct))
 print("normalize = "+ str(args.normalize))
 print("regrid_XY_to_match = "+ str(args.regrid_XY_to_match))
 print("zonal_average = "+ str(args.zonal_average))
-print("dimension = "+ str(args.dimension))
+print("select_dim = "+ str(args.select_dim))
 print("normalize = "+ str(args.normalize))
 print("extension = "+ str(args.extension))
+print("include = "+ str(args.include))
 
-# dimension split
-# normalize tide
-# add_trend lpt
-# reconstruct tide
-# include
-# extension
+if args.input_file:
+    if not re.search(".nc", args.input_file.name):
+        parser.error(f"{Red}{args.input_file.name} is not a netCDF "
+                     f"file{Nclr}")
+        exit()
+
+if args.select_dim and not args.split:
+    parser.error(f"{Red}[-dim --select_dim] must be used with [-split "
+                 f"--split]{Nclr}")
+    exit()
+
+if args.normalize and not args.tide_decomp:
+    parser.error(f"{Red}[-norm --normalize] must be used with [-tide "
+                 f"--tide_decomp]{Nclr}")
+    exit()
+
+if args.add_trend and not (args.high_pass_temporal or args.low_pass_temporal
+                           or args.band_pass_temporal):
+    parser.error(f"{Red}[-add_trend --add_trend] must be used with [-lpt "
+                 f"--low_pass_temporal], [-hpt --high_pass_temporal], or "
+                 f"[-bpt --band_pass_temporal]{Nclr}")
+    exit()
+
+if args.reconstruct and not args.tide_decomp:
+    parser.error(f"{Red}[-recon --reconstruct] must be used with [-tide "
+                 f"--tide_decomp]{Nclr}")
+    exit()
+
+all_args = [args.bin_files, args.concatenate, args.split, args.time_shift, 
+            args.bin_average, args.bin_diurn, args.high_pass_temporal, 
+            args.low_pass_temporal, args.band_pass_temporal, 
+            args.high_pass_spatial, args.low_pass_spatial, 
+            args.band_pass_spatial, args.tide_decomp, args.normalize, 
+            args.regrid_XY_to_match, args.zonal_average]
+
+if all(v is None or v is False for v in all_args) and args.include is not None:
+    parser.error(f"{Red}[-incl --include] must be used with another "
+                 f"argument{Nclr}")
+    exit()
+    
+if all(v is None or v is False for v in all_args) and args.extension is not None:
+    parser.error(f"{Red}[-ext --extension] must be used with another "
+                 f"argument{Nclr}")
+    exit()
+    
 # ======================================================================
 #                               EXTENSIONS
 # ======================================================================
@@ -1041,7 +1082,8 @@ def main():
     elif args.split:
         # Split file along the specified dimension. If none specified,
         # default to time dimension
-        split_files(file_list, args.dimension)
+        split_dim = 'areo' if args.select_dim == None else args.select_dim
+        split_files(file_list, split_dim)
         
     elif args.time_shift:
         # Time-shift files

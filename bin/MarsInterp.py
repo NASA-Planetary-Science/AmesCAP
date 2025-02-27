@@ -34,6 +34,7 @@ from amescap.Script_utils import (
 import argparse     # Parse arguments
 import os           # Access operating system functions
 import time         # Monitor interpolation time
+import re           # Regular expressions
 import matplotlib
 import numpy as np
 from netCDF4 import Dataset
@@ -141,6 +142,12 @@ parser.add_argument('--debug', action='store_true',
 
 args = parser.parse_args()
 
+if args.input_file:
+    if not re.search(".nc", args.input_file.name):
+        parser.error(f"{Red}{args.input_file.name} is not a netCDF "
+                     f"file{Nclr}")
+        exit()
+        
 # ======================================================================
 #                           DEFINITIONS
 # ======================================================================

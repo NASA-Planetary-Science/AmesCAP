@@ -41,6 +41,7 @@ import argparse     # Parse arguments
 import os           # Access operating system functions
 import subprocess   # Run command-line commands
 import warnings     # Suppress errors triggered by NaNs
+import re           # Regular expressions
 import matplotlib
 import numpy as np
 from netCDF4 import Dataset
@@ -328,6 +329,12 @@ parser.add_argument('--debug',  action='store_true',
 
 args = parser.parse_args()
 
+if args.input_file:
+    if not re.search(".nc", args.input_file.name):
+        parser.error(f"{Red}{args.input_file.name} is not a netCDF "
+                     f"file{Nclr}")
+        exit()
+        
 # ======================================================================
 # TODO : If only one timestep, reshape from
 #       (lev, lat, lon) to (t, lev, lat, lon)
