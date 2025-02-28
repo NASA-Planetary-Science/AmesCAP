@@ -107,7 +107,7 @@ parser.add_argument('template_file', nargs='?',
     )
 )
 
-parser.add_argument('-i', '--inspect_file', nargs=1,
+parser.add_argument('-i', '--inspect_file', nargs='+',
     type=argparse.FileType('r'),
     help=(
         f"Print the content of a netCDF file to the screen. This is a "
@@ -248,12 +248,12 @@ parser.add_argument('--debug', action='store_true',
 args = parser.parse_args()
 
 if args.template_file:
-    if not re.search(".in", str(args.template_file.name)):
+    if not re.search(".in", args.template_file.name):
         parser.error(f"{Red}Template file is not a '.in' file{Nclr}")
         exit()
 
 if args.inspect_file:
-    if not re.search(".nc", str(args.inspect_file.name)):
+    if not re.search(".nc", args.inspect_file.name):
         parser.error(f"{Red}{args.inspect_file.name} is not a netCDF "
                      f"file{Nclr}")
         exit()
