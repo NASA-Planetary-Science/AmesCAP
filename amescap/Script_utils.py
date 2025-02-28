@@ -238,8 +238,8 @@ def check_file_tape(fileNcdf, abort=False):
     :return: None
     """
     # If fileNcdf is not a netCDF file, exit program
-    if fileNcdf[-3:] != ".nc":
-        print(f"{Red}*** Error ***\n{fileNcdf} is not a netCDF file \n")
+    if not re.search(".nc", fileNcdf):
+        print(f"{Red}{fileNcdf} is not a netCDF file{Nclr}")
         exit()
     try:
         # Check if the file exists on the disk, exit otherwise. If it
