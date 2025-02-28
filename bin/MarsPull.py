@@ -48,12 +48,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-group = parser.add_argument_group("Required Arguments", 
-    "\n{Yellow}MarsCalendar requires either -ls or -sol.{Nclr}\n")
-exclusive_group = parser.add_mutually_exclusive_group(required=True)
-
-exclusive_group.add_argument('-list', '--list_files', nargs='+',
-    action='store_true',
+parser.add_argument('-list', '--list_files', action='store_true',
     help=(
         f"Return a list of all the files available for download from:\n"
         f"{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}\n"
@@ -63,7 +58,7 @@ exclusive_group.add_argument('-list', '--list_files', nargs='+',
     )
 )
 
-exclusive_group.add_argument('directory_name', type=str, nargs='+',
+parser.add_argument('directory_name', type=str,
     choices=[
         'FV3BETAOUT1', 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
         'ACTIVECLDS_NCDF'],
