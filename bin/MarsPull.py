@@ -48,7 +48,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('-list', '--list_files', nargs='?', action='store_true',
+parser.add_argument('-list', '--list_files', action='store_true',
     help=(
         f"Return a list of all the files available for download from:\n"
         f"{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}\n"
