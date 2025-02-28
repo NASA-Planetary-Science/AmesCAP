@@ -66,7 +66,8 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('input_file', nargs='+',
+parser.add_argument('input_file', nargs='?', 
+    type=argparse.FileType('r'),
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
 parser.add_argument('-t', '--interp_type', interp_=str, default='pstd',

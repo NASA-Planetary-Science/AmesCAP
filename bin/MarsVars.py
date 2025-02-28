@@ -19,7 +19,7 @@ and optionally accepts:
     * ``[-to_dz --dp_to_dz]``            Convert aerosol opacity op/Pa -> op/m
     * ``[-to_dp --dz_to_dp]``            Convert aerosol opacity op/m -> op/Pa
     * ``[-rm --remove_variable]``        Remove variable from file
-    * ``[-extract --copy_extract]``      Copy variable to new file
+    * ``[-extract --extract_copy]``      Copy variable to new file
     * ``[-edit --edit_variable]``        Edit variable attributes or scale it
 
 Third-party Requirements:
@@ -135,11 +135,11 @@ def add_help(var_list):
                  f"{'REQUIRED VARIABLES':24s} {'SUPPORTED FILETYPES'}"
                  f"\n{Cyan}")
     for ivar in var_list.keys():
-        lname, unit, reqd_var, compat_files = var_list[ivar]
+        longname, unit, reqd_var, compat_files = var_list[ivar]
         reqd_var_fmt = ", ".join([f"{rv}" for rv in reqd_var])
         compat_file_fmt = ", ".join([f"{cf}" for cf in compat_files])
         help_text += (
-            f"{ivar:9s} {lname:33s} {unit:11s} {reqd_var_fmt:24s} "
+            f"{ivar:9s} {longname:33s} {unit:11s} {reqd_var_fmt:24s} "
             f"{compat_file_fmt}\n"
             )
     return(help_text)
@@ -158,7 +158,8 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('input_file', nargs='+',
+parser.add_argument('input_file', nargs='?', 
+    type=argparse.FileType('r'),
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
 parser.add_argument('-add', '--add_variable', nargs='+', default=[], 
@@ -249,7 +250,7 @@ parser.add_argument('-rm', '--remove_variable', nargs='+', default=[],
     )
 )
 
-parser.add_argument('-extract', '--copy_extract', nargs='+', default=[],
+parser.add_argument('-extract', '--extract_copy', nargs='+', default=[],
     help=(
         f"Copy one or more variables from a file into a new file of "
         f"the same name with the appended extension: '_extract'.\n"
@@ -266,10 +267,10 @@ parser.add_argument('-edit', '--edit_variable', default=None,
     help=(
         f"Edit a variable's attributes or scale its values.\n"
         f"Requires the use of one or more of the following flags:\n"
-        f"``-name``\n``-lname``\n``-u``\n``-mult``\n"
+        f"``-rename``\n``-longname``\n``-unit``\n``-multiply``\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -edit ps -name ps_mbar "
-        f"-mult 0.01 -lname 'Pressure scaled to mb' -u 'mbar'"
+        f"> MarsVars 00668.atmos_average.nc -edit ps -rename ps_mbar "
+        f"-multiply 0.01 -longname 'Pressure scaled to mb' -unit 'mbar'"
         f"{Nclr}\n\n"
     )
 )
@@ -277,42 +278,42 @@ parser.add_argument('-edit', '--edit_variable', default=None,
 # Secondary arguments: Used with some of the arguments above
 
 # To be used jointly with --edit
-parser.add_argument('-name', '--rename', type=str, default=None,
+parser.add_argument('-rename', '--rename', type=str, default=None,
     help=(
         f"Rename a variable. Requires ``-edit``.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -edit ps -name ps_mbar\n"
+        f"> MarsVars 00668.atmos_average.nc -edit ps -rename ps_mbar\n"
         f"{Nclr}\n\n"
     )
 )
 
 # To be used jointly with --edit
-parser.add_argument('-lname', '--longname', type=str, default=None,
+parser.add_argument('-longname', '--longname', type=str, default=None,
     help=(
         f"Change a variable's 'longname' attribute. Requires ``-edit``.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -edit ps -lname "
+        f"> MarsVars 00668.atmos_average.nc -edit ps -longname "
         f"'Pressure scaled to mb'"
         f"{Nclr}\n\n"
     )
 )
 
 # To be used jointly with --edit
-parser.add_argument('-u', '--unit', type=str, default=None,
+parser.add_argument('-unit', '--unit', type=str, default=None,
     help=(
         f"Change a variable's unit text. Requires ``-edit``.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -edit ps -u 'mbar'"
+        f"> MarsVars 00668.atmos_average.nc -edit ps -unit 'mbar'"
         f"{Nclr}\n\n"
     )
 )
 
 # To be used jointly with --edit
-parser.add_argument('-mult', '--multiply', type=float, default=None,
+parser.add_argument('-multiply', '--multiply', type=float, default=None,
     help=(
         f"Scale a variable's values. Requires ``-edit``.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -edit ps -mult 0.01"
+        f"> MarsVars 00668.atmos_average.nc -edit ps -multiply 0.01"
         f"{Nclr}\n\n"
     )
 )
@@ -334,7 +335,35 @@ if args.input_file:
         parser.error(f"{Red}{args.input_file.name} is not a netCDF "
                      f"file{Nclr}")
         exit()
-        
+
+if args.rename and args.edit_variable is None:
+    parser.error(f"{Red}The -rename argument requires -edit to be used "
+                 f"with it (e.g., MarsVars 00668.atmos_average.nc "
+                 f"-edit ps -rename ps_mbar)"
+                 f"{Nclr}")
+    exit()
+
+if args.longname and args.edit_variable is None:
+    parser.error(f"{Red}The -longname argument requires -edit to be "
+                 f"used with it (e.g., MarsVars 00668.atmos_average.nc "
+                 f"-edit ps -longname 'Pressure scaled to mb')"
+                 f"{Nclr}")
+    exit()
+
+if args.unit and args.edit_variable is None:
+    parser.error(f"{Red}The -unit argument requires -edit to be used "
+                 f"with it (e.g., MarsVars 00668.atmos_average.nc "
+                 f"-edit ps -unit 'mbar')"
+                 f"{Nclr}")
+    exit()
+
+if args.multiply and args.edit_variable is None:
+    parser.error(f"{Red}The -multiply argument requires -edit to be "
+                 f"used with it (e.g., MarsVars 00668.atmos_average.nc "
+                 f"-edit ps -multiply 0.01)"
+                 f"{Nclr}")
+    exit()
+
 # ======================================================================
 # TODO : If only one timestep, reshape from
 #       (lev, lat, lon) to (t, lev, lat, lon)
@@ -1028,7 +1057,7 @@ def main():
     dz_to_dp_list = args.dz_to_dp
     col_list = args.column_integrate
     remove_list = args.remove_variable
-    extract_list = args.copy_extract
+    extract_list = args.extract_copy
     edit_var = args.edit_variable
     debug = args.debug
 
@@ -1106,7 +1135,7 @@ def main():
 
             # The variable to exclude
             exclude_list = filter_vars(f_IN, 
-                                       args.copy_extract,
+                                       args.extract_copy,
                                        giveExclude = True)
             print()
             ifile_tmp = f"{ifile[:-3]}_extract.nc"

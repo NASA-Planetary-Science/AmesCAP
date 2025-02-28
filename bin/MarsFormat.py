@@ -47,30 +47,21 @@ from amescap.FV3_utils import layers_mid_point_to_boundary
 
 xr.set_options(keep_attrs=True)
 
-#---
-# MarsFormat.py
-# Routine to Transform Model Input (variable names, dimension names, array order)
-# to expected configuration CAP
-
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
 parser = argparse.ArgumentParser(
     prog=('MarsFormat'),
     description=(
-        f"{Yellow} Converts model output to MGCM-like format."
+        f"{Yellow} Converts model output to MGCM-like format for "
+        f"compatibility with CAP."
         f"{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter)
 
-parser.add_argument('input_file', nargs='+',
-    help=(
-        f"NetCDF file or list of NetCDF files."
-        f"{Green}Example:\n"
-        f"> MarsFormat marswrf_file1.nc\n"
-        f"{Nclr}\n\n"
-    )
-)
+parser.add_argument('input_file', nargs='?', 
+    type=argparse.FileType('r'),
+    help=(f"A netCDF file or list of netCDF files.\n\n"))
 
 parser.add_argument('-gcm', '--gcm_name', type=str,
     choices=['marswrf', 'openmars', 'pcm', 'emars'],

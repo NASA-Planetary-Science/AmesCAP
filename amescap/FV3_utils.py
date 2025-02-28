@@ -18,8 +18,8 @@ import warnings     # suppress errors triggered by NaNs
 import numpy as np
 from scipy import optimize
 
-# NOTE p_half = half-level = layer interfaces
-# NOTE p_full = full-level = layer midpoints
+# p_half = half-level = layer interfaces
+# p_full = full-level = layer midpoints
 
 def fms_press_calc(psfc, ak, bk, lev_type='full'):
     """

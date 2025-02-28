@@ -134,11 +134,9 @@ parser = ExtArgumentParser(
     formatter_class = argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('input_file', nargs='+', type=argparse.FileType('r'),
-    help=(
-        f"A netCDF file or list of netCDF files.\n\n"
-    )
-)
+parser.add_argument('input_file', nargs='?', 
+    type=argparse.FileType('r'),
+    help=(f"A netCDF file or list of netCDF files.\n\n"))
 
 parser.add_argument('-bin', '--bin_files', nargs='+', type=str,
     choices=['fixed', 'diurn', 'average', 'daily'],
@@ -493,30 +491,6 @@ parser.add_argument('--debug', action='store_true',
  )
 
 args = parser.parse_args()
-
-print("input file = "+ str(args.input_file))
-print("bin_files = "+ str(args.bin_files))
-print("concatenate = "+ str(args.concatenate))
-print("split = "+ str(args.split))
-print("time_shift = "+ str(args.time_shift))
-print("bin_average = "+ str(args.bin_average))
-print("bin_diurn = "+ str(args.bin_diurn))
-print("high_pass_temporal = "+ str(args.high_pass_temporal))
-print("low_pass_temporal = "+ str(args.low_pass_temporal))
-print("band_pass_temporal = "+ str(args.band_pass_temporal))
-print("add_trend = "+ str(args.add_trend))
-print("high_pass_spatial = "+ str(args.high_pass_spatial))
-print("low_pass_spatial = "+ str(args.low_pass_spatial))
-print("band_pass_spatial = "+ str(args.band_pass_spatial))
-print("tide_decomp = "+ str(args.tide_decomp))
-print("reconstruct = "+ str(args.reconstruct))
-print("normalize = "+ str(args.normalize))
-print("regrid_XY_to_match = "+ str(args.regrid_XY_to_match))
-print("zonal_average = "+ str(args.zonal_average))
-print("select_dim = "+ str(args.select_dim))
-print("normalize = "+ str(args.normalize))
-print("extension = "+ str(args.extension))
-print("include = "+ str(args.include))
 
 if args.input_file:
     if not re.search(".nc", args.input_file.name):

@@ -29,8 +29,9 @@ import sys          # System commands
 import argparse     # Parse arguments
 import os           # Access operating system functions
 import requests     # Download data from website
+import re           # Regular expressions
 import numpy as np
-
+import requests     # make HTTP requests
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
@@ -47,15 +48,29 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('directory_name', type=str,
+group = parser.add_argument_group("Required Arguments", 
+    "\n{Yellow}MarsCalendar requires either -ls or -sol.{Nclr}\n")
+exclusive_group = parser.add_mutually_exclusive_group(required=True)
+
+exclusive_group.add_argument('-list', '--list_files', action='store_true',
+    help=(
+        f"Return a list of all the files available for download from:\n"
+        f"{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}\n"
+        f"{Green}Example:\n"
+        f"> MarsPull -list"
+        f"{Nclr}\n\n"
+    )
+)
+
+exclusive_group.add_argument('directory_name', type=str,
     choices=[
         'FV3BETAOUT1', 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
         'ACTIVECLDS_NCDF'],
     help=(
-        f"Mandatory flag. Selects the simulation directory from the "
+        f"Selects the simulation directory from the "
         f"NAS data portal:\n"
         f"{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}\n"
-        f"Current options are: {Yellow}FV3BETAOUT1\nACTIVECLDS\n"
+        f"Current options are:\n{Yellow}FV3BETAOUT1\nACTIVECLDS\n"
         f"INERTCLDS\nNEWBASE_ACTIVECLDS\nACTIVECLDS_NCDF\n"
         f"{Red}MUST be used with either ``-f`` or ``-ls``.\n"
         f"{Green}Example:\n"
@@ -178,21 +193,52 @@ def download(url, filename):
                 f.write(response.content)
             print('%s Done'%(fname))
 
+def file_list(list_of_files):
+    print("Available files:")
+    for file in list_of_files:
+        print(file)
+
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
+
 def main():
+    if args.list_files:
+        # Send an HTTP GET request to the URL and store the response.
+        legacy_data = requests.get('https://data.nas.nasa.gov/mcmcref/legacygcm/')
+        fv3_data = requests.get('https://data.nas.nasa.gov/mcmcref/fv3betaout1/')
 
-    #Original
-    #URLbase="https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/"
-    simu_ID=args.directory_name
+        # Access the text content of the response, which contains the webpage's HTML.
+        legacy_dir_text = legacy_data.text
+        fv3_dir_text = fv3_data.text
 
-    #URLbase='https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/'+simu_ID+'/'
-    print('new URL base')
-    if simu_ID in ['ACTIVECLDS','INERTCLDS', 'NEWBASE_ACTIVECLDS','ACTIVECLDS_NCDF']:
-        URLbase='https://data.nas.nasa.gov/legacygcm/legacygcmdata/'+simu_ID+'/'
-    elif simu_ID in ['FV3BETAOUT1']:
-        URLbase='https://data.nas.nasa.gov/legacygcm/fv3betaout1data/'
+        # Search for the URLs beginning with the below string
+        legacy_dir_search = "https://data\.nas\.nasa\.gov/legacygcm/legacygcmdata/"
+
+        legacy_urls = re.findall(
+            fr"{legacy_dir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+", legacy_dir_text
+            )
+
+        print("Available directories:")
+        for url in legacy_urls:
+            dir_option = url.split('legacygcmdata/')[1]
+            print(dir_option)
+
+        legacy_data = requests.get(legacy_urls[0])
+        legacy_dir_text = legacy_data.text
+
+        legacy_files_available = re.findall(r'download="(fort\.11_[0-9]+)"', legacy_dir_text)
+        fv3_files_available = re.findall(r'href="[^"]*\/([^"\/]+\.nc)"', fv3_dir_text)
+
+
+        file_list(legacy_files_available)
+        file_list(fv3_files_available)
+    
+    portal_dir=args.directory_name
+    if portal_dir in ['ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS', 'ACTIVECLDS_NCDF']:
+        url_requested="https://data.nas.nasa.gov/legacygcm/legacygcmdata/"+portal_dir+'/'
+    elif portal_dir in ['FV3BETAOUT1']:
+        url_requested="https://data.nas.nasa.gov/legacygcm/fv3betaout1data/"
 
     if args.ls :
         data_input=np.asarray(args.ls)
@@ -212,22 +258,22 @@ def main():
         prCyan(f"Saving {len(num_files)} file(s) to {saveDir}")
         for ii in num_files:
             #Legacy .nc files
-            if simu_ID=='ACTIVECLDS_NCDF':
-                fName='LegacyGCM_Ls%03d_Ls%03d.nc'%(Ls_ini[ii],Ls_end[ii])
+            if portal_dir=='ACTIVECLDS_NCDF':
+                file_name='LegacyGCM_Ls%03d_Ls%03d.nc'%(Ls_ini[ii],Ls_end[ii])
             #fort.11 files
             else:
-                fName='fort.11_%04d'%(670+ii)
+                file_name='fort.11_%04d'%(670+ii)
 
-            url = URLbase+fName
-            filename=saveDir+fName
-            #print('Downloading '+ fName+ '...')
+            url = url_requested+file_name
+            filename=saveDir+file_name
+            #print('Downloading '+ file_name+ '...')
             print('Downloading '+ url+ '...')
             download(url,filename)
 
     elif args.filename:
         f_input=np.asarray(args.filename)
         for ff in f_input :
-            url = URLbase+ff
+            url = url_requested+ff
             filename=saveDir+ff
             print('Downloading '+ url+ '...')#ff
             download(url,filename)

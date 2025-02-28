@@ -21,7 +21,7 @@ Third-party Requirements:
 
 # Make print statements appear in color
 from amescap.Script_utils import (
-    Yellow, Red, Purple, Cyan, Nclr, Blue, Green
+    Yellow, Red, Purple, Nclr, Blue, Green
 )
 
 # Load generic Python modules
@@ -31,7 +31,7 @@ import os           # Access operating system functions
 import subprocess   # Run command-line commands
 import warnings     # Suppress errors triggered by NaNs
 import matplotlib
-import re
+import re           # Regular expressions
 import numpy as np
 from netCDF4 import Dataset, MFDataset
 from warnings import filterwarnings
@@ -240,9 +240,6 @@ parser.add_argument('--debug', action='store_true',
 
 # Handle mutually in/exclusive arguments (e.g., -sy requires Custom.in)
 args = parser.parse_args()
-
-print("inspect_file = ", args.inspect_file)
-print("template_file = ", args.template_file)
 
 if args.template_file:
     if not re.search(".in", args.template_file.name):
@@ -674,14 +671,14 @@ def get_lon_index(lon_query_180, lons):
             else:
                 # Get closest value
                 lon_query_360 = lon180_to_360(lon_query_180)
-                loni = np.argmin(np.abs(lon_query_360-lons))
+                loni = np.argmin(abs(lon_query_360-lons))
                 txt_lon = f", lon={lon360_to_180(lons[loni]):.1f}"
 
         elif lon_query_180.size == 2:
             # If range of longitudes provided
             lon_query_360 = lon180_to_360(lon_query_180)
-            loni_bounds = np.array([np.argmin(np.abs(lon_query_360[0]-lons)),
-                                    np.argmin(np.abs(lon_query_360[1]-lons))])
+            loni_bounds = np.array([np.argmin(abs(lon_query_360[0]-lons)),
+                                    np.argmin(abs(lon_query_360[1]-lons))])
             # Longitude should be increasing for extraction # TODO
             # Normal case (e.g., -45°W > 45°E)
             if loni_bounds[0] < loni_bounds[1]:
@@ -709,13 +706,13 @@ def get_lon_index(lon_query_180, lons):
                 txt_lon = ", zonal avg"
             else:
                 # Get closest value
-                loni = np.argmin(np.abs(lon_query_180-lons))
+                loni = np.argmin(abs(lon_query_180-lons))
                 txt_lon = f", lon={lons[loni]:.1f}"
 
         elif lon_query_180.size == 2:
             # If range of longitudes provided
-            loni_bounds = np.array([np.argmin(np.abs(lon_query_180[0]-lons)),
-                                    np.argmin(np.abs(lon_query_180[1]-lons))])
+            loni_bounds = np.array([np.argmin(abs(lon_query_180[0]-lons)),
+                                    np.argmin(abs(lon_query_180[1]-lons))])
             if loni_bounds[0] < loni_bounds[1]:
                 # Normal case (e.g., -45 °W > 45 °E)
                 loni = np.arange(loni_bounds[0], loni_bounds[1]+1)
@@ -761,12 +758,12 @@ def get_lat_index(lat_query, lats):
             txt_lat = ", merid. avg"
         else:
             # Get closest value
-            lati = np.argmin(np.abs(lat_query-lats))
+            lati = np.argmin(abs(lat_query-lats))
             txt_lat = f", lat={lats[lati]:g}"
     elif lat_query.size == 2:
         # If range of latitudes provided
-        lat_bounds = np.array([np.argmin(np.abs(lat_query[0] - lats)),
-                               np.argmin(np.abs(lat_query[1] - lats))])
+        lat_bounds = np.array([np.argmin(abs(lat_query[0] - lats)),
+                               np.argmin(abs(lat_query[1] - lats))])
         if lat_bounds[0] > lat_bounds[1]:
             # Latitude should be increasing for extraction
             lat_bounds = np.flipud(lat_bounds)
@@ -806,13 +803,13 @@ def get_tod_index(tod_query, tods):
             txt_tod = ", tod avg"
         else:
             # Get closest value
-            todi = np.argmin(np.abs(tod_query-tods))
+            todi = np.argmin(abs(tod_query-tods))
             txt_tmp = UT_LTtxt(tods[todi]/24., lon_180 = 0., roundmin = 1)
             txt_tod = f", tod= {txt_tmp}"
     elif tod_query.size == 2:
         # If range of times of day provided
-        tod_bounds = np.array([np.argmin(np.abs(tod_query[0] - tods)),
-                               np.argmin(np.abs(tod_query[1] - tods))])
+        tod_bounds = np.array([np.argmin(abs(tod_query[0] - tods)),
+                               np.argmin(abs(tod_query[1] - tods))])
         if tod_bounds[0] < tod_bounds[1]:
             # Normal case (e.g., 4 am > 10am)
             todi = np.arange(tod_bounds[0], tod_bounds[1]+1)
@@ -857,7 +854,7 @@ def get_level_index(level_query, levs):
             txt_level = ", column avg"
         else:
             # Specific level
-            levi = np.argmin(np.abs(level_query-levs))
+            levi = np.argmin(abs(level_query-levs))
             if level_query > 10.**7:
                 # Provide smart labeling
                 # None (i.e.surface was requested)
@@ -866,8 +863,8 @@ def get_level_index(level_query, levs):
                 txt_level = f", lev={levs[levi]:1.2e} Pa/m"
     elif level_query.size == 2:
         # Bounds are provided
-        levi_bounds = np.array([np.argmin(np.abs(level_query[0] - levs)),
-                                np.argmin(np.abs(level_query[1] - levs))])
+        levi_bounds = np.array([np.argmin(abs(level_query[0] - levs)),
+                                np.argmin(abs(level_query[1] - levs))])
         if levi_bounds[0] > levi_bounds[1]:
             # Level should be increasing for extraction
             levi_bounds = np.flipud(levi_bounds)
@@ -930,7 +927,7 @@ def get_time_index(Ls_query_360, LsDay):
                 # Lok one year back
                 MY_end -= 1
                 Ls_query = Ls_query_360 + (MY_end - 1)*360.
-            ti = np.argmin(np.abs(Ls_query - LsDay))
+            ti = np.argmin(abs(Ls_query - LsDay))
             txt_time = f", Ls= (MY{MY_end:02}) {np.mod(LsDay[ti], 360.):.2f}"
     elif Ls_query_360.size == 2:
         # If a range of times provided
@@ -944,19 +941,19 @@ def get_time_index(Ls_query_360, LsDay):
             # Look one MY back
             MY_last -= 1
             Ls_query_last = Ls_query_360[1] + (MY_last-1)*360.
-        ti_last = np.argmin(np.abs(Ls_query_last - LsDay))
+        ti_last = np.argmin(abs(Ls_query_last - LsDay))
         # Then get first value for that MY
         MY_beg = MY_last.copy()
 
         # Try MY of last timestep
         Ls_query_beg = Ls_query_360[0] + (MY_beg-1)*360.
-        ti_beg = np.argmin(np.abs(Ls_query_beg - LsDay))
+        ti_beg = np.argmin(abs(Ls_query_beg - LsDay))
 
         if ti_beg >= ti_last:
             # Search year before for ti_beg
             MY_beg -= 1
             Ls_query_beg = Ls_query_360[0] + (MY_beg-1)*360.
-            ti_beg = np.argmin(np.abs(Ls_query_beg - LsDay))
+            ti_beg = np.argmin(abs(Ls_query_beg - LsDay))
 
         ti = np.arange(ti_beg, ti_last + 1)
         Ls_bounds = [LsDay[ti[0]], LsDay[ti[-1]]]
@@ -3034,8 +3031,8 @@ class Fig_2D_time_lat(Fig_2D):
 
             # Axis formatting
             if self.Xlim:
-                idmin = np.argmin(np.abs(SolDay - self.Xlim[0]))
-                idmax = np.argmin(np.abs(SolDay - self.Xlim[1]))
+                idmin = np.argmin(abs(SolDay - self.Xlim[0]))
+                idmax = np.argmin(abs(SolDay - self.Xlim[1]))
                 plt.xlim([LsDay[idmin], LsDay[idmax]])
 
             if self.Ylim:
@@ -3046,7 +3043,7 @@ class Fig_2D_time_lat(Fig_2D):
 
             for i in range(0, len(Ls_ticks)):
                 # Find timestep closest to this tick
-                id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
+                id = np.argmin(abs(LsDay-Ls_ticks[i]))
                 if add_sol_time_axis:
                     labels[i] = (f"{np.mod(Ls_ticks[i], 360.):g}{degr}"
                                  f"\nsol {SolDay[id]}")
@@ -3230,8 +3227,8 @@ class Fig_2D_time_lev(Fig_2D):
 
             # Axis formatting
             if self.Xlim:
-                idmin = np.argmin(np.abs(SolDay - self.Xlim[0]))
-                idmax = np.argmin(np.abs(SolDay - self.Xlim[1]))
+                idmin = np.argmin(abs(SolDay - self.Xlim[0]))
+                idmax = np.argmin(abs(SolDay - self.Xlim[1]))
                 plt.xlim([LsDay[idmin], LsDay[idmax]])
             if self.Ylim:
                 plt.ylim(self.Ylim)
@@ -3241,7 +3238,7 @@ class Fig_2D_time_lev(Fig_2D):
 
             for i in range(0, len(Ls_ticks)):
                 # Find timestep closest to this tick
-                id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
+                id = np.argmin(abs(LsDay-Ls_ticks[i]))
                 if add_sol_time_axis:
                     labels[i] = (f"{np.mod(Ls_ticks[i], 360.)}{degr}"
                                  f"\nsol {SolDay[id]}")
@@ -3317,8 +3314,8 @@ class Fig_2D_lon_time(Fig_2D):
                 plt.xlim(self.Xlim)
 
             if self.Ylim:
-                idmin = np.argmin(np.abs(SolDay - self.Ylim[0]))
-                idmax = np.argmin(np.abs(SolDay - self.Ylim[1]))
+                idmin = np.argmin(abs(SolDay - self.Ylim[0]))
+                idmax = np.argmin(abs(SolDay - self.Ylim[1]))
                 plt.ylim([LsDay[idmin], LsDay[idmax]])
 
             Ls_ticks = [item for item in ax.get_yticks()]
@@ -3326,7 +3323,7 @@ class Fig_2D_lon_time(Fig_2D):
 
             for i in range(0, len(Ls_ticks)):
                 # Find timestep closest to this tick
-                id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
+                id = np.argmin(abs(LsDay-Ls_ticks[i]))
                 if add_sol_time_axis:
                     labels[i] = (f"{np.mod(Ls_ticks[i], 360.):g}{degr}"
                                  f"\nsol {SolDay[id]}")
@@ -4131,7 +4128,7 @@ class Fig_1D(object):
 
                 for i in range(0, len(Ls_ticks)):
                     # Find timestep closest to this tick
-                    id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
+                    id = np.argmin(abs(LsDay-Ls_ticks[i]))
                     if add_sol_time_axis:
                         labels[i] = (f"{np.mod(Ls_ticks[i], 360.)}{degr}"
                                      f"\nsol {SolDay[id]}")
