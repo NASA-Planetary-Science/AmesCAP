@@ -96,13 +96,7 @@ parser.add_argument('template_file', nargs='?',
         f"Must be a '.in' file.\n"
         f"{Green}Example:\n"
         f"> MarsPlot Custom.in\n"
-        f"> MarsPlot my_template.in\n"
-        f"{Nclr}\n\n"
-        f"Update CAP as needed with:{Cyan}\n"
-        f"> pip install git+https://github.com/NASA-Planetary-Science/"
-        f"AmesCAP.git --upgrade\n"
-        f"{Nclr}Tutorial: "
-        f"{Yellow}https://github.com/NASA-Planetary-Science/AmesCAP"
+        f"> MarsPlot my_template.in"
         f"{Nclr}\n\n"
     )
 )
@@ -247,8 +241,8 @@ parser.add_argument('--debug', action='store_true',
 # Handle mutually in/exclusive arguments (e.g., -sy requires Custom.in)
 args = parser.parse_args()
 
-print(args.template_file)
-print(args.inspect_file)
+print("inspect_file = ", args.inspect_file)
+print("template_file = ", args.template_file)
 
 if args.template_file:
     if not re.search(".in", args.template_file.name):
