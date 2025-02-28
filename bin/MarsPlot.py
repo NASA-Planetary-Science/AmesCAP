@@ -75,7 +75,15 @@ current_version = 3.5
 parser = argparse.ArgumentParser(
     prog=('MarsPlot'),
     description=(
-        f"{Yellow}Analysis Toolkit for the MGCM, V{current_version}."
+        f"{Yellow}MarsPlot V{current_version} is the plotting routine "
+        f"for CAP. To get started, use the -template flag to generate "
+        f"a Custom.in template file. Then, use the Custom.in file to "
+        f"create plots.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot -template {Blue}generates Custom.in file\n"
+        f"modify the Custom.in file to generate desired plots{Green}"
+        f"> MarsPlot Custom.in {Blue}generates pdf of plots from the "
+        f"template"
         f"{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
@@ -84,9 +92,11 @@ parser = argparse.ArgumentParser(
 parser.add_argument('template_file', nargs='?', 
     type=argparse.FileType('r'),
     help=(
-        f"Use the Custom.in template file to create figures.\n"
+        f"Pass a template file to MarsPlot to create figures.\n"
+        f"Must be a '.in' file.\n"
         f"{Green}Example:\n"
         f"> MarsPlot Custom.in\n"
+        f"> MarsPlot my_template.in\n"
         f"{Nclr}\n\n"
         f"Update CAP as needed with:{Cyan}\n"
         f"> pip install git+https://github.com/NASA-Planetary-Science/"
@@ -119,23 +129,11 @@ parser.add_argument('-template', '--generate_template', default=False,
     )
 )
 
-parser.add_argument('-d', '--date', nargs='+', default=None,
+parser.add_argument('-d', '--date', nargs=1, default=None,
     help=(
-        f"Specify the files to use. Default is the last file created.\n"
+        f"Specify the file to use. Default is the last file created.\n"
         f"{Green}Example:\n"
-        f"> MarsPlot Custom.in -d 00668\n"
-        f"> MarsPlot Custom.in -d 00334 01002"
-        f"{Nclr}\n\n"
-    )
-)
-
-parser.add_argument('-do', '--do', nargs=1, type=str, default=None,
-    help=(
-        f"(Re)use a template file (e.g., my_template.in). Searches in "
-        f"path/to/amesCAP/mars_templates/ first, then in directories"
-        f"defined in MarsPlot.\n"
-        f"{Green}Example:\n"
-        f"> MarsPlot -do my_template.in"
+        f"> MarsPlot Custom.in -d 00668"
         f"{Nclr}\n\n"
     )
 )
@@ -143,9 +141,11 @@ parser.add_argument('-do', '--do', nargs=1, type=str, default=None,
 parser.add_argument('-sy', '--stack_years', action='store_true',
     default=False,
     help=(
-        f"Stack consecutive years in 1D time series plots "
-        f"(recommended). "
-        f"Otherwise, plot in monotonically increasing format.\n"
+        f"Stack consecutive years of data on the same axes (e.g., Ls ="
+        f"0-360) in 1D time series plots.\nThis only works if ADD LINE "
+        f"is used in the Custom.in template to overplot multiple years "
+        f"of data.\nDefault is to plot in monotonically increasing "
+        f"format.\n"
         f"{Green}Example:\n"
         f"> MarsPlot Custom.in -sy"
         f"{Nclr}\n\n"
@@ -155,8 +155,8 @@ parser.add_argument('-sy', '--stack_years', action='store_true',
 parser.add_argument('-ftype', '--figure_filetype', default=None, 
     type=str, choices=['pdf', 'eps', 'png'],
     help=(
-        f"Output file format.\n"
-        f"Default is PDF if ghostscript (gs) is available, else PNG.\n"
+        f"Output file format.\n Default is PDF if ghostscript (gs) is "
+        f"available, else PNG.\n Supported formats: PDF, EPS, PNG.\n"
         f"{Green}Example:\n"
         f"> MarsPlot Custom.in -ftype png"
         f"{Nclr}\n\n"
@@ -216,7 +216,7 @@ parser.add_argument('-values', '--print_values', nargs='+',
         f"{Green}Example:\n"
         f"> MarsPlot -i 00668.atmos_daily.nc -values temp\n"
         f"{Blue}(quotes '' req. for browsing dimensions){Green}\n"
-        f"> MarsPlot -i 00668.atmos_daily.nc -values ''temp[6,:,30,10]''"
+        f"> MarsPlot -i 00668.atmos_daily.nc -values 'temp[6,:,30,10]'"
         f"{Nclr}\n\n"
     )
 )
@@ -229,7 +229,7 @@ parser.add_argument('-stats', '--statistics', nargs='+', default=None,
         f"{Green}Example:\n"
         f"> MarsPlot -i 00668.atmos_daily.nc -stats temp\n"
         f"{Blue}(quotes '' req. for browsing dimensions){Green}\n"
-        f"> MarsPlot -i 00668.atmos_daily.nc -stats ''temp[6,:,30,10]''"
+        f"> MarsPlot -i 00668.atmos_daily.nc -stats 'temp[6,:,30,10]'"
         f"{Nclr}\n\n"
     )
 )
@@ -248,12 +248,12 @@ parser.add_argument('--debug', action='store_true',
 args = parser.parse_args()
 
 if args.template_file:
-    if not re.search(".in", args.template_file.name):
+    if not re.search(".in", str(args.template_file.name)):
         parser.error(f"{Red}Template file is not a '.in' file{Nclr}")
         exit()
 
 if args.inspect_file:
-    if not re.search(".nc", args.inspect_file.name):
+    if not re.search(".nc", str(args.inspect_file.name)):
         parser.error(f"{Red}{args.inspect_file.name} is not a netCDF "
                      f"file{Nclr}")
         exit()
@@ -392,11 +392,6 @@ def main():
         print(f"Reading {args.template_file.name}")
         namelist_parser(args.template_file.name)
 
-        if args.do:
-            # Case B: Use Custom.in from local template dir
-            print(f"Reading {path_to_template(args.do)}")
-            namelist_parser(path_to_template(args.do))
-
         if args.date:
             # If optional --date provided, use files matching date(s)
             try:
@@ -473,20 +468,13 @@ def main():
                 all_fig += (f"{figID} ")
 
             try:
-                # Identify the name of the template file
-                if args.do:
-                    # If template file NOT Custom.in, extract prefix
-                    # for PDF name:
-                    # e.g., plots.in -> extract "plots" -> plots.pdf
-                    basename = args.do[0]
-                else:
-                    # If template file = "Custom", use default
-                    # PDF basename "Diagnostics":
-                    # e.g., Custom.in -> Diagnostics.pdf, or
-                    #       Custom_01.in -> Diagnostics_01.pdf
-                    input_file = (f"{output_path}/"
-                                  f"{args.template_file.name}")
-                    basename = input_file.split("/")[-1].split(".")[0].strip()
+                # If template file = "Custom", use default
+                # PDF basename "Diagnostics":
+                # e.g., Custom.in -> Diagnostics.pdf, or
+                #       Custom_01.in -> Diagnostics_01.pdf
+                input_file = (f"{output_path}/"
+                                f"{args.template_file.name}")
+                basename = input_file.split("/")[-1].split(".")[0].strip()
             except:
                 # Use default PDF basename "Diagnostics".
                 basename = "Custom"
@@ -1927,44 +1915,6 @@ def create_name(root_name):
         n = n + 1
         new_name = f"{root_name[0:-(len_ext + 1)]}_{n:02}.{ext}"
     return new_name
-
-
-def path_to_template(custom_name):
-    """
-    Locate the ``Custom.in`` template file requested by the user.
-
-    :param custom_name: name of the template file.
-        Accepted formats are ``some_name`` or ``some_name.in``.
-    :type custom_name: str
-    :return: the full path to the template file (e.g.,
-        ``/u/$USER/path/to/my_custom.in``).
-    """
-    local_dir = f"{sys.prefix}/mars_templates"
-
-    # Convert 1-element list to a string
-    custom_name = custom_name[0]
-
-    if custom_name[-3:] != ".in":
-        # If input name has no .in extension, add it
-        custom_name = f"{custom_name}.in"
-
-    if not os.path.isfile(f"{local_dir}/{custom_name}"):
-        # First look for template in local_dir/custom_name
-        if not os.path.isfile(f"{shared_dir}/{custom_name}"):
-            # Then look in shared_dir/custom_name
-            print(f"{Red}*** Error ***\nFile {custom_name} not found in "
-                  f"{local_dir} nor in {shared_dir}{Nclr}")
-
-            if not os.path.exists(local_dir):
-                # If no local template dir exists, suggest creating it
-                print(f"{Yellow}Note: {local_dir} directory does not "
-                      f"exist, create it with:\nmkdir {local_dir}{Nclr}")
-            exit()
-        else:
-            return f"{shared_dir}/{custom_name}"
-    else:
-        return f"{local_dir}/{custom_name}"
-
 
 def progress(k, Nmax, txt="", success=True):
     """
