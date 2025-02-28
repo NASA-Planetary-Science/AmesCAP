@@ -76,12 +76,12 @@ parser = argparse.ArgumentParser(
     prog=('MarsPlot'),
     description=(
         f"{Yellow}MarsPlot V{current_version} is the plotting routine "
-        f"for CAP. To get started, use the -template flag to generate "
-        f"a Custom.in template file. Then, use the Custom.in file to "
+        f"for CAP.\nTo get started, use the -template flag to generate "
+        f"a Custom.in template file.\nThen, use the Custom.in file to "
         f"create plots.\n"
         f"{Green}Example:\n"
         f"> MarsPlot -template {Blue}generates Custom.in file\n"
-        f"modify the Custom.in file to generate desired plots{Green}"
+        f"modify the Custom.in file to generate desired plots{Green}\n"
         f"> MarsPlot Custom.in {Blue}generates pdf of plots from the "
         f"template"
         f"{Nclr}\n\n"
@@ -246,6 +246,9 @@ parser.add_argument('--debug', action='store_true',
 
 # Handle mutually in/exclusive arguments (e.g., -sy requires Custom.in)
 args = parser.parse_args()
+
+print(args.template_file)
+print(args.inspect_file)
 
 if args.template_file:
     if not re.search(".in", args.template_file.name):
