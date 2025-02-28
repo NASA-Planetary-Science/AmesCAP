@@ -86,10 +86,10 @@ def print_fileContent(fileNcdf):
 
     :return: None
     """
-    if not os.path.isfile(fileNcdf):
-        print(f"{fileNcdf} not found")
+    if not os.path.isfile(fileNcdf.name):
+        print(f"{fileNcdf.name} not found")
     else:
-        f = Dataset(fileNcdf, "r")
+        f = Dataset(fileNcdf.name, "r")
         print("==================== DIMENSIONS ====================")
         print(list(f.dimensions.keys()))
         print(str(f.dimensions))
@@ -152,8 +152,8 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
 
     :return: None
     """
-    if not os.path.isfile(fileNcdf):
-        print(f"{fileNcdf} not found")
+    if not os.path.isfile(fileNcdf.name):
+        print(f"{fileNcdf.name} not found")
     else:
         if print_stat:
             print(f"{Cyan}____________________________________________________"
@@ -171,7 +171,7 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                 else:
                     varname = varfull.strip()
                 cmd_txt = f"f.variables['{varname}']{slice}"
-                f = Dataset(fileNcdf, "r")
+                f = Dataset(fileNcdf.name, "r")
                 var = eval(cmd_txt)
 
                 if print_stat:
@@ -249,7 +249,7 @@ def check_file_tape(fileNcdf, abort=False):
                               stdout = open(os.devnull, "w"),
                               stderr = open(os.devnull, "w"))
         # Get the last columns of the ls command (filename and status)
-        cmd_txt = f"dmls -l {fileNcdf}| awk '{{print $8,$9}}'"
+        cmd_txt = f"dmls -l {fileNcdf.name}| awk '{{print $8,$9}}'"
         # Get 3-letter identifier from dmls -l command, convert byte to
         # string for Python3
         dmls_out = subprocess.check_output(cmd_txt,
