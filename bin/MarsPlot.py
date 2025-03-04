@@ -4,9 +4,9 @@ The MarsPlot executable is for generating plots from Custom.in template
 files. It sources variables from netCDF files in a specified directory.
 
 The executable requires:
-    * ``[-template --template]`` generates blank Custom.in template
-    * ``[-i --inspect]``         triggers ncdump-like text to console
-    * ``[Custom.in]``            to create plots in Custom.in template
+    * ``[-template --generate_template]`` Generates a Custom.in template
+    * ``[-i --inspect]``         Triggers ncdump-like text to console
+    * ``[Custom.in]``            To create plots in Custom.in template
 
 Third-party Requirements:
     * ``numpy``
@@ -20,36 +20,46 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (Yellow, Red, Purple, Cyan, Nclr, Blue, Green)
+from amescap.Script_utils import (
+    Yellow, Red, Purple, Nclr, Blue, Green
+)
 
 # Load generic Python modules
-import sys
+import sys          # System commands
 import argparse     # Parse arguments
 import os           # Access operating system functions
 import subprocess   # Run command-line commands
+import warnings     # Suppress errors triggered by NaNs
 import matplotlib
+import re           # Regular expressions
 import numpy as np
-import warnings     # suppress errors triggered by NaNs
-from warnings import filterwarnings
-import warnings     # suppress errors triggered by NaNs
-import matplotlib.pyplot as plt
 from netCDF4 import Dataset, MFDataset
-from numpy import abs, sqrt, log, exp, abs, min, max,mean #imported to allow operations insquare brackets
-from matplotlib.ticker import (LogFormatter, NullFormatter,
-                               LogFormatterSciNotation, MultipleLocator)
+from warnings import filterwarnings
+import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
-matplotlib.use("Agg") # Force matplotlib NOT to load Xwindows backend
+# Force matplotlib NOT to load Xwindows backend
+matplotlib.use("Agg")
+
+# Allows operations in square brackets in Custom.in
+from numpy import (abs, sqrt, log, exp, min, max, mean) 
+
+from matplotlib.ticker import (
+    LogFormatter, NullFormatter, LogFormatterSciNotation, 
+    MultipleLocator
+)
 
 # Load amesCAP modules
 from amescap.Script_utils import (
     check_file_tape, section_content_amescap_profile, print_fileContent,
     print_varContent, FV3_file_type, find_tod_in_diurn, wbr_cmap,
-    rjw_cmap, dkass_temp_cmap,dkass_dust_cmap,hot_cold_cmap)
+    rjw_cmap, dkass_temp_cmap,dkass_dust_cmap,hot_cold_cmap
+)
 from amescap.FV3_utils import (
     lon360_to_180, lon180_to_360, UT_LTtxt, area_weights_deg,
     shiftgrid_180_to_360, shiftgrid_360_to_180, add_cyclic,
-    azimuth2cart, mollweide2cart, robin2cart, ortho2cart)
+    azimuth2cart, mollweide2cart, robin2cart, ortho2cart
+)
 
 # Ignore deprecation warnings
 filterwarnings("ignore", category = DeprecationWarning)
@@ -63,135 +73,235 @@ current_version = 3.5
 # ======================================================
 
 parser = argparse.ArgumentParser(
+    prog=('MarsPlot'),
     description=(
-        f"{Yellow}Analysis Toolkit for the MGCM, V{current_version}."
+        f"{Yellow}MarsPlot V{current_version} is the plotting routine "
+        f"for CAP.\nTo get started, use the -template flag to generate "
+        f"a Custom.in template file.\nThen, use the Custom.in file to "
+        f"create plots.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot -template {Blue}generates Custom.in file\n"
+        f"modify the Custom.in file to generate desired plots{Green}\n"
+        f"> MarsPlot Custom.in {Blue}generates pdf of plots from the "
+        f"template"
         f"{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument(
-    "custom_file", nargs="?", type=argparse.FileType("r"), default=None,
+parser.add_argument('template_file', nargs='?', 
+    type=argparse.FileType('r'),
     help=(
-        f"Use optional input file Custom.in to create the graphs.\n"
-        f"{Green}Usage:\n"
-        f"> MarsPlot Custom.in [other options]\n"
-        f"{Nclr}\n\n"
-        f"Update CAP as needed with:{Cyan}\n"
-        f"> pip install git+https://github.com/NASA-Planetary-Science/"
-        f"AmesCAP.git --upgrade\n"
-        f"{Nclr}Tutorial: "
-        f"{Yellow}https://github.com/NASA-Planetary-Science/AmesCAP"
+        f"Pass a template file to MarsPlot to create figures.\n"
+        f"Must be a '.in' file.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot Custom.in\n"
+        f"> MarsPlot my_template.in"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-i", "--inspect_file", default=None,
+parser.add_argument('-i', '--inspect_file', nargs='?',
+    type=argparse.FileType('r'),
     help=(
-        f"Inspect netcdf file content. Variables are sorted by "
-        f"dimensions.\n"
-        f"{Green}Usage:\n"
-        f"> MarsPlot -i 00000.atmos_daily.nc\n"
-        f"{Blue}Options: use --dump (variable content) and --stat "
-        f"(min, mean,max) jointly with --inspect{Green}\n"
-        f"> MarsPlot -i 00000.atmos_daily.nc -dump pfull "
-        f"``temp[6,:,30,10]``\n"
-        f"{Blue}(quotes "" req. for browsing dimensions){Green}\n"
-        f"> MarsPlot -i 00000.atmos_daily.nc -stat ``ucomp[5,:,:,:]`` "
-        f"``vcomp[5,:,:,:]``"
-        f"{Nclr}\n\n"
-    )
-)
-# to be used jointly with --inspect
-parser.add_argument("--dump", "-dump", nargs="+", default=None,
-    help=argparse.SUPPRESS)
-
-# to be used jointly with --inspect
-parser.add_argument("--stat", "-stat", nargs="+", default=None,
-    help=argparse.SUPPRESS)
-
-parser.add_argument("-d", "--date", nargs="+", default=None,
-    help=(
-        f"Specify the files to use. Default is the last file created.\n"
-        f"{Green}Usage:\n"
-        f"> Usage: MarsPlot Custom.in -d 700\n"
-        f"         MarsPlot Custom.in -d 350 700 (start end)"
+        f"Print the content of a netCDF file to the screen. This is a "
+        f"ncdump-like feature. Variables are sorted by dimension.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot -i 00668.atmos_daily.nc"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("--template", "-template", action="store_true",
+parser.add_argument('-template', '--generate_template', default=False,
+    action='store_true',
     help=(
-        f"Generate a template (Custom.in) for creating the plots.\n"
-        f"(Use ``--temp`` to create a Custom.in file without these "
-        f"instructions)\n\n"
-    )
-)
-
-# Creates a Custom.in template without the instructions
-parser.add_argument("-temp", "--temp", action="store_true",
-    help=argparse.SUPPRESS)
-
-parser.add_argument("-do", "--do", nargs=1, type=str, default=None,
-    help=(
-        f"(Re)use a template file (e.g., my_custom.in). Searches in "
-        f"~/amesCAP/mars_templates/ first, then in  "
-        f"/path_to_shared_templates/ as defined in MarsPlot\n"
-        f"{Green}Usage:\n"
-        f"> MarsPlot -do my_custom [other options]"
+        f"Generate a file called Custom.in that provides templates "
+        f"for making plots with CAP.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot -template\n"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-sy", "--stack_year", action="store_true",
-                    default=False,
+parser.add_argument('-d', '--date', nargs=1, default=None,
     help=(
-        f"Stack consecutive years in 1D time series plots "
-        f"(recommended). "
-        f"Otherwise, plot in monotonically increasing format.\n"
-        f"{Green}Usage:\n"
+        f"Specify the file to use. Default is the last file created.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot Custom.in -d 00668"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument('-sy', '--stack_years', action='store_true',
+    default=False,
+    help=(
+        f"Stack consecutive years of data on the same axes (e.g., Ls ="
+        f"0-360) in 1D time series plots.\nThis only works if ADD LINE "
+        f"is used in the Custom.in template to overplot multiple years "
+        f"of data.\nDefault is to plot in monotonically increasing "
+        f"format.\n"
+        f"{Green}Example:\n"
         f"> MarsPlot Custom.in -sy"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-o", "--output", default="pdf",
-    choices=["pdf", "eps", "png"],
+parser.add_argument('-ftype', '--figure_filetype', default=None, 
+    type=str, choices=['pdf', 'eps', 'png'],
     help=(
-        f"Output file format.\n"
-        f"Default is PDF if ghostscript (gs) is available, else PNG.\n"
-        f"{Green}Usage:\n"
-        f"> MarsPlot Custom.in -o png\n"
-        f"> MarsPlot Custom.in -o png -pw 500 "
-        f"  {Blue}(sets pixel width to 500, default is 2000)"
+        f"Output file format.\n Default is PDF if ghostscript (gs) is "
+        f"available, else PNG.\n Supported formats: PDF, EPS, PNG.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot Custom.in -ftype png"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-vert", "--vertical", action="store_true",
-                    default=False,
+parser.add_argument('-portrait', '--portrait_mode', action='store_true',
+    default=False,
     help=(
-        f"Output figures in portrait instead of landscape format.\n\n"
+        f"Output figures in portrait instead of landscape format.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot Custom.in -portrait"
+        f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-pw", "--pwidth", default=2000, type=float,
-    help=argparse.SUPPRESS)
+parser.add_argument('-pw', '--pixel_width', default=2000, type=float,
+    help=(
+        f"Pixel width of the output figure. Default is 2000.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot Custom.in -pw 1000"
+        f"{Nclr}\n\n"
+    )
+)
 
-parser.add_argument("-dir", "--directory", default=os.getcwd(),
+parser.add_argument('-dir', '--directory', default=os.getcwd(),
     help=(
         f"Target directory if input files are not in current "
         f"directory.\n"
-        f"{Green}Usage:\n"
-        f"> MarsPlot Custom.in [other options] -dir /u/akling/FV3/"
-        f"verona/c192L28_dliftA/history"
+        f"{Green}Example:\n"
+        f"> MarsPlot Custom.in -dir path/to/directory"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("--debug", action="store_true",
-    help=(f"Debug flag: do not bypass errors.\n\n"))
+# Secondary arguments: Used with some of the arguments above
 
+# to be used jointly with --generate_template
+parser.add_argument('-trim', '--trim_text', action='store_true',
+    default=False,
+    help=(
+        f"Generate a file called Custom.in that provides templates "
+        f"for making plots with CAP without the commented instructions "
+        f"at top of the file.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot -template -trim\n"
+        f"{Nclr}\n\n"
+    )
+)
+
+# to be used jointly with --inspect
+parser.add_argument('-values', '--print_values', nargs='+',
+    default=None,
+    help=(
+        f"For use with ``-i --inspect``: print the values of the "
+        f"specified variable to the screen.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot -i 00668.atmos_daily.nc -values temp\n"
+        f"{Blue}(quotes '' req. for browsing dimensions){Green}\n"
+        f"> MarsPlot -i 00668.atmos_daily.nc -values 'temp[6,:,30,10]'"
+        f"{Nclr}\n\n"
+    )
+)
+
+# to be used jointly with --inspect
+parser.add_argument('-stats', '--statistics', nargs='+', default=None,
+    help=(
+        f"For use with ``-i --inspect``: print the min, mean, and max "
+        f"values of the specified variable to the screen.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot -i 00668.atmos_daily.nc -stats temp\n"
+        f"{Blue}(quotes '' req. for browsing dimensions){Green}\n"
+        f"> MarsPlot -i 00668.atmos_daily.nc -stats 'temp[6,:,30,10]'"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument('--debug', action='store_true',
+    help=(
+        f"Use with any other argument to pass all Python errors and\n"
+        f"status messages to the screen when running CAP.\n"
+        f"{Green}Example:\n"
+        f"> MarsPlot Custom.in --debug"
+        f"{Nclr}\n\n"
+    )
+ )
+
+# Handle mutually in/exclusive arguments (e.g., -sy requires Custom.in)
+args = parser.parse_args()
+
+if args.template_file:
+    if not re.search(".in", args.template_file.name):
+        parser.error(f"{Red}Template file is not a '.in' file{Nclr}")
+        exit()
+
+if args.inspect_file:
+    if not re.search(".nc", args.inspect_file.name):
+        parser.error(f"{Red}{args.inspect_file.name} is not a netCDF "
+                     f"file{Nclr}")
+        exit()
+
+if args.date is not None and (args.template_file is None and 
+                              args.generate_template is False and 
+                              args.inspect_file is None):
+    parser.error(f"{Red}The -d argument requires a template file "
+                 f"like Custom.in (e.g., MarsPlot Custom.in -d 00668)"
+                 f"{Nclr}")
+    exit()
+
+if args.figure_filetype is not None and (
+    args.template_file is None and 
+    args.generate_template is False and 
+    args.inspect_file is None
+    ):
+    parser.error(f"{Red}The -f argument requires a template file "
+                 f"like Custom.in (e.g., MarsPlot Custom.in -ftype png)"
+                 f"{Nclr}")
+    exit()
+
+if args.stack_years and (args.template_file is None and 
+                         args.generate_template is False and 
+                         args.inspect_file is None):
+    parser.error(f"{Red}The -sy argument requires a template file "
+                 f"like Custom.in (e.g., MarsPlot Custom.in -sy)"
+                 f"{Nclr}")
+    exit()
+
+if args.portrait_mode and (args.template_file is None and 
+                           args.generate_template is False and 
+                           args.inspect_file is None):
+    parser.error(f"{Red}The -portrait argument requires a template "
+                 f"file like Custom.in (e.g., MarsPlot Custom.in "
+                 f"-portrait){Nclr}")
+    exit()
+
+if args.statistics is not None and args.inspect_file is None:
+    parser.error(f"{Red}The -stat argument requires a template "
+                 f"file like Custom.in (e.g., MarsPlot -i "
+                 f"00668.atmos_daily.nc -stats temp{Nclr}")
+    exit()
+    
+if args.print_values is not None and args.inspect_file is None:
+    parser.error(f"{Red}The -values argument requires a template "
+                 f"file like Custom.in (e.g., MarsPlot -i "
+                 f"00668.atmos_daily.nc -values temp{Nclr}")
+    exit()
+    
+if args.trim_text and (args.generate_template is False):
+    parser.error(f"{Red}The -trim argument requires -template (e.g., "
+                 f"MarsPlot -template -trim{Nclr}")
+    exit()
 
 # ======================================================================
 #                           MAIN PROGRAM
@@ -199,10 +309,10 @@ parser.add_argument("--debug", action="store_true",
 def main():
     global output_path, input_paths, out_format, debug
     output_path = os.getcwd()
-    out_format = parser.parse_args().output
-    debug = parser.parse_args().debug
+    out_format = 'pdf' if args.figure_filetype is None else args.figure_filetype
+    debug = args.debug
     input_paths = []
-    input_paths.append(parser.parse_args().directory)
+    input_paths.append(args.directory)
 
     global Ncdf_num         # Hosts the simulation timestamps
     global objectList       # Contains all figure objects
@@ -223,14 +333,14 @@ def main():
     global vertical_page
 
     # Set portrait format for outout figures
-    vertical_page = parser.parse_args().vertical
+    vertical_page = args.portrait_mode
 
     # Directory (dir) containing shared templates
     global shared_dir
     shared_dir = "/path_to_shared_templates"
 
     # Set figure dimensions
-    pixel_width = parser.parse_args().pwidth
+    pixel_width = args.pixel_width
     if vertical_page:
         width_inch = pixel_width / 1.4 / my_dpi
         height_inch = pixel_width / my_dpi
@@ -252,43 +362,35 @@ def main():
     objectList[1].subID = 2 # 2nd object in a 2-panel figure
     objectList[1].nPan = 2
 
-    if parser.parse_args().inspect_file:
+    if args.inspect_file:
         # --inspect: Inspect content of netcdf file
         # NAS-specific, check if the file is on tape (Lou only)
-        check_file_tape(parser.parse_args().inspect_file, abort = False)
-        if parser.parse_args().dump:
+        check_file_tape(args.inspect_file, abort = False)
+        if args.print_values:
             # Print variable content to screen
-            print_varContent(parser.parse_args().inspect_file,
-                             parser.parse_args().dump, False)
-        elif parser.parse_args().stat:
+            print_varContent(args.inspect_file,
+                             args.print_values, False)
+        elif args.statistics:
             # Print variable stats (max, min, mean) to screen
-            print_varContent(parser.parse_args().inspect_file,
-                             parser.parse_args().stat, True)
+            print_varContent(args.inspect_file,
+                             args.statistics, True)
         else:
             # Show information for all variables
-            print_fileContent(parser.parse_args().inspect_file)
+            print_fileContent(args.inspect_file)
 
-    elif parser.parse_args().template or parser.parse_args().temp:
-        # --template: Generate a template file
+    elif args.generate_template:
         make_template()
 
-    else:
-        # Custom.in: generate plots from a Custom.in template
-        if parser.parse_args().custom_file:
-            # Case A: Use local Custom.in (most common option)
-            print(f"Reading {parser.parse_args().custom_file.name}")
-            namelist_parser(parser.parse_args().custom_file.name)
+    elif args.template_file:
+        # Case A: Use local Custom.in (most common option)
+        print(f"Reading {args.template_file.name}")
+        namelist_parser(args.template_file.name)
 
-        if parser.parse_args().do:
-            # Case B: Use ~/FV3/templates/Custom.in
-            print(f"Reading {path_to_template(parser.parse_args().do)}")
-            namelist_parser(path_to_template(parser.parse_args().do))
-
-        if parser.parse_args().date:
+        if args.date:
             # If optional --date provided, use files matching date(s)
             try:
                 # Confirm that input date type = float
-                bound = np.asarray(parser.parse_args().date).astype(float)
+                bound = np.asarray(args.date).astype(float)
             except Exception as e:
                 print(f"{Red}*** Syntax Error***\nPlease use: ``MarsPlot "
                       f"Custom.in -d XXXX [YYYY] -o out``{Nclr}")
@@ -360,20 +462,13 @@ def main():
                 all_fig += (f"{figID} ")
 
             try:
-                # Identify the name of the template file
-                if parser.parse_args().do:
-                    # If template file NOT Custom.in, extract prefix
-                    # for PDF name:
-                    # e.g., plots.in -> extract "plots" -> plots.pdf
-                    basename = parser.parse_args().do[0]
-                else:
-                    # If template file = "Custom", use default
-                    # PDF basename "Diagnostics":
-                    # e.g., Custom.in -> Diagnostics.pdf, or
-                    #       Custom_01.in -> Diagnostics_01.pdf
-                    input_file = (f"{output_path}/"
-                                  f"{parser.parse_args().custom_file.name}")
-                    basename = input_file.split("/")[-1].split(".")[0].strip()
+                # If template file = "Custom", use default
+                # PDF basename "Diagnostics":
+                # e.g., Custom.in -> Diagnostics.pdf, or
+                #       Custom_01.in -> Diagnostics_01.pdf
+                input_file = (f"{output_path}/"
+                                f"{args.template_file.name}")
+                basename = input_file.split("/")[-1].split(".")[0].strip()
             except:
                 # Use default PDF basename "Diagnostics".
                 basename = "Custom"
@@ -386,7 +481,7 @@ def main():
                 # If template name = Custom_XX.in -> Diagnostics_XX.pdf
                 output_pdf = (f"{output_path}/Diagnostics_{basename[7:9]}.pdf")
             else:
-                # If template name is something else, use prefix to
+                # If template name is NOT Custom.in, use prefix to
                 # generate PDF name
                 output_pdf = (f"{output_path}/{basename}.pdf")
 
@@ -438,17 +533,22 @@ def main():
                       "try a different format, such as PNG.")
                 if debug:
                     raise
-
+    else:
+        parser.error(f"{Red}No valid argument was passed. Pass a "
+                     f"Custom.in template file or use -template or -i "
+                     f"to use MarsPlot. Type 'MarsPlot -h' if you need "
+                     f"more assistance.{Nclr}")
+        exit()
 # ======================================================================
 #                       DATA OPERATION UTILITIES
 # ======================================================================
 
-# User Preferences from ~/.amescap_profile
+# User Preferences from amescap_profile
 global add_sol_time_axis, lon_coord_type, include_NaNs
 
 # Create a namespace with numpy available
 namespace = {'np': np}
-# Load preferences in Settings section of ~/.amescap_profile
+# Load preferences in Settings section of amescap_profile
 exec(section_content_amescap_profile("MarsPlot Settings"), namespace)
 
 # Determine whether to include sol number in addition to Ls on
@@ -469,7 +569,7 @@ def mean_func(arr, axis):
     """
     This function calculates a mean over the selected axis, ignoring or
     including NaN values as specified by ``show_NaN_in_slice`` in
-   ``~/.amescap_profile``.
+   ``amescap_profile``.
 
     :param arr: the array to be averaged
     :type arr: array
@@ -515,7 +615,7 @@ def shift_data(lon, data):
     else:
         raise ValueError("Longitude coordinate type invalid. Please "
                          "specify ``180`` or ``360`` after "
-                         "``lon_coordinate`` in ``~/.amescap_profile``")
+                         "``lon_coordinate`` in ``amescap_profile``")
     # If 1D plot, squeeze array
     if data.shape[0] == 1:
         data = np.squeeze(data)
@@ -571,14 +671,14 @@ def get_lon_index(lon_query_180, lons):
             else:
                 # Get closest value
                 lon_query_360 = lon180_to_360(lon_query_180)
-                loni = np.argmin(np.abs(lon_query_360-lons))
+                loni = np.argmin(abs(lon_query_360-lons))
                 txt_lon = f", lon={lon360_to_180(lons[loni]):.1f}"
 
         elif lon_query_180.size == 2:
             # If range of longitudes provided
             lon_query_360 = lon180_to_360(lon_query_180)
-            loni_bounds = np.array([np.argmin(np.abs(lon_query_360[0]-lons)),
-                                    np.argmin(np.abs(lon_query_360[1]-lons))])
+            loni_bounds = np.array([np.argmin(abs(lon_query_360[0]-lons)),
+                                    np.argmin(abs(lon_query_360[1]-lons))])
             # Longitude should be increasing for extraction # TODO
             # Normal case (e.g., -45°W > 45°E)
             if loni_bounds[0] < loni_bounds[1]:
@@ -606,13 +706,13 @@ def get_lon_index(lon_query_180, lons):
                 txt_lon = ", zonal avg"
             else:
                 # Get closest value
-                loni = np.argmin(np.abs(lon_query_180-lons))
+                loni = np.argmin(abs(lon_query_180-lons))
                 txt_lon = f", lon={lons[loni]:.1f}"
 
         elif lon_query_180.size == 2:
             # If range of longitudes provided
-            loni_bounds = np.array([np.argmin(np.abs(lon_query_180[0]-lons)),
-                                    np.argmin(np.abs(lon_query_180[1]-lons))])
+            loni_bounds = np.array([np.argmin(abs(lon_query_180[0]-lons)),
+                                    np.argmin(abs(lon_query_180[1]-lons))])
             if loni_bounds[0] < loni_bounds[1]:
                 # Normal case (e.g., -45 °W > 45 °E)
                 loni = np.arange(loni_bounds[0], loni_bounds[1]+1)
@@ -658,12 +758,12 @@ def get_lat_index(lat_query, lats):
             txt_lat = ", merid. avg"
         else:
             # Get closest value
-            lati = np.argmin(np.abs(lat_query-lats))
+            lati = np.argmin(abs(lat_query-lats))
             txt_lat = f", lat={lats[lati]:g}"
     elif lat_query.size == 2:
         # If range of latitudes provided
-        lat_bounds = np.array([np.argmin(np.abs(lat_query[0] - lats)),
-                               np.argmin(np.abs(lat_query[1] - lats))])
+        lat_bounds = np.array([np.argmin(abs(lat_query[0] - lats)),
+                               np.argmin(abs(lat_query[1] - lats))])
         if lat_bounds[0] > lat_bounds[1]:
             # Latitude should be increasing for extraction
             lat_bounds = np.flipud(lat_bounds)
@@ -703,13 +803,13 @@ def get_tod_index(tod_query, tods):
             txt_tod = ", tod avg"
         else:
             # Get closest value
-            todi = np.argmin(np.abs(tod_query-tods))
+            todi = np.argmin(abs(tod_query-tods))
             txt_tmp = UT_LTtxt(tods[todi]/24., lon_180 = 0., roundmin = 1)
             txt_tod = f", tod= {txt_tmp}"
     elif tod_query.size == 2:
         # If range of times of day provided
-        tod_bounds = np.array([np.argmin(np.abs(tod_query[0] - tods)),
-                               np.argmin(np.abs(tod_query[1] - tods))])
+        tod_bounds = np.array([np.argmin(abs(tod_query[0] - tods)),
+                               np.argmin(abs(tod_query[1] - tods))])
         if tod_bounds[0] < tod_bounds[1]:
             # Normal case (e.g., 4 am > 10am)
             todi = np.arange(tod_bounds[0], tod_bounds[1]+1)
@@ -754,7 +854,7 @@ def get_level_index(level_query, levs):
             txt_level = ", column avg"
         else:
             # Specific level
-            levi = np.argmin(np.abs(level_query-levs))
+            levi = np.argmin(abs(level_query-levs))
             if level_query > 10.**7:
                 # Provide smart labeling
                 # None (i.e.surface was requested)
@@ -763,8 +863,8 @@ def get_level_index(level_query, levs):
                 txt_level = f", lev={levs[levi]:1.2e} Pa/m"
     elif level_query.size == 2:
         # Bounds are provided
-        levi_bounds = np.array([np.argmin(np.abs(level_query[0] - levs)),
-                                np.argmin(np.abs(level_query[1] - levs))])
+        levi_bounds = np.array([np.argmin(abs(level_query[0] - levs)),
+                                np.argmin(abs(level_query[1] - levs))])
         if levi_bounds[0] > levi_bounds[1]:
             # Level should be increasing for extraction
             levi_bounds = np.flipud(levi_bounds)
@@ -827,7 +927,7 @@ def get_time_index(Ls_query_360, LsDay):
                 # Lok one year back
                 MY_end -= 1
                 Ls_query = Ls_query_360 + (MY_end - 1)*360.
-            ti = np.argmin(np.abs(Ls_query - LsDay))
+            ti = np.argmin(abs(Ls_query - LsDay))
             txt_time = f", Ls= (MY{MY_end:02}) {np.mod(LsDay[ti], 360.):.2f}"
     elif Ls_query_360.size == 2:
         # If a range of times provided
@@ -841,19 +941,19 @@ def get_time_index(Ls_query_360, LsDay):
             # Look one MY back
             MY_last -= 1
             Ls_query_last = Ls_query_360[1] + (MY_last-1)*360.
-        ti_last = np.argmin(np.abs(Ls_query_last - LsDay))
+        ti_last = np.argmin(abs(Ls_query_last - LsDay))
         # Then get first value for that MY
         MY_beg = MY_last.copy()
 
         # Try MY of last timestep
         Ls_query_beg = Ls_query_360[0] + (MY_beg-1)*360.
-        ti_beg = np.argmin(np.abs(Ls_query_beg - LsDay))
+        ti_beg = np.argmin(abs(Ls_query_beg - LsDay))
 
         if ti_beg >= ti_last:
             # Search year before for ti_beg
             MY_beg -= 1
             Ls_query_beg = Ls_query_360[0] + (MY_beg-1)*360.
-            ti_beg = np.argmin(np.abs(Ls_query_beg - LsDay))
+            ti_beg = np.argmin(abs(Ls_query_beg - LsDay))
 
         ti = np.arange(ti_beg, ti_last + 1)
         Ls_bounds = [LsDay[ti[0]], LsDay[ti[-1]]]
@@ -1376,7 +1476,7 @@ def make_template():
     # Create header with instructions. Add version number to title.
     customFileIN.write(
         f"===================== |MarsPlot V{str(current_version)}| ===================\n")
-    if parser.parse_args().template:
+    if args.trim_text is not None:
         # Additional instructions if requested
         customFileIN.write(
             "# ================================================= INSTRUCTIONS =================================================\n")
@@ -1447,6 +1547,7 @@ def make_template():
         customFileIN.write("# Specify the *.nc file from which to plot using the ``@`` symbol + the simulation number:\n")
         customFileIN.write("#    in the call to Main Variable, e.g., Main Variable = atmos_average@2.temp \n")
         customFileIN.write("# \n")
+    
     customFileIN.write(
         "<<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>\n")
     customFileIN.write("ref> None\n")
@@ -1455,7 +1556,7 @@ def make_template():
     customFileIN.write(
         "=======================================================\n")
     customFileIN.write("START\n\n")
-
+    
     # For the default list of figures in main(), create a template.
     for i in range(0, len(objectList)):
         if objectList[i].subID == 1 and objectList[i].nPan > 1:
@@ -1808,44 +1909,6 @@ def create_name(root_name):
         n = n + 1
         new_name = f"{root_name[0:-(len_ext + 1)]}_{n:02}.{ext}"
     return new_name
-
-
-def path_to_template(custom_name):
-    """
-    Locate the ``Custom.in`` template file requested by the user.
-
-    :param custom_name: name of the template file.
-        Accepted formats are ``some_name`` or ``some_name.in``.
-    :type custom_name: str
-    :return: the full path to the template file (e.g.,
-        ``/u/$USER/FV3/templates/my_custom.in``).
-    """
-    local_dir = f"{sys.prefix}/mars_templates"
-
-    # Convert 1-element list to a string
-    custom_name = custom_name[0]
-
-    if custom_name[-3:] != ".in":
-        # If input name has no .in extension, add it
-        custom_name = f"{custom_name}.in"
-
-    if not os.path.isfile(f"{local_dir}/{custom_name}"):
-        # First look for template in ~/FV3/templates
-        if not os.path.isfile(f"{shared_dir}/{custom_name}"):
-            # Then look in /lou/.../MCMC/analysis/working/templates
-            print(f"{Red}*** Error ***\nFile {custom_name} not found in "
-                  f"{local_dir} nor in {shared_dir}{Nclr}")
-
-            if not os.path.exists(local_dir):
-                # If no local ~/FV3/templates path, suggest creating it
-                print(f"{Yellow}Note: directory: ~/FV3/templates does not "
-                      f"exist, create it with:\nmkdir {local_dir}{Nclr}")
-            exit()
-        else:
-            return f"{shared_dir}/{custom_name}"
-    else:
-        return f"{local_dir}/{custom_name}"
-
 
 def progress(k, Nmax, txt="", success=True):
     """
@@ -2548,7 +2611,7 @@ class Fig_2D_lon_lat(Fig_2D):
         :param varfull: variable input to main_variable in Custom.in
             (e.g., ``03340.atmos_average.ucomp``)
         :type varfull: str
-        :param plot_type: plot template type (e.g.,
+        :param plot_type: plot type (e.g.,
             ``Plot 2D lon X time``)
         :type plot_type: str
         :return: topography or ``None`` if no matching ``fixed`` file
@@ -2968,8 +3031,8 @@ class Fig_2D_time_lat(Fig_2D):
 
             # Axis formatting
             if self.Xlim:
-                idmin = np.argmin(np.abs(SolDay - self.Xlim[0]))
-                idmax = np.argmin(np.abs(SolDay - self.Xlim[1]))
+                idmin = np.argmin(abs(SolDay - self.Xlim[0]))
+                idmax = np.argmin(abs(SolDay - self.Xlim[1]))
                 plt.xlim([LsDay[idmin], LsDay[idmax]])
 
             if self.Ylim:
@@ -2980,7 +3043,7 @@ class Fig_2D_time_lat(Fig_2D):
 
             for i in range(0, len(Ls_ticks)):
                 # Find timestep closest to this tick
-                id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
+                id = np.argmin(abs(LsDay-Ls_ticks[i]))
                 if add_sol_time_axis:
                     labels[i] = (f"{np.mod(Ls_ticks[i], 360.):g}{degr}"
                                  f"\nsol {SolDay[id]}")
@@ -3164,8 +3227,8 @@ class Fig_2D_time_lev(Fig_2D):
 
             # Axis formatting
             if self.Xlim:
-                idmin = np.argmin(np.abs(SolDay - self.Xlim[0]))
-                idmax = np.argmin(np.abs(SolDay - self.Xlim[1]))
+                idmin = np.argmin(abs(SolDay - self.Xlim[0]))
+                idmax = np.argmin(abs(SolDay - self.Xlim[1]))
                 plt.xlim([LsDay[idmin], LsDay[idmax]])
             if self.Ylim:
                 plt.ylim(self.Ylim)
@@ -3175,7 +3238,7 @@ class Fig_2D_time_lev(Fig_2D):
 
             for i in range(0, len(Ls_ticks)):
                 # Find timestep closest to this tick
-                id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
+                id = np.argmin(abs(LsDay-Ls_ticks[i]))
                 if add_sol_time_axis:
                     labels[i] = (f"{np.mod(Ls_ticks[i], 360.)}{degr}"
                                  f"\nsol {SolDay[id]}")
@@ -3251,8 +3314,8 @@ class Fig_2D_lon_time(Fig_2D):
                 plt.xlim(self.Xlim)
 
             if self.Ylim:
-                idmin = np.argmin(np.abs(SolDay - self.Ylim[0]))
-                idmax = np.argmin(np.abs(SolDay - self.Ylim[1]))
+                idmin = np.argmin(abs(SolDay - self.Ylim[0]))
+                idmax = np.argmin(abs(SolDay - self.Ylim[1]))
                 plt.ylim([LsDay[idmin], LsDay[idmax]])
 
             Ls_ticks = [item for item in ax.get_yticks()]
@@ -3260,7 +3323,7 @@ class Fig_2D_lon_time(Fig_2D):
 
             for i in range(0, len(Ls_ticks)):
                 # Find timestep closest to this tick
-                id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
+                id = np.argmin(abs(LsDay-Ls_ticks[i]))
                 if add_sol_time_axis:
                     labels[i] = (f"{np.mod(Ls_ticks[i], 360.):g}{degr}"
                                  f"\nsol {SolDay[id]}")
@@ -4036,7 +4099,7 @@ class Fig_1D(object):
                 SolDay = xdata[0, :]
                 LsDay = xdata[1, :]
 
-                if parser.parse_args().stack_year:
+                if args.stack_years:
                     # If simulations span different years, stack (overplot)
                     LsDay = np.mod(LsDay, 360)
 
@@ -4065,7 +4128,7 @@ class Fig_1D(object):
 
                 for i in range(0, len(Ls_ticks)):
                     # Find timestep closest to this tick
-                    id = np.argmin(np.abs(LsDay-Ls_ticks[i]))
+                    id = np.argmin(abs(LsDay-Ls_ticks[i]))
                     if add_sol_time_axis:
                         labels[i] = (f"{np.mod(Ls_ticks[i], 360.)}{degr}"
                                      f"\nsol {SolDay[id]}")

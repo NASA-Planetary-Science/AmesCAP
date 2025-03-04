@@ -18,8 +18,8 @@ import warnings     # suppress errors triggered by NaNs
 import numpy as np
 from scipy import optimize
 
-# NOTE p_half = half-level = layer interfaces
-# NOTE p_full = full-level = layer midpoints
+# p_half = half-level = layer interfaces
+# p_full = full-level = layer midpoints
 
 def fms_press_calc(psfc, ak, bk, lev_type='full'):
     """
@@ -2082,7 +2082,7 @@ def polar_warming(T, lat, outside_range=np.nan):
                             PW_half_hemisphere(T_NH, lat_NH, outside_range)),
                            axis = 0))
 
-def tshift(array, lon, timeo, timex=None):
+def time_shift(array, lon, timeo, timex=None):
     """
     Conversion to uniform local time.
 
