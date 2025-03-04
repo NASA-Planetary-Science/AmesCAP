@@ -9,18 +9,18 @@ extracts variables from files, and enables scaling variables or editing
 variable names, units, etc.
 
 The executable requires:
-    * ``[input_file]``          the file to be transformed
+    * ``[input_file]``           The file to be transformed
 
 and optionally accepts:
-    * ``[-add --add]``           derive and add variable to file
-    * ``[-zdiff --zdiff]``       differentiate variable w.r.t. Z axis
-    * ``[-col --col]``           column-integrate variable
-    * ``[-zd --zonal_detrend]``  subtract zonal mean from variable
-    * ``[-dp_to_dz --dp_to_dz]`` convert aerosol opacity op/Pa -> op/m
-    * ``[-dz_to_dp --dz_to_dp]`` convert aerosol opacity op/m -> op/Pa
-    * ``[-rm --remove]``         remove variable from file
-    * ``[-extract --extract]``   copy variable to new file
-    * ``[-edit --edit]``         edit variable attributes or scale it
+    * ``[-add --add_variable]``          Derive and add variable to file
+    * ``[-zdiff --differentiate_wrt_z]`` Differentiate variable w.r.t. Z axis
+    * ``[-col --column_integrate]``      Column-integrate variable
+    * ``[-zd --zonal_detrend]``          Subtract zonal mean from variable
+    * ``[-to_dz --dp_to_dz]``            Convert aerosol opacity op/Pa -> op/m
+    * ``[-to_dp --dz_to_dp]``            Convert aerosol opacity op/m -> op/Pa
+    * ``[-rm --remove_variable]``        Remove variable from file
+    * ``[-extract --extract_copy]``      Copy variable to new file
+    * ``[-edit --edit_variable]``        Edit variable attributes or scale it
 
 Third-party Requirements:
     * ``numpy``
@@ -32,13 +32,16 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (Yellow, Cyan, Red, Nclr, Green)
+from amescap.Script_utils import (
+    Yellow, Cyan, Red, Nclr, Green, Blue
+)
 
 # Load generic Python modules
 import argparse     # Parse arguments
 import os           # Access operating system functions
 import subprocess   # Run command-line commands
 import warnings     # Suppress errors triggered by NaNs
+import re           # Regular expressions
 import matplotlib
 import numpy as np
 from netCDF4 import Dataset
@@ -61,7 +64,7 @@ from amescap.Ncdf_wrapper import Ncdf
 #                  DEFINITIONS
 # ======================================================
 
-# List of supported variables for [-add --add]
+# List of supported variables for [-add --add_variable]
 cap_str = " (derived w/CAP)"
 master_list = {
     'curl':     [f"Relative vorticity", 'Hz', 
@@ -70,18 +73,18 @@ master_list = {
                  ['ucomp', 'vcomp'], ['pfull', 'pstd', 'zstd', 'zagl']],
     'DP':       [f"Layer thickness (P)", 'Pa', 
                  ['ps', 'temp'], ['pfull']],
-    'dst_mass': [f"Dust MMR", 'kg/kg', 
+    'dst_mass_mom': [f"Dust MMR", 'kg/kg', 
                  ['dzTau', 'temp'], ['pfull']],
     'DZ':       [f"Layer thickness (Z)", 'm', 
                  ['ps', 'temp'], ['pfull']],
     'dzTau':    [f"Dust extinction rate", 'km-1', 
-                 ['dst_mass', 'temp'], ['pfull']],
+                 ['dst_mass_mom', 'temp'], ['pfull']],
     'fn':       [f"Frontogenesis", 'K/m/s', 
                  ['ucomp', 'vcomp', 'theta'], ['pstd', 'zstd', 'zagl']],
-    'ice_mass': [f"Ice MMR", 'kg/kg', 
+    'ice_mass_mom': [f"Ice MMR", 'kg/kg', 
                  ['izTau', 'temp'], ['pfull']],
     'izTau':    [f"Ice extinction rate", 'km-1', 
-                 ['ice_mass', 'temp'], ['pfull']],
+                 ['ice_mass_mom', 'temp'], ['pfull']],
     'N':        [f"Brunt Vaisala freq.", 'rad/s', 
                  ['ps', 'temp'], ['pfull']],
     'pfull3D':  [f"Mid-layer pressure", 'Pa', 
@@ -97,7 +100,7 @@ master_list = {
     'theta':    [f"Potential temp.", 'K', 
                  ['ps', 'temp'], ['pfull']],
     'Vg_sed':   [f"Sedimentation rate", 'm/s', 
-                 ['dst_mass', 'dst_num', 'temp'], 
+                 ['dst_mass_mom', 'dst_num_mom', 'temp'], 
                  ['pfull', 'pstd', 'zstd', 'zagl']],
     'w':        [f"Vert. wind", 'm/s', 
                  ['ps', 'temp', 'omega'], ['pfull']],
@@ -132,11 +135,11 @@ def add_help(var_list):
                  f"{'REQUIRED VARIABLES':24s} {'SUPPORTED FILETYPES'}"
                  f"\n{Cyan}")
     for ivar in var_list.keys():
-        lname, unit, reqd_var, compat_files = var_list[ivar]
+        longname, unit, reqd_var, compat_files = var_list[ivar]
         reqd_var_fmt = ", ".join([f"{rv}" for rv in reqd_var])
         compat_file_fmt = ", ".join([f"{cf}" for cf in compat_files])
         help_text += (
-            f"{ivar:9s} {lname:33s} {unit:11s} {reqd_var_fmt:24s} "
+            f"{ivar:9s} {longname:33s} {unit:11s} {reqd_var_fmt:24s} "
             f"{compat_file_fmt}\n"
             )
     return(help_text)
@@ -146,131 +149,220 @@ def add_help(var_list):
 # ======================================================================
 
 parser = argparse.ArgumentParser(
+    prog=('MarsVars'),
     description=(
-        f"{Yellow} MarsVars, variable manager. Add to or remove "
-        f"variables from the diagnostic files.\n"
-        f"Use MarsFiles ****.atmos.average.nc to view file content."
+        f"{Yellow}Enables derivations, manipulations, or removal of "
+        f"variables from netCDF files.\n"
         f"{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument("input_file", nargs="+",
+parser.add_argument('input_file', nargs='?', 
+    type=argparse.FileType('r'),
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
-parser.add_argument("-add", "--add", nargs="+", default=[], help=(
-    f"Add a new variable to file. Variables that can be added are "
-    f"listed below.\n"
-    f"{Green}Usage:\n"
-    f"> MarsVars ****.atmos.average.nc -add varname\n"
-    f"{Yellow}\n"
-    f"{add_help(master_list)}\n"
-    f"{Nclr}NOTE: MarsVars offers some support on interpolated\n"
-    f"files, particularly if ``pfull3D`` and ``zfull`` are added \n"
-    f"to the file before interpolation.\n\n"
-    f"{Nclr}\n"
-    )
-)
-
-parser.add_argument("-zdiff", "--zdiff", nargs="+", default=[],
+parser.add_argument('-add', '--add_variable', nargs='+', default=[], 
     help=(
-        f"Differentiate a variable w.r.t. the Z axis. A new variable\n"
-        f"``d_dz_var`` in [Unit/m] will be added to the file.\n"
-        f"{Green}Usage:\n"
-        f"> MarsVars ****.atmos.average.nc -zdiff temp"
+        f"Add a new variable to file. Variables that can be added are "
+        f"listed below.\n"
+        f"{Green}Example:\n"
+        f"> MarsVars 00668.atmos_average.nc -add rho\n{Yellow}\n"
+        f"{add_help(master_list)}\n"
+        f"{Yellow}NOTE: MarsVars offers some support on interpolated\n"
+        f"files, particularly if ``pfull3D`` and ``zfull`` are added \n"
+        f"to the file before interpolation.\n\n"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-col", "--col", nargs="+", default=[],
+parser.add_argument('-zdiff', '--differentiate_wrt_z', nargs='+', 
+    default=[],
     help=(
-        f"Integrate a mixing ratio of a variable through the column.\n"
-        f"A new a variable (``var_col``) in [kg/m2] will be added to "
-        f"the file.\n"
-        f"{Green}Usage:\n"
-        f"> MarsVars ****.atmos.average.nc -col ice_mass_mom"
+        f"Differentiate a variable w.r.t. the Z axis.\n"
+        f"*Requires a variable with a vertical dimension*\n"
+        f"A new variable ``d_dz_var`` in [Unit/m] will be added to the "
+        f"file.\n"
+        f"{Green}Example:\n"
+        f"> MarsVars 00668.atmos_average.nc -zdiff dst_mass_mom\n"
+        f"  {Blue}d_dz_dst_mass_mom is derived and added to the file"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-zd", "--zonal_detrend", nargs="+", default=[],
+parser.add_argument('-col', '--column_integrate', nargs='+', default=[],
+    help=(
+        f"Integrate a variable through the column.\n"
+        f"*Requires a variable with a vertical dimension*\n"
+        f"A new variable (``var_col``) in [kg/m2] will be added to the "
+        f"file.\n"
+        f"{Green}Example:\n"
+        f"> MarsVars 00668.atmos_average.nc -col dst_mass_mom"
+        f"  {Blue}dst_mass_mom_col is derived and added to the file"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument('-zd', '--zonal_detrend', nargs='+', default=[],
     help=(
         f"Detrend a variable by substracting its zonal mean value.\n"
         f"A new a variable (``var_p``) (for prime) will be added to the"
         f" file.\n"
-        f"{Green}Usage:\n"
-        f"> MarsVars ****.atmos.average.nc -zd ucomp"
+        f"{Green}Example:\n"
+        f"> MarsVars 00668.atmos_average.nc -zd temp"
+        f"  {Blue}temp_p is derived and added to the file"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-dp_to_dz", "--dp_to_dz", nargs="+", default=[],
+parser.add_argument('-to_dz', '--dp_to_dz', nargs='+', default=[],
     help=(
-        f"Convert aerosol opacities [op/Pa] to [op/m] (-dp_to_dz) and\n"
-        f"[op/m] to [op/Pa] (-dp_to_dz). Requires ``DP`` & ``DZ``.\n"
-        f"A new a variable (``var_dp_to_dz``) will be added to the \n"
+        f"Convert aerosol opacity [op/Pa] to [op/m]. "
+        f"Requires ``DP`` & ``DZ`` to be present in the file already.\n"
+        f"A new variable (``[variable]_dp_to_dz``) is added to the "
         f"file.\n"
-        f"{Green}Usage:\n"
-        f"> MarsVars ****.atmos.average.nc -dp_to_dz opacity\n"
-        f"{Nclr}Use -dz_to_dp to convert from [op/m] to [op/Pa]\n\n"
+        f"{Green}Example:\n"
+        f"> MarsVars 00668.atmos_average.nc -to_dz temp\n"
+        f"  {Blue}temp_dp_to_dz is derived and added to the file"
+        f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-dz_to_dp", "--dz_to_dp", nargs="+", default=[],
-    help=argparse.SUPPRESS)
+parser.add_argument('-to_dp', '--dz_to_dp', nargs='+', default=[],
+    help=(
+        f"Convert aerosol opacity [op/m] to [op/Pa]. "
+        f"Requires ``DP`` & ``DZ`` to be present in the file already.\n"
+        f"A new variable (``[variable]_dz_to_dp``) is added to the "
+        f"file.\n"
+        f"{Green}Example:\n"
+        f"> MarsVars 00668.atmos_average.nc -to_dp temp\n"
+        f"  {Blue}temp_dz_to_dp is derived and added to the file"
+        f"{Nclr}\n\n"
+    )
+)
 
-parser.add_argument("-rm", "--remove", nargs="+", default=[],
+parser.add_argument('-rm', '--remove_variable', nargs='+', default=[],
     help=(
         f"Remove a variable from a file.\n"
-        f"{Green}Usage:\n"
-        f"> MarsVars ****.atmos.average.nc -rm rho theta"
+        f"{Green}Example:\n"
+        f"> MarsVars 00668.atmos_average.nc -rm ps"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-extract", "--extract", nargs="+", default=[],
+parser.add_argument('-extract', '--extract_copy', nargs='+', default=[],
     help=(
-        f"Extract variable(s) to a new ``_extract.nc`` file.\n"
-        f"{Green}Usage:\n"
-        f"> MarsVars ****.atmos.average.nc -extract ps ts"
+        f"Copy one or more variables from a file into a new file of "
+        f"the same name with the appended extension: '_extract'.\n"
+        f"{Green}Example:\n"
+        f"> MarsVars 00668.atmos_average.nc -extract ps temp"
+        f"  {Blue}Creates 00668.atmos_average_extract.nc containing ps "
+        f"and temp as well as their dimensional variables (e.g., lat, "
+        f"lon, lev, etc.)"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-edit", "--edit", default=None,
+parser.add_argument('-edit', '--edit_variable', default=None,
     help=(
-        f"Edit a variable ``name``, ``longname``, or ``unit``, or "
-        f"scale its values.\n"
-        f"Use jointly with ``-rename`` ``-longname`` ``-unit`` or "
-        f"``-multiply`` flags\n"
-        f"{Green}Usage:\n"
-        f"> MarsVars *.atmos_average.nc --edit temp -rename "
-        f"airtemp\n"
-        f"> MarsVars *.atmos_average.nc --edit ps -multiply 0.01\n"
-        f"  -longname 'new pressure' -unit 'mbar'"
+        f"Edit a variable's attributes or scale its values.\n"
+        f"Requires the use of one or more of the following flags:\n"
+        f"``-rename``\n``-longname``\n``-unit``\n``-multiply``\n"
+        f"{Green}Example:\n"
+        f"> MarsVars 00668.atmos_average.nc -edit ps -rename ps_mbar "
+        f"-multiply 0.01 -longname 'Pressure scaled to mb' -unit 'mbar'"
         f"{Nclr}\n\n"
     )
 )
-# To be used jointly with --edit
-parser.add_argument("-rename", "--rename", type=str, default=None,
-    help=argparse.SUPPRESS)
+
+# Secondary arguments: Used with some of the arguments above
 
 # To be used jointly with --edit
-parser.add_argument("-longname", "--longname", type=str, default=None,
-    help=argparse.SUPPRESS)
+parser.add_argument('-rename', '--rename', type=str, default=None,
+    help=(
+        f"Rename a variable. Requires ``-edit``.\n"
+        f"{Green}Example:\n"
+        f"> MarsVars 00668.atmos_average.nc -edit ps -rename ps_mbar\n"
+        f"{Nclr}\n\n"
+    )
+)
 
 # To be used jointly with --edit
-parser.add_argument("-unit", "--unit", type=str, default=None,
-    help=argparse.SUPPRESS)
+parser.add_argument('-longname', '--longname', type=str, default=None,
+    help=(
+        f"Change a variable's 'longname' attribute. Requires ``-edit``.\n"
+        f"{Green}Example:\n"
+        f"> MarsVars 00668.atmos_average.nc -edit ps -longname "
+        f"'Pressure scaled to mb'"
+        f"{Nclr}\n\n"
+    )
+)
 
 # To be used jointly with --edit
-parser.add_argument("-multiply", "--multiply", type=float, default=None,
-    help=argparse.SUPPRESS)
+parser.add_argument('-unit', '--unit', type=str, default=None,
+    help=(
+        f"Change a variable's unit text. Requires ``-edit``.\n"
+        f"{Green}Example:\n"
+        f"> MarsVars 00668.atmos_average.nc -edit ps -unit 'mbar'"
+        f"{Nclr}\n\n"
+    )
+)
 
+# To be used jointly with --edit
+parser.add_argument('-multiply', '--multiply', type=float, default=None,
+    help=(
+        f"Scale a variable's values. Requires ``-edit``.\n"
+        f"{Green}Example:\n"
+        f"> MarsVars 00668.atmos_average.nc -edit ps -multiply 0.01"
+        f"{Nclr}\n\n"
+    )
+)
 
-parser.add_argument("--debug",  action="store_true",
-    help=(f"Debug flag: do not bypass errors.\n\n"))
+parser.add_argument('--debug',  action='store_true',
+    help=(
+        f"Use with any other argument to pass all Python errors and\n"
+        f"status messages to the screen when running CAP.\n"
+        f"{Green}Example:\n"
+        f"> MarsVars 00668.atmos_average.nc -add rho --debug"
+        f"{Nclr}\n\n"
+    )
+ )
 
+args = parser.parse_args()
+
+if args.input_file:
+    if not re.search(".nc", args.input_file.name):
+        parser.error(f"{Red}{args.input_file.name} is not a netCDF "
+                     f"file{Nclr}")
+        exit()
+
+if args.rename and args.edit_variable is None:
+    parser.error(f"{Red}The -rename argument requires -edit to be used "
+                 f"with it (e.g., MarsVars 00668.atmos_average.nc "
+                 f"-edit ps -rename ps_mbar)"
+                 f"{Nclr}")
+    exit()
+
+if args.longname and args.edit_variable is None:
+    parser.error(f"{Red}The -longname argument requires -edit to be "
+                 f"used with it (e.g., MarsVars 00668.atmos_average.nc "
+                 f"-edit ps -longname 'Pressure scaled to mb')"
+                 f"{Nclr}")
+    exit()
+
+if args.unit and args.edit_variable is None:
+    parser.error(f"{Red}The -unit argument requires -edit to be used "
+                 f"with it (e.g., MarsVars 00668.atmos_average.nc "
+                 f"-edit ps -unit 'mbar')"
+                 f"{Nclr}")
+    exit()
+
+if args.multiply and args.edit_variable is None:
+    parser.error(f"{Red}The -multiply argument requires -edit to be "
+                 f"used with it (e.g., MarsVars 00668.atmos_average.nc "
+                 f"-edit ps -multiply 0.01)"
+                 f"{Nclr}")
+    exit()
 
 # ======================================================================
 # TODO : If only one timestep, reshape from
@@ -957,17 +1049,17 @@ filepath = os.getcwd()
 
 def main():
     # Load all the .nc files
-    file_list = parser.parse_args().input_file
-    add_list = parser.parse_args().add
-    zdiff_list = parser.parse_args().zdiff
-    zdetrend_list = parser.parse_args().zonal_detrend
-    dp_to_dz_list = parser.parse_args().dp_to_dz
-    dz_to_dp_list = parser.parse_args().dz_to_dp
-    col_list = parser.parse_args().col
-    remove_list = parser.parse_args().remove
-    extract_list = parser.parse_args().extract
-    edit_var = parser.parse_args().edit
-    debug = parser.parse_args().debug
+    file_list = args.input_file
+    add_list = args.add_variable
+    zdiff_list = args.differentiate_wrt_z
+    zdetrend_list = args.zonal_detrend
+    dp_to_dz_list = args.dp_to_dz
+    dz_to_dp_list = args.dz_to_dp
+    col_list = args.column_integrate
+    remove_list = args.remove_variable
+    extract_list = args.extract_copy
+    edit_var = args.edit_variable
+    debug = args.debug
 
     # An array to swap vertical axis forward and backward:
     # [1, 0, 2, 3] for [t, lev, lat, lon] and
@@ -988,7 +1080,7 @@ def main():
             edit_var):
         print_fileContent(file_list[0])
         print(f"{Yellow}***Notice***  No operation requested. Use "
-              f"-add, -zdiff, -zd, -col, -dp_to_dz, -rm, or -edit"
+              f"-add, -zdiff, -zd, -col, -to_dz, -rm, or -edit"
               f"{Nclr}")
 
     # For all the files
@@ -1043,7 +1135,7 @@ def main():
 
             # The variable to exclude
             exclude_list = filter_vars(f_IN, 
-                                       parser.parse_args().extract,
+                                       args.extract_copy,
                                        giveExclude = True)
             print()
             ifile_tmp = f"{ifile[:-3]}_extract.nc"
@@ -1179,9 +1271,11 @@ def main():
                 if ivar == "Vg_sed":
                     if "dst_mass_micro" in f.variables.keys():
                         xTau = f.variables["dst_mass_micro"][:]
-                        nTau = f.variables["dst_num_micro"][:]
                     elif "dst_mass_mom" in f.variables.keys():
                         xTau = f.variables["dst_mass_mom"][:]
+                    if "dst_num_micro" in f.variables.keys():
+                        nTau = f.variables["dst_num_micro"][:]
+                    elif "dst_num_mom" in f.variables.keys():
                         nTau = f.variables["dst_num_mom"][:]
                     OUT = compute_Vg_sed(xTau, nTau, temp)
 
@@ -1718,14 +1812,14 @@ def main():
             unit_text = getattr(var_Ncdf, "units", "")
             cart_text = getattr(var_Ncdf, "cartesian_axis", "")
 
-            if parser.parse_args().rename:
-                name_text = parser.parse_args().rename
-            if parser.parse_args().longname:
-                lname_text = parser.parse_args().longname
-            if parser.parse_args().unit:
-                unit_text = parser.parse_args().unit
-            if parser.parse_args().multiply:
-                vals *= parser.parse_args().multiply
+            if args.rename:
+                name_text = args.rename
+            if args.longname:
+                lname_text = args.longname
+            if args.unit:
+                unit_text = args.unit
+            if args.multiply:
+                vals *= args.multiply
 
             if cart_text == "":
                 Log.log_variable(

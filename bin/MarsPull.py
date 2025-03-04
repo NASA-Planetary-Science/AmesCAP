@@ -5,80 +5,113 @@ Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on \
 the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
 The executable requires 2 arguments:
-    * [-id --id]      The simulation identifier, AND
-    * [-ls --ls]      the desired solar longitude(s), OR
-    * [-f --filename] the name(s) of the desired file(s).
+    * The directory from which to pull data from 
+    (https://data.nas.nasa.gov/mcmcref/), AND
+    * ``[-ls --ls]``      The desired solar longitude(s), OR
+    * ``[-f --filename]`` The name(s) of the desired file(s)
 
 Third-party Requirements:
-    * numpy
-    * argparse
-    * requests
+    * ``numpy``
+    * ``argparse``
+    * ``requests``
 
 List of Functions:
     * download - Queries the requested file from the NAS Data Portal.
 """
 
 # make print statements appear in color
-from amescap.Script_utils import prYellow, prCyan, Green, Yellow, Nclr, Cyan
+from amescap.Script_utils import (
+    prYellow, prCyan, Green, Yellow, Nclr, Cyan, Blue, Red
+)
 
-# load generic Python modules
-import sys          # system commands
-import os           # access operating system functions
+# Load generic Python modules
+import sys          # System commands
+import argparse     # Parse arguments
+import os           # Access operating system functions
+import requests     # Download data from website
+import re           # Regular expressions
 import numpy as np
-import argparse     # parse arguments
-import requests     # download data from site
-
-
+import requests     # make HTTP requests
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
 
 parser = argparse.ArgumentParser(
+    prog=('MarsPull'),
     description=(
-        f"{Yellow}Uility for querying files on the MCMC NAS Data "
-        f"Portal.{Nclr}"
+        f"{Yellow}Uility for downloading NASA Ames Mars Global Climate "
+        f"Model output files from the NAS Data Portal at:"
+        f"{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}\n"
+        f"Requires the ``-id`` argument AND EITHER ``-f`` or ``-ls``."
+        f"{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument(
-    '-id', '--id', type=str,
+parser.add_argument('-list', '--list_files', action='store_true',
     help=(
-        f"Query data by simulation identifier corresponding to \n"
-        f"a subdirectory of :\n"
-        f"{Cyan}https://data.nas.nasa.gov/mcmcref/ \n"
-        f"Current options include: '{Yellow}FV3BETAOUT1{Nclr}' '{Yellow}ACTIVECLDS{Nclr}', "
-        f"'{Yellow}INERTCLDS{Nclr}', {Yellow}NEWBASE_ACTIVECLDS{Nclr}  and '{Yellow}ACTIVECLDS_NCDF\n"
-        f"{Green}Usage:\n"
-        f"> MarsPull -id  INERTCLDS..."
-        f"{Nclr}\n\n"
-
-    )
-)
-
-
-parser.add_argument(
-    '-f', '--filename', nargs='+', type=str,
-    help=(
-        f"Query data by file name. Requires a simulation identifier "
-        f"(--id)\n"
-        f"{Green}Usage:\n"
-        f"> MarsPull -id ACTIVECLDS -f fort.11_0730 fort.11_0731"
+        f"Return a list of all the files available for download from:\n"
+        f"{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}\n"
+        f"{Green}Example:\n"
+        f"> MarsPull -list"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument(
-    '-ls', '--ls', nargs='+', type=float,
+parser.add_argument('directory_name', type=str, nargs='?', 
+    choices=[
+        'FV3BETAOUT1', 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
+        'ACTIVECLDS_NCDF'],
     help=(
-        f"Legacy GCM only: Query data by solar longitude (Ls). Requires a simulation "
-        f"identifier (--id)\n"
-        f"{Green}Usage:\n"
-        f"> MarsPull -id ACTIVECLDS -ls 90.\n"
-        f"> MarsPull -id ACTIVECLDS -ls [start] [stop]"
+        f"Selects the simulation directory from the "
+        f"NAS data portal:\n"
+        f"{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}\n"
+        f"Current options are:\n{Yellow}FV3BETAOUT1\nACTIVECLDS\n"
+        f"INERTCLDS\nNEWBASE_ACTIVECLDS\nACTIVECLDS_NCDF\n"
+        f"{Red}MUST be used with either ``-f`` or ``-ls``.\n"
+        f"{Green}Example:\n"
+        f"> MarsPull ACTIVECLDS -f fort.11_0730\n"
+        f"{Blue}OR{Green}\n"
+        f"> MarsPull ACTIVECLDS -ls 90\n"
         f"{Nclr}\n\n"
     )
 )
+
+parser.add_argument('-f', '--filename', nargs='+', type=str,
+    help=(
+        f"The name(s) of the file(s) to download.\n"
+        f"{Green}Example:\n"
+        f"> MarsPull ACTIVECLDS -f fort.11_0730 fort.11_0731"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument('-ls', '--ls', nargs='+', type=float,
+    help=(
+        f"Selects the file(s) to download based on a range of solar "
+        f"longitudes (Ls).\n"
+        f"This only works on data in the {Yellow}ACTIVECLDS{Nclr} and "
+        f"{Yellow}INERTCLDS{Nclr} folders.\n"
+        f"{Green}Example:\n"
+        f"> MarsPull ACTIVECLDS -ls 90\n"
+        f"> MarsPull ACTIVECLDS -ls 180 360"
+        f"{Nclr}\n\n"
+    )
+)
+
+# Secondary arguments: Used with some of the arguments above
+
+parser.add_argument('--debug', action='store_true',
+    help=(
+        f"Use with any other argument to pass all Python errors and\n"
+        f"status messages to the screen when running CAP.\n"
+        f"{Green}Example:\n"
+        f"> MarsPull ACTIVECLDS -ls 90 --debug"
+        f"{Nclr}\n\n"
+    )
+ )
+
+args = parser.parse_args()
 
 # ======================================================
 #                  DEFINITIONS
@@ -156,28 +189,55 @@ def download(url, filename):
                 f.write(response.content)
             print('%s Done'%(fname))
 
+def file_list(list_of_files):
+    print("Available files:")
+    for file in list_of_files:
+        print(file)
+
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
+
 def main():
+    if args.list_files:
+        # Send an HTTP GET request to the URL and store the response.
+        legacy_data = requests.get('https://data.nas.nasa.gov/mcmcref/legacygcm/')
+        fv3_data = requests.get('https://data.nas.nasa.gov/mcmcref/fv3betaout1/')
 
-    #Original
-    #URLbase="https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/"
-    simu_ID=parser.parse_args().id
+        # Access the text content of the response, which contains the webpage's HTML.
+        legacy_dir_text = legacy_data.text
+        fv3_dir_text = fv3_data.text
 
-    if simu_ID is None :
-        prYellow("***Error*** simulation ID [-id --id] is required. See 'MarsPull -h' for help")
-        exit()
+        # Search for the URLs beginning with the below string
+        legacy_dir_search = "https://data\.nas\.nasa\.gov/legacygcm/legacygcmdata/"
 
-    #URLbase='https://data.nas.nasa.gov/legacygcm/download_data_legacygcm.php?file=/legacygcmdata/'+simu_ID+'/'
-    print('new URL base')
-    if simu_ID in ['ACTIVECLDS','INERTCLDS', 'NEWBASE_ACTIVECLDS','ACTIVECLDS_NCDF']:
-        URLbase='https://data.nas.nasa.gov/legacygcm/legacygcmdata/'+simu_ID+'/'
-    elif simu_ID in ['FV3BETAOUT1']:
-        URLbase='https://data.nas.nasa.gov/legacygcm/fv3betaout1data/'
+        legacy_urls = re.findall(
+            fr"{legacy_dir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+", legacy_dir_text
+            )
 
-    if parser.parse_args().ls :
-        data_input=np.asarray(parser.parse_args().ls)
+        print("Available directories:")
+        for url in legacy_urls:
+            dir_option = url.split('legacygcmdata/')[1]
+            print(dir_option)
+
+        legacy_data = requests.get(legacy_urls[0])
+        legacy_dir_text = legacy_data.text
+
+        legacy_files_available = re.findall(r'download="(fort\.11_[0-9]+)"', legacy_dir_text)
+        fv3_files_available = re.findall(r'href="[^"]*\/([^"\/]+\.nc)"', fv3_dir_text)
+
+
+        file_list(legacy_files_available)
+        file_list(fv3_files_available)
+    
+    portal_dir=args.directory_name
+    if portal_dir in ['ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS', 'ACTIVECLDS_NCDF']:
+        url_requested="https://data.nas.nasa.gov/legacygcm/legacygcmdata/"+portal_dir+'/'
+    elif portal_dir in ['FV3BETAOUT1']:
+        url_requested="https://data.nas.nasa.gov/legacygcm/fv3betaout1data/"
+
+    if args.ls :
+        data_input=np.asarray(args.ls)
         if len(data_input)==1: #query only  the file that contains this Ls
             i_start=np.argmin(np.abs(Ls_ini-data_input))
             if data_input<Ls_ini[i_start]:i_start-=1
@@ -194,29 +254,28 @@ def main():
         prCyan(f"Saving {len(num_files)} file(s) to {saveDir}")
         for ii in num_files:
             #Legacy .nc files
-            if simu_ID=='ACTIVECLDS_NCDF':
-                fName='LegacyGCM_Ls%03d_Ls%03d.nc'%(Ls_ini[ii],Ls_end[ii])
+            if portal_dir=='ACTIVECLDS_NCDF':
+                file_name='LegacyGCM_Ls%03d_Ls%03d.nc'%(Ls_ini[ii],Ls_end[ii])
             #fort.11 files
             else:
-                fName='fort.11_%04d'%(670+ii)
+                file_name='fort.11_%04d'%(670+ii)
 
-            url = URLbase+fName
-            filename=saveDir+fName
-            #print('Downloading '+ fName+ '...')
+            url = url_requested+file_name
+            filename=saveDir+file_name
+            #print('Downloading '+ file_name+ '...')
             print('Downloading '+ url+ '...')
             download(url,filename)
 
-    elif parser.parse_args().filename:
-        f_input=np.asarray(parser.parse_args().filename)
+    elif args.filename:
+        f_input=np.asarray(args.filename)
         for ff in f_input :
-            url = URLbase+ff
+            url = url_requested+ff
             filename=saveDir+ff
             print('Downloading '+ url+ '...')#ff
             download(url,filename)
     else:
         prYellow("ERROR No file requested. Use [-ls --ls] or "
-                 "[-f --filename] with [-id --id] to specify a file to "
-                 "download.")
+                 "[-f --filename] to specify a file to download.")
         exit()
 
 # ======================================================

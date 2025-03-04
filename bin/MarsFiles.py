@@ -6,41 +6,28 @@ as well as band pass filtering, tide analysis, zonal averaging, and
 extracting variables from files.
 
 The executable requires:
-    * ``[input_file]``                  the file for manipulation
+    * ``[input_file]``                  The file for manipulation
 
 and optionally accepts:
-    * ``[-fv3, --fv3]``                 produce MGCM ``fixed``,
-        ``diurn``, ``average`` and ``daily`` files from Legacy output
-    * ``[-c, --combine]``               Combine sequential files of
-        the same type into one file
-    * ``[-t, --tshift]``                apply a time-shift to
-        ``diurn`` files
-    * ``[-ba, --bin_average]``          bin MGCM ``daily`` files like
-        ``average`` files
-    * ``[-bd, --bin_diurn]``            bin MGCM ``daily`` files like
-        ``diurn`` files
-    * ``[-hp, --high_pass_filter]``     temporal filtering: high-pass
-    * ``[-lp, --low_pass_filter]``      temporal filtering: low-pass
-    * ``[-bp, --band_pass_filter]``     temporal filtering: band-pass
-    * ``[-no_trend, --no_trend]``       filter and compute amplitudes
-        only (use with filtering)
-    * ``[-hpk, --high_pass_zonal]``     spatial filtering: high-pass
-    * ``[-lpk, --low_pass_zonal]``      spatial filtering: low-pass
-    * ``[-bpk, --band_pass_zonal]``     spatial filtering: band-pass
-    * ``[-tidal, --tidal]``             extracts diurnal tide and its
-        harmonics
-    * ``[-reconstruct, --reconstruct]`` reconstructs the first N
-        harmonics
-    * ``[-norm, --normalize]``          provides ``-tidal`` result in
-        percent amplitude
-    * ``[-rs, --regrid_source]``        regrid a target file to match
-        a source file
-    * ``[-za, --zonal_avg]``            zonally average all variables
-        in a file
-    * ``[-include, --include]``         only include specific
-        variables from the target file
-    * ``[-e, --ext]``                   create a new file with a
-        unique extension instead of overwriting current file
+    * ``[-bin, --bin_files]``             Produce MGCM 'fixed', 'diurn', 'average' and 'daily' files from Legacy output
+    * ``[-c, --concatenate]``             Combine sequential files of the same type into one file
+    * ``[-t, --time_shift]``              Apply a time-shift to 'diurn' files
+    * ``[-ba, --bin_average]``            Bin MGCM 'daily' files like 'average' files
+    * ``[-bd, --bin_diurn]``              Bin MGCM 'daily' files like 'diurn' files
+    * ``[-hpt, --high_pass_temporal]``    Temporal filter: high-pass
+    * ``[-lpt, --low_pass_temporal]``     Temporal filter: low-pass
+    * ``[-bpt, --band_pass_temporal]``    Temporal filter: band-pass
+    * ``[-trend, --add_trend]``           Return amplitudes only (use with temporal filters)
+    * ``[-hps, --high_pass_spatial]``     Spatial filter: high-pass
+    * ``[-lps, --low_pass_spatial]``      Spatial filter: low-pass
+    * ``[-bps, --band_pass_spatial]``     Spatial filter: band-pass
+    * ``[-tide, --tide_decomp]``          Extract diurnal tide and its harmonics
+    * ``[-recon, --reconstruct]``         Reconstruct the first N harmonics
+    * ``[-norm, --normalize]``            Provide ``-tide`` result in % amplitude
+    * ``[-regrid, --regrid_XY_to_match]`` Regrid a target file to match a source file
+    * ``[-zavg, --zonal_average]``        Zonally average all variables in a file
+    * ``[-incl, --include]``              Only include specific variables in a calculation
+    * ``[-ext, --extension]``             Create a new file with a unique extension instead of modifying the current file
 
 Third-party Requirements:
     * ``numpy``
@@ -53,7 +40,9 @@ Third-party Requirements:
 """
 
 # Make print statements appear in color
-from amescap.Script_utils import (Yellow, Cyan, Red, Blue, Yellow, Nclr, Green)
+from amescap.Script_utils import (
+    Yellow, Cyan, Red, Blue, Yellow, Nclr, Green
+)
 
 # Load generic Python Modules
 import sys          # System commands
@@ -61,12 +50,15 @@ import argparse     # Parse arguments
 import os           # Access operating system functions
 import subprocess   # Run command-line commands
 import warnings     # Suppress errors triggered by NaNs
+import re           # Regular expressions
 import numpy as np
 from netCDF4 import Dataset
 
 # Load amesCAP modules
 from amescap.Ncdf_wrapper import (Ncdf, Fort)
-from amescap.FV3_utils import (tshift, daily_to_average, daily_to_diurn, get_trend_2D)
+from amescap.FV3_utils import (
+    time_shift, daily_to_average, daily_to_diurn, get_trend_2D
+)
 from amescap.Script_utils import (
     find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile,
     get_longname_unit, extract_path_basename
@@ -78,9 +70,9 @@ from amescap.Script_utils import (
 class ExtAction(argparse.Action):
     def __init__(self, *args, ext_content=None, parser=None, **kwargs):
         self.parser = parser
-        # Store the ext content that's specific to this argument
+        # Store the extension content that's specific to this argument
         self.ext_content = ext_content
-        # For flag arguments, we need to handle nargs=0 and default=False
+        # For flags, we need to handle nargs=0 and default=False
         if kwargs.get('nargs') == 0:
             kwargs['default'] = False
             kwargs['const'] = True
@@ -111,7 +103,7 @@ class ExtAction(argparse.Action):
             except ValueError:
                 setattr(namespace, self.dest, values)
         
-        # Set the ext content using the argument name
+        # Set the extension content using the argument name
         ext_attr = f"{self.dest}_ext"
         setattr(namespace, ext_attr, self.ext_content)
 
@@ -134,6 +126,7 @@ class ExtArgumentParser(argparse.ArgumentParser):
 # ======================================================================
 
 parser = ExtArgumentParser(
+    prog=('MarsFiles'),
     description=(
         f"{Yellow}MarsFiles is a file manager. Use it to modify a "
         f"netCDF file format.{Nclr}\n\n"
@@ -141,376 +134,442 @@ parser = ExtArgumentParser(
     formatter_class = argparse.RawTextHelpFormatter
 )
 
-parser.add_argument("input_file", nargs="+",
-    help=(
-        f"A netCDF file or list of netCDF files.\n\n"
-    )
-)
+parser.add_argument('input_file', nargs='?', 
+    type=argparse.FileType('r'),
+    help=(f"A netCDF file or list of netCDF files.\n\n"))
 
-parser.add_argument("-fv3", "--fv3", nargs="+",
+parser.add_argument('-bin', '--bin_files', nargs='+', type=str,
+    choices=['fixed', 'diurn', 'average', 'daily'],
     help=(
-        f"Produce MGCM ``fixed``, ``diurn``, ``average`` and "
-        f"``daily`` files from Legacy output.\n"
-        f"Available options are:\n"
+        f"Produce MGCM ``fixed``, ``diurn``, ``average`` and ``daily`` "
+        f"files from Legacy output:\n"
         f"  - ``fixed``  : static fields (e.g., topography)\n"
+        f"  - ``daily``  : instantaneous data\n"
+        f"  - ``diurn``  : 5-sol averages binned by time of day\n"
         f"  - ``average``: 5-sol averages\n"
-        f"  - ``daily``  : 5-sol continuous\n"
-        f"  - ``diurn``  : 5-sol averages for each time of day\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles filename.nc -fv3 fixed\n"
-        f"> MarsFiles filename.nc -fv3 fixed diurn"
+        f"{Green}Example:\n"
+        f"> MarsFiles filename.nc -bin fixed\n"
+        f"> MarsFiles filename.nc -bin fixed diurn"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-c", "--combine", action="store_true",
+parser.add_argument('-c', '--concatenate', action='store_true',
     help=(
         f"Combine sequential files of the same type into one file.\n"
-        f"Works with all file types (``fixed``, ``average``, "
-        f"``daily`` and ``diurn``).\n"
-        f"{Yellow}Overwrites the first file in the series. "
-        f"To override, use --ext.{Nclr}\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_average.nc --combine"
+        f"and ``diurn``).\n"
+        f"{Green}Example:\n"
+        f"> ls\n"
+        f"00334.atmos_average.nc 00668.atmos_average.nc\n"
+        f"> MarsFiles *.atmos_average.nc -c\n"
+        f"> ls\n"
+        f"   00334.atmos_average.nc\n"
+        f"{Yellow}Overwrites 00334.atmos_average.nc with concatenated "
+        f"files. To override, use [-ext --extension]:{Green}\n"
+        f"> MarsFiles *.atmos_average.nc -c -ext _concatenated\n"
+        f"> ls\n"
+        f"   00334.atmos_average.nc 00668.atmos_average.nc "
+        f"00334.atmos_average_concatenated.nc\n"
+        f"{Blue}(Produces 00334.atmos_average_concatenated.nc and "
+        f" preserves all other files)"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-split", "--split", nargs="+",
+parser.add_argument('-split', '--split', nargs='+', type=float,
     help=(
-        f"Extract a range of values along a dimension. Defaults to Ls, unless "
-        f"otherwise specified using --dim. If the file contains multiple Mars "
-        f"Years of data, this function splits the file according to the Ls "
-        f"values from the first Mars Year.\n"
-        f"{Yellow}Use [-dim, --dim] to specify the dimension (see below).\n"
-        f"{Green}Usage:\n"
+        f"Extract one value or a range of values along a dimension.\n"
+        f"Defaults to ``areo`` (Ls) unless otherwise specified using "
+        f"-dim.\nIf a file contains multiple Mars Years of data, the "
+        f"function splits the file in the first Mars Year.\n"
+        f"{Green}Example:\n"
         f"> MarsFiles 00668.atmos_average.nc --split 0 90"
-        f"> MarsFiles 00668.atmos_average.nc --split 270"
+        f"> MarsFiles 00668.atmos_average.nc --split 270\n"
+        f"{Yellow}Use -dim to specify the dimension:{Green}\n"
+        f"> MarsFiles 00668.atmos_average.nc --split 0 90 -dim lat"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-dim", "--dim", type=str, default = 'areo',
-    help=(
-        f"Flag to specify the dimension to split. Acceptable values are \n"
-        f"time, areo, lev, lat, lon. For use with --split.\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles 00668.atmos_average.nc --split 0 90 --dim areo"
-        f"> MarsFiles 00668.atmos_average.nc --split -70 --dim lat"
-        f"{Nclr}\n\n"
-    )
-)
-
-parser.add_argument("-t", "--tshift", action=ExtAction,
-    ext_content="_T",
+parser.add_argument('-t', '--time_shift', action=ExtAction, type=str,
+    ext_content='_T',
     parser=parser,
-    nargs="?", const=999, type=str,
+    nargs="?", const=999,
     help=(
-    f"Apply a time-shift to {Yellow}``diurn``{Nclr}  files.\n"
-        "Vertically interpolated ``diurn`` files OK.\n"
+        f"Convert hourly binned ('diurn') files to universal local "
+        f"time.\nUseful for comparing data at a specific time of day "
+        f"across all longitudes.\nWorks on vertically interpolated "
+        f"files.\n"
         f"{Yellow}Generates a new file ending in ``_T.nc``{Nclr}\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_diurn.nc --tshift\n"
-        f"  {Blue}(outputs data for all 24 local times){Green}\n"
-        f"> MarsFiles *.atmos_diurn.nc --tshift ``3 15``"
-        f"\n"
-        f"  {Blue}(outputs data for target local times only)"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_diurn.nc -t"
+        f" {Blue}(outputs data for all 24 local times){Green}\n"
+        f"> MarsFiles 00668.atmos_diurn.nc -t '3 15'"
+        f" {Blue}(outputs data for target local times only)"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-ba", "--bin_average",action=ExtAction,
-    ext_content="_to_average",
+parser.add_argument('-ba', '--bin_average', action=ExtAction, type=int,
+    ext_content='_to_average',
     parser=parser,
-    nargs="?", const=5,type=int,
+    nargs='?', const=5,
     help=(
-        f"Bin MGCM ``daily`` files like ``average`` files.\n"
+        f"Calculate 5-day averages from instantaneous data files\n"
+        f"(i.e., convert 'daily' files into 'average' files.\n"
+        f"Requires input file to be in MGCM 'daily' format.\n"
         f"{Yellow}Generates a new file ending in ``_to_average.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_daily.nc -ba\n"
-        f"  {Blue}(NC, bin 5 days){Green}\n"
-        f"> MarsFiles *.atmos_daily_pstd.nc -ba 10\n"
-        f"  {Blue}(bin 10 days)"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_daily.nc -ba {Blue}(5-sol bin){Green}\n"
+        f"> MarsFiles 00668.atmos_daily_pstd.nc -ba 10 {Blue}(10-sol bin)"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-bd", "--bin_diurn", action=ExtAction,
-    ext_content="_to_diurn",
+parser.add_argument('-bd', '--bin_diurn', action=ExtAction, type=int,
+    ext_content='_to_diurn',
     parser=parser,
     nargs=0,
     help=(
-        f"Bin MGCM ``daily`` files like ``diurn`` files.\n"
-        f"May be used jointly with --bin_average.\n"
+        f"Calculate 5-day averages binned by hour from instantaneous "
+        f"data files\n(i.e., convert 'daily' files into 'diurn' "
+        f"files.\nMay be used jointly with --bin_average.\n"
+        f"Requires input file to be in MGCM 'daily' format.\n"
         f"{Yellow}Generates a new file ending in ``_to_diurn.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_daily.nc -bd\n"
-        f"  {Blue}(default 5-day bin){Green}\n"
-        f"> MarsFiles *.atmos_daily_pstd.nc -bd -ba 10\n"
-        f"  {Blue}(10-day bin){Green}\n"
-        f"> MarsFiles *.atmos_daily_pstd.nc -bd -ba 1\n"
-        f"  {Blue}(No binning. Mimics raw Legacy output)"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_daily.nc -bd {Blue}(5-sol bin){Green}\n"
+        f"> MarsFiles 00668.atmos_daily_pstd.nc -bd -ba 10 "
+        f"{Blue}(10-sol bin){Green}\n"
+        f"> MarsFiles 00668.atmos_daily_pstd.nc -bd -ba 1 "
+        f"{Blue}(no binning, mimics raw Legacy output)"
         f"{Nclr}\n\n"
     )
 )
 
+parser.add_argument('-hpt', '--high_pass_temporal', action=ExtAction,
+    ext_content='_hpt',
+    parser=parser,
+    nargs='+', type=float,
+    help=(
+        f"Temporal high-pass filtering: removes low-frequency noise.\n"
+        f"Only works with 'daily' files. Requires a cutoff frequency "
+        f"in Sols.\nUse ``--add_trend`` to return amplitudes only.\n"
+        f"Data detrended before filtering."
+        f"\n{Yellow}Generates a new file ending in ``_hpt.nc``\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_daily.nc -hpt 10.\n"
+        f"{Nclr}\n\n"
+    )
+)
 
-parser.add_argument("-hpf", "--high_pass_filter", action=ExtAction,
-    ext_content="_hpf",
+parser.add_argument('-lpt', '--low_pass_temporal', action=ExtAction,
+    ext_content='_lpt',
+    parser=parser,
+    nargs='+', type=float,
+    help=(
+        f"Temporal low-pass filtering: removes high-frequency noise "
+        f"(smoothing).\nOnly works with 'daily' files. Requires a "
+        f"cutoff frequency in Sols.\nUse ``--add_trend`` to return "
+        f"amplitudes only.\n"
+        f"Data detrended before filtering."
+        f"\n{Yellow}Generates a new file ending in ``_lpt.nc``\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_daily.nc -lpt 0.5\n"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument('-bpt', '--band_pass_temporal', action=ExtAction,
+    ext_content='_bpt',
     parser=parser,
     nargs="+", type=float,
     help=(
-        f"Temporal filtering utilities: low-, high-, and "
-        f"band-pass filters.\n"
-        f"Use ``--no_trend`` to compute amplitudes only.\n"
-        f"Data detrended before filtering.\n"
-        f"{Yellow}Generates a new file ending in ``_hpf.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_daily.nc -hpf 10.\n"
-        f"  {Blue}(-hpf) --high_pass_filter sol_min "
-        f"{Nclr}\n\n"
-    )
-)
-
-parser.add_argument("-lpf", "--low_pass_filter", action=ExtAction,
-    ext_content="_lpf",
-    parser=parser,
-    nargs="+", type=float,
-    help=(
-        f"Temporal filtering utilities: low-, high-, and "
-        f"band-pass filters.\n"
-        f"Use ``--no_trend`` to compute amplitudes only.\n"
-        f"Data detrended before filtering.\n"
-        f"{Yellow}Generates a new file ending in ``_lpf.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_daily.nc -lpf 0.5\n"
-        f"  {Blue}(-lpf) --low_pass_filter sol_max "
-        f"{Nclr}\n\n"
-    )
-)
-
-parser.add_argument("-bpf", "--band_pass_filter", action=ExtAction,
-    ext_content="_bpf",
-    parser=parser,
-    nargs="+",
-    help=(
-        f"Temporal filtering utilities: low-, high-, and "
-        f"band-pass filters.\n"
-        f"Use ``--no_trend`` to compute amplitudes only.\n"
-        f"Data detrended before filtering.\n"
-        f"{Yellow}Generates a new file ending in ``bpf.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_daily.nc -hpf 0.5 10.\n"
-        f"  {Blue}(-bpf) --band_pass_filter sol_min sol max "
-        f"{Nclr}\n\n"
-    )
-)
-
-parser.add_argument("-no_trend", "--no_trend", action=ExtAction,
-    ext_content="_no_trend",
-    parser=parser,
-    nargs=0,
-    help=(
-        f"Filter and compute amplitudes only.\n"
-        f"For use with temporal filtering utilities (``-lpf``, "
-        f"``-hpf``, ``-bpf``).\n"
-        f"{Yellow}Generates a new file ending in ``_no_trend.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_daily.nc -hpf 10. --no_trend\n"
-        f"> MarsFiles *.atmos_daily.nc -lpf 0.5 --no_trend\n"
-        f"> MarsFiles *.atmos_daily.nc -hpf 0.5 10. --no_trend"
+        f"Temporal band-pass filtering: filters out frequencies "
+        f"specified by user.\nOnly works with 'daily' files. Requires a "
+        f"cutoff frequency in Sols.\nUse ``--add_trend`` to return "
+        f"amplitudes only.\nData detrended before filtering."
+        f"\n{Yellow}Generates a new file ending in ``bpt.nc``\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_daily.nc -hpt 0.5 10.\n"
         f"{Nclr}\n\n"
     )
 )
 
 # Decomposition in zonal harmonics, disabled for initial CAP release:
-parser.add_argument("-hpk", "--high_pass_zonal", action=ExtAction,
-    ext_content="_hpk",
+parser.add_argument('-hps', '--high_pass_spatial', action=ExtAction,
+    ext_content='_hps',
     parser=parser,
-    nargs="+", type=int,
+    nargs='+', type=int,
     help=(
-        f"Spatial filtering utilities: low-, high-, and "
-        f"band pass filters.\n"
-        f"Use ``--no_trend`` to compute amplitudes only.\n"
-        f"Data detrended before filtering.\n"
-        f"{Yellow}Generates a new file ending in ``_hpk.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_daily.nc -hpk 10 --no_trend\n"
-        f"      {Blue}(-hpk) --high_pass_zonal kmin "
+        f"Spatial high-pass filtering: removes low-frequency noise. "
+        f"Only works with 'daily' files.\nRequires a cutoff frequency "
+        f"in Sols.\n"
+        f"{Yellow}Generates a new file ending in ``_hps.nc``\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_daily.nc -hps 10 --add_trend\n"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-lpk", "--low_pass_zonal", action=ExtAction,
-    ext_content="_lpk",
+parser.add_argument('-lps', '--low_pass_spatial', action=ExtAction,
+    ext_content='_lps',
     parser=parser,
-    nargs="+", type=int,
+    nargs='+', type=int,
     help=(
-        f"Spatial filtering utilities: low-, high-, and "
-        f"band pass filters.\n"
-        f"Use ``--no_trend`` to compute amplitudes only.\n"
-        f"Data detrended before filtering.\n"
-        f"{Yellow}Generates a new file ending in ``_lpk.nc``\n"
-        f"{Green}Usage:\n"
-        f"    > MarsFiles *.atmos_daily.nc -lpk 20 --no_trend\n"
-        f"      {Blue}(-lpk) --low_pass_zonal kmax "
+        f"Spatial low-pass filtering: removes high-frequency noise "
+        f"(smoothing).\nOnly works with 'daily' files. Requires a "
+        f"cutoff frequency in Sols.\n"
+        f"{Yellow}Generates a new file ending in ``_lps.nc``\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_daily.nc -lps 20 --add_trend\n"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-bpk", "--band_pass_zonal", action=ExtAction,
-    ext_content="_bpk",
+parser.add_argument('-bps', '--band_pass_spatial', action=ExtAction,
+    ext_content='_bps',
     parser=parser,
-    nargs="+",
+    nargs='+', type=int,
     help=(
-        f"Spatial filtering utilities: low-, high-, and "
-        f"band pass filters.\n"
-        f"Use ``--no_trend`` to compute amplitudes only.\n"
-        f"Data detrended before filtering.\n"
-        f"{Yellow}Generates a new file ending in ``_bpk.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_daily.nc -bpk 10 20 --no_trend\n"
-        f"      {Blue}(-bpk) --band_pass_zonal kmin kmax"
+        f"Spatial band-pass filtering: filters out frequencies "
+        f"specified by user.\nOnly works with 'daily' files. Requires a "
+        f"cutoff frequency in Sols.\nData detrended before filtering.\n"
+        f"{Yellow}Generates a new file ending in ``_bps.nc``\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_daily.nc -bps 10 20 --add_trend\n"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-tidal", "--tidal", action=ExtAction,
-    ext_content="_tidal",
+parser.add_argument('-tide', '--tide_decomp', action=ExtAction,
+    ext_content='_tide_decomp',
     parser=parser,
-    nargs="+", type=int,
+    nargs='+', type=int,
     help=(
-        f"Performs a tidal analyis on ``diurn`` files.\n"
-        f"Extracts diurnal tide and its harmonics.\n"
-        f"N = 1 diurnal, N = 2 semi-diurnal etc.\n"
-        f"{Yellow}Generates a new file ending in ``_tidal.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_diurn.nc -tidal 4\n"
-        f"  {Blue}(extracts 4 harmonics)"
+        f"Use fourier decomposition to break down the signal into N "
+        f"harmonics.\nOnly works with 'diurn' files.\nReturns the phase "
+        f"and amplitude of the variable.\n"
+        f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
+        f"{Yellow}Generates a new file ending in ``_tide_decomp.nc``\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_diurn.nc -tide 2 -incl ps temp "
+        f"{Blue}(extracts semi-diurnal tide component of ps and temp "
+        f"variables; 2 harmonics)"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-reconstruct", "--reconstruct", action=ExtAction,
-    ext_content="_reconstruct",
+parser.add_argument('-regrid', '--regrid_XY_to_match', action=ExtAction,
+    ext_content='_regrid',
+    parser=parser,
+    nargs='+',
+    help=(
+        f"Regrid the X and Y dimensions of a target file to match a "
+        f"user-provided source file.\nBoth files must have the same "
+        f"vertical dimensions (i.e., should be vertically\ninterpolated "
+        f"to the same standard grid [zstd, zagl, pstd, etc.].\n"
+        f"{Yellow}Generates a new file ending in ``_regrid.nc``\n"
+        f"{Green}Example:\n"
+        f"> MarsInterp sim1/00668.atmos_average_pstd.nc -regrid "
+        f"sim2/00668.atmos_average_pstd.nc"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument('-zavg', '--zonal_average', action=ExtAction,
+    ext_content='_zavg',
+    parser=parser,
+    nargs=0,
+    help=(
+        f"Zonally average the entire file over the longitudinal "
+        f"dimension.\nDoes not work if the longitude dimension has "
+        f"length <= 1.\n"
+        f"{Yellow}Generates a new file ending in ``_zavg.nc``\n"
+        f"{Green}Example:\n"
+        "> MarsFiles 00668.atmos_diurn.nc -zavg"
+        f"{Nclr}\n\n"
+    )
+)
+
+# Secondary arguments: Used with some of the arguments above
+
+parser.add_argument('-dim', '--select_dim', type=str, default=None,
+    help=(
+        f"Must be used with [-split --split]. Flag indicates the "
+        f"dimension on which to trim the file.\nAcceptable values are "
+        f"'time', 'areo', 'lev', 'lat', 'lon'. Default = 'areo'.\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_average.nc --split 0 90 -dim areo"
+        f"> MarsFiles 00668.atmos_average.nc --split -70 -dim lat"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument('-norm', '--normalize', action=ExtAction,
+    ext_content='_norm',
+    parser=parser,
+    nargs=0,
+    help=(
+        f"For use with ``-tide``: Returns the result in percent "
+        f"amplitude.\n"
+        f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
+        f"{Yellow}Generates a new file ending in ``_norm.nc``\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_diurn.nc -tide 6 -incl ps "
+        f"-norm"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument('-add_trend', '--add_trend', action=ExtAction,
+    ext_content='_trended',
+    parser=parser,
+    nargs=0,
+    help=(
+        f"Return the temporal filter amplitudes only (omit phase from"
+        f"the output file).\n"
+        f"For use with temporal filtering utilities (``-lpt``, "
+        f"``-hpt``, ``-bpt``).\n"
+        f"{Yellow}Generates a new file ending in ``_trended.nc``\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_daily.nc -hpt 10. -add_trend\n"
+        f"> MarsFiles 00668.atmos_daily.nc -lpt 0.5 -add_trend\n"
+        f"> MarsFiles 00668.atmos_daily.nc -hpt 0.5 10. -add_trend"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument('-recon', '--reconstruct', action=ExtAction,
+    ext_content='_reconstruct',
     parser=parser,
     nargs=0,
     help=(
         f"Reconstructs the first N harmonics.\n"
         f"{Yellow}Generates a new file ending in ``_reconstruct.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_diurn.nc -tidal 6 "
-        f"--include ps temp --reconstruct"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_diurn.nc -tide 6 -incl ps temp "
+        f"-recon"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-norm", "--normalize", action=ExtAction,
-    ext_content="_norm",
-    parser=parser,
-    nargs=0,
+parser.add_argument('-incl', '--include', nargs='+',
     help=(
-        f"Provides result in percent amplitude.\n"
-        f"{Yellow}Generates a new file ending in ``_norm.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_diurn.nc -tidal 6 "
-        f"--include ps --normalize"
+        f"Flag to use only the variables specified in a calculation.\n"
+        f"All dimensional and 1D variables are ported to the new file "
+        f"automatically.\n"
+        f"{Yellow}Overwrites existing target file. To override, use "
+        f"-ext.{Nclr}\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_daily.nc -ba -incl ps temp ts"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-rs", "--regrid_source", action=ExtAction,
-    ext_content="_regrid",
-    parser=parser,
-    nargs="+",
+parser.add_argument('-e', '--extension', type=str, default=None,
     help=(
-        f"Regrid a target file to match a source file.\n"
-        f"Both source and target files should be vertically\n"
-        f"interpolated to the same standard grid\n"
-        f"(e.g. zstd, zagl, pstd, etc.).\n"
-        f"{Yellow}Generates a new file ending in ``_regrid.nc``\n"
-        f"{Green}Usage:\n"
-        f"> MarsInterp *.atmos.average_pstd.nc -rs "
-        f"simu2/00668.atmos_average_pstd.nc"
+        f"Must be paired with an argument listed above.\nInstead of "
+        f"overwriting a file to perform a function, ``-ext``\ntells "
+        f"CAP to create a new file with the extension name specified "
+        f"here.\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00334.atmos_average.nc -c -ext _comb"
+        f"  {Blue}(produces 00334.atmos_average_comb.nc and "
+        f"preserves all other files)"
         f"{Nclr}\n\n"
     )
 )
 
-parser.add_argument("-za", "--zonal_avg", action=ExtAction,
-    ext_content="_zavg",
-    parser=parser,
-    nargs=0,
+parser.add_argument('--debug', action='store_true',
     help=(
-        f"Zonally average all variables in a file.\n"
-        f"{Yellow}Generates a new file ending in ``_zavg.nc``\n"
-        f"{Green}Usage:\n"
-        "> MarsFiles *.atmos_diurn.nc -za"
+        f"Use with any other argument to pass all Python errors and\n"
+        f"status messages to the screen when running CAP.\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 00668.atmos_average.nc -t '3 15' --debug"
         f"{Nclr}\n\n"
     )
-)
+ )
 
-parser.add_argument("-include", "--include", nargs="+",
-    help=(
-        f"Flag to include only the variables listed after \n"
-        f"-include in the target file.\n"
-        f"All dimensional and 1D variables are always included.\n"
-        f"{Yellow}Overwrites existing target file. To override, "
-        f"use --ext.{Nclr}\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos_daily.nc -ba --include ps ts ucomp"
-        f"{Nclr}\n\n"
-    )
-)
+args = parser.parse_args()
 
-parser.add_argument("-e", "--ext", type=str, default = None,
-    help=(
-        f"Do not overwrite file. Append the extension provided \n"
-        f"after --ext to the new file.\n"
-        f"{Green}Usage:\n"
-        f"> MarsFiles *.atmos.average.nc --combine --ext _combined\n"
-        f"  {Blue}(produces *.atmos.average_combined.nc)"
-        f"{Nclr}\n\n"
-    )
-)
+if args.input_file:
+    if not re.search(".nc", args.input_file.name):
+        parser.error(f"{Red}{args.input_file.name} is not a netCDF "
+                     f"file{Nclr}")
+        exit()
 
-parser.add_argument("--debug", action="store_true",
-    help=(f"Debug flag: release the exceptions.\n\n"))
+if args.select_dim and not args.split:
+    parser.error(f"{Red}[-dim --select_dim] must be used with [-split "
+                 f"--split]{Nclr}")
+    exit()
 
+if args.normalize and not args.tide_decomp:
+    parser.error(f"{Red}[-norm --normalize] must be used with [-tide "
+                 f"--tide_decomp]{Nclr}")
+    exit()
+
+if args.add_trend and not (args.high_pass_temporal or args.low_pass_temporal
+                           or args.band_pass_temporal):
+    parser.error(f"{Red}[-add_trend --add_trend] must be used with [-lpt "
+                 f"--low_pass_temporal], [-hpt --high_pass_temporal], or "
+                 f"[-bpt --band_pass_temporal]{Nclr}")
+    exit()
+
+if args.reconstruct and not args.tide_decomp:
+    parser.error(f"{Red}[-recon --reconstruct] must be used with [-tide "
+                 f"--tide_decomp]{Nclr}")
+    exit()
+
+all_args = [args.bin_files, args.concatenate, args.split, args.time_shift, 
+            args.bin_average, args.bin_diurn, args.high_pass_temporal, 
+            args.low_pass_temporal, args.band_pass_temporal, 
+            args.high_pass_spatial, args.low_pass_spatial, 
+            args.band_pass_spatial, args.tide_decomp, args.normalize, 
+            args.regrid_XY_to_match, args.zonal_average]
+
+if all(v is None or v is False for v in all_args) and args.include is not None:
+    parser.error(f"{Red}[-incl --include] must be used with another "
+                 f"argument{Nclr}")
+    exit()
+    
+if all(v is None or v is False for v in all_args) and args.extension is not None:
+    parser.error(f"{Red}[-ext --extension] must be used with another "
+                 f"argument{Nclr}")
+    exit()
+    
 # ======================================================================
 #                               EXTENSIONS
 # ======================================================================
-"""
-Concatenates extensions to append to file depending on the provided arguments.
-"""
-args=parser.parse_args()
+# Concatenates extensions to append to the file name depending on 
+# user-provided arguments.
 
-out_ext = (f"{args.tshift_ext}"
+out_ext = (f"{args.time_shift_ext}"
             f"{args.bin_average_ext}"
             f"{args.bin_diurn_ext}"
-            f"{args.high_pass_filter_ext}"
-            f"{args.low_pass_filter_ext}"
-            f"{args.band_pass_filter_ext}"
-            f"{args.no_trend_ext}"
-            f"{args.high_pass_zonal_ext}"
-            f"{args.low_pass_zonal_ext}"
-            f"{args.band_pass_zonal_ext}"
-            f"{args.tidal_ext}"
+            f"{args.high_pass_temporal_ext}"
+            f"{args.low_pass_temporal_ext}"
+            f"{args.band_pass_temporal_ext}"
+            f"{args.add_trend_ext}"
+            f"{args.high_pass_spatial_ext}"
+            f"{args.low_pass_spatial_ext}"
+            f"{args.band_pass_spatial_ext}"
+            f"{args.tide_decomp_ext}"
             f"{args.reconstruct_ext}"
             f"{args.normalize_ext}"
             f"{args.regrid_source_ext}"
             f"{args.zonal_avg_ext}"
             )
 
-if args.ext:
+if args.extension:
     # Append extension, if any:
     out_ext = (f"{out_ext}_"
-                f"{args.ext}")
+                f"{args.extension}")
 
 # ======================================================================
 #                               DEFINITIONS
 # ======================================================================
 
-def combine_files(file_list, full_file_list):
+def concatenate_files(file_list, full_file_list):
     """
     Concatenates sequential output files in chronological order.
 
@@ -551,7 +610,7 @@ def combine_files(file_list, full_file_list):
     Log.merge_files_from_list(full_file_list, exclude_var=exclude_list)
     Log.close()
 
-    # ----- Delete the files that were used for combine -----
+    # ----- Delete the files that were used for concatenate -----
 
     # First, rename temporary file for the final merged file
     #   For Legacy netCDF files, rename using initial and end Ls
@@ -563,7 +622,7 @@ def combine_files(file_list, full_file_list):
     else:
         merged_file = full_file_list[0]
 
-    # Second, delete the files that were combined.
+    # Second, delete the files that were concatenated.
     # Apply the new name created above
     rm_cmd = "rm -f "
     for file in full_file_list:
@@ -806,11 +865,11 @@ def time_shift(file_list):
     :param file_list: list of file names
     :type file_list: list
     """
-    if args.tshift == 999:
+    if args.time_shift == 999:
         # Target local times requested by user
         target_list = None 
     else:
-        target_list = np.fromstring(args.tshift, 
+        target_list = np.fromstring(args.time_shift, 
                                     dtype = float, sep=" ")
 
     for file in file_list:
@@ -905,7 +964,7 @@ def time_shift(file_list):
             if (len(dims) == 4):
                 # time, tod, lat, lon
                 var_val_tmp = np.transpose(value, (x, y, t, tod))
-                var_val_T = tshift(var_val_tmp, lons, tod_orig,
+                var_val_T = time_shift(var_val_tmp, lons, tod_orig,
                                    timex = target_list)
                 var_out = np.transpose(var_val_T, (2, 3, 1, 0))
                 fnew.log_variable(var, var_out,
@@ -915,7 +974,7 @@ def time_shift(file_list):
                 # time, tod, Z, lat, lon
                 z = dims.index(zaxis)
                 var_val_tmp = np.transpose(value, (x, y, z, t, tod))
-                var_val_T = tshift(var_val_tmp, lons, tod_orig,
+                var_val_T = time_shift(var_val_tmp, lons, tod_orig,
                                    timex = target_list)
                 var_out = np.transpose(var_val_T, (3, 4, 2, 1, 0))
                 fnew.log_variable(var, var_out,
@@ -942,8 +1001,8 @@ def main():
         else:
             full_file_list.append(f"{file}")
             
-    if args.fv3 and args.combine:
-        print(f"{Red}Use --fv3 and --combine separately to avoid ambiguity")
+    if args.bin_files and args.concatenate:
+        print(f"{Red}Use --bin_files and --concatenate separately to avoid ambiguity")
         exit()
 
     # ==================================================================
@@ -952,8 +1011,8 @@ def main():
     # ==================================================================
 
     # Convert to MGCM Output Format
-    if args.fv3:
-        for req_file in args.fv3:
+    if args.bin_files:
+        for req_file in args.bin_files:
             if req_file not in ["fixed", "average", "daily", "diurn"]:
                 print(f"{Red}{req_file} is invalid. Select ``fixed``, "
                       f"``average``, ``daily``, or ``diurn``{Nclr}")
@@ -976,30 +1035,31 @@ def main():
                 #     lsmax = ls_r
                 # else:
                 #     lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
-                make_FV3_files(f, args.fv3, True)
+                make_FV3_files(f, args.bin_files, True)
         else:
             print("Processing fort.11 files")
             for f in full_file_list:
                 file_name = Fort(f)
-                if "fixed" in args.fv3:
+                if "fixed" in args.bin_files:
                     file_name.write_to_fixed()
-                if "average" in args.fv3:
+                if "average" in args.bin_files:
                     file_name.write_to_average()
-                if "daily" in args.fv3:
+                if "daily" in args.bin_files:
                     file_name.write_to_daily()
-                if "diurn" in args.fv3:
+                if "diurn" in args.bin_files:
                     file_name.write_to_diurn()
                     
-    elif args.combine:
+    elif args.concatenate:
         # Combine files along the time dimension
-        combine_files(file_list, full_file_list)
+        concatenate_files(file_list, full_file_list)
     
     elif args.split:
         # Split file along the specified dimension. If none specified,
         # default to time dimension
-        split_files(file_list, args.dim)
+        split_dim = 'areo' if args.select_dim == None else args.select_dim
+        split_files(file_list, split_dim)
         
-    elif args.tshift:
+    elif args.time_shift:
         # Time-shift files
         time_shift(file_list)
 
@@ -1168,33 +1228,33 @@ def main():
     #                       Alex K. & R. J. Wilson
     # ==================================================================
 
-    elif (args.high_pass_filter or
-          args.low_pass_filter or
-          args.band_pass_filter):
+    elif (args.high_pass_temporal or
+          args.low_pass_temporal or
+          args.band_pass_temporal):
 
         # This functions requires scipy > 1.2.0. Import package here.
         from amescap.Spectral_utils import zeroPhi_filter
 
-        if args.high_pass_filter:
+        if args.high_pass_temporal:
             btype = "high"
             nsol = np.asarray(
-                args.high_pass_filter
+                args.high_pass_temporal
                 ).astype(float)
             if len(np.atleast_1d(nsol)) != 1:
                 print(f"{Red}***Error*** sol_min accepts only one value")
                 exit()
-        if args.low_pass_filter:
+        if args.low_pass_temporal:
             btype = "low"
             nsol = np.asarray(
-                args.low_pass_filter
+                args.low_pass_temporal
                 ).astype(float)
             if len(np.atleast_1d(nsol)) != 1:
                 print(f"{Red}sol_max accepts only one value")
                 exit()
-        if args.band_pass_filter:
+        if args.band_pass_temporal:
             btype = "band"
             nsol = np.asarray(
-                args.band_pass_filter
+                args.band_pass_temporal
                 ).astype(float)
             if len(np.atleast_1d(nsol)) != 2:
                 print(f"{Red}Requires two values: sol_min sol_max")
@@ -1263,7 +1323,7 @@ def main():
                     print(f"{Cyan}Processing: {ivar}{Nclr}")
                     var_out = zeroPhi_filter(
                         varNcf[:], btype, low_highcut, fs, axis = 0, order = 4,
-                        no_trend = args.no_trend)
+                        add_trend = args.add_trend)
                     longname_txt, units_txt = get_longname_unit(fdaily, ivar)
                     fnew.log_variable(ivar, var_out, varNcf.dimensions,
                                       longname_txt, units_txt)
@@ -1281,28 +1341,28 @@ def main():
     #                      Zonal Decomposition Analysis
     #                              Alex K.
     #==================================================================
-    elif (args.high_pass_zonal or 
-          args.low_pass_zonal or 
-          args.band_pass_zonal):
+    elif (args.high_pass_spatial or 
+          args.low_pass_spatial or 
+          args.band_pass_spatial):
         # This function requires scipy > 1.2.0. Import the package here
         from amescap.Spectral_utils import zonal_decomposition, zonal_construct,init_shtools
         # Load the module
         init_shtools()
-        if args.high_pass_zonal:
+        if args.high_pass_spatial:
             btype = "high"
-            nk = np.asarray(args.high_pass_zonal).astype(int)
+            nk = np.asarray(args.high_pass_spatial).astype(int)
             if len(np.atleast_1d(nk)) != 1:
                 print(f"{Red}***Error*** kmin accepts only one value")
                 exit()
-        if args.low_pass_zonal:
+        if args.low_pass_spatial:
             btype = "low"
-            nk = np.asarray(args.low_pass_zonal).astype(int)
+            nk = np.asarray(args.low_pass_spatial).astype(int)
             if len(np.atleast_1d(nk)) != 1:
                 print(f"{Red}kmax accepts only one value")
                 exit()
-        if args.band_pass_zonal:
+        if args.band_pass_spatial:
             btype = "band"
-            nk = np.asarray(args.band_pass_zonal).astype(int)
+            nk = np.asarray(args.band_pass_spatial).astype(int)
             if len(np.atleast_1d(nk)) != 2:
                 print(f"{Red}Requires two values: kmin kmax")
                 exit()
@@ -1378,16 +1438,16 @@ def main():
                 if ("lat" in varNcf.dimensions and 
                     "lon" in varNcf.dimensions):
                     print(f"{Cyan}Processing: {ivar}...{Nclr}")
-                    # Step 1 : Detrend the data
+                    # Step 1: Detrend the data
                     TREND = get_trend_2D(varNcf[:], LON, LAT,  "wmean")
-                    # Step 2 : Calculate spherical harmonic coeffs
+                    # Step 2: Calculate spherical harmonic coeffs
                     COEFF, PSD = zonal_decomposition(varNcf[:] - TREND)
-                    # Step 3 : Recompose the variable out of the coeffs
+                    # Step 3: Recompose the variable out of the coeffs
                     VAR_filtered=zonal_construct(COEFF, varNcf[:].shape, 
                                                  btype = btype, 
                                                  low_highcut = low_highcut)
                     #Step 4: Add the trend, if requested
-                    if args.no_trend:
+                    if args.add_trend:
                         var_out = VAR_filtered
                     else:
                         var_out = VAR_filtered + TREND
@@ -1409,9 +1469,9 @@ def main():
     #                           Alex K. & R. J. Wilson
     # ==================================================================
 
-    elif args.tidal:
+    elif args.tide_decomp:
         from amescap.Spectral_utils import diurn_extract, reconstruct_diurn
-        N = args.tidal[0]
+        N = args.tide_decomp[0]
         if len(np.atleast_1d(N)) != 1:
             print(f"{Red}***Error*** N accepts only one value")
             exit()
@@ -1517,22 +1577,22 @@ def main():
                         fnew.copy_Ncaxis_with_content(fdiurn.variables[ivar])
                 elif  ivar in ["areo"]:
                         if args.reconstruct:
-                            #time_of_day is the same size as the
+                            # time_of_day is the same size as the
                             # original file
                             print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
                             fnew.copy_Ncvar(fdiurn.variables["areo"])
                         else:
                             print(f"{Cyan}Processing: {ivar}...{Nclr}")
-                            #Create areo variable reflecting the
+                            # Create areo variable reflecting the
                             # new shape
                             areo_new=np.zeros((areo.shape[0], N, 1))
-                            #Copy areo
+                            # Copy areo
                             for xx in range(N):
                                 areo_new[:, xx, :] = areo[:, 0, :]
-                            #Update the dimensions
+                            # Update the dimensions
                             new_dim = list(varNcf.dimensions)
                             new_dim[1] = f"time_of_day_{N}"
-                            #fnew.log_variable(ivar, bareo_new, new_dim,
+                            # fnew.log_variable(ivar, bareo_new, new_dim,
                             # longname_txt, units_txt)
                             fnew.log_variable(ivar, areo_new, new_dim, 
                                               longname_txt, var_unit)
@@ -1543,8 +1603,8 @@ def main():
     #                                 Alex K.
     # ==================================================================
 
-    elif args.regrid_source:
-        name_target = args.regrid_source[0]
+    elif args.regrid_XY_to_match:
+        name_target = args.regrid_XY_to_match[0]
 
         # Add path unless full path is provided
         if not ("/" in name_target):
@@ -1597,7 +1657,7 @@ def main():
     #                           Zonal Averaging
     #                              Alex K.
     # ==================================================================
-    elif args.zonal_avg:
+    elif args.zonal_average:
         for file in file_list:
             if not ("/" in file):
                 # Add path unless full path is provided
@@ -1651,8 +1711,8 @@ def main():
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
     else:
-        print(f"{Red}Error: no action requested: use ``MarsFiles *nc --fv3 "
-              "--combine, --tshift, --bin_average, --bin_diurn etc ...``")
+        print(f"{Red}Error: no action requested: use ``MarsFiles *nc --bin_files "
+              "--concatenate, --time_shift, --bin_average, --bin_diurn etc ...``")
 # END of script
 
 # ======================================================
@@ -1662,7 +1722,7 @@ def main():
 def make_FV3_files(fpath, typelistfv3, renameFV3=True):
     """
     Make MGCM-like ``average``, ``daily``, and ``diurn`` files.
-    Used if call to [``-fv3 --fv3``] is made AND Legacy files are in
+    Used if call to [``-bin --bin_files``] is made AND Legacy files are in
     netCDFformat (not fort.11).
 
     :param fpath: Full path to the Legacy netcdf files
