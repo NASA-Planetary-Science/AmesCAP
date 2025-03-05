@@ -466,7 +466,7 @@ parser.add_argument('-incl', '--include', nargs='+',
     )
 )
 
-parser.add_argument('-e', '--extension', type=str, default=None,
+parser.add_argument('-ext', '--extension', type=str, default=None,
     help=(
         f"Must be paired with an argument listed above.\nInstead of "
         f"overwriting a file to perform a function, ``-ext``\ntells "
