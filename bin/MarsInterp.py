@@ -89,7 +89,6 @@ parser.add_argument('-v', '--vertical_grid', interp_=str, default=None,
         f"{Cyan}cp path/to/amesCAP/mars_templates/amescap_profile "
         f"~/.amescap_profile\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 00668.atmos_average.nc -t pstd -v p44\n"
         f"> MarsInterp 00668.atmos_average.nc -t zstd -v phalf_mb"
         f"{Nclr}\n\n"
     )
