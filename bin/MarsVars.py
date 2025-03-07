@@ -158,7 +158,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('input_file', nargs='?', 
+parser.add_argument('input_file', nargs='+', 
     type=argparse.FileType('r'),
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
@@ -329,12 +329,11 @@ parser.add_argument('--debug',  action='store_true',
  )
 
 args = parser.parse_args()
-
 if args.input_file:
-    if not re.search(".nc", args.input_file.name):
-        parser.error(f"{Red}{args.input_file.name} is not a netCDF "
-                     f"file{Nclr}")
-        exit()
+    for file in args.input_file:
+        if not re.search(".nc", file.name):
+            parser.error(f"{Red}{file.name} is not a netCDF file{Nclr}")
+            exit()
 
 if args.rename and args.edit_variable is None:
     parser.error(f"{Red}The -rename argument requires -edit to be used "
