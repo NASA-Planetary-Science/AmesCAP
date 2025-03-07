@@ -346,31 +346,6 @@ def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
     :type reverse_input: bool
 
     :return: The index for the level(s) where the pressure < ``plev``
-
-    Example cases::
-
-        Case 1:       Case 2:      Case 3:       Case 4:
-        (ND)   (1D)   (1D)  (1D)   (1D)  (ND)    (ND)    (ND)
-        |x|x|         |x|          |x|           |x|x|
-        |x|x| > |x|   |x| > |x|    |x| > |x|x|   |x|x| > |x|x|
-        |x|x|   |x|   |x|   |x|    |x|   |x|x|   |x|x|   |x|x|
-        |x|x|   |x|   |x|   |x|    |x|   |x|x|   |x|x|   |x|x|
-        
-        Case 4 must have same number of elements along the other dimensions
-
-    .. note::
-        Cyclic arrays are handled naturally (e.g., time of day
-        0.5 ...23.5 > 0.5 or longitudes 0 > ...359 > 0). If the first
-        array element > requested value, (e.g., requested = 0.2,
-        array = [0.5, 1.5, ..., 23.5]), then n = 0-1 = -1 which is the
-        last element in the array (23.5).
-
-        The last element in the array is always <= the selected value:
-        e.g., requested = 23.8, array = [0.5, 1.5, ..., 23.5] then the
-        returned value is 23.5.
-
-        Therefore, the cyclic values must be handled during the
-        interpolation stage (i.e., before this stage).
     """
     if type(X_IN) != np.ndarray:
         # Number of original layers
@@ -416,21 +391,36 @@ def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
     if len(dimsIN) == 1:
         for i in range(N_OUT):
             for j in range(Ndim):
-                n[i, j] = np.argmin(np.abs(X_OUT[i, j] - X_IN[:]))
-                if X_IN[n[i, j]] > X_OUT[i, j]:
-                    n[i, j] = n[i, j] - 1
+                # Handle the case where j might be out of bounds
+                if j < NdimsOUT:
+                    n[i, j] = np.argmin(np.abs(X_OUT[i, j] - X_IN[:]))
+                    if X_IN[n[i, j]] > X_OUT[i, j]:
+                        n[i, j] = n[i, j] - 1
+                else:
+                    # For indices beyond the available dimensions, use index 0
+                    n[i, j] = 0
     elif len(dimsOUT) == 1:
         for i in range(N_OUT):
             for j in range(Ndim):
-                n[i, j] = np.argmin(np.abs(X_OUT[i] - X_IN[:, j]))
-                if X_IN[n[i, j], j] > X_OUT[i]:
-                    n[i, j] = n[i, j] - 1
+                # Handle the case where j might be out of bounds for X_IN
+                if j < NdimsIN:
+                    n[i, j] = np.argmin(np.abs(X_OUT[i] - X_IN[:, j]))
+                    if X_IN[n[i, j], j] > X_OUT[i]:
+                        n[i, j] = n[i, j] - 1
+                else:
+                    # For indices beyond the available dimensions, use index 0
+                    n[i, j] = 0
     else:
         for i in range(N_OUT):
             for j in range(Ndim):
-                n[i, j] = np.argmin(np.abs(X_OUT[i, j] - X_IN[:, j]))
-                if X_IN[n[i, j], j] > X_OUT[i, j]:
-                    n[i, j] = n[i, j] - 1
+                # Handle the case where j might be out of bounds for either array
+                if j < NdimsIN and j < NdimsOUT:
+                    n[i, j] = np.argmin(np.abs(X_OUT[i, j] - X_IN[:, j]))
+                    if X_IN[n[i, j], j] > X_OUT[i, j]:
+                        n[i, j] = n[i, j] - 1
+                else:
+                    # For indices beyond the available dimensions, use index 0
+                    n[i, j] = 0
 
     if len(dimsOUT) == 1:
         n = np.squeeze(n)
