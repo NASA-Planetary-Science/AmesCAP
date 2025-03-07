@@ -556,8 +556,8 @@ out_ext = (f"{args.time_shift_ext}"
             f"{args.tide_decomp_ext}"
             f"{args.reconstruct_ext}"
             f"{args.normalize_ext}"
-            f"{args.regrid_XY_to_match}"
-            f"{args.zonal_avg_ext}"
+            f"{args.regrid_XY_to_match_ext}"
+            f"{args.zonal_average_ext}"
             )
 
 if args.extension:
