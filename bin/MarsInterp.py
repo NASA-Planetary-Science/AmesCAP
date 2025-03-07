@@ -66,7 +66,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('input_file', nargs='?', 
+parser.add_argument('input_file', nargs='+', 
     type=argparse.FileType('r'),
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
@@ -176,7 +176,7 @@ def main():
     start_time   = time.time()
     debug        = args.debug
     # Load all of the netcdf files
-    file_list    = args.input_file
+    file_list    = file_list = [f.name for f in args.input_file]
     interp_type  = args.interp_type  # e.g. pstd
     custom_level = args.vertical_grid # e.g. p44
     grid_out     = args.print_grid

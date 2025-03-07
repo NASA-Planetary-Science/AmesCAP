@@ -556,7 +556,7 @@ out_ext = (f"{args.time_shift_ext}"
             f"{args.tide_decomp_ext}"
             f"{args.reconstruct_ext}"
             f"{args.normalize_ext}"
-            f"{args.regrid_source_ext}"
+            f"{args.regrid_XY_to_match}"
             f"{args.zonal_avg_ext}"
             )
 
@@ -990,7 +990,7 @@ def time_shift(file_list):
 
 def main():
     global data_dir
-    file_list = [f.name for f in args.input_file]  # Get the filenames from the file objects
+    file_list = [f.name for f in args.input_file]
     data_dir = os.getcwd()
 
     # Make a list of input files including the full path to the dir
