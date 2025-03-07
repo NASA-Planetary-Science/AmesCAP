@@ -223,7 +223,7 @@ def give_permission(filename):
     except subprocess.CalledProcessError:
         pass
 
-def check_file_tape(fileNcdf, abort=False):
+def check_file_tape(fileNcdf):
     """
     For use in the NAS environnment only.
     Checks whether a file is exists on the disk by running the command
@@ -232,8 +232,6 @@ def check_file_tape(fileNcdf, abort=False):
 
     :param fileNcdf: full path to a netcdf file or a file object with a name attribute
     :type fileNcdf: str or file object
-    :param abort: If True, exit the program. Defaults to False
-    :type abort: bool, optional
 
     :return: None
     """
@@ -245,41 +243,25 @@ def check_file_tape(fileNcdf, abort=False):
         print(f"{Red}{filename} is not a netCDF file{Nclr}")
         exit()
         
-    try:
-        # Check if the file exists on the disk, exit otherwise. If it
-        # exists, copy it over from the disk.
-        # Check if dmls command is available
-        subprocess.check_call(["dmls"], shell = True,
-                              stdout = open(os.devnull, "w"),
-                              stderr = open(os.devnull, "w"))
-        # Get the last columns of the ls command (filename and status)
-        cmd_txt = f"dmls -l {filename}| awk '{{print $8,$9}}'"
-        # Get 3-letter identifier from dmls -l command, convert byte to
-        # string for Python3
-        dmls_out = subprocess.check_output(cmd_txt,
-                                           shell = True).decode("utf-8")
-        if dmls_out[1:4] not in ["DUL", "REG", "MIG"]:
-            # If file is OFFLINE, UNMIGRATING etc...
-            if abort :
-                print(f"{Red}*** Error ***\n{dmls_out}\n{dmls_out[6:-1]} "
-                      f"is not available on disk, status is: {dmls_out[0:5]}"
-                      f"CHECK file status with ``dmls -l *.nc`` and run "
-                      f"``dmget *.nc`` to migrate the files.\nExiting now..."
-                      f"\n{Nclr}")
-                exit()
-            else:
-                print(f"{Yellow}*** Warning ***\n{dmls_out[6:-1]} is not  "
-                      f"available on the disk. Status: {dmls_out[0:5]}.\n"
-                      f"Consider checking file status with ``dmls -l *.nc`` "
-                      f"and run ``dmget *.nc`` to migrate the files.\n"
-                      f"Waiting for file to be migrated to the disk, this "
-                      f"may take awhile...")
-    except subprocess.CalledProcessError:
-        # Return an eror message
-        if abort:
-             exit()
-        else:
-            pass
+    # Check if the file exists on the disk, exit otherwise
+    # Check if dmls command is available
+    subprocess.check_call(["dmls"], shell = True,
+                            stdout = open(os.devnull, "w"),
+                            stderr = open(os.devnull, "w"))
+    # Get the last columns of the ls command (filename and status)
+    cmd_txt = f"dmls -l {filename}| awk '{{print $8,$9}}'"
+    # Get 3-letter identifier from dmls -l command, convert byte to
+    # string for Python3
+    dmls_out = subprocess.check_output(cmd_txt,
+                                        shell = True).decode("utf-8")
+    if dmls_out[1:4] not in ["DUL", "REG", "MIG"]:
+        # If file is OFFLINE, UNMIGRATING etc...
+        print(f"{Red}*** Error ***\n{dmls_out}\n{dmls_out[6:-1]} "
+                f"is not available on disk, status is: {dmls_out[0:5]}"
+                f"CHECK file status with ``dmls -l *.nc`` and run "
+                f"``dmget *.nc`` to migrate the files.\nExiting now..."
+                f"\n{Nclr}")
+        exit()
 
 
 def get_Ncdf_path(fNcdf):

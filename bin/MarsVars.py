@@ -1048,7 +1048,7 @@ filepath = os.getcwd()
 
 def main():
     # Load all the .nc files
-    file_list = args.input_file
+    file_list = [f.name for f in args.input_file]
     add_list = args.add_variable
     zdiff_list = args.differentiate_wrt_z
     zdetrend_list = args.zonal_detrend
@@ -1085,7 +1085,13 @@ def main():
     # For all the files
     for ifile in file_list:
         # First check if file is on the disk (Lou only)
-        check_file_tape(ifile)
+        # Create a wrapper object to pass to check_file_tape
+        class FileWrapper:
+            def __init__(self, name):
+                self.name = name
+                
+        file_wrapper = FileWrapper(ifile)
+        check_file_tape(file_wrapper)
 
         # ==============================================================
         # Remove Function
