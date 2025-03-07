@@ -365,7 +365,7 @@ def main():
     if args.inspect_file:
         # --inspect: Inspect content of netcdf file
         # NAS-specific, check if the file is on tape (Lou only)
-        check_file_tape(args.inspect_file, abort = False)
+        check_file_tape(args.inspect_file)
         if args.print_values:
             # Print variable content to screen
             print_varContent(args.inspect_file,
@@ -1994,7 +1994,7 @@ def prep_file(var_name, file_type, simuID, sol_array):
             # No sol number
             file_list[i] = f"{input_paths[simuID]}/{file_type}.nc"
 
-        check_file_tape(file_list[i], abort = False)
+        check_file_tape(file_list[i])
 
     try:
         # Files on tape, open with MFDataset if aggregate dim detected
