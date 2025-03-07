@@ -678,7 +678,7 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int="lin",
     dimsIN = var_IN.shape
     dimsOUT = tuple(np.append(len(xi), dimsIN[1:]))
     var_OUT = np.zeros(dimsOUT)
-
+    
     for k in range(0, len(index)):
         n = index[k]
         np1 = n+1
@@ -700,15 +700,37 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int="lin",
             # (i.e., if the requested value is samller than first
             # element array) and the values are NOT cyclic.
             n = 0
+            
         if type_int == "log":
-            alpha = (np.log(xi[k]/x[np1]) / np.log(x[n]/x[np1]))
+            # Add error handling to avoid logarithm and division issues
+            if x[np1] <= 0 or xi[k] <= 0 or x[n] <= 0 or x[n] == x[np1]:
+                alpha = 0  # Default to 0 if we can't compute logarithm
+                var_OUT[k, :] = var_IN[np1, ...]  # Use nearest value
+            else:
+                try:
+                    alpha = (np.log(xi[k]/x[np1]) / np.log(x[n]/x[np1]))
+                    var_OUT[k, :] = (var_IN[n, ...]*alpha + (1-alpha)*var_IN[np1, ...])
+                except:
+                    # Handle any other errors by using nearest value
+                    alpha = 0
+                    var_OUT[k, :] = var_IN[np1, ...]
         elif type_int == "lin":
             if modulo is None:
-                alpha = (xi[k] - x[np1]) / (x[n] - x[np1])
+                if x[n] == x[np1]:  # Avoid division by zero
+                    alpha = 0
+                    var_OUT[k, :] = var_IN[np1, ...]
+                else:
+                    alpha = (xi[k] - x[np1]) / (x[n] - x[np1])
+                    var_OUT[k, :] = (var_IN[n, ...]*alpha + (1-alpha)*var_IN[np1, ...])
             else:
-                alpha = (np.mod(xi[k]-x[np1] + modulo, modulo)
-                         / np.mod(x[n]-x[np1] + modulo, modulo))
-        var_OUT[k, :] = (var_IN[n, ...]*alpha + (1-alpha)*var_IN[np1, ...])
+                # Handle modulo case with similar error checking
+                denom = np.mod(x[n]-x[np1] + modulo, modulo)
+                if denom == 0:  # Avoid division by zero
+                    alpha = 0
+                    var_OUT[k, :] = var_IN[np1, ...]
+                else:
+                    alpha = np.mod(xi[k]-x[np1] + modulo, modulo) / denom
+                    var_OUT[k, :] = (var_IN[n, ...]*alpha + (1-alpha)*var_IN[np1, ...])
 
     return np.moveaxis(var_OUT, 0, axis)
 
