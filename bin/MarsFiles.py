@@ -1036,7 +1036,7 @@ def main():
                 # else:
                 #     lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
                 make_FV3_files(f, args.bin_files, True)
-        else:
+        elif "fort.11" in full_file_list[0]:
             print("Processing fort.11 files")
             for f in full_file_list:
                 file_name = Fort(f)
@@ -1048,6 +1048,8 @@ def main():
                     file_name.write_to_daily()
                 if "diurn" in args.bin_files:
                     file_name.write_to_diurn()
+        else:
+            print(f"Cannot bin {full_file_list[0]} like MGCM file.")
                     
     elif args.concatenate:
         # Combine files along the time dimension
