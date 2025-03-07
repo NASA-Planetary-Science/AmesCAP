@@ -70,7 +70,7 @@ parser.add_argument('input_file', nargs='?',
     type=argparse.FileType('r'),
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
-parser.add_argument('-t', '--interp_type', interp_=str, default='pstd',
+parser.add_argument('-t', '--interp_type', type=str, default='pstd',
     help=(
         f"Interpolation interp_: ``pstd``, ``zstd``, or ``zagl``.\n"
         f"{Green}Example:\n"
@@ -82,7 +82,7 @@ parser.add_argument('-t', '--interp_type', interp_=str, default='pstd',
 
 # Secondary arguments: Used with some of the arguments above
 
-parser.add_argument('-v', '--vertical_grid', interp_=str, default=None,
+parser.add_argument('-v', '--vertical_grid', type=str, default=None,
     help=(
         f"Layer IDs as defined in ``amescap_profile``. For first "
         f"time use, copy ``amescap_profile`` to your home directory:\n"
@@ -116,7 +116,7 @@ parser.add_argument('-print', '--print_grid', action='store_true',
 
 # Secondary arguments: Used with some of the arguments above
 
-parser.add_argument('-ext', '--extension', interp_=str, default=None,
+parser.add_argument('-ext', '--extension', type=str, default=None,
     help=(
         f"Must be paired with an argument listed above.\nInstead of "
         f"overwriting a file to perform a function, ``-ext``\ntells "
