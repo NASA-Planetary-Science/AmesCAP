@@ -493,8 +493,8 @@ parser.add_argument('--debug', action='store_true',
 args = parser.parse_args()
 
 if args.input_file:
-    if not re.search(".nc", args.input_file.name):
-        parser.error(f"{Red}{args.input_file.name} is not a netCDF "
+    if not re.search(".nc", args.input_file.name) or not re.search("fort.11", args.input_file.name):
+        parser.error(f"{Red}{args.input_file.name} is not a netCDF or fort.11"
                      f"file{Nclr}")
         exit()
 
