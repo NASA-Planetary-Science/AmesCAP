@@ -134,9 +134,9 @@ parser = ExtArgumentParser(
     formatter_class = argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('input_file', nargs='?', 
+parser.add_argument('input_file', nargs='+', 
     type=argparse.FileType('r'),
-    help=(f"A netCDF file or list of netCDF files.\n\n"))
+    help=(f"A netCDF or fort.11 file or list of files.\n\n"))
 
 parser.add_argument('-bin', '--bin_files', nargs='+', type=str,
     choices=['fixed', 'diurn', 'average', 'daily'],
@@ -493,10 +493,10 @@ parser.add_argument('--debug', action='store_true',
 args = parser.parse_args()
 
 if args.input_file:
-    if not re.search(".nc", args.input_file.name) or not re.search("fort.11", args.input_file.name):
-        parser.error(f"{Red}{args.input_file.name} is not a netCDF or fort.11"
-                     f"file{Nclr}")
-        exit()
+    for file in args.input_file:
+        if not (re.search(".nc", file.name) or re.search("fort.11", file.name)):
+            parser.error(f"{Red}{file.name} is not a netCDF or fort.11 file{Nclr}")
+            exit()
 
 if args.dim_select and not args.split:
     parser.error(f"{Red}[-dim --dim_select] must be used with [-split "
@@ -990,7 +990,7 @@ def time_shift(file_list):
 
 def main():
     global data_dir
-    file_list = args.input_file
+    file_list = [f.name for f in args.input_file]  # Get the filenames from the file objects
     data_dir = os.getcwd()
 
     # Make a list of input files including the full path to the dir
