@@ -2072,7 +2072,7 @@ def polar_warming(T, lat, outside_range=np.nan):
                             PW_half_hemisphere(T_NH, lat_NH, outside_range)),
                            axis = 0))
 
-def time_shift(array, lon, timeo, timex=None):
+def time_shift_calc(array, lon, timeo, timex=None):
     """
     Conversion to uniform local time.
 
@@ -2189,7 +2189,7 @@ def time_shift(array, lon, timeo, timex=None):
         imm[:, nd] = im[:]
         ipp[:, nd] = ipa[:]
 
-    # assume uniform time between input data samples
+    # Assume uniform time between input data samples
     fraction = fraction / dt_samp
 
     # Now carry out the interpolation

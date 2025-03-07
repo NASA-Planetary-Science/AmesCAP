@@ -57,7 +57,7 @@ from netCDF4 import Dataset
 # Load amesCAP modules
 from amescap.Ncdf_wrapper import (Ncdf, Fort)
 from amescap.FV3_utils import (
-    time_shift, daily_to_average, daily_to_diurn, get_trend_2D
+    time_shift_calc, daily_to_average, daily_to_diurn, get_trend_2D
 )
 from amescap.Script_utils import (
     find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile,
@@ -857,7 +857,7 @@ def split_files(file_list, split_dim):
 #                            Victoria H.
 # ==================================================================
 
-def time_shift(file_list):
+def process_time_shift(file_list):
     """
     This function converts the data in diurn files with a time_of_day_XX
     dimension to universal local time.
@@ -964,7 +964,7 @@ def time_shift(file_list):
             if (len(dims) == 4):
                 # time, tod, lat, lon
                 var_val_tmp = np.transpose(value, (x, y, t, tod))
-                var_val_T = time_shift(var_val_tmp, lons, tod_orig,
+                var_val_T = time_shift_calc(var_val_tmp, lons, tod_orig,
                                    timex = target_list)
                 var_out = np.transpose(var_val_T, (2, 3, 1, 0))
                 fnew.log_variable(var, var_out,
@@ -974,7 +974,7 @@ def time_shift(file_list):
                 # time, tod, Z, lat, lon
                 z = dims.index(zaxis)
                 var_val_tmp = np.transpose(value, (x, y, z, t, tod))
-                var_val_T = time_shift(var_val_tmp, lons, tod_orig,
+                var_val_T = time_shift_calc(var_val_tmp, lons, tod_orig,
                                    timex = target_list)
                 var_out = np.transpose(var_val_T, (3, 4, 2, 1, 0))
                 fnew.log_variable(var, var_out,
@@ -1063,7 +1063,7 @@ def main():
         
     elif args.time_shift:
         # Time-shift files
-        time_shift(file_list)
+        process_time_shift(file_list)
 
     # ==================================================================
     #               Bin a daily file as an average file
