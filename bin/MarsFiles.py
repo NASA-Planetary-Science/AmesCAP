@@ -393,7 +393,7 @@ parser.add_argument('-zavg', '--zonal_average', action=ExtAction,
 
 # Secondary arguments: Used with some of the arguments above
 
-parser.add_argument('-dim', '--select_dim', type=str, default=None,
+parser.add_argument('-dim', '--dim_select', type=str, default=None,
     help=(
         f"Must be used with [-split --split]. Flag indicates the "
         f"dimension on which to trim the file.\nAcceptable values are "
@@ -498,8 +498,8 @@ if args.input_file:
                      f"file{Nclr}")
         exit()
 
-if args.select_dim and not args.split:
-    parser.error(f"{Red}[-dim --select_dim] must be used with [-split "
+if args.dim_select and not args.split:
+    parser.error(f"{Red}[-dim --dim_select] must be used with [-split "
                  f"--split]{Nclr}")
     exit()
 
@@ -1056,7 +1056,7 @@ def main():
     elif args.split:
         # Split file along the specified dimension. If none specified,
         # default to time dimension
-        split_dim = 'areo' if args.select_dim == None else args.select_dim
+        split_dim = 'areo' if args.dim_select == None else args.dim_select
         split_files(file_list, split_dim)
         
     elif args.time_shift:
