@@ -57,7 +57,7 @@ from netCDF4 import Dataset
 # Load amesCAP modules
 from amescap.Ncdf_wrapper import (Ncdf, Fort)
 from amescap.FV3_utils import (
-    time_shift, daily_to_average, daily_to_diurn, get_trend_2D
+    time_shift_calc, daily_to_average, daily_to_diurn, get_trend_2D
 )
 from amescap.Script_utils import (
     find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile,
@@ -134,9 +134,9 @@ parser = ExtArgumentParser(
     formatter_class = argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('input_file', nargs='?', 
+parser.add_argument('input_file', nargs='+', 
     type=argparse.FileType('r'),
-    help=(f"A netCDF file or list of netCDF files.\n\n"))
+    help=(f"A netCDF or fort.11 file or list of files.\n\n"))
 
 parser.add_argument('-bin', '--bin_files', nargs='+', type=str,
     choices=['fixed', 'diurn', 'average', 'daily'],
@@ -493,10 +493,10 @@ parser.add_argument('--debug', action='store_true',
 args = parser.parse_args()
 
 if args.input_file:
-    if not re.search(".nc", args.input_file.name):
-        parser.error(f"{Red}{args.input_file.name} is not a netCDF "
-                     f"file{Nclr}")
-        exit()
+    for file in args.input_file:
+        if not (re.search(".nc", file.name) or re.search("fort.11", file.name)):
+            parser.error(f"{Red}{file.name} is not a netCDF or fort.11 file{Nclr}")
+            exit()
 
 if args.dim_select and not args.split:
     parser.error(f"{Red}[-dim --dim_select] must be used with [-split "
@@ -556,8 +556,8 @@ out_ext = (f"{args.time_shift_ext}"
             f"{args.tide_decomp_ext}"
             f"{args.reconstruct_ext}"
             f"{args.normalize_ext}"
-            f"{args.regrid_source_ext}"
-            f"{args.zonal_avg_ext}"
+            f"{args.regrid_XY_to_match_ext}"
+            f"{args.zonal_average_ext}"
             )
 
 if args.extension:
@@ -857,7 +857,7 @@ def split_files(file_list, split_dim):
 #                            Victoria H.
 # ==================================================================
 
-def time_shift(file_list):
+def process_time_shift(file_list):
     """
     This function converts the data in diurn files with a time_of_day_XX
     dimension to universal local time.
@@ -964,7 +964,7 @@ def time_shift(file_list):
             if (len(dims) == 4):
                 # time, tod, lat, lon
                 var_val_tmp = np.transpose(value, (x, y, t, tod))
-                var_val_T = time_shift(var_val_tmp, lons, tod_orig,
+                var_val_T = time_shift_calc(var_val_tmp, lons, tod_orig,
                                    timex = target_list)
                 var_out = np.transpose(var_val_T, (2, 3, 1, 0))
                 fnew.log_variable(var, var_out,
@@ -974,7 +974,7 @@ def time_shift(file_list):
                 # time, tod, Z, lat, lon
                 z = dims.index(zaxis)
                 var_val_tmp = np.transpose(value, (x, y, z, t, tod))
-                var_val_T = time_shift(var_val_tmp, lons, tod_orig,
+                var_val_T = time_shift_calc(var_val_tmp, lons, tod_orig,
                                    timex = target_list)
                 var_out = np.transpose(var_val_T, (3, 4, 2, 1, 0))
                 fnew.log_variable(var, var_out,
@@ -990,7 +990,7 @@ def time_shift(file_list):
 
 def main():
     global data_dir
-    file_list = args.input_file
+    file_list = [f.name for f in args.input_file]
     data_dir = os.getcwd()
 
     # Make a list of input files including the full path to the dir
@@ -1036,7 +1036,7 @@ def main():
                 # else:
                 #     lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
                 make_FV3_files(f, args.bin_files, True)
-        else:
+        elif "fort.11" in full_file_list[0]:
             print("Processing fort.11 files")
             for f in full_file_list:
                 file_name = Fort(f)
@@ -1048,6 +1048,8 @@ def main():
                     file_name.write_to_daily()
                 if "diurn" in args.bin_files:
                     file_name.write_to_diurn()
+        else:
+            print(f"Cannot bin {full_file_list[0]} like MGCM file.")
                     
     elif args.concatenate:
         # Combine files along the time dimension
@@ -1061,7 +1063,7 @@ def main():
         
     elif args.time_shift:
         # Time-shift files
-        time_shift(file_list)
+        process_time_shift(file_list)
 
     # ==================================================================
     #               Bin a daily file as an average file

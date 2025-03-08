@@ -230,17 +230,21 @@ def check_file_tape(fileNcdf, abort=False):
     ``dmls -l`` on NAS. This prevents the program from stalling if the
     files need to be migrated from the disk to the tape.
 
-    :param fileNcdf: full path to a netcdf file
-    :type fileNcdf: _type_
+    :param fileNcdf: full path to a netcdf file or a file object with a name attribute
+    :type fileNcdf: str or file object
     :param abort: If True, exit the program. Defaults to False
     :type abort: bool, optional
 
     :return: None
     """
-    # If fileNcdf is not a netCDF file, exit program
-    if not re.search(".nc", fileNcdf.name):
-        print(f"{Red}{fileNcdf.name} is not a netCDF file{Nclr}")
+    # Get the filename, whether passed as string or as file object
+    filename = fileNcdf if isinstance(fileNcdf, str) else fileNcdf.name
+    
+    # If filename is not a netCDF file, exit program
+    if not re.search(".nc", filename):
+        print(f"{Red}{filename} is not a netCDF file{Nclr}")
         exit()
+        
     try:
         # Check if the file exists on the disk, exit otherwise. If it
         # exists, copy it over from the disk.
@@ -249,7 +253,7 @@ def check_file_tape(fileNcdf, abort=False):
                               stdout = open(os.devnull, "w"),
                               stderr = open(os.devnull, "w"))
         # Get the last columns of the ls command (filename and status)
-        cmd_txt = f"dmls -l {fileNcdf.name}| awk '{{print $8,$9}}'"
+        cmd_txt = f"dmls -l {filename}| awk '{{print $8,$9}}'"
         # Get 3-letter identifier from dmls -l command, convert byte to
         # string for Python3
         dmls_out = subprocess.check_output(cmd_txt,

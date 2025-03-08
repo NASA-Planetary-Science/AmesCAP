@@ -346,31 +346,6 @@ def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
     :type reverse_input: bool
 
     :return: The index for the level(s) where the pressure < ``plev``
-
-    Example cases::
-
-        Case 1:       Case 2:      Case 3:       Case 4:
-        (ND)   (1D)   (1D)  (1D)   (1D)  (ND)    (ND)    (ND)
-        |x|x|         |x|          |x|           |x|x|
-        |x|x| > |x|   |x| > |x|    |x| > |x|x|   |x|x| > |x|x|
-        |x|x|   |x|   |x|   |x|    |x|   |x|x|   |x|x|   |x|x|
-        |x|x|   |x|   |x|   |x|    |x|   |x|x|   |x|x|   |x|x|
-        
-        Case 4 must have same number of elements along the other dimensions
-
-    .. note::
-        Cyclic arrays are handled naturally (e.g., time of day
-        0.5 ...23.5 > 0.5 or longitudes 0 > ...359 > 0). If the first
-        array element > requested value, (e.g., requested = 0.2,
-        array = [0.5, 1.5, ..., 23.5]), then n = 0-1 = -1 which is the
-        last element in the array (23.5).
-
-        The last element in the array is always <= the selected value:
-        e.g., requested = 23.8, array = [0.5, 1.5, ..., 23.5] then the
-        returned value is 23.5.
-
-        Therefore, the cyclic values must be handled during the
-        interpolation stage (i.e., before this stage).
     """
     if type(X_IN) != np.ndarray:
         # Number of original layers
@@ -416,21 +391,36 @@ def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
     if len(dimsIN) == 1:
         for i in range(N_OUT):
             for j in range(Ndim):
-                n[i, j] = np.argmin(np.abs(X_OUT[i, j] - X_IN[:]))
-                if X_IN[n[i, j]] > X_OUT[i, j]:
-                    n[i, j] = n[i, j] - 1
+                # Handle the case where j might be out of bounds
+                if j < NdimsOUT:
+                    n[i, j] = np.argmin(np.abs(X_OUT[i, j] - X_IN[:]))
+                    if X_IN[n[i, j]] > X_OUT[i, j]:
+                        n[i, j] = n[i, j] - 1
+                else:
+                    # For indices beyond the available dimensions, use index 0
+                    n[i, j] = 0
     elif len(dimsOUT) == 1:
         for i in range(N_OUT):
             for j in range(Ndim):
-                n[i, j] = np.argmin(np.abs(X_OUT[i] - X_IN[:, j]))
-                if X_IN[n[i, j], j] > X_OUT[i]:
-                    n[i, j] = n[i, j] - 1
+                # Handle the case where j might be out of bounds for X_IN
+                if j < NdimsIN:
+                    n[i, j] = np.argmin(np.abs(X_OUT[i] - X_IN[:, j]))
+                    if X_IN[n[i, j], j] > X_OUT[i]:
+                        n[i, j] = n[i, j] - 1
+                else:
+                    # For indices beyond the available dimensions, use index 0
+                    n[i, j] = 0
     else:
         for i in range(N_OUT):
             for j in range(Ndim):
-                n[i, j] = np.argmin(np.abs(X_OUT[i, j] - X_IN[:, j]))
-                if X_IN[n[i, j], j] > X_OUT[i, j]:
-                    n[i, j] = n[i, j] - 1
+                # Handle the case where j might be out of bounds for either array
+                if j < NdimsIN and j < NdimsOUT:
+                    n[i, j] = np.argmin(np.abs(X_OUT[i, j] - X_IN[:, j]))
+                    if X_IN[n[i, j], j] > X_OUT[i, j]:
+                        n[i, j] = n[i, j] - 1
+                else:
+                    # For indices beyond the available dimensions, use index 0
+                    n[i, j] = 0
 
     if len(dimsOUT) == 1:
         n = np.squeeze(n)
@@ -688,7 +678,7 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int="lin",
     dimsIN = var_IN.shape
     dimsOUT = tuple(np.append(len(xi), dimsIN[1:]))
     var_OUT = np.zeros(dimsOUT)
-
+    
     for k in range(0, len(index)):
         n = index[k]
         np1 = n+1
@@ -710,21 +700,43 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int="lin",
             # (i.e., if the requested value is samller than first
             # element array) and the values are NOT cyclic.
             n = 0
+            
         if type_int == "log":
-            alpha = (np.log(xi[k]/x[np1]) / np.log(x[n]/x[np1]))
+            # Add error handling to avoid logarithm and division issues
+            if x[np1] <= 0 or xi[k] <= 0 or x[n] <= 0 or x[n] == x[np1]:
+                alpha = 0  # Default to 0 if we can't compute logarithm
+                var_OUT[k, :] = var_IN[np1, ...]  # Use nearest value
+            else:
+                try:
+                    alpha = (np.log(xi[k]/x[np1]) / np.log(x[n]/x[np1]))
+                    var_OUT[k, :] = (var_IN[n, ...]*alpha + (1-alpha)*var_IN[np1, ...])
+                except:
+                    # Handle any other errors by using nearest value
+                    alpha = 0
+                    var_OUT[k, :] = var_IN[np1, ...]
         elif type_int == "lin":
             if modulo is None:
-                alpha = (xi[k] - x[np1]) / (x[n] - x[np1])
+                if x[n] == x[np1]:  # Avoid division by zero
+                    alpha = 0
+                    var_OUT[k, :] = var_IN[np1, ...]
+                else:
+                    alpha = (xi[k] - x[np1]) / (x[n] - x[np1])
+                    var_OUT[k, :] = (var_IN[n, ...]*alpha + (1-alpha)*var_IN[np1, ...])
             else:
-                alpha = (np.mod(xi[k]-x[np1] + modulo, modulo)
-                         / np.mod(x[n]-x[np1] + modulo, modulo))
-        var_OUT[k, :] = (var_IN[n, ...]*alpha + (1-alpha)*var_IN[np1, ...])
+                # Handle modulo case with similar error checking
+                denom = np.mod(x[n]-x[np1] + modulo, modulo)
+                if denom == 0:  # Avoid division by zero
+                    alpha = 0
+                    var_OUT[k, :] = var_IN[np1, ...]
+                else:
+                    alpha = np.mod(xi[k]-x[np1] + modulo, modulo) / denom
+                    var_OUT[k, :] = (var_IN[n, ...]*alpha + (1-alpha)*var_IN[np1, ...])
 
     return np.moveaxis(var_OUT, 0, axis)
 
 def layers_mid_point_to_boundary(pfull, sfc_val):
     """
-    A general description for the layer boundaries is::
+    A general description for the layer boundaries is:
 
         p_half = ps*bk + pk
 
@@ -2082,7 +2094,7 @@ def polar_warming(T, lat, outside_range=np.nan):
                             PW_half_hemisphere(T_NH, lat_NH, outside_range)),
                            axis = 0))
 
-def time_shift(array, lon, timeo, timex=None):
+def time_shift_calc(array, lon, timeo, timex=None):
     """
     Conversion to uniform local time.
 
@@ -2199,7 +2211,7 @@ def time_shift(array, lon, timeo, timex=None):
         imm[:, nd] = im[:]
         ipp[:, nd] = ipa[:]
 
-    # assume uniform time between input data samples
+    # Assume uniform time between input data samples
     fraction = fraction / dt_samp
 
     # Now carry out the interpolation

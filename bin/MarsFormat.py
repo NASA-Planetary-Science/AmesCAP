@@ -59,7 +59,7 @@ parser = argparse.ArgumentParser(
     ),
     formatter_class=argparse.RawTextHelpFormatter)
 
-parser.add_argument('input_file', nargs='?', 
+parser.add_argument('input_file', nargs='+', 
     type=argparse.FileType('r'),
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
@@ -128,10 +128,10 @@ parser.add_argument('--debug', action='store_true',
 args = parser.parse_args()
 
 if args.input_file:
-    if not re.search(".nc", args.input_file.name):
-        parser.error(f"{Red}{args.input_file.name} is not a netCDF "
-                     f"file{Nclr}")
-        exit()
+    for file in args.input_file:
+        if not re.search(".nc", file.name):
+            parser.error(f"{Red}{file.name} is not a netCDF file{Nclr}")
+            exit()
         
 # ===========================
 path2data = os.getcwd()
@@ -149,8 +149,8 @@ def main():
    path2data = os.getcwd()
 
    # Load all of the netcdf files
-   file_list    = args.input_file
-   model_type  = args.gcm_name  # e.g. 'legacy'
+   file_list = file_list = [f.name for f in args.input_file]
+   model_type = args.gcm_name  # e.g. 'legacy'
    for filei in file_list:
       #Add path unless full path is provided
       if not ('/' in filei):

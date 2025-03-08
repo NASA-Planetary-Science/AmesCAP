@@ -32,37 +32,37 @@ except Exception as exception:
 # ======================================================================
 #                           DEFINITIONS
 # ======================================================================
+import pyshtools
+# def init_shtools():
+#     """
+#     The following code simply loads the pyshtools module and provides
+#     adequate referencing. Since dependencies may need to be solved by
+#     the user, the module import is wrapped in a function that can be
+#     called as needed.
 
-def init_shtools():
-    """
-    The following code simply loads the pyshtools module and provides
-    adequate referencing. Since dependencies may need to be solved by
-    the user, the module import is wrapped in a function that can be
-    called as needed.
+#     :raises: Exception
 
-    :raises: Exception
-
-    :return: imported module pyshtools or error
-    """
-    try:
-        import pyshtools as pyshtools
-        print('Successfully imported pyshtools')
-    except ImportError as error_msg:
-        print(f"{Yellow}__________________\n"
-              f"Zonal decomposition relies on the pyshtools library, "
-              f"referenced at:\n\n"
-              f"Mark A. Wieczorek and Matthias Meschede (2018). "
-              f"SHTools - Tools for working with spherical harmonics,"
-              f"Geochemistry, Geophysics, Geosystems, 2574-2592, "
-              f"doi:10.1029/2018GC007529\n Please consult installation "
-              f"instructions at:\n"
-              f"{Cyan}https://pypi.org/project/pyshtools\n"
-              f"{Yellow}And install with:\n"
-              f"{Cyan}pip install pyshtools{Nclr}")
-        exit()
-    except Exception as exception:
-        # Output unexpected Exceptions.
-        print(f"{exception.__class__.__name__}: {exception}")
+#     :return: imported module pyshtools or error
+#     """
+#     try:
+#         import pyshtools as pyshtools
+#         print('Successfully imported pyshtools')
+#     except ImportError as error_msg:
+#         print(f"{Yellow}__________________\n"
+#               f"Zonal decomposition relies on the pyshtools library, "
+#               f"referenced at:\n\n"
+#               f"Mark A. Wieczorek and Matthias Meschede (2018). "
+#               f"SHTools - Tools for working with spherical harmonics,"
+#               f"Geochemistry, Geophysics, Geosystems, 2574-2592, "
+#               f"doi:10.1029/2018GC007529\n Please consult installation "
+#               f"instructions at:\n"
+#               f"{Cyan}https://pypi.org/project/pyshtools\n"
+#               f"{Yellow}And install with:\n"
+#               f"{Cyan}pip install pyshtools{Nclr}")
+#         exit()
+#     except Exception as exception:
+#         # Output unexpected Exceptions.
+#         print(f"{exception.__class__.__name__}: {exception}")
 
 def diurn_extract(VAR, N, tod, lon):
     """
@@ -372,7 +372,7 @@ def space_time(lon, timex, varIN, kmx, tmx):
     return ampe, ampw, phasee, phasew
 
 def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
-                   no_trend=False):
+                   add_trend=False):
     """
     A temporal filter that uses a forward and backward pass to prevent
     phase shift. Alex Kling 2020.
@@ -392,9 +392,9 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
     :type axis: int
     :param order: order for the filter
     :type order: int
-    :param no_trend: if True, return the filtered output. If false,
+    :param add_trend: if True, return the filtered output. If false,
         return the trend and filtered output.
-    :type no_trend: bool
+    :type add_trend: bool
 
     :return: the filtered data
 
@@ -415,7 +415,7 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
 
     VAR_f = filtfilt(b, a, VAR_detrend, axis = axis)
 
-    if no_trend:
+    if add_trend:
         return VAR_f
     else:
         return VAR_trend + VAR_f
