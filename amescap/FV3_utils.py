@@ -736,7 +736,7 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int="lin",
 
 def layers_mid_point_to_boundary(pfull, sfc_val):
     """
-    A general description for the layer boundaries is::
+    A general description for the layer boundaries is:
 
         p_half = ps*bk + pk
 

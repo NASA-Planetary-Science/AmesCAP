@@ -372,7 +372,7 @@ def space_time(lon, timex, varIN, kmx, tmx):
     return ampe, ampw, phasee, phasew
 
 def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
-                   no_trend=False):
+                   add_trend=False):
     """
     A temporal filter that uses a forward and backward pass to prevent
     phase shift. Alex Kling 2020.
@@ -392,9 +392,9 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
     :type axis: int
     :param order: order for the filter
     :type order: int
-    :param no_trend: if True, return the filtered output. If false,
+    :param add_trend: if True, return the filtered output. If false,
         return the trend and filtered output.
-    :type no_trend: bool
+    :type add_trend: bool
 
     :return: the filtered data
 
@@ -415,7 +415,7 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
 
     VAR_f = filtfilt(b, a, VAR_detrend, axis = axis)
 
-    if no_trend:
+    if add_trend:
         return VAR_f
     else:
         return VAR_trend + VAR_f
