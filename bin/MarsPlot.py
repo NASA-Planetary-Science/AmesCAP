@@ -242,8 +242,8 @@ parser.add_argument('--debug', action='store_true',
 args = parser.parse_args()
 
 if args.template_file:
-    if not re.search(".in", args.template_file.name):
-        parser.error(f"{Red}Template file is not a '.in' file{Nclr}")
+    if not (re.search(".in", args.template_file.name) or re.search(".nc", args.template_file.name)):
+        parser.error(f"{Red}Template file is not a '.in' or a netCDF file{Nclr}")
         exit()
 
 if args.inspect_file:
