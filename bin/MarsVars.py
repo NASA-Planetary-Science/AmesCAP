@@ -55,7 +55,7 @@ from amescap.FV3_utils import (
     zonal_detrend, spherical_div, spherical_curl, frontogenesis
 )
 from amescap.Script_utils import (
-    check_file_tape, print_fileContent,FV3_file_type, filter_vars,
+    check_file_tape, FV3_file_type, filter_vars,
     get_longname_unit, ak_bk_loader
 )
 from amescap.Ncdf_wrapper import Ncdf
@@ -1066,21 +1066,6 @@ def main():
     global lev_T
     # Reshape ``lev_T_out`` in zfull and zhalf calculation
     global lev_T_out
-
-    # Check if an operation is requested. Otherwise, print file content
-    if not (add_list or
-            zdiff_list or
-            zdetrend_list or
-            remove_list or
-            col_list or
-            extract_list or
-            dp_to_dz_list or
-            dz_to_dp_list or
-            edit_var):
-        print_fileContent(file_list[0])
-        print(f"{Yellow}***Notice***  No operation requested. Use "
-              f"-add, -zdiff, -zd, -col, -to_dz, -rm, or -edit"
-              f"{Nclr}")
 
     # For all the files
     for ifile in file_list:
