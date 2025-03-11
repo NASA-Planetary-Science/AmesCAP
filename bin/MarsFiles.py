@@ -251,10 +251,11 @@ parser.add_argument('-hpt', '--high_pass_temporal', action=ExtAction,
     parser=parser,
     nargs='+', type=float,
     help=(
-        f"Temporal high-pass filtering: removes low-frequency noise.\n"
-        f"Only works with 'daily' files. Requires a cutoff frequency "
-        f"in Sols.\nUse ``--add_trend`` to return amplitudes only.\n"
-        f"Data detrended before filtering."
+        f"Temporal high-pass filtering: removes low-frequencies \n"
+        f"Only works with 'daily' or 'average' files. Requires a cutoff frequency "
+        f"in Sols.\n"
+        f"Data is detrended before filtering. Use ``--add_trend`` \n"
+        f"to add the original linear trend to the amplitudes \n"
         f"\n{Yellow}Generates a new file ending in ``_hpt.nc``\n"
         f"{Green}Example:\n"
         f"> MarsFiles 00668.atmos_daily.nc -hpt 10.\n"
@@ -267,11 +268,11 @@ parser.add_argument('-lpt', '--low_pass_temporal', action=ExtAction,
     parser=parser,
     nargs='+', type=float,
     help=(
-        f"Temporal low-pass filtering: removes high-frequency noise "
-        f"(smoothing).\nOnly works with 'daily' files. Requires a "
-        f"cutoff frequency in Sols.\nUse ``--add_trend`` to return "
-        f"amplitudes only.\n"
-        f"Data detrended before filtering."
+        f"Temporal low-pass filtering: removes high-frequencies \n"
+        f"Only works with 'daily' or 'average' files. Requires a cutoff frequency "
+        f"in Sols.\n"
+        f"Data is detrended before filtering. Use ``--add_trend`` \n"
+        f"to add the original linear trend to the amplitudes \n"
         f"\n{Yellow}Generates a new file ending in ``_lpt.nc``\n"
         f"{Green}Example:\n"
         f"> MarsFiles 00668.atmos_daily.nc -lpt 0.5\n"
@@ -284,10 +285,11 @@ parser.add_argument('-bpt', '--band_pass_temporal', action=ExtAction,
     parser=parser,
     nargs="+", type=float,
     help=(
-        f"Temporal band-pass filtering: filters out frequencies "
-        f"specified by user.\nOnly works with 'daily' files. Requires a "
-        f"cutoff frequency in Sols.\nUse ``--add_trend`` to return "
-        f"amplitudes only.\nData detrended before filtering."
+        f"Temporal band-pass filtering"
+        f"specified by user.\nOnly works with 'daily' or 'average' files. Requires two "
+        f"cutoff frequencies in Sols.\n"
+        f"Data is detrended before filtering. Use ``--add_trend`` \n"
+        f"to add the original linear trend to the amplitudes \n"
         f"\n{Yellow}Generates a new file ending in ``bpt.nc``\n"
         f"{Green}Example:\n"
         f"> MarsFiles 00668.atmos_daily.nc -hpt 0.5 10.\n"
@@ -426,8 +428,8 @@ parser.add_argument('-add_trend', '--add_trend', action=ExtAction,
     parser=parser,
     nargs=0,
     help=(
-        f"Return the temporal filter amplitudes only (omit phase from"
-        f"the output file).\n"
+        f"Return filtered oscillation amplitudes with the linear trend added."
+        f"(Fast Fourier transform natively eliminate affine Y = at +  b  )\n"
         f"For use with temporal filtering utilities (``-lpt``, "
         f"``-hpt``, ``-bpt``).\n"
         f"{Yellow}Generates a new file ending in ``_trended.nc``\n"
@@ -1226,7 +1228,7 @@ def main():
             fnew.close()
 
     # ==================================================================
-    #                       Transient Wave Analysis
+    #                       Temporal Filtering
     #                       Alex K. & R. J. Wilson
     # ==================================================================
 
