@@ -19,20 +19,21 @@ CAP is currently compatible with output from the MCMC’s `Legacy <https://githu
    CAP is continually in development and we appreciate any feedback you have for us.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    installation
-   autoapi/index
-   autoapi/bin/MarsPull/index
-   autoapi/bin/MarsFormat/index
-   autoapi/bin/MarsFiles/index
-   autoapi/bin/MarsVars/index
-   autoapi/bin/MarsInterp/index
-   autoapi/bin/MarsPlot/index
-   autoapi/bin/MarsCalendar/index
-   autoapi/amescap/index
    examples
+   description
+   MarsPull <autoapi/bin/MarsPull/index>
+   MarsFormat <autoapi/bin/MarsFormat/index>
+   MarsFiles <autoapi/bin/MarsFiles/index>
+   MarsVars <autoapi/bin/MarsVars/index>
+   MarsInterp <autoapi/bin/MarsInterp/index>
+   MarsPlot <autoapi/bin/MarsPlot/index>
+   MarsCalendar <autoapi/bin/MarsCalendar/index>
+   amescap <autoapi/amescap/index>
+   autoapi <autoapi/index.rst>
 
 Indices and tables
 ------------------

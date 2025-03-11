@@ -4,11 +4,13 @@ The MarsPlot executable is for generating plots from Custom.in template
 files. It sources variables from netCDF files in a specified directory.
 
 The executable requires:
+
     * ``[-template --generate_template]`` Generates a Custom.in template
     * ``[-i --inspect]``         Triggers ncdump-like text to console
     * ``[Custom.in]``            To create plots in Custom.in template
 
 Third-party Requirements:
+
     * ``numpy``
     * ``netCDF4``
     * ``sys``
@@ -17,6 +19,7 @@ Third-party Requirements:
     * ``warnings``
     * ``subprocess``
     * ``matplotlib``
+
 """
 
 # Make print statements appear in color
@@ -42,10 +45,10 @@ from matplotlib.colors import LogNorm
 matplotlib.use("Agg")
 
 # Allows operations in square brackets in Custom.in
-from numpy import (abs, sqrt, log, exp, min, max, mean) 
+from numpy import (abs, sqrt, log, exp, min, max, mean)
 
 from matplotlib.ticker import (
-    LogFormatter, NullFormatter, LogFormatterSciNotation, 
+    LogFormatter, NullFormatter, LogFormatterSciNotation,
     MultipleLocator
 )
 
@@ -89,7 +92,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('template_file', nargs='?', 
+parser.add_argument('template_file', nargs='?',
     type=argparse.FileType('r'),
     help=(
         f"Pass a template file to MarsPlot to create figures.\n"
@@ -146,7 +149,7 @@ parser.add_argument('-sy', '--stack_years', action='store_true',
     )
 )
 
-parser.add_argument('-ftype', '--figure_filetype', default=None, 
+parser.add_argument('-ftype', '--figure_filetype', default=None,
     type=str, choices=['pdf', 'eps', 'png'],
     help=(
         f"Output file format.\n Default is PDF if ghostscript (gs) is "
@@ -252,8 +255,8 @@ if args.inspect_file:
                      f"file{Nclr}")
         exit()
 
-if args.date is not None and (args.template_file is None and 
-                              args.generate_template is False and 
+if args.date is not None and (args.template_file is None and
+                              args.generate_template is False and
                               args.inspect_file is None):
     parser.error(f"{Red}The -d argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -d 00668)"
@@ -261,8 +264,8 @@ if args.date is not None and (args.template_file is None and
     exit()
 
 if args.figure_filetype is not None and (
-    args.template_file is None and 
-    args.generate_template is False and 
+    args.template_file is None and
+    args.generate_template is False and
     args.inspect_file is None
     ):
     parser.error(f"{Red}The -f argument requires a template file "
@@ -270,16 +273,16 @@ if args.figure_filetype is not None and (
                  f"{Nclr}")
     exit()
 
-if args.stack_years and (args.template_file is None and 
-                         args.generate_template is False and 
+if args.stack_years and (args.template_file is None and
+                         args.generate_template is False and
                          args.inspect_file is None):
     parser.error(f"{Red}The -sy argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -sy)"
                  f"{Nclr}")
     exit()
 
-if args.portrait_mode and (args.template_file is None and 
-                           args.generate_template is False and 
+if args.portrait_mode and (args.template_file is None and
+                           args.generate_template is False and
                            args.inspect_file is None):
     parser.error(f"{Red}The -portrait argument requires a template "
                  f"file like Custom.in (e.g., MarsPlot Custom.in "
@@ -291,13 +294,13 @@ if args.statistics is not None and args.inspect_file is None:
                  f"file like Custom.in (e.g., MarsPlot -i "
                  f"00668.atmos_daily.nc -stats temp{Nclr}")
     exit()
-    
+
 if args.print_values is not None and args.inspect_file is None:
     parser.error(f"{Red}The -values argument requires a template "
                  f"file like Custom.in (e.g., MarsPlot -i "
                  f"00668.atmos_daily.nc -values temp{Nclr}")
     exit()
-    
+
 if args.trim_text and (args.generate_template is False):
     parser.error(f"{Red}The -trim argument requires -template (e.g., "
                  f"MarsPlot -template -trim{Nclr}")
@@ -569,14 +572,16 @@ def mean_func(arr, axis):
     """
     This function calculates a mean over the selected axis, ignoring or
     including NaN values as specified by ``show_NaN_in_slice`` in
-   ``amescap_profile``.
+    ``amescap_profile``.
 
     :param arr: the array to be averaged
     :type arr: array
+    
     :param axis: the axis over which to average the array
     :type axis: int
 
     :return: the mean over the time axis
+
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category = RuntimeWarning)
@@ -592,15 +597,22 @@ def shift_data(lon, data):
 
     :param lon: 1D array of longitude
     :type lon: array [lon]
+    
     :param data: 2D array with last dimension = longitude
     :type data: array [1,lon]
+    
     :raises ValueError: Longitude coordinate type is not recognized.
+    
     :return: longitude (-180/180)
     :rtype: array [lon]
+    
     :return: shifted data
     :rtype: array [1,lon]
-    :note: Use ``np.ma.hstack`` instead of ``np.hstack`` to keep the
+    
+    .. note::
+        Use ``np.ma.hstack`` instead of ``np.hstack`` to keep the
         masked array properties
+
     """
     nlon = len(lon)
     # If 1D plot, reshape array
@@ -628,8 +640,10 @@ def MY_func(Ls_cont):
 
     :param Ls_cont: solar longitude (``areo``; continuous)
     :type Ls_cont: array [areo]
+    
     :return: the Mars year
     :rtype: int
+
     """
     return (Ls_cont)//(360.)+1
 
@@ -642,14 +656,19 @@ def get_lon_index(lon_query_180, lons):
     :param lon_query_180: longitudes in -180/180: value,
         ``[min, max]``, or `None`
     :type lon_query_180: list
+    
     :param lons: longitude in 0-360
     :type lons: array [lon]
+    
     :return: 1D array of file indices
     :rtype: array
+    
     :return: text descriptor for the extracted longitudes
     :rtype: str
-    :note: the keyword ``all`` is passed as ``-99999`` by the rT()
-        functions
+    
+    .. note::
+        The keyword ``all`` passed as ``-99999`` by the rT() functions
+
     """
     Nlon = len(lons)
     lon_query_180 = np.array(lon_query_180)
@@ -722,7 +741,7 @@ def get_lon_index(lon_query_180, lons):
                                  np.arange(0, loni_bounds[1]+1))
             txt_lon = (f", lon=avg[{lons[loni_bounds[0]]:.1f}"
                        f"<->{lons[loni_bounds[1]]:.1f}]")
-    #NOTE: is lon dimension is degenerate, e.g. (time,lev,lat,1)
+    #.. note:: is lon dimension is degenerate, e.g. (time,lev,lat,1)
     #loni must be a scalar, otherwise f.variables['var'][time,lev,lat,loni] returns an error
     if len(np.atleast_1d(loni))==1 and not np.isscalar(loni):
         loni=loni[0]
@@ -736,13 +755,17 @@ def get_lat_index(lat_query, lats):
 
     :param lat_query: requested latitudes (-90/+90)
     :type lat_query: list
+    
     :param lats: latitude
     :type lats: array [lat]
+    
     :return: 1d array of file indices
     :rtype: text descriptor for the extracted longitudes
-    :rtype: str
-    :note: the keyword ``all`` is passed as ``-99999`` by the ``rt()``
+    
+    .. note::T
+        The keyword ``all`` passed as ``-99999`` by the ``rt()``
         function
+
     """
     Nlat = len(lats)
     lat_query = np.array(lat_query)
@@ -779,14 +802,20 @@ def get_tod_index(tod_query, tods):
 
     :param tod_query: requested time of day (0-24)
     :type tod_query: list
+    
     :param tods: times of day
     :type tods: array [tod]
+    
     :return: file indices
     :rtype: array [tod]
+    
     :return: descriptor for the extracted time of day
     :rtype: str
-    :note: the keyword ``all`` is passed as ``-99999`` by the ``rT()``
+    
+    .. note::
+        The keyword ``all`` is passed as ``-99999`` by the ``rT()``
         function
+
     """
     Ntod = len(tods)
     tod_query = np.array(tod_query)
@@ -830,14 +859,20 @@ def get_level_index(level_query, levs):
 
     :param level_query: requested pressure [Pa] (depth [m])
     :type level_query: float
+    
     :param levs: levels (in the native coordinates)
     :type levs: array [lev]
+    
     :return: file indices
     :rtype: array
+    
     :return: descriptor for the extracted pressure (depth)
     :rtype: str
-    :note: the keyword ``all`` is passed as ``-99999`` by the ``rT()``
+    
+    .. note::
+        The keyword ``all`` is passed as ``-99999`` by the ``rT()``
         functions
+
     """
     level_query = np.array(level_query)
     Nz = len(levs)
@@ -889,14 +924,20 @@ def get_time_index(Ls_query_360, LsDay):
 
     :param Ls_query_360: requested solar longitudes
     :type Ls_query_360: list
+    
     :param LsDay: continuous solar longitudes
     :type LsDay: array [areo]
+    
     :return: file indices
     :rtype: array
+    
     :return: descriptor for the extracted solar longitudes
     :rtype: str
-    :note: the keyword ``all`` is passed as ``-99999`` by the ``rT()``
+    
+    .. note::
+        The keyword ``all`` is passed as ``-99999`` by the ``rT()``
         function
+
     """
     if len(np.atleast_1d(LsDay)) == 1:
         # Special case: file has 1 timestep, transform LsDay -> array
@@ -972,11 +1013,14 @@ def filter_input(txt, typeIn="char"):
     :param txt: text input into ``Custom.in`` to the right of an equal
         sign
     :type txt: str
+    
     :param typeIn: type of data expected: ``char``, ``float``, ``int``,
         ``bool``, defaults to ``char``
     :type typeIn: str, optional
+    
     :return: text input reformatted to ``[val1, val2]``
     :rtype: float or array
+
     """
     if txt == "None" or not txt:
         # If None or empty string
@@ -1027,8 +1071,10 @@ def rT(typeIn="char"):
     :param typeIn: type of data expected: ``char``, ``float``, ``int``,
         ``bool``, defaults to ``char``
     :type typeIn: str, optional
+    
     :return: text input reformatted to ``[val1, val2]``
     :rtype: float or array
+
     """
     global customFileIN
     raw_input = customFileIN.readline()
@@ -1059,17 +1105,23 @@ def read_axis_options(axis_options_txt):
     :param axis_options_txt: a copy of the last line ``Axis Options``
         in ``Custom.in`` templates
     :type axis_options_txt: str
+    
     :return: X-axis bounds as a numpy array or ``None`` if undedefined
     :rtype: array or None
+    
     :return: Y-axis bounds as a numpy array or ``None`` if undedefined
     :rtype: array or None
+    
     :return: colormap (e.g., ``jet``, ``nipy_spectral``) or line
         options (e.g., ``--r`` for dashed red)
     :rtype: str
+    
     :return: linear (``lin``) or logarithmic (``log``) color scale
     :rtype: str
+    
     :return: projection (e.g., ``ortho -125,45``)
     :rtype: str
+
     """
     list_txt = axis_options_txt.split(":")[1].split("|")
 
@@ -1120,14 +1172,19 @@ def split_varfull(varfull):
     :param varfull: a ``varfull`` object (e.g,
         ``atmos_average@2.zsurf``, ``02400.atmos_average@2.zsurf``)
     :type varfull: str
+    
     :return: (sol_array) a sol number or ``None`` (if none provided)
     :rtype: int or None
+    
     :return: (filetype) file type (e.g, ``atmos_average``)
     :rtype: str
+    
     :return: (var) variable of interest (e.g, ``zsurf``)
     :rtype: str
+    
     :return: (``simuID``) simulation ID (Python indexing starts at 0)
     :rtype: int
+
     """
     if varfull.count(".") == 1:
         # Default: no sol number provided (e.g., atmos_average2.zsurf).
@@ -1169,9 +1226,11 @@ def remove_whitespace(raw_input):
     :param raw_input: user input for variable, (e.g.,
         ``[atmos_average.temp] + 2)``
     :type raw_input: str
+    
     :return: raw_input without whitespaces (e.g.,
         ``[atmos_average.temp]+2)``
     :rtype: str
+
     """
     processed_input = ""
     for i in range(0, len(raw_input)):
@@ -1187,9 +1246,11 @@ def clean_comma_whitespace(raw_input):
     :param raw_input: dimensions specified by user input to Variable
         (e.g., ``lat=3. , lon=2 , lev = 10.``)
     :type raw_input: str
+    
     :return: raw_input without whitespaces (e.g.,
         ``lat=3.,lon=2,lev=10.``)
     :rtype: str
+
     """
     processed_input = ""
     for i in range(0, len(raw_input)):
@@ -1205,9 +1266,11 @@ def get_list_varfull(raw_input):
     :param raw_input: complex user input to Variable (e.g.,
         ``2*[atmos_average.temp]+[atmos_average2.ucomp]*1000``)
     :type raw_input: str
+    
     :return: list required variables (e.g., [``atmos_average.temp``,
         ``atmos_average2.ucomp``])
     :rtype: str
+
     """
     var_list = []
     record = False
@@ -1239,17 +1302,22 @@ def get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2, ftod):
     :param varfull_bracket: a ``varfull`` object with ``{}`` (e.g.,
         ``atmos_average.temp{lev=10;ls=350;lon=155;lat=25}``)
     :type varfull_bracket: str
+    
     :param plot_type: the type of the plot template
     :type plot_type: str
+    
     :param fdim1: X axis dimension for plot
     :type fdim1: str
+    
     :param fdim2: Y axis dimension for plot
     :type fdim2: str
+    
     :return: (varfull) required file and variable (e.g.,
         ``atmos_average.temp``);
         (fdim_out1) X axis dimension for plot;
         (fdim_out2) Y axis dimension for plot;
         (ftod_out) if X or Y axis dimension is time of day
+
     """
     # Initialization: use dimension provided in template
     fdim_out1 = fdim1
@@ -1313,7 +1381,7 @@ def get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2, ftod):
         if split_dim[i].split("=")[0] == "tod":
             # Always get time of day
             ftod_out = filter_input(split_dim[i].split("=")[1], "float")
-    # NOTE: filter_input() converts text (3 or 4, 5) to variable:
+    # .. note:: filter_input() converts text (3 or 4, 5) to variable:
     # (e.g., numpy.array([3.]) or numpy.array([4., 5.]))
     return varfull_no_bracket, fdim_out1, fdim_out2, ftod_out
 
@@ -1327,16 +1395,22 @@ def get_overwrite_dim_1D(varfull_bracket, t_in, lat_in, lon_in, lev_in,
     :param varfull_bracket: a ``varfull`` object with ``{}`` (e.g.,
         ``atmos_average.temp{lev=10;ls=350;lon=155;lat=25}``)
     :type varfull_bracket: str
+    
     :param t_in: self.t variable
     :type t_in: array [time]
+    
     :param lat_in: self.lat variable
     :type lat_in: array [lat]
+    
     :param lon_in: self.lon variable
     :type lon_in: array [lon]
+    
     :param lev_in: self.lev variable
     :type lev_in: array [lev]
+    
     :param ftod_in: self.ftod variable
     :type ftod_in: array [tod]
+    
     :return: ``varfull`` object without brackets (e.g.,
         ``atmos_average.temp``);
         :return: (t_out) dimension to update;
@@ -1344,6 +1418,7 @@ def get_overwrite_dim_1D(varfull_bracket, t_in, lat_in, lon_in, lev_in,
         :return: (lon_out) dimension to update;
         :return: (lev_out) dimension to update;
         :return: (ftod_out) dimension to update;
+
     """
     # Initialization: Use dimension provided in template
     t_out = t_in
@@ -1382,7 +1457,7 @@ def get_overwrite_dim_1D(varfull_bracket, t_in, lat_in, lon_in, lev_in,
         ftod_out = None
         if split_dim[i].split("=")[0] == "tod":
             ftod_out = filter_input(split_dim[i].split("=")[1], "float")
-    # NOTE: filter_input() converts text ("3" or "4,5") to variable:
+    # .. note:: filter_input() converts text ("3" or "4,5") to variable:
     # (e.g., numpy.array([3.]) or numpy.array([4.,5.]))
     return varfull_no_bracket, t_out, lat_out, lon_out, lev_out, ftod_out
 
@@ -1401,14 +1476,18 @@ def fig_layout(subID, nPan, vertical_page=False):
 
     :param subID: current subplot number
     :type subID: int
+    
     :param nPan: number of panels desired on page (max = 64, 8x8)
     :type nPan: int
+    
     :param vertical_page: reverse the tuple for portrait format if
         ``True``
     :type vertical_page: bool
+    
     :return: plot layout (e.g., ``plt.subplot(nrows = out[0], ncols =
         out[1], plot_number = out[2])``)
     :rtype: tuple
+
     """
     out = list((0, 0, 0))
 
@@ -1458,10 +1537,9 @@ def fig_layout(subID, nPan, vertical_page=False):
 def make_template():
     """
     Generate the ``Custom.in`` template file.
-
-    Parameters
-    ----------
+    
     :return: Custom.in blank template
+
     """
     global customFileIN  # Will be modified
     global current_version
@@ -1547,7 +1625,7 @@ def make_template():
         customFileIN.write("# Specify the *.nc file from which to plot using the ``@`` symbol + the simulation number:\n")
         customFileIN.write("#    in the call to Main Variable, e.g., Main Variable = atmos_average@2.temp \n")
         customFileIN.write("# \n")
-    
+
     customFileIN.write(
         "<<<<<<<<<<<<<<<<<<<<<< Simulations >>>>>>>>>>>>>>>>>>>>>\n")
     customFileIN.write("ref> None\n")
@@ -1556,7 +1634,7 @@ def make_template():
     customFileIN.write(
         "=======================================================\n")
     customFileIN.write("START\n\n")
-    
+
     # For the default list of figures in main(), create a template.
     for i in range(0, len(objectList)):
         if objectList[i].subID == 1 and objectList[i].nPan > 1:
@@ -1569,10 +1647,10 @@ def make_template():
 
         # Separate empty templates
         if i == 1:
-            customFileIN.write("""#=========================================================================\n""")
-            customFileIN.write("""#================== Empty Templates (set to False)========================\n""")
-            customFileIN.write("""#========================================================================= \n""")
-            customFileIN.write(""" \n""")
+            customFileIN.write("#=========================================================================\n")
+            customFileIN.write("#================== Empty Templates (set to False)========================\n")
+            customFileIN.write("#========================================================================= \n")
+            customFileIN.write(" \n")
     customFileIN.close()
 
     # NAS system only: set group permissions & print confirmation
@@ -1586,6 +1664,7 @@ def give_permission(filename):
 
     :param filename: name of the file
     :type filename: str
+
     """
     # NAS system only: set group permissions to file
     try:
@@ -1606,7 +1685,8 @@ def namelist_parser(Custom_file):
     :param Custom_file: full path to ``Custom.in`` file
     :type Custom_file: str
 
-    :returns: updated global variables, ``FigLayout``, ``objectList``
+    :return: updated global variables, ``FigLayout``, ``objectList``
+
     """
     global objectList
     global customFileIN
@@ -1787,11 +1867,14 @@ def get_figure_header(line_txt):
     :param line_txt: template header from Custom.in (e.g.,
         ``<<<<<<<<<| Plot 2D lon X lat = True |>>>>>>>>``)
     :type line_txt: str
+    
     :return: (figtype) figure type (e.g., ``Plot 2D lon X lat``)
     :rtype: str
+    
     :return: (boolPlot) whether to plot (``True``) or skip (``False``)
         figure
     :rtype: bool
+
     """
     # Plot 2D lon X lat = True
     line_cmd = line_txt.split("|")[1].strip()
@@ -1809,10 +1892,13 @@ def format_lon_lat(lon_lat, type):
 
     :param lon_lat: latitude or longitude (+180/-180)
     :type lon_lat: float
+    
     :param type: ``lat`` or ``lon``
     :type type: str
+    
     :return: formatted label
     :rtype: str
+
     """
     letter = ""
     if type == "lon":
@@ -1840,6 +1926,7 @@ def get_Ncdf_num():
 
     :return: a sorted array of sols
     :rtype: array
+
     """
     # e.g., 00350.fixed.nc
     list_dir = os.listdir(input_paths[0])
@@ -1860,10 +1947,13 @@ def select_range(Ncdf_num, bound):
 
     :param Ncdf_num: a sorted array of sols
     :type Ncdf_num: array
+    
     :param bound: a sol (e.g., 0350) or range of sols ``[min max]``
     :type bound: int or array
+    
     :return: a sorted array of sols within the bounds
     :rtype: array
+
     """
     bound = np.array(bound)
     if bound.size == 1:
@@ -1890,9 +1980,11 @@ def create_name(root_name):
     :param root_name: path + default name for the file type (e.g.,
         ``/path/custom.in`` or ``/path/figure.png``)
     :type root_name: str
+    
     :return: the modified name if the file already exists
         (e.g., ``/path/custom_01.in`` or ``/path/figure_01.png``)
     :rtype: str
+
     """
     n = 1
     # Get extension length (e.g., 2 for *.nc, 3 for *.png)
@@ -1916,9 +2008,12 @@ def progress(k, Nmax, txt="", success=True):
 
     :param k: current iteration of the outer loop
     :type k: float
+    
     :param Nmax: max iteration of the outer loop
     :type Nmax: float
+    
     :return: progress bar (EX: ``Running... [#---------] 10.64 %``)
+
     """
     progress = float(k)/Nmax
     barLength = 10
@@ -1946,10 +2041,13 @@ def prep_file(var_name, file_type, simuID, sol_array):
 
     :param var_name: variable to extract (e.g., ``ucomp``)
     :type var_name: str
+    
     :param file_type: MGCM output file type (e.g., ``average``)
     :type file_name: str
+    
     :param simuID: simulation ID number (e.g., 2 for 2nd simulation)
     :type simuID: int
+    
     :param sol_array: date in file name (e.g., [3340,4008])
     :type sol_array: list
 
@@ -1957,6 +2055,7 @@ def prep_file(var_name, file_type, simuID, sol_array):
         (var_info) longname and units;
         (dim_info) dimensions e.g., (``time``, ``lat``,``lon``);
         (dims) shape of the array e.g., [133,48,96]
+
     """
     global input_paths
     # Holds sol numbers (e.g., [1500,2400])
@@ -2611,10 +2710,13 @@ class Fig_2D_lon_lat(Fig_2D):
         :param varfull: variable input to main_variable in Custom.in
             (e.g., ``03340.atmos_average.ucomp``)
         :type varfull: str
+        
         :param plot_type: plot type (e.g.,
             ``Plot 2D lon X time``)
         :type plot_type: str
+        
         :return: topography or ``None`` if no matching ``fixed`` file
+
         """
 
         if not "[" in varfull:
@@ -2999,7 +3101,6 @@ class Fig_2D_lon_lat(Fig_2D):
 
 class Fig_2D_time_lat(Fig_2D):
 
-
     def make_template(self):
         # Calls method from parent class
         super(Fig_2D_time_lat, self).make_template("Plot 2D time X lat",
@@ -3137,14 +3238,20 @@ class Fig_2D_lon_lev(Fig_2D):
 
 
     def make_template(self):
-        """ Calls method from parent class """
+        """
+        Calls method from parent class
+
+        """
         super(Fig_2D_lon_lev, self).make_template("Plot 2D lon X lev",
                                                   "Ls 0-360 ", "Latitude",
                                                   "Lon +/-180", "Level[Pa/m]")
 
 
     def do_plot(self):
-        """ Create figure """
+        """
+        Create figure
+
+        """
         ax = super(Fig_2D_lon_lev, self).fig_init()
         try:
             # Try to create figure, else return error
@@ -3432,6 +3539,7 @@ class Fig_1D(object):
         not passed a template.
 
         :return: type of 1D plot to create (1D_time, 1D_lat, etc.)
+
         """
         ncheck = 0
         graph_type = "Error"
@@ -3556,30 +3664,40 @@ class Fig_1D(object):
 
         :param var_name: variable name (e.g., ``temp``)
         :type var_name: str
+        
         :param file_type: MGCM output file type. Must be ``fixed`` or
             ``average``
         :type file_type: str
+        
         :param simuID: number identifier for netCDF file directory
         :type simuID: str
+        
         :param sol_array: sol if different from default
             (e.g., ``02400``)
         :type sol_array:  str
+        
         :param plot_type: ``1D_lon``, ``1D_lat``, ``1D_lev``, or
             ``1D_time``
         :type plot_type: str
+        
         :param t_req: Ls requested
         :type t_req: str
+        
         :param lat_req: lat requested
         :type lat_req: str
+        
         :param lon_req: lon requested
         :type lon_req: str
+        
         :param lev_req: level [Pa/m] requested
         :type lev_req: str
+        
         :param ftod_req: time of day requested
         :type ftod_req: str
 
         :return: (dim_array) the axis (e.g., an array of longitudes),
                  (var_array) the variable extracted
+
         """
 
         f, var_info, dim_info, dims = prep_file(var_name, file_type,

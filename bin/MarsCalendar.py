@@ -4,16 +4,20 @@ The MarsCalendar executable accepts an input Ls or day-of-year (sol)
 and returns the corresponding sol or Ls, respectively.
 
 The executable requires 1 of the following arguments:
+
     * ``[-sol --sol]``          The sol to convert to Ls, OR
     * ``[-ls --ls]``            The Ls to convert to sol
 
 and optionally accepts:
+
     * ``[-my --marsyear]``      The Mars Year of the simulation to compute sol or Ls from, AND/OR
     * ``[-c --continuous]``     Returns Ls in continuous form
 
 Third-party Requirements:
+
     * ``numpy``
     * ``argparse``
+
 """
 
 # Make print statements appear in color
@@ -134,6 +138,7 @@ def parse_array(len_input):
         ``ls2sol`` or ``sol2ls``. If ``len_input = 300``, then
         ``input_as_arr=[300]``. If ``len_input = 300 310 2``, then
         ``input_as_arr = [300, 302, 304, 306, 308]``.\n
+
     """
     if len(len_input) == 1:
         input_as_arr = len_input

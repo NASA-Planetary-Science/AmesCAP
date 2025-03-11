@@ -4,11 +4,13 @@ Spectral_utils contains wave analysis routines. Note the dependencies on
 scipy.signal.
 
 Third-party Requirements:
+
     * ``numpy``
     * ``amescap.Script_utils``
     * ``scipy.signal``
     * ``ImportError``
     * ``Exception``
+    
 """
 
 # Load generic Python modules
@@ -72,17 +74,22 @@ def diurn_extract(VAR, N, tod, lon):
     :param VAR: field to process. Time of day dimension must be first
         (e.g., ``[tod, time, lat, lon]`` or ``[tod]``
     :type VAR: 1D or ND array
+    
     :param N: number of harmonics to extract (``N=1`` for diurnal,
         ``N=2`` for diurnal AND semi diurnal, etc.)
     :type N: int
+    
     :param tod: universal time of day in sols (``0-1.``) If provided in
         hours (``0-24``), it will be normalized.
     :type tod: 1D array
+    
     :param lon: longitudes ``0-360``
     :type lon: 1D array or float
+    
     :return: the amplitudes & phases for the Nth first harmonics,
         (e.g., size ``[Nh, time, lat, lon]``)
     :rtype: ND arrays
+    
     """
     dimsIN = VAR.shape
     nsteps = len(tod)
@@ -156,20 +163,26 @@ def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
     :param amp: amplitude of the signal. Harmonics dimension FIRST
         (e.g., ``[N, time, lat, lon]``)
     :type amp: array
+    
     :param phas: phase of the signal [hr]. Harmonics dimension FIRST
     :type phas: array
+    
     :param tod: time of day in universal time [hr]
     :type tod: 1D array
+    
     :param lon: longitude for converting universal -> local time
     :type lon: 1D array or float
+   
     :param sumList: the harmonics to include when reconstructing the
         wave (e.g., ``sumN=[1, 2, 4]``), defaults to ``[]``
     :type sumList: list, optional
+    
     :return: a variable with reconstructed harmonics with N dimension
         FIRST and time of day SECOND (``[N, tod, time, lat, lon]``). If
         sumList is provided, the wave output harmonics will be
         aggregated (i.e., size = ``[tod, time, lat, lon]``)
     :rtype: _type_
+    
     """
     dimsIN = amp.shape
     N = dimsIN[0]
@@ -184,21 +197,26 @@ def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
         lon = np.array([lon])
 
     #Reshape  lon array for broadcasting, e.g. lon[96] -> [1,1,1,96]
-    dimAXIS = np.arange(len(dimsSUM)); dimAXIS[:] = 1; dimAXIS[-1] = len(lon)
+    dimAXIS = np.arange(len(dimsSUM))
+    dimAXIS[:] = 1
+    dimAXIS[-1] = len(lon)
     lon = lon.reshape(dimAXIS)
+    
     # Reshape tod array
-    dimAXIS = np.arange(len(dimsSUM)); dimAXIS[:] = 1; dimAXIS[0] = len(tod)
+    dimAXIS = np.arange(len(dimsSUM))
+    dimAXIS[:] = 1
+    dimAXIS[0] = len(tod)
     tod = tod.reshape(dimAXIS)
 
     # Shift in phase due to local time
     DT = lon/360 * 24
 
     varSUM  = np.zeros(dimsSUM)
-    for nn in range(1, N+1):
-        # Compute each harmonic
-        varOUT[nn-1, ...] = (amp[nn-1, ...]
-                             * np.cos(nn * (tod-phas[nn-1, ...]
-                                            + DT) / 24*2*np.pi))
+    for nn in range(1, N+1): # Compute each harmonic
+        varOUT[nn-1, ...] = (
+            amp[nn-1, ...] 
+            * np.cos(nn * (tod-phas[nn-1, ...] + DT) / 24*2*np.pi)
+            )
         # If a sum of harmonics is requested, sum it
         if nn in sumList:
             varSUM += varOUT[nn-1, ...]
@@ -218,17 +236,21 @@ def space_time(lon, timex, varIN, kmx, tmx):
 
     :param lon: longitude [°] (0-360)
     :type lon: 1D array
+    
     :param timex: time [sol] (e.g., 1.5 days sampled every hour is
         ``[0/24, 1/24, 2/24,.. 1,.. 1.5]``)
     :type timex: 1D array
+    
     :param varIN: variable for the Fourier analysis. First axis must be
         ``lon`` and last axis must be ``time`` (e.g.,
         ``varIN[lon, time]``, ``varIN[lon, lat, time]``, or
         ``varIN[lon, lev, lat, time]``)
     :type varIN: array
+    
     :param kmx: the number of longitudinal wavenumbers to extract
         (max = ``nlon/2``)
     :type kmx: int
+    
     :param tmx: the number of tidal harmonics to extract
         (max = ``nsamples/2``)
     :type tmx: int
@@ -249,6 +271,7 @@ def space_time(lon, timex, varIN, kmx, tmx):
             KTIME, KLON = np.meshgrid(ktime, klon)
             amplitude = np.concatenate((ampw[:, ::-1], ampe), axis = 1)
             phase = np.concatenate((phasew[:, ::-1], phasee), axis = 1)
+            
     """
     # Get input variable dimensions
     dims = varIN.shape
@@ -380,18 +403,24 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
     :param VAR: values for filtering 1D or ND array. Filtered dimension
         must be FIRST. Adjusts axis as necessary.
     :type VAR: array
+    
     :param btype: filter type (i.e., "low", "high" or "band")
     :type btype: str
+    
     :param low_high_cut: low, high, or [low, high] cutoff frequency
         depending on the filter [Hz or m-1]
     :type low_high_cut: int
+    
     :param fs: sampling frequency [Hz or m-1]
     :type fs: int
+    
     :param axis: if data is an ND array, this identifies the filtering
         dimension
     :type axis: int
+    
     :param order: order for the filter
     :type order: int
+    
     :param add_trend: if True, return the filtered output. If false,
         return the trend and filtered output.
     :type add_trend: bool
@@ -400,6 +429,7 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
 
     .. NOTE:: ``Wn=[low, high]`` are expressed as a function of the
         Nyquist frequency
+        
     """
     # Create the filter
     low_highcut = np.array(low_highcut)
@@ -436,6 +466,7 @@ def zonal_decomposition(VAR):
 
     .. NOTE:: Output size is (``[...,lat/2, lat/2]``) as lat is the
         smallest dimension. This matches the Nyquist frequency.
+        
     """
     # TODO: Not optimal but prevent issues when library is not installed
     #init_shtools()
@@ -469,11 +500,14 @@ def zonal_construct(COEFFS_flat, VAR_shape, btype=None, low_highcut=None):
         array, (e.g., ``[time, lat, lon]`` or
         ``[time x lev, 2, lat, lon]``)
     :type COEFFS_flat: array
+    
     :param VAR_shape: shape of the original variable
     :type VAR_shape: tuple
+    
     :param btype: filter type: "low", "high", or "band". If None,
         returns reconstructed array using all zonal wavenumbers
     :type btype: str or None
+    
     :param low_high_cut: low, high or [low, high] zonal wavenumber
     :type low_high_cut: int
 
@@ -488,6 +522,7 @@ def zonal_construct(COEFFS_flat, VAR_shape, btype=None, low_highcut=None):
             L_max = np.inf
         print("(kmin,kmax) = ({kmin}, {kmax})
               -> dx min = {L_min} km, dx max = {L_max} km")
+              
     """
     # Not optimal but prevent issues when library is not installed
     #init_shtools()

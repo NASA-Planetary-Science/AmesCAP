@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
 """
-The MarsFormat executable is for converting non-MGCM data, such as that\
-from EMARS, OpenMARS, PCM, and MarsWRF, into MGCM-like netCDF data \
-products. The MGCM is the NASA Ames Mars Global Climate Model developed\
-and maintained by the Mars Climate Modeling Center (MCMC). The MGCM \
+The MarsFormat executable is for converting non-MGCM data, such as that
+from EMARS, OpenMARS, PCM, and MarsWRF, into MGCM-like netCDF data 
+products. The MGCM is the NASA Ames Mars Global Climate Model developed
+and maintained by the Mars Climate Modeling Center (MCMC). The MGCM 
 data repository is available at data.nas.nasa.gov/mcmc.
 
 The executable requires 2 arguments:
+
     * ``[input_file]``         The file to be transformed
     * ``[-gcm --gcm_name]``    The GCM from which the file originates
-    
+
 and optionally accepts:
+
     * ``[-rn --retain_names]`` Preserve original variable and dimension names
     * ``[-ba, --bin_average]`` Bin non-MGCM files like 'average' files
     * ``[-bd, --bin_diurn]``   Bin non-MGCM files like 'diurn' files
-    
+
 Third-party Requirements:
+
     * ``numpy``
     * ``netCDF4``
     * ``sys``
@@ -23,7 +26,9 @@ Third-party Requirements:
     * ``os``
 
 List of Functions:
+
     * download - Queries the requested file from the NAS Data Portal.
+
 """
 
 # Make print statements appear in color
@@ -59,7 +64,7 @@ parser = argparse.ArgumentParser(
     ),
     formatter_class=argparse.RawTextHelpFormatter)
 
-parser.add_argument('input_file', nargs='+', 
+parser.add_argument('input_file', nargs='+',
     type=argparse.FileType('r'),
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
@@ -74,7 +79,7 @@ parser.add_argument('-gcm', '--gcm_name', type=str,
     )
 )
 
-parser.add_argument('-ba', '--bin_average', nargs="?", const=5, 
+parser.add_argument('-ba', '--bin_average', nargs="?", const=5,
     type=int,
     help=(
         f"Calculate 5-day averages from instantaneous data. Generates "
@@ -96,7 +101,7 @@ parser.add_argument('-bd', '--bin_diurn', action='store_true',
         f"{Green}Example:\n"
         f"> MarsFormat openmars_file.nc -t openmars -bd "
         f"{Blue}uses a 5-sol bin{Green}\n"
-        f"> MarsFormat openmars_file.nc -t openmars -bd -ba 10 " 
+        f"> MarsFormat openmars_file.nc -t openmars -bd -ba 10 "
         f"{Blue}uses a 10-sol bin"
         f"{Nclr}\n\n"
     )
@@ -104,7 +109,7 @@ parser.add_argument('-bd', '--bin_diurn', action='store_true',
 
 # Secondary arguments: Used with some of the arguments above
 
-parser.add_argument('-rn', '--retain_names', action='store_true', 
+parser.add_argument('-rn', '--retain_names', action='store_true',
     default=False,
     help=(
         f"Preserves the names of the variables and dimensions in the"
@@ -132,7 +137,7 @@ if args.input_file:
         if not re.search(".nc", file.name):
             parser.error(f"{Red}{file.name} is not a netCDF file{Nclr}")
             exit()
-        
+
 # ===========================
 path2data = os.getcwd()
 ref_press=725 #TODO hard-codded
@@ -179,13 +184,13 @@ def main():
       #=================================================================
       if model_type == 'marswrf':
          #TODO longname is 'description' for MarsWRF
-         '''
-         print('Input File content (description) and (description) attibutes:')
-         print('------')
-         for ivar in  DS.keys():
-            print(ivar,DS[ivar].attrs['description'],DS[ivar].attrs['units'])
-         print('------')
-         '''
+         
+         # print('Input File content (description) and (description) attibutes:')
+         # print('------')
+         # for ivar in  DS.keys():
+         #    print(ivar,DS[ivar].attrs['description'],DS[ivar].attrs['units'])
+         # print('------')
+         
          #==================================================================
          # First save all variable descriptions in attrs longname
          #==================================================================
@@ -197,7 +202,7 @@ def main():
          #==================================================================
          # Reformat Dimension Variables/Coords as Needed
          #==================================================================
-         time        = DS[model.time]/ 60/ 24         # minutes since simulation start [m]
+         time = DS[model.time]/ 60/ 24         # minutes since simulation start [m]
          lat = DS[model.lat][0,:,0]
          lon = DS[model.lon][0,0,:] #MarsWRF longitudes are 1...180 -180... -1
          lon360=(lon+360)%360
@@ -205,7 +210,7 @@ def main():
 
          # Derive half and full reference pressure levels (Pa)
          pfull = DS.P_TOP[0]+ DS.ZNU[0,:]* DS.P0
-         phalf= DS.P_TOP[0]+ DS.ZNW[0,:]* DS.P0
+         phalf = DS.P_TOP[0]+ DS.ZNW[0,:]* DS.P0
          DS = DS.assign_coords(phalf=phalf,pfull=pfull)
          DS.phalf.attrs['long_name'] = '(ADDED IN POST PROCESSING) pressure at layer interfaces'
          DS.phalf.attrs['description'] = '(ADDED IN POST PROCESSING) pressure at layer interfaces'
@@ -258,7 +263,7 @@ def main():
          #==================================================================
          gamma = DS.CP / (DS.CP - DS.R_D)
          temp = (DS.T + DS.T0) * (pfull3D / DS.P0)**((gamma-1.) / gamma)
-         DS = DS.assign(temp=temp)
+         DS = DS.assign(temp = temp)
          DS['temp'].attrs['description'] = '(ADDED IN POST PROCESSING) Temperature'
          DS['temp'].attrs['long_name'] = '(ADDED IN POST PROCESSING) Temperature'
          DS['temp'].attrs['units'] = 'K'
