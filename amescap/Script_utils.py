@@ -1288,7 +1288,7 @@ def ak_bk_loader(fNcdf):
         else:
             ak = np.array(fNcdf.variables["pk"])
         bk = np.array(fNcdf.variables["bk"])
-        print("``ak`` and ``bk`` are in the file")
+        
 
     else:
         try:
@@ -1304,7 +1304,7 @@ def ak_bk_loader(fNcdf):
                 ak = np.array(f_fixed.variables["pk"])
             bk = np.array(f_fixed.variables["bk"])
             f_fixed.close()
-            print("``pk`` and ``bk`` are in the fixed file")
+            
         except:
             print(f"{Red}Fixed file does not exist in {filepath}. "
                   f"Make sure the fixed file you are referencing "

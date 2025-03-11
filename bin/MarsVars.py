@@ -73,7 +73,7 @@ cap_str = " (derived w/CAP)"
 
 master_list = {
     'curl': [
-        "Relative vorticity",
+    "Relative vorticity",
         'Hz',
         ['ucomp', 'vcomp'],
         ['pfull', 'pstd', 'zstd', 'zagl']
@@ -1635,14 +1635,13 @@ def main():
             except Exception as exception:
                 if debug:
                     raise
-                if str(exception) == (
+                elif str(exception[0:35]) == (
                     "NetCDF: String match to name in use"
                     ):
                     print(f"{Yellow}***Error*** Variable already "
                           f"exists in file.\nDelete the existing "
                           f"variable d_dz_{idiff} with MarsVars "
                           f"``{ifile} -rm d_dz_{idiff}''{Nclr}")
-
         # ==============================================================
         #                   Vertical Differentiation
         # ==============================================================
@@ -1962,13 +1961,14 @@ def main():
                 except Exception as exception:
                     if debug:
                         raise
-                    if str(exception) == (
-                        "NetCDF: String match to name in use"
-                        ):
+                    if str(exception)[0:35] == (
+                        "NetCDF: String match to name in use"):
                         print(f"{Yellow}***Error*** Variable already "
                               f"exists in file.\nDelete the existing "
                               f"variable {icol}_col with ``MarsVars "
                               f"{ifile} -rm {icol}_col``{Nclr}")
+                    else:
+                        print(f"{Red}***Error*** {str(exception)}")
         if edit_var:
             f_IN = Dataset(ifile, "r", format = "NETCDF4_CLASSIC")
             ifile_tmp = f"{ifile[:-3]}_tmp.nc"
