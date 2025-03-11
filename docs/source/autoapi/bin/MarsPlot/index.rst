@@ -764,7 +764,8 @@ Attributes
    :return: 1d array of file indices
    :rtype: text descriptor for the extracted longitudes
 
-   ..note:: the keyword ``all`` is passed as ``-99999`` by the ``rt()``
+   .. note::T
+       The keyword ``all`` passed as ``-99999`` by the ``rt()``
        function
 
 
@@ -786,7 +787,8 @@ Attributes
    :return: descriptor for the extracted pressure (depth)
    :rtype: str
 
-   ..note:: the keyword ``all`` is passed as ``-99999`` by the ``rT()``
+   .. note::
+       The keyword ``all`` is passed as ``-99999`` by the ``rT()``
        functions
 
 
@@ -823,8 +825,8 @@ Attributes
    :return: text descriptor for the extracted longitudes
    :rtype: str
 
-   ..note:: the keyword ``all`` is passed as ``-99999`` by the rT()
-       functions
+   .. note::
+       The keyword ``all`` passed as ``-99999`` by the rT() functions
 
 
 
@@ -916,7 +918,8 @@ Attributes
    :return: descriptor for the extracted solar longitudes
    :rtype: str
 
-   ..note:: the keyword ``all`` is passed as ``-99999`` by the ``rT()``
+   .. note::
+       The keyword ``all`` is passed as ``-99999`` by the ``rT()``
        function
 
 
@@ -938,7 +941,8 @@ Attributes
    :return: descriptor for the extracted time of day
    :rtype: str
 
-   ..note:: the keyword ``all`` is passed as ``-99999`` by the ``rT()``
+   .. note::
+       The keyword ``all`` is passed as ``-99999`` by the ``rT()``
        function
 
 
@@ -1122,7 +1126,8 @@ Attributes
    :return: shifted data
    :rtype: array [1,lon]
 
-   ..note:: Use ``np.ma.hstack`` instead of ``np.hstack`` to keep the
+   .. note::
+       Use ``np.ma.hstack`` instead of ``np.hstack`` to keep the
        masked array properties
 
 

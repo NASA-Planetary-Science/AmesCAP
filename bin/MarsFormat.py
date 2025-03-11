@@ -65,7 +65,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('input_file', nargs='+',
-    type=argparse.FileType('r'),
+    type=argparse.FileType('rb'),
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
 parser.add_argument('-gcm', '--gcm_name', type=str,
