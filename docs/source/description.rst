@@ -785,7 +785,7 @@ Example of using CAP libraries for custom analysis:
     # Example of accessing functions from the Ames Pipeline if we wanted to plot
     # the data in a different coordinate system (0>360 instead of +/-180 )
 
-    from amesgcm.FV3_utils import lon180_to_360, shiftgrid_180_to_360
+    from amescap.FV3_utils import lon180_to_360, shiftgrid_180_to_360
 
     lon360 = lon180_to_360(lon)
     temp360 = shiftgrid_180_to_360(lon, temp)
