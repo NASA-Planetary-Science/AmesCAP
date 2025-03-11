@@ -12,11 +12,13 @@
        from /u/path/Script_utils import MY_func
 
    Third-party Requirements:
+
        * ``numpy``
        * ``netCDF4``
        * ``re``
        * ``os``
        * ``subprocess``
+       
 
 
 
@@ -91,6 +93,7 @@ Attributes
    :return: The Ls array type (string, ``fixed``, ``continuous``, or
        ``diurn``) and the netCDF file type (string ``fixed``,
        ``diurn``, ``average``, or ``daily``)
+       
 
 
 .. py:function:: MY_func(Ls_cont)
@@ -104,6 +107,7 @@ Attributes
    :rtype: int
 
 
+
 .. py:function:: ak_bk_loader(fNcdf)
 
    Return ``ak`` and ``bk`` arrays from the current netCDF file. If
@@ -115,12 +119,14 @@ Attributes
 
    :return: the ``ak`` and ``bk`` arrays
 
-   .. NOTE:: This routine will look for both ``ak`` and ``bk``. There
-   are cases when it is convenient to load the ``ak``, ``bk`` once when
-   the files are first opened in ``MarsVars``, but the ``ak`` and
-   ``bk`` arrays may not be necessary for in the calculation as is the
-   case for ``MarsVars XXXXX.atmos_average_psd.nc --add msf``, which
-   operates on a pressure interpolated (``_pstd.nc``) file.
+   ..note:: This routine will look for both ``ak`` and ``bk``. There
+       are cases when it is convenient to load the ``ak``, ``bk`` once 
+       when the files are first opened in ``MarsVars``, but the ``ak`` 
+       and ``bk`` arrays may not be necessary for in the calculation 
+       as is the case for ``MarsVars XXXXX.atmos_average_psd.nc 
+       --add msf``, which operates on a pressure interpolated 
+       (``_pstd.nc``) file.
+
 
 
 .. py:function:: alt_FV3path(fullpaths, alt, test_exist=True)
@@ -131,8 +137,10 @@ Attributes
    :param fullpaths: full path to a file or a list of full paths to
        more than one file
    :type fullpaths: str
+
    :param alt: type of file to return (i.e., original or fixed)
    :type alt: str
+
    :param test_exist: Whether file exists on the disk, defaults to True
    :type test_exist: bool, optional
 
@@ -144,6 +152,7 @@ Attributes
    :rtype: str
 
 
+
 .. py:function:: check_file_tape(fileNcdf, abort=False)
 
    For use in the NAS environnment only.
@@ -153,10 +162,12 @@ Attributes
 
    :param fileNcdf: full path to a netcdf file or a file object with a name attribute
    :type fileNcdf: str or file object
+
    :param abort: If True, exit the program. Defaults to False
    :type abort: bool, optional
 
    :return: None
+
 
 
 .. py:function:: dkass_dust_cmap()
@@ -166,11 +177,13 @@ Attributes
    Provided by Courtney Batterson.
 
 
+
 .. py:function:: dkass_temp_cmap()
 
    Returns a color map that highlights the 200K temperatures.
    (black -> purple -> blue -> green -> yellow -> orange -> red)
    Provided by Courtney Batterson.
+
 
 
 .. py:function:: extract_path_basename(filename)
@@ -183,8 +196,9 @@ Attributes
 
    :return: full file path & name of file
 
-   .. NOTE:: This routine does not confirm that the file exists.
+   ..note:: This routine does not confirm that the file exists.
        It operates on the provided input string.
+       
 
 
 .. py:function:: filter_vars(fNcdf, include_list=None, giveExclude=False)
@@ -196,13 +210,17 @@ Attributes
    :param fNcdf: an open netCDF object for a diurn, daily, or average
        file
    :type fNcdf: netCDF file object
+
    :param include_list:list of variables to include (e.g., [``ucomp``,
        ``vcomp``], defaults to None
    :type include_list: list or None, optional
+
    :param giveExclude: if True, returns variables to be excluded from
        the file, defaults to False
    :type giveExclude: bool, optional
+
    :return: list of variable names to include in the processed file
+
 
 
 .. py:function:: find_fixedfile(filename)
@@ -213,6 +231,7 @@ Attributes
 
    :param filename: an average, daily, or diurn netCDF file
    :type filename: str
+
    :return: full path to the correspnding fixed file
    :rtype: str
 
@@ -225,7 +244,7 @@ Attributes
            atmos_average.tileX_plevs.nc            -> fixed.tileX.nc
            atmos_average.tileX_plevs_custom.nc     -> fixed.tileX.nc
            atmos_average_custom.tileX_plevs.nc     -> fixed.tileX.nc
-
+           
 
 
 .. py:function:: find_tod_in_diurn(fNcdf)
@@ -241,17 +260,21 @@ Attributes
    :rtype: str
 
 
+
 .. py:function:: get_Ncdf_path(fNcdf)
 
    Returns the full path for a netCDF file object.
 
-   .. NOTE:: ``Dataset`` and multi-file dataset (``MFDataset``) have
-   different attributes for the path, hence the need for this function.
+   ..note:: ``Dataset`` and multi-file dataset (``MFDataset``) have
+       different attributes for the path, hence the need for this 
+       function.
 
    :param fNcdf: Dataset or MFDataset object
    :type fNcdf: netCDF file object
+
    :return: string list for the Dataset (MFDataset)
    :rtype: str(list)
+
 
 
 .. py:function:: get_longname_unit(fNcdf, varname)
@@ -262,27 +285,31 @@ Attributes
 
    :param fNcdf: an open netCDF file
    :type fNcdf: netCDF file object
+
    :param varname: variable to extract attribute from
    :type varname: str
 
    :return: longname and unit attributes
    :rtype: str
 
-   .. NOTE:: Some functions in MarsVars edit the units
-   (e.g., [kg] -> [kg/m]), therefore the empty string is 4 characters
-   in length ("    " instead of "") to allow for editing by
-   ``editing units_txt[:-2]``, for example.
+   ..note:: Some functions in MarsVars edit the units
+       (e.g., [kg] -> [kg/m]), therefore the empty string is 4 
+       characters in length ("    " instead of "") to allow for 
+       editing by ``editing units_txt[:-2]``, for example.
+
 
 
 .. py:function:: give_permission(filename)
 
-   Sets group file permissions for the NAS system 
+   Sets group file permissions for the NAS system
+
 
 
 .. py:function:: hot_cold_cmap()
 
    Returns Dark blue > light blue>white>yellow>red colormap
    Based on Matlab's bipolar colormap
+
 
 
 .. py:function:: prCyan(skk)
@@ -310,12 +337,15 @@ Attributes
 
    :param var: ak or bk data
    :type var: array
+
    :param varname: the variable name ("a" or "b")
    :type varname: str
+
    :param nperline: the number of elements per line, defaults to 6
    :type nperline: int, optional
 
    :return: a print statement for copying into ``fv_eta.f90``
+
 
 
 .. py:function:: print_fileContent(fileNcdf)
@@ -329,6 +359,7 @@ Attributes
    :return: None
 
 
+
 .. py:function:: print_varContent(fileNcdf, list_varfull, print_stat=False)
 
    Print variable contents from a variable in a netCDF file. Requires
@@ -336,14 +367,17 @@ Attributes
 
    :param fileNcdf: full path to a netcdf file
    :type fileNcdf: str
+
    :param list_varfull: list of variable names and optional slices
        (e.g., ``["lon", "ps[:, 10, 20]"]``)
    :type list_varfull: list
+
    :param print_stat: If True, print min, mean, and max. If False,
        print values. Defaults to False
    :type print_stat: bool, optional
 
    :return: None
+
 
 
 .. py:function:: progress(k, Nmax)
@@ -352,28 +386,40 @@ Attributes
 
    :param k: current iteration of the outer loop
    :type k: int
+
    :param Nmax: max iteration of the outer loop
    :type Nmax: int
 
 
+
 .. py:function:: read_variable_dict_amescap_profile(f_Ncdf=None)
 
-   Inspect a Netcdf file and return the name of the variables and dimensions based on the content of ~/.amescap_profile.
+   Inspect a Netcdf file and return the name of the variables and 
+   dimensions based on the content of ~/.amescap_profile.
+
    Calling this function allows to remove hard-coded calls in CAP.
-   For example, to f.variables['ucomp'] is replaced by f.variables["ucomp"], with "ucomp" taking the values of'ucomp', 'U'
-   Args:
-       f_Ncdf: An opened Netcdf file object
-   Returns:
-       model: a dictionary with the dimensions and variables, e.g. "ucomp"='U' or "dim_lat"='latitudes'
+   For example, to f.variables['ucomp'] is replaced by 
+   f.variables["ucomp"], with "ucomp" taking the values of'ucomp', 'U'
 
-   ***NOTE***
-   The defaut names for variables are defined in () parenthesis in  ~/.amescap_profile :
-   'X direction wind        [m/s]                   (ucomp)>'
+   :param f_Ncdf: An opened Netcdf file object
+   :type f_Ncdf: File object
 
-   The defaut names for dimensions are defined in {} parenthesis in  ~/.amescap_profile :
-   Ncdf Y latitude dimension    [integer]          {lat}>lats
+   :return: Model, a dictionary with the dimensions and variables, 
+       e.g. "ucomp"='U' or "dim_lat"='latitudes'
 
-   The dimensions (lon,lat,pfull,pstd) are loaded in the dictionary as "dim_lon", "dim_lat"
+   ..NOTE:: The defaut names for variables are defined in () 
+       parenthesis in ~/.amescap_profile::
+       
+       'X direction wind        [m/s]                   (ucomp)>'
+
+   The defaut names for dimensions are defined in {} parenthesis in 
+   ~/.amescap_profile::
+       
+       Ncdf Y latitude dimension    [integer]          {lat}>lats
+
+   The dimensions (lon, lat, pfull, pstd) are loaded in the dictionary 
+   as "dim_lon", "dim_lat"
+
 
 
 .. py:function:: regrid_Ncfile(VAR_Ncdf, file_Nc_in, file_Nc_target)
@@ -385,9 +431,11 @@ Attributes
    :param VAR_Ncdf: a netCDF variable object to regrid
        (e.g., ``f_in.variable["temp"]``)
    :type VAR_Ncdf: netCDF file variable
+
    :param file_Nc_in: an open netCDF file to source for the variable
        (e.g., ``f_in = Dataset("filename", "r")``)
    :type file_Nc_in: netCDF file object
+
    :param file_Nc_target: an open netCDF file with the desired file
        structure (e.g., ``f_out = Dataset("filename", "r")``)
    :type file_Nc_target: netCDF file object
@@ -396,12 +444,13 @@ Attributes
        grid.
    :rtype: array
 
-   .. NOTE:: While the KDTree interpolation can handle a 3D dataset
-   (lon/lat/lev instead of just 2D lon/lat), the grid points in the
-   vertical are just a few (10--100s) meters in the PBL vs a few
-   (10-100s) kilometers in the horizontal. This results in excessive
-   weighting in the vertical, which is why the vertical dimension is
-   handled separately.
+   ..note:: While the KDTree interpolation can handle a 3D dataset
+       (lon/lat/lev instead of just 2D lon/lat), the grid points in 
+       the vertical are just a few (10--100s) meters in the PBL vs a 
+       few (10-100s) kilometers in the horizontal. This results in 
+       excessive weighting in the vertical, which is why the vertical 
+       dimension is handled separately.
+
 
 
 .. py:function:: replace_dims(Ncvar_dim, vert_dim_name=None)
@@ -412,30 +461,37 @@ Attributes
    :param Ncvar_dim: netCDF variable dimensions
        (e.g., ``f_Ncdf.variables["temp"].dimensions``)
    :type Ncvar_dim: str
+
    :param vert_dim_name: the vertical dimension if it is ambiguous
        (``pstd``, ``zstd``, or ``zagl``). Defaults to None
    :type vert_dim_name: str, optional
+
    :return: updated dimensions
    :rtype: str
 
 
+
 .. py:function:: reset_FV3_names(MOD)
 
-   This  function reset the model dictionary to the native FV3's variables, e.g.
-   model.dim_lat = 'latitude' > model.dim_lat = 'lat'
-   model.ucomp   = 'U'        > model.ucomp = 'ucomp'
-   etc...
+   This function reset the model dictionary to the native FV3's 
+   variables, e.g.::
+       
+       model.dim_lat = 'latitude' > model.dim_lat = 'lat'
+       model.ucomp   = 'U'        > model.ucomp = 'ucomp'
 
-   Args:
-       model: a class object generated with  read_variable_dict_amescap_profile()
-   Returns:
-       model: same object with updated names for the dimensions and variables.
+   :param MOD: Generated with read_variable_dict_amescap_profile()
+   :type MOD: class object
+
+   :return: same object with updated names for the dimensions and 
+   variables
+
 
 
 .. py:function:: rjw_cmap()
 
    Returns John Wilson's preferred color map
    (red -> jade -> wisteria)
+
 
 
 .. py:function:: section_content_amescap_profile(section_ID)
@@ -450,6 +506,7 @@ Attributes
    :return: the relevant line with Python syntax
 
 
+
 .. py:function:: smart_reader(fNcdf, var_list, suppress_warning=False)
 
    Alternative to ``var = fNcdf.variables["var"][:]`` for handling
@@ -458,9 +515,11 @@ Attributes
 
    :param fNcdf: an open netCDF file
    :type fNcdf: netCDF file object
+
    :param var_list: a variable or list of variables (e.g., ``areo`` or
        [``pk``, ``bk``, ``areo``])
    :type var_list: _type_
+
    :param suppress_warning: suppress debug statement. Useful if a
        variable is not expected to be in the file anyway. Defaults to
        False
@@ -485,13 +544,15 @@ Attributes
        # in the average file, it will check for them in the fixed file.
        pk, bk, areo = smart_reader(fNcdf, ["pk", "bk", "areo"])
 
-   .. NOTE:: Only the variable content is returned, not attributes
+   ..note:: Only the variable content is returned, not attributes
+
 
 
 .. py:function:: wbr_cmap()
 
    Returns a color map that goes from
    white -> blue -> green -> yellow -> red
+
 
 
 .. py:data:: Blue

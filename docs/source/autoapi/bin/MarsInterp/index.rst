@@ -11,9 +11,11 @@
    ground level (``zagl``), or a custom vertical grid.
 
    The executable requires:
+
        * ``[input_file]``          The file to be transformed
 
    and optionally accepts:
+
        * ``[-t --interp_type]``    Type of interpolation to perform (altitude, pressure, etc.)
        * ``[-v --vertical_grid]``  Specific vertical grid to interpolate to
        * ``[-incl --include]``     Variables to include in the new interpolated file
@@ -22,6 +24,7 @@
 
 
    Third-party Requirements:
+
        * ``numpy``
        * ``netCDF4``
        * ``argparse``

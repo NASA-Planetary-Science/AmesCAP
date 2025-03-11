@@ -4,12 +4,14 @@ Ncdf_wrapper archives data into netCDF format. It serves as a wrapper
 for creating netCDF files.
 
 Third-party Requirements:
+
     * ``numpy``
     * ``amescap.FV3_utils``
     * ``scipy.io``
     * ``netCDF4``
     * ``os``
-    * ``datetime
+    * ``datetime``
+    
 """
 
 # Load generic Python modules
@@ -54,7 +56,9 @@ class Ncdf(object):
 
     :param object: _description_
     :type object: _type_
+    
     :return: netCDF file
+    
     """
 
     def __init__(self, filename=None, description_txt="", action="w",
@@ -145,6 +149,7 @@ class Ncdf(object):
         exclude FV3 T-cell latitudes ``grid_xt_bnds`` and
         ``grid_yt_bnds``, which are of size ``(lon, bnds)`` &
         ``(lat, bnds)`` with dimension = 2.
+        
         """
         cart_axis = False
         tmp_cart = getattr(Ncvar, 'cartesian_axis', False)
@@ -162,6 +167,7 @@ class Ncdf(object):
 
             Log.log_variable("sfcT", sfcT, ("time", "Nx"),
                              "soil temperature", "K")
+                             
         """
         if variable_name not in self.var_dict.keys():
             self._def_variable(variable_name, dim_array, longname_txt,
@@ -177,6 +183,7 @@ class Ncdf(object):
         EX::
 
             Log.log_axis1D("areo", areo, "time", "degree", "T")
+            
         """
         if variable_name not in self.var_dict.keys():
             self._def_axis1D(variable_name, dim_name, longname_txt, units_txt,
@@ -188,7 +195,8 @@ class Ncdf(object):
 
     def add_dim_with_content(self, dimension_name, DATAin, longname_txt="",
                              units_txt="", cart_txt=''):
-        """Function to define a dimension and add a variable at the
+        """
+        Function to define a dimension and add a variable at the
         same time. Equivalent to ``add_dimension()`` followed by
         ``log_axis1D()``::
 
@@ -197,7 +205,9 @@ class Ncdf(object):
         EX::
 
             Log.add_dim_with_content("lon", lon_array, "longitudes",
-                                     "degree", "X")"""
+                                     "degree", "X")
+                                     
+        """
         if dimension_name not in self.dim_dict.keys():
             self.add_dimension(dimension_name, len(DATAin))
 
@@ -213,7 +223,7 @@ class Ncdf(object):
         self.var_dict[dimension_name].cartesian_axis = cart_txt
         self.var_dict[dimension_name][:] = DATAin
 
-    # ..NOTE:: The attribute ``name``  was replaced by ``_name`` for
+    # .. note:: The attribute ``name``  was replaced by ``_name`` for
     # compatibility with MFDataset:
     # When using ``f=MFDataset(fname,"r")``, ``f.variables[var]`` does
     # not have a ``name`` attribute but does have ``_name``
@@ -223,6 +233,7 @@ class Ncdf(object):
         Copy a netCDF DIMENSION variable (e.g.,
         ``Ncdim = f.variables["lon"]``). If the dimension does not exist
         yet, it will be created
+        
         """
         longname_txt = getattr(Ncdim_var, "long_name", Ncdim_var._name)
         units_txt = getattr(Ncdim_var, "units", "")
@@ -236,6 +247,7 @@ class Ncdf(object):
         ``Ncvar = f.variables["ucomp"]``). All dimensions must already
         exist. If ``swap_array`` is provided, the original values are
         swapped with this array.
+        
         """
         if Ncvar._name not in self.var_dict.keys():
             dim_array = Ncvar.dimensions
@@ -258,6 +270,7 @@ class Ncdf(object):
         """
         Copy all variables, dimensions, and attributes from another
         netCDF file
+        
         """
         # First include dimensions
         all_dims = Ncfile_in.dimensions.keys()
@@ -317,8 +330,10 @@ class Fort(object):
 
     :param object: _description_
     :type object: _type_
+    
     :return: _description_
     :rtype: _type_
+    
     """
 
     class Fort_var(np.ndarray):
@@ -332,13 +347,16 @@ class Fort(object):
         A useful resource on subclassing is available at:
         https://numpy.org/devdocs/reference/arrays.classes.html
 
-        .. NOTE:: Because we use an existing ``numpy.ndarray`` to define
+        .. note::
+            Because we use an existing ``numpy.ndarray`` to define
             the object, we do not call ``__array_finalize__(self, obj)``
 
         :param np.ndarray: _description_
         :type np.ndarray: _type_
+        
         :return: _description_
         :rtype: _type_
+        
         """
 
         def __new__(cls, input_vals, *args, **kwargs):
@@ -393,6 +411,7 @@ class Fort(object):
     def write_to_fixed(self):
         """
         Create ``fixed`` file (all static variables)
+        
         """
         Log = Ncdf(f"{self.path}/{self.fdate}.fixed.nc")
 
@@ -424,6 +443,7 @@ class Fort(object):
     def write_to_daily(self):
         """
         Create daily file (continuous time series)
+        
         """
         Log = Ncdf(f"{self.path}/{self.fdate}.atmos_daily.nc")
 
@@ -479,6 +499,7 @@ class Fort(object):
     def write_to_average(self, day_average=5):
         """
         Create average file (e.g., N-day averages [N=5 usually])
+        
         """
         Log = Ncdf(f"{self.path}/{self.fdate}.atmos_average.nc")
 
@@ -536,6 +557,7 @@ class Fort(object):
         """
         Create diurn file (variables organized by time of day & binned
         (typically 5-day bins)
+        
         """
         Log = Ncdf(f"{self.path}/{self.fdate}.atmos_diurn.nc")
 
@@ -623,13 +645,15 @@ class Fort(object):
         :return: ``RUNNUM``, ``JM``, ``IM``, ``LM``, ``NL``, ``ntrace``,
             ``version``, and ``SM``
 
-        .. NOTE:: In ``myhist.f``:
+        .. note::
+            In ``myhist.f``:
 
             write(11) RUNNUM (float), JM, IM, LAYERS, NL, NTRACE (ints),
             version (char= 7)
 
         These are saved as attributes (e.g., uses ``f.LAYERS`` to
         access the number of layers).
+        
         """
         Rec = self.f.read_record("f4", "(1, 5)i4", "S7")
         self.RUNNUM = Rec[0][0]
@@ -648,7 +672,8 @@ class Fort(object):
         Return run constants from ``fort.11`` header.
         ``f`` is an open ``scipy.io.FortranFile`` object
 
-        .. NOTE:: In ``myhist.f``:
+        .. note::
+            In ``myhist.f``:
 
             write(11) DSIG, DXYP, GRAV, RGAS, cp, stbo, xlhtc, kapa,
             *          cmk, decmax, eccn, orbinc, vinc, sdepth, alicen,
@@ -656,6 +681,7 @@ class Fort(object):
 
         These are saved as attributes (e.g., uses ``f.rgas`` to access
         the gas constant for the simulation.
+        
         """
         Rec = self.f.read_record(f"(1, {self.LM})f4",
                                  f"(1, {self.JM})f4",
@@ -688,12 +714,14 @@ class Fort(object):
         Return values from ``fort.11`` header.
         ``f`` is an open ``scipy.io.FortranFile`` object
 
-        .. NOTE:: In ``myhist.f``:
+        .. note::
+            In ``myhist.f``:
 
             write(11) TOPOG, ALSP, ZIN, NPCFLAG
 
         These are saved as variables (e.g., uses
         ``f.variables["zsurf"]`` to access the topography.
+        
         """
         Rec = self.f.read_record(f"({self.IM},{self.JM})f4",
                                  f"({self.IM},{self.JM})f4",
@@ -720,6 +748,7 @@ class Fort(object):
         header. Also compute a vertical grid structure that includes
         sigma values at the layer boundaries AND midpoints for the
         radiation code. Total size is ``2*LM+2``
+        
         """
         JM = self.JM # JM = 36
         IM = self.IM # IM = 60
@@ -757,6 +786,7 @@ class Fort(object):
         """
         ``_ra`` stands for "Return array": Append single timesteps
         along the first (``time``) dimensions
+        
         """
         if type(new_array) != np.ndarray:
             new_array = np.array([new_array])
@@ -843,6 +873,7 @@ class Fort(object):
                 write(11) surfalb
                 write(11) dheat
                 write(11) geot
+                
         """
         # Typically ``nsteps = 16 x 10 = 160``
         nsteps = self.nperday * self.nsolfile
@@ -1005,7 +1036,7 @@ class Fort(object):
 
             # write(11) fuptopir, fupsurfir, fdnsurfir
 
-            #..NOTE:: the following are read in fortran order:
+            # the following are read in fortran order:
             # (IM, JM) > (60, 36) and not (JM, IM) > (36, 60) since we
             # are not using the ``order = "F"`` flag. These need to be
             # transposed.
@@ -1038,6 +1069,7 @@ class Fort(object):
     def _add_axis_as_variables(self):
         """
         Add dimensions to the file as variables
+        
         """
         self.variables["lat"] = self.Fort_var(self.lat, "lat", "latitude",
                                               "degrees_N", ("lat"))
@@ -1090,15 +1122,19 @@ class Fort(object):
 
         :param Ls_deg: solar longitude [°]
         :type Ls_deg: float
+        
         :param offset: if True, make year starts at Ls 0
         :type offset: bool
+        
         :param round10: if True, round to the nearest 10 sols
         :type round10: bool
 
         :return: ``Ds`` sol number
 
-        .. NOTE:: For the moment this is consistent with Ls 0 -> 359.99,
+        .. note::
+            For the moment this is consistent with Ls 0 -> 359.99,
             not for monotically increasing Ls.
+            
         """
         # Ls at perihelion
         Lsp = 250.99
@@ -1135,6 +1171,7 @@ class Fort(object):
 
         :param Ls: input solar longitude
         :type Ls: float
+        
         :param stride: default stride
         :type stride: int
 
@@ -1144,6 +1181,7 @@ class Fort(object):
         longitude is only updated once per day, implying that 16
         successive timesteps would have the same ls value. This routine
         linearly interpolates the Ls between those successive values.
+        
         """
         Ls = np.array(Ls)
         Ls_out = np.zeros_like(Ls)

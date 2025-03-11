@@ -9,12 +9,14 @@
    for creating netCDF files.
 
    Third-party Requirements:
+
        * ``numpy``
        * ``amescap.FV3_utils``
        * ``scipy.io``
        * ``netCDF4``
        * ``os``
-       * ``datetime
+       * ``datetime``
+       
 
 
 
@@ -60,8 +62,10 @@ Classes
 
    :param object: _description_
    :type object: _type_
+
    :return: _description_
    :rtype: _type_
+
 
    .. py:class:: Fort_var(input_vals, name_txt, long_name_txt, units_txt, dimensions_tuple)
 
@@ -82,8 +86,174 @@ Classes
 
       :param np.ndarray: _description_
       :type np.ndarray: _type_
+
       :return: _description_
       :rtype: _type_
+
+
+      .. py:method:: __abs__()
+
+
+      .. py:method:: __add__(value)
+
+
+      .. py:method:: __and__(value)
+
+
+      .. py:method:: __array__(dtype=None)
+
+
+      .. py:method:: __array_wrap__(obj)
+
+
+      .. py:method:: __class_getitem__(value)
+         :classmethod:
+
+
+      .. py:method:: __contains__(key)
+
+
+      .. py:method:: __copy__()
+
+
+      .. py:method:: __deepcopy__(memo)
+
+
+      .. py:method:: __divmod__(value)
+
+
+      .. py:method:: __eq__(value)
+
+         Return self==value.
+
+
+      .. py:method:: __float__()
+
+
+      .. py:method:: __floordiv__()
+
+
+      .. py:method:: __ge__(value)
+
+         Return self>=value.
+
+
+      .. py:method:: __getitem__(key)
+
+
+      .. py:method:: __gt__(value)
+
+         Return self>value.
+
+
+      .. py:method:: __iadd__(value)
+
+
+      .. py:method:: __iand__(value)
+
+
+      .. py:method:: __ifloordiv__(value)
+
+
+      .. py:method:: __ilshift__(value)
+
+
+      .. py:method:: __imod__(value)
+
+
+      .. py:method:: __imul__(value)
+
+
+      .. py:method:: __int__()
+
+
+      .. py:method:: __invert__()
+
+
+      .. py:method:: __ior__(value)
+
+
+      .. py:method:: __ipow__(value)
+
+
+      .. py:method:: __irshift__(value)
+
+
+      .. py:method:: __isub__(value)
+
+
+      .. py:method:: __itruediv__(value)
+
+
+      .. py:method:: __ixor__(value)
+
+
+      .. py:method:: __le__(value)
+
+         Return self<=value.
+
+
+      .. py:method:: __len__()
+
+
+      .. py:method:: __lshift__(value)
+
+
+      .. py:method:: __lt__(value)
+
+         Return self<value.
+
+
+      .. py:method:: __matmul__(value)
+
+
+      .. py:method:: __mod__(value)
+
+
+      .. py:method:: __mul__(value)
+
+
+      .. py:method:: __ne__(value)
+
+         Return self!=value.
+
+
+      .. py:method:: __neg__()
+
+
+      .. py:method:: __or__(value)
+
+
+      .. py:method:: __pos__()
+
+
+      .. py:method:: __pow__()
+
+
+      .. py:method:: __repr__()
+
+         Return repr(self).
+
+
+      .. py:method:: __rshift__()
+
+
+      .. py:method:: __setitem__(key, value)
+
+
+      .. py:method:: __str__()
+
+         Return str(self).
+
+
+      .. py:method:: __sub__(value)
+
+
+      .. py:method:: __truediv__(value)
+
+
+      .. py:method:: __xor__(value)
+
 
       .. py:method:: all(axis=None, out=None, keepdims=False)
 
@@ -262,9 +432,11 @@ Classes
       Create average file (e.g., N-day averages [N=5 usually])
 
 
+
    .. py:method:: write_to_daily()
 
       Create daily file (continuous time series)
+
 
 
    .. py:method:: write_to_diurn(day_average=5)
@@ -273,9 +445,11 @@ Classes
       (typically 5-day bins)
 
 
+
    .. py:method:: write_to_fixed()
 
       Create ``fixed`` file (all static variables)
+
 
 
 
@@ -312,7 +486,9 @@ Classes
 
    :param object: _description_
    :type object: _type_
+
    :return: netCDF file
+
 
    .. py:method:: add_constant(variable_name, value, longname_txt='', units_txt='')
 
@@ -329,6 +505,7 @@ Classes
 
           Log.add_dim_with_content("lon", lon_array, "longitudes",
                                    "degree", "X")
+                                   
 
 
    .. py:method:: add_dimension(dimension_name, length)
@@ -344,6 +521,7 @@ Classes
       yet, it will be created
 
 
+
    .. py:method:: copy_Ncvar(Ncvar, swap_array=None)
 
       Copy a netCDF variable from another file (e.g.,
@@ -352,10 +530,12 @@ Classes
       swapped with this array.
 
 
+
    .. py:method:: copy_all_dims_from_Ncfile(Ncfile_in, exclude_dim=[], time_unlimited=True)
 
       Copy all variables, dimensions, and attributes from another
       netCDF file
+
 
 
    .. py:method:: copy_all_vars_from_Ncfile(Ncfile_in, exclude_var=[])
@@ -366,6 +546,7 @@ Classes
       EX::
 
           Log.log_axis1D("areo", areo, "time", "degree", "T")
+          
 
 
    .. py:method:: log_variable(variable_name, DATAin, dim_array, longname_txt='', units_txt='')
@@ -374,6 +555,7 @@ Classes
 
           Log.log_variable("sfcT", sfcT, ("time", "Nx"),
                            "soil temperature", "K")
+                           
 
 
    .. py:method:: merge_files_from_list(Ncfilename_list, exclude_var=[])

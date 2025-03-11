@@ -1,5 +1,5 @@
-Installation
-============
+Installation Instructions
+=========================
 
 *Last Updated: March 2025*
 
@@ -8,22 +8,22 @@ Installing CAP is done on the command line via ``git clone``. If you are install
 .. _mac_install:
 
 Installation on MacOS
-=====================
+---------------------
 
 This guide provides installation instructions for the AmesCAP package on MacOS using either ``pip`` or ``conda`` for package management.
 
 Prerequisites
--------------
+^^^^^^^^^^^^^
 
 * A MacOS system with Python 3 installed
 * Terminal access
 * (Optional) `Anaconda <https://www.anaconda.com/download>`_ or `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ for conda-based installation
 
 Installation Steps
-------------------
+^^^^^^^^^^^^^^^^^^
 
 1. Remove any pre-existing CAP environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you have a **pre-existing** virtual environment holding CAP, we recommend you first remove the virtual environment folder entirely.
 
@@ -36,7 +36,7 @@ If you have a **pre-existing** virtual environment holding CAP, we recommend you
    conda env remove -n amescap # For conda virtual environments
 
 2. Create and activate a virtual environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Choose either pip or conda to create your virtual environment:
 
@@ -60,7 +60,7 @@ Choose either pip or conda to create your virtual environment:
    conda activate amescap
 
 3. Install CAP from GitHub
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Install CAP from the `NASA Planetary Science GitHub <https://github.com/NASA-Planetary-Science/AmesCAP>`_ using ``pip``:
 
@@ -69,7 +69,7 @@ Install CAP from the `NASA Planetary Science GitHub <https://github.com/NASA-Pla
    pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 
 4. Copy the profile file to your home directory
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
@@ -78,7 +78,7 @@ Install CAP from the `NASA Planetary Science GitHub <https://github.com/NASA-Pla
    cp opt/anaconda3/envs/amescap/mars_templates/amescap-profile ~/.amescap-profile # For conda
 
 5. Test your installation
-^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 While your virtual environment is active, run:
 
@@ -89,7 +89,7 @@ While your virtual environment is active, run:
 This should display the help documentation for MarsPlot.
 
 6. Deactivate the virtual environment when finished
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
@@ -98,7 +98,7 @@ This should display the help documentation for MarsPlot.
    conda deactivate # For conda
 
 Troubleshooting Tips
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 * **Python Version Issues**: Ensure you're using Python 3.6 or newer.
 * **Virtual Environment Not Activating**: Verify you're using the correct activation script for your shell.
@@ -109,12 +109,12 @@ Troubleshooting Tips
 .. _windows_install:
 
 Installation on Windows
-=======================
+-----------------------
 
 This guide provides installation instructions for the AmesCAP package on Windows using either **Windows Terminal (PowerShell)** or **Cygwin**, with either ``pip`` or ``conda`` for package management.
 
 Prerequisites
--------------
+^^^^^^^^^^^^^
 
 Choose your preferred environment:
 
@@ -136,10 +136,10 @@ Cygwin Setup
 * (Optional) `Anaconda <https://www.anaconda.com/download>`_ or `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ for conda-based installation
 
 Installation Steps
-------------------
+^^^^^^^^^^^^^^^^^^
 
 1. Remove any pre-existing CAP environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you have a **pre-existing** virtual environment holding CAP, we recommend you first remove the virtual environment folder entirely.
 
@@ -162,7 +162,7 @@ Using **Cygwin:**
    conda env remove -n amescap # For conda virtual environments
 
 1. Create and activate a virtual environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Using **pip** with **Windows Terminal (PowerShell)**:
 
@@ -207,7 +207,7 @@ Using **conda** with **Cygwin**:
    conda activate amescap
 
 1. Install CAP from GitHub
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
@@ -215,7 +215,7 @@ Using **conda** with **Cygwin**:
    pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 
 4. Copy the profile file to your home directory
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Using **Windows Terminal (PowerShell)**:
 
@@ -238,7 +238,7 @@ Using **Cygwin**:
    cp /cygdrive/c/Users/YourUsername/anaconda3/envs/amescap/mars_templates/amescap-profile ~/.amescap-profile
 
 5. Test your installation
-^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 While your virtual environment is active, run:
 
@@ -249,7 +249,7 @@ While your virtual environment is active, run:
 This should display the help documentation for MarsPlot.
 
 6. Deactivate the virtual environment when finished
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Using **pip** with **Windows Terminal (PowerShell)**:
 
@@ -270,7 +270,7 @@ Using **conda** (both **Windows Terminal** and **Cygwin**):
    conda deactivate
 
 Troubleshooting Tips
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 * **Path Issues**: Windows uses backslashes (``\``) for paths, while Cygwin uses forward slashes (``/``). Make sure you're using the correct format for your environment.
 * **Permission Errors**: If you encounter permission issues, try running your terminal as Administrator.
@@ -281,22 +281,22 @@ Troubleshooting Tips
 .. _nas_install:
 
 Installation in the NASA Advanced Supercomputing (NAS) Environment
-==================================================================
+------------------------------------------------------------------
 
 This guide provides installation instructions for the AmesCAP package on NASA's Pleiades or Lou supercomputers.
 
 Prerequisites
-------------
+^^^^^^^^^^^^^
 
 * Access to NASA's Pleiades or Lou supercomputing systems
 * Familiarity with Unix command line and modules system
 * Terminal access to the NAS environment
 
 Installation Steps
------------------
+^^^^^^^^^^^^^^^^^^
 
 1. Remove any pre-existing CAP environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you have a **pre-existing** virtual environment holding CAP, we recommend you first remove the virtual environment folder entirely:
 
@@ -307,7 +307,7 @@ If you have a **pre-existing** virtual environment holding CAP, we recommend you
 **NOTE:** Use the name of your virtual environment. We use ``amescap`` as an example, but you can name it whatever you like.
 
 2. Create and activate a virtual environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
@@ -318,7 +318,7 @@ If you have a **pre-existing** virtual environment holding CAP, we recommend you
    source amescap/bin/activate # For BASH
 
 3. Load necessary modules
-^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Within your activated virtual environment, load the required Python module:
 
@@ -328,7 +328,7 @@ Within your activated virtual environment, load the required Python module:
    module load python3/3.9.12
 
 4. Install CAP from GitHub
-^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Install CAP from the `NASA Planetary Science GitHub <https://github.com/NASA-Planetary-Science/AmesCAP>`_ using ``pip``:
 
@@ -337,14 +337,14 @@ Install CAP from the `NASA Planetary Science GitHub <https://github.com/NASA-Pla
    pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 
 5. Copy the profile file to your home directory
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
    cp amescap/mars_templates/amescap_profile ~/.amescap_profile
 
 6. Test your installation
-^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 While your virtual environment is active, run:
 
@@ -355,14 +355,14 @@ While your virtual environment is active, run:
 This should display the help documentation for MarsPlot.
 
 7. Deactivate the virtual environment when finished
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
    deactivate
 
 Troubleshooting Tips
--------------------
+^^^^^^^^^^^^^^^^^^^^
 
 * **Module Conflicts**: If you encounter module conflicts, ensure you run ``module purge`` before loading the Python module.
 * **Permission Issues**: Ensure you have the necessary permissions in your directory to create and modify virtual environments.

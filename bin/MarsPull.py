@@ -5,18 +5,21 @@ Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on \
 the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
 The executable requires 2 arguments:
-    * The directory from which to pull data from 
-    (https://data.nas.nasa.gov/mcmcref/), AND
+
+    * The directory from which to pull data from, AND
     * ``[-ls --ls]``      The desired solar longitude(s), OR
     * ``[-f --filename]`` The name(s) of the desired file(s)
 
 Third-party Requirements:
+
     * ``numpy``
     * ``argparse``
     * ``requests``
 
 List of Functions:
+
     * download - Queries the requested file from the NAS Data Portal.
+
 """
 
 # make print statements appear in color
@@ -58,7 +61,7 @@ parser.add_argument('-list', '--list_files', action='store_true',
     )
 )
 
-parser.add_argument('directory_name', type=str, nargs='?', 
+parser.add_argument('directory_name', type=str, nargs='?',
     choices=[
         'FV3BETAOUT1', 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
         'ACTIVECLDS_NCDF'],
@@ -142,23 +145,18 @@ Ls_end = np.array([
 def download(url, filename):
     """
     Downloads a file from the NAS Data Portal (data.nas.nasa.gov).
+    
+    :param url: The url to download, e.g   'https://data.nas.nasa.gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_Ls000_Ls004.nc'
+    :type url: str
+    
+    :param filename: The local filename e.g  '/lou/la4/akling/Data/LegacyGCM_Ls000_Ls004.nc'
+    :type filename: str
 
-    Parameters
-    ----------
-    url : str
-        The url to download, e.g   'https://data.nas.nasa.gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_Ls000_Ls004.nc'
-    filename : str
-        The local filename e.g  '/lou/la4/akling/Data/LegacyGCM_Ls000_Ls004.nc'
-
-    Returns
-    -------
-    The requested file(s), downloaded and saved to the current \
+    :return: The requested file(s), downloaded and saved to the current \
     directory.
 
+    :raises FileNotFoundError: A file-not-found error.
 
-    Raises
-    ------
-    A file-not-found error.
     """
 
     _ , fname=os.path.split(filename)
@@ -229,7 +227,7 @@ def main():
 
         file_list(legacy_files_available)
         file_list(fv3_files_available)
-    
+
     portal_dir=args.directory_name
     if portal_dir in ['ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS', 'ACTIVECLDS_NCDF']:
         url_requested="https://data.nas.nasa.gov/legacygcm/legacygcmdata/"+portal_dir+'/'

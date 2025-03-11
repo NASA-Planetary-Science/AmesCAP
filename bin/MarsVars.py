@@ -9,9 +9,11 @@ extracts variables from files, and enables scaling variables or editing
 variable names, units, etc.
 
 The executable requires:
+
     * ``[input_file]``           The file to be transformed
 
 and optionally accepts:
+
     * ``[-add --add_variable]``          Derive and add variable to file
     * ``[-zdiff --differentiate_wrt_z]`` Differentiate variable w.r.t. Z axis
     * ``[-col --column_integrate]``      Column-integrate variable
@@ -23,12 +25,14 @@ and optionally accepts:
     * ``[-edit --edit_variable]``        Edit variable attributes or scale it
 
 Third-party Requirements:
+
     * ``numpy``
     * ``netCDF4``
     * ``argparse``
     * ``os``
     * ``subprocess``
     * ``matplotlib``
+
 """
 
 # Make print statements appear in color
@@ -66,68 +70,188 @@ from amescap.Ncdf_wrapper import Ncdf
 
 # List of supported variables for [-add --add_variable]
 cap_str = " (derived w/CAP)"
+
 master_list = {
-    'curl':     [f"Relative vorticity", 'Hz', 
-                 ['ucomp', 'vcomp'], ['pfull', 'pstd', 'zstd', 'zagl']],
-    'div':      [f"Wind divergence", 'Hz', 
-                 ['ucomp', 'vcomp'], ['pfull', 'pstd', 'zstd', 'zagl']],
-    'DP':       [f"Layer thickness (P)", 'Pa', 
-                 ['ps', 'temp'], ['pfull']],
-    'dst_mass_mom': [f"Dust MMR", 'kg/kg', 
-                 ['dzTau', 'temp'], ['pfull']],
-    'DZ':       [f"Layer thickness (Z)", 'm', 
-                 ['ps', 'temp'], ['pfull']],
-    'dzTau':    [f"Dust extinction rate", 'km-1', 
-                 ['dst_mass_mom', 'temp'], ['pfull']],
-    'fn':       [f"Frontogenesis", 'K/m/s', 
-                 ['ucomp', 'vcomp', 'theta'], ['pstd', 'zstd', 'zagl']],
-    'ice_mass_mom': [f"Ice MMR", 'kg/kg', 
-                 ['izTau', 'temp'], ['pfull']],
-    'izTau':    [f"Ice extinction rate", 'km-1', 
-                 ['ice_mass_mom', 'temp'], ['pfull']],
-    'N':        [f"Brunt Vaisala freq.", 'rad/s', 
-                 ['ps', 'temp'], ['pfull']],
-    'pfull3D':  [f"Mid-layer pressure", 'Pa', 
-                 ['ps', 'temp'], ['pfull']],
-    'rho':      [f"Density", 'kg/m^3', 
-                 ['ps', 'temp'], ['pfull']],
-    'Ri':       [f"Richardson number", 'none', 
-                 ['ps', 'temp', 'uccomp', 'vcomp'], ['pfull']],
-    'scorer_wl':[f"Scorer horiz. λ = 2π/√(l^2)", 'm', 
-                 ['ps', 'temp', 'ucomp'], ['pfull']],
-    'Tco2':     [f"CO2 condensation temp.", 'K', 
-                 ['ps', 'temp'], ['pfull', 'pstd']],
-    'theta':    [f"Potential temp.", 'K', 
-                 ['ps', 'temp'], ['pfull']],
-    'Vg_sed':   [f"Sedimentation rate", 'm/s', 
-                 ['dst_mass_mom', 'dst_num_mom', 'temp'], 
-                 ['pfull', 'pstd', 'zstd', 'zagl']],
-    'w':        [f"Vert. wind", 'm/s', 
-                 ['ps', 'temp', 'omega'], ['pfull']],
-    'w_net':    [f"Net vert. wind [w-Vg_sed]", 'm/s', 
-                 ['Vg_sed', 'w'], ['pfull', 'pstd', 'zstd', 'zagl']],
-    'wdir':     [f"Wind direction", 'degree', 
-                 ['ucomp', 'vcomp'], ['pfull', 'pstd', 'zstd', 'zagl']],
-    'wspeed':   [f"Wind speed", 'm/s', 
-                 ['ucomp', 'vcomp'], ['pfull', 'pstd', 'zstd', 'zagl']],
-    'zfull':    [f"Mid-layer altitude AGL", 'm', 
-                 ['ps', 'temp'], ['pfull']],
-    'ax':       [f"Zonal wave-mean flow forcing", 'm/s^2', 
-                 ['ucomp', 'w', 'rho'], ['pstd', 'zstd', 'zagl']],
-    'ay':       [f"Merid. wave-mean flow forcing", 'm/s^2', 
-                 ['vcomp', 'w', 'rho'], ['pstd', 'zstd', 'zagl']],
-    'ek':       [f"Wave kinetic energy", 'J/kg', 
-                 ['ucomp', 'vcomp'], ['pstd', 'zstd', 'zagl']],
-    'ep':       [f"Wave potential energy", 'J/kg', 
-                 ['temp'], ['pstd', 'zstd', 'zagl']],
-    'msf':      [f"Mass stream function", '1.e8 kg/s', 
-                 ['vcomp'], ['pstd', 'zstd', 'zagl']],
-    'mx':       [f"Zonal momentum flux, vert.", 'J/kg', 
-                 ['ucomp', 'w'], ['pstd', 'zstd', 'zagl']],
-    'my':       [f"Merid. momentum flux, vert.", 'J/kg', 
-                 ['vcomp', 'w'], ['pstd', 'zstd', 'zagl']],
-    'tp_t':     [f"Normalized temp. perturb.", 'None', 
-                 ['temp'], ['pstd', 'zstd', 'zagl']],
+    'curl': [
+        "Relative vorticity",
+        'Hz',
+        ['ucomp', 'vcomp'],
+        ['pfull', 'pstd', 'zstd', 'zagl']
+    ],
+    'div': [
+        "Wind divergence",
+        'Hz',
+        ['ucomp', 'vcomp'],
+        ['pfull', 'pstd', 'zstd', 'zagl']
+    ],
+    'DP': [
+        "Layer thickness (P)",
+        'Pa',
+        ['ps', 'temp'],
+        ['pfull']
+    ],
+    'dst_mass_mom': [
+        "Dust MMR",
+        'kg/kg',
+        ['dzTau', 'temp'],
+        ['pfull']
+    ],
+    'DZ': [
+        "Layer thickness (Z)",
+        'm',
+        ['ps', 'temp'],
+        ['pfull']
+    ],
+    'dzTau': [
+        "Dust extinction rate",
+        'km-1',
+        ['dst_mass_mom', 'temp'],
+        ['pfull']
+    ],
+    'fn': [
+        "Frontogenesis",
+        'K/m/s',
+        ['ucomp', 'vcomp', 'theta'],
+        ['pstd', 'zstd', 'zagl']
+    ],
+    'ice_mass_mom': [
+        "Ice MMR",
+        'kg/kg',
+        ['izTau', 'temp'],
+        ['pfull']
+    ],
+    'izTau': [
+        "Ice extinction rate",
+        'km-1',
+        ['ice_mass_mom', 'temp'],
+        ['pfull']
+    ],
+    'N': [
+        "Brunt Vaisala freq.",
+        'rad/s',
+        ['ps', 'temp'],
+        ['pfull']
+    ],
+    'pfull3D': [
+        "Mid-layer pressure",
+        'Pa',
+        ['ps', 'temp'],
+        ['pfull']
+    ],
+    'rho': [
+        "Density",
+        'kg/m^3',
+        ['ps', 'temp'],
+        ['pfull']
+    ],
+    'Ri': [
+        "Richardson number",
+        'none',
+        ['ps', 'temp', 'uccomp', 'vcomp'],
+        ['pfull']
+    ],
+    'scorer_wl': [
+        "Scorer horiz. λ = 2π/√(l^2)",
+        'm',
+        ['ps', 'temp', 'ucomp'],
+        ['pfull']
+    ],
+    'Tco2': [
+        "CO2 condensation temperature",
+        'K',
+        ['ps', 'temp'],
+        ['pfull', 'pstd']
+    ],
+    'theta': [
+        "Potential temperature",
+        'K',
+        ['ps', 'temp'],
+        ['pfull']
+    ],
+    'Vg_sed': [
+        "Sedimentation rate",
+        'm/s',
+        ['dst_mass_mom', 'dst_num_mom', 'temp'],
+        ['pfull', 'pstd', 'zstd', 'zagl']
+    ],
+    'w': [
+        "vertical wind",
+        'm/s',
+        ['ps', 'temp', 'omega'],
+        ['pfull']
+    ],
+    'w_net': [
+        "Net vertical wind [w-Vg_sed]",
+        'm/s',
+        ['Vg_sed', 'w'],
+        ['pfull', 'pstd', 'zstd', 'zagl']
+    ],
+    'wdir': [
+        "Wind direction",
+        'degree',
+        ['ucomp', 'vcomp'],
+        ['pfull', 'pstd', 'zstd', 'zagl']
+    ],
+    'wspeed': [
+        "Wind speed",
+        'm/s',
+        ['ucomp', 'vcomp'],
+        ['pfull', 'pstd', 'zstd', 'zagl']
+    ],
+    'zfull': [
+        "Mid-layer altitude AGL",
+        'm',
+        ['ps', 'temp'],
+        ['pfull']
+    ],
+    'ax': [
+        "Zonal wave-mean flow forcing",
+        'm/s^2',
+        ['ucomp', 'w', 'rho'],
+        ['pstd', 'zstd', 'zagl']
+    ],
+    'ay': [
+        "Merid. wave-mean flow forcing",
+        'm/s^2',
+        ['vcomp', 'w', 'rho'],
+        ['pstd', 'zstd', 'zagl']
+    ],
+    'ek': [
+        "Wave kinetic energy",
+        'J/kg',
+        ['ucomp', 'vcomp'],
+        ['pstd', 'zstd', 'zagl']
+    ],
+    'ep': [
+        "Wave potential energy",
+        'J/kg',
+        ['temp'],
+        ['pstd', 'zstd', 'zagl']
+    ],
+    'msf': [
+        "Mass stream function",
+        '1.e8 kg/s',
+        ['vcomp'],
+        ['pstd', 'zstd', 'zagl']
+    ],
+    'mx': [
+        "Zonal momentum flux, vertical",
+        'J/kg',
+        ['ucomp', 'w'],
+        ['pstd', 'zstd', 'zagl']
+    ],
+    'my': [
+        "Merid. momentum flux, vertical",
+        'J/kg',
+        ['vcomp', 'w'],
+        ['pstd', 'zstd', 'zagl']
+    ],
+    'tp_t': [
+        "Normalized temperature perturbation",
+        'None',
+        ['temp'],
+        ['pstd', 'zstd', 'zagl']
+    ],
 }
 
 def add_help(var_list):
@@ -158,11 +282,11 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('input_file', nargs='+', 
+parser.add_argument('input_file', nargs='+',
     type=argparse.FileType('r'),
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
-parser.add_argument('-add', '--add_variable', nargs='+', default=[], 
+parser.add_argument('-add', '--add_variable', nargs='+', default=[],
     help=(
         f"Add a new variable to file. Variables that can be added are "
         f"listed below.\n"
@@ -176,7 +300,7 @@ parser.add_argument('-add', '--add_variable', nargs='+', default=[],
     )
 )
 
-parser.add_argument('-zdiff', '--differentiate_wrt_z', nargs='+', 
+parser.add_argument('-zdiff', '--differentiate_wrt_z', nargs='+',
     default=[],
     help=(
         f"Differentiate a variable w.r.t. the Z axis.\n"
@@ -414,10 +538,13 @@ def compute_p_3D(ps, ak, bk, shape_out):
 
     :param ps: Surface pressure (Pa)
     :type ps: array [time, lat, lon]
+
     :param ak: Vertical coordinate pressure value (Pa)
     :type ak: array [phalf]
+
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
+
     :param shape_out: Determines how to handle the dimensions of p_3D.
         If ``len(time) = 1`` (one timestep), ``p_3D`` is returned as
         [1, lev, lat, lon] as opposed to [lev, lat, lon]
@@ -427,6 +554,7 @@ def compute_p_3D(ps, ak, bk, shape_out):
 
     :return: ``p_3D`` The full 3D pressure array (Pa)
     :rtype: array [time, lev, lat, lon]
+
     """
     p_3D = fms_press_calc(ps, ak, bk, lev_type="full")
     # Swap dimensions 0 and 1 (time and lev)
@@ -440,6 +568,7 @@ def compute_rho(p_3D, temp):
 
     :param p_3D: Pressure (Pa)
     :type p_3D: array [time, lev, lat, lon]
+
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
 
@@ -447,6 +576,7 @@ def compute_rho(p_3D, temp):
 
     :return: Density (kg/m^3)
     :rtype: array [time, lev, lat, lon]
+
     """
     return p_3D / (rgas*temp)
 
@@ -458,12 +588,16 @@ def compute_xzTau(q, temp, lev, const, f_type):
 
     :param q: Dust or ice mass mixing ratio (ppm)
     :type q: array [time, lev, lat, lon]
+
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
+
     :param lev: Vertical coordinate (e.g., pstd) (e.g., Pa)
     :type lev: array [lev]
+
     :param const: Dust or ice constant
     :type const: array
+
     :param f_type: The FV3 file type: diurn, daily, or average
     :type f_stype: str
 
@@ -471,14 +605,15 @@ def compute_xzTau(q, temp, lev, const, f_type):
 
     :return: ``xzTau`` Dust or ice extinction rate (km-1)
     :rtype: array [time, lev, lat, lon]
+
     """
     if f_type == "diurn":
         PT = np.repeat(
-            lev, 
+            lev,
             (q.shape[0] * q.shape[1] * q.shape[3] * q.shape[4])
         )
         PT = np.reshape(
-            PT, 
+            PT,
             (q.shape[2], q.shape[0], q.shape[1], q.shape[3], q.shape[4])
         )
         # (lev, tim, tod, lat, lon) -> (tim, tod, lev, lat, lon)
@@ -486,7 +621,7 @@ def compute_xzTau(q, temp, lev, const, f_type):
     else:
         PT = np.repeat(lev, (q.shape[0] * q.shape[2] * q.shape[3]))
         PT = np.reshape(
-            PT, 
+            PT,
             (q.shape[1], q.shape[0], q.shape[2], q.shape[3])
         )
         # Swap dimensions 0 and 1 (time and lev)
@@ -506,12 +641,16 @@ def compute_mmr(xTau, temp, lev, const, f_type):
 
     :param xTau: Dust or ice extinction rate (km-1)
     :type xTau: array [time, lev, lat, lon]
+
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
+
     :param lev: Vertical coordinate (e.g., pstd) (e.g., Pa)
     :type lev: array [lev]
+
     :param const: Dust or ice constant
     :type const: array
+
     :param f_type: The FV3 file type: diurn, daily, or average
     :type f_stype: str
 
@@ -519,19 +658,20 @@ def compute_mmr(xTau, temp, lev, const, f_type):
 
     :return: ``q``, Dust or ice mass mixing ratio (ppm)
     :rtype: array [time, lev, lat, lon]
+
     """
     if f_type == "diurn":
         PT = np.repeat(lev,(xTau.shape[0] * xTau.shape[1]
                             * xTau.shape[3] * xTau.shape[4]))
-        PT = np.reshape(PT, (xTau.shape[2], xTau.shape[0], 
-                             xTau.shape[1], xTau.shape[3], 
+        PT = np.reshape(PT, (xTau.shape[2], xTau.shape[0],
+                             xTau.shape[1], xTau.shape[3],
                              xTau.shape[4]))
         # (lev, tim, tod, lat, lon) -> (tim, tod, lev, lat, lon)
         P = PT.transpose((1, 2, 0, 3, 4))
     else:
-        PT = np.repeat(lev, (xTau.shape[0] * xTau.shape[2] 
+        PT = np.repeat(lev, (xTau.shape[0] * xTau.shape[2]
                              * xTau.shape[3]))
-        PT = np.reshape(PT,(xTau.shape[1], xTau.shape[0], 
+        PT = np.reshape(PT,(xTau.shape[1], xTau.shape[0],
                             xTau.shape[2], xTau.shape[3]))
         # Swap dimensions 0 and 1 (time and lev)
         P = PT.transpose(lev_T)
@@ -549,8 +689,10 @@ def compute_Vg_sed(xTau, nTau, temp):
 
     :param xTau: Dust or ice MASS mixing ratio (ppm)
     :type xTau: array [time, lev, lat, lon]
+
     :param nTau: Dust or ice NUMBER mixing ratio (None)
     :type nTau: array [time, lev, lat, lon]
+
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
 
@@ -558,6 +700,7 @@ def compute_Vg_sed(xTau, nTau, temp):
 
     :return: ``Vg`` Dust sedimentation rate (m/s)
     :rtype: array [time, lev, lat, lon]
+
     """
     r0 = (((3.*xTau) / (4.*np.pi*rho_dst*nTau)) ** (1/3)
           * np.exp(-3 * (sigma**2) / 2))
@@ -581,6 +724,7 @@ def compute_w_net(Vg, wvar):
 
     :param Vg: Dust sedimentation rate (m/s)
     :type Vg: array [time, lev, lat, lon]
+
     :param wvar: Vertical wind (m/s)
     :type wvar: array [time, lev, lat, lon]
 
@@ -588,6 +732,7 @@ def compute_w_net(Vg, wvar):
 
     :return: `w_net` Net vertical wind speed (m/s)
     :rtype: array [time, lev, lat, lon]
+
     """
     w_net = np.subtract(wvar, Vg)
     return w_net
@@ -599,10 +744,13 @@ def compute_theta(p_3D, ps, temp, f_type):
 
     :param p_3D: The full 3D pressure array (Pa)
     :type p_3D: array [time, lev, lat, lon]
+
     :param ps: Surface pressure (Pa)
     :type ps: array [time, lat, lon]
+
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
+
     :param f_type: The FV3 file type: diurn, daily, or average
     :type f_type: str
 
@@ -610,12 +758,13 @@ def compute_theta(p_3D, ps, temp, f_type):
 
     :return: Potential temperature (K)
     :rtype: array [time, lev, lat, lon]
+
     """
     theta_exp = R / (M_co2*Cp)
     # Broadcast dimensions
     if f_type == "diurn":
         # (time, tod, lat, lon) -> (time, tod, 1, lat, lon)
-        ps_shape = [ps.shape[0], ps.shape[1], 1, ps.shape[2], 
+        ps_shape = [ps.shape[0], ps.shape[1], 1, ps.shape[2],
                     ps.shape[3]]
     else:
         # (time, lat, lon) -> (time, 1, lat, lon)
@@ -643,6 +792,7 @@ def compute_w(rho, omega):
 
     :param rho: Atmospheric density (kg/m^3)
     :type rho: array [time, lev, lat, lon]
+
     :param omega: Rate of change in pressure at layer midpoint (Pa/s)
     :type omega: array [time, lev, lat, lon]
 
@@ -650,6 +800,7 @@ def compute_w(rho, omega):
 
     :return: vertical wind (m/s)
     :rtype: array [time, lev, lat, lon]
+
     """
     return -omega / (rho*g)
 
@@ -660,10 +811,13 @@ def compute_zfull(ps, ak, bk, temp):
 
     :param ps: Surface pressure (Pa)
     :type ps: array [time, lat, lon]
+
     :param ak: Vertical coordinate pressure value (Pa)
     :type ak: array [phalf]
+
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
+
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
 
@@ -671,11 +825,12 @@ def compute_zfull(ps, ak, bk, temp):
 
     :return: ``zfull`` (m)
     :rtype: array [time, lev, lat, lon]
+
     """
     zfull = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T),
                        topo=0., lev_type="full")
 
-    # Note: lev_T swaps dims 0 & 1, ensuring level is the first
+    # .. note:: lev_T swaps dims 0 & 1, ensuring level is the first
     # dimension for the calculation
 
     zfull = zfull.transpose(lev_T_out)
@@ -688,10 +843,13 @@ def compute_zhalf(ps, ak, bk, temp):
 
     :param ps: Surface pressure (Pa)
     :type ps: array [time, lat, lon]
+
     :param ak: Vertical coordinate pressure value (Pa)
     :type ak: array [phalf]
+
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
+
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
 
@@ -699,11 +857,12 @@ def compute_zhalf(ps, ak, bk, temp):
 
     :return: ``zhalf`` (m)
     :rtype: array [time, lev, lat, lon]
+
     """
     zhalf = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T),
                        topo=0., lev_type="half")
 
-    # Note: lev_T swaps dims 0 & 1, ensuring level is the first
+    # .. note:: lev_T swaps dims 0 & 1, ensuring level is the first
     # dimension for the calculation
 
     zhalf = zhalf.transpose(lev_T_out)
@@ -729,8 +888,10 @@ def compute_DZ_full_pstd(pstd, temp, ftype="average"):
 
     :param pstd: Vertical coordinate (pstd; Pa)
     :type pstd: array [lev]
+
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
+
     :param f_type: The FV3 file type: diurn, daily, or average
     :type f_stype: str
 
@@ -738,6 +899,7 @@ def compute_DZ_full_pstd(pstd, temp, ftype="average"):
 
     :return: DZ_full_pstd, Layer thicknesses (Pa)
     :rtype: array [time, lev, lat, lon]
+
     """
     # Determine whether the lev dimension is located at i = 1 or i = 2
     if ftype == "diurn":
@@ -768,7 +930,7 @@ def compute_DZ_full_pstd(pstd, temp, ftype="average"):
     # the second-to-last layer.
     DZ_full_pstd[-1, ...] = DZ_full_pstd[-2, ...]
 
-    # Note that unless you fine-tune the standard pressure levels to
+    # .. note:: that unless you fine-tune the standard pressure levels to
     # match the model top, data is usually missing in the last few
     # layers.
 
@@ -781,6 +943,7 @@ def compute_N(theta, zfull):
 
     :param theta: Potential temperature (K)
     :type theta: array [time, lev, lat, lon]
+
     :param zfull: Altitude above ground level at the layer midpoint (m)
     :type zfull: array [time, lev, lat, lon]
 
@@ -788,12 +951,13 @@ def compute_N(theta, zfull):
 
     :return: ``N``, Brunt Vaisala freqency [rad/s]
     :rtype: array [time, lev, lat, lon]
+
     """
     # Differentiate theta w.r.t. zfull to obdain d(theta)/dz
     dtheta_dz = dvar_dh(theta.transpose(lev_T),
                         zfull.transpose(lev_T)).transpose(lev_T)
 
-    # Note: lev_T swaps dims 0 & 1, ensuring level is the first
+    # .. note:: lev_T swaps dims 0 & 1, ensuring level is the first
     # dimension for the differentiation
 
     # Calculate the Brunt Vaisala frequency
@@ -815,6 +979,7 @@ def compute_Tco2(P_3D):
 
     :return: CO2 frost point [K]
     :rtype: array [time, lev, lat, lon]
+
     """
     # Set some constants
     B = -3167.8 # K
@@ -839,8 +1004,10 @@ def compute_scorer(N, ucomp, zfull):
 
     :param N: Brunt Vaisala freqency (rad/s)
     :type N: float [time, lev, lat, lon]
+
     :param ucomp: Zonal wind (m/s)
     :type ucomp: array [time, lev, lat, lon]
+
     :param zfull: Altitude above ground level at the layer midpoint (m)
     :type zfull: array [time, lev, lat, lon]
 
@@ -848,6 +1015,7 @@ def compute_scorer(N, ucomp, zfull):
 
     :return: ``scorer_wl`` Scorer horizontal wavelength (m)
     :rtype: array [time, lev, lat, lon]
+
     """
     # Differentiate U w.r.t. zfull TWICE to obdain d^2U/dz^2
     dUdz = dvar_dh(ucomp.transpose(lev_T),
@@ -855,7 +1023,7 @@ def compute_scorer(N, ucomp, zfull):
     dUdz2 = dvar_dh(dUdz.transpose(lev_T),
                     zfull.transpose(lev_T)).transpose(lev_T)
 
-    # Note: lev_T swaps dims 0 & 1, ensuring level is the first
+    # .. note:: lev_T swaps dims 0 & 1, ensuring level is the first
     # dimension for the differentiation
 
     # Compute the scorer parameter I^2(z) (m-1)
@@ -875,10 +1043,13 @@ def compute_DP_3D(ps, ak, bk, shape_out):
 
     :param ps: Surface pressure (Pa)
     :type ps: array [time, lat, lon]
+
     :param ak: Vertical coordinate pressure value (Pa)
     :type ak: array [phalf]
+
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
+
     :param shape_out: Determines how to handle the dimensions of DP_3D.
         If len(time) = 1 (one timestep), DP_3D is returned as
         [1, lev, lat, lon] as opposed to [lev, lat, lon]
@@ -888,6 +1059,7 @@ def compute_DP_3D(ps, ak, bk, shape_out):
 
     :return: ``DP`` Layer thickness in pressure units (Pa)
     :rtype: array [time, lev, lat, lon]
+
     """
     # Get the 3D pressure field from fms_press_calc
     p_half3D = fms_press_calc(ps, ak, bk, lev_type="half")
@@ -910,10 +1082,13 @@ def compute_DZ_3D(ps, ak, bk, temp, shape_out):
 
     :param ps: Surface pressure (Pa)
     :type ps: array [time, lat, lon]
+
     :param ak: Vertical coordinate pressure value (Pa)
     :type ak: array [phalf]
+
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
+
     :param shape_out: Determines how to handle the dimensions of DZ_3D.
         If len(time) = 1 (one timestep), DZ_3D is returned as
         [1, lev, lat, lon] as opposed to [lev, lat, lon]
@@ -923,6 +1098,7 @@ def compute_DZ_3D(ps, ak, bk, temp, shape_out):
 
     :return: ``DZ`` Layer thickness in altitude units (m)
     :rtype: array [time, lev, lat, lon]
+
     """
 
     # Get the 3D altitude field from fms_Z_calc
@@ -933,7 +1109,7 @@ def compute_DZ_3D(ps, ak, bk, temp, shape_out):
 
     # Calculate the differences in pressure between each layer midpoint
     DZ_3D = z_half3D[0:-1, ...]-z_half3D[1:, ..., ]
-    # Note the reversed order: Z decreases with increasing levels
+    # .. note:: the reversed order: Z decreases with increasing levels
 
     # Swap dimensions 0 and 1, back to [t, lev, lat, lon]
     DZ_3D = DZ_3D.transpose(lev_T)
@@ -956,6 +1132,7 @@ def compute_Ep(temp):
 
     :return: ``Ep`` Wave potential energy (J/kg)
     :rtype: array [time, lev, lat, lon]
+
     """
     return 0.5*g**2*(zonal_detrend(temp)/(temp*N))**2
 
@@ -968,6 +1145,7 @@ def compute_Ek(ucomp, vcomp):
 
     :param ucomp: Zonal wind (m/s)
     :type ucomp: array [time, lev, lat, lon]
+
     :param vcomp: Meridional wind (m/s)
     :type vcomp: array [time, lev, lat, lon]
 
@@ -975,6 +1153,7 @@ def compute_Ek(ucomp, vcomp):
 
     :return: ``Ek`` Wave kinetic energy (J/kg)
     :rtype: array [time, lev, lat, lon]
+
     """
     return 0.5*(zonal_detrend(ucomp)**2+zonal_detrend(vcomp)**2)
 
@@ -985,6 +1164,7 @@ def compute_MF(UVcomp, w):
 
     :param UVcomp: Zonal or meridional wind (ucomp or vcomp)(m/s)
     :type UVcomp: array
+
     :param w: Vertical wind (m/s)
     :type w: array [time, lev, lat, lon]
 
@@ -992,6 +1172,7 @@ def compute_MF(UVcomp, w):
 
     :return: ``u'w'`` or ``v'w'``, Zonal/meridional momentum flux (J/kg)
     :rtype: array [time, lev, lat, lon]
+
     """
     return zonal_detrend(UVcomp)*zonal_detrend(w)
 
@@ -1014,10 +1195,13 @@ def compute_WMFF(MF, rho, lev, interp_type):
 
     :param MF: Zonal/meridional momentum flux (J/kg)
     :type MF: array [time, lev, lat, lon]
+
     :param rho: Atmospheric density (kg/m^3)
     :type rho: array [time, lev, lat, lon]
+
     :param lev: Array for the vertical grid (zagl, zstd, pstd, or pfull)
     :type lev: array [lev]
+
     :param interp_type: The vertical grid type (``zagl``, ``zstd``,
         ``pstd``, or ``pfull``)
     :type interp_type: str
@@ -1026,6 +1210,7 @@ def compute_WMFF(MF, rho, lev, interp_type):
 
     :return: The zonal or meridional wave-mean flow forcing (m/s2)
     :rtype: array [time, lev, lat, lon]
+
     """
     # Differentiate the momentum flux (MF)
     darr_dz = dvar_dh((rho*MF).transpose(lev_T), lev).transpose(lev_T)
@@ -1074,7 +1259,7 @@ def main():
         class FileWrapper:
             def __init__(self, name):
                 self.name = name
-                
+
         file_wrapper = FileWrapper(ifile)
         check_file_tape(file_wrapper)
 
@@ -1124,7 +1309,7 @@ def main():
             f_IN = Dataset(ifile, "r", format = "NETCDF4_CLASSIC")
 
             # The variable to exclude
-            exclude_list = filter_vars(f_IN, 
+            exclude_list = filter_vars(f_IN,
                                        args.extract_copy,
                                        giveExclude = True)
             print()
@@ -1148,11 +1333,11 @@ def main():
                 print(f"{Red}Variable ``{ivar}`` is not supported and "
                       f"cannot be added to the file.{Nclr}")
                 exit()
-                
+
             try:
                 f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
                 f_type, interp_type = FV3_file_type(f)
-                
+
                 compat_file_fmt = (
                     ", ".join([f"{cf}" for cf in master_list[ivar][3]])
                     )
@@ -1171,7 +1356,7 @@ def main():
                             f"ending in: {Yellow}{compat_file_fmt}"
                             f"{Nclr}\n")
                     exit()
-                
+
                 print(f"Processing: {ivar}...")
 
                 if interp_type == "pfull":
@@ -1329,7 +1514,7 @@ def main():
                         ).transpose(lev_T)
                     OUT = N**2 / (du_dz**2 + dv_dz**2)
 
-                # NOTE lev_T swaps dims 0 & 1, ensuring level is
+                # .. note:: lev_T swaps dims 0 & 1, ensuring level is
                 # the first dimension for the differentiation
 
                 if ivar == "Tco2":
@@ -1432,21 +1617,21 @@ def main():
                 else:
                     # Add NANs to the interpolated files
                     with warnings.catch_warnings():
-                        warnings.simplefilter("ignore", 
+                        warnings.simplefilter("ignore",
                                               category = RuntimeWarning)
                         OUT[OUT > 1.e30] = np.nan
                         OUT[OUT < -1.e30] = np.nan
-                
+
                 # Log the variable
                 var_Ncdf = f.createVariable(ivar, "f4", dim_out)
-                var_Ncdf.long_name = (master_list[ivar][0] 
+                var_Ncdf.long_name = (master_list[ivar][0]
                                       + cap_str)
                 var_Ncdf.units = master_list[ivar][1]
                 var_Ncdf[:] = OUT
                 f.close()
                 print(f"{Green}*** Variable '{ivar}' added "
                       f"successfully ***{Nclr}")
-            
+
             except Exception as exception:
                 if debug:
                     raise
@@ -1504,11 +1689,11 @@ def main():
                         # Diurn file: zfull = [lev, tod, t, lat, lon]
                         # Differentiate the variable w.r.t. Z:
                         darr_dz = dvar_dh(
-                            var.transpose(lev_T), 
+                            var.transpose(lev_T),
                             zfull.transpose(lev_T)
                             ).transpose(lev_T)
 
-                        # Note: lev_T swaps dims 0 & 1, ensuring level
+                        # .. note:: lev_T swaps dims 0 & 1, ensuring level
                         # is the first dimension for the differentiation
 
                     elif interp_type == "pstd":
@@ -1534,7 +1719,7 @@ def main():
                         darr_dz = dvar_dh(
                             var.transpose(lev_T), lev
                             ).transpose(lev_T)
-                    # Note: lev_T swaps dims 0 & 1, ensuring level is
+                    # .. note:: lev_T swaps dims 0 & 1, ensuring level is
                     # the first dimension for the differentiation
 
                     # Log the variable
@@ -1617,11 +1802,11 @@ def main():
 
                 try:
                     var = f.variables[idp_to_dz][:]
-                    new_unit = (getattr(f.variables[idp_to_dz],  
-                                        "units", "") 
+                    new_unit = (getattr(f.variables[idp_to_dz],
+                                        "units", "")
                                 + "/m")
-                    new_lname = (getattr(f.variables[idp_to_dz], 
-                                         "long_name", "") 
+                    new_lname = (getattr(f.variables[idp_to_dz],
+                                         "long_name", "")
                                  + " rescaled to meter-1")
                     # Get dimension
                     dim_out = f.variables[idp_to_dz].dimensions
@@ -1632,7 +1817,7 @@ def main():
                         )
                     var_Ncdf.long_name = (new_lname + cap_str)
                     var_Ncdf.units = new_unit
-                    var_Ncdf[:] = (var 
+                    var_Ncdf[:] = (var
                                    * f.variables["DP"][:]
                                    / f.variables["DZ"][:])
                     f.close()
@@ -1664,11 +1849,11 @@ def main():
 
                 try:
                     var = f.variables[idz_to_dp][:]
-                    new_unit = (getattr(f.variables[idz_to_dp], 
-                                        "units", "") 
+                    new_unit = (getattr(f.variables[idz_to_dp],
+                                        "units", "")
                                 + "/m")
-                    new_lname = (getattr(f.variables[idz_to_dp], 
-                                         "long_name", "") 
+                    new_lname = (getattr(f.variables[idz_to_dp],
+                                         "long_name", "")
                                  + " rescaled to Pa-1")
                     # Get dimension
                     dim_out = f.variables[idz_to_dp].dimensions
@@ -1715,6 +1900,7 @@ def main():
                 >  col = \
                         /__ var (dp/g)
                             p_top
+
         """
         for icol in col_list:
             f = Dataset(ifile, "a")

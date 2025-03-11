@@ -1,16 +1,19 @@
 # !/usr/bin/env python3
 """
-FV3_utils contains internal Functions for processing data in MGCM output
-files such as vertical interpolation.
-These functions can be used on their own outside of CAP if they are
+FV3_utils contains internal Functions for processing data in MGCM 
+output files such as vertical interpolation.
+
+These functions can be used on their own outside of CAP if they are 
 imported as a module::
 
     from /u/path/FV3_utils import fms_press_calc
 
 Third-party Requirements:
+
     * ``numpy``
     * ``warnings``
     * ``scipy``
+    
 """
 
 # Load generic Python modules
@@ -29,10 +32,13 @@ def fms_press_calc(psfc, ak, bk, lev_type='full'):
     :param psfc: the surface pressure [Pa] or an array of surface 
         pressures (1D, 2D, or 3D if time dimension)
     :type psfc: array
+    
     :param ak: 1st vertical coordinate parameter
     :type ak: array
+    
     :param bk: 2nd vertical coordinate parameter
     :type bk: array:
+    
     :param lev_type: "full" (layer midpoints) or "half" 
         (layer interfaces). Defaults to "full."
     :type lev_type: str
@@ -50,10 +56,11 @@ def fms_press_calc(psfc, ak, bk, lev_type='full'):
         ---Nk-1---           --------  p_full
         --- Nk --- SFC       ========  p_half
                             / / / / /
-
-    .. note:: 
+    
+    .. note::
         Some literature uses pk (pressure) instead of ak with
         ``p3d = ps * bk + P_ref * ak`` instead of ``p3d = ps * bk + ak``
+        
     """
     Nk = len(ak)
     # If ``psfc`` is a float (e.g., ``psfc = 700.``), make it a
@@ -79,12 +86,13 @@ def fms_press_calc(psfc, ak, bk, lev_type='full'):
     # Pressure at layer midpoints. The size of Z axis is ``Nk-1``
     PRESS_f = np.zeros((len(psfc_flat), Nk-1))
 
-    if ak[0] == 0 and bk[0] == 0:
-        # Top layer (1st element is ``i = 0`` in Python)
+    if ak[0] == 0 and bk[0] == 0: # Top layer (1st element is ``i = 0`` in Python)
         PRESS_f[:, 0] = 0.5 * (PRESS_h[:, 0]+PRESS_h[:, 1])
     else:
-        PRESS_f[:, 0] = ((PRESS_h[:, 1] - PRESS_h[:, 0])
-                         / np.log(PRESS_h[:, 1] / PRESS_h[:, 0]))
+        PRESS_f[:, 0] = (
+            (PRESS_h[:, 1] - PRESS_h[:, 0])
+            / np.log(PRESS_h[:, 1] / PRESS_h[:, 0])
+            )
 
     # The rest of the column (``i = 1 ... Nk``). [2:] goes from the 3rd
     # element to ``Nk`` and [1:-1] goes from the 2nd element to ``Nk-1``
@@ -112,18 +120,23 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full"):
     :param psfc: The surface pressure [Pa] or array of surface 
         pressures (1D, 2D, or 3D)
     :type psfc: array
+    
     :param ak: 1st vertical coordinate parameter
     :type ak: array
+    
     :param bk: 2nd vertical coordinate parameter
     :type bk: array
-    :param T: The air temperature profile. 1D array (for a single grid point), 
-        ND array with VERTICAL AXIS FIRST
+    
+    :param T: The air temperature profile. 1D array (for a single grid 
+        point), ND array with VERTICAL AXIS FIRST
     :type T: 1D array or ND array
+    
     :param topo: The surface elevation. Same dimension as ``psfc``. 
         If None is provided, AGL is returned
     :type topo: array
-    :param lev_type: "full" (layer midpoint) or "half" (layer interfaces). 
-        Defaults to "full"
+    
+    :param lev_type: "full" (layer midpoint) or "half" (layer 
+        interfaces). Defaults to "full"
     :type lev_type: str
 
     :return: The layer altitude at the full level ``Z_f(:, :, Nk-1)`` 
@@ -147,28 +160,31 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full"):
 
             topo = np.repeat(zsurf[np.newaxis, :], ps.shape[0], axis = 0)
 
-    Calculation is derived from ``./atmos_cubed_sphere_mars/Mars_phys.F90``::
+    Calculation is derived from 
+        ``./atmos_cubed_sphere_mars/Mars_phys.F90``::
+            
+            # (dp/dz = -rho g) => (dz = dp/(-rho g)) and
+            # (rho = p/(r T)) => (dz = rT/g * (-dp/p))
 
-        (dp/dz = -rho g) => (dz = dp/(-rho g)) and
-        (rho= p/(r T)) => (dz=rT/g * (-dp/p))
+            # Define log-pressure (``u``) as:
+            u = ln(p)
 
-        # Define log-pressure (``u``) as:
-        u = ln(p)
+            # Then:
+            du = {du/dp}*dp = {1/p)*dp} = dp/p
 
-        # Then:
-        du = {du/dp}*dp = {1/p)*dp} = dp/p
-
-        # Finally, ``dz`` for the half-layers:
-        (dz = rT/g * -(du)) => (dz = rT/g *(+dp/p))
-        # with ``N`` layers defined from top to bottom.
+            # Finally, ``dz`` for the half-layers:
+            (dz = rT/g * -(du)) => (dz = rT/g * (+dp/p))
+            # with ``N`` layers defined from top to bottom.
 
     Z_half calculation::
 
-        Hydrostatic relation
-        within the layer        >   (P(k+1)/P(k) = exp(-DZ(k)/H))
-        # layer thickness
+        # Hydrostatic relation within the layer > (P(k+1)/P(k) = 
+        # exp(-DZ(k)/H))
+        
+        # layer thickness:
         DZ(k) = rT/g * -(du)
-        # previous layer altitude + thickness of layer
+        
+        # previous layer altitude + thickness of layer:
         Z_h k) = Z_h(k+1)  +DZ_h(h)
 
     Z_full calculation::
@@ -176,6 +192,7 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full"):
         # previous altitude + half the thickness of previous layer and
         # half of current layer
         Z_f(k) = Z_f(k+1) + (0.5 DZ(k) + 0.5 DZ(k+1))
+        
         # Add ``+0.5 DZ(k)-0.5 DZ(k)=0`` and re-organiz the equation
         Z_f(k) = Z_f(k+1) + DZ(k) + 0.5 (DZ(k+1) - DZ(k))
         Z_f(k) = Z_h(k+1) + 0.5 (DZ(k+1) - DZ(k))
@@ -206,15 +223,16 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full"):
     and (``Tfull < Thalf`` and ``Γ > 0``)
 
     Line 7: ``Z_full[k] = Z_half[k] + (T_half[k+1]-T_full[k])/Γ``
-        Pulling out ``Tfull`` from above equation and using ``Γ = (gγ)/R``::
+    Pulling out ``Tfull`` from above equation and using ``Γ = (gγ)/R``::
+        
+        Z_full[k] = (Z_half[k+1] + (R Tfull[k]) / (gγ)(T_half[k+1]
+        / T_full[k] - 1))
 
-            Z_full[k] = (Z_half[k+1] + (R Tfull[k]) / (gγ)(T_half[k+1]
-                         / T_full[k] - 1))
-
-        Using the isentropic relation above::
-
-            Z_full = (Z_half[k+1] + (R Tfull[k]) / (gγ)(p_half[k+1]
-                      / p_full[k])**(R/Cp)-1))
+    Using the isentropic relation above::
+        
+        Z_full = (Z_half[k+1] + (R Tfull[k]) / (gγ)(p_half[k+1]
+        / p_full[k])**(R/Cp)-1))
+                      
     """
     g = 3.72 # acc. m/s2
     r_co2 = 191.00 # kg/mol
@@ -265,8 +283,7 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full"):
     elif lev_type == "half":
         new_dim_h = np.append(Nk, psfc.shape)
         return Z_h.reshape(new_dim_h)
-    else:
-        # Return the levels in Z coordinates [m]
+    else: # Return the levels in Z coordinates [m]
         raise Exception("Altitude level type not recognized: use 'full' "
                         "or 'half'")
 
@@ -282,8 +299,10 @@ def find_n0(Lfull_IN, Llev_OUT, reverse_input=False):
     :param Lfull_IN: Input pressure [Pa] or altitude [m] at layer
         midpoints. ``Level`` dimension is FIRST
     :type Lfull_IN: array
+    
     :param Llev_OUT: Desired level type for interpolation [Pa] or [m]
     :type Llev_OUT: float or 1D array  
+    
     :param reverse_input: Reverse array (e.g., if ``z(0) = 120 km``,
         ``z(N) = 0km`` -- which is typical -- or if input data is
         ``p(0) = 1000Pa``, ``p(N) = 0Pa``)
@@ -300,6 +319,7 @@ def find_n0(Lfull_IN, Llev_OUT, reverse_input=False):
         If ``Lfull_IN`` is ND ``[lev, time, lat, lon]`` and
         ``Llev_OUT`` is a 1D array of size ``klev`` then ``n`` is an
         array of size ``[klev, Ndim]`` with ``Ndim = [time, lat, lon]``
+        
     """
     # Number of original layers
     Lfull_IN = np.array(Lfull_IN)
@@ -337,25 +357,25 @@ def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
 
     :param X_IN: Source level [Pa] or [m]
     :type X_IN: float or 1D array
+    
     :param X_OUT: Desired pressure [Pa] or altitude [m] at layer
         midpoints. Level dimension is FIRST
     :type X_OUT: array
+    
     :param reverse_input: If input array is decreasing (e.g., if z(0)
         = 120 km, z(N) = 0 km, which is typical, or if data is
         p(0) = 1000 Pa, p(N) = 0 Pa, which is uncommon)
     :type reverse_input: bool
 
     :return: The index for the level(s) where the pressure < ``plev``
+    
     """
-    if type(X_IN) != np.ndarray:
-        # Number of original layers
+    if type(X_IN) != np.ndarray: # Number of original layers
         X_IN = np.array(X_IN)
 
-    if len(np.atleast_1d(X_OUT)) == 1:
-        # If one value is requested, convert float to array
+    if len(np.atleast_1d(X_OUT)) == 1: # If one value is requested, convert float to array
         X_OUT = np.array([X_OUT])
-    elif type(X_OUT) != np.ndarray:
-        # Convert list to numpy array as needed
+    elif type(X_OUT) != np.ndarray: # Convert list to numpy array as needed
         X_OUT = np.array(X_OUT)
 
     # Get input variable dimensions
@@ -390,8 +410,7 @@ def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
     # out of the larger loop over all of the array elements
     if len(dimsIN) == 1:
         for i in range(N_OUT):
-            for j in range(Ndim):
-                # Handle the case where j might be out of bounds
+            for j in range(Ndim): # Handle the case where j might be out of bounds
                 if j < NdimsOUT:
                     n[i, j] = np.argmin(np.abs(X_OUT[i, j] - X_IN[:]))
                     if X_IN[n[i, j]] > X_OUT[i, j]:
@@ -401,8 +420,7 @@ def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
                     n[i, j] = 0
     elif len(dimsOUT) == 1:
         for i in range(N_OUT):
-            for j in range(Ndim):
-                # Handle the case where j might be out of bounds for X_IN
+            for j in range(Ndim): # Handle the case where j might be out of bounds for X_IN
                 if j < NdimsIN:
                     n[i, j] = np.argmin(np.abs(X_OUT[i] - X_IN[:, j]))
                     if X_IN[n[i, j], j] > X_OUT[i]:
@@ -412,8 +430,7 @@ def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
                     n[i, j] = 0
     else:
         for i in range(N_OUT):
-            for j in range(Ndim):
-                # Handle the case where j might be out of bounds for either array
+            for j in range(Ndim): # Handle the case where j might be out of bounds for either array
                 if j < NdimsIN and j < NdimsOUT:
                     n[i, j] = np.argmin(np.abs(X_OUT[i, j] - X_IN[:, j]))
                     if X_IN[n[i, j], j] > X_OUT[i, j]:
@@ -433,9 +450,11 @@ def expand_index(Nindex, VAR_shape_axis_FIRST, axis_list):
     :param Nindex: Interpolation indices, size is (``n_axis``,
         ``Nfull = [time, lat, lon]``)
     :type Nindex: idx
+    
     :param VAR_shape_axis_FIRST: Shape for the variable to interpolate
         with interpolation axis first (e.g., ``[tod, time, lev, lat, lon]``)
     :type VAR_shape_axis_FIRST: tuple
+    
     :param axis_list: Position or list of positions for axis to insert
         (e.g., ``2`` for ``lev`` in ``[tod, time, lev, lat, lon]``, ``[2, 4]``
         for ``lev`` and ``lon``). The axis positions are those for the final
@@ -454,6 +473,7 @@ def expand_index(Nindex, VAR_shape_axis_FIRST, axis_list):
         This routine expands the indices from ``[tod, time, lat, lon]`` to
         ``[tod, time, lev, lat, lon]`` with ``Nfull = [time, lev, lat, lon]``
         for use in interpolation.
+        
     """
     # If one element, turn axis to list
     if len(np.atleast_1d(axis_list)) == 1:
@@ -495,22 +515,28 @@ def vinterp(varIN, Lfull, Llev, type_int="log", reverse_input=False,
     
     :param varIN: Variable to interpolate (VERTICAL AXIS FIRST)
     :type varIN: ND array
+    
     :param Lfull: Pressure [Pa] or altitude [m] at full layers, same
         dimensions as ``varIN``
     :type Lfull: array
+    
     :param Llev: Desired level for interpolation [Pa] or [m]. May be
         increasing or decreasing as the output levels are processed one
         at a time
     :type Llev: 1D array
+    
     :param type_int: "log" for logarithmic (typically pressure),
         "lin" for linear (typically altitude)
     :type type_int: str
+    
     :param reverse_input: Reverse input arrays. e.g., if
         ``zfull[0]`` = 120 km then ``zfull[N]`` = 0km (typical) or if
         input data is ``pfull[0]``=1000 Pa, ``pfull[N]``=0 Pa
     :type reverse_input: bool
+    
     :param masktop: Set to NaN values if above the model top
     :type masktop: bool
+    
     :param index: Indices for the interpolation, already processed as
         ``[klev, Ndim]``. Indices calculated if not provided
     :type index: None or array
@@ -526,7 +552,7 @@ def vinterp(varIN, Lfull, Llev, type_int="log", reverse_input=False,
                                     :         |
             --  n  -- pn   [30 Pa]  : [800 m] | Xn
                                     :         |
-        >>> --  k  -- Llev [100 Pa] : [500 m] | X_OUT
+            --  k  -- Llev [100 Pa] : [500 m] | X_OUT
             -- n+1 -- pn+1 [200 Pa] : [200 m] | Xn+1
 
             -- SFC --
@@ -534,6 +560,7 @@ def vinterp(varIN, Lfull, Llev, type_int="log", reverse_input=False,
 
         with ``A = log(Llev/pn + 1) / log(pn/pn + 1)`` in "log" mode
         or ``A = (zlev-zn + 1) / (zn-zn + 1)`` in "lin" mode
+        
     """
     Nlev = len(np.atleast_1d(Llev))
     if Nlev == 1:
@@ -580,15 +607,7 @@ def vinterp(varIN, Lfull, Llev, type_int="log", reverse_input=False,
             # was reversed earlier
             n = np.squeeze(find_n(Lfull, Llev[k], False))
 
-        # Slow method (with loop):
-        # for ii in range(Ndim):
-        #     if n[ii] < Nfull-1:
-        #         alpha = (np.log(Llev[k] / Lfull[n[ii] + 1, ii])
-        #                  / np.log(Lfull[n[ii], ii] / Lfull[n[ii] + 1, ii]))
-        #         varOUT[k, ii] = (varIN[n[ii], ii]*alpha
-        #                          + (1-alpha)*varIN[n[ii] + 1, ii])
-
-        # Fast method (no loop):
+        # Fast method (no loop)
         # Convert the layers (``nindex``) to indices for a 2D matrix
         # using nindex = i*ncol + j
         nindex = n*Ndim + Ndimall
@@ -628,19 +647,25 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int="lin",
     :param var_IN: Variable on a REGULAR grid (e.g.,
         ``[lev, lat, lon]`` or ``[time, lev, lat, lon]``)
     :type var_IN: ND array
+    
     :param x: Original position array (e.g., ``time``)
     :type x: 1D array
+    
     :param xi: Target array to interpolate the array on
     :type xi: 1D array
+    
     :param axis: Position of the interpolation axis (e.g., ``0`` for a
         temporal interpolation on ``[time, lev, lat, lon]``)
     :type axis: int
+    
     :param reverse_input: Reverse input arrays (e.g., if
         ``zfull(0)``= 120 km, ``zfull(N)``= 0 km, which is typical)
     :type reverse_input: bool
+    
     :param type_int: "log" for logarithmic (typically pressure),
         "lin" for linear
     :type type_int: str
+    
     :param modulo: For "lin" interpolation only, use cyclic input
         (e.g., when using ``modulo = 24`` for time of day, 23.5 and
         00 am are considered 30 min apart, not 23.5 hr apart)
@@ -662,6 +687,7 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int="lin",
         X_OUT = Xn*A + (1-A)*Xn + 1
         with ``A = log(xi/xn + 1) / log(xn/xn + 1)`` in "log" mode
         or ``A = (xi-xn + 1)/(xn-xn + 1)`` in "lin" mode
+        
     """
     # Convert list to numpy array as needed
     if type(var_IN) != np.ndarray:
@@ -682,27 +708,23 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int="lin",
     for k in range(0, len(index)):
         n = index[k]
         np1 = n+1
+        # Treatment of edge cases where the interpolated value is outside the domain
+        # (i.e. ``n`` is the last element and ``n+1`` does not exist)
         if np1 >= len(x):
-            # Treatment of edge cases where the interpolated value is
-            # outside the domain (i.e. ``n`` is the last element and
-            # ``n+1`` does not exist
             if modulo is not None:
-                # If looping around (e.g., longitude, time of day...)
-                # replace ``n+1`` by the first element
+                # If looping around (e.g., longitude, time of day...) replace ``n+1`` by the first element
                 np1 = 0
             else:
-                # This will set the interpolated value to NaN in ``xi``
-                # as last value as ``x[n] - x[np1] = 0``
+                # Sets the interpolated value to NaN in ``xi`` as last value as ``x[n] - x[np1] = 0``
                 np1 -= 1
 
         if n == -1 and modulo is None:
+            n = 0
             # Also set ``n = n+1`` (which results in NaN) if ``n = -1``
             # (i.e., if the requested value is samller than first
             # element array) and the values are NOT cyclic.
-            n = 0
             
-        if type_int == "log":
-            # Add error handling to avoid logarithm and division issues
+        if type_int == "log": # Add error handling to avoid logarithm and division issues
             if x[np1] <= 0 or xi[k] <= 0 or x[n] <= 0 or x[n] == x[np1]:
                 alpha = 0  # Default to 0 if we can't compute logarithm
                 var_OUT[k, :] = var_IN[np1, ...]  # Use nearest value
@@ -736,17 +758,18 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int="lin",
 
 def layers_mid_point_to_boundary(pfull, sfc_val):
     """
-    A general description for the layer boundaries is:
+    A general description for the layer boundaries is::
 
         p_half = ps*bk + pk
 
-    This routine converts the coordinate of the layer MIDPOINTS, ``p_full``
-    or ``bk``, into the coordinate of the layer BOUNDARIES ``p_half``. 
-    The surface value must be provided.
+    This routine converts the coordinate of the layer MIDPOINTS, 
+    ``p_full`` or ``bk``, into the coordinate of the layer BOUNDARIES 
+    ``p_half``. The surface value must be provided.
 
     :param p_full: Pressure/sigma values for the layer MIDPOINTS,
         INCREASING with ``N`` (e.g., [0.01 -> 720] or [0.001 -> 1])
     :type p_full: 1D array
+    
     :param sfc_val: The surface value for the lowest layer's boundary
         ``p_half[N]`` (e.g., ``sfc_val`` = 720 Pa or ``sfc_val`` = 1 in
         sigma coordinates)
@@ -765,25 +788,29 @@ def layers_mid_point_to_boundary(pfull, sfc_val):
         ---Nk-1---      --------  p_full
         --- Nk --- SFC  ========  p_half
                         / / / / /
-
+    
     We have::
 
-        pfull[N] = ((phalf[N]-phalf[N-1])
-                     / np.log(phalf[N]/phalf[N-1]))
+        pfull[N] = ((phalf[N]-phalf[N-1]) / np.log(phalf[N]/phalf[N-1]))
         => phalf[N-1] - pfull[N] log(phalf[N-1])
         = phalf[N] - pfull[N] log(phalf[N])
 
     We want to solve for ``phalf[N-1] = X``::
+        
         v                v                             v
         X      - pfull[N]       log(X)   =             B
 
     ``=> X= -pfull[N] W{-exp(-B/pfull[N])/pfull[N]}``
+    
     with ``B = phalf[N] - pfull[N] log(phalf[N])`` (known at N) and
+    
     ``W`` is the product-log (Lambert) function.
 
     This was tested on an L30 simulation: The values of ``phalf`` are
-    reconstructed from ``pfull`` with a max error of
+    reconstructed from ``pfull`` with a max error of:
+    
     ``100*(phalf - phalf_reconstruct)/phalf < 0.4%`` at the top.
+    
     """
 
     def lambertW_approx(x):
@@ -814,10 +841,13 @@ def polar2XYZ(lon, lat, alt, Re=3400*10**3):
 
     :param lon: Longitude in radians
     :type lon: ND array
+    
     :param lat: Latitude in radians
     :type lat: ND array
+    
     :param alt: Altitude [m]
     :type alt: ND array
+    
     :param Re: Planetary radius [m], defaults to 3400*10^3
     :type Re: float
 
@@ -826,6 +856,7 @@ def polar2XYZ(lon, lat, alt, Re=3400*10**3):
     .. note::
         This is a classic polar coordinate system with
         ``colatitude = pi/2 - lat`` where ``cos(colat) = sin(lat)``
+        
     """
     lon = np.array(lon)
     lat = np.array(lat)
@@ -847,24 +878,30 @@ def interp_KDTree(var_IN, lat_IN, lon_IN, lat_OUT, lon_OUT, N_nearest=10):
         ``[time, lev, lat, lon]`` with ``[lat, lon]`` dimensions LAST
         [°])
     :type var_IN: ND array
+    
     :param lat_IN: latitude [°] (``LAT[y, x]`` array for
         irregular grids)
     :type lat_IN: 1D or 2D array
+    
     :param lon_IN: latitude [°] (``LAT[y, x]`` array for
         irregular grids)
     :type lon_IN: 1D or 2D array
+    
     :param lat_OUT: latitude [°] for the TARGET grid structure
         (or ``LAT1[y,x]`` for irregular grids)
     :type lat_OUT: 1D or 2D array
+    
     :param lon_OUT: longitude [°] for the TARGET grid structure
         (or ``LON1[y,x]`` for irregular grids)
     :type lon_OUT: 1D or 2D array
+    
     :param N_nearest: number of nearest neighbours for the search
     :type N_nearest: int
 
     :return: ``VAR_OUT`` interpolated data on the target grid
 
-    .. note:: This implementation is much FASTER than ``griddata`` and
+    .. note::
+        This implementation is much FASTER than ``griddata`` and
         it supports unstructured grids like an MGCM tile.
 
         The nearest neighbour interpolation is only done on the lon/lat
@@ -874,7 +911,9 @@ def interp_KDTree(var_IN, lat_IN, lon_IN, lat_OUT, lon_OUT, N_nearest=10):
         on the target grid are 100's of km away while the closest
         points in the vertical are a few 10's -100's meter in the PBL.
         This would result in excessive weighting in the vertical.
+        
     """
+    
     # TODO Import called each time. Should be moved out of the routine
     # if ``scipy`` is a requirement for the pipeline
     from scipy.spatial import cKDTree
@@ -927,18 +966,20 @@ def interp_KDTree(var_IN, lat_IN, lon_IN, lat_OUT, lon_OUT, N_nearest=10):
 
 def cart_to_azimut_TR(u, v, mode="from"):
     """
-    Convert cartesian coordinates or wind vectors to radians using
-    azimuth angle.
+    Convert cartesian coordinates or wind vectors to radians using azimuth angle.
 
     :param x: the cartesian coordinate
     :type x: 1D array
+    
     :param y: the cartesian coordinate
     :type y: 1D array
+    
     :param mode: "to" for the direction that the vector is pointing,
         "from" for the direction from which the vector is coming
     :type mode: str
 
     :return: ``Theta`` [°] and ``R`` the polar coordinates
+    
     """
     if mode == "from":
         cst = 180
@@ -958,17 +999,22 @@ def sfc_area_deg(lon1, lon2, lat1, lat2, R=3390000.):
                                              lon1    lon2
     :param lon1: longitude from set 1 [°]
     :type lon1: float
+    
     :param lon2: longitude from set 2 [°]
     :type lon2: float
+    
     :param lat1: latitude from set 1 [°]
     :type lat1: float
+    
     :param lat2: longitude from set 2 [°]
     :type lat2: float
+    
     :param R: planetary radius [m]
     :type R: int
 
-    .. note:: Lon and Lat define the corners of the area not the grid
-        cell center.
+    .. note::
+    qLon and Lat define the corners of the area not the grid cell center.
+        
     """
     lat1 *= np.pi/180
     lat2 *= np.pi/180
@@ -983,29 +1029,34 @@ def area_meridional_cells_deg(lat_c, dlon, dlat, normalize=False, R=3390000.):
     Return area of invidual cells for a meridional band of thickness
     ``dlon`` where ``S = int[R^2 dlon cos(lat) dlat]`` with
     ``sin(a)-sin(b) = 2 cos((a+b)/2)sin((a+b)/2)``
-    so ``S = 2 R^2 dlon 2cos(lat)sin(dlat/2)``
+    so ``S = 2 R^2 dlon 2cos(lat)sin(dlat/2)``::
 
-        _________lat + dlat/2
-        \    lat \               ^
-         \lon +   \              | dlat
-          \________\lat - dlat/2 v
-    lon - dlon/2   lon + dlon/2
-             <------>
-               dlon
+            _________lat + dlat/2
+            \    lat \               ^
+            \lon +   \              | dlat
+            \________\lat - dlat/2 v
+        lon - dlon/2   lon + dlon/2
+                <------>
+                dlon
 
     :param lat_c: latitude of cell center [°]
     :type lat_c: float
+    
     :param dlon: cell angular width [°]
     :type dlon: float
+    
     :param dlat: cell angular height [°]
     :type dlat: float
+    
     :param R: planetary radius [m]
     :type R: float
+    
     :param normalize: if True, the sum of the output elements = 1
     :type normalize: bool
 
     :return: ``S`` areas of the cells, same size as ``lat_c`` in [m2]
         or normalized by the total area
+        
     """
     # Initialize
     area_tot = 1.
@@ -1026,11 +1077,16 @@ def area_weights_deg(var_shape, lat_c, axis = -2):
 
     :param var_shape: variable shape
     :type var_shape: tuple
+    
     :param lat_c: latitude of cell centers [°]
+    :type lat_c: float
+    
     :param axis: position of the latitude axis for 2D and higher
         dimensional arrays. The default is the SECOND TO LAST dimension
+    :type axis: int
 
     Expected dimensions are:
+    
     [lat] ``axis`` not needed
     [lat, lon] ``axis = -2`` or ``axis = 0``
     [time, lat, lon] ``axis = -2`` or ``axis = 1``
@@ -1046,27 +1102,30 @@ def area_weights_deg(var_shape, lat_c, axis = -2):
         averaging as ``np.mean(var*W)`` [condensed form] or
         ``np.average(var, weights=W)`` [expanded form]
 
-    .. note:: Given a variable var::
+    .. note::
+        Given a variable var:
+        
+        ``var = [v1, v2, ...vn]``
 
-            var = [v1, v2, ...vn]
+        The regular average is
 
-        The regular average is::
+        ``AVG = (v1 + v2 + ... vn) / N``
 
-            AVG = (v1 + v2 + ... vn) / N
+        and the weighted average is
 
-        and the weighted average is::
+        ``AVG_W = (v1*w1 + v2*w2 + ... vn*wn) / (w1 + w2 + ...wn)``
 
-            AVG_W = (v1*w1 + v2*w2 + ... vn*wn) / (w1 + w2 + ...wn)
+        This function returns
 
-        This function returns::
-
-            W = [w1, w2, ... , wn]*N / (w1 + w2 + ...wn)
+        ``W = [w1, w2, ... , wn]*N / (w1 + w2 + ...wn)``
 
         Therfore taking a regular average of (``var*W``) with
-        ``np.mean(var*W)`` or ``np.average(var, weights=W)`` returns
-        the weighted average of the variable. Use
+        ``np.mean(var*W)`` or ``np.average(var, weights=W)`` 
+        
+        returns the weighted average of the variable. Use
         ``np.average(var, weights=W, axis = X)`` to average over a
         specific axis.
+        
     """
     if (len(np.atleast_1d(lat_c)) == 1 or
         len(np.atleast_1d(var_shape)) == 1):
@@ -1102,13 +1161,17 @@ def areo_avg(VAR, areo, Ls_target, Ls_angle, symmetric=True):
 
     :param VAR: a variable with ``time`` in the 1st dimension
     :type VAR: ND array
+    
     :param areo: solar longitude of the input variable (0-720)
     :type areo: 1D array
+    
     :param Ls_target: central solar longitude of interest
     :type Ls_target: float
+    
     :param Ls_angle: requested window angle centered at ``Ls_target``
     :type Ls_angle: float
-    symmetric: If ``True`` and the requested window is out of range,
+    
+    :param symmetric: If ``True`` and the requested window is out of range,
         ``Ls_angle`` is reduced. If False, the time average is performed
         on the data available
     :type symmetric: bool (defaults to True)
@@ -1116,9 +1179,10 @@ def areo_avg(VAR, areo, Ls_target, Ls_angle, symmetric=True):
     :return: the variable averaged over solar longitudes
         ``Ls_target-Ls_angle/2`` to ``Ls_target+Ls_angle/2``
 
-    EX:
-    ``Ls_target = 90.``
-    ``Ls_angle = 10.``
+    EX::
+        
+        ``Ls_target = 90.``
+        ``Ls_angle = 10.``
 
     Nominally, the time average is done over solar longitudes
     ``85 < Ls_target < 95`` (10°).
@@ -1129,7 +1193,9 @@ def areo_avg(VAR, areo, Ls_target, Ls_angle, symmetric=True):
     If ``symmetric = False`` and the input data range is Ls = 88-100°
     then ``88 < Ls_target < 95`` (7°, assymetric)
 
-    .. note:: The routine can bin data from muliples Mars years
+    .. note::
+        The routine can bin data from muliples Mars years
+    
     """
     # Take the modulo of solar longitude
     areo = np.mod(areo, 360)
@@ -1214,16 +1280,22 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
         ``lat`` dimension SECOND (e.g., ``[pstd, lat]``,
         ``[pstd, lat, lon]`` or ``[pstd, lat, lon, time]``)
     :type v_avg: ND array
+    
     :param lat: latitudes [°]
     :type lat: 1D array
+    
     :param level: interpolated layers [Pa] or [m]
     :type level: 1D array
-    :param type: interpolation type ("pstd", "zstd" or "zagl")
+    
+    :param type: interpolation type (``pstd``, ``zstd`` or ``zagl``)
     :type type: str
+    
     :param psfc: reference surface pressure [Pa]
     :type psfc: float
+    
     :param H: reference scale height [m] when pressures are used
     :type H: float
+    
     :param factor: normalize the mass stream function by a factor, use
         ``factor = 1`` for [kg/s]
     :type factor: int
@@ -1231,10 +1303,12 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
     :return: ``MSF`` the meridional mass stream function (in
         ``factor * [kg/s]``)
 
-    .. note:: This routine allows the time and zonal averages to be
+    .. note:: 
+        This routine allows the time and zonal averages to be
         computed before OR after the MSF calculation.
 
-    .. note:: The expressions for MSF use log(pressure) Z coordinates,
+    .. note:: 
+        The expressions for MSF use log(pressure) Z coordinates,
         which integrate better numerically.
 
         With ``p = p_sfc exp(-Z/H)`` and ``Z = H log(p_sfc/p)``
@@ -1247,13 +1321,13 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
                                             Z
         With ``p = p_sfc exp(-Z/H)``
 
-
         The integral is calculated using trapezoidal rule::
 
                 n
                 ⌠
             .g. ⌡ f(z)dz = (Zn-Zn-1){f(Zn) + f(Zn-1)}/2
               n-1
+              
     """
     g = 3.72 # m/s2
     a = 3400*1000 # m
@@ -1325,29 +1399,37 @@ def vw_from_MSF(msf, lat, lev, ztype="pstd", norm=True, psfc=700, H=8000.):
             LAST and the ``lat`` dimension LAST (e.g., ``[lev, lat]``,
             ``[time, lev, lat]``, ``[time, lon, lev, lat]``)
         :type msf: ND array
+        
         :param lat: latitude [°]
         :type lat: 1D array
+        
         :param lev: level [Pa] or [m] (``pstd``, ``zagl``, ``zstd``)
         :type lev: 1D array
-        :param ztype: Use "pstd" for pressure so vertical
+        
+        :param ztype: Use ``pstd`` for pressure so vertical
             differentation is done in log space.
         :type ztype: str
+        
         :param norm: if True, normalize ``lat`` and ``lev`` before
             differentiating to avoid having to rescale manually the
             vectors in quiver plots
         :type norm: bool
+        
         :param psfc: surface pressure for pseudo-height when
-            ``ztype = "pstd"``
+            ``ztype = pstd``
         :type psfc: float
-        :param H: scale height for pseudo-height when ``ztype = "pstd"``
+        
+        :param H: scale height for pseudo-height when ``ztype = pstd``
         :type H: float
 
     :return: the meditional and altitude components of the mass stream
         function for plotting as a quiver or streamlines.
 
-    .. note:: The components are:
+    .. note:: 
+        The components are:
         ``[v]=  g/(2 pi cos(lat)) dphi/dz``
         ``[w]= -g/(2 pi cos(lat)) dphi/dlat``
+        
     """
     g = 3.72 # m/s2
 
@@ -1392,16 +1474,20 @@ def alt_KM(press, scale_height_KM=8., reference_press=610.):
 
     :param press: the pressure [Pa]
     :type press: 1D array
+    
     :param scale_height_KM: scale height [km] (default is 8 km, an
         isothermal at 155K)
     :type scale_height_KM: float
+    
     :param reference_press: reference surface pressure [Pa] (default is
         610 Pa)
     :type reference_press: float
 
     :return: ``z_KM`` the equivalent altitude for that pressure [km]
 
-    .. note:: Scale height is ``H = rT/g``
+    .. note:: 
+        Scale height is ``H = rT/g``
+    
     """
     # Pressure -> altitude [km]
     return (-scale_height_KM * np.log(press/reference_press))
@@ -1412,21 +1498,24 @@ def press_pa(alt_KM, scale_height_KM=8., reference_press=610.):
 
     :param alt_KM: the altitude [km]
     :type alt_KM: 1D array
+    
     :param scale_height_KM: scale height [km] (default is 8 km, an
         isothermal at 155K)
     :type scale_height_KM: float
+    
     :param reference_press: reference surface pressure [Pa] (default is
         610 Pa)
     :type reference_press: float
 
     :return: ``press_pa`` the equivalent pressure at that altitude [Pa]
 
-    .. note:: Scale height is ``H = rT/g``
+    .. note:: 
+        Scale height is ``H = rT/g``
+    
     """
     return (reference_press * np.exp(-alt_KM/scale_height_KM))
 
 def lon180_to_360(lon):
-    lon = np.array(lon)
     """
     Transform a float or an array from the -180/180 coordinate system
     to 0-360
@@ -1435,7 +1524,10 @@ def lon180_to_360(lon):
     :type lon: float, 1D array, or 2D array
 
     :return: the equivalent longitudes in the 0-360 coordinate system
+    
     """
+    lon = np.array(lon)
+    
     if len(np.atleast_1d(lon)) == 1:
         # ``lon`` is a float
         if lon < 0:
@@ -1457,6 +1549,7 @@ def lon360_to_180(lon):
     :type lon: float, 1D array, or 2D array
 
     :return: the equivalent longitudes in the -180/180 coordinate system
+    
     """
     if len(np.atleast_1d(lon)) == 1:
         # ``lon`` is a float
@@ -1475,13 +1568,16 @@ def shiftgrid_360_to_180(lon, data):
 
     :param lon: longitudes in the 0-360 coordinate system
     :type lon: 1D array
+    
     :param data: variable with ``lon`` in the last dimension
     :type data: ND array
 
     :return: shifted data
 
-    .. note:: Use ``np.ma.hstack`` instead of ``np.hstack`` to keep the
+    .. note:: 
+        Use ``np.ma.hstack`` instead of ``np.hstack`` to keep the
         masked array properties
+        
     """
     lon = np.array(lon)
     # convert to +/- 180
@@ -1496,10 +1592,12 @@ def shiftgrid_180_to_360(lon, data):
 
     :param lon: longitudes in the 0-360 coordinate system
     :type lon: 1D array
+    
     :param data: variable with ``lon`` in the last dimension
     :type data: ND array
 
     :return: shifted data
+    
     """
     lon = np.array(lon)
     # convert to 0-360
@@ -1516,10 +1614,12 @@ def second_hhmmss(seconds, lon_180=0.):
 
     :param seconds: the time [sec]
     :type seconds: float
+    
     :param lon_180: the longitude in -180/180 coordinate
     :type lon_180: float
 
     :return: the local time [float] or a tuple (hours, minutes, seconds)
+    
     """
     hours = seconds // (60*60)
     seconds %= (60 * 60)
@@ -1536,10 +1636,12 @@ def sol_hhmmss(time_sol, lon_180=0.):
 
     :param time_sol: the time in sols
     :type seconds: float
+    
     :param lon_180: the longitude in -180/180 coordinate
     :type lon_180: float
 
     :return: the local time [float] or a tuple (hours, minutes, seconds)
+    
     """
     return second_hhmmss(time_sol * 86400., lon_180)
 
@@ -1549,14 +1651,18 @@ def UT_LTtxt(UT_sol, lon_180=0., roundmin=None):
 
     :param time_sol: the time in sols
     :type time_sol: float
+    
     :param lon_180: the center longitude in -180/180 coordinates.
         Increments by 1hr every 15°
     :type lon_180: float
+    
     :param roundmin: round to the nearest X minute. Typical values are
         ``roundmin = 1, 15, 60``
     :type roundmin: int
 
-    .. note:: If ``roundmin`` is requested, seconds are not shown
+    .. note:: 
+        If ``roundmin`` is requested, seconds are not shown
+    
     """
     def round2num(number, interval):
         # Internal Function to round a number to the closest range.
@@ -1582,10 +1688,11 @@ def dvar_dh(arr, h=None):
     If ``h`` is 1D, then ``h``and ``dim1`` must have the same length
 
     If ``h`` is 2D, 3D or 4D, then ``arr`` and ``h`` must have the
-        same shape
+    same shape
 
     :param arr: variable
     :type arr: ND array
+    
     :param h: the dimension (``Z``, ``P``, ``lat``, ``lon``)
     :type h: str
 
@@ -1643,10 +1750,12 @@ def zonal_detrend(VAR):
 
     :return: detrented field (same size as input)
 
-    .. note:: ``RuntimeWarnings`` are expected if the slice contains
+    .. note:: 
+        ``RuntimeWarnings`` are expected if the slice contains
         only NaNs which is the case below the surface and above the
         model top in the interpolated files. This routine disables such
         warnings temporarily.
+        
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category = RuntimeWarning)
@@ -1661,10 +1770,13 @@ def get_trend_2D(VAR, LON, LAT, type_trend="wmean"):
         and ``lon`` is LAST  (e.g., ``[time, lat, lon]`` or
         ``[time, lev, lat, lon]``)
     :type VAR: ND array
+    
     :param LON: longitude coordinates
     :type LON: 2D array
+    
     :param LAT: latitude coordinates
     :type LAT: 2D array
+    
     :param type_trend: type of averaging to perform:
         "mean" - use a constant average over all lat/lon
         "wmean" - use a area-weighted average over all lat/lon
@@ -1673,6 +1785,7 @@ def get_trend_2D(VAR, LON, LAT, type_trend="wmean"):
     :type type_trend: str
 
     :return: the trend, same size as ``VAR``
+    
     """
     var_shape = np.array(VAR.shape)
 
@@ -1711,14 +1824,18 @@ def regression_2D(X, Y, VAR, order=1):
 
     :param X: first coordinate
     :type X: 2D array
+    
     :param Y: second coordinate
     :type Y: 2D array
+    
     :param VAR: variable of the same size as X
     :type VAR: 2D array
+    
     :param order: 1 (linear) or 2 (quadratic)
     :type order: int
 
-    .. note:: When ``order = 1``, the equation is: ``aX + bY + C = Z``.
+    .. note:: 
+        When ``order = 1``, the equation is: ``aX + bY + C = Z``.
         When ``order = 2``, the equation is:
         ``aX^2 + 2bX*Y + cY^2 + 2dX + 2eY + f = Z``
 
@@ -1734,6 +1851,7 @@ def regression_2D(X, Y, VAR, order=1):
 
     The least-squares regression provides the solution that that
     minimizes ``||b – A x||^2``
+    
     """
     if order == 1:
         A = np.array([X.flatten(), Y.flatten(), np.ones_like(X.flatten())]).T
@@ -1775,27 +1893,33 @@ def daily_to_average(varIN, dt_in, nday=5, trim=True):
     :param varIN: variable with ``time`` dimension first (e.g.,
         ``ts[time, lat, lon]``)
     :type varIN: ND array
+    
     :param dt_in: delta of time betwen timesteps in sols (e.g.,
         ``dt_in = time[1] - time[0]``)
     :type dt_in: float
+    
     :param nday: bining period in sols, default is 5 sols
     :type nday: int
+    
     :param trim: whether to discard any leftover data at the end of file
         before binning
     :type trim: bool
 
     :return: the variable bin over ``nday``
 
-    .. note::  If ``varIN[time, lat, lon]`` from ``atmos_daily`` is
+    .. note:: 
+        If ``varIN[time, lat, lon]`` from ``atmos_daily`` is
         ``[160, 48, 96]`` and has 4 timesteps per day (every 6 hours),
         then the resulting variable for ``nday = 5`` is
         ``varOUT(160/(4*5), 48, 96) = varOUT(8, 48, 96)``
 
-    .. note:: If the daily file has 668 sols, then there are
+    .. note::
+        If the daily file has 668 sols, then there are
         ``133 x 5 + 3`` sols leftover. If ``trim = True``, then the
         time is 133 and last 3 sols the are discarded. If
         ``trim = False``, the time is 134 and last bin contains only
         3 sols of data.
+        
     """
     vshape_in = varIN.shape
     # 0 is the time dimension
@@ -1834,6 +1958,7 @@ def daily_to_diurn(varIN, time_in):
     :param varIN: variable with time dimension first (e.g.,
         ``[time, lat, lon]``)
     :type varIN: ND array
+    
     :param time_in: time array in sols. Only the first N elements
         are actually required if saving memory is important
     :type time_in: ND array
@@ -1842,15 +1967,18 @@ def daily_to_diurn(varIN, time_in):
         (``[time, time_of_day, lat, lon]``) and the time of day array
         [hr]
 
-    .. note:: If ``varIN[time, lat, lon]`` from ``atmos_daily`` is
+    .. note::
+        If ``varIN[time, lat, lon]`` from ``atmos_daily`` is
         ``[40, 48, 96]`` and has 4 timestep per day (every 6 hours),
         then the resulting variable is
         ``varOUT[10, 4, 48, 96] = [time, time_of_day, lat, lon]`` and
         ``tod = [0., 6., 12., 18.]``.
 
-    .. note:: Since the time dimension is first, the output variables
+    .. note::
+        Since the time dimension is first, the output variables
         may be passed to the ``daily_to_average()`` function for
         further binning.
+        
     """
     dt_in = time_in[1] - time_in[0]
     iperday = int(np.round(1/dt_in))
@@ -1880,6 +2008,7 @@ def gauss_profile(x, alpha, x0=0.):
     """
     Return Gaussian line shape at x. This can be used to generate a
     bell-shaped mountain.
+    
     """
     return (np.sqrt(np.log(2) / np.pi) / alpha
             * np.exp(-((x-x0) / alpha)**2 * np.log(2)))
@@ -1892,19 +2021,24 @@ def compute_uneven_sigma(num_levels, N_scale_heights, surf_res,
 
     :param num_levels: the number of levels
     :type num_levels: float
+    
     :param N_scale_heights: the number of scale heights to the top of
         the model (e.g., ``N_scale_heights`` = 12.5 ~102 km assuming an
         8 km scale height)
     :type N_scale_heights: float
+    
     :param surf_res: the resolution at the surface
     :type surf_res: float
+    
     :param exponent: an exponent to increase the thickness of the levels
     :type exponent: float
+    
     :param zero_top: if True, force the top pressure boundary
         (in N = 0) to 0 Pa
     :type zero_top: bool
 
     :return: an array of sigma layers
+    
     """
     b = np.zeros(int(num_levels)+1)
     for k in range(0, num_levels):
@@ -1924,9 +2058,11 @@ def transition(pfull, p_sigma=0.1, p_press=0.05):
 
     :param pfull: the pressure [Pa]
     :type pfull: 1D array
+    
     :param p_sigma: the pressure level where the vertical grid starts
         transitioning from sigma to pressure
     :type p_sigma: float
+    
     :param p_press: the pressure level above which the vertical grid is
         pure (constant) pressure
     :type p_press: float
@@ -1934,10 +2070,12 @@ def transition(pfull, p_sigma=0.1, p_press=0.05):
     :return: the transition factor. = 1 for pure sigma, = 0 for pure
         pressure and =0-1 for the transition
 
-    .. note:: In the MGCM code, the full pressures are computed from:
+    In the MGCM code, the full pressures are computed from::
+
                        del(phalf)
          pfull = -----------------------------
                  log(phalf(k+1/2)/phalf(k-1/2))
+                 
     """
     t = np.zeros_like(pfull)
     for k in range(0, len(pfull)):
@@ -1957,12 +2095,15 @@ def swinbank(plev, psfc, ptrans=1.):
 
     :param plev: the pressure levels [Pa]
     :type plev: 1D array
+    
     :param psfc: the surface pressure [Pa]
     :type psfc: 1D array
+    
     :param ptrans: the transition pressure [Pa]
     :type ptrans: 1D array
 
     :return: the coefficients for the new layers
+    
     """
     # ``ks`` = number of pure pressure levels
     ktrans = np.argmin(np.abs(plev - ptrans))
@@ -2013,17 +2154,21 @@ def polar_warming(T, lat, outside_range=np.nan):
     :param T: temperature with the lat dimension FIRST (transpose as
         needed)
     :type T: ND array
+    
     :param lat: latitude array
     :type lat: 1D array
+    
     :param outside_range: values to set the polar warming to when
         outside pf the range. Default = NaN but 0 may be desirable.
     :type outside_range: float
 
     :return: The polar warming [K]
 
-    .. note:: ``polar_warming()`` concatenates the results from both
+    .. note::
+        ``polar_warming()`` concatenates the results from both
         hemispheres obtained from the nested function
         ``PW_half_hemisphere()``
+        
     """
     def PW_half_hemisphere(T_half, lat_half, outside_range=np.nan):
 
@@ -2101,17 +2246,22 @@ def time_shift_calc(array, lon, timeo, timex=None):
     :param array: variable to be shifted. Assume ``lon`` is the first
         dimension and ``time_of_day`` is the last dimension
     :type array: ND array
+    
     :param lon: longitude
     :type lon: 1D array
+    
     :param timeo: ``time_of_day`` index from the input file
     :type timeo: 1D array
+    
     :param timex: local time(s) [hr] to shift to (e.g., ``"3. 15."``)
     :type timex: float (optional)
 
     :return: the array shifted to uniform local time
 
-    .. note:: If ``timex`` is not specified, the file is interpolated
+    .. note::
+        If ``timex`` is not specified, the file is interpolated
         on the same ``time_of_day`` as the input
+        
     """
     if np.shape(array) == len(array):
         print('Need longitude and time dimensions')
@@ -2239,12 +2389,15 @@ def lin_interp(X_in, X_ref, Y_ref):
 
     :param X_in: input values
     :type X_in: float or array
+    
     :param X_ref x values
     :type X_ref: array
+    
     :param Y_ref y values
     :type Y_ref: array
 
     :return: y value linearly interpolated at ``X_in``
+    
     """
     X_ref = np.array(X_ref)
     Y_ref = np.array(Y_ref)
@@ -2279,12 +2432,14 @@ def add_cyclic(data, lon):
 
     :param data: variable of size ``[nlat, nlon]``
     :type data: array
+    
     :param lon: longitudes
     :type lon: array
 
     :return: a 2D array of size ``[nlat, nlon+1]`` with last column
         identical to the 1st; and a 1D array of longitudes
         size [nlon+1] where the last element is ``lon[-1] + dlon``
+        
     """
     # Compute increment
     dlon = lon[1]-lon[0]
@@ -2305,16 +2460,21 @@ def spherical_div(U, V, lon_deg, lat_deg, R=3400*1000., spacing="varying"):
         dimensions (e.g., ``[lat, lon]`` or ``[time, lev, lat, lon``]
         etc.)
     :type U: array
+    
     :param V: wind field with ``lat`` SECOND TO LAST and ``lon`` as last
         dimensions (e.g., ``[lat, lon]`` or ``[time, lev, lat, lon``]
         etc.)
     :type V: array
+    
     :param lon_deg: longitude [°] (2D if irregularly-spaced)
     :type lon_deg: 1D array
+    
     :param lat_deg: latitude [°] (2D if irregularly-spaced)
     :type lat_deg: 1D array
+    
     :param R: planetary radius [m]
     :type R: float
+    
     :param spacing: when ``lon`` and ``lat`` are 1D arrays, using
         spacing = "varying" differentiates latitude and longitude. When
         spacing = "regular", ``dx = lon[1]-lon[0]``,
@@ -2323,6 +2483,7 @@ def spherical_div(U, V, lon_deg, lat_deg, R=3400*1000., spacing="varying"):
     :type spacing: str (defaults to "varying")
 
     :return: the horizonal divergence of the wind field [m-1]
+    
     """
     lon = lon_deg * np.pi/180
     lat = lat_deg * np.pi/180
@@ -2386,16 +2547,21 @@ def spherical_curl(U, V, lon_deg, lat_deg, R=3400*1000., spacing="varying"):
         dimensions (e.g., ``[lat, lon]`` or ``[time, lev, lat, lon``]
         etc.)
     :type U: array
+    
     :param V: wind field with ``lat`` SECOND TO LAST and ``lon`` as last
         dimensions (e.g., ``[lat, lon]`` or ``[time, lev, lat, lon``]
         etc.)
     :type V: array
+    
     :param lon_deg: longitude [°] (2D if irregularly-spaced)
     :type lon_deg: 1D array
+    
     :param lat_deg: latitude [°] (2D if irregularly-spaced)
     :type lat_deg: 1D array
+    
     :param R: planetary radius [m]
     :type R: float
+    
     :param spacing: when ``lon`` and ``lat`` are 1D arrays, using
         spacing = "varying" differentiates latitude and longitude. When
         spacing = "regular", ``dx = lon[1]-lon[0]``,
@@ -2470,18 +2636,24 @@ def frontogenesis(U, V, theta, lon_deg, lat_deg, R=3400*1000.,
         dimensions (e.g., ``[lat, lon]`` or ``[time, lev, lat, lon``]
         etc.)
     :type U: array
+    
     :param V: wind field with ``lat`` SECOND TO LAST and ``lon`` as last
         dimensions (e.g., ``[lat, lon]`` or ``[time, lev, lat, lon``]
         etc.)
     :type V: array
+    
     :param theta: potential temperature [K]
     :type theta: array
+    
     :param lon_deg: longitude [°] (2D if irregularly-spaced)
     :type lon_deg: 1D array
+    
     :param lat_deg: latitude [°] (2D if irregularly-spaced)
     :type lat_deg: 1D array
+    
     :param R: planetary radius [m]
     :type R: float
+    
     :param spacing: when ``lon`` and ``lat`` are 1D arrays, using
         spacing = "varying" differentiates latitude and longitude. When
         spacing = "regular", ``dx = lon[1]-lon[0]``,
@@ -2490,6 +2662,7 @@ def frontogenesis(U, V, theta, lon_deg, lat_deg, R=3400*1000.,
     :type spacing: str (defaults to "varying")
 
     :return: the frontogenesis field [m-1]
+    
     """
     lon = lon_deg*np.pi/180
     lat = lat_deg*np.pi/180
@@ -2574,10 +2747,12 @@ def MGSzmax_ls_lat(ls, lat):
 
     :param ls: solar longitude [°]
     :type ls: array
+    
     :param lat : latitude [°]
     :type lat: array
 
     :return: top altitude for the dust [km]
+    
     """
     lat = np.array(lat) * np.pi/180
     ls_p = (np.array(ls)-158) * np.pi/180
@@ -2596,10 +2771,12 @@ def MGStau_ls_lat(ls, lat):
 
     :param ls: solar longitude [°]
     :type ls: array
+    
     :param lat : latitude [°]
     :type lat: array
 
     :return: top altitude for the dust [km]
+    
     """
     lat = np.array(lat)
     ls_p = (np.array(ls)-250) * np.pi/180
@@ -2631,12 +2808,14 @@ def broadcast(var_1D, shape_out, axis):
     :param var_1D: variable (e.g., ``lat`` size = 36, or ``time``
         size = 133)
     :type var_1D: 1D array
+    
     :param shape_out: broadcasting shape (e.g.,
         ``temp.shape = [133, lev, 36, lon]``)
     :type shape_out: list
 
     :return: (ND array) broadcasted variables (e.g., size =
         ``[1,36,1,1]`` for ``lat`` or ``[133,1,1,1]`` for ``time``)
+        
     """
     # Special case where var_1D has only one element
     var_1D = np.atleast_1d(var_1D)
@@ -2656,7 +2835,8 @@ def ref_atmosphere_Mars_PTD(Zi):
     :return: tuple of corresponding pressure [Pa], temperature [K],
     and density [kg/m3] floats or arrays
 
-    .. note:: This model was obtained by fitting globally and annually
+    .. note::
+        This model was obtained by fitting globally and annually
         averaged reference temperature profiles derived from the Legacy
         GCM, MCS observations, and Mars Climate Database.
 
@@ -2674,6 +2854,7 @@ def ref_atmosphere_Mars_PTD(Zi):
         altitudes, we provide a fit in the form of
         ``P = P0 exp(-az-bz^2)`` based on diurnal average of the MCD
         database at lat = 0, Ls = 150.
+        
     """
 
     # Internal Functions
@@ -2684,16 +2865,21 @@ def ref_atmosphere_Mars_PTD(Zi):
 
         :param Z: altitude [m]
         :type Z: float
+        
         :param Z0: starting altitude [m]
         :type Z0: float
+        
         :param T0: quadratic coefficient
         :type T0: float
+        
         :param gam: quadratic coefficient
         :type gam: float
+        
         :param a: quadratic coefficient
         :type a: float
 
         :return: temperature at altitude Z [K]
+        
         """
         return (T0 + gam*(Z-Z0) + a*(Z-Z0)**2)
 
@@ -2706,22 +2892,30 @@ def ref_atmosphere_Mars_PTD(Zi):
 
         :param Z: altitude [m]
         :type Z: float
+        
         :param Z0: starting altitude [m]
         :type Z0: float
+        
         :param P0: reference pressure at Z0[Pa]
         :type P0: float
+        
         :param T0: reference temperature at Z0[Pa]
         :type T0: float
+        
         :param gam: linear and quadratic coeff for the temperature
         :type gam: float
+        
         :param a: linear and quadratic coeff for the temperature
         :type a: float
+        
         :param rgas: specific gas constant [J/kg/K]
         :type rgas: float
+        
         :param rg: gravity [m/s2]
         :type rg: float
 
         :return: pressure at alitude Z [Pa]
+        
         """
         delta = (4*a*T0 - gam**2)
 
@@ -2756,6 +2950,7 @@ def ref_atmosphere_Mars_PTD(Zi):
         :type Z: float
 
         :return: the equivalent pressure at altitude [Pa]
+        
         """
         return (P0 * np.exp(-p1*(Zi-Z0) - p2*(Zi-Z0)**2))
 
@@ -2775,8 +2970,11 @@ def ref_atmosphere_Mars_PTD(Zi):
             return 174.6
 
     def P_analytic_scalar(Zi):
-        """ Analytic solution for a pressure derived from a temperature
-        profile """
+        """
+        Analytic solution for a pressure derived from a temperature
+        profile
+        
+        """
         if Zi <= 57000:
             return alt_to_press_quad(Zi, Z0 = 0, P0 = 610, T0 = 225.9,
                                      gam = -0.00213479, a = 1.44823e-08,
@@ -2811,6 +3009,7 @@ def press_to_alt_atmosphere_Mars(Pi):
     :type Pi: float or 1D array
 
     :return: the corresponding altitude [m] (float or 1D array)
+    
     """
     # Internal Functions
     def press_to_alt_quad(P, Z0, P0, T0, gam, a, rgas, g):
@@ -2822,22 +3021,30 @@ def press_to_alt_atmosphere_Mars(Pi):
 
         :param P: pressure [Pa]
         :type P: float
+        
         :param Z0: referecence altitude [m]
         :type Z0: float
+        
         :param P0: reference pressure at Z0[Pa]
         :type P0: float
+        
         :param T0: reference temperature at Z0[Pa]
         :type T0: float
+        
         :param gam: linear and quadratic coefficients for temperature
         :type gam: float
+        
         :param a: linear and quadratic coefficients for temperature
         :type a: float
+        
         :param rgas: specific gas constant [J/kg/K]
         :type rgas: float
+        
         :param g: gravity [m/s2]
         :type g:
 
         :return: the corresponding altitude [m] (float or 1D array)
+        
         """
         delta = (4*a*T0 - gam**2)
 
@@ -2867,6 +3074,7 @@ def press_to_alt_atmosphere_Mars(Pi):
         :type P: float
 
         :return: altitude [m]
+        
         """
         # ``delta > 0`` on this pressure interval
         delta = (p1**2 - 4*p2*np.log(P/P0))
@@ -2875,6 +3083,7 @@ def press_to_alt_atmosphere_Mars(Pi):
     def alt_analytic_scalar(Pi):
         """
         Analytic solution for the altitude as a function of pressure.
+        
         """
         if Pi >= 610:
             return 0.
@@ -2918,11 +3127,10 @@ def press_to_alt_atmosphere_Mars(Pi):
     return alt_analytic_scalar(Pi)
 
 # ============================ Projections =============================
-"""
-The projections below were implemented by Alex Kling following "An
-Album of Map Projections," USGS Professional Paper 1453, (1994)
-https://pubs.usgs.gov/pp/1453/report.pdf
-"""
+
+# The projections below were implemented by Alex Kling following "An
+# Album of Map Projections," USGS Professional Paper 1453, (1994)
+# https://pubs.usgs.gov/pp/1453/report.pdf
 
 def azimuth2cart(LAT, LON, lat0, lon0=0):
     """
@@ -2931,14 +3139,18 @@ def azimuth2cart(LAT, LON, lat0, lon0=0):
 
     :param LAT: latitudes[°] size [nlat]
     :type LAT: 1D or 2D array
+    
     :param LON: longitudes [°] size [nlon]
     :type LON: 1D or 2D array
+    
     :param lat0: latitude coordinate of the pole
     :type lat0: float
+    
     :param lon0: longitude coordinate of the pole
     :type lon0: float
 
     :return: the cartesian coordinates for the latitudes and longitudes
+    
     """
     # Convert to radians
     LAT = LAT * np.pi/180
@@ -2961,15 +3173,19 @@ def ortho2cart(LAT, LON, lat0, lon0=0):
 
     :param LAT: latitudes[°] size [nlat]
     :type LAT: 1D or 2D array
+    
     :param LON: longitudes [°] size [nlon]
     :type LON: 1D or 2D array
+    
     :param lat0: latitude coordinate of the pole
     :type lat0: float
+    
     :param lon0: longitude coordinate of the pole
     :type lon0: float
 
     :return: the cartesian coordinates for the latitudes and longitudes;
         and a mask (NaN array) that hides the back side of the planet
+        
     """
     # Convert to radians
     LAT = LAT  * np.pi/180
@@ -2995,14 +3211,18 @@ def mollweide2cart(LAT, LON):
 
     :param LAT: latitudes[°] size [nlat]
     :type LAT: 1D or 2D array
+    
     :param LON: longitudes [°] size [nlon]
     :type LON: 1D or 2D array
+    
     :param lat0: latitude coordinate of the pole
     :type lat0: float
+    
     :param lon0: longitude coordinate of the pole
     :type lon0: float
 
     :return: the cartesian coordinates for the latitudes and longitudes
+    
     """
     # Convert to radians
     LAT = np.array(LAT) * np.pi/180
@@ -3012,6 +3232,7 @@ def mollweide2cart(LAT, LON):
     def compute_theta(lat):
         """
         Internal Function to compute theta. Latitude is in radians here.
+        
         """
         theta0 = lat
         sum = 0
@@ -3059,14 +3280,18 @@ def robin2cart(LAT, LON):
 
     :param LAT: latitudes[°] size [nlat]
     :type LAT: 1D or 2D array
+    
     :param LON: longitudes [°] size [nlon]
     :type LON: 1D or 2D array
+    
     :param lat0: latitude coordinate of the pole
     :type lat0: float
+    
     :param lon0: longitude coordinate of the pole
     :type lon0: float
 
     :return: the cartesian coordinates for the latitudes and longitudes
+    
     """
     # Convert to radians
     lon0 = 0.
@@ -3110,11 +3335,13 @@ def sol2ls(jld, cumulative=False):
 
     :param jld: sol number after perihelion
     :type jld: float or 1D array
+    
     :param cumulative: if True, result is cumulative
         (Ls=0-360, 360-720 etc..)
     :type cumulative: bool
 
     :return: the corresponding solar longitude
+    
     """
     # Constants
     # Year in sols
@@ -3137,6 +3364,7 @@ def sol2ls(jld, cumulative=False):
         """
         Based on Tanguy's ``aerols.py``. Useful link:
         http://www.jgiesen.de/kepler/kepler.html
+        
         """
         # Specify orbit eccentricity
         ec = .093
@@ -3193,6 +3421,7 @@ def sol2ls(jld, cumulative=False):
         For those edge cases where Ls is close to 359.9, the routine
         recalculates the Ls at a later time (say 1 sols) to check for
         outlier points.
+        
         """
         # Calculate cumulative Ls using ``sol2ls`` and adding 360 for
         # every Mars year
@@ -3239,8 +3468,10 @@ def ls2sol(Ls_in):
 
     :return: the corresponding sol number
 
-    .. note:: This function simply uses a numerical solver on the
+    .. note::
+        This function simply uses a numerical solver on the
         ``sol2ls()`` function.
+        
     """
     def internal_func(Ls_in):
         func_int = lambda x: sol2ls(x, cumulative = True)

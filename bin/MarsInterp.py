@@ -6,9 +6,11 @@ pressure (``pstd``), standard altitude (``zstd``), altitude above
 ground level (``zagl``), or a custom vertical grid.
 
 The executable requires:
+
     * ``[input_file]``          The file to be transformed
 
 and optionally accepts:
+
     * ``[-t --interp_type]``    Type of interpolation to perform (altitude, pressure, etc.)
     * ``[-v --vertical_grid]``  Specific vertical grid to interpolate to
     * ``[-incl --include]``     Variables to include in the new interpolated file
@@ -17,12 +19,14 @@ and optionally accepts:
 
 
 Third-party Requirements:
+
     * ``numpy``
     * ``netCDF4``
     * ``argparse``
     * ``os``
     * ``time``
     * ``matplotlib``
+
 """
 
 # Make print statements appear in color
@@ -48,7 +52,7 @@ from amescap.FV3_utils import (
 )
 from amescap.Script_utils import (
     check_file_tape, section_content_amescap_profile, find_tod_in_diurn,
-    filter_vars, find_fixedfile, ak_bk_loader, 
+    filter_vars, find_fixedfile, ak_bk_loader,
     read_variable_dict_amescap_profile
 )
 from amescap.Ncdf_wrapper import Ncdf
@@ -66,7 +70,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('input_file', nargs='+', 
+parser.add_argument('input_file', nargs='+',
     type=argparse.FileType('r'),
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
@@ -147,7 +151,7 @@ if args.input_file:
         if not re.search(".nc", file.name):
             parser.error(f"{Red}{file.name} is not a netCDF file{Nclr}")
             exit()
-        
+
 # ======================================================================
 #                           DEFINITIONS
 # ======================================================================

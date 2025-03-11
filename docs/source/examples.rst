@@ -14,9 +14,9 @@ CAP is a Python toolkit designed to simplify post-processing and plotting MGCM o
 
 The following exercises are organized into two parts by function.
 
-**`Part I: File Manipulations`_** → ``MarsFiles``, ``MarsVars``, & ``MarsInterp``
+`Part I: File Manipulations`_ → ``MarsFiles``, ``MarsVars``, & ``MarsInterp``
 
-**`Part II: Plotting with CAP`_** → ``MarsPlot``
+`Part II: Plotting with CAP`_ → ``MarsPlot``
 
 .. note::
    This does not cover ``MarsPull``.
@@ -24,18 +24,16 @@ The following exercises are organized into two parts by function.
 ----
 
 Table of Contents
-----------------
+-----------------
 
 - `Activating CAP`_
 - `Part I: File Manipulations`_
-  - `1. MarsPlot's --inspect Function`_
+  - `1. MarsPlot's Inspect Function`_
   - `2. Editing Variable Names and Attributes`_
   - `3. Splitting Files in Time`_
   - `4. Deriving Secondary Variables`_
   - `5. Time-Shifting Diurn Files`_
   - `6. Pressure-Interpolating the Vertical Axis`_
-- `Optional: Use the Answer Key for Part I`_
-- `CAP Practical Day 2`_
 - `Part II: Plotting with CAP`_
   - `Step 1: Creating the Template (Custom.in)`_
   - `Step 2: Editing Custom.in`_
@@ -48,7 +46,7 @@ Table of Contents
 ----
 
 Activating CAP
--------------
+--------------
 
 Activate the ``amescap`` virtual environment to use CAP:
 
@@ -78,7 +76,7 @@ CAP stores useful settings in ``amescap_profile``. Copying it to our home direct
 *Return to* `Table of Contents`_
 
 Part I: File Manipulations
-========================
+--------------------------
 
 CAP has dozens of post-processing capabilities. We will go over a few of the most commonly used functions in this tutorial. We will cover:
 
@@ -101,8 +99,8 @@ The three MGCM output files have a 5-digit sol number appended to the front of t
 .. note::
    The output files we manipulate in Part I will be used to generating plots in Part II so do **not** delete any file you create!
 
-1. MarsPlot's --inspect Function
--------------------------------
+1. MarsPlot's Inspect Function
+--------------------------------
 
 The inspect function is part of ``MarsPlot`` and it prints netCDF file contents to the screen. To use it on the ``average`` file, ``03340.atmos_average.nc``, type the following in the terminal:
 
@@ -118,7 +116,7 @@ The inspect function is part of ``MarsPlot`` and it prints netCDF file contents 
 ----
 
 2. Editing Variable Names and Attributes
---------------------------------------
+----------------------------------------
 
 In the previous exercise, ``[-i --inspect]`` revealed a variable called ``opac`` in ``03340.atmos_average.nc``. ``opac`` is dust opacity per pascal and it is similar to another variable in the file, ``dustref``, which is opacity per (model) level. Let's rename ``opac`` to ``dustref_per_pa`` to better indicate the relationship between these variables.
 
@@ -152,7 +150,7 @@ Finally, ``[-i --inspect]`` can **print the values** of a variable to the screen
 .. code-block:: bash
 
     (amescap)~$ MarsPlot -i 03340.atmos_average.nc -values lat
-    lat= 
+    lat=
     [-89. -87. -85. -83. -81. -79. -77. -75. -73. -71. -69. -67. -65. -63.
      -61. -59. -57. -55. -53. -51. -49. -47. -45. -43. -41. -39. -37. -35.
      -33. -31. -29. -27. -25. -23. -21. -19. -17. -15. -13. -11.  -9.  -7.
@@ -166,7 +164,7 @@ Finally, ``[-i --inspect]`` can **print the values** of a variable to the screen
 ----
 
 3. Splitting Files in Time
------------------------
+--------------------------
 
 Next we're going to trim the ``diurn`` and ``average`` files by L\ :sub:`s`\. We'll create files that only contain data around southern summer solstice, L\ :sub:`s`\=270. This greatly reduces the file size to make our next post-processing steps more efficient.
 
@@ -197,7 +195,7 @@ For future steps, we need a ``fixed`` file with the same simulation day number a
 ----
 
 4. Deriving Secondary Variables
-----------------------------
+-------------------------------
 
 The ``[-add --add_variable]`` function in ``MarsVars`` derives and adds secondary variables to MGCM output files provided that the variable(s) required for the derivation are already in the file. We will add the meridional mass streamfunction (``msf``) to the trimmed ``average`` file. To figure out what we need in order to do this, use the ``[-h --help]`` function on ``MarsVars``:
 
@@ -253,7 +251,7 @@ Now we have a pressure-interpolated ``average`` file with ``vcomp`` in it. We ca
 ----
 
 5. Time-Shifting Diurn Files
--------------------------
+----------------------------
 
 The ``diurn`` file is organized by time-of-day assuming ***universal*** time starting at the Martian prime meridian. The time-shift ``[-t --time_shift]`` function interpolates the ``diurn`` file to ***uniform local***  time. This is especially useful when comparing MGCM output to satellite observations in fixed local time orbit.
 
@@ -290,7 +288,7 @@ A new ``diurn`` file called ``03847.atmos_diurn_Ls265_275_T.nc`` is created. Use
 ----
 
 6. Pressure-Interpolating the Vertical Axis
-----------------------------------------
+-------------------------------------------
 
 Now we can efficiently interpolate the ``diurn`` file to the standard pressure grid. Recall that interpolation is part of ``MarsInterp`` and requires:
 
@@ -321,8 +319,8 @@ CAP always adds an appendix to the name of any new file it creates. This helps u
 
 *Return to* `Part I: File Manipulations`_
 
-CAP Practical Part II
-===================
+Part II
+-------
 
 This part of the CAP Practical covers how to generate plots with CAP. We will take a learn-by-doing approach, creating five sets of plots that demonstrate some of CAP's most often used plotting capabilities:
 
@@ -342,7 +340,7 @@ Plotting with CAP is done in 3 steps:
 As in Part I, we will go through these steps together.
 
 Part II: Plotting with CAP
-========================
+--------------------------
 
 CAP's plotting routine is ``MarsPlot``. It works by generating a ``Custom.in`` file containing seven different plot templates that users can modify, then reading the ``Custom.in`` file to make the plots.
 
@@ -367,7 +365,7 @@ The plot templates in ``Custom.in`` include:
 +----------------+----------------------+-------------------------+
 
 .. note::
-   *Dimension is user-indicated and could be time (``time``), latitude (``lat``), longitude ``lon``, or level (``pfull``, ``pstd``, ``zstd``, ``zagl``).
+   Dimension is user-indicated and could be time (``time``), latitude (``lat``), longitude ``lon``, or level (``pfull``, ``pstd``, ``zstd``, ``zagl``).
 
 Additionally, ``MarsPlot`` supports:
 
@@ -380,26 +378,26 @@ Additionally, ``MarsPlot`` supports:
 
 and so much more. You will learn to plot with ``MarsPlot`` by following along with the demonstration. We will generate the ``Custom.in`` template file, customize it, and pass it back into ``MarsPlot`` to create plots.
 
-*Return to* `CAP Practical Part II`_
+*Return to* `Part II`_
 
 ----
 
 Step 1: Creating the Template (Custom.in)
----------------------------------------
+-----------------------------------------
 
 Generate the template file using ``[-template --generate_template]``, ``Custom.in``:
 
 .. code-block:: bash
 
     (amescap)~$ MarsPlot -template
-    /home/centos/tutorial_files/cap_exercises/Custom.in was created 
+    /home/centos/tutorial_files/cap_exercises/Custom.in was created
 
 A new file called ``Custom.in`` is created in your current working directory.
 
 ----
 
 Step 2: Editing Custom.in
-----------------------
+-------------------------
 
 Open ``Custom.in`` using ``vim``:
 
@@ -415,7 +413,7 @@ Scroll down until you see the first two templates shown in the image below:
 Since all of the templates have a similar structure, we can broadly describe how ``Custom.in`` works by going through the templates line-by-line.
 
 Line 1
-~~~~~~~
+~~~~~~
 
 .. code-block:: python
 
@@ -425,7 +423,7 @@ Line 1
 Line 1 indicates the **plot type** and **whether to create the plot** when passed into ``MarsPlot``.
 
 Line 2
-~~~~~~~
+~~~~~~
 
 .. code-block:: python
 
@@ -435,7 +433,7 @@ Line 2
 Line 2 is where we set the plot title.
 
 Line 3
-~~~~~~~
+~~~~~~
 
 .. code-block:: python
 
@@ -452,7 +450,7 @@ Additional customizations include:
 - Dimensional selection (e.g., selecting the time of day (``tod``) at which to plot from a time-shifted diurn file)
 
 Line 4
-~~~~~~~
+~~~~~~
 
 .. code-block:: python
 
@@ -489,7 +487,7 @@ Lines 5 & 6 accept four input types:
 
 .. code-block:: python
 
-    # ┌ free dimension      ┌ default setting
+    # ┌ free dimension  ┌ default setting
     Ls 0-360       = None   # most recent timestep
     Level Pa/m     = None   # surface level
     Lon +/-180     = None   # zonal mean over all longitudes
@@ -512,7 +510,7 @@ Lines 7 & 8 (optional) define the **solid contours** on the plot. Contours can b
 - Like ``Cmin, Cmax``, ``Contours Var 2`` accepts a range (``min,max``) or list of explicit contour levels (``X,Y,Z,...,N``)
 
 Line 9
-~~~~~~~
+~~~~~~
 
 .. code-block:: python
 
@@ -521,12 +519,12 @@ Line 9
 
 Finally, Line 9 offers plot customization (e.g., axes limits, colormaps, map projections, linestyles, 1D axes labels).
 
-*Return to* `CAP Practical Part II`_
+*Return to* `Part II`_
 
 ----
 
 Step 3: Generating the Plots
---------------------------
+----------------------------
 
 Generate the plots set to ``True`` in ``Custom.in`` by saving and quitting the editor (``:wq``) and then passing the template file to ``MarsPlot``. The first time we do this, we'll pass the ``[-d --date]`` flag to specify that we want to plot from the ``03340`` ``average`` and ``fixed`` files:
 
@@ -557,7 +555,7 @@ Now we will go through some examples.
 ----
 
 Customizing the Plots
--------------------
+---------------------
 
 Open ``Custom.in`` in the editor:
 
@@ -579,7 +577,7 @@ We'll preserve the first two plots, but let's define the sol number of the avera
 Now we can omit the date (``[-d --date]``) when we pass ``Custom.in`` to ``MarsPlot``.
 
 Custom Set 1 of 4: Zonal Mean Surface Plots Over Time
---------------------------------------------------
+-----------------------------------------------------
 
 The first set of plots we'll make are zonal mean surface fields over time: surface temperature, CO\ :sub:`2` ice, and wind stress.
 
@@ -620,4 +618,227 @@ Go back to the **cloud environment** tab to finish generating the other plots on
 
     (amescap)~$ vim Custom.in
 
-Write a set of ``HOLD ON
+HOLD ON`` and ``HOLD OFF`` arguments around the surface temperature plot. We will paste the other templates within these arguments to tell ``MarsPlot`` to put these plots on the same page.
+
+Copy/paste the ``Plot 2D time X lat`` template plot twice more. Make sure to set the boolean to ``True``.
+
+For the **surface CO2 ice** plot:
+
+- Set the title to ``Zonal Mean Sfc CO2 Ice [kg/m2]``
+- Set ``Main Variable = 03340.atmos_average.co2ice_sfc``
+- Edit the colorbar range: ``Cmin, Cmax = 0,800``  → *0-800 kg/m2*
+- Set ``2nd Variable = 03340.atmos_average.co2ice_sfc``  → *solid contours*
+- Explicitly define the solid contours: ``Contours Var 2 = 200,400,600,800``
+- Change the colormap on the ``Axis Options`` line: ``cmap = plasma``
+
+For the **surface wind stress** plot:
+
+- Set the title to ``Zonal Mean Sfc Stress [N/m2]``
+- Set ``Main Variable = 03340.atmos_average.stress``
+- Edit the colorbar range: ``Cmin, Cmax = 0,0.03``  → *0-0.03 N/m2*
+
+Save and quit the editor (``ESC-:wq``) and pass ``Custom.in`` to ``MarsPlot``:
+
+.. code-block:: bash
+
+   (amescap)~$ MarsPlot Custom.in
+
+*Return to* `Part II: Plotting with CAP`_
+
+----
+
+Custom Set 2 of 4: Global Mean Column-Integrated Dust Optical Depth Over Time
+-----------------------------------------------------------------------------
+
+Now we'll generate a 1D plot and practice plotting multiple lines on it.
+
+.. image:: ./images/Global_Dust.png
+   :alt: global mean dust plot
+
+Let's start by setting up our 1D plot template:
+
+- Write a new set of ``HOLD ON`` and ``HOLD OFF`` arguments.
+- Copy/paste the ``Plot 1D`` template between them.
+- Set the template to ``True``.
+
+Create the **visible dust optical depth** plot first:
+
+- Set the title: ``Area-Weighted Global Mean Dust OD (norm.) [op]``
+- Edit the legend: ``Visible``
+
+The input to ``Main Variable`` is not so straightforward this time. We want to plot the *normalized* dust optical depth, which is dervied as follows:
+
+``normalized_dust_OD = opacity / surface_pressure * reference_pressure``
+
+The MGCM outputs column-integrated visible dust opacity to the variable ``taudust_VIS``, surface pressure is saved as ``ps``, and we'll use a reference pressure of 610 Pa. Recall that element-wise operations are performed when square brackets ``[]`` are placed around the variable in ``Main Variable``. Putting all that together, ``Main Variable`` is:
+
+.. code-block:: python
+
+   # ┌ norm. OD     ┌ opacity                         ┌ surface pressure       ┌ ref. P
+   Main Variable  = [03340.atmos_average.taudust_VIS]/[03340.atmos_average.ps]*610
+
+To finish up this plot, tell ``MarsPlot`` what to do to the dimensions of ``taudust_VIS (time, lon, lat)``:
+
+- Leave ``Ls 0-360 = AXIS`` to use 'time' as the X axis dimension.
+- Set ``Latitude = all``  → *average over all latitudes*
+- Set ``Lon +/-180  = all``  → *average over all longitudes*
+- Set the Y axis label under ``Axis Options``: ``axlabel = Optical Depth``
+
+The **infrared dust optical depth** plot is identical to the visible dust OD plot except for the variable being plotted, so duplicate the **visible** plot we just created. Make sure both templates are between ``HOLD ON`` and ``HOLD OFF`` Then, change two things:
+
+- Change ``Main Variable`` from ``taudust_VIS`` to ``taudust_IR``
+- Set the legend to reflect the new variable (``Legend = Infrared``)
+
+Save and quit the editor (``ESC-:wq``). pass ``Custom.in`` to ``MarsPlot``:
+
+.. code-block:: bash
+
+   (amescap)~$ MarsPlot Custom.in
+
+Notice we have two separate 1D plots on the same page. This is because of the ``HOLD ON`` and ``HOLD OFF`` arguments. Without those, these two plots would be on separate pages. But how do we overplot the lines on top of one another?
+
+Go back to the cloud environment, open ``Custom.in``, and type ``ADD LINE`` between the two 1D templates.
+
+Save and quit again, pass it through ``MarsPlot``, and retrieve the PDF locally. Now we have the overplotted lines we were looking for.
+
+*Return to* `Part II: Plotting with CAP`_
+
+----
+
+Custom Set 3 of 4: 50 Pa Temperatures at 3 AM and 3 PM
+------------------------------------------------------
+
+The first two plots are 3 AM and 3 PM 50 Pa temperatures at L\ :sub:`s`\=270. Below is the 3 PM - 3 AM difference.
+
+.. image:: ./images/50Pa_Temps.png
+   :alt: 3 am 3 pm temperatures
+
+We'll generate all three plots before passing ``Custom.in`` to ``MarsPlot``, so copy/paste the ``Plot 2D lon X lat`` template ***three times*** between a set of ``HOLD ON`` and ``HOLD OFF`` arguments and set them to ``True``.
+
+For the first plot,
+
+- Title it for 3 AM temperatures: ``3 AM 50 Pa Temperatures [K] @ Ls=270``
+- Set ``Main Variable`` to ``temp`` and select 3 AM for the time of day using curly brackets:
+
+.. code-block:: python
+
+   Main Variable  = 03847.atmos_diurn_Ls265_275_T_pstd.temp{tod=3}
+
+- Set the colorbar range: ``Cmin, Cmax = 145,290``  → *145-290 K*
+- Set ``Ls 0-360 = 270``  → *southern summer solstice*
+- Set ``Level Pa/m = 50``  → *selects 50 Pa temperatures*
+- Set ``2nd Variable`` to be identical to ``Main Variable``
+
+Now, edit the second template for 3 PM temperatures the same way. The only differences are the:
+
+- Title: edit to reflect 3 PM temperatures
+- Time of day selection: for 3 PM, ``{tod=15}`` ***change this for ``2nd Variable`` too!***
+
+For the **difference plot**, we will need to use square brackets in the input for ``Main Variable`` in order to subtract 3 AM temperatures from 3 PM temperatures. We'll also use a diverging colorbar to show temperature differences better.
+
+- Set the title to ``3 PM - 3 AM Temperature [K] @ Ls=270``
+- Build ``Main Variable`` by subtracting the 3 AM ``Main Variable`` input from the 3 PM ``Main variable`` input:
+
+.. code-block:: python
+
+   Main Variable = [03847.atmos_diurn_Ls265_275_T_pstd.temp{tod=15}]-[03847.atmos_diurn_Ls265_275_T_pstd.temp{tod=3}]
+
+- Center the colorbar at ``0`` by setting ``Cmin, Cmax = -20,20``
+- Like the first two plots, set ``Ls 0-360 = 270``  → *southern summer solstice*
+- Like the first two plots, set ``Level Pa/m = 50``  → *selects 50 Pa temperatures*
+- Select a diverging colormap in ``Axis Options``: ``cmap = RdBu_r``
+
+Save and quit the editor (``ESC-:wq``). pass ``Custom.in`` to ``MarsPlot``, and pull it to your local computer:
+
+.. code-block:: bash
+
+   (amescap)~$ MarsPlot Custom.in
+
+*Return to* `Part II: Plotting with CAP`_
+
+----
+
+Custom Set 4 of 4: Zonal Mean Circulation Cross-Sections
+--------------------------------------------------------
+
+For our final set of plots, we will generate four cross-section plots showing temperature, zonal (U) and meridional (V) winds, and mass streamfunction at L\ :sub:`s`\=270.
+
+.. image:: ./images/Zonal_Circulation.png
+   :alt: zonal mean circulation plots
+
+Begin with the usual 3-step process:
+
+1. Write a set of ``HOLD ON`` and ``HOLD OFF`` arguments
+2. Copy-paste the ``Plot 2D lat X lev`` template between them
+3. Set the template to ``True``
+
+Since all four plots are going to have the same X and Y axis ranges and ``time`` selection, let's edit this template before copying it three more times:
+
+- Set ``Ls 0-360 = 270``
+- In ``Axis Options``, set ``Lat = [-90,90]``
+- In ``Axis Options``, set ``level[Pa/m] = [1000,0.05]``
+
+Now copy/paste this template three more times. Let the first plot be temperature, the second be mass streamfunction, the third be zonal wind, and the fourth be meridional wind.
+
+For **temperature**:
+
+.. code-block:: python
+
+   Title          = Temperature [K] (Ls=270)
+   Main Variable  = 03847.atmos_average_Ls265_275_pstd.temp
+   Cmin, Cmax     = 110,240
+   ...
+   2nd Variable   = 03847.atmos_average_Ls265_275_pstd.temp
+
+For **streamfunction**, define explicit solid contours under ``Contours Var 2`` and set a diverging colormap.
+
+.. code-block:: python
+
+   Title          = Mass Stream Function [1.e8 kg s-1] (Ls=270)
+   Main Variable  = 03847.atmos_average_Ls265_275_pstd.msf
+   Cmin, Cmax     = -110,110
+   ...
+   2nd Variable   = 03847.atmos_average_Ls265_275_pstd.msf
+   Contours Var 2 = -5,-3,-1,-0.5,1,3,5,10,20,40,60,100,120
+   # set cmap = bwr in Axis Options
+
+For **zonal** and **meridional** wind, use the dual-toned colormap ``PiYG``.
+
+.. code-block:: python
+
+   Title          = Zonal Wind [m/s] (Ls=270)
+   Main Variable  = 03847.atmos_average_Ls265_275_pstd.ucomp
+   Cmin, Cmax     = -230,230
+   ...
+   2nd Variable   = 03847.atmos_average_Ls265_275_pstd.ucomp
+   # set cmap = PiYG in Axis Options
+
+.. code-block:: python
+
+   Title          = Meridional Wind [m/s] (Ls=270)
+   Main Variable  = 03847.atmos_average_Ls265_275_pstd.vcomp
+   Cmin, Cmax     = -85,85
+   ...
+   2nd Variable   = 03847.atmos_average_Ls265_275_pstd.vcomp
+   # set cmap = PiYG in Axis Options
+
+Save and quit the editor (``ESC-:wq``). pass ``Custom.in`` to ``MarsPlot``, and pull it to your local computer:
+
+.. code-block:: bash
+
+   (amescap)~$ MarsPlot Custom.in
+
+*Return to* `Part II: Plotting with CAP`_
+
+----
+
+End Credits
+-----------
+
+This concludes the practical exercise portion of the CAP tutorial. Please feel free to use these exercises as a reference when using CAP the future!
+
+*Written by Courtney Batterson, Alex Kling, and Victoria Hartwick. This document was created for the NASA Ames MGCM and CAP Tutorial held virtually November 13-15, 2023.*
+
+*Questions, comments, or general feedback? `Contact us <https://forms.gle/2VGnVRrvHDzoL6Y47>`_*.
+
+*Return to* `Table of Contents`_

@@ -14,9 +14,11 @@
    variable names, units, etc.
 
    The executable requires:
+
        * ``[input_file]``           The file to be transformed
 
    and optionally accepts:
+
        * ``[-add --add_variable]``          Derive and add variable to file
        * ``[-zdiff --differentiate_wrt_z]`` Differentiate variable w.r.t. Z axis
        * ``[-col --column_integrate]``      Column-integrate variable
@@ -28,6 +30,7 @@
        * ``[-edit --edit_variable]``        Edit variable attributes or scale it
 
    Third-party Requirements:
+
        * ``numpy``
        * ``netCDF4``
        * ``argparse``
@@ -120,10 +123,13 @@ Attributes
 
    :param ps: Surface pressure (Pa)
    :type ps: array [time, lat, lon]
+
    :param ak: Vertical coordinate pressure value (Pa)
    :type ak: array [phalf]
+
    :param bk: Vertical coordinate sigma value (None)
    :type bk: array [phalf]
+
    :param shape_out: Determines how to handle the dimensions of DP_3D.
        If len(time) = 1 (one timestep), DP_3D is returned as
        [1, lev, lat, lon] as opposed to [lev, lat, lon]
@@ -135,16 +141,20 @@ Attributes
    :rtype: array [time, lev, lat, lon]
 
 
+
 .. py:function:: compute_DZ_3D(ps, ak, bk, temp, shape_out)
 
    Calculate the thickness of a layer in altitude units.
 
    :param ps: Surface pressure (Pa)
    :type ps: array [time, lat, lon]
+
    :param ak: Vertical coordinate pressure value (Pa)
    :type ak: array [phalf]
+
    :param bk: Vertical coordinate sigma value (None)
    :type bk: array [phalf]
+
    :param shape_out: Determines how to handle the dimensions of DZ_3D.
        If len(time) = 1 (one timestep), DZ_3D is returned as
        [1, lev, lat, lon] as opposed to [lev, lat, lon]
@@ -154,6 +164,7 @@ Attributes
 
    :return: ``DZ`` Layer thickness in altitude units (m)
    :rtype: array [time, lev, lat, lon]
+
 
 
 .. py:function:: compute_DZ_full_pstd(pstd, temp, ftype='average')
@@ -175,8 +186,10 @@ Attributes
 
    :param pstd: Vertical coordinate (pstd; Pa)
    :type pstd: array [lev]
+
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]
+
    :param f_type: The FV3 file type: diurn, daily, or average
    :type f_stype: str
 
@@ -184,6 +197,7 @@ Attributes
 
    :return: DZ_full_pstd, Layer thicknesses (Pa)
    :rtype: array [time, lev, lat, lon]
+
 
 
 .. py:function:: compute_Ek(ucomp, vcomp)
@@ -194,6 +208,7 @@ Attributes
 
    :param ucomp: Zonal wind (m/s)
    :type ucomp: array [time, lev, lat, lon]
+
    :param vcomp: Meridional wind (m/s)
    :type vcomp: array [time, lev, lat, lon]
 
@@ -201,6 +216,7 @@ Attributes
 
    :return: ``Ek`` Wave kinetic energy (J/kg)
    :rtype: array [time, lev, lat, lon]
+
 
 
 .. py:function:: compute_Ep(temp)
@@ -218,12 +234,14 @@ Attributes
    :rtype: array [time, lev, lat, lon]
 
 
+
 .. py:function:: compute_MF(UVcomp, w)
 
    Calculate zonal or meridional momentum fluxes.
 
    :param UVcomp: Zonal or meridional wind (ucomp or vcomp)(m/s)
    :type UVcomp: array
+
    :param w: Vertical wind (m/s)
    :type w: array [time, lev, lat, lon]
 
@@ -233,12 +251,14 @@ Attributes
    :rtype: array [time, lev, lat, lon]
 
 
+
 .. py:function:: compute_N(theta, zfull)
 
    Calculate the Brunt Vaisala freqency.
 
    :param theta: Potential temperature (K)
    :type theta: array [time, lev, lat, lon]
+
    :param zfull: Altitude above ground level at the layer midpoint (m)
    :type zfull: array [time, lev, lat, lon]
 
@@ -246,6 +266,7 @@ Attributes
 
    :return: ``N``, Brunt Vaisala freqency [rad/s]
    :rtype: array [time, lev, lat, lon]
+
 
 
 .. py:function:: compute_Tco2(P_3D)
@@ -263,14 +284,17 @@ Attributes
    :rtype: array [time, lev, lat, lon]
 
 
+
 .. py:function:: compute_Vg_sed(xTau, nTau, temp)
 
    Calculate the sedimentation rate of the dust.
 
    :param xTau: Dust or ice MASS mixing ratio (ppm)
    :type xTau: array [time, lev, lat, lon]
+
    :param nTau: Dust or ice NUMBER mixing ratio (None)
    :type nTau: array [time, lev, lat, lon]
+
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]
 
@@ -278,6 +302,7 @@ Attributes
 
    :return: ``Vg`` Dust sedimentation rate (m/s)
    :rtype: array [time, lev, lat, lon]
+
 
 
 .. py:function:: compute_WMFF(MF, rho, lev, interp_type)
@@ -298,10 +323,13 @@ Attributes
 
    :param MF: Zonal/meridional momentum flux (J/kg)
    :type MF: array [time, lev, lat, lon]
+
    :param rho: Atmospheric density (kg/m^3)
    :type rho: array [time, lev, lat, lon]
+
    :param lev: Array for the vertical grid (zagl, zstd, pstd, or pfull)
    :type lev: array [lev]
+
    :param interp_type: The vertical grid type (``zagl``, ``zstd``,
        ``pstd``, or ``pfull``)
    :type interp_type: str
@@ -312,6 +340,7 @@ Attributes
    :rtype: array [time, lev, lat, lon]
 
 
+
 .. py:function:: compute_mmr(xTau, temp, lev, const, f_type)
 
    Compute the dust or ice mixing ratio.
@@ -319,12 +348,16 @@ Attributes
 
    :param xTau: Dust or ice extinction rate (km-1)
    :type xTau: array [time, lev, lat, lon]
+
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]
+
    :param lev: Vertical coordinate (e.g., pstd) (e.g., Pa)
    :type lev: array [lev]
+
    :param const: Dust or ice constant
    :type const: array
+
    :param f_type: The FV3 file type: diurn, daily, or average
    :type f_stype: str
 
@@ -334,16 +367,20 @@ Attributes
    :rtype: array [time, lev, lat, lon]
 
 
+
 .. py:function:: compute_p_3D(ps, ak, bk, shape_out)
 
    Compute the 3D pressure at layer midpoints.
 
    :param ps: Surface pressure (Pa)
    :type ps: array [time, lat, lon]
+
    :param ak: Vertical coordinate pressure value (Pa)
    :type ak: array [phalf]
+
    :param bk: Vertical coordinate sigma value (None)
    :type bk: array [phalf]
+
    :param shape_out: Determines how to handle the dimensions of p_3D.
        If ``len(time) = 1`` (one timestep), ``p_3D`` is returned as
        [1, lev, lat, lon] as opposed to [lev, lat, lon]
@@ -355,12 +392,14 @@ Attributes
    :rtype: array [time, lev, lat, lon]
 
 
+
 .. py:function:: compute_rho(p_3D, temp)
 
    Compute density.
 
    :param p_3D: Pressure (Pa)
    :type p_3D: array [time, lev, lat, lon]
+
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]
 
@@ -370,14 +409,17 @@ Attributes
    :rtype: array [time, lev, lat, lon]
 
 
+
 .. py:function:: compute_scorer(N, ucomp, zfull)
 
    Calculate the Scorer wavelength.
 
    :param N: Brunt Vaisala freqency (rad/s)
    :type N: float [time, lev, lat, lon]
+
    :param ucomp: Zonal wind (m/s)
    :type ucomp: array [time, lev, lat, lon]
+
    :param zfull: Altitude above ground level at the layer midpoint (m)
    :type zfull: array [time, lev, lat, lon]
 
@@ -387,16 +429,20 @@ Attributes
    :rtype: array [time, lev, lat, lon]
 
 
+
 .. py:function:: compute_theta(p_3D, ps, temp, f_type)
 
    Compute the potential temperature.
 
    :param p_3D: The full 3D pressure array (Pa)
    :type p_3D: array [time, lev, lat, lon]
+
    :param ps: Surface pressure (Pa)
    :type ps: array [time, lat, lon]
+
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]
+
    :param f_type: The FV3 file type: diurn, daily, or average
    :type f_type: str
 
@@ -404,6 +450,7 @@ Attributes
 
    :return: Potential temperature (K)
    :rtype: array [time, lev, lat, lon]
+
 
 
 .. py:function:: compute_w(rho, omega)
@@ -425,6 +472,7 @@ Attributes
 
    :param rho: Atmospheric density (kg/m^3)
    :type rho: array [time, lev, lat, lon]
+
    :param omega: Rate of change in pressure at layer midpoint (Pa/s)
    :type omega: array [time, lev, lat, lon]
 
@@ -432,6 +480,7 @@ Attributes
 
    :return: vertical wind (m/s)
    :rtype: array [time, lev, lat, lon]
+
 
 
 .. py:function:: compute_w_net(Vg, wvar)
@@ -443,6 +492,7 @@ Attributes
 
    :param Vg: Dust sedimentation rate (m/s)
    :type Vg: array [time, lev, lat, lon]
+
    :param wvar: Vertical wind (m/s)
    :type wvar: array [time, lev, lat, lon]
 
@@ -452,6 +502,7 @@ Attributes
    :rtype: array [time, lev, lat, lon]
 
 
+
 .. py:function:: compute_xzTau(q, temp, lev, const, f_type)
 
    Compute the dust or ice extinction rate.
@@ -459,12 +510,16 @@ Attributes
 
    :param q: Dust or ice mass mixing ratio (ppm)
    :type q: array [time, lev, lat, lon]
+
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]
+
    :param lev: Vertical coordinate (e.g., pstd) (e.g., Pa)
    :type lev: array [lev]
+
    :param const: Dust or ice constant
    :type const: array
+
    :param f_type: The FV3 file type: diurn, daily, or average
    :type f_stype: str
 
@@ -474,16 +529,20 @@ Attributes
    :rtype: array [time, lev, lat, lon]
 
 
+
 .. py:function:: compute_zfull(ps, ak, bk, temp)
 
    Calculate the altitude of the layer midpoints above ground level.
 
    :param ps: Surface pressure (Pa)
    :type ps: array [time, lat, lon]
+
    :param ak: Vertical coordinate pressure value (Pa)
    :type ak: array [phalf]
+
    :param bk: Vertical coordinate sigma value (None)
    :type bk: array [phalf]
+
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]
 
@@ -493,16 +552,20 @@ Attributes
    :rtype: array [time, lev, lat, lon]
 
 
+
 .. py:function:: compute_zhalf(ps, ak, bk, temp)
 
    Calculate the altitude of the layer interfaces above ground level.
 
    :param ps: Surface pressure (Pa)
    :type ps: array [time, lat, lon]
+
    :param ak: Vertical coordinate pressure value (Pa)
    :type ak: array [phalf]
+
    :param bk: Vertical coordinate sigma value (None)
    :type bk: array [phalf]
+
    :param temp: Temperature (K)
    :type temp: array [time, lev, lat, lon]
 
@@ -510,6 +573,7 @@ Attributes
 
    :return: ``zhalf`` (m)
    :rtype: array [time, lev, lat, lon]
+
 
 
 .. py:function:: main()

@@ -9,11 +9,13 @@
    files. It sources variables from netCDF files in a specified directory.
 
    The executable requires:
+
        * ``[-template --generate_template]`` Generates a Custom.in template
        * ``[-i --inspect]``         Triggers ncdump-like text to console
        * ``[Custom.in]``            To create plots in Custom.in template
 
    Third-party Requirements:
+
        * ``numpy``
        * ``netCDF4``
        * ``sys``
@@ -114,6 +116,12 @@ Attributes
 
       
 
+   .. py:method:: __call__(x, pos=None)
+
+      Return the format for tick value *x* at position pos.
+      ``pos=None`` indicates an unspecified location.
+
+
    .. py:method:: create_dummy_axis(**kwargs)
 
 
@@ -205,6 +213,7 @@ Attributes
       :return: type of 1D plot to create (1D_time, 1D_lat, etc.)
 
 
+
    .. py:method:: make_template()
 
 
@@ -216,30 +225,40 @@ Attributes
 
       :param var_name: variable name (e.g., ``temp``)
       :type var_name: str
+
       :param file_type: MGCM output file type. Must be ``fixed`` or
           ``average``
       :type file_type: str
+
       :param simuID: number identifier for netCDF file directory
       :type simuID: str
+
       :param sol_array: sol if different from default
           (e.g., ``02400``)
       :type sol_array:  str
+
       :param plot_type: ``1D_lon``, ``1D_lat``, ``1D_lev``, or
           ``1D_time``
       :type plot_type: str
+
       :param t_req: Ls requested
       :type t_req: str
+
       :param lat_req: lat requested
       :type lat_req: str
+
       :param lon_req: lon requested
       :type lon_req: str
+
       :param lev_req: level [Pa/m] requested
       :type lev_req: str
+
       :param ftod_req: time of day requested
       :type ftod_req: str
 
       :return: (dim_array) the axis (e.g., an array of longitudes),
                (var_array) the variable extracted
+
 
 
    .. py:method:: read_template()
@@ -376,10 +395,13 @@ Attributes
       :param varfull: variable input to main_variable in Custom.in
           (e.g., ``03340.atmos_average.ucomp``)
       :type varfull: str
+
       :param plot_type: plot type (e.g.,
           ``Plot 2D lon X time``)
       :type plot_type: str
+
       :return: topography or ``None`` if no matching ``fixed`` file
+
 
 
    .. py:method:: make_colorbar(levs)
@@ -417,7 +439,8 @@ Attributes
 
    .. py:method:: do_plot()
 
-      Create figure 
+      Create figure
+
 
 
    .. py:method:: exception_handler(e, ax)
@@ -437,7 +460,8 @@ Attributes
 
    .. py:method:: make_template()
 
-      Calls method from parent class 
+      Calls method from parent class
+
 
 
    .. py:method:: make_title(var_info, xlabel, ylabel)
@@ -609,8 +633,10 @@ Attributes
 
    :param Ls_cont: solar longitude (``areo``; continuous)
    :type Ls_cont: array [areo]
+
    :return: the Mars year
    :rtype: int
+
 
 
 .. py:function:: clean_comma_whitespace(raw_input)
@@ -620,9 +646,11 @@ Attributes
    :param raw_input: dimensions specified by user input to Variable
        (e.g., ``lat=3. , lon=2 , lev = 10.``)
    :type raw_input: str
+
    :return: raw_input without whitespaces (e.g.,
        ``lat=3.,lon=2,lev=10.``)
    :rtype: str
+
 
 
 .. py:function:: create_exec(raw_input, varfull_list)
@@ -635,9 +663,11 @@ Attributes
    :param root_name: path + default name for the file type (e.g.,
        ``/path/custom.in`` or ``/path/figure.png``)
    :type root_name: str
+
    :return: the modified name if the file already exists
        (e.g., ``/path/custom_01.in`` or ``/path/figure_01.png``)
    :rtype: str
+
 
 
 .. py:function:: fig_layout(subID, nPan, vertical_page=False)
@@ -646,14 +676,18 @@ Attributes
 
    :param subID: current subplot number
    :type subID: int
+
    :param nPan: number of panels desired on page (max = 64, 8x8)
    :type nPan: int
+
    :param vertical_page: reverse the tuple for portrait format if
        ``True``
    :type vertical_page: bool
+
    :return: plot layout (e.g., ``plt.subplot(nrows = out[0], ncols =
        out[1], plot_number = out[2])``)
    :rtype: tuple
+
 
 
 .. py:function:: filter_input(txt, typeIn='char')
@@ -663,11 +697,14 @@ Attributes
    :param txt: text input into ``Custom.in`` to the right of an equal
        sign
    :type txt: str
+
    :param typeIn: type of data expected: ``char``, ``float``, ``int``,
        ``bool``, defaults to ``char``
    :type typeIn: str, optional
+
    :return: text input reformatted to ``[val1, val2]``
    :rtype: float or array
+
 
 
 .. py:function:: format_lon_lat(lon_lat, type)
@@ -677,10 +714,13 @@ Attributes
 
    :param lon_lat: latitude or longitude (+180/-180)
    :type lon_lat: float
+
    :param type: ``lat`` or ``lon``
    :type type: str
+
    :return: formatted label
    :rtype: str
+
 
 
 .. py:function:: get_Ncdf_num()
@@ -692,6 +732,7 @@ Attributes
    :rtype: array
 
 
+
 .. py:function:: get_figure_header(line_txt)
 
    Returns the plot type by confirming that template = ``True``.
@@ -699,11 +740,14 @@ Attributes
    :param line_txt: template header from Custom.in (e.g.,
        ``<<<<<<<<<| Plot 2D lon X lat = True |>>>>>>>>``)
    :type line_txt: str
+
    :return: (figtype) figure type (e.g., ``Plot 2D lon X lat``)
    :rtype: str
+
    :return: (boolPlot) whether to plot (``True``) or skip (``False``)
        figure
    :rtype: bool
+
 
 
 .. py:function:: get_lat_index(lat_query, lats)
@@ -713,13 +757,16 @@ Attributes
 
    :param lat_query: requested latitudes (-90/+90)
    :type lat_query: list
+
    :param lats: latitude
    :type lats: array [lat]
+
    :return: 1d array of file indices
    :rtype: text descriptor for the extracted longitudes
-   :rtype: str
-   :note: the keyword ``all`` is passed as ``-99999`` by the ``rt()``
+
+   ..note:: the keyword ``all`` is passed as ``-99999`` by the ``rt()``
        function
+
 
 
 .. py:function:: get_level_index(level_query, levs)
@@ -729,14 +776,19 @@ Attributes
 
    :param level_query: requested pressure [Pa] (depth [m])
    :type level_query: float
+
    :param levs: levels (in the native coordinates)
    :type levs: array [lev]
+
    :return: file indices
    :rtype: array
+
    :return: descriptor for the extracted pressure (depth)
    :rtype: str
-   :note: the keyword ``all`` is passed as ``-99999`` by the ``rT()``
+
+   ..note:: the keyword ``all`` is passed as ``-99999`` by the ``rT()``
        functions
+
 
 
 .. py:function:: get_list_varfull(raw_input)
@@ -746,9 +798,11 @@ Attributes
    :param raw_input: complex user input to Variable (e.g.,
        ``2*[atmos_average.temp]+[atmos_average2.ucomp]*1000``)
    :type raw_input: str
+
    :return: list required variables (e.g., [``atmos_average.temp``,
        ``atmos_average2.ucomp``])
    :rtype: str
+
 
 
 .. py:function:: get_lon_index(lon_query_180, lons)
@@ -759,14 +813,19 @@ Attributes
    :param lon_query_180: longitudes in -180/180: value,
        ``[min, max]``, or `None`
    :type lon_query_180: list
+
    :param lons: longitude in 0-360
    :type lons: array [lon]
+
    :return: 1D array of file indices
    :rtype: array
+
    :return: text descriptor for the extracted longitudes
    :rtype: str
-   :note: the keyword ``all`` is passed as ``-99999`` by the rT()
+
+   ..note:: the keyword ``all`` is passed as ``-99999`` by the rT()
        functions
+
 
 
 .. py:function:: get_overwrite_dim_1D(varfull_bracket, t_in, lat_in, lon_in, lev_in, ftod_in)
@@ -777,16 +836,22 @@ Attributes
    :param varfull_bracket: a ``varfull`` object with ``{}`` (e.g.,
        ``atmos_average.temp{lev=10;ls=350;lon=155;lat=25}``)
    :type varfull_bracket: str
+
    :param t_in: self.t variable
    :type t_in: array [time]
+
    :param lat_in: self.lat variable
    :type lat_in: array [lat]
+
    :param lon_in: self.lon variable
    :type lon_in: array [lon]
+
    :param lev_in: self.lev variable
    :type lev_in: array [lev]
+
    :param ftod_in: self.ftod variable
    :type ftod_in: array [tod]
+
    :return: ``varfull`` object without brackets (e.g.,
        ``atmos_average.temp``);
        :return: (t_out) dimension to update;
@@ -794,6 +859,7 @@ Attributes
        :return: (lon_out) dimension to update;
        :return: (lev_out) dimension to update;
        :return: (ftod_out) dimension to update;
+
 
 
 .. py:function:: get_overwrite_dim_2D(varfull_bracket, plot_type, fdim1, fdim2, ftod)
@@ -811,17 +877,22 @@ Attributes
    :param varfull_bracket: a ``varfull`` object with ``{}`` (e.g.,
        ``atmos_average.temp{lev=10;ls=350;lon=155;lat=25}``)
    :type varfull_bracket: str
+
    :param plot_type: the type of the plot template
    :type plot_type: str
+
    :param fdim1: X axis dimension for plot
    :type fdim1: str
+
    :param fdim2: Y axis dimension for plot
    :type fdim2: str
+
    :return: (varfull) required file and variable (e.g.,
        ``atmos_average.temp``);
        (fdim_out1) X axis dimension for plot;
        (fdim_out2) Y axis dimension for plot;
        (ftod_out) if X or Y axis dimension is time of day
+
 
 
 .. py:function:: get_time_index(Ls_query_360, LsDay)
@@ -835,14 +906,19 @@ Attributes
 
    :param Ls_query_360: requested solar longitudes
    :type Ls_query_360: list
+
    :param LsDay: continuous solar longitudes
    :type LsDay: array [areo]
+
    :return: file indices
    :rtype: array
+
    :return: descriptor for the extracted solar longitudes
    :rtype: str
-   :note: the keyword ``all`` is passed as ``-99999`` by the ``rT()``
+
+   ..note:: the keyword ``all`` is passed as ``-99999`` by the ``rT()``
        function
+
 
 
 .. py:function:: get_tod_index(tod_query, tods)
@@ -852,14 +928,19 @@ Attributes
 
    :param tod_query: requested time of day (0-24)
    :type tod_query: list
+
    :param tods: times of day
    :type tods: array [tod]
+
    :return: file indices
    :rtype: array [tod]
+
    :return: descriptor for the extracted time of day
    :rtype: str
-   :note: the keyword ``all`` is passed as ``-99999`` by the ``rT()``
+
+   ..note:: the keyword ``all`` is passed as ``-99999`` by the ``rT()``
        function
+
 
 
 .. py:function:: give_permission(filename)
@@ -870,6 +951,7 @@ Attributes
    :type filename: str
 
 
+
 .. py:function:: main()
 
 
@@ -877,24 +959,24 @@ Attributes
 
    Generate the ``Custom.in`` template file.
 
-   Parameters
-   ----------
    :return: Custom.in blank template
+
 
 
 .. py:function:: mean_func(arr, axis)
 
-    This function calculates a mean over the selected axis, ignoring or
-    including NaN values as specified by ``show_NaN_in_slice`` in
+   This function calculates a mean over the selected axis, ignoring or
+   including NaN values as specified by ``show_NaN_in_slice`` in
    ``amescap_profile``.
 
-    :param arr: the array to be averaged
-    :type arr: array
-    :param axis: the axis over which to average the array
-    :type axis: int
+   :param arr: the array to be averaged
+   :type arr: array
 
-    :return: the mean over the time axis
-    
+   :param axis: the axis over which to average the array
+   :type axis: int
+
+   :return: the mean over the time axis
+
 
 
 .. py:function:: namelist_parser(Custom_file)
@@ -904,7 +986,8 @@ Attributes
    :param Custom_file: full path to ``Custom.in`` file
    :type Custom_file: str
 
-   :returns: updated global variables, ``FigLayout``, ``objectList``
+   :return: updated global variables, ``FigLayout``, ``objectList``
+
 
 
 .. py:function:: prep_file(var_name, file_type, simuID, sol_array)
@@ -917,10 +1000,13 @@ Attributes
 
    :param var_name: variable to extract (e.g., ``ucomp``)
    :type var_name: str
+
    :param file_type: MGCM output file type (e.g., ``average``)
    :type file_name: str
+
    :param simuID: simulation ID number (e.g., 2 for 2nd simulation)
    :type simuID: int
+
    :param sol_array: date in file name (e.g., [3340,4008])
    :type sol_array: list
 
@@ -930,15 +1016,19 @@ Attributes
        (dims) shape of the array e.g., [133,48,96]
 
 
+
 .. py:function:: progress(k, Nmax, txt='', success=True)
 
    Display a progress bar when performing heavy calculations.
 
    :param k: current iteration of the outer loop
    :type k: float
+
    :param Nmax: max iteration of the outer loop
    :type Nmax: float
+
    :return: progress bar (EX: ``Running... [#---------] 10.64 %``)
+
 
 
 .. py:function:: rT(typeIn='char')
@@ -949,8 +1039,10 @@ Attributes
    :param typeIn: type of data expected: ``char``, ``float``, ``int``,
        ``bool``, defaults to ``char``
    :type typeIn: str, optional
+
    :return: text input reformatted to ``[val1, val2]``
    :rtype: float or array
+
 
 
 .. py:function:: read_axis_options(axis_options_txt)
@@ -960,17 +1052,23 @@ Attributes
    :param axis_options_txt: a copy of the last line ``Axis Options``
        in ``Custom.in`` templates
    :type axis_options_txt: str
+
    :return: X-axis bounds as a numpy array or ``None`` if undedefined
    :rtype: array or None
+
    :return: Y-axis bounds as a numpy array or ``None`` if undedefined
    :rtype: array or None
+
    :return: colormap (e.g., ``jet``, ``nipy_spectral``) or line
        options (e.g., ``--r`` for dashed red)
    :rtype: str
+
    :return: linear (``lin``) or logarithmic (``log``) color scale
    :rtype: str
+
    :return: projection (e.g., ``ortho -125,45``)
    :rtype: str
+
 
 
 .. py:function:: remove_whitespace(raw_input)
@@ -983,9 +1081,11 @@ Attributes
    :param raw_input: user input for variable, (e.g.,
        ``[atmos_average.temp] + 2)``
    :type raw_input: str
+
    :return: raw_input without whitespaces (e.g.,
        ``[atmos_average.temp]+2)``
    :rtype: str
+
 
 
 .. py:function:: select_range(Ncdf_num, bound)
@@ -995,10 +1095,13 @@ Attributes
 
    :param Ncdf_num: a sorted array of sols
    :type Ncdf_num: array
+
    :param bound: a sol (e.g., 0350) or range of sols ``[min max]``
    :type bound: int or array
+
    :return: a sorted array of sols within the bounds
    :rtype: array
+
 
 
 .. py:function:: shift_data(lon, data)
@@ -1007,15 +1110,21 @@ Attributes
 
    :param lon: 1D array of longitude
    :type lon: array [lon]
+
    :param data: 2D array with last dimension = longitude
    :type data: array [1,lon]
+
    :raises ValueError: Longitude coordinate type is not recognized.
+
    :return: longitude (-180/180)
    :rtype: array [lon]
+
    :return: shifted data
    :rtype: array [1,lon]
-   :note: Use ``np.ma.hstack`` instead of ``np.hstack`` to keep the
+
+   ..note:: Use ``np.ma.hstack`` instead of ``np.hstack`` to keep the
        masked array properties
+
 
 
 .. py:function:: split_varfull(varfull)
@@ -1025,14 +1134,19 @@ Attributes
    :param varfull: a ``varfull`` object (e.g,
        ``atmos_average@2.zsurf``, ``02400.atmos_average@2.zsurf``)
    :type varfull: str
+
    :return: (sol_array) a sol number or ``None`` (if none provided)
    :rtype: int or None
+
    :return: (filetype) file type (e.g, ``atmos_average``)
    :rtype: str
+
    :return: (var) variable of interest (e.g, ``zsurf``)
    :rtype: str
+
    :return: (``simuID``) simulation ID (Python indexing starts at 0)
    :rtype: int
+
 
 
 .. py:data:: add_sol_time_axis

@@ -4,16 +4,20 @@ The MarsCalendar executable accepts an input Ls or day-of-year (sol)
 and returns the corresponding sol or Ls, respectively.
 
 The executable requires 1 of the following arguments:
+
     * ``[-sol --sol]``          The sol to convert to Ls, OR
     * ``[-ls --ls]``            The Ls to convert to sol
 
 and optionally accepts:
+
     * ``[-my --marsyear]``      The Mars Year of the simulation to compute sol or Ls from, AND/OR
     * ``[-c --continuous]``     Returns Ls in continuous form
 
 Third-party Requirements:
+
     * ``numpy``
     * ``argparse``
+
 """
 
 # Make print statements appear in color
@@ -42,7 +46,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-group = parser.add_argument_group("Required Arguments", 
+group = parser.add_argument_group("Required Arguments",
     "\n{Yellow}MarsCalendar requires either -ls or -sol.{Nclr}\n")
 exclusive_group = parser.add_mutually_exclusive_group(required=True)
 
@@ -69,7 +73,7 @@ exclusive_group.add_argument('-ls', '--ls', nargs='+', type=float,
 
 # Secondary arguments: Used with some of the arguments above
 
-parser.add_argument('-my', '--marsyear', nargs='+', type=float, 
+parser.add_argument('-my', '--marsyear', nargs='+', type=float,
     default = 0.,
     help=(
         f"Return the sol or Ls corresponding to the Ls or sol of a "
@@ -110,7 +114,7 @@ if args.sol is None and args.ls is None:
                  f"``[-ls --ls]``. See ``MarsCalendar -h`` for additional "
                  f"help.{Nclr}")
     exit()
-    
+
 # ======================================================================
 #                               DEFINITIONS
 # ======================================================================
@@ -134,6 +138,7 @@ def parse_array(len_input):
         ``ls2sol`` or ``sol2ls``. If ``len_input = 300``, then
         ``input_as_arr=[300]``. If ``len_input = 300 310 2``, then
         ``input_as_arr = [300, 302, 304, 306, 308]``.\n
+
     """
     if len(len_input) == 1:
         input_as_arr = len_input
