@@ -1404,11 +1404,16 @@ def main():
                     # If file interpolated to pstd, calculate the 3D
                     # pressure field.
                     lev = f.variables["pstd"][:]
-                    # [0 1 2 3]
+                    
+                    # Create the right shape that includes all time steps
                     rshp_shape = [1 for i in range(0, len(shape_out))]
-                    # e.g [1, 28, 1, 1]
+                    rshp_shape[0] = shape_out[0]  # Set the correct number of time steps
                     rshp_shape[lev_axis] = len(lev)
-                    p_3D = lev.reshape(rshp_shape)
+                    
+                    # p_3D = lev.reshape(rshp_shape)
+                    # Reshape and broadcast properly
+                    p_levels = lev.reshape([1, len(lev), 1, 1])
+                    p_3D = np.broadcast_to(p_levels, shape_out)
 
                 else:
                     try:
