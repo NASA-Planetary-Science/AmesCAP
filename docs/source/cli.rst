@@ -3,38 +3,12 @@ Quick Start Guide
 
 The Community Analysis Pipeline (CAP) is a Python-based command-line tool that performs analysis and creates plots from netCDF files output by the Mars Global Climate Model (MGCM).
 
-Model Compatibility
--------------------
-
-CAP is currently compatible with output from the:
-
-* MCMC Legacy MGCM
-* MCMC FV3-based MGCM
-* Mars Weather Research and Forecasting Model (MarsWRF)
-* OpenMars
-
-Basic Usage
-------------
-
-First, install CAP. Detailed :ref:`installation instructions are provided here <installation>`.
-
-Once CAP is installed and you are in your virtual environment, you may type ``cap`` to view the information provided here on the command line.
-
-You can check your CAP version and install date using ``cap version`` or ``cap info``, which returns:
-
-.. code-block:: bash
-   CAP Installation Information
-   ----------------------------
-   Version: 0.3
-   Install Date: Fri Mar  7 11:56:48 2025
-   Install Location: /Users/path/to/amescap/lib/python3.11/site-packages
-
-Below is a list of the executables in CAP. Use this list to find the executable that performs the operation you desire.
+.. _available_commands:
 
 Available Commands
 ^^^^^^^^^^^^^^^^^^
 
-The CAP command-line tool includes several executables for different operations:
+Below is a list of the executables in CAP. Use this list to find the executable that performs the operation you desire.
 
 * **MarsCalendar** - Converts L\ :sub:`s` into day-of-year (sol) and vice versa.
 * **MarsFiles** - Manipulates entire files (e.g., time-shift, regrid, filter, etc.)
@@ -44,36 +18,57 @@ The CAP command-line tool includes several executables for different operations:
 * **MarsPull** - Queries data from the MGCM repository at data.nas.nasa.gov/mcmc
 * **MarsVars** - Performs variable manipulations (e.g., deriving secondary variables, column-integration, etc.)
 
-To see the arguments for each executable, use ``[-h --help]``, for example:
+Example Usage
+-------------
+
+Let's walk through a simple use case for CAP. We will install CAP, source the virtual environment, download two files from the NAS Data Portal, inspect the file contents, derive a secondary variable and add it to a file, and finally generate two plots.
+
+1. Install CAP
+^^^^^^^^^^^^^^
+
+Install CAP using the :ref:`instructions provided here <installation>`. Once installed, make sure you have sourced your virtual environment. Assuming the virtual environment is called ``amescap``, activate it like so:
 
 .. code-block:: bash
-   MarsVars -h
 
-CAP only works with netCDF files, so use CAP in a directory hosting model output in netCDF format. Then you can pass arguments to CAP executables to perform your desired operation on the file. A good place to start is to use the example command shown below your desired operation.
+   source amescap/bin/activate.csh # For CSH/TCSH
+   # OR
+   source amescap/bin/activate # For BASH
 
-Example Usage
-^^^^^^^^^^^^^
+In your virtual environment, you may type ``cap`` at any time to review basic usage information. You can also check your CAP version and install date using ``cap version`` or ``cap info``, which returns:
 
-Let's walk through a use case for CAP. Change to a directory you want to save your data in.
+.. code-block::
 
-1. Begin by using ``MarsPull`` to retrieve MGCM data from the `NAS Data Portal <https://data.nas.nasa.gov/mcmc>`_. 
+   CAP Installation Information
+   ----------------------------
+   Version: 0.3
+   Install Date: Fri Mar  7 11:56:48 2025
+   Install Location: /Users/path/to/amescap/lib/python3.11/site-packages
+
+2. Retrieve netCDF data
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Begin by using ``MarsPull`` to retrieve MGCM data from the `NAS Data Portal <https://data.nas.nasa.gov/mcmc>`_. 
 
 If you check out the website at the link above, click "Reference Mars Climate Simulations" and then "FV3-based Mars GCM," you'll see a list of files. We will download the one called ``03340.atmos_average_pstd.nc`` and its associated "fixed" file, ``03340.fixed.nc``:
 
 .. code-block:: bash
+
    MarsPull FV3BETAOUT1 -f 03340.atmos_average_pstd.nc 03340.fixed.nc
 
 .. note::
+
    The download will take a few minutes. Actual time varies depending on your internet download speed.
 
-While we wait for the download, let's explore how we would know to use this exact command. The :ref:`Available Commands` section above lists the executables and their functions (you can also view this in the terminal by typing ``cap``). This list tells us that we want to use ``MarsPull`` to retrieve data, and that we can use ``[-h --help]`` to view the instructions on how to use MarsPull, like so:
+While we wait for the download, let's explore how we would know to use this exact command. The :ref:`available_commands` section above lists the executables and their functions (you can also view this in the terminal by typing ``cap``). This list tells us that we want to use ``MarsPull`` to retrieve data, and that we can use ``[-h --help]`` to view the instructions on how to use MarsPull, like so:
 
 .. code-block:: bash
+
    MarsPull -h
 
 which outputs:
 
 .. code-block:: bash
+
    usage: MarsPull [-h] [-list] [-f FILENAME [FILENAME ...]] [-ls LS [LS ...]] [--debug]
                   [{FV3BETAOUT1,ACTIVECLDS,INERTCLDS,NEWBASE_ACTIVECLDS,ACTIVECLDS_NCDF}]
 
@@ -130,55 +125,76 @@ As we can see, MarsPull wants us to provide the simulation directory name and ei
 
 Then, we used the ``[-f --filename]`` argument to specify which files from that page we wanted to download.
 
-2. Inspect the file contents
+3. Inspect the file contents
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once our files are downloaded, we can look at the variables they contain using the "inspect" function in ``MarsPlot``. This is one function you'll want to remember because you'll find its always useful.
 
 .. code-block:: bash
+
    MarsPlot -i 003340.atmos_average_pstd.nc
 
 The following should be printed to your terminal:
 
-.. image:: ./images/cli_MarsPlot_inspect.png
+.. image:: ./images/cli_marsplot_inspect.png
    :alt: Output from ``MarsPlot -i``
 
 We can see dozens of variables in the file including surface pressure (``ps``) and atmospheric temperature (``temp``). We can use these variables to derive the CO\ :sub:`2` condensation temperature (``Tco2``). Let's derive that variable and add it to the file.
 
-3. Derive and add ``Tco2`` to the file
+4. Derive and add ``Tco2`` to the file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Calling ``[-h --help]`` on MarsVars will return a list of variables that MarsVars can derive for you. Make sure your netCDF file has the variables required to derive your requested variable first. To add ``Tco2`` to our file, we type:
 
 .. code-block:: bash
+
    MarsVars 003340.atmos_average_pstd.nc -add Tco2
 
 When that completes, we can inspect the file to confirm that Tco2 was added:
 
 .. code-block:: bash
+
    MarsPlot -i 003340.atmos_average_pstd.nc
 
 You should see a new variable listed at the bottom of the printed output:
 
 .. code-block:: bash
-   Tco2           : ('time', 'pstd', 'lat', 'lon')= (133, 36, 90, 180), CO2 condensation temperature (derived w/CAP)  [K]
 
-Next, let's plot the lowest-level CO\ :sub:`2` condensation temperature and the lowest level atmospheric temperature to compare them.
+   Tco2: ('time', 'pstd', 'lat', 'lon')= (133, 36, 90, 180), CO2 condensation temperature (derived w/CAP)  [K]
 
-4. Generate some plots
+Next, let's create some plots.
+
+5. Generate some plots
+^^^^^^^^^^^^^^^^^^^^^^
 
 CAP's plotting executable is MarsPlot, which accepts a template file called ``Custom.in`` from which it generates plots. First we need to make this template file, so we type:
 
 .. code-block:: bash
+
    MarsPlot -template
 
 This creates ``Custom.in`` in your current directory. Open ``Custom.in`` in your preferred text editor. You can set the syntax highlighting scheme to detect Python in order to make the file more readable.
 
-The template file contains templates for several plot types. Scroll down until you see the first two templates, which are set to ``True`` by default. The default settings would create a topographical map from the ``zsurf`` variable in ``03340.fixed.nc`` and a latitude-level cross-section of the zonal wind (``ucomp``) from a ``03340.atmos_average.nc`` file, the latter of which we do not have. These are just examples that show what you might want to visualize with each plot type.
+The template file contains templates for several plot types. Scroll down until you see the first two templates, which are set to ``True`` by default. The default settings create a topographical map from the ``zsurf`` variable in a ``fixed`` file and a latitude-level cross-section of the zonal wind (``ucomp``) from an ``atmos_average`` file. Since our ``atmos_average`` file has been pressure interpolated, let's append ``_pstd`` to the file name in ``Custom.in``. Your ``Custom.in`` file should look like this:
 
-Set the second template to ``False``: ``Plot 2D lat X lev = False``
+.. image:: ./images/cli_custom.png
+   :alt: ``Custom.in`` setup
 
-We will use the first template to generate two latitude-longitude maps showing the lowest-level temperature and CO\ :sub:`2` condensation temperature. Start by changing the ``Main Variable`` setting to call ``temp`` from the ``03340.atmos_average_pstd.nc`` file. Then, copy and paste that template right below itself, so you have two identical templates. In the second template, change ``temp`` to ``Tco2``. Your ``Custom.in`` file should look like:
+Save your changes to ``Custom.in`` and pass it into MarsPlot to generate the figures:
 
+.. code-block:: bash
 
+   MarsPlot Custom.in
+
+You will see that a file called Diagnostics.pdf has been created in your directory. Opening that PDF, you should see the following two plots:
+
+.. image:: ./images/default_custom_plots.png
+   :alt: Default figures generated by ``Custom.in``
+
+Review
+^^^^^^
+
+This was just one simple example of how you can use CAP to manipulate MGCM output data in netCDF files and visualize the results. Going forward, make generous use of ``cap`` and ``<executable name> --help`` to guide your analysis process. For more use case examples, see :ref:`_cap_practical`.
 
 Additional Information
 ----------------------
