@@ -42,7 +42,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 
-group = parser.add_argument_group("Required Arguments", 
+group = parser.add_argument_group("Required Arguments",
     "\n{Yellow}MarsCalendar requires either -ls or -sol.{Nclr}\n")
 exclusive_group = parser.add_mutually_exclusive_group(required=True)
 
@@ -69,7 +69,7 @@ exclusive_group.add_argument('-ls', '--ls', nargs='+', type=float,
 
 # Secondary arguments: Used with some of the arguments above
 
-parser.add_argument('-my', '--marsyear', nargs='+', type=float, 
+parser.add_argument('-my', '--marsyear', nargs='+', type=float,
     default = 0.,
     help=(
         f"Return the sol or Ls corresponding to the Ls or sol of a "
@@ -110,7 +110,7 @@ if args.sol is None and args.ls is None:
                  f"``[-ls --ls]``. See ``MarsCalendar -h`` for additional "
                  f"help.{Nclr}")
     exit()
-    
+
 # ======================================================================
 #                               DEFINITIONS
 # ======================================================================
@@ -176,7 +176,7 @@ def main():
         input_num = np.asarray(args.sol).astype(float)
         head_text = "\n    SOL  |    Ls    \n-----------------------"
         input_arr = parse_array(input_num)
-        output_arr = sol2ls(input_arr, continuous=accumulate)
+        output_arr = sol2ls(input_arr, cumulative=accumulate)
 
     # If scalar, return as float
     output_arr = np.atleast_1d(output_arr)
