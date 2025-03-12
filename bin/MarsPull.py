@@ -197,6 +197,11 @@ def file_list(list_of_files):
 # ======================================================
 
 def main():
+    # validation
+    if not args.list_files and not args.directory_name:
+        print("Error: You must specify either -list or a directory.")
+        sys.exit(1)
+        
     if args.list_files:
         # Send an HTTP GET request to the URL and store the response.
         legacy_data = requests.get('https://data.nas.nasa.gov/mcmcref/legacygcm/')
@@ -235,6 +240,11 @@ def main():
         elif portal_dir in ['FV3BETAOUT1']:
             url_requested="https://data.nas.nasa.gov/legacygcm/fv3betaout1data/"
 
+        if not (args.ls or args.filename):
+            prYellow("ERROR No file requested. Use [-ls --ls] or "
+                     "[-f --filename] to specify a file to download.")
+            sys.exit(1)  # Use sys.exit(1) to return a non-zero exit code
+            
         if args.ls :
             data_input=np.asarray(args.ls)
             if len(data_input)==1: #query only  the file that contains this Ls
@@ -272,14 +282,23 @@ def main():
                 filename=saveDir+ff
                 print('Downloading '+ url+ '...')#ff
                 download(url,filename)
-        else:
-            prYellow("ERROR No file requested. Use [-ls --ls] or "
-                    "[-f --filename] to specify a file to download.")
-            exit()
-
+                
+    elif not args.list_files:
+        # If no directory is provided and it's not a list files request
+        prYellow("ERROR: A directory must be specified unless using -list.")
+        sys.exit(1)
+        
 # ======================================================
 #                  END OF PROGRAM
 # ======================================================
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as e:
+        if args.debug:
+            import traceback
+            traceback.print_exc()
+        else:
+            print(f"Error: {e}")
+        sys.exit(1)

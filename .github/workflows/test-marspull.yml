@@ -1,135 +1,54 @@
-name: Test MarsPull
+name: MarsPull CI
 
 on:
   push:
-    branches: [ devel ]
+    branches: [ main, master ]
+    paths:
+      - 'bin/MarsPull.py'
+      - 'tests/test_marspull.py'
+      - '.github/workflows/marspull.yml'
+      - 'pyproject.toml'
   pull_request:
-    branches: [ devel ]
-  workflow_dispatch:  # Allow manual triggering
+    branches: [ main, master ]
+    paths:
+      - 'bin/MarsPull.py'
+      - 'tests/test_marspull.py'
+      - '.github/workflows/marspull.yml'
+      - 'pyproject.toml'
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
-
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+    
     steps:
     - uses: actions/checkout@v3
     
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
     
-    - name: Create virtual environment
+    - name: Install dependencies
       run: |
-        python -m venv amescap
-        source amescap/bin/activate
         python -m pip install --upgrade pip
+        pip install build
+        pip install pytest
+        pip install flake8
+        pip install .
     
-    - name: Install AmesCAP from GitHub
+    - name: Run unit tests
       run: |
-        source amescap/bin/activate
-        # Check Python version
-        python --version
-        
-        # Clone the repository
-        git clone --branch devel https://github.com/falconstryker/AmesCAP.git
-        cd AmesCAP
-        
-        # Install in development mode
-        pip install -e .
-        
-        # Check if installation was successful
-        pip list | grep amescap
-        
-        # Copy profile file if it exists
-        if [ -f mars_templates/amescap_profile ]; then
-          cp mars_templates/amescap_profile ~/.amescap_profile
-        elif [ -f mars_templates/amescap-profile ]; then
-          cp mars_templates/amescap-profile ~/.amescap_profile
-        else
-          echo "Profile file not found in expected location."
-        fi
-        
-        cd ..
-        
-    - name: Install AmesCAP dependencies
-      run: |
-        source amescap/bin/activate
-        # Install all required dependencies without the package itself
-        pip install numpy matplotlib scipy xarray netCDF4 requests
+        python -m unittest tests/test_marspull.py
     
-    - name: Test MarsPull help message
+    - name: Check Linting
       run: |
-        source amescap/bin/activate
-        MarsPull -h
+        flake8 bin/MarsPull.py tests/test_marspull.py --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 bin/MarsPull.py tests/test_marspull.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     
-    - name: Test MarsPull list functionality
+    - name: Build Package
       run: |
-        source amescap/bin/activate
-        MarsPull -list || echo "List command may require internet access or specific permissions"
-    
-    - name: Create test script
-      run: |
-        cat > test_marspull.py << 'EOF'
-        import unittest
-        import subprocess
-        import os
-        import sys
-        
-        class TestMarsPull(unittest.TestCase):
-            def test_help_command(self):
-                """Test if the help command works"""
-                result = subprocess.run(["MarsPull", "-h"], 
-                                       capture_output=True, text=True)
-                self.assertEqual(result.returncode, 0)
-                self.assertIn("Uility for downloading NASA Ames Mars Global Climate", result.stdout)
-        
-            def test_list_command(self):
-                """Test if the list command works - we don't check output as it may vary"""
-                result = subprocess.run(["MarsPull", "-list"], 
-                                       capture_output=True, text=True)
-                # Depending on network access, this might return different codes
-                # so we just check that it runs without crashing
-                if result.returncode == 0:
-                    self.assertIn("Available", result.stdout)
-        
-            def test_error_on_missing_args(self):
-                """Test that an error is raised when directory is specified without ls or filename"""
-                result = subprocess.run(["MarsPull", "ACTIVECLDS"], 
-                                       capture_output=True, text=True)
-                self.assertIn("ERROR No file requested", result.stdout)
-        
-        if __name__ == '__main__':
-            unittest.main()
-        EOF
-    
-    - name: Run tests
-      run: |
-        source amescap/bin/activate
-        # Make sure MarsPull is available
-        which MarsPull || echo "MarsPull not found in PATH"
-        python -m unittest -v test_marspull.py
-    
-    - name: Check for package integrity
-      run: |
-        source amescap/bin/activate
-        # Print Python path to debug
-        echo "Python path:"
-        python -c "import sys; print(sys.path)"
-        
-        # Check installed packages
-        pip list
-        
-        # Check if other expected scripts are installed
-        if command -v MarsPlot &> /dev/null; then
-          echo "MarsPlot is installed and working"
-          MarsPlot -h
-        else
-          echo "MarsPlot not found, installation may be incomplete"
-          echo "Checking for script locations:"
-          find amescap -name "MarsPull.py" -o -name "MarsPlot.py"
-          find AmesCAP -name "MarsPull.py" -o -name "MarsPlot.py" 2>/dev/null || echo "AmesCAP directory not found"
-        fi
+        python -m build

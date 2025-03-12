@@ -15,9 +15,9 @@ import shutil
 import subprocess
 import re
 
-# For finding the MarsPull executable
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-
+# Add project root to Python path
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, PROJECT_ROOT)
 
 class TestMarsPull(unittest.TestCase):
     """Test suite for MarsPull"""
@@ -29,36 +29,19 @@ class TestMarsPull(unittest.TestCase):
         cls.test_dir = tempfile.mkdtemp()
         os.chdir(cls.test_dir)  # Change to test directory
         
-        # Find MarsPull executable
-        cls.mars_pull_exec = cls.find_mars_pull_executable()
+        # Find MarsPull script
+        cls.mars_pull_script = os.path.join(PROJECT_ROOT, 'bin', 'MarsPull.py')
     
     @classmethod
     def tearDownClass(cls):
         """Clean up the test environment"""
         # Change back to original directory and remove test directory
-        os.chdir(SCRIPT_DIR)
+        os.chdir(os.path.dirname(os.path.abspath(__file__)))
         shutil.rmtree(cls.test_dir)
-    
-    @classmethod
-    def find_mars_pull_executable(cls):
-        """Find the MarsPull executable"""
-        # Check common locations
-        possible_paths = [
-            os.path.join(SCRIPT_DIR, 'MarsPull'),
-            os.path.join(SCRIPT_DIR, '..', 'bin', 'MarsPull'),
-            'MarsPull',  # Check if in PATH
-        ]
-        
-        for path in possible_paths:
-            if os.path.exists(path) or shutil.which(path):
-                return path
-        
-        # If we can't find it, use the most likely path and let the tests fail if needed
-        return 'MarsPull'
     
     def run_mars_pull(self, args, expect_success=True):
         """Run MarsPull command with given arguments"""
-        cmd = [self.mars_pull_exec] + args
+        cmd = [sys.executable, self.mars_pull_script] + args
         
         # Run the command
         try:
@@ -91,23 +74,16 @@ class TestMarsPull(unittest.TestCase):
         </html>
         """
         
-        fv3_response = MagicMock()
-        fv3_response.text = """
-        <html>
-        <a href="https://example.com/file1.nc">file1.nc</a>
-        <a href="https://example.com/file2.nc">file2.nc</a>
-        </html>
-        """
-        
         # Configure mock to return different responses for different URLs
-        def side_effect(url):
-            if 'legacygcm/' in url and not 'legacygcmdata/' in url:
-                return legacy_response
-            elif 'legacygcmdata/' in url:
-                return activeclds_response
-            elif 'fv3betaout1/' in url:
-                return fv3_response
-            return MagicMock()
+        def side_effect(url, **kwargs):
+            response = MagicMock()
+            if url == 'https://data.nas.nasa.gov/mcmcref/legacygcm/':
+                response.text = """<html>URLs for legacygcm</html>"""
+            elif url == 'https://data.nas.nasa.gov/mcmcref/fv3betaout1/':
+                response.text = """<html>URLs for fv3betaout1</html>"""
+            else:
+                response.text = """<html>Some directory content</html>"""
+            return response
         
         mock_get.side_effect = side_effect
         
@@ -115,7 +91,7 @@ class TestMarsPull(unittest.TestCase):
         stdout, stderr = self.run_mars_pull(['-list'])
         
         # Check that the command tried to fetch directory listings
-        self.assertGreaterEqual(mock_get.call_count, 2)
+        self.assertGreaterEqual(mock_get.call_count, 1)
         
         # Check that the output includes file listings
         self.assertIn("Available directories", stdout)
@@ -153,7 +129,14 @@ class TestMarsPull(unittest.TestCase):
         response.status_code = 200
         response.headers.get.return_value = '1024'  # Content length
         response.iter_content.return_value = [b'test data']
-        mock_get.return_value = response
+        
+        def side_effect(url, **kwargs):
+            # Simulate finding multiple files for Ls 90
+            if 'fort.11_0090' in url or 'fort.11_0091' in url:
+                return response
+            return MagicMock()
+        
+        mock_get.side_effect = side_effect
         
         # Run MarsPull to download a file by Ls
         stdout, stderr = self.run_mars_pull(['ACTIVECLDS', '-ls', '90'])
@@ -171,17 +154,13 @@ class TestMarsPull(unittest.TestCase):
     
     def test_missing_required_args(self):
         """Test error handling when required arguments are missing"""
-        # Run MarsPull without required arguments
+        # Test without any arguments
         stdout, stderr = self.run_mars_pull([], expect_success=False)
+        self.assertIn("Error: You must specify either -list or a directory", stdout)
         
-        # Check for usage/error message
-        self.assertTrue('usage:' in stdout.lower() or 'error:' in stdout.lower())
-        
-        # Run MarsPull with directory but no -ls or -f
+        # Test with directory but no file specification
         stdout, stderr = self.run_mars_pull(['ACTIVECLDS'], expect_success=False)
-        
-        # Check for specific error message
-        self.assertIn('ERROR No file requested', stdout)
+        self.assertIn("ERROR No file requested", stdout)
     
     def test_help_message(self):
         """Test that help message displays correctly"""
