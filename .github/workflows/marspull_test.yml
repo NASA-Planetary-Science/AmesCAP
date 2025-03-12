@@ -1,9 +1,9 @@
 name: MarsPull Test Workflow
 
 on:
-  # Trigger the workflow on push to main branch
+  # Trigger the workflow on push to devel branch
   push:
-    branches: [ main ]
+    branches: [ devel ]
     paths:
       - 'bin/MarsPull.py'
       - 'tests/test_marspull.py'
@@ -14,7 +14,7 @@ on:
 
   # Trigger on pull requests that modify MarsPull or tests
   pull_request:
-    branches: [ main ]
+    branches: [ devel ]
     paths:
       - 'bin/MarsPull.py'
       - 'tests/test_marspull.py'
