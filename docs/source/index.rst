@@ -22,9 +22,10 @@ CAP is currently compatible with output from the MCMC’s `Legacy <https://githu
    :maxdepth: 3
    :caption: Contents:
 
-   installation
-   examples
-   description
+   Install <installation>
+   Quick Start Guide <cli>
+   Example Use Cases <examples>
+   CAP Description <description>
    MarsPull <autoapi/bin/MarsPull/index>
    MarsFormat <autoapi/bin/MarsFormat/index>
    MarsFiles <autoapi/bin/MarsFiles/index>

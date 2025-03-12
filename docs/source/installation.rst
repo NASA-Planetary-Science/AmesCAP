@@ -1,9 +1,15 @@
+.. _installation:
+
 Installation Instructions
 =========================
 
 *Last Updated: March 2025*
 
-Installing CAP is done on the command line via ``git clone``. If you are installing CAP on your local PC, please see the instructions relevant to your operating system: :ref:`MacOS Installation <mac_install>` or :ref:`Windows Installation <windows_install>`. If you are installing CAP on NASA's supercomputing environment, NAS, please see the :ref:`NAS Installation <nas_install>` instructions below.
+Installing CAP is done on the command line via ``git clone``. Here, we provide instructions for installing on Windows using Cygwin or PowerShell and pip or conda, MacOS using pip or conda, and the NASA Advanced Supercomputing (NAS) system using pip.
+
+:ref:`MacOS Installation <mac_install>`
+:ref:`Windows Installation <windows_install>`
+:ref:`NAS Installation <nas_install>`
 
 .. _mac_install:
 

@@ -324,8 +324,9 @@ Attributes
 
    :returns: ``Ds`` the sol number
 
-   ..note:: For the moment, this is consistent with 0 <= Ls <=
-       359.99, but not for monotically increasing Ls.
+   ..note::
+       For the moment, this is consistent with 0 <= Ls <= 359.99, but 
+       not for monotically increasing Ls.
 
 
 

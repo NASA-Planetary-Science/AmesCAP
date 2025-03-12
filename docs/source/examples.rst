@@ -1,3 +1,5 @@
+.. _cap_practical:
+
 Examples & Use Cases
 ====================
 

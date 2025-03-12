@@ -119,7 +119,8 @@ Attributes
 
    :return: the ``ak`` and ``bk`` arrays
 
-   ..note:: This routine will look for both ``ak`` and ``bk``. There
+   .. note::
+       This routine will look for both ``ak`` and ``bk``. There
        are cases when it is convenient to load the ``ak``, ``bk`` once 
        when the files are first opened in ``MarsVars``, but the ``ak`` 
        and ``bk`` arrays may not be necessary for in the calculation 
@@ -196,7 +197,8 @@ Attributes
 
    :return: full file path & name of file
 
-   ..note:: This routine does not confirm that the file exists.
+   .. note::
+       This routine does not confirm that the file exists.
        It operates on the provided input string.
        
 
@@ -265,7 +267,8 @@ Attributes
 
    Returns the full path for a netCDF file object.
 
-   ..note:: ``Dataset`` and multi-file dataset (``MFDataset``) have
+   .. note::
+       ``Dataset`` and multi-file dataset (``MFDataset``) have
        different attributes for the path, hence the need for this 
        function.
 
@@ -292,7 +295,8 @@ Attributes
    :return: longname and unit attributes
    :rtype: str
 
-   ..note:: Some functions in MarsVars edit the units
+   .. note::
+       Some functions in MarsVars edit the units
        (e.g., [kg] -> [kg/m]), therefore the empty string is 4 
        characters in length ("    " instead of "") to allow for 
        editing by ``editing units_txt[:-2]``, for example.
@@ -407,7 +411,8 @@ Attributes
    :return: Model, a dictionary with the dimensions and variables, 
        e.g. "ucomp"='U' or "dim_lat"='latitudes'
 
-   ..NOTE:: The defaut names for variables are defined in () 
+   .. note::
+       The defaut names for variables are defined in () 
        parenthesis in ~/.amescap_profile::
        
        'X direction wind        [m/s]                   (ucomp)>'
@@ -444,7 +449,8 @@ Attributes
        grid.
    :rtype: array
 
-   ..note:: While the KDTree interpolation can handle a 3D dataset
+   .. note::
+       While the KDTree interpolation can handle a 3D dataset
        (lon/lat/lev instead of just 2D lon/lat), the grid points in 
        the vertical are just a few (10--100s) meters in the PBL vs a 
        few (10-100s) kilometers in the horizontal. This results in 
@@ -544,7 +550,8 @@ Attributes
        # in the average file, it will check for them in the fixed file.
        pk, bk, areo = smart_reader(fNcdf, ["pk", "bk", "areo"])
 
-   ..note:: Only the variable content is returned, not attributes
+   .. note::
+       Only the variable content is returned, not attributes
 
 
 

@@ -71,7 +71,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument('input_file', nargs='+',
-    type=argparse.FileType('r'),
+    type=argparse.FileType('rb'),
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
 parser.add_argument('-t', '--interp_type', type=str, default='pstd',

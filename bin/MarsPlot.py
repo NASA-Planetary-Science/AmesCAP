@@ -105,7 +105,7 @@ parser.add_argument('template_file', nargs='?',
 )
 
 parser.add_argument('-i', '--inspect_file', nargs='?',
-    type=argparse.FileType('r'),
+    type=argparse.FileType('rb'),
     help=(
         f"Print the content of a netCDF file to the screen. This is a "
         f"ncdump-like feature. Variables are sorted by dimension.\n"

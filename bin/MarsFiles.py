@@ -138,7 +138,7 @@ parser = ExtArgumentParser(
 )
 
 parser.add_argument('input_file', nargs='+',
-    type=argparse.FileType('r'),
+    type=argparse.FileType('rb'),
     help=(f"A netCDF or fort.11 file or list of files.\n\n"))
 
 parser.add_argument('-bin', '--bin_files', nargs='+', type=str,

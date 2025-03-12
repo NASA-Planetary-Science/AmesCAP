@@ -81,7 +81,8 @@ Classes
       A useful resource on subclassing is available at:
       https://numpy.org/devdocs/reference/arrays.classes.html
 
-      .. NOTE:: Because we use an existing ``numpy.ndarray`` to define
+      .. note::
+          Because we use an existing ``numpy.ndarray`` to define
           the object, we do not call ``__array_finalize__(self, obj)``
 
       :param np.ndarray: _description_

@@ -95,9 +95,9 @@ Use the ``[-h --help]`` option with any executable to display documentation and 
 1. MarsPull - Downloading Raw MGCM Output
 -----------------------------------------
 
-``MarsPull`` is a utility for accessing MGCM output files hosted on the `MCMC Data portal <https://data.nas.nasa.gov/legacygcm/data_legacygcm.php>`_. MGCM data is archived in 1.5-hour intervals (16x/day) and packaged in files containing 10 sols. The files are named fort.11_XXXX in the order they were produced, but ``MarsPull`` maps those files to specific solar longitudes (Ls, in °).
+``MarsPull`` is a utility for accessing MGCM output files hosted on the `MCMC Data portal <https://data.nas.nasa.gov/legacygcm/data_legacygcm.php>`_. MGCM data is archived in 1.5-hour intervals (16x/day) and packaged in files containing 10 sols. The files are named fort.11_XXXX in the order they were produced, but ``MarsPull`` maps those files to specific solar longitudes (L\ :sub:`s`, in °).
 
-This allows users to request a file at a specific Ls or for a range of Ls using the ``[-ls --ls]`` flag. ``MarsPull`` requires the name of the folder to parse files from, and folders can be listed using ``[-list --list_files]``. The ``[-f --filename]`` flag can be used to parse specific files within a particular directory.
+This allows users to request a file at a specific L\ :sub:`s` or for a range of L\ :sub:`s` using the ``[-ls --ls]`` flag. ``MarsPull`` requires the name of the folder to parse files from, and folders can be listed using ``[-list --list_files]``. The ``[-f --filename]`` flag can be used to parse specific files within a particular directory.
 
 .. code-block:: bash
 
@@ -353,7 +353,7 @@ Generate a template with the ``[-template --generate_template]`` argument:
     (amesCAP)$ MarsPlot Custom.in
     > Reading Custom.in
     > [----------]  0 % (2D_lon_lat :fixed.zsurf)
-    > [#####-----] 50 % (2D_lat_lev :atmos_average.ucomp, Ls= (MY 2) 252.30, zonal avg)
+    > [#####-----] 50 % (2D_lat_lev :atmos_average.ucomp, L\ :sub:`s`= (MY 2) 252.30, zonal avg)
     > [##########]100 % (Done)
     > Merging figures...
     > /path/to/simulation/run_name/history/Diagnostics.pdf was generated
@@ -385,7 +385,7 @@ The data selection process follows this decision tree:
                                      (e.g. temp, ucomp)                 └─
                                        │                                ┌─
                                        └── 5. Which dimensions          │            5. see rule table below
-                                          (e.g lat =0°,Ls =270°)        │  DEFAULT
+                                          (e.g lat =0°,L\ :sub:`s` =270°)        │  DEFAULT
                                               │                         │  SETTINGS
                                               └── 6. plot customization │            6. default settings
                                                      (e.g. colormap)    └─
@@ -661,7 +661,7 @@ By default, MarsPlot applies the free dimensions specified in the template to bo
     Level [Pa/m]   = 10
     2nd Variable   = atmos_average.var{ls=90,180;lev=50}
 
-Here, ``Main Variable`` uses Ls=270° and pressure=10 Pa, while ``2nd Variable`` uses the average of Ls=90-180° and pressure=50 Pa.
+Here, ``Main Variable`` uses L\ :sub:`s`=270° and pressure=10 Pa, while ``2nd Variable`` uses the average of L\ :sub:`s`=90-180° and pressure=50 Pa.
 
 .. note::
    Dimension keywords are ``ls``, ``lev``, ``lon``, ``lat``, and ``tod``. Accepted values are ``Value`` (closest), ``Valmin,Valmax`` (average between two values), and ``all`` (average over all values).
