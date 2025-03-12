@@ -145,6 +145,8 @@ def parse_array(len_input):
 
     elif len(len_input) == 3:
         start, stop, step = len_input[0], len_input[1], len_input[2]
+        while (stop < start):
+            stop += 360.
         input_as_arr = np.arange(start, stop, step)
 
     else:
@@ -175,6 +177,7 @@ def main():
         head_text = "\n   Ls    |    Sol    \n-----------------------"
         input_arr = parse_array(input_num)
         output_arr = ls2sol(input_arr)
+        input_arr = input_arr%360
 
     elif args.sol:
         # If [-sol --sol] is input, return Ls
@@ -182,6 +185,7 @@ def main():
         head_text = "\n    SOL  |    Ls    \n-----------------------"
         input_arr = parse_array(input_num)
         output_arr = sol2ls(input_arr, cumulative=accumulate)
+        input_arr = input_arr+MY*668.
 
     # If scalar, return as float
     output_arr = np.atleast_1d(output_arr)
@@ -189,7 +193,7 @@ def main():
     print(head_text)
     for i in range(0, len(input_arr)):
         # Print input_arr and corresponding output_arr
-        print(f" {input_arr[i]:.2f}  |  {(output_arr[i]+MY*668.):.2f}")
+        print(f" {input_arr[i]:<6.2f}  |  {(output_arr[i]):.2f}")
 
     print("\n")
 
