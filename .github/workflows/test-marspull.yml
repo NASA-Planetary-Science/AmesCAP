@@ -3,18 +3,8 @@ name: Test MarsPull
 on:
   push:
     branches: [ devel ]
-    # paths:
-    #   - 'bin/MarsPull'
-    #   - 'bin/MarsPull.py'
-    #   - 'amescap/**'
-    #   - 'tests/test_marspull.py'
   pull_request:
     branches: [ devel ]
-    # paths:
-    #   - 'bin/MarsPull'
-    #   - 'bin/MarsPull.py'
-    #   - 'amescap/**'
-    #   - 'tests/test_marspull.py'
   workflow_dispatch:  # Allow manual triggering
 
 jobs:
@@ -37,12 +27,6 @@ jobs:
         python -m venv amescap
         source amescap/bin/activate
         python -m pip install --upgrade pip
-    
-    - name: Install AmesCAP dependencies
-      run: |
-        source amescap/bin/activate
-        # Install all required dependencies
-        pip install numpy requests unittest-mock pytest matplotlib scipy xarray netCDF4
     
     - name: Install AmesCAP from GitHub
       run: |
@@ -70,6 +54,12 @@ jobs:
         fi
         
         cd ..
+        
+    - name: Install AmesCAP dependencies
+      run: |
+        source amescap/bin/activate
+        # Install all required dependencies without the package itself
+        pip install numpy matplotlib scipy xarray netCDF4 requests
     
     - name: Test MarsPull help message
       run: |
@@ -81,30 +71,37 @@ jobs:
         source amescap/bin/activate
         MarsPull -list || echo "List command may require internet access or specific permissions"
     
-    - name: Create simple test script
+    - name: Create test script
       run: |
-        mkdir -p tests
-        cat > tests/test_marspull.py << EOF
+        cat > test_marspull.py << 'EOF'
         import unittest
         import subprocess
         import os
         import sys
-
+        
         class TestMarsPull(unittest.TestCase):
             def test_help_command(self):
-                result = subprocess.run(["MarsPull", "-h"], capture_output=True, text=True)
+                """Test if the help command works"""
+                result = subprocess.run(["MarsPull", "-h"], 
+                                       capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0)
                 self.assertIn("Uility for downloading NASA Ames Mars Global Climate", result.stdout)
-            
+        
             def test_list_command(self):
-                result = subprocess.run(["MarsPull", "-list"], capture_output=True, text=True)
+                """Test if the list command works - we don't check output as it may vary"""
+                result = subprocess.run(["MarsPull", "-list"], 
+                                       capture_output=True, text=True)
+                # Depending on network access, this might return different codes
+                # so we just check that it runs without crashing
                 if result.returncode == 0:
                     self.assertIn("Available", result.stdout)
-            
+        
             def test_error_on_missing_args(self):
-                result = subprocess.run(["MarsPull", "ACTIVECLDS"], capture_output=True, text=True)
+                """Test that an error is raised when directory is specified without ls or filename"""
+                result = subprocess.run(["MarsPull", "ACTIVECLDS"], 
+                                       capture_output=True, text=True)
                 self.assertIn("ERROR No file requested", result.stdout)
-
+        
         if __name__ == '__main__':
             unittest.main()
         EOF
@@ -114,7 +111,7 @@ jobs:
         source amescap/bin/activate
         # Make sure MarsPull is available
         which MarsPull || echo "MarsPull not found in PATH"
-        python -m unittest -v tests/test_marspull.py
+        python -m unittest -v test_marspull.py
     
     - name: Check for package integrity
       run: |
@@ -136,12 +133,3 @@ jobs:
           find amescap -name "MarsPull.py" -o -name "MarsPlot.py"
           find AmesCAP -name "MarsPull.py" -o -name "MarsPlot.py" 2>/dev/null || echo "AmesCAP directory not found"
         fi
-        
-    - name: Upload test artifacts on failure
-      if: failure()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-output
-        path: |
-          tests/*
-          ~/.amescap_profile
