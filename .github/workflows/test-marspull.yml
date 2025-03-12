@@ -34,45 +34,32 @@ jobs:
         # Check Python version
         python --version
         
-        # Try installing with specific version constraint for numpy
-        pip install --no-deps git+https://github.com/falconstryker/AmesCAP.git@devel
-        pip install numpy>=1.24.0,<1.26.0  # Install an older numpy version compatible with Python 3.9
-        pip install -e .  # Install the rest of dependencies
+        # Clone the repository
+        git clone --branch devel https://github.com/falconstryker/AmesCAP.git
+        cd AmesCAP
         
-        # If that fails, try alternative installation approach
-        if [ $? -ne 0 ]; then
-          echo "Standard pip install failed, trying alternative approach..."
-          git clone --branch devel https://github.com/falconstryker/AmesCAP.git
-          cd AmesCAP
-          
-          # Modify setup.py or pyproject.toml to accept older numpy
-          if [ -f "pyproject.toml" ]; then
-            # Update numpy requirement in pyproject.toml
-            sed -i 's/numpy>=1.26.2/numpy>=1.24.0/g' pyproject.toml
-          fi
-          
-          if [ -f "setup.py" ]; then
-            # Update numpy requirement in setup.py
-            sed -i 's/numpy>=1.26.2/numpy>=1.24.0/g' setup.py
-          fi
-          
-          pip install -e .
-          cd ..
-        fi
+        # Install in development mode
+        pip install -e .
         
         # Check if installation was successful
         pip list | grep amescap
         
-    - name: Copy profile file
+        # Copy profile file if it exists
+        if [ -f mars_templates/amescap_profile ]; then
+          cp mars_templates/amescap_profile ~/.amescap_profile
+        elif [ -f mars_templates/amescap-profile ]; then
+          cp mars_templates/amescap-profile ~/.amescap_profile
+        else
+          echo "Profile file not found in expected location."
+        fi
+        
+        cd ..
+        
+    - name: Install AmesCAP dependencies
       run: |
         source amescap/bin/activate
-        # Check if profile file exists and copy it
-        if [ -f amescap/mars_templates/amescap_profile ]; then
-          cp amescap/mars_templates/amescap_profile ~/.amescap_profile
-        else
-          echo "Profile file not found in expected location, searching..."
-          find . -name "amescap_profile" -o -name "amescap-profile" | xargs -I{} cp {} ~/.amescap_profile
-        fi
+        # Install all required dependencies without the package itself
+        pip install numpy matplotlib scipy xarray netCDF4 requests
     
     - name: Test MarsPull help message
       run: |
