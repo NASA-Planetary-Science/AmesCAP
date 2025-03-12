@@ -1451,6 +1451,15 @@ def except_message(debug,exception,varname,ifile,pre="",ext=""):
     :param varname: Name of variable causing exception
     :type varname: string
 
+    :param ifile: Name of input file
+    :type ifile: string
+
+    :param pre: Prefix to new variable
+    :type pre: string
+
+    :param ext: Extension to new variable
+    :type ext: string
+
     """
     if debug:
         raise
