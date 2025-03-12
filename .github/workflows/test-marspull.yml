@@ -3,18 +3,18 @@ name: Test MarsPull
 on:
   push:
     branches: [ devel ]
-    paths:
-      - 'bin/MarsPull'
-      - 'bin/MarsPull.py'
-      - 'amescap/**'
-      - 'tests/test_marspull.py'
+    # paths:
+    #   - 'bin/MarsPull'
+    #   - 'bin/MarsPull.py'
+    #   - 'amescap/**'
+    #   - 'tests/test_marspull.py'
   pull_request:
     branches: [ devel ]
-    paths:
-      - 'bin/MarsPull'
-      - 'bin/MarsPull.py'
-      - 'amescap/**'
-      - 'tests/test_marspull.py'
+    # paths:
+    #   - 'bin/MarsPull'
+    #   - 'bin/MarsPull.py'
+    #   - 'amescap/**'
+    #   - 'tests/test_marspull.py'
   workflow_dispatch:  # Allow manual triggering
 
 jobs:
