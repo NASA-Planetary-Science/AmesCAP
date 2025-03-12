@@ -228,53 +228,54 @@ def main():
         file_list(legacy_files_available)
         file_list(fv3_files_available)
 
-    portal_dir=args.directory_name
-    if portal_dir in ['ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS', 'ACTIVECLDS_NCDF']:
-        url_requested="https://data.nas.nasa.gov/legacygcm/legacygcmdata/"+portal_dir+'/'
-    elif portal_dir in ['FV3BETAOUT1']:
-        url_requested="https://data.nas.nasa.gov/legacygcm/fv3betaout1data/"
+    if args.directory_name:
+        portal_dir=args.directory_name
+        if portal_dir in ['ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS', 'ACTIVECLDS_NCDF']:
+            url_requested="https://data.nas.nasa.gov/legacygcm/legacygcmdata/"+portal_dir+'/'
+        elif portal_dir in ['FV3BETAOUT1']:
+            url_requested="https://data.nas.nasa.gov/legacygcm/fv3betaout1data/"
 
-    if args.ls :
-        data_input=np.asarray(args.ls)
-        if len(data_input)==1: #query only  the file that contains this Ls
-            i_start=np.argmin(np.abs(Ls_ini-data_input))
-            if data_input<Ls_ini[i_start]:i_start-=1
-            num_files=np.arange(i_start,i_start+1)
+        if args.ls :
+            data_input=np.asarray(args.ls)
+            if len(data_input)==1: #query only  the file that contains this Ls
+                i_start=np.argmin(np.abs(Ls_ini-data_input))
+                if data_input<Ls_ini[i_start]:i_start-=1
+                num_files=np.arange(i_start,i_start+1)
 
-        elif len(data_input)==2: #start stop  is provided
-            i_start=np.argmin(np.abs(Ls_ini-data_input[0]))
-            if data_input[0]<Ls_ini[i_start]:i_start-=1
+            elif len(data_input)==2: #start stop  is provided
+                i_start=np.argmin(np.abs(Ls_ini-data_input[0]))
+                if data_input[0]<Ls_ini[i_start]:i_start-=1
 
-            i_end=np.argmin(np.abs(Ls_end-data_input[1]))
-            if data_input[1]>Ls_end[i_end]:i_end+=1
+                i_end=np.argmin(np.abs(Ls_end-data_input[1]))
+                if data_input[1]>Ls_end[i_end]:i_end+=1
 
-            num_files=np.arange(i_start,i_end+1)
-        prCyan(f"Saving {len(num_files)} file(s) to {saveDir}")
-        for ii in num_files:
-            #Legacy .nc files
-            if portal_dir=='ACTIVECLDS_NCDF':
-                file_name='LegacyGCM_Ls%03d_Ls%03d.nc'%(Ls_ini[ii],Ls_end[ii])
-            #fort.11 files
-            else:
-                file_name='fort.11_%04d'%(670+ii)
+                num_files=np.arange(i_start,i_end+1)
+            prCyan(f"Saving {len(num_files)} file(s) to {saveDir}")
+            for ii in num_files:
+                #Legacy .nc files
+                if portal_dir=='ACTIVECLDS_NCDF':
+                    file_name='LegacyGCM_Ls%03d_Ls%03d.nc'%(Ls_ini[ii],Ls_end[ii])
+                #fort.11 files
+                else:
+                    file_name='fort.11_%04d'%(670+ii)
 
-            url = url_requested+file_name
-            filename=saveDir+file_name
-            #print('Downloading '+ file_name+ '...')
-            print('Downloading '+ url+ '...')
-            download(url,filename)
+                url = url_requested+file_name
+                filename=saveDir+file_name
+                #print('Downloading '+ file_name+ '...')
+                print('Downloading '+ url+ '...')
+                download(url,filename)
 
-    elif args.filename:
-        f_input=np.asarray(args.filename)
-        for ff in f_input :
-            url = url_requested+ff
-            filename=saveDir+ff
-            print('Downloading '+ url+ '...')#ff
-            download(url,filename)
-    else:
-        prYellow("ERROR No file requested. Use [-ls --ls] or "
-                 "[-f --filename] to specify a file to download.")
-        exit()
+        elif args.filename:
+            f_input=np.asarray(args.filename)
+            for ff in f_input :
+                url = url_requested+ff
+                filename=saveDir+ff
+                print('Downloading '+ url+ '...')#ff
+                download(url,filename)
+        else:
+            prYellow("ERROR No file requested. Use [-ls --ls] or "
+                    "[-f --filename] to specify a file to download.")
+            exit()
 
 # ======================================================
 #                  END OF PROGRAM
