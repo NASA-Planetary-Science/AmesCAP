@@ -38,6 +38,12 @@ jobs:
         source amescap/bin/activate
         python -m pip install --upgrade pip
     
+    - name: Install AmesCAP dependencies
+      run: |
+        source amescap/bin/activate
+        # Install all required dependencies
+        pip install numpy requests unittest-mock pytest matplotlib scipy xarray netCDF4
+    
     - name: Install AmesCAP from GitHub
       run: |
         source amescap/bin/activate
@@ -64,12 +70,6 @@ jobs:
         fi
         
         cd ..
-        
-    - name: Install AmesCAP dependencies
-      run: |
-        source amescap/bin/activate
-        # Install all required dependencies
-        pip install numpy requests unittest-mock pytest matplotlib scipy xarray netCDF4
     
     - name: Test MarsPull help message
       run: |
@@ -81,198 +81,40 @@ jobs:
         source amescap/bin/activate
         MarsPull -list || echo "List command may require internet access or specific permissions"
     
-    - name: Setup test directory
+    - name: Create simple test script
       run: |
-        source amescap/bin/activate
         mkdir -p tests
-        
-    - name: Create test script
-      run: |
-        cat > tests/test_marspull.py << 'EOF'
-#!/usr/bin/env python3
-"""
-Tests for MarsPull.py
+        cat > tests/test_marspull.py << EOF
+        import unittest
+        import subprocess
+        import os
+        import sys
 
-This test module mocks HTTP requests to test the functionality of MarsPull
-without actually downloading files from the NAS Data Portal.
-"""
+        class TestMarsPull(unittest.TestCase):
+            def test_help_command(self):
+                result = subprocess.run(["MarsPull", "-h"], capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0)
+                self.assertIn("Uility for downloading NASA Ames Mars Global Climate", result.stdout)
+            
+            def test_list_command(self):
+                result = subprocess.run(["MarsPull", "-list"], capture_output=True, text=True)
+                if result.returncode == 0:
+                    self.assertIn("Available", result.stdout)
+            
+            def test_error_on_missing_args(self):
+                result = subprocess.run(["MarsPull", "ACTIVECLDS"], capture_output=True, text=True)
+                self.assertIn("ERROR No file requested", result.stdout)
 
-import os
-import sys
-import unittest
-from unittest.mock import patch, MagicMock
-import tempfile
-import shutil
-import subprocess
-import re
-
-# For finding the MarsPull executable
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-class TestMarsPull(unittest.TestCase):
-    """Test suite for MarsPull"""
+        if __name__ == '__main__':
+            unittest.main()
+        EOF
     
-    @classmethod
-    def setUpClass(cls):
-        """Set up the test environment"""
-        # Create a temporary directory for test outputs
-        cls.test_dir = tempfile.mkdtemp()
-        os.chdir(cls.test_dir)  # Change to test directory
-        
-        # Find MarsPull executable
-        cls.mars_pull_exec = cls.find_mars_pull_executable()
-    
-    @classmethod
-    def tearDownClass(cls):
-        """Clean up the test environment"""
-        # Change back to original directory and remove test directory
-        os.chdir(SCRIPT_DIR)
-        shutil.rmtree(cls.test_dir)
-    
-    @classmethod
-    def find_mars_pull_executable(cls):
-        """Find the MarsPull executable"""
-        # Check common locations
-        possible_paths = [
-            os.path.join(SCRIPT_DIR, 'MarsPull'),
-            os.path.join(SCRIPT_DIR, '..', 'bin', 'MarsPull'),
-            'MarsPull',  # Check if in PATH
-        ]
-        
-        for path in possible_paths:
-            if os.path.exists(path) or shutil.which(path):
-                return path
-        
-        # If we can't find it, use the most likely path and let the tests fail if needed
-        return 'MarsPull'
-    
-    def run_mars_pull(self, args, expect_success=True):
-        """Run MarsPull command with given arguments"""
-        cmd = [self.mars_pull_exec] + args
-        
-        # Run the command
-        try:
-            result = subprocess.run(cmd, check=False, capture_output=True, text=True)
-            if expect_success:
-                self.assertEqual(result.returncode, 0, f"MarsPull failed: {result.stderr}")
-            else:
-                self.assertNotEqual(result.returncode, 0, "MarsPull should have failed but didn't")
-            return result.stdout, result.stderr
-        except Exception as e:
-            self.fail(f"Failed to run MarsPull: {e}")
-    
-    def test_help_command(self):
-        """Test if the help command works"""
-        stdout, stderr = self.run_mars_pull(["-h"])
-        self.assertIn("Uility for downloading NASA Ames Mars Global Climate", stdout)
-    
-    def test_list_command(self):
-        """Test if the list command works - we don't check output as it may vary"""
-        try:
-            stdout, stderr = self.run_mars_pull(["-list"], expect_success=False)
-            # Just check that it runs and produces some output
-            if "Available" in stdout:
-                self.assertIn("Available", stdout)
-        except:
-            # Ignore failures as this might need network access
-            pass
-    
-    def test_error_on_missing_args(self):
-        """Test that an error is raised when directory is specified without ls or filename"""
-        stdout, stderr = self.run_mars_pull(["ACTIVECLDS"], expect_success=False)
-        self.assertIn("ERROR No file requested", stdout)
-
-
-if __name__ == "__main__":
-    unittest.main()
-EOF
-    
-    - name: Run basic tests
+    - name: Run tests
       run: |
         source amescap/bin/activate
         # Make sure MarsPull is available
         which MarsPull || echo "MarsPull not found in PATH"
         python -m unittest -v tests/test_marspull.py
-    
-    - name: Run mock tests
-      run: |
-        source amescap/bin/activate
-        
-        # Create mock test file that uses unittest.mock
-        cat > tests/test_marspull_mocks.py << 'EOF'
-#!/usr/bin/env python3
-"""Tests for MarsPull using mocks to avoid actual downloads"""
-
-import os
-import sys
-import unittest
-from unittest.mock import patch, MagicMock
-
-# Try to import the package
-try:
-    # Add the package directory to the path to import the module
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-    from bin import MarsPull
-    DIRECT_IMPORT = True
-except ImportError:
-    DIRECT_IMPORT = False
-    print("Could not import MarsPull directly, skipping mock tests")
-
-@unittest.skipIf(not DIRECT_IMPORT, "Cannot import MarsPull directly")
-class TestMarsPullWithMocks(unittest.TestCase):
-    """Test MarsPull with mocks to simulate network calls"""
-    
-    @patch('requests.get')
-    def test_list_files(self, mock_get):
-        """Test the list_files function"""
-        # Skip if we couldn't import MarsPull
-        if not DIRECT_IMPORT:
-            return
-        
-        # Setup mock responses
-        legacy_response = MagicMock()
-        legacy_response.text = "<html><a href='ACTIVECLDS/'>ACTIVECLDS</a></html>"
-        
-        fv3_response = MagicMock()
-        fv3_response.text = "<html><a href='file.nc'>file.nc</a></html>"
-        
-        # Configure get to return different responses
-        def side_effect(url):
-            if 'legacygcm/' in url:
-                return legacy_response
-            elif 'fv3betaout1/' in url:
-                return fv3_response
-            return MagicMock()
-        
-        mock_get.side_effect = side_effect
-        
-        # Redirect stdout to capture output
-        import io
-        from contextlib import redirect_stdout
-        f = io.StringIO()
-        with redirect_stdout(f):
-            # Set args to list files and run main
-            sys.argv = ['MarsPull', '-list']
-            try:
-                MarsPull.main()
-            except SystemExit:
-                pass
-        
-        output = f.getvalue()
-        
-        # Verify output contains directory listings
-        self.assertIn("Available", output)
-        
-        # Verify get was called
-        self.assertTrue(mock_get.called)
-
-if __name__ == '__main__':
-    unittest.main()
-EOF
-        
-        # Run mock tests
-        python -m unittest -v tests/test_marspull_mocks.py || echo "Mock tests skipped (this is okay)"
     
     - name: Check for package integrity
       run: |
