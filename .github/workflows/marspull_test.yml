@@ -32,11 +32,11 @@ jobs:
     
     steps:
     # Checkout the repository
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
     
     # Set up the specified Python version
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
     
