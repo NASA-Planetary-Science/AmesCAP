@@ -46,10 +46,19 @@ class TestMarsPull(unittest.TestCase):
         # Run the command
         try:
             result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+            
+            # Debug print for failed tests
+            if not expect_success and result.returncode == 0:
+                print(f"STDOUT: {result.stdout}")
+                print(f"STDERR: {result.stderr}")
+            
             if expect_success:
-                self.assertEqual(result.returncode, 0, f"MarsPull failed: {result.stderr}")
+                self.assertEqual(result.returncode, 0, 
+                    f"MarsPull failed: {result.stderr}\nSTDOUT: {result.stdout}")
             else:
-                self.assertNotEqual(result.returncode, 0, "MarsPull should have failed but didn't")
+                self.assertNotEqual(result.returncode, 0, 
+                    "MarsPull should have failed but didn't")
+            
             return result.stdout, result.stderr
         except Exception as e:
             self.fail(f"Failed to run MarsPull: {e}")
@@ -57,32 +66,32 @@ class TestMarsPull(unittest.TestCase):
     @patch('requests.get')
     def test_list_files_option(self, mock_get):
         """Test the -list option"""
-        # Mock the responses for directory listings
-        legacy_response = MagicMock()
-        legacy_response.text = """
-        <html>
-        <a href="https://data.nas.nasa.gov/legacygcm/legacygcmdata/ACTIVECLDS/">ACTIVECLDS</a>
-        <a href="https://data.nas.nasa.gov/legacygcm/legacygcmdata/INERTCLDS/">INERTCLDS</a>
-        </html>
-        """
-        
-        activeclds_response = MagicMock()
-        activeclds_response.text = """
-        <html>
-        <a download="fort.11_0730">fort.11_0730</a>
-        <a download="fort.11_0731">fort.11_0731</a>
-        </html>
-        """
-        
-        # Configure mock to return different responses for different URLs
+        # Mock responses for different requests
         def side_effect(url, **kwargs):
             response = MagicMock()
             if url == 'https://data.nas.nasa.gov/mcmcref/legacygcm/':
-                response.text = """<html>URLs for legacygcm</html>"""
+                response.text = """
+                <html>
+                <a href="https://data.nas.nasa.gov/legacygcm/legacygcmdata/ACTIVECLDS/">ACTIVECLDS</a>
+                <a href="https://data.nas.nasa.gov/legacygcm/legacygcmdata/INERTCLDS/">INERTCLDS</a>
+                </html>
+                """
             elif url == 'https://data.nas.nasa.gov/mcmcref/fv3betaout1/':
-                response.text = """<html>URLs for fv3betaout1</html>"""
+                response.text = """
+                <html>
+                <a href="file1.nc">file1.nc</a>
+                <a href="file2.nc">file2.nc</a>
+                </html>
+                """
+            elif 'legacygcmdata/' in url:
+                response.text = """
+                <html>
+                <a download="fort.11_0730">fort.11_0730</a>
+                <a download="fort.11_0731">fort.11_0731</a>
+                </html>
+                """
             else:
-                response.text = """<html>Some directory content</html>"""
+                response.text = ""
             return response
         
         mock_get.side_effect = side_effect
@@ -91,7 +100,8 @@ class TestMarsPull(unittest.TestCase):
         stdout, stderr = self.run_mars_pull(['-list'])
         
         # Check that the command tried to fetch directory listings
-        self.assertGreaterEqual(mock_get.call_count, 1)
+        self.assertGreaterEqual(mock_get.call_count, 2, 
+                                "Expected at least two HTTP requests for file listing")
         
         # Check that the output includes file listings
         self.assertIn("Available directories", stdout)
@@ -100,12 +110,18 @@ class TestMarsPull(unittest.TestCase):
     @patch('requests.get')
     def test_download_file_by_name(self, mock_get):
         """Test downloading a specific file by name"""
-        # Mock the response for file download
+        # Mock the file download response
         response = MagicMock()
         response.status_code = 200
-        response.headers.get.return_value = '1024'  # Content length
+        response.headers.get.return_value = '1024'
         response.iter_content.return_value = [b'test data']
-        mock_get.return_value = response
+        
+        def side_effect(url, **kwargs):
+            if url == 'https://data.nas.nasa.gov/legacygcm/legacygcmdata/ACTIVECLDS/fort.11_0730':
+                return response
+            return MagicMock()
+        
+        mock_get.side_effect = side_effect
         
         # Run MarsPull to download a specific file
         stdout, stderr = self.run_mars_pull(['ACTIVECLDS', '-f', 'fort.11_0730'])
@@ -124,22 +140,22 @@ class TestMarsPull(unittest.TestCase):
     @patch('requests.get')
     def test_download_file_by_ls(self, mock_get):
         """Test downloading files by Ls value"""
-        # Mock the response for file download
+        # Mock the file download response
         response = MagicMock()
         response.status_code = 200
-        response.headers.get.return_value = '1024'  # Content length
+        response.headers.get.return_value = '1024'
         response.iter_content.return_value = [b'test data']
         
         def side_effect(url, **kwargs):
-            # Simulate finding multiple files for Ls 90
-            if 'fort.11_0090' in url or 'fort.11_0091' in url:
+            # Simulate finding files for Ls 0 (which corresponds to fort.11_0674 and fort.11_0675)
+            if 'fort.11_0674' in url or 'fort.11_0675' in url:
                 return response
             return MagicMock()
         
         mock_get.side_effect = side_effect
         
-        # Run MarsPull to download a file by Ls
-        stdout, stderr = self.run_mars_pull(['ACTIVECLDS', '-ls', '90'])
+        # Run MarsPull to download files by Ls
+        stdout, stderr = self.run_mars_pull(['ACTIVECLDS', '-ls', '0'])
         
         # Check that the command tried to download at least one file
         self.assertGreaterEqual(mock_get.call_count, 1)
@@ -167,10 +183,15 @@ class TestMarsPull(unittest.TestCase):
         stdout, stderr = self.run_mars_pull(['-h'])
         
         # Check for typical help message components
-        self.assertIn('Usage:', stdout)
-        self.assertIn('-ls', stdout)
-        self.assertIn('-f', stdout)
-        self.assertIn('--list', stdout)
+        help_checks = [
+            'usage:',  # Note lowercase
+            '-ls',
+            '-f',
+            '--list'
+        ]
+        
+        for check in help_checks:
+            self.assertIn(check, stdout.lower(), f"Help message missing '{check}'")
 
 
 if __name__ == "__main__":
