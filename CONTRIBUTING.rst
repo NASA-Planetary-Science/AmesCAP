@@ -17,7 +17,7 @@ Getting Started
 
 Code Style
 ---------
-* Follow PEP 8 Python style guidelines
+* Follow PEP 8 Python style guidelines outlined `here <https://peps.python.org/pep-0008/>`_
 * Use meaningful variable names
 * Include docstrings for functions and modules
 * Add comments for complex algorithms
