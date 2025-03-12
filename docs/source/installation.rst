@@ -50,7 +50,7 @@ Choose either pip or conda to create your virtual environment:
 
 .. code-block:: bash
 
-   /Users/username/path/to/preferred/python3 -m venv --system-site-packages amescap
+   /Users/username/path/to/preferred/python3 -m venv amescap
    
    source amescap/bin/activate.csh # For CSH/TCSH
    # OR
@@ -175,7 +175,7 @@ Using **pip** with **Windows Terminal (PowerShell)**:
 .. code-block:: powershell
 
    # Create virtual environment
-   python -m venv --system-site-packages amescap
+   python -m venv amescap
 
    # Activate the environment
    .\amescap\Scripts\Activate.ps1
@@ -191,9 +191,9 @@ Using **pip** with **Cygwin**:
 .. code-block:: bash
 
    # Create virtual environment (use the path to your preferred Python)
-   /cygdrive/c/path/to/python3 -m venv --system-site-packages amescap
+   /cygdrive/c/path/to/python3 -m venv amescap
    # Or simply use the Cygwin python:
-   python3 -m venv --system-site-packages amescap
+   python3 -m venv amescap
 
    # Activate the environment
    source amescap/bin/activate
@@ -317,7 +317,7 @@ If you have a **pre-existing** virtual environment holding CAP, we recommend you
 
 .. code-block:: bash
 
-   python3 -m venv --system-site-packages amescap
+   python3 -m venv amescap
    
    source amescap/bin/activate.csh # For CSH/TCSH
    # OR
