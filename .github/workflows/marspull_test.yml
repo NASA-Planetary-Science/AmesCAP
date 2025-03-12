@@ -55,13 +55,3 @@ jobs:
     - name: Run MarsPull tests
       run: |
         python -m unittest tests/test_marspull.py
-      
-    # Optional: Upload test logs as artifacts if tests fail
-    - name: Upload test logs
-      if: failure()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-logs-${{ matrix.os }}-${{ matrix.python-version }}
-        path: |
-          ~/MarsPull_test_downloads
-          ~/.log
