@@ -608,6 +608,7 @@ def compute_xzTau(q, temp, lev, const, f_type):
 
     """
     if f_type == "diurn":
+        # Handle diurn files 
         PT = np.repeat(
             lev,
             (q.shape[0] * q.shape[1] * q.shape[3] * q.shape[4])
@@ -619,13 +620,25 @@ def compute_xzTau(q, temp, lev, const, f_type):
         # (lev, tim, tod, lat, lon) -> (tim, tod, lev, lat, lon)
         P = PT.transpose((1, 2, 0, 3, 4))
     else:
-        PT = np.repeat(lev, (q.shape[0] * q.shape[2] * q.shape[3]))
-        PT = np.reshape(
-            PT,
-            (q.shape[1], q.shape[0], q.shape[2], q.shape[3])
-        )
-        # Swap dimensions 0 and 1 (time and lev)
-        P = PT.transpose(lev_T)
+        # For average and daily files, ensure proper broadcasting across all times
+        # Create a properly sized pressure field with correct time dimension
+        P = np.zeros_like(q)
+        
+        # Fill P with the appropriate pressure level for each vertical index
+        for z in range(len(lev)):
+            if len(q.shape) == 4:  # Standard [time, lev, lat, lon] format
+                P[:, z, :, :] = lev[z]
+            else:
+                # Handle other shapes appropriately
+                P[..., z, :, :] = lev[z]
+                
+        # PT = np.repeat(lev, (q.shape[0] * q.shape[2] * q.shape[3]))
+        # PT = np.reshape(
+        #     PT,
+        #     (q.shape[1], q.shape[0], q.shape[2], q.shape[3])
+        # )
+        # # Swap dimensions 0 and 1 (time and lev)
+        # P = PT.transpose(lev_T)
 
     rho_z = P / (Rd*temp)
     # Converts mass mixing ratio (q) from kg/kg -> ppm (mg/kg)
@@ -661,6 +674,7 @@ def compute_mmr(xTau, temp, lev, const, f_type):
 
     """
     if f_type == "diurn":
+        # Handle diurnal files
         PT = np.repeat(lev,(xTau.shape[0] * xTau.shape[1]
                             * xTau.shape[3] * xTau.shape[4]))
         PT = np.reshape(PT, (xTau.shape[2], xTau.shape[0],
@@ -669,12 +683,22 @@ def compute_mmr(xTau, temp, lev, const, f_type):
         # (lev, tim, tod, lat, lon) -> (tim, tod, lev, lat, lon)
         P = PT.transpose((1, 2, 0, 3, 4))
     else:
-        PT = np.repeat(lev, (xTau.shape[0] * xTau.shape[2]
-                             * xTau.shape[3]))
-        PT = np.reshape(PT,(xTau.shape[1], xTau.shape[0],
-                            xTau.shape[2], xTau.shape[3]))
-        # Swap dimensions 0 and 1 (time and lev)
-        P = PT.transpose(lev_T)
+        # For average and daily files, create properly broadcast pressure array
+        P = np.zeros_like(xTau)
+        
+        # Fill P with the appropriate pressure level for each vertical index
+        for z in range(len(lev)):
+            if len(xTau.shape) == 4:  # Standard [time, lev, lat, lon] format
+                P[:, z, :, :] = lev[z]
+            else:
+                # Handle other shapes appropriately
+                P[..., z, :, :] = lev[z]
+        # PT = np.repeat(lev, (xTau.shape[0] * xTau.shape[2]
+        #                      * xTau.shape[3]))
+        # PT = np.reshape(PT,(xTau.shape[1], xTau.shape[0],
+        #                     xTau.shape[2], xTau.shape[3]))
+        # # Swap dimensions 0 and 1 (time and lev)
+        # P = PT.transpose(lev_T)
 
     rho_z = P / (Rd*temp)
     # Converts extinction (xzTau) from km-1 -> m-1
@@ -919,11 +943,17 @@ def compute_DZ_full_pstd(pstd, temp, ftype="average"):
     # Reshape pstd according to new_shape
     pstd_reshaped = pstd.reshape(new_shape)
 
+    # Ensure pstd is broadcast to match the shape of temp 
+    # (along non-level dimensions)
+    broadcast_shape = list(temp.shape)
+    broadcast_shape[0] = len(pstd)  # Keep level dimension the same
+    pstd_broadcast = np.broadcast_to(pstd_reshaped, broadcast_shape)
+    
     # Compute thicknesses using avg. temperature of both layers
     DZ_full_pstd = np.zeros_like(temp)
     DZ_full_pstd[0:-1, ...] = (
         -rgas * 0.5 * (temp[1:, ...]+temp[0:-1, ...]) / g
-        * np.log(pstd_reshaped[1:, ...]/pstd_reshaped[0:-1, ...])
+        * np.log(pstd_broadcast[1:, ...]/pstd_broadcast[0:-1, ...])
     )
 
     # There is nothing to differentiate the last layer with, so copy
@@ -1868,9 +1898,8 @@ def main():
                         )
                     var_Ncdf.long_name = (new_lname + cap_str)
                     var_Ncdf.units = new_unit
-                    var_Ncdf[:] = (var
-                                   * f.variables["DZ"][:]
-                                   / f.variables["DP"][:])
+                    var_Ncdf[:] = (var * f.variables["DP"][:] 
+                                   / f.variables["DZ"][:])
                     f.close()
 
                     print(f"{idz_to_dp}_dz_to_dp: {Green}Done{Nclr}")
@@ -1950,7 +1979,7 @@ def main():
 
                     ps = f.variables["ps"][:]
                     DP = compute_DP_3D(ps, ak, bk, shape_in)
-                    out = np.sum(var*DP/g, axis = lev_axis)
+                    out = np.sum(var * DP / g, axis=lev_axis)
 
                     # Log the variable
                     var_Ncdf = f.createVariable(
