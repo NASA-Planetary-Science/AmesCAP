@@ -111,7 +111,7 @@ jobs:
         source amescap/bin/activate
         # Make sure MarsPull is available
         which MarsPull || echo "MarsPull not found in PATH"
-        python -m unittest test_marspull.py
+        python -m unittest -v test_marspull.py
     
     - name: Check for package integrity
       run: |
