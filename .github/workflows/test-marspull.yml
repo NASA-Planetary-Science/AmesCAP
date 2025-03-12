@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.9', '3.10', '3.11']
 
     steps:
     - uses: actions/checkout@v3
@@ -31,14 +31,31 @@ jobs:
     - name: Install AmesCAP from GitHub
       run: |
         source amescap/bin/activate
-        # First try to install with pip in verbose mode
-        pip install -v git+https://github.com/falconstryker/AmesCAP.git@devel
+        # Check Python version
+        python --version
+        
+        # Try installing with specific version constraint for numpy
+        pip install --no-deps git+https://github.com/falconstryker/AmesCAP.git@devel
+        pip install numpy>=1.24.0,<1.26.0  # Install an older numpy version compatible with Python 3.9
+        pip install -e .  # Install the rest of dependencies
         
         # If that fails, try alternative installation approach
         if [ $? -ne 0 ]; then
           echo "Standard pip install failed, trying alternative approach..."
           git clone --branch devel https://github.com/falconstryker/AmesCAP.git
           cd AmesCAP
+          
+          # Modify setup.py or pyproject.toml to accept older numpy
+          if [ -f "pyproject.toml" ]; then
+            # Update numpy requirement in pyproject.toml
+            sed -i 's/numpy>=1.26.2/numpy>=1.24.0/g' pyproject.toml
+          fi
+          
+          if [ -f "setup.py" ]; then
+            # Update numpy requirement in setup.py
+            sed -i 's/numpy>=1.26.2/numpy>=1.24.0/g' setup.py
+          fi
+          
           pip install -e .
           cd ..
         fi
