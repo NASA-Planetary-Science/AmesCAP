@@ -446,9 +446,9 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
     VAR_f = filtfilt(b, a, VAR_detrend, axis = axis)
 
     if add_trend:
-        return VAR_f
-    else:
         return VAR_trend + VAR_f
+    else:
+        return VAR_f
 
 def zonal_decomposition(VAR):
     """

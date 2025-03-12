@@ -181,7 +181,7 @@ def main():
         input_num = np.asarray(args.sol).astype(float)
         head_text = "\n    SOL  |    Ls    \n-----------------------"
         input_arr = parse_array(input_num)
-        output_arr = sol2ls(input_arr, continuous=accumulate)
+        output_arr = sol2ls(input_arr, cumulative=accumulate)
 
     # If scalar, return as float
     output_arr = np.atleast_1d(output_arr)
