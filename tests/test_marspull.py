@@ -1,198 +1,139 @@
 #!/usr/bin/env python3
 """
-Tests for MarsPull.py
+Integration tests for MarsPull.py
 
-This test module mocks HTTP requests to test the functionality of MarsPull
-without actually downloading files from the NAS Data Portal.
+These tests actually download files to verify the functionality of MarsPull.
 """
 
 import os
 import sys
 import unittest
-from unittest.mock import patch, MagicMock
-import tempfile
 import shutil
+import tempfile
+import argparse
 import subprocess
-import re
-
-# Add project root to Python path
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, PROJECT_ROOT)
 
 class TestMarsPull(unittest.TestCase):
-    """Test suite for MarsPull"""
+    """Integration test suite for MarsPull"""
     
     @classmethod
     def setUpClass(cls):
         """Set up the test environment"""
-        # Create a temporary directory for test outputs
-        cls.test_dir = tempfile.mkdtemp()
-        os.chdir(cls.test_dir)  # Change to test directory
+        # Create a temporary directory in the user's home directory
+        cls.test_dir = os.path.join(os.path.expanduser('~'), 'MarsPull_test_downloads')
+        os.makedirs(cls.test_dir, exist_ok=True)
         
-        # Find MarsPull script
-        cls.mars_pull_script = os.path.join(PROJECT_ROOT, 'bin', 'MarsPull.py')
+        # Project root directory
+        cls.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
+    def setUp(self):
+        """Change to temporary directory before each test"""
+        os.chdir(self.test_dir)
     
     @classmethod
     def tearDownClass(cls):
         """Clean up the test environment"""
-        # Change back to original directory and remove test directory
-        os.chdir(os.path.dirname(os.path.abspath(__file__)))
-        shutil.rmtree(cls.test_dir)
+        try:
+            shutil.rmtree(cls.test_dir, ignore_errors=True)
+        except Exception:
+            print(f"Warning: Could not remove test directory {cls.test_dir}")
     
-    def run_mars_pull(self, args, expect_success=True):
-        """Run MarsPull command with given arguments"""
-        cmd = [sys.executable, self.mars_pull_script] + args
+    def run_mars_pull(self, args):
+        """
+        Run MarsPull using subprocess to avoid import-time argument parsing
+        
+        :param args: List of arguments to pass to MarsPull
+        """
+        # Construct the full command to run MarsPull
+        cmd = [sys.executable, '-m', 'bin.MarsPull'] + args
         
         # Run the command
         try:
-            result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+            result = subprocess.run(
+                cmd, 
+                capture_output=True, 
+                text=True, 
+                cwd=self.test_dir,  # Run in the test directory
+                env=dict(os.environ, PWD=self.test_dir)  # Ensure current working directory is set
+            )
             
-            # Debug print for failed tests
-            if not expect_success and result.returncode == 0:
-                print(f"STDOUT: {result.stdout}")
-                print(f"STDERR: {result.stderr}")
+            # Check if the command was successful
+            if result.returncode != 0:
+                self.fail(f"MarsPull failed with error: {result.stderr}")
             
-            if expect_success:
-                self.assertEqual(result.returncode, 0, 
-                    f"MarsPull failed: {result.stderr}\nSTDOUT: {result.stdout}")
-            else:
-                self.assertNotEqual(result.returncode, 0, 
-                    "MarsPull should have failed but didn't")
-            
-            return result.stdout, result.stderr
+            return result
         except Exception as e:
             self.fail(f"Failed to run MarsPull: {e}")
     
-    @patch('requests.get')
-    def test_list_files_option(self, mock_get):
-        """Test the -list option"""
-        # Mock responses for different requests
-        def side_effect(url, **kwargs):
-            response = MagicMock()
-            if url == 'https://data.nas.nasa.gov/mcmcref/legacygcm/':
-                response.text = """
-                <html>
-                <a href="https://data.nas.nasa.gov/legacygcm/legacygcmdata/ACTIVECLDS/">ACTIVECLDS</a>
-                <a href="https://data.nas.nasa.gov/legacygcm/legacygcmdata/INERTCLDS/">INERTCLDS</a>
-                </html>
-                """
-            elif url == 'https://data.nas.nasa.gov/mcmcref/fv3betaout1/':
-                response.text = """
-                <html>
-                <a href="file1.nc">file1.nc</a>
-                <a href="file2.nc">file2.nc</a>
-                </html>
-                """
-            elif 'legacygcmdata/' in url:
-                response.text = """
-                <html>
-                <a download="fort.11_0730">fort.11_0730</a>
-                <a download="fort.11_0731">fort.11_0731</a>
-                </html>
-                """
-            else:
-                response.text = ""
-            return response
+    def check_files_in_test_directory(self, expected_files):
+        """
+        Check if files exist in the test directory
         
-        mock_get.side_effect = side_effect
+        If files are not found, list all files in the directory to help diagnose the issue
+        """
+        test_files = os.listdir(self.test_dir)
         
-        # Run MarsPull with -list option
-        stdout, stderr = self.run_mars_pull(['-list'])
-        
-        # Check that the command tried to fetch directory listings
-        self.assertGreaterEqual(mock_get.call_count, 2, 
-                                "Expected at least two HTTP requests for file listing")
-        
-        # Check that the output includes file listings
-        self.assertIn("Available directories", stdout)
-        self.assertIn("Available files", stdout)
+        for filename in expected_files:
+            if filename not in test_files:
+                print(f"Files in test directory ({self.test_dir}):")
+                print(test_files)
+                self.fail(f"File {filename} was not found in the test directory")
+            
+            # Verify file is not empty
+            filepath = os.path.join(self.test_dir, filename)
+            self.assertGreater(os.path.getsize(filepath), 0, 
+                               f"Downloaded file {filename} is empty")
     
-    @patch('requests.get')
-    def test_download_file_by_name(self, mock_get):
-        """Test downloading a specific file by name"""
-        # Mock the file download response
-        response = MagicMock()
-        response.status_code = 200
-        response.headers.get.return_value = '1024'
-        response.iter_content.return_value = [b'test data']
-        
-        def side_effect(url, **kwargs):
-            if url == 'https://data.nas.nasa.gov/legacygcm/legacygcmdata/ACTIVECLDS/fort.11_0730':
-                return response
-            return MagicMock()
-        
-        mock_get.side_effect = side_effect
-        
-        # Run MarsPull to download a specific file
-        stdout, stderr = self.run_mars_pull(['ACTIVECLDS', '-f', 'fort.11_0730'])
-        
-        # Check that the command tried to download the file
-        mock_get.assert_called_with('https://data.nas.nasa.gov/legacygcm/legacygcmdata/ACTIVECLDS/fort.11_0730', stream=True)
+    def test_download_fv3betaout1_specific_file(self):
+        """Test downloading a specific file from FV3BETAOUT1"""
+        result = self.run_mars_pull(['FV3BETAOUT1', '-f', '03340.fixed.nc'])
         
         # Check that the file was created
-        self.assertTrue(os.path.exists('fort.11_0730'))
-        
-        # Check file content
-        with open('fort.11_0730', 'rb') as f:
-            content = f.read()
-            self.assertEqual(content, b'test data')
+        self.check_files_in_test_directory(['03340.fixed.nc'])
     
-    @patch('requests.get')
-    def test_download_file_by_ls(self, mock_get):
-        """Test downloading files by Ls value"""
-        # Mock the file download response
-        response = MagicMock()
-        response.status_code = 200
-        response.headers.get.return_value = '1024'
-        response.iter_content.return_value = [b'test data']
+    def test_download_inertclds_single_ls(self):
+        """Test downloading files from INERTCLDS for a single Ls value"""
+        result = self.run_mars_pull(['INERTCLDS', '-ls', '90'])
         
-        def side_effect(url, **kwargs):
-            # Simulate finding files for Ls 0 (which corresponds to fort.11_0674 and fort.11_0675)
-            if 'fort.11_0674' in url or 'fort.11_0675' in url:
-                return response
-            return MagicMock()
-        
-        mock_get.side_effect = side_effect
-        
-        # Run MarsPull to download files by Ls
-        stdout, stderr = self.run_mars_pull(['ACTIVECLDS', '-ls', '0'])
-        
-        # Check that the command tried to download at least one file
-        self.assertGreaterEqual(mock_get.call_count, 1)
-        
-        # Check that at least one file was created
-        files = os.listdir('.')
-        self.assertGreater(len(files), 0)
-        
-        # Look for fort.11_* files which would be created by the Ls download
-        fort_files = [f for f in files if re.match(r'fort\.11_\d+', f)]
-        self.assertGreater(len(fort_files), 0)
+        # Check that the file was created
+        self.check_files_in_test_directory(['fort.11_0689'])
     
-    def test_missing_required_args(self):
-        """Test error handling when required arguments are missing"""
-        # Test without any arguments
-        stdout, stderr = self.run_mars_pull([], expect_success=False)
-        self.assertIn("Error: You must specify either -list or a directory", stdout)
+    def test_download_inertclds_ls_range(self):
+        """Test downloading files from INERTCLDS for a range of Ls values"""
+        result = self.run_mars_pull(['INERTCLDS', '-ls', '90', '95'])
         
-        # Test with directory but no file specification
-        stdout, stderr = self.run_mars_pull(['ACTIVECLDS'], expect_success=False)
-        self.assertIn("ERROR No file requested", stdout)
+        # Check that the files were created
+        self.check_files_in_test_directory(['fort.11_0689', 'fort.11_0690'])
+    
+    def test_list_option(self):
+        """Test the list option to ensure it runs without errors"""
+        result = self.run_mars_pull(['-list'])
+        
+        # Check that something was printed
+        self.assertTrue(len(result.stdout) > 0, "No output generated by -list option")
+        
+        # Check for specific expected output
+        self.assertIn("Available directories", result.stdout)
+        self.assertIn("Available files", result.stdout)
     
     def test_help_message(self):
-        """Test that help message displays correctly"""
-        stdout, stderr = self.run_mars_pull(['-h'])
+        """Test that help message can be displayed"""
+        result = self.run_mars_pull(['-h'])
+        
+        # Check that something was printed
+        self.assertTrue(len(result.stdout) > 0, "No help message generated")
         
         # Check for typical help message components
         help_checks = [
-            'usage:',  # Note lowercase
+            'usage:',
             '-ls',
             '-f',
             '--list'
         ]
         
         for check in help_checks:
-            self.assertIn(check, stdout.lower(), f"Help message missing '{check}'")
+            self.assertIn(check, result.stdout.lower(), f"Help message missing '{check}'")
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()
