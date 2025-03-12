@@ -31,7 +31,20 @@ jobs:
     - name: Install AmesCAP from GitHub
       run: |
         source amescap/bin/activate
-        pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git@devel
+        # First try to install with pip in verbose mode
+        pip install -v git+https://github.com/falconstryker/AmesCAP.git@devel
+        
+        # If that fails, try alternative installation approach
+        if [ $? -ne 0 ]; then
+          echo "Standard pip install failed, trying alternative approach..."
+          git clone --branch devel https://github.com/falconstryker/AmesCAP.git
+          cd AmesCAP
+          pip install -e .
+          cd ..
+        fi
+        
+        # Check if installation was successful
+        pip list | grep amescap
         
     - name: Copy profile file
       run: |
@@ -92,15 +105,27 @@ jobs:
     - name: Run tests
       run: |
         source amescap/bin/activate
+        # Make sure MarsPull is available
+        which MarsPull || echo "MarsPull not found in PATH"
         python -m unittest test_marspull.py
     
     - name: Check for package integrity
       run: |
         source amescap/bin/activate
+        # Print Python path to debug
+        echo "Python path:"
+        python -c "import sys; print(sys.path)"
+        
+        # Check installed packages
+        pip list
+        
         # Check if other expected scripts are installed
         if command -v MarsPlot &> /dev/null; then
           echo "MarsPlot is installed and working"
           MarsPlot -h
         else
           echo "MarsPlot not found, installation may be incomplete"
+          echo "Checking for script locations:"
+          find amescap -name "MarsPull.py" -o -name "MarsPlot.py"
+          find AmesCAP -name "MarsPull.py" -o -name "MarsPlot.py" 2>/dev/null || echo "AmesCAP directory not found"
         fi
