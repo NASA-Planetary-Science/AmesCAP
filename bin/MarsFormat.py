@@ -500,12 +500,12 @@ def main():
             model_vars = {key: val for key, val in model_vars.items() if key != val}
 
             #Update dataset with new variables and names
-            print(f"{Cyan}Current variables before renaming: {list(DS.variables)}{Nclr}")
+            print(f"{Cyan}Current variables before renaming:\n{list(DS.variables)}{Nclr}\n")
             
             DS=DS.swap_dims(dims_dict=model_dims)
             DS=DS.rename_vars(name_dict=model_vars)
             
-            print(f"{Cyan}Rename dictionary: {list(DS.variables)}{Nclr}")
+            print(f"{Cyan}Renamed variables:\n{list(DS.variables)}{Nclr}\n")
             #Update CAP's internal variables dictionary
             model=reset_FV3_names(model)
 

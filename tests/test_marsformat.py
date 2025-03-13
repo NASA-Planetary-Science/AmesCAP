@@ -66,12 +66,12 @@ class TestMarsFormat(unittest.TestCase):
                 os.remove(file)
         
         # Clean up dummy input files
-        # dummy_files = [
-        #     self.emars_file, self.openmars_file, self.pcm_file, self.marswrf_file
-        # ]
-        # for file in dummy_files:
-        #     if os.path.exists(file):
-        #         os.remove(file)
+        dummy_files = [
+            self.emars_file, self.openmars_file, self.pcm_file, self.marswrf_file
+        ]
+        for file in dummy_files:
+            if os.path.exists(file):
+                os.remove(file)
     
     @classmethod
     def tearDownClass(cls):
@@ -412,236 +412,128 @@ class TestMarsFormat(unittest.TestCase):
         dataset.close()
 
     def create_dummy_marswrf(self):
-        """Create a MarsWRF file with explicitly defined coordinate arrays based on real MarsWRF data."""
+        """Create a MarsWRF file with precisely structured coordinate and variable arrays."""
         dataset = nc.Dataset(self.marswrf_file, 'w', format='NETCDF4')
         
-        # Create dimensions according to actual MarsWRF format
+        # Create dimensions exactly as MarsFormat expects
         dataset.createDimension('Time', 5)
-        dataset.createDimension('DateStrLen', 19)  
-        dataset.createDimension('south_north', 86)
-        dataset.createDimension('west_east', 180)
-        dataset.createDimension('south_north_stag', 87)
-        dataset.createDimension('west_east_stag', 181)
         dataset.createDimension('bottom_top', 10)
+        dataset.createDimension('south_north', 36)
+        dataset.createDimension('west_east', 60)
         dataset.createDimension('bottom_top_stag', 11)
-        dataset.createDimension('soil_layers_stag', 5)
-        
-        # Create Times variable with string dates
-        Times = dataset.createVariable('Times', 'S1', ('Time', 'DateStrLen'))
-        time_strings = []
-        for i in range(5):
-            time_str = f"2020-01-{(i+1):02d}_00:00:00"
-            time_strings.append([c for c in time_str])
-        Times[:] = time_strings
-        
-        # Create required time variables
+        dataset.createDimension('south_north_stag', 37)
+        dataset.createDimension('west_east_stag', 61)
+
+        # Time-related variables
         XTIME = dataset.createVariable('XTIME', 'f4', ('Time',))
-        XTIME[:] = np.arange(5) * 24.0 * 60.0  # minutes
-        XTIME.units = 'minutes'
-        XTIME.description = 'minutes since simulation start'
-        
-        # Create explicit coordinate arrays exactly as seen in real MarsWRF files
-        
-        # Create latitude arrays (XLAT and staggered versions)
-        XLAT = dataset.createVariable('XLAT', 'f4', ('Time', 'south_north', 'west_east'))
-        XLAT.units = 'degree_north'
-        XLAT.description = 'latitude'
-        
-        # Fill XLAT properly - constant along west_east dimension
-        for t in range(5):
-            lat_values = np.linspace(-89, 89, 86)
-            for i, lat in enumerate(lat_values):
-                XLAT[t, i, :] = lat
-        
-        # Create XLAT_U - same as XLAT but one more point in west_east dimension
-        XLAT_U = dataset.createVariable('XLAT_U', 'f4', ('Time', 'south_north', 'west_east_stag'))
-        XLAT_U.units = 'degree_north'
-        XLAT_U.description = 'latitude at u-points'
-        
-        # XLAT_U matches XLAT in first 180 points, repeats first value at end
-        for t in range(5):
-            for i in range(86):
-                XLAT_U[t, i, 0:180] = XLAT[t, i, :]
-                XLAT_U[t, i, 180] = XLAT[t, i, 0]
-        
-        # Create XLAT_V - staggered in south_north
-        XLAT_V = dataset.createVariable('XLAT_V', 'f4', ('Time', 'south_north_stag', 'west_east'))
-        XLAT_V.units = 'degree_north'
-        XLAT_V.description = 'latitude at v-points'
-        
-        # First fill south pole values
-        for t in range(5):
-            XLAT_V[t, 0, :] = -90.0
-            
-            # Fill interior points as averages
-            for i in range(1, 86):
-                XLAT_V[t, i, :] = (XLAT[t, i-1, :] + XLAT[t, i, :]) / 2.0
-                
-            # Fill north pole values
-            XLAT_V[t, 86, :] = 90.0
-        
-        # Create longitude arrays (XLONG and staggered versions)
-        XLONG = dataset.createVariable('XLONG', 'f4', ('Time', 'south_north', 'west_east'))
-        XLONG.units = 'degree_east'
-        XLONG.description = 'longitude'
-        
-        # Fill XLONG properly
-        # Create array from 1 to 179, then -179 to -1
-        lon_values = np.concatenate([np.arange(1, 180, 2), np.arange(-179, 0, 2)])
-        for t in range(5):
-            for i in range(86):
-                XLONG[t, i, :] = lon_values
-        
-        # Create XLONG_U - staggered in west_east
-        XLONG_U = dataset.createVariable('XLONG_U', 'f4', ('Time', 'south_north', 'west_east_stag'))
-        XLONG_U.units = 'degree_east'
-        XLONG_U.description = 'longitude at u-points'
-        
-        # XLONG_U contains midpoints between XLONG values, starting at 0
-        lon_u_values = np.concatenate([np.arange(0, 180, 2), np.arange(-178, 2, 2), [0]])
-        for t in range(5):
-            for i in range(86):
-                XLONG_U[t, i, :] = lon_u_values
-        
-        # Create XLONG_V - same as XLONG in west_east dimension
-        XLONG_V = dataset.createVariable('XLONG_V', 'f4', ('Time', 'south_north_stag', 'west_east'))
-        XLONG_V.units = 'degree_east'
-        XLONG_V.description = 'longitude at v-points'
-        
-        # Copy XLONG to XLONG_V for each north_south_stag point
-        for t in range(5):
-            for i in range(87):
-                if i < 86:
-                    XLONG_V[t, i, :] = XLONG[t, i, :]
-                else:
-                    XLONG_V[t, i, :] = XLONG[t, 0, :]  # Use first latitude for extra staggered point
-        
-        # Required thermodynamic constants
-        P_TOP = dataset.createVariable('P_TOP', 'f4', ('Time',))
-        P_TOP[:] = np.ones(5) * 5.0
-        P_TOP.units = 'Pa'
-        P_TOP.description = 'pressure at model top'
-        
-        P0 = dataset.createVariable('P0', 'f4', ())
-        P0[:] = 610.0
-        P0.units = 'Pa'
-        P0.description = 'reference pressure'
-        
-        G = dataset.createVariable('G', 'f4', ())
-        G[:] = 3.72
-        G.units = 'm s-2'
-        G.description = 'gravitational acceleration'
-        
-        CP = dataset.createVariable('CP', 'f4', ())
-        CP[:] = 735.0
-        CP.units = 'J kg-1 K-1'
-        CP.description = 'specific heat capacity'
-        
-        R_D = dataset.createVariable('R_D', 'f4', ())
-        R_D[:] = 192.0
-        R_D.units = 'J kg-1 K-1'
-        R_D.description = 'gas constant for dry air'
-        
-        T0 = dataset.createVariable('T0', 'f4', ('Time',))
-        T0[:] = np.ones(5) * 170.0
-        T0.units = 'K'
-        T0.description = 'reference temperature'
-        
-        # Create vertical coordinate variables
-        ZNU = dataset.createVariable('ZNU', 'f4', ('Time', 'bottom_top'))
-        ZNU[:] = np.tile(np.linspace(0, 1, 10).reshape(1, 10), (5, 1))
-        ZNU.description = 'eta values on full (mass) levels'
-        
-        ZNW = dataset.createVariable('ZNW', 'f4', ('Time', 'bottom_top_stag'))
-        ZNW[:] = np.tile(np.linspace(0, 1, 11).reshape(1, 11), (5, 1))
-        ZNW.description = 'eta values on half (w) levels'
-        
-        # Core meteorological variables - minimal set for testing
-        T = dataset.createVariable('T', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east'))
-        T[:] = np.random.uniform(-170.9, 349.1, (5, 10, 86, 180))
-        T.units = 'K'
-        T.description = 'perturbation potential temperature'
-        
-        PSFC = dataset.createVariable('PSFC', 'f4', ('Time', 'south_north', 'west_east'))
-        PSFC[:] = np.random.uniform(85.0, 1330.0, (5, 86, 180))
-        PSFC.units = 'Pa'
-        PSFC.description = 'surface pressure'
-        
-        # Wind variables (staggered) - minimal set
-        U = dataset.createVariable('U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))
-        U[:] = np.random.uniform(-514.7, 519.5, (5, 10, 86, 181))
-        U.units = 'm s-1'
-        U.description = 'x-wind component'
-        
-        V = dataset.createVariable('V', 'f4', ('Time', 'bottom_top', 'south_north_stag', 'west_east'))
-        V[:] = np.random.uniform(-205.6, 238.3, (5, 10, 87, 180))
-        V.units = 'm s-1'
-        V.description = 'y-wind component'
-        
-        W = dataset.createVariable('W', 'f4', ('Time', 'bottom_top_stag', 'south_north', 'west_east'))
-        W[:] = np.random.uniform(-40.7, 39.0, (5, 11, 86, 180))
-        W.units = 'm s-1'
-        W.description = 'z-wind component'
-        
-        # Surface variables - minimal set
-        HGT = dataset.createVariable('HGT', 'f4', ('Time', 'south_north', 'west_east'))
-        HGT[:] = np.random.uniform(-7400.0, 19000.0, (5, 86, 180))
-        HGT.units = 'm'
-        HGT.description = 'terrain height'
-        
-        TSK = dataset.createVariable('TSK', 'f4', ('Time', 'south_north', 'west_east'))
-        TSK[:] = np.random.uniform(142.0, 308.7, (5, 86, 180))
-        TSK.units = 'K'
-        TSK.description = 'surface skin temperature'
-        
-        # Mars-specific variables - minimal set
+        XTIME[:] = np.linspace(0, 120, 5)  # days
+        XTIME.units = 'minutes since simulation start'
+        XTIME.description = 'time since simulation start'
+
+        # Solar longitude
         L_S = dataset.createVariable('L_S', 'f4', ('Time',))
         L_S[:] = np.linspace(0, 90, 5)
         L_S.units = 'degrees'
-        L_S.description = 'Mars solar longitude'
-        
-        CO2ICE = dataset.createVariable('CO2ICE', 'f4', ('Time', 'south_north', 'west_east'))
-        CO2ICE[:] = np.random.uniform(0.0, 1697.5, (5, 86, 180))
-        CO2ICE.units = 'kg/m^2'
-        CO2ICE.description = 'CO2 ice on surface'
-        
-        TAU_OD2D = dataset.createVariable('TAU_OD2D', 'f4', ('Time', 'south_north', 'west_east'))
-        TAU_OD2D[:] = np.random.uniform(0.0, 2.1, (5, 86, 180))
-        TAU_OD2D.units = 'Unitless'
-        TAU_OD2D.description = 'Dust optical depth'
-        
-        # Add geopotential variables - THESE WERE MISSING
-        PH = dataset.createVariable('PH', 'f4', ('Time', 'bottom_top_stag', 'south_north', 'west_east'))
-        PH[:] = np.random.uniform(-7.3e+04, 1.6e+04, (5, 11, 86, 180))
-        PH.units = 'm2 s-2'
-        PH.description = 'perturbation geopotential'
-        
-        PHB = dataset.createVariable('PHB', 'f4', ('Time', 'bottom_top_stag', 'south_north', 'west_east'))
-        PHB[:] = np.random.uniform(-2.8e+04, 2.7e+05, (5, 11, 86, 180))
-        PHB.units = 'm2 s-2'
-        PHB.description = 'base-state geopotential'
-        
-        # Add pressure-related variables we may have missed
-        MU = dataset.createVariable('MU', 'f4', ('Time', 'south_north', 'west_east'))
-        MU[:] = np.random.uniform(-267.5, 87.1, (5, 86, 180))
-        MU.units = 'Pa'
-        MU.description = 'perturbation dry air mass in column'
-        
-        MUB = dataset.createVariable('MUB', 'f4', ('Time', 'south_north', 'west_east'))
-        MUB[:] = np.random.uniform(128.4, 1244.7, (5, 86, 180))
-        MUB.units = 'Pa'
-        MUB.description = 'base state dry air mass in column'
-        
-        P = dataset.createVariable('P', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east'))
-        P[:] = np.random.uniform(-267.2, 87.0, (5, 10, 86, 180))
-        P.units = 'Pa'
-        P.description = 'perturbation pressure'
-        
+        L_S.description = 'areocentric longitude'
+
+        # Vertical coordinate
+        P_TOP = dataset.createVariable('P_TOP', 'f4', ('Time',))
+        P_TOP[:] = np.ones(5) * 100.0  # Pa
+        P_TOP.units = 'Pa'
+        P_TOP.description = 'pressure at model top'
+
+        P0 = dataset.createVariable('P0', 'f4', ())
+        P0[:] = 610.0  # Reference pressure
+        P0.units = 'Pa'
+        P0.description = 'reference pressure'
+
+        # Vertical coordinates
+        ZNU = dataset.createVariable('ZNU', 'f4', ('Time', 'bottom_top'))
+        ZNU[:] = np.tile(np.linspace(0, 1, 10).reshape(1, 10), (5, 1))
+        ZNU.description = 'sigma levels'
+
+        ZNW = dataset.createVariable('ZNW', 'f4', ('Time', 'bottom_top_stag'))
+        ZNW[:] = np.tile(np.linspace(0, 1, 11).reshape(1, 11), (5, 1))
+        ZNW.description = 'sigma interfaces'
+
+        # Coordinates
+        XLAT = dataset.createVariable('XLAT', 'f4', ('Time', 'south_north', 'west_east'))
+        lat_values = np.linspace(-87, 87, 36)
+        for t in range(5):
+            for i in range(36):
+                XLAT[t, i, :] = lat_values[i]
+        XLAT.units = 'degrees_north'
+        XLAT.description = 'latitude'
+
+        XLONG = dataset.createVariable('XLONG', 'f4', ('Time', 'south_north', 'west_east'))
+        lon_values = np.linspace(0, 350, 60)
+        for t in range(5):
+            for j in range(36):
+                XLONG[t, j, :] = lon_values
+        XLONG.units = 'degrees_east'
+        XLONG.description = 'longitude'
+
+        # Wind variables (staggered)
+        U = dataset.createVariable('U', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east_stag'))
+        U[:] = np.random.uniform(-50, 50, (5, 10, 36, 61))
+        U.units = 'm/s'
+        U.description = 'x-wind component'
+
+        V = dataset.createVariable('V', 'f4', ('Time', 'bottom_top', 'south_north_stag', 'west_east'))
+        V[:] = np.random.uniform(-50, 50, (5, 10, 37, 60))
+        V.units = 'm/s'
+        V.description = 'y-wind component'
+
+        # Temperature
+        T = dataset.createVariable('T', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east'))
+        T[:] = np.random.uniform(150, 250, (5, 10, 36, 60))
+        T.units = 'K'
+        T.description = 'perturbation potential temperature'
+
+        T0 = dataset.createVariable('T0', 'f4', ('Time',))
+        T0[:] = np.ones(5) * 200.0
+        T0.units = 'K'
+        T0.description = 'base state temperature'
+
+        # Pressure variables
+        PSFC = dataset.createVariable('PSFC', 'f4', ('Time', 'south_north', 'west_east'))
+        PSFC[:] = np.random.uniform(500, 1000, (5, 36, 60))
+        PSFC.units = 'Pa'
+        PSFC.description = 'surface pressure'
+
         PB = dataset.createVariable('PB', 'f4', ('Time', 'bottom_top', 'south_north', 'west_east'))
-        PB[:] = np.random.uniform(1.6, 1243.7, (5, 10, 86, 180))
+        PB[:] = np.random.uniform(100, 900, (5, 10, 36, 60))
         PB.units = 'Pa'
         PB.description = 'base state pressure'
-        
+
+        # Thermodynamic constants
+        CP = dataset.createVariable('CP', 'f4', ())
+        CP[:] = 1004.0
+        CP.units = 'J/kg/K'
+        CP.description = 'specific heat capacity'
+
+        R_D = dataset.createVariable('R_D', 'f4', ())
+        R_D[:] = 287.0
+        R_D.units = 'J/kg/K'
+        R_D.description = 'gas constant for dry air'
+
+        # Height/topography
+        HGT = dataset.createVariable('HGT', 'f4', ('Time', 'south_north', 'west_east'))
+        HGT[:] = np.random.uniform(0, 5000, (5, 36, 60))
+        HGT.units = 'm'
+        HGT.description = 'terrain height'
+
+        # Geopotential (required for some processing)
+        PH = dataset.createVariable('PH', 'f4', ('Time', 'bottom_top_stag', 'south_north', 'west_east'))
+        PH[:] = np.random.uniform(0, 10000, (5, 11, 36, 60))
+        PH.units = 'm2/s2'
+        PH.description = 'perturbation geopotential'
+
+        PHB = dataset.createVariable('PHB', 'f4', ('Time', 'bottom_top_stag', 'south_north', 'west_east'))
+        PHB[:] = np.random.uniform(0, 10000, (5, 11, 36, 60))
+        PHB.units = 'm2/s2'
+        PHB.description = 'base state geopotential'
+
         dataset.close()
     
     def test_daily_average(self):
