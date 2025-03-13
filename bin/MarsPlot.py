@@ -110,7 +110,7 @@ parser.add_argument('-i', '--inspect_file', nargs='?',
         f"Print the content of a netCDF file to the screen. This is a "
         f"ncdump-like feature. Variables are sorted by dimension.\n"
         f"{Green}Example:\n"
-        f"> MarsPlot -i 00668.atmos_daily.nc"
+        f"> MarsPlot -i 01336.atmos_daily.nc"
         f"{Nclr}\n\n"
     )
 )
@@ -130,7 +130,7 @@ parser.add_argument('-d', '--date', nargs=1, default=None,
     help=(
         f"Specify the file to use. Default is the last file created.\n"
         f"{Green}Example:\n"
-        f"> MarsPlot Custom.in -d 00668"
+        f"> MarsPlot Custom.in -d 01336"
         f"{Nclr}\n\n"
     )
 )
@@ -211,9 +211,9 @@ parser.add_argument('-values', '--print_values', nargs='+',
         f"For use with ``-i --inspect``: print the values of the "
         f"specified variable to the screen.\n"
         f"{Green}Example:\n"
-        f"> MarsPlot -i 00668.atmos_daily.nc -values temp\n"
+        f"> MarsPlot -i 01336.atmos_daily.nc -values temp\n"
         f"{Blue}(quotes '' req. for browsing dimensions){Green}\n"
-        f"> MarsPlot -i 00668.atmos_daily.nc -values 'temp[6,:,30,10]'"
+        f"> MarsPlot -i 01336.atmos_daily.nc -values 'temp[6,:,30,10]'"
         f"{Nclr}\n\n"
     )
 )
@@ -224,9 +224,9 @@ parser.add_argument('-stats', '--statistics', nargs='+', default=None,
         f"For use with ``-i --inspect``: print the min, mean, and max "
         f"values of the specified variable to the screen.\n"
         f"{Green}Example:\n"
-        f"> MarsPlot -i 00668.atmos_daily.nc -stats temp\n"
+        f"> MarsPlot -i 01336.atmos_daily.nc -stats temp\n"
         f"{Blue}(quotes '' req. for browsing dimensions){Green}\n"
-        f"> MarsPlot -i 00668.atmos_daily.nc -stats 'temp[6,:,30,10]'"
+        f"> MarsPlot -i 01336.atmos_daily.nc -stats 'temp[6,:,30,10]'"
         f"{Nclr}\n\n"
     )
 )
@@ -259,7 +259,7 @@ if args.date is not None and (args.template_file is None and
                               args.generate_template is False and
                               args.inspect_file is None):
     parser.error(f"{Red}The -d argument requires a template file "
-                 f"like Custom.in (e.g., MarsPlot Custom.in -d 00668)"
+                 f"like Custom.in (e.g., MarsPlot Custom.in -d 01336)"
                  f"{Nclr}")
     exit()
 
@@ -292,13 +292,13 @@ if args.portrait_mode and (args.template_file is None and
 if args.statistics is not None and args.inspect_file is None:
     parser.error(f"{Red}The -stat argument requires a template "
                  f"file like Custom.in (e.g., MarsPlot -i "
-                 f"00668.atmos_daily.nc -stats temp{Nclr}")
+                 f"01336.atmos_daily.nc -stats temp{Nclr}")
     exit()
 
 if args.print_values is not None and args.inspect_file is None:
     parser.error(f"{Red}The -values argument requires a template "
                  f"file like Custom.in (e.g., MarsPlot -i "
-                 f"00668.atmos_daily.nc -values temp{Nclr}")
+                 f"01336.atmos_daily.nc -values temp{Nclr}")
     exit()
 
 if args.trim_text and (args.generate_template is False):
@@ -2073,7 +2073,7 @@ def prep_file(var_name, file_type, simuID, sol_array):
         file_has_sol_number = True
         if sol_array != [None]:
             # File number explicitly provided in varfull
-            # (e.g., 00668.atmos_average.nc)
+            # (e.g., 01336.atmos_average.nc)
             Sol_num_current = sol_array
         elif Ncdf_num is not None:
             # File number NOT provided in varfull
@@ -2701,8 +2701,8 @@ class Fig_2D_lon_lat(Fig_2D):
         This function returns the longitude, latitude, and topography
         to overlay as contours in a ``2D_lon_lat`` plot. Because the
         main variable requested may be complex
-        (e.g., ``[00668.atmos_average_psdt2.temp]/1000.``), we will
-        ensure to load the matching topography (here ``00668.fixed.nc``
+        (e.g., ``[01336.atmos_average_psdt2.temp]/1000.``), we will
+        ensure to load the matching topography (here ``01336.fixed.nc``
         from the 2nd simulation). This function essentially does a
         simple task in a complicated way. Note that a great deal of
         the code is borrowed from the ``data_loader_2D()`` function.
@@ -2734,8 +2734,8 @@ class Fig_2D_lon_lat(Fig_2D):
             f = get_list_varfull(varfull)
             sol_array, filetype, var, simuID = split_varfull(varfull_list[0])
 
-        # If requesting a lat-lon plot for 00668.atmos_average.nc,
-        # try to find matching 00668.fixed.nc
+        # If requesting a lat-lon plot for 01336.atmos_average.nc,
+        # try to find matching 01336.fixed.nc
         try:
             f, var_info, dim_info, dims = prep_file(
                 "zsurf", "fixed", simuID, sol_array)
