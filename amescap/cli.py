@@ -26,7 +26,7 @@ def main():
 Welcome to the NASA Ames Community Analysis Pipeline (CAP)!
 -----------------------------------------------------------{Nclr}
 The Community Analysis Pipeline (CAP) is a Python-based command-line tool that performs analysis and creates plots from netCDF files output by the Mars Global Climate Model (MGCM). The offical user guide for CAP is available on readthedocs:
-{Yellow}https://amescap.readthedocs.io/en/latest/index.html{Nclr}
+{Yellow}https://amescap.readthedocs.io{Nclr}
 
 {Cyan}How do I use CAP?
 -----------------{Nclr}
