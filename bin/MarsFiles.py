@@ -719,6 +719,15 @@ def split_files(file_list, split_dim):
             reducing_dim = np.squeeze(fNcdf.variables[split_dim][:])
 
     print(f"\n{Yellow}All values in dimension:\n{reducing_dim}\n")
+
+    bounds_in=bounds.copy()
+    if split_dim == 'areo':
+        while (bounds[0] < reducing_dim[0]):
+            bounds += 360.
+        if len(np.atleast_1d(bounds)) == 2:
+            while (bounds[1] < bounds[0]):
+                bounds[1] += 360.
+
     if len(np.atleast_1d(bounds)) < 2:
         a=check_bounds(bounds[0],reducing_dim[0],reducing_dim[-1])
         indices = [(np.abs(reducing_dim - bounds[0])).argmin()]
@@ -726,12 +735,6 @@ def split_files(file_list, split_dim):
         print(f"Requested value = {bounds[0]}\n"
               f"Nearest value = {dim_out[0]}\n")
     else:
-        bounds_in=bounds.copy()
-        if split_dim == 'areo':
-            while (bounds[0] < reducing_dim[0]):
-                bounds += 360.
-            while (bounds[1] < bounds[0]):
-                bounds[1] += 360.
         a=check_bounds(bounds,reducing_dim[0],reducing_dim[-1])
         if ((split_dim == 'lon') & (bounds[1] < bounds[0])):
             indices = np.where((reducing_dim <= bounds[1]) | (reducing_dim >= bounds[0]))[0]
