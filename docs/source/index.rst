@@ -24,8 +24,8 @@ CAP is currently compatible with output from the MCMC’s `Legacy <https://githu
 
    Install <installation>
    Quick Start Guide <cli>
-   Example Use Cases <examples>
    CAP Description <description>
+   Example Use Cases <examples>
    MarsPull <autoapi/bin/MarsPull/index>
    MarsFormat <autoapi/bin/MarsFormat/index>
    MarsFiles <autoapi/bin/MarsFiles/index>
