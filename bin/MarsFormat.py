@@ -258,13 +258,11 @@ def main():
                 print(f"{Red}Available variables: {list(DS.variables)}{Nclr}")
                 raise
             
-        #=================================================================
-        # ===================OpenMars Specific Processing==================
-        #=================================================================
+        # ==============================================================
+        #                  OpenMars Specific Processing
+        # ==============================================================
         elif model_type == 'openmars':
-            #==================================================================
             # First save all variable FIELDNAM in attrs longname
-            #==================================================================
             for var_name in DS.data_vars:
                 var = DS[var_name]
                 if 'FIELDNAM' in var.attrs:
@@ -273,10 +271,7 @@ def main():
                     var.attrs['units'] = var.attrs['UNITS']
 
 
-            #==================================================================
             # Define Coordinates for New DataFrame
-            #==================================================================
-
             time        = DS[model.dim_time]         # minutes since simulation start [m]
             lat = DS[model.dim_lat]  #Replace DS.lat
             lon = DS[model.dim_lon]
@@ -286,11 +281,8 @@ def main():
             DS['pfull'].attrs['long_name']='(MODIFIED IN POST-PROCESSING) ' + DS['lev'].attrs['FIELDNAM']
             DS['pfull'].attrs['long_name']='Pa'
 
-
-            #==================================================================
             # add ak,bk as variables
             # add p_half dimensions as vertical grid coordinate
-            #==================================================================
 
             #Compute sigma values. Swap the sigma array upside down twice  with [::-1] since the layers_mid_point_to_boundary() needs sigma[0]=0, sigma[-1]=1) and then to reorganize the array in the original openMars format with sigma[0]=1, sigma[-1]=0
             bk = layers_mid_point_to_boundary(DS[model.dim_pfull][::-1],1.)[::-1]
@@ -310,17 +302,11 @@ def main():
             DS['bk'].attrs['long_name'] = '(ADDED IN POST PROCESSING) vertical coordinate sigma value'
             DS['bk'].attrs['units']='None'
 
-
-
-        #=================================================================
-        # ===================Emars Specific Processing==================
-        #=================================================================
+        # ==============================================================
+        #                 Emars Specific Processing
+        # ==============================================================
         elif model_type == 'emars':
-
-            #==================================================================
             # Interpolate U, V, onto Regular Mass Grid (from staggered)
-            #==================================================================
-
             print(f"{Cyan}Interpolating Staggered Variables to Standard Grid")
             variables_with_latu = [var for var in DS.variables if 'latu' in DS[var].dims]
             variables_with_lonv = [var for var in DS.variables if 'lonv' in DS[var].dims]
@@ -393,9 +379,9 @@ def main():
                 DS[var_name].attrs['long_name'] = '(UNSTAGGERED IN POST-PROCESSING) ' + longname_txt
                 DS[var_name].attrs['units'] = units_txt
 
-        #=================================================================
-        # ===================PCM Specific Processing==================
-        #=================================================================
+        # ==============================================================
+        #                 PCM Specific Processing
+        # ==============================================================
 
         elif model_type == 'pcm':
 
@@ -418,30 +404,20 @@ def main():
             #DS.phalf.attrs['description'] = '(ADDED IN POST PROCESSING) pressure at layer interfaces'
             #DS.phalf.attrs['units'] = 'Pa'
 
-        #==================================================================
-        #==================================================================
+        # ==============================================================
         #                START PROCESSING FOR ALL MODELS
-        #==================================================================
-        #==================================================================
-
-        #==================================================================
+        # ==============================================================
         # check that vertical grid starts at toa with highest level at surface
-        #==================================================================
-
         if DS[model.dim_pfull][0] != DS[model.dim_pfull].min(): # if toa, lev = 0 is surface then flip
             DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
             DS=DS.isel(**{model.dim_phalf: slice(None, None, -1)}) #Also flip phalf,ak, bk
             print(f"{Red}NOTE: all variables flipped along vertical dimension, so that the top of the atmosphere is now index 0")
 
-        #==================================================================
         # reorder dimensions
-        #==================================================================
         print(f"{Cyan} Transposing variable dimensions to match order expected in CAP")
         DS = DS.transpose(model.dim_time, model.dim_pfull ,model.dim_lat,model.dim_lon, ...)
 
-        #==================================================================
         # change longitude from -180-179 to 0-360
-        #==================================================================
         if min(DS[model.dim_lon]) < 0:
                 tmp = np.array(DS[model.dim_lon])
                 tmp = np.where(tmp<0,tmp+360,tmp)
@@ -451,9 +427,7 @@ def main():
                 DS[model.lon].attrs['units']='degrees_E'
                 print(f"{Red} NOTE: Longitude changed to 0-360E and all variables appropriately reindexed")
 
-        #==================================================================
         # add scalar axis to areo [time, scalar_axis])
-        #==================================================================
         inpt_dimlist = DS.dims
         # first check if dimensions are correct and don't need to be modified
         if 'scalar_axis' not in inpt_dimlist:           # first see if scalar axis is a dimension
@@ -464,10 +438,7 @@ def main():
 
                 print(f"{Red}NOTE: scalar axis added to aerocentric longitude")
 
-        #=================================================
         # STANDARDIZED VARIABLES NAMES IF REQUESTED
-        #=================================================
-
         if args.retain_names:
             print(f"{Purple}Preserving original names for variable and dimensions")
             ext=ext+'_nat'
@@ -509,23 +480,17 @@ def main():
             #Update CAP's internal variables dictionary
             model=reset_FV3_names(model)
 
-
-        #==================================================================
         # Output Processed Data to New **atmos_daily.nc File
-        #==================================================================
 
-        #==================================================================
+        # ==============================================================
         # CREATE ATMOS_DAILY, ATMOS_AVERAGE, & ATMOS_DIURN FILES
-        #==================================================================
+        # ==============================================================
 
         if args.bin_average:
             ext=ext+'_average'
             nday=args.bin_average
 
-            #==================================================================
             # Output Binned Data to New **atmos_average.nc file
-            #==================================================================
-
             # Figure out number of timesteps per 5 sol
             dt_in = DS[model.dim_time][1]-DS[model.dim_time][0]
 
@@ -561,9 +526,8 @@ def main():
                 print(f"{Red}***Error***: Operation not permitted because time sampling in file is less than one time step per day")
                 break
             combinedN = int(iperday*nday)
-            #==================================================================
+            
             # Output Binned Data to New  **atmos_diurn.nc file
-            #==================================================================
             # create a new time of day dimension
             tod_name = 'time_of_day_%02d' %(iperday)
             days = len(DS[model.dim_time])/iperday
