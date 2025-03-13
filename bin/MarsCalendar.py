@@ -176,7 +176,7 @@ def main():
         input_num = np.asarray(args.ls).astype(float)
         head_text = "\n   Ls    |    Sol    \n-----------------------"
         input_arr = parse_array(input_num)
-        output_arr = ls2sol(input_arr)
+        output_arr = ls2sol(input_arr) +MY*668.
         input_arr = input_arr%360
 
     elif args.sol:
