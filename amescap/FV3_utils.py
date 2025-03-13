@@ -102,13 +102,13 @@ def fms_press_calc(psfc, ak, bk, lev_type='full'):
     # First, transpose ``PRESS(:, Nk)`` to ``PRESS(Nk, :)``. Then
     # reshape ``PRESS(Nk, :)`` to the original pressure shape
     # ``PRESS(Nk, :, :, :)`` (resp. ``Nk-1``)
-
+    #TODO
     if lev_type == "full":
         new_dim_f = np.append(Nk-1, psfc.shape)
-        return np.squeeze(PRESS_f.T.reshape(new_dim_f))
+        return PRESS_f.T.reshape(new_dim_f) #<removed squeezed
     elif lev_type == "half":
         new_dim_h = np.append(Nk, psfc.shape)
-        return np.squeeze(PRESS_h.T.reshape(new_dim_h))
+        return PRESS_h.T.reshape(new_dim_h) #<removed squeezed
     else:
         raise Exception("Pressure level type not recognized by "
                         "``press_lev()``: use 'full' or 'half' ")

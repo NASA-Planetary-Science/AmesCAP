@@ -60,7 +60,7 @@ from amescap.FV3_utils import (
 )
 from amescap.Script_utils import (
     check_file_tape, FV3_file_type, filter_vars,
-    get_longname_unit, ak_bk_loader
+    get_longname_unit, ak_bk_loader, except_message
 )
 from amescap.Ncdf_wrapper import Ncdf
 
@@ -1095,7 +1095,6 @@ def compute_DP_3D(ps, ak, bk, shape_out):
     p_half3D = fms_press_calc(ps, ak, bk, lev_type="half")
     # fms_press_calc will swap dimensions 0 and 1 so p_half3D has
     # dimensions = [lev, t, lat, lon]
-
     # Calculate the differences in pressure between each layer midpoint
     DP_3D = p_half3D[1:, ..., ] - p_half3D[0:-1, ...]
 
@@ -1434,12 +1433,12 @@ def main():
                     # If file interpolated to pstd, calculate the 3D
                     # pressure field.
                     lev = f.variables["pstd"][:]
-                    
+
                     # Create the right shape that includes all time steps
                     rshp_shape = [1 for i in range(0, len(shape_out))]
                     rshp_shape[0] = shape_out[0]  # Set the correct number of time steps
                     rshp_shape[lev_axis] = len(lev)
-                    
+
                     # p_3D = lev.reshape(rshp_shape)
                     # Reshape and broadcast properly
                     p_levels = lev.reshape([1, len(lev), 1, 1])
@@ -1668,15 +1667,7 @@ def main():
                       f"successfully ***{Nclr}")
 
             except Exception as exception:
-                if debug:
-                    raise
-                elif str(exception[0:35]) == (
-                    "NetCDF: String match to name in use"
-                    ):
-                    print(f"{Yellow}***Error*** Variable already "
-                          f"exists in file.\nDelete the existing "
-                          f"variable d_dz_{idiff} with MarsVars "
-                          f"``{ifile} -rm d_dz_{idiff}''{Nclr}")
+                except_message(debug,exception,ivar,ifile)
         # ==============================================================
         #                   Vertical Differentiation
         # ==============================================================
@@ -1767,15 +1758,7 @@ def main():
 
                     print(f"d_dz_{idiff}: {Green}Done{Nclr}")
                 except Exception as exception:
-                    if debug:
-                        raise
-                    if str(exception) == (
-                        "NetCDF: String match to name in use"
-                        ):
-                        print(f"{Yellow}***Error*** Variable already "
-                              f"exists in file.\nDelete the existing "
-                              f"variable d_dz_{idiff} with MarsVars "
-                              f"``{ifile} -rm d_dz_{idiff}''{Nclr}")
+                    except_message(debug,exception,idiff,ifile,pre="d_dz_")
 
         # ==============================================================
         #                       Zonal Detrending
@@ -1810,15 +1793,7 @@ def main():
 
                     print(f"{izdetrend}_p: {Green}Done{Nclr}")
                 except Exception as exception:
-                    if debug:
-                        raise
-                    if str(exception) == (
-                        "NetCDF: String match to name in use"
-                        ):
-                        print(f"{Yellow}***Error*** Variable already "
-                              f"exists in file. Delete the existing "
-                              f"variable d_dz_{idiff} with MarsVars "
-                              f"``{ifile} -rm d_dz_{idiff}``{Nclr}")
+                    except_message(debug,exception,izdetrend,ifile,ext="_p")
 
         # ==============================================================
         #           Opacity Conversion (dp_to_dz and dz_to_dp)
@@ -1859,16 +1834,7 @@ def main():
                     print(f"{idp_to_dz}_dp_to_dz: {Green}Done{Nclr}")
 
                 except Exception as exception:
-                    if debug:
-                        raise
-                    if str(exception) == (
-                        "NetCDF: String match to name in use"
-                        ):
-                        print(f"{Yellow}***Error*** Variable already "
-                              f"exists in file.\nDelete the existing "
-                              f"variable {idp_to_dz}_dp_to_dz with "
-                              f"``MarsVars {ifile} -rm {idp_to_dz}_dp_"
-                              f"to_dz``{Nclr}")
+                    except_message(debug,exception,idp_to_dz,ifile,ext="_dp_to_dz")
 
         for idz_to_dp in dz_to_dp_list:
             # ========= Case 2: dz_to_dp
@@ -1905,16 +1871,7 @@ def main():
                     print(f"{idz_to_dp}_dz_to_dp: {Green}Done{Nclr}")
 
                 except Exception as exception:
-                    if debug:
-                        raise
-                    if str(exception) == (
-                        "NetCDF: String match to name in use"
-                        ):
-                        print(f"{Yellow}***Error*** Variable already "
-                              f"exists in file.\nDelete the existing "
-                              f"variable {idp_to_dz}_dp_to_dz with "
-                              f"``MarsVars {ifile} -rm "
-                              f"{idp_to_dz}_dp_to_dz``{Nclr}")
+                    except_message(debug,exception,idz_to_dp,ifile,ext="_dz_to_dp")
 
         # ==============================================================
         #                    Column Integration
@@ -1993,16 +1950,7 @@ def main():
                     print(f"{icol}_col: {Green}Done{Nclr}")
 
                 except Exception as exception:
-                    if debug:
-                        raise
-                    if str(exception)[0:35] == (
-                        "NetCDF: String match to name in use"):
-                        print(f"{Yellow}***Error*** Variable already "
-                              f"exists in file.\nDelete the existing "
-                              f"variable {icol}_col with ``MarsVars "
-                              f"{ifile} -rm {icol}_col``{Nclr}")
-                    else:
-                        print(f"{Red}***Error*** {str(exception)}")
+                    except_message(debug,exception,icol,ifile,ext="_col")
         if edit_var:
             f_IN = Dataset(ifile, "r", format = "NETCDF4_CLASSIC")
             ifile_tmp = f"{ifile[:-3]}_tmp.nc"

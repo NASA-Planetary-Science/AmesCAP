@@ -13,6 +13,7 @@ and optionally accepts:
 
     * ``[-bin, --bin_files]``             Produce MGCM 'fixed', 'diurn', 'average' and 'daily' files from Legacy output
     * ``[-c, --concatenate]``             Combine sequential files of the same type into one file
+    * ``[-split, --split]``               Split file along a specified dimension or extracts slice at one point along the dim
     * ``[-t, --time_shift]``              Apply a time-shift to 'diurn' files
     * ``[-ba, --bin_average]``            Bin MGCM 'daily' files like 'average' files
     * ``[-bd, --bin_diurn]``              Bin MGCM 'daily' files like 'diurn' files
@@ -65,7 +66,7 @@ from amescap.FV3_utils import (
 )
 from amescap.Script_utils import (
     find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile,
-    get_longname_unit, extract_path_basename
+    get_longname_unit, extract_path_basename, check_bounds
 )
 
 # ======================================================================
@@ -114,7 +115,7 @@ class ExtAction(argparse.Action):
 class ExtArgumentParser(argparse.ArgumentParser):
     def parse_args(self, *args, **kwargs):
         namespace = super().parse_args(*args, **kwargs)
-        
+
         # Then set info attributes for any unused arguments
         if hasattr(self, '_ext_actions'):
             for action in self._ext_actions:
@@ -402,7 +403,7 @@ parser.add_argument('-dim', '--dim_select', type=str, default=None,
     help=(
         f"Must be used with [-split --split]. Flag indicates the "
         f"dimension on which to trim the file.\nAcceptable values are "
-        f"'time', 'areo', 'lev', 'lat', 'lon'. Default = 'areo'.\n"
+        f"'areo', 'lev', 'lat', 'lon'. Default = 'areo'.\n"
         f"{Green}Example:\n"
         f"> MarsFiles 00668.atmos_average.nc --split 0 90 -dim areo"
         f"> MarsFiles 00668.atmos_average.nc --split -70 -dim lat"
@@ -585,7 +586,7 @@ def concatenate_files(file_list, full_file_list):
 
     :param file_list: list of file names
     :type file_list: list
-    
+
     :param full_file_list: list of file names and full paths
     :type full_file_list: list
 
@@ -654,13 +655,13 @@ def split_files(file_list, split_dim):
 
     :param file_list: list of file names
     :type split_dim: dimension along which to perform extraction
-    
+
     :returns: new file with sliced dimensions
 
     """
-    if split_dim not in ['time', 'areo', 'lev', 'lat', 'lon']:
+    if split_dim not in ['areo', 'lev', 'lat', 'lon']:
         print(f"{Red}Split dimension must be one of the following:"
-              f"    time, areo, lev, lat, lon{Nclr}")
+              f"    areo, lev, lat, lon{Nclr}")
         exit()
 
     bounds = np.asarray(args.split).astype(float)
@@ -685,8 +686,6 @@ def split_files(file_list, split_dim):
     # Get file type (diurn, average, daily, etc.)
     f_type, interp_type = FV3_file_type(fNcdf)
 
-    if split_dim == 'areo':
-        split_dim = 'time'
     if split_dim == 'lev':
         split_dim = interp_type
         if interp_type == 'pstd':
@@ -704,47 +703,65 @@ def split_files(file_list, split_dim):
 
     # Remove all single dimensions from areo (scalar_axis)
     if f_type == 'diurn':
-        if split_dim == 'time':
+        if split_dim == 'areo':
             # size areo = (time, tod, scalar_axis)
-            reducing_dim = np.squeeze(fNcdf.variables['areo'][:, 0, :]) % 360
+            reducing_dim = np.squeeze(fNcdf.variables['areo'][:, 0, :])
         else:
             reducing_dim = np.squeeze(fNcdf.variables[split_dim][:, 0])
     else:
-        if split_dim == 'time':
+        if split_dim == 'areo':
             # size areo = (time, scalar_axis)
-            reducing_dim = np.squeeze(fNcdf.variables['areo'][:]) % 360
+            reducing_dim = np.squeeze(fNcdf.variables['areo'][:])
         else:
             reducing_dim = np.squeeze(fNcdf.variables[split_dim][:])
 
     print(f"\n{Yellow}All values in dimension:\n{reducing_dim}\n")
     if len(np.atleast_1d(bounds)) < 2:
+        a=check_bounds(bounds[0],reducing_dim[0],reducing_dim[-1])
         indices = [(np.abs(reducing_dim - bounds[0])).argmin()]
         dim_out = reducing_dim[indices]
         print(f"Requested value = {bounds[0]}\n"
               f"Nearest value = {dim_out[0]}\n")
     else:
-        indices = np.where((reducing_dim >= bounds[0]) & (reducing_dim <= bounds[1]))[0]
+        bounds_in=bounds.copy()
+        if split_dim == 'areo':
+            while (bounds[0] < reducing_dim[0]):
+                bounds += 360.
+            while (bounds[1] < bounds[0]):
+                bounds[1] += 360.
+        a=check_bounds(bounds,reducing_dim[0],reducing_dim[-1])
+        if ((split_dim == 'lon') & (bounds[1] < bounds[0])):
+            indices = np.where((reducing_dim <= bounds[1]) | (reducing_dim >= bounds[0]))[0]
+        else:
+            indices = np.where((reducing_dim >= bounds[0]) & (reducing_dim <= bounds[1]))[0]
         dim_out = reducing_dim[indices]
-        print(f"Requested range = {bounds[0]} - {bounds[1]}\n"
+        print(f"Requested range = {bounds_in[0]} - {bounds_in[1]}\n"
               f"Corresponding values = {dim_out}\n")
         if len(indices) == 0:
             print(f"{Red}Warning, no values were found in the range {split_dim} "
-                f"{bounds[0]}, {bounds[1]}) ({split_dim} values range from "
+                f"{bounds_in[0]}, {bounds_in[1]}) ({split_dim} values range from "
                 f"{reducing_dim[0]:.1f} to {reducing_dim[-1]:.1f})")
             exit()
 
-    if split_dim == 'time':
+    if split_dim in ('time','areo'):
         time_dim = (np.squeeze(fNcdf.variables['time'][:]))[indices]
         print(f"time_dim = {time_dim}")
 
     fpath, fname = extract_path_basename(input_file_name)
-    if split_dim == 'time':
+    if split_dim =='time':
         if len(np.atleast_1d(bounds)) < 2:
             output_file_name = (f"{fpath}/{int(time_dim):05d}{fname[5:-3]}_"
-                                f"nearest_Ls{int(bounds[0]):03d}.nc")
+                                f"nearest_sol{int(bounds_in[0]):03d}.nc")
         else:
             output_file_name = (f"{fpath}/{int(time_dim[0]):05d}{fname[5:-3]}_"
-                                f"Ls{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
+                                f"sol{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
+    elif split_dim =='areo':
+        if len(np.atleast_1d(bounds)) < 2:
+            output_file_name = (f"{fpath}/{int(time_dim):05d}{fname[5:-3]}_"
+                                f"nearest_Ls{int(bounds_in[0]):03d}.nc")
+        else:
+            output_file_name = (f"{fpath}/{int(time_dim[0]):05d}{fname[5:-3]}_"
+                                f"Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
     elif split_dim == 'lat':
         new_bounds = [str(abs(int(b)))+"S" if b < 0 else str(int(b))+"N" for b in bounds]
         if len(np.atleast_1d(bounds)) < 2:
@@ -766,12 +783,12 @@ def split_files(file_list, split_dim):
             print(f"{Yellow}bounds = {bounds[0]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]}")
             output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_nearest"
-                                f"_{new_bounds[0]:03d}.nc")
+                                f"_{new_bounds[0]}.nc")
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
             output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}"
-                                f"_{new_bounds[0]:03d}_{new_bounds[1]:03d}.nc")
+                                f"_{new_bounds[0]}_{new_bounds[1]}.nc")
     else:
         if len(np.atleast_1d(bounds)) < 2:
             output_file_name = (f"{fpath}/{original_date}{fname[5:-3]}_nearest_{split_dim}"
@@ -1744,11 +1761,11 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
 
     :param fpath: Full path to the Legacy netcdf files
     :type fpath: str
-    
+
     :param typelistfv3: MGCM-like file type: ``average``, ``daily``,
         or ``diurn``
     :type typelistfv3: list
-    
+
     :param renameFV3: Rename the files from Legacy_LsXXX_LsYYY.nc to
         ``XXXXX.atmos_average.nc`` following MGCM output conventions
     :type renameFV3: bool
@@ -1774,7 +1791,7 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
 
         :param newf: path to target file
         :type newf: str
-        
+
         :param typefv3: identifies type of file: ``average``,
             ``daily``, or ``diurn``
         :type typefv3: str
@@ -1890,18 +1907,18 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
 
     :param histfile: file to perform time average on
     :type histfile: str
-    
+
     :param newf: path to target file
     :type newf: str
-    
+
     :param avgtime: whether ``histfile`` has averaged fields
         (e.g., ``atmos_average``)
     :type avgtime: bool
-    
+
     :param avgtod: whether ``histfile`` has a diurnal time dimenion
         (e.g., ``atmos_diurn``)
     :type avgtod: bool
-    
+
     :param bin_period: the time binning period if `histfile` has
         averaged fields (i.e., if ``avgtime==True``), defaults to 5
     :type bin_period: int, optional
@@ -2039,10 +2056,10 @@ def change_vname_longname_unit(vname, longname_txt, units_txt):
 
     :param vname: variable name
     :type vname: str
-    
+
     :param longname_txt: variable description
     :type longname_txt: str
-    
+
     :param units_txt: variable units
     :type units_txt: str
 
@@ -2102,7 +2119,7 @@ def replace_dims(dims, todflag):
 
     :param dims: dimensions of the variable
     :type dims: str
-    
+
     :param todflag: indicates whether there exists a ``time_of_day``
         dimension
     :type todflag: bool
@@ -2132,11 +2149,11 @@ def replace_at_index(tuple_dims, idx, new_name):
     :param tuple_dims: the dimensions as tuples e.g. (``pfull``,
         ``nlat``, ``nlon``)
     :type tuple_dims: tuple
-    
+
     :param idx: index indicating axis with the dimensions to update
         (e.g. ``idx = 1``  for ``nlat``)
     :type idx: int
-    
+
     :param new_name: new dimension name (e.g. ``latitude``)
     :type new_name: str
 
@@ -2154,17 +2171,17 @@ def ls2sol_1year(Ls_deg, offset=True, round10=True):
 
     :param Ls_deg: solar longitude [°]
     :type Ls_deg: float
-    
+
     :param offset: if True, force year to start at Ls 0
     :type offset: bool
-    
+
     :param round10: if True, round to the nearest 10 sols
     :type round10: bool
 
     :returns: ``Ds`` the sol number
 
     ..note::
-        For the moment, this is consistent with 0 <= Ls <= 359.99, but 
+        For the moment, this is consistent with 0 <= Ls <= 359.99, but
         not for monotically increasing Ls.
 
     """
