@@ -1472,3 +1472,49 @@ def except_message(debug,exception,varname,ifile,pre="",ext=""):
               f"{pre}{varname}{ext}``{Nclr}")
     else:
         print(f"{Red}***Error*** {str(exception)}")
+
+def check_bounds(values, min_val, max_val):
+    """
+    Check if all values in an array are within specified bounds.
+    Exits program if any value is out of bounds.
+    
+    Parameters:
+    values : array-like
+        Single value or array of values to check
+    min_val : float
+        Minimum allowed value
+    max_val : float
+        Maximum allowed value
+        
+    Returns:
+    values : array or float
+        The validated value(s)
+    """
+    try:
+        # Handle both single values and arrays
+        is_scalar = np.isscalar(values)
+        values_array = np.array([values]) if is_scalar else np.array(values)
+        
+        # Check for non-numeric values
+        if not np.issubdtype(values_array.dtype, np.number):
+            print(f"Error: Input contains non-numeric values")
+            sys.exit(1)
+        
+        # Find any out-of-bounds values
+        mask_invalid = (values_array < min_val) | (values_array > max_val)
+        
+        if np.any(mask_invalid):
+            # Get the invalid values
+            invalid_values = values_array[mask_invalid]
+            invalid_indices = np.where(mask_invalid)[0]
+            
+            print(f"Error: Values out of allowed range [{min_val}, {max_val}]")
+            print(f"Invalid values at indices {invalid_indices}: {invalid_values}")
+            exit()
+        
+        # Return original format (scalar or array)
+        return values if is_scalar else values_array
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        exit()

@@ -13,6 +13,7 @@ and optionally accepts:
 
     * ``[-bin, --bin_files]``             Produce MGCM 'fixed', 'diurn', 'average' and 'daily' files from Legacy output
     * ``[-c, --concatenate]``             Combine sequential files of the same type into one file
+    * ``[-split, --split]``               Split file along a specified dimension or extracts slice at one point along the dim
     * ``[-t, --time_shift]``              Apply a time-shift to 'diurn' files
     * ``[-ba, --bin_average]``            Bin MGCM 'daily' files like 'average' files
     * ``[-bd, --bin_diurn]``              Bin MGCM 'daily' files like 'diurn' files
@@ -65,7 +66,7 @@ from amescap.FV3_utils import (
 )
 from amescap.Script_utils import (
     find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile,
-    get_longname_unit, extract_path_basename
+    get_longname_unit, extract_path_basename, check_bounds
 )
 
 # ======================================================================
@@ -685,8 +686,6 @@ def split_files(file_list, split_dim):
     # Get file type (diurn, average, daily, etc.)
     f_type, interp_type = FV3_file_type(fNcdf)
 
-    if split_dim == 'areo':
-        split_dim = 'time'
     if split_dim == 'lev':
         split_dim = interp_type
         if interp_type == 'pstd':
@@ -704,47 +703,65 @@ def split_files(file_list, split_dim):
 
     # Remove all single dimensions from areo (scalar_axis)
     if f_type == 'diurn':
-        if split_dim == 'time':
+        if split_dim == 'areo':
             # size areo = (time, tod, scalar_axis)
-            reducing_dim = np.squeeze(fNcdf.variables['areo'][:, 0, :]) % 360
+            reducing_dim = np.squeeze(fNcdf.variables['areo'][:, 0, :])
         else:
             reducing_dim = np.squeeze(fNcdf.variables[split_dim][:, 0])
     else:
-        if split_dim == 'time':
+        if split_dim == 'areo':
             # size areo = (time, scalar_axis)
-            reducing_dim = np.squeeze(fNcdf.variables['areo'][:]) % 360
+            reducing_dim = np.squeeze(fNcdf.variables['areo'][:])
         else:
             reducing_dim = np.squeeze(fNcdf.variables[split_dim][:])
 
     print(f"\n{Yellow}All values in dimension:\n{reducing_dim}\n")
     if len(np.atleast_1d(bounds)) < 2:
+        a=check_bounds(bounds[0],reducing_dim[0],reducing_dim[-1])
         indices = [(np.abs(reducing_dim - bounds[0])).argmin()]
         dim_out = reducing_dim[indices]
         print(f"Requested value = {bounds[0]}\n"
               f"Nearest value = {dim_out[0]}\n")
     else:
-        indices = np.where((reducing_dim >= bounds[0]) & (reducing_dim <= bounds[1]))[0]
+        bounds_in=bounds.copy()
+        if split_dim == 'areo':
+            while (bounds[0] < reducing_dim[0]):
+                bounds += 360.
+            while (bounds[1] < bounds[0]):
+                bounds[1] += 360.
+        a=check_bounds(bounds,reducing_dim[0],reducing_dim[-1])
+        if ((split_dim == 'lon') & (bounds[1] < bounds[0])):
+            indices = np.where((reducing_dim <= bounds[1]) | (reducing_dim >= bounds[0]))[0]
+        else:
+            indices = np.where((reducing_dim >= bounds[0]) & (reducing_dim <= bounds[1]))[0]
         dim_out = reducing_dim[indices]
-        print(f"Requested range = {bounds[0]} - {bounds[1]}\n"
+        print(f"Requested range = {bounds_in[0]} - {bounds_in[1]}\n"
               f"Corresponding values = {dim_out}\n")
         if len(indices) == 0:
             print(f"{Red}Warning, no values were found in the range {split_dim} "
-                f"{bounds[0]}, {bounds[1]}) ({split_dim} values range from "
+                f"{bounds_in[0]}, {bounds_in[1]}) ({split_dim} values range from "
                 f"{reducing_dim[0]:.1f} to {reducing_dim[-1]:.1f})")
             exit()
 
-    if split_dim == 'time':
+    if split_dim in ('time','areo'):
         time_dim = (np.squeeze(fNcdf.variables['time'][:]))[indices]
         print(f"time_dim = {time_dim}")
 
     fpath, fname = extract_path_basename(input_file_name)
-    if split_dim == 'time':
+    if split_dim =='time':
         if len(np.atleast_1d(bounds)) < 2:
             output_file_name = (f"{fpath}/{int(time_dim):05d}{fname[5:-3]}_"
-                                f"nearest_Ls{int(bounds[0]):03d}.nc")
+                                f"nearest_sol{int(bounds_in[0]):03d}.nc")
         else:
             output_file_name = (f"{fpath}/{int(time_dim[0]):05d}{fname[5:-3]}_"
-                                f"Ls{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
+                                f"sol{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
+    elif split_dim =='areo':
+        if len(np.atleast_1d(bounds)) < 2:
+            output_file_name = (f"{fpath}/{int(time_dim):05d}{fname[5:-3]}_"
+                                f"nearest_Ls{int(bounds_in[0]):03d}.nc")
+        else:
+            output_file_name = (f"{fpath}/{int(time_dim[0]):05d}{fname[5:-3]}_"
+                                f"Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
     elif split_dim == 'lat':
         new_bounds = [str(abs(int(b)))+"S" if b < 0 else str(int(b))+"N" for b in bounds]
         if len(np.atleast_1d(bounds)) < 2:
