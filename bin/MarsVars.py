@@ -1065,7 +1065,6 @@ def compute_DP_3D(ps, ak, bk, shape_out):
     p_half3D = fms_press_calc(ps, ak, bk, lev_type="half")
     # fms_press_calc will swap dimensions 0 and 1 so p_half3D has
     # dimensions = [lev, t, lat, lon]
-
     # Calculate the differences in pressure between each layer midpoint
     DP_3D = p_half3D[1:, ..., ] - p_half3D[0:-1, ...]
 
@@ -1404,12 +1403,12 @@ def main():
                     # If file interpolated to pstd, calculate the 3D
                     # pressure field.
                     lev = f.variables["pstd"][:]
-                    
+
                     # Create the right shape that includes all time steps
                     rshp_shape = [1 for i in range(0, len(shape_out))]
                     rshp_shape[0] = shape_out[0]  # Set the correct number of time steps
                     rshp_shape[lev_axis] = len(lev)
-                    
+
                     # p_3D = lev.reshape(rshp_shape)
                     # Reshape and broadcast properly
                     p_levels = lev.reshape([1, len(lev), 1, 1])
