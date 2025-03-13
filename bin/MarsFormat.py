@@ -181,6 +181,7 @@ def main():
         #=================================================================
         if model_type == 'marswrf':
             # First save all variable descriptions in attrs longname
+            print(f"{Cyan}Current variables at top of marswrf processing:\n{list(DS.variables)}{Nclr}\n")
             for var_name in DS.data_vars:
                 var = DS[var_name]
                 if 'description' in var.attrs:
@@ -409,6 +410,7 @@ def main():
         # ==============================================================
         # check that vertical grid starts at toa with highest level at surface
         if DS[model.dim_pfull][0] != DS[model.dim_pfull].min(): # if toa, lev = 0 is surface then flip
+            print(f"{Cyan}Current variables at start of processing for all models:\n{list(DS.variables)}{Nclr}\n")
             DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
             DS=DS.isel(**{model.dim_phalf: slice(None, None, -1)}) #Also flip phalf,ak, bk
             print(f"{Red}NOTE: all variables flipped along vertical dimension, so that the top of the atmosphere is now index 0")

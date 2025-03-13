@@ -438,7 +438,7 @@ class TestMarsFormat(unittest.TestCase):
 
         # Vertical coordinate
         P_TOP = dataset.createVariable('P_TOP', 'f4', ('Time',))
-        P_TOP[:] = np.ones(5) * 100.0  # Pa
+        P_TOP[:] = np.ones(5) * 5.0  # Pa
         P_TOP.units = 'Pa'
         P_TOP.description = 'pressure at model top'
 
@@ -491,7 +491,7 @@ class TestMarsFormat(unittest.TestCase):
         T.description = 'perturbation potential temperature'
 
         T0 = dataset.createVariable('T0', 'f4', ('Time',))
-        T0[:] = np.ones(5) * 200.0
+        T0[:] = np.ones(5) * 170.0
         T0.units = 'K'
         T0.description = 'base state temperature'
 
