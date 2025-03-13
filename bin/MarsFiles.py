@@ -152,8 +152,8 @@ parser.add_argument('-bin', '--bin_files', nargs='+', type=str,
         f"  - ``diurn``  : 5-sol averages binned by time of day\n"
         f"  - ``average``: 5-sol averages\n"
         f"{Green}Example:\n"
-        f"> MarsFiles filename.nc -bin fixed\n"
-        f"> MarsFiles filename.nc -bin fixed diurn"
+        f"> MarsFiles fort.11_* -bin fixed daily diurn average\n"
+        f"> MarsFiles fort.11_* -bin fixed diurn"
         f"{Nclr}\n\n"
     )
 )
@@ -187,10 +187,10 @@ parser.add_argument('-split', '--split', nargs='+', type=float,
         f"-dim.\nIf a file contains multiple Mars Years of data, the "
         f"function splits the file in the first Mars Year.\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_average.nc --split 0 90"
-        f"> MarsFiles 00668.atmos_average.nc --split 270\n"
+        f"> MarsFiles 01336.atmos_average.nc --split 0 90"
+        f"> MarsFiles 01336.atmos_average.nc --split 270\n"
         f"{Yellow}Use -dim to specify the dimension:{Green}\n"
-        f"> MarsFiles 00668.atmos_average.nc --split 0 90 -dim lat"
+        f"> MarsFiles 01336.atmos_average.nc --split 0 90 -dim lat"
         f"{Nclr}\n\n"
     )
 )
@@ -206,9 +206,9 @@ parser.add_argument('-t', '--time_shift', action=ExtAction, type=str,
         f"files.\n"
         f"{Yellow}Generates a new file ending in ``_T.nc``{Nclr}\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_diurn.nc -t"
+        f"> MarsFiles 01336.atmos_diurn.nc -t"
         f" {Blue}(outputs data for all 24 local times){Green}\n"
-        f"> MarsFiles 00668.atmos_diurn.nc -t '3 15'"
+        f"> MarsFiles 01336.atmos_diurn.nc -t '3 15'"
         f" {Blue}(outputs data for target local times only)"
         f"{Nclr}\n\n"
     )
@@ -224,8 +224,8 @@ parser.add_argument('-ba', '--bin_average', action=ExtAction, type=int,
         f"Requires input file to be in MGCM 'daily' format.\n"
         f"{Yellow}Generates a new file ending in ``_to_average.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_daily.nc -ba {Blue}(5-sol bin){Green}\n"
-        f"> MarsFiles 00668.atmos_daily_pstd.nc -ba 10 {Blue}(10-sol bin)"
+        f"> MarsFiles 01336.atmos_daily.nc -ba {Blue}(5-sol bin){Green}\n"
+        f"> MarsFiles 01336.atmos_daily_pstd.nc -ba 10 {Blue}(10-sol bin)"
         f"{Nclr}\n\n"
     )
 )
@@ -241,10 +241,10 @@ parser.add_argument('-bd', '--bin_diurn', action=ExtAction, type=int,
         f"Requires input file to be in MGCM 'daily' format.\n"
         f"{Yellow}Generates a new file ending in ``_to_diurn.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_daily.nc -bd {Blue}(5-sol bin){Green}\n"
-        f"> MarsFiles 00668.atmos_daily_pstd.nc -bd -ba 10 "
+        f"> MarsFiles 01336.atmos_daily.nc -bd {Blue}(5-sol bin){Green}\n"
+        f"> MarsFiles 01336.atmos_daily_pstd.nc -bd -ba 10 "
         f"{Blue}(10-sol bin){Green}\n"
-        f"> MarsFiles 00668.atmos_daily_pstd.nc -bd -ba 1 "
+        f"> MarsFiles 01336.atmos_daily_pstd.nc -bd -ba 1 "
         f"{Blue}(no binning, mimics raw Legacy output)"
         f"{Nclr}\n\n"
     )
@@ -262,7 +262,7 @@ parser.add_argument('-hpt', '--high_pass_temporal', action=ExtAction,
         f"to add the original linear trend to the amplitudes \n"
         f"\n{Yellow}Generates a new file ending in ``_hpt.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_daily.nc -hpt 10.\n"
+        f"> MarsFiles 01336.atmos_daily.nc -hpt 10.\n"
         f"{Nclr}\n\n"
     )
 )
@@ -279,7 +279,7 @@ parser.add_argument('-lpt', '--low_pass_temporal', action=ExtAction,
         f"to add the original linear trend to the amplitudes \n"
         f"\n{Yellow}Generates a new file ending in ``_lpt.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_daily.nc -lpt 0.5\n"
+        f"> MarsFiles 01336.atmos_daily.nc -lpt 0.5\n"
         f"{Nclr}\n\n"
     )
 )
@@ -296,7 +296,7 @@ parser.add_argument('-bpt', '--band_pass_temporal', action=ExtAction,
         f"to add the original linear trend to the amplitudes \n"
         f"\n{Yellow}Generates a new file ending in ``bpt.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_daily.nc -hpt 0.5 10.\n"
+        f"> MarsFiles 01336.atmos_daily.nc -hpt 0.5 10.\n"
         f"{Nclr}\n\n"
     )
 )
@@ -312,7 +312,7 @@ parser.add_argument('-hps', '--high_pass_spatial', action=ExtAction,
         f"in Sols.\n"
         f"{Yellow}Generates a new file ending in ``_hps.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_daily.nc -hps 10 --add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -hps 10 --add_trend\n"
         f"{Nclr}\n\n"
     )
 )
@@ -327,7 +327,7 @@ parser.add_argument('-lps', '--low_pass_spatial', action=ExtAction,
         f"cutoff frequency in Sols.\n"
         f"{Yellow}Generates a new file ending in ``_lps.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_daily.nc -lps 20 --add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -lps 20 --add_trend\n"
         f"{Nclr}\n\n"
     )
 )
@@ -342,7 +342,7 @@ parser.add_argument('-bps', '--band_pass_spatial', action=ExtAction,
         f"cutoff frequency in Sols.\nData detrended before filtering.\n"
         f"{Yellow}Generates a new file ending in ``_bps.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_daily.nc -bps 10 20 --add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -bps 10 20 --add_trend\n"
         f"{Nclr}\n\n"
     )
 )
@@ -358,7 +358,7 @@ parser.add_argument('-tide', '--tide_decomp', action=ExtAction,
         f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
         f"{Yellow}Generates a new file ending in ``_tide_decomp.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_diurn.nc -tide 2 -incl ps temp "
+        f"> MarsFiles 01336.atmos_diurn.nc -tide 2 -incl ps temp "
         f"{Blue}(extracts semi-diurnal tide component of ps and temp "
         f"variables; 2 harmonics)"
         f"{Nclr}\n\n"
@@ -376,8 +376,11 @@ parser.add_argument('-regrid', '--regrid_XY_to_match', action=ExtAction,
         f"to the same standard grid [zstd, zagl, pstd, etc.].\n"
         f"{Yellow}Generates a new file ending in ``_regrid.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsInterp sim1/00668.atmos_average_pstd.nc -regrid "
-        f"sim2/00668.atmos_average_pstd.nc"
+        f"> MarsInterp 01336.atmos_average_pstd.nc -regrid "
+        f"01336.atmos_average_pstd_c48.nc"
+        f"{Yellow}NOTE: name of regridded file does not matter."
+        f"{Green}> MarsInterp sim1/01336.atmos_average_pstd.nc -regrid "
+        f"sim2/01336.atmos_average_pstd.nc"
         f"{Nclr}\n\n"
     )
 )
@@ -392,7 +395,7 @@ parser.add_argument('-zavg', '--zonal_average', action=ExtAction,
         f"length <= 1.\n"
         f"{Yellow}Generates a new file ending in ``_zavg.nc``\n"
         f"{Green}Example:\n"
-        "> MarsFiles 00668.atmos_diurn.nc -zavg"
+        "> MarsFiles 01336.atmos_diurn.nc -zavg"
         f"{Nclr}\n\n"
     )
 )
@@ -405,8 +408,8 @@ parser.add_argument('-dim', '--dim_select', type=str, default=None,
         f"dimension on which to trim the file.\nAcceptable values are "
         f"'areo', 'lev', 'lat', 'lon'. Default = 'areo'.\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_average.nc --split 0 90 -dim areo"
-        f"> MarsFiles 00668.atmos_average.nc --split -70 -dim lat"
+        f"> MarsFiles 01336.atmos_average.nc --split 0 90 -dim areo"
+        f"> MarsFiles 01336.atmos_average.nc --split -70 -dim lat"
         f"{Nclr}\n\n"
     )
 )
@@ -421,7 +424,7 @@ parser.add_argument('-norm', '--normalize', action=ExtAction,
         f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
         f"{Yellow}Generates a new file ending in ``_norm.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_diurn.nc -tide 6 -incl ps "
+        f"> MarsFiles 01336.atmos_diurn.nc -tide 6 -incl ps "
         f"-norm"
         f"{Nclr}\n\n"
     )
@@ -438,9 +441,9 @@ parser.add_argument('-add_trend', '--add_trend', action=ExtAction,
         f"``-hpt``, ``-bpt``).\n"
         f"{Yellow}Generates a new file ending in ``_trended.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_daily.nc -hpt 10. -add_trend\n"
-        f"> MarsFiles 00668.atmos_daily.nc -lpt 0.5 -add_trend\n"
-        f"> MarsFiles 00668.atmos_daily.nc -hpt 0.5 10. -add_trend"
+        f"> MarsFiles 01336.atmos_daily.nc -hpt 10. -add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -lpt 0.5 -add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -hpt 0.5 10. -add_trend"
         f"{Nclr}\n\n"
     )
 )
@@ -453,7 +456,7 @@ parser.add_argument('-recon', '--reconstruct', action=ExtAction,
         f"Reconstructs the first N harmonics.\n"
         f"{Yellow}Generates a new file ending in ``_reconstruct.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_diurn.nc -tide 6 -incl ps temp "
+        f"> MarsFiles 01336.atmos_diurn.nc -tide 6 -incl ps temp "
         f"-recon"
         f"{Nclr}\n\n"
     )
@@ -467,7 +470,7 @@ parser.add_argument('-incl', '--include', nargs='+',
         f"{Yellow}Overwrites existing target file. To override, use "
         f"-ext.{Nclr}\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_daily.nc -ba -incl ps temp ts"
+        f"> MarsFiles 01336.atmos_daily.nc -ba -incl ps temp ts"
         f"{Nclr}\n\n"
     )
 )
@@ -491,7 +494,7 @@ parser.add_argument('--debug', action='store_true',
         f"Use with any other argument to pass all Python errors and\n"
         f"status messages to the screen when running CAP.\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00668.atmos_average.nc -t '3 15' --debug"
+        f"> MarsFiles 01336.atmos_average.nc -t '3 15' --debug"
         f"{Nclr}\n\n"
     )
  )

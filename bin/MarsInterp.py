@@ -78,8 +78,8 @@ parser.add_argument('-t', '--interp_type', type=str, default='pstd',
     help=(
         f"Interpolation interp_: ``pstd``, ``zstd``, or ``zagl``.\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 00668.atmos_average.nc\n"
-        f"> MarsInterp 00668.atmos_average.nc -t pstd"
+        f"> MarsInterp 01336.atmos_average.nc\n"
+        f"> MarsInterp 01336.atmos_average.nc -t pstd"
         f"{Nclr}\n\n"
     )
 )
@@ -93,7 +93,7 @@ parser.add_argument('-v', '--vertical_grid', type=str, default=None,
         f"{Cyan}cp path/to/amesCAP/mars_templates/amescap_profile "
         f"~/.amescap_profile\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 00668.atmos_average.nc -t zstd -v phalf_mb"
+        f"> MarsInterp 01336.atmos_average.nc -t zstd -v phalf_mb"
         f"{Nclr}\n\n"
     )
 )
@@ -103,7 +103,7 @@ parser.add_argument('-incl', '--include', nargs='+',
         f"Only include the listed variables. Dimensions and 1D "
         f"variables are always included.\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 00668.atmos_daily.nc -incl temp ps ts"
+        f"> MarsInterp 01336.atmos_daily.nc -incl temp ps ts"
         f"{Nclr}\n\n"
     )
 )
@@ -113,7 +113,7 @@ parser.add_argument('-print', '--print_grid', action='store_true',
         f"Print the vertical grid to the screen. {Yellow}This does not "
         f"run the interpolation, it only prints grid information.\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 00668.atmos_average.nc -t pstd -v p44 -print"
+        f"> MarsInterp 01336.atmos_average.nc -t pstd -v p44 -print"
         f"{Nclr}\n\n"
     )
 )
@@ -139,7 +139,7 @@ parser.add_argument('--debug', action='store_true',
         f"Use with any other argument to pass all Python errors and\n"
         f"status messages to the screen when running CAP.\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 00668.atmos_average.nc -t pstd --debug"
+        f"> MarsInterp 01336.atmos_average.nc -t pstd --debug"
         f"{Nclr}\n\n"
     )
  )

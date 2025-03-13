@@ -73,9 +73,9 @@ parser.add_argument('directory_name', type=str, nargs='?',
         f"INERTCLDS\nNEWBASE_ACTIVECLDS\nACTIVECLDS_NCDF\n"
         f"{Red}MUST be used with either ``-f`` or ``-ls``.\n"
         f"{Green}Example:\n"
-        f"> MarsPull ACTIVECLDS -f fort.11_0730\n"
+        f"> MarsPull INERTCLDS -f fort.11_0690\n"
         f"{Blue}OR{Green}\n"
-        f"> MarsPull ACTIVECLDS -ls 90\n"
+        f"> MarsPull INERTCLDS -ls 90\n"
         f"{Nclr}\n\n"
     )
 )
@@ -84,7 +84,7 @@ parser.add_argument('-f', '--filename', nargs='+', type=str,
     help=(
         f"The name(s) of the file(s) to download.\n"
         f"{Green}Example:\n"
-        f"> MarsPull ACTIVECLDS -f fort.11_0730 fort.11_0731"
+        f"> MarsPull INERTCLDS -f fort.11_0690"
         f"{Nclr}\n\n"
     )
 )
@@ -96,8 +96,8 @@ parser.add_argument('-ls', '--ls', nargs='+', type=float,
         f"This only works on data in the {Yellow}ACTIVECLDS{Nclr} and "
         f"{Yellow}INERTCLDS{Nclr} folders.\n"
         f"{Green}Example:\n"
-        f"> MarsPull ACTIVECLDS -ls 90\n"
-        f"> MarsPull ACTIVECLDS -ls 180 360"
+        f"> MarsPull INERTCLDS -ls 90\n"
+        f"> MarsPull INERTCLDS -ls 90 180"
         f"{Nclr}\n\n"
     )
 )
@@ -109,7 +109,7 @@ parser.add_argument('--debug', action='store_true',
         f"Use with any other argument to pass all Python errors and\n"
         f"status messages to the screen when running CAP.\n"
         f"{Green}Example:\n"
-        f"> MarsPull ACTIVECLDS -ls 90 --debug"
+        f"> MarsPull INERTCLDS -ls 90 --debug"
         f"{Nclr}\n\n"
     )
  )

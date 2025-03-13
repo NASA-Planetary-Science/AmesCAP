@@ -291,7 +291,7 @@ parser.add_argument('-add', '--add_variable', nargs='+', default=[],
         f"Add a new variable to file. Variables that can be added are "
         f"listed below.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -add rho\n{Yellow}\n"
+        f"> MarsVars 01336.atmos_average.nc -add rho\n{Yellow}\n"
         f"{add_help(master_list)}\n"
         f"{Yellow}NOTE: MarsVars offers some support on interpolated\n"
         f"files, particularly if ``pfull3D`` and ``zfull`` are added \n"
@@ -308,7 +308,7 @@ parser.add_argument('-zdiff', '--differentiate_wrt_z', nargs='+',
         f"A new variable ``d_dz_var`` in [Unit/m] will be added to the "
         f"file.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -zdiff dst_mass_mom\n"
+        f"> MarsVars 01336.atmos_average.nc -zdiff dst_mass_mom\n"
         f"  {Blue}d_dz_dst_mass_mom is derived and added to the file"
         f"{Nclr}\n\n"
     )
@@ -321,7 +321,7 @@ parser.add_argument('-col', '--column_integrate', nargs='+', default=[],
         f"A new variable (``var_col``) in [kg/m2] will be added to the "
         f"file.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -col dst_mass_mom"
+        f"> MarsVars 01336.atmos_average.nc -col dst_mass_mom"
         f"  {Blue}dst_mass_mom_col is derived and added to the file"
         f"{Nclr}\n\n"
     )
@@ -333,7 +333,7 @@ parser.add_argument('-zd', '--zonal_detrend', nargs='+', default=[],
         f"A new a variable (``var_p``) (for prime) will be added to the"
         f" file.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -zd temp"
+        f"> MarsVars 01336.atmos_average.nc -zd temp"
         f"  {Blue}temp_p is derived and added to the file"
         f"{Nclr}\n\n"
     )
@@ -346,7 +346,7 @@ parser.add_argument('-to_dz', '--dp_to_dz', nargs='+', default=[],
         f"A new variable (``[variable]_dp_to_dz``) is added to the "
         f"file.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -to_dz temp\n"
+        f"> MarsVars 01336.atmos_average.nc -to_dz temp\n"
         f"  {Blue}temp_dp_to_dz is derived and added to the file"
         f"{Nclr}\n\n"
     )
@@ -359,7 +359,7 @@ parser.add_argument('-to_dp', '--dz_to_dp', nargs='+', default=[],
         f"A new variable (``[variable]_dz_to_dp``) is added to the "
         f"file.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -to_dp temp\n"
+        f"> MarsVars 01336.atmos_average.nc -to_dp temp\n"
         f"  {Blue}temp_dz_to_dp is derived and added to the file"
         f"{Nclr}\n\n"
     )
@@ -369,7 +369,7 @@ parser.add_argument('-rm', '--remove_variable', nargs='+', default=[],
     help=(
         f"Remove a variable from a file.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -rm ps"
+        f"> MarsVars 01336.atmos_average.nc -rm ps"
         f"{Nclr}\n\n"
     )
 )
@@ -379,8 +379,8 @@ parser.add_argument('-extract', '--extract_copy', nargs='+', default=[],
         f"Copy one or more variables from a file into a new file of "
         f"the same name with the appended extension: '_extract'.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -extract ps temp"
-        f"  {Blue}Creates 00668.atmos_average_extract.nc containing ps "
+        f"> MarsVars 01336.atmos_average.nc -extract ps temp"
+        f"  {Blue}Creates 01336.atmos_average_extract.nc containing ps "
         f"and temp as well as their dimensional variables (e.g., lat, "
         f"lon, lev, etc.)"
         f"{Nclr}\n\n"
@@ -393,7 +393,7 @@ parser.add_argument('-edit', '--edit_variable', default=None,
         f"Requires the use of one or more of the following flags:\n"
         f"``-rename``\n``-longname``\n``-unit``\n``-multiply``\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -edit ps -rename ps_mbar "
+        f"> MarsVars 01336.atmos_average.nc -edit ps -rename ps_mbar "
         f"-multiply 0.01 -longname 'Pressure scaled to mb' -unit 'mbar'"
         f"{Nclr}\n\n"
     )
@@ -406,7 +406,7 @@ parser.add_argument('-rename', '--rename', type=str, default=None,
     help=(
         f"Rename a variable. Requires ``-edit``.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -edit ps -rename ps_mbar\n"
+        f"> MarsVars 01336.atmos_average.nc -edit ps -rename ps_mbar\n"
         f"{Nclr}\n\n"
     )
 )
@@ -416,7 +416,7 @@ parser.add_argument('-longname', '--longname', type=str, default=None,
     help=(
         f"Change a variable's 'longname' attribute. Requires ``-edit``.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -edit ps -longname "
+        f"> MarsVars 01336.atmos_average.nc -edit ps -longname "
         f"'Pressure scaled to mb'"
         f"{Nclr}\n\n"
     )
@@ -427,7 +427,7 @@ parser.add_argument('-unit', '--unit', type=str, default=None,
     help=(
         f"Change a variable's unit text. Requires ``-edit``.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -edit ps -unit 'mbar'"
+        f"> MarsVars 01336.atmos_average.nc -edit ps -unit 'mbar'"
         f"{Nclr}\n\n"
     )
 )
@@ -437,7 +437,7 @@ parser.add_argument('-multiply', '--multiply', type=float, default=None,
     help=(
         f"Scale a variable's values. Requires ``-edit``.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -edit ps -multiply 0.01"
+        f"> MarsVars 01336.atmos_average.nc -edit ps -multiply 0.01"
         f"{Nclr}\n\n"
     )
 )
@@ -447,7 +447,7 @@ parser.add_argument('--debug',  action='store_true',
         f"Use with any other argument to pass all Python errors and\n"
         f"status messages to the screen when running CAP.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 00668.atmos_average.nc -add rho --debug"
+        f"> MarsVars 01336.atmos_average.nc -add rho --debug"
         f"{Nclr}\n\n"
     )
  )
@@ -461,28 +461,28 @@ if args.input_file:
 
 if args.rename and args.edit_variable is None:
     parser.error(f"{Red}The -rename argument requires -edit to be used "
-                 f"with it (e.g., MarsVars 00668.atmos_average.nc "
+                 f"with it (e.g., MarsVars 01336.atmos_average.nc "
                  f"-edit ps -rename ps_mbar)"
                  f"{Nclr}")
     exit()
 
 if args.longname and args.edit_variable is None:
     parser.error(f"{Red}The -longname argument requires -edit to be "
-                 f"used with it (e.g., MarsVars 00668.atmos_average.nc "
+                 f"used with it (e.g., MarsVars 01336.atmos_average.nc "
                  f"-edit ps -longname 'Pressure scaled to mb')"
                  f"{Nclr}")
     exit()
 
 if args.unit and args.edit_variable is None:
     parser.error(f"{Red}The -unit argument requires -edit to be used "
-                 f"with it (e.g., MarsVars 00668.atmos_average.nc "
+                 f"with it (e.g., MarsVars 01336.atmos_average.nc "
                  f"-edit ps -unit 'mbar')"
                  f"{Nclr}")
     exit()
 
 if args.multiply and args.edit_variable is None:
     parser.error(f"{Red}The -multiply argument requires -edit to be "
-                 f"used with it (e.g., MarsVars 00668.atmos_average.nc "
+                 f"used with it (e.g., MarsVars 01336.atmos_average.nc "
                  f"-edit ps -multiply 0.01)"
                  f"{Nclr}")
     exit()
