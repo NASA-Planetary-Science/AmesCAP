@@ -51,6 +51,7 @@ from amescap.Script_utils import (
 
 # Load generic Python Modules
 import sys          # System commands
+import sys          # System commands
 import argparse     # Parse arguments
 import os           # Access operating system functions
 import subprocess   # Run command-line commands
@@ -125,6 +126,31 @@ class ExtArgumentParser(argparse.ArgumentParser):
 
         return namespace
 
+import functools
+import traceback
+
+def debug_wrapper(func):
+    """
+    A decorator that wraps a function with error handling based on the 
+    --debug flag.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        global debug
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            if debug:
+                # In debug mode, show the full traceback
+                print(f"{Red}ERROR in {func.__name__}: {str(e)}{Nclr}")
+                traceback.print_exc()
+            else:
+                # In normal mode, show a clean error message
+                print(f"{Red}ERROR in {func.__name__}: {str(e)}\nUse "
+                      f"--debug for more information.{Nclr}")
+            return 1  # Error exit code
+    return wrapper
+
 # ======================================================================
 #                           ARGUMENT PARSER
 # ======================================================================
@@ -145,7 +171,7 @@ parser.add_argument('input_file', nargs='+',
 parser.add_argument('-bin', '--bin_files', nargs='+', type=str,
     choices=['fixed', 'diurn', 'average', 'daily'],
     help=(
-        f"Produce MGCM ``fixed``, ``diurn``, ``average`` and ``daily`` "
+        f"Produce MGCM 'fixed', 'diurn', 'average' and 'daily' "
         f"files from Legacy output:\n"
         f"  - ``fixed``  : static fields (e.g., topography)\n"
         f"  - ``daily``  : instantaneous data\n"
@@ -167,10 +193,10 @@ parser.add_argument('-c', '--concatenate', action='store_true',
         f"00334.atmos_average.nc 00668.atmos_average.nc\n"
         f"> MarsFiles *.atmos_average.nc -c\n"
         f"{Blue}Overwrites 00334.atmos_average.nc with concatenated "
-        f"files:\n"
+        f"files:{Green}\n"
         f"> ls\n"
         f"   00334.atmos_average.nc\n"
-        f"{Blue}To preserve original files, use [-ext --extension]:"
+        f"{Yellow}To preserve original files, use [-ext --extension]:"
         f"{Green}\n"
         f"> MarsFiles *.atmos_average.nc -c -ext _concatenated\n"
         f"{Blue}Produces 00334.atmos_average_concatenated.nc and "
@@ -189,7 +215,7 @@ parser.add_argument('-split', '--split', nargs='+', type=float,
         f"-dim.\nIf a file contains multiple Mars Years of data, the "
         f"function splits the file in the first Mars Year.\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_average.nc --split 0 90"
+        f"> MarsFiles 01336.atmos_average.nc --split 0 90\n"
         f"> MarsFiles 01336.atmos_average.nc --split 270\n"
         f"{Yellow}Use -dim to specify the dimension:{Green}\n"
         f"> MarsFiles 01336.atmos_average.nc --split 0 90 -dim lat"
@@ -281,7 +307,7 @@ parser.add_argument('-lpt', '--low_pass_temporal', action=ExtAction,
         f"to add the original linear trend to the amplitudes \n"
         f"\n{Yellow}Generates a new file ending in ``_lpt.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_daily.nc -lpt 0.5\n"
+        f"> MarsFiles 01336.atmos_daily.nc -lpt 0.75\n"
         f"{Nclr}\n\n"
     )
 )
@@ -292,13 +318,13 @@ parser.add_argument('-bpt', '--band_pass_temporal', action=ExtAction,
     nargs="+", type=float,
     help=(
         f"Temporal band-pass filtering"
-        f"specified by user.\nOnly works with 'daily' or 'average' files. Requires two "
-        f"cutoff frequencies in Sols.\n"
+        f"specified by user.\nOnly works with 'daily' or 'average' "
+        f"files. Requires two cutoff frequencies in Sols.\n"
         f"Data is detrended before filtering. Use ``--add_trend`` \n"
         f"to add the original linear trend to the amplitudes \n"
         f"\n{Yellow}Generates a new file ending in ``bpt.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_daily.nc -hpt 0.5 10.\n"
+        f"> MarsFiles 01336.atmos_daily.nc -bpt 0.75 10.\n"
         f"{Nclr}\n\n"
     )
 )
@@ -437,15 +463,15 @@ parser.add_argument('-add_trend', '--add_trend', action=ExtAction,
     parser=parser,
     nargs=0,
     help=(
-        f"Return filtered oscillation amplitudes with the linear trend added."
-        f"(Fast Fourier transform natively eliminate affine Y = at +  b  )\n"
+        f"Return filtered oscillation amplitudes with the linear trend "
+        f"added. Works with 'daily' and 'average' files.\n"
         f"For use with temporal filtering utilities (``-lpt``, "
         f"``-hpt``, ``-bpt``).\n"
         f"{Yellow}Generates a new file ending in ``_trended.nc``\n"
         f"{Green}Example:\n"
         f"> MarsFiles 01336.atmos_daily.nc -hpt 10. -add_trend\n"
-        f"> MarsFiles 01336.atmos_daily.nc -lpt 0.5 -add_trend\n"
-        f"> MarsFiles 01336.atmos_daily.nc -hpt 0.5 10. -add_trend"
+        f"> MarsFiles 01336.atmos_daily.nc -lpt 0.75 -add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -bpt 0.75 10. -add_trend"
         f"{Nclr}\n\n"
     )
 )
@@ -1032,6 +1058,7 @@ def process_time_shift(file_list):
 #                           MAIN PROGRAM
 # ======================================================================
 
+@debug_wrapper
 def main():
     global data_dir
     file_list = [f.name for f in args.input_file]
@@ -2227,4 +2254,5 @@ def ls2sol_1year(Ls_deg, offset=True, round10=True):
 # ======================================================================
 
 if __name__ == "__main__":
-    main()
+    exit_code = main()
+    sys.exit(exit_code)
