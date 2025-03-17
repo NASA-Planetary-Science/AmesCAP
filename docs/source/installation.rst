@@ -81,7 +81,7 @@ Install CAP from the `NASA Planetary Science GitHub <https://github.com/NASA-Pla
 
    cp amescap/mars_templates/amescap_profile ~/.amescap_profile # For pip
    # OR
-   cp opt/anaconda3/envs/amescap/mars_templates/amescap-profile ~/.amescap-profile # For conda
+   cp /opt/anaconda3/envs/amescap/mars_templates/amescap-profile ~/.amescap-profile # For conda
 
 5. Test your installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~

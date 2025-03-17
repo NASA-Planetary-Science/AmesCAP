@@ -43,22 +43,12 @@ parser = argparse.ArgumentParser(
     prog=('MarsPull'),
     description=(
         f"{Yellow}Uility for downloading NASA Ames Mars Global Climate "
-        f"Model output files from the NAS Data Portal at:"
-        f"{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}\n"
-        f"Requires the ``-id`` argument AND EITHER ``-f`` or ``-ls``."
+        f"Model output files from the NAS Data Portal at:\n"
+        f"{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}"
+        f"Requires ``-f`` or ``-ls``."
         f"{Nclr}\n\n"
     ),
     formatter_class=argparse.RawTextHelpFormatter
-)
-
-parser.add_argument('-list', '--list_files', action='store_true',
-    help=(
-        f"Return a list of all the files available for download from:\n"
-        f"{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}\n"
-        f"{Green}Example:\n"
-        f"> MarsPull -list"
-        f"{Nclr}\n\n"
-    )
 )
 
 parser.add_argument('directory_name', type=str, nargs='?',
@@ -67,15 +57,25 @@ parser.add_argument('directory_name', type=str, nargs='?',
         'ACTIVECLDS_NCDF'],
     help=(
         f"Selects the simulation directory from the "
-        f"NAS data portal:\n"
-        f"{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}\n"
-        f"Current options are:\n{Yellow}FV3BETAOUT1\nACTIVECLDS\n"
-        f"INERTCLDS\nNEWBASE_ACTIVECLDS\nACTIVECLDS_NCDF\n"
-        f"{Red}MUST be used with either ``-f`` or ``-ls``.\n"
+        f"NAS data portal ("
+        f"{Cyan}https://data.nas.nasa.gov/mcmcref/){Nclr}\n"
+        f"Current directory options are:\n{Yellow}FV3BETAOUT1, ACTIVECLDS, "
+        f"ACTIVECLDS, INERTCLDS, NEWBASE_ACTIVECLDS, ACTIVECLDS_NCDF\n"
+        f"{Red}MUST be used with either ``-f`` or ``-ls``\n"
         f"{Green}Example:\n"
         f"> MarsPull INERTCLDS -f fort.11_0690\n"
         f"{Blue}OR{Green}\n"
         f"> MarsPull INERTCLDS -ls 90\n"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument('-list', '--list_files', action='store_true',
+    help=(
+        f"Return a list of all the files available for download from "
+        f"{Cyan}https://data.nas.nasa.gov/mcmcref/{Nclr}\n"
+        f"{Green}Example:\n"
+        f"> MarsPull -list"
         f"{Nclr}\n\n"
     )
 )
