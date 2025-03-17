@@ -1473,7 +1473,7 @@ def except_message(debug,exception,varname,ifile,pre="",ext=""):
     else:
         print(f"{Red}***Error*** {str(exception)}")
 
-def check_bounds(values, min_val, max_val):
+def check_bounds(values, min_val, max_val, dx):
     """
     Check if all values in an array are within specified bounds.
     Exits program if any value is out of bounds.
@@ -1501,7 +1501,7 @@ def check_bounds(values, min_val, max_val):
             sys.exit(1)
         
         # Find any out-of-bounds values
-        mask_invalid = (values_array < min_val) | (values_array > max_val)
+        mask_invalid = (values_array < (min_val-dx)) | (values_array > (max_val+dx))
         
         if np.any(mask_invalid):
             # Get the invalid values
