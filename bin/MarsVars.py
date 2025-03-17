@@ -321,8 +321,8 @@ parser.add_argument('-col', '--column_integrate', nargs='+', default=[],
         f"A new variable (``var_col``) in [kg/m2] will be added to the "
         f"file.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 01336.atmos_average.nc -col dst_mass_mom"
-        f"  {Blue}dst_mass_mom_col is derived and added to the file"
+        f"> MarsVars 01336.atmos_average.nc -col dst_mass_mom\n"
+        f"{Blue}(derive and add dst_mass_mom_col to the file)"
         f"{Nclr}\n\n"
     )
 )
@@ -333,8 +333,8 @@ parser.add_argument('-zd', '--zonal_detrend', nargs='+', default=[],
         f"A new a variable (``var_p``) (for prime) will be added to the"
         f" file.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 01336.atmos_average.nc -zd temp"
-        f"  {Blue}temp_p is derived and added to the file"
+        f"> MarsVars 01336.atmos_average.nc -zd temp\n"
+        f"{Blue}(temp_p is added to the file)"
         f"{Nclr}\n\n"
     )
 )
@@ -347,7 +347,7 @@ parser.add_argument('-to_dz', '--dp_to_dz', nargs='+', default=[],
         f"file.\n"
         f"{Green}Example:\n"
         f"> MarsVars 01336.atmos_average.nc -to_dz temp\n"
-        f"  {Blue}temp_dp_to_dz is derived and added to the file"
+        f"{Blue}(temp_dp_to_dz is added to the file)"
         f"{Nclr}\n\n"
     )
 )
@@ -360,7 +360,7 @@ parser.add_argument('-to_dp', '--dz_to_dp', nargs='+', default=[],
         f"file.\n"
         f"{Green}Example:\n"
         f"> MarsVars 01336.atmos_average.nc -to_dp temp\n"
-        f"  {Blue}temp_dz_to_dp is derived and added to the file"
+        f"{Blue}(temp_dz_to_dp is added to the file)"
         f"{Nclr}\n\n"
     )
 )
@@ -379,10 +379,10 @@ parser.add_argument('-extract', '--extract_copy', nargs='+', default=[],
         f"Copy one or more variables from a file into a new file of "
         f"the same name with the appended extension: '_extract'.\n"
         f"{Green}Example:\n"
-        f"> MarsVars 01336.atmos_average.nc -extract ps temp"
-        f"  {Blue}Creates 01336.atmos_average_extract.nc containing ps "
-        f"and temp as well as their dimensional variables (e.g., lat, "
-        f"lon, lev, etc.)"
+        f"> MarsVars 01336.atmos_average.nc -extract ps temp\n"
+        f"{Blue}(Creates 01336.atmos_average_extract.nc containing ps "
+        f"and temp\nplus their dimensional variables [lat, "
+        f"lon, lev, etc.])"
         f"{Nclr}\n\n"
     )
 )

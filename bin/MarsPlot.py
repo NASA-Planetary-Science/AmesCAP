@@ -107,8 +107,8 @@ parser.add_argument('template_file', nargs='?',
 parser.add_argument('-i', '--inspect_file', nargs='?',
     type=argparse.FileType('rb'),
     help=(
-        f"Print the content of a netCDF file to the screen. This is a "
-        f"ncdump-like feature. Variables are sorted by dimension.\n"
+        f"Print the content of a netCDF file to the screen.\nVariables "
+        f"are sorted by dimension.\n"
         f"{Green}Example:\n"
         f"> MarsPlot -i 01336.atmos_daily.nc"
         f"{Nclr}\n\n"
@@ -138,10 +138,10 @@ parser.add_argument('-d', '--date', nargs=1, default=None,
 parser.add_argument('-sy', '--stack_years', action='store_true',
     default=False,
     help=(
-        f"Stack consecutive years of data on the same axes (e.g., Ls ="
-        f"0-360) in 1D time series plots.\nThis only works if ADD LINE "
-        f"is used in the Custom.in template to overplot multiple years "
-        f"of data.\nDefault is to plot in monotonically increasing "
+        f"Plot consecutive years of data over the same axes range (e.g."
+        f"Ls=0–360). For 1D time series plots.\nRequires ADD LINE "
+        f"in the Custom.in template (see template for instructions)."
+        f"\nDefault is to plot in monotonically increasing "
         f"format.\n"
         f"{Green}Example:\n"
         f"> MarsPlot Custom.in -sy"
@@ -196,7 +196,7 @@ parser.add_argument('-trim', '--trim_text', action='store_true',
     default=False,
     help=(
         f"Generate a file called Custom.in that provides templates "
-        f"for making plots with CAP without the commented instructions "
+        f"for making plots\nwith CAP without the instructions "
         f"at top of the file.\n"
         f"{Green}Example:\n"
         f"> MarsPlot -template -trim\n"
@@ -208,7 +208,7 @@ parser.add_argument('-trim', '--trim_text', action='store_true',
 parser.add_argument('-values', '--print_values', nargs='+',
     default=None,
     help=(
-        f"For use with ``-i --inspect``: print the values of the "
+        f"For use with ``-i --inspect``:\nPrint the values of the "
         f"specified variable to the screen.\n"
         f"{Green}Example:\n"
         f"> MarsPlot -i 01336.atmos_daily.nc -values temp\n"
@@ -221,7 +221,7 @@ parser.add_argument('-values', '--print_values', nargs='+',
 # to be used jointly with --inspect
 parser.add_argument('-stats', '--statistics', nargs='+', default=None,
     help=(
-        f"For use with ``-i --inspect``: print the min, mean, and max "
+        f"For use with ``-i --inspect``:\nPrint the min, mean, and max "
         f"values of the specified variable to the screen.\n"
         f"{Green}Example:\n"
         f"> MarsPlot -i 01336.atmos_daily.nc -stats temp\n"
@@ -233,8 +233,8 @@ parser.add_argument('-stats', '--statistics', nargs='+', default=None,
 
 parser.add_argument('--debug', action='store_true',
     help=(
-        f"Use with any other argument to pass all Python errors and\n"
-        f"status messages to the screen when running CAP.\n"
+        f"Use with any other argument to print all Python errors and "
+        f"status messages to the screen\n"
         f"{Green}Example:\n"
         f"> MarsPlot Custom.in --debug"
         f"{Nclr}\n\n"
