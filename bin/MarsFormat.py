@@ -37,6 +37,7 @@ from amescap.Script_utils import (
 )
 
 # Load generic Python modules
+import sys          # System commands
 import argparse     # Parse arguments
 import os           # Access operating system functions
 import re           # Regular expressions
@@ -51,6 +52,31 @@ from amescap.Script_utils import (
 from amescap.FV3_utils import layers_mid_point_to_boundary
 
 xr.set_options(keep_attrs=True)
+
+import functools
+import traceback
+
+def debug_wrapper(func):
+    """
+    A decorator that wraps a function with error handling based on the 
+    --debug flag.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        global debug
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            if debug:
+                # In debug mode, show the full traceback
+                print(f"{Red}ERROR in {func.__name__}: {str(e)}{Nclr}")
+                traceback.print_exc()
+            else:
+                # In normal mode, show a clean error message
+                print(f"{Red}ERROR in {func.__name__}: {str(e)}\nUse "
+                      f"--debug for more information.{Nclr}")
+            return 1  # Error exit code
+    return wrapper
 
 # ======================================================
 #                  ARGUMENT PARSER
@@ -144,6 +170,7 @@ if args.input_file:
 path2data = os.getcwd()
 ref_press = 725  # TODO hard-coded reference pressure
 
+@debug_wrapper
 def main():
     ext = ''  # Initialize empty extension
     if args.gcm_name not in ['marswrf', 'openmars', 'pcm', 'emars']:
@@ -577,5 +604,6 @@ def main():
             DS.to_netcdf(fullnameOUT,unlimited_dims=model.dim_time,format='NETCDF4_CLASSIC')
         print(f"{Cyan}{fullnameOUT} was created")
 
-if __name__ == '__main__':
-   main()
+if __name__ == "__main__":
+    exit_code = main()
+    sys.exit(exit_code)

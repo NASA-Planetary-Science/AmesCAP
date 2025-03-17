@@ -35,6 +35,32 @@ import requests     # Download data from website
 import re           # Regular expressions
 import numpy as np
 import requests     # make HTTP requests
+
+import functools
+import traceback
+
+def debug_wrapper(func):
+    """
+    A decorator that wraps a function with error handling based on the 
+    --debug flag.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        global debug
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            if debug:
+                # In debug mode, show the full traceback
+                print(f"{Red}ERROR in {func.__name__}: {str(e)}{Nclr}")
+                traceback.print_exc()
+            else:
+                # In normal mode, show a clean error message
+                print(f"{Red}ERROR in {func.__name__}: {str(e)}\nUse "
+                      f"--debug for more information.{Nclr}")
+            return 1  # Error exit code
+    return wrapper
+
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
@@ -196,6 +222,7 @@ def file_list(list_of_files):
 #                  MAIN PROGRAM
 # ======================================================
 
+@debug_wrapper
 def main():
     # validation
     if not args.list_files and not args.directory_name:
@@ -292,13 +319,6 @@ def main():
 #                  END OF PROGRAM
 # ======================================================
 
-if __name__ == '__main__':
-    try:
-        main()
-    except Exception as e:
-        if args.debug:
-            import traceback
-            traceback.print_exc()
-        else:
-            print(f"Error: {e}")
-        sys.exit(1)
+if __name__ == "__main__":
+    exit_code = main()
+    sys.exit(exit_code)
