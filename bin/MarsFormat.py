@@ -265,6 +265,7 @@ def main():
         elif model_type == 'openmars':
             # First save all variable FIELDNAM in attrs longname
             for var_name in DS.data_vars:
+                #TODO grab vars and dims here!
                 var = DS[var_name]
                 if 'FIELDNAM' in var.attrs:
                     var.attrs['long_name'] = var.attrs['FIELDNAM']
@@ -296,7 +297,8 @@ def main():
 
             DS = DS.assign(bk=(model.dim_phalf, np.array(bk)))
             DS = DS.assign(ak=(model.dim_phalf, np.zeros(len(DS[model.dim_pfull]) + 1)))
-
+            
+            print('dim phalf=',model.dim_phalf)
             # Update Variable Description & Longname
             DS['ak'].attrs['long_name']='(ADDED IN POST PROCESSING) pressure part of the hybrid coordinate'
             DS['ak'].attrs['units']='Pa'
