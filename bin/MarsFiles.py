@@ -166,16 +166,18 @@ parser.add_argument('-c', '--concatenate', action='store_true',
         f"> ls\n"
         f"00334.atmos_average.nc 00668.atmos_average.nc\n"
         f"> MarsFiles *.atmos_average.nc -c\n"
+        f"{Blue}Overwrites 00334.atmos_average.nc with concatenated "
+        f"files:\n"
         f"> ls\n"
         f"   00334.atmos_average.nc\n"
-        f"{Yellow}Overwrites 00334.atmos_average.nc with concatenated "
-        f"files. To override, use [-ext --extension]:{Green}\n"
+        f"{Blue}To preserve original files, use [-ext --extension]:"
+        f"{Green}\n"
         f"> MarsFiles *.atmos_average.nc -c -ext _concatenated\n"
+        f"{Blue}Produces 00334.atmos_average_concatenated.nc and "
+        f"preserves all other files:{Green}\n"
         f"> ls\n"
         f"   00334.atmos_average.nc 00668.atmos_average.nc "
         f"00334.atmos_average_concatenated.nc\n"
-        f"{Blue}(Produces 00334.atmos_average_concatenated.nc and "
-        f" preserves all other files)"
         f"{Nclr}\n\n"
     )
 )
@@ -358,8 +360,8 @@ parser.add_argument('-tide', '--tide_decomp', action=ExtAction,
         f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
         f"{Yellow}Generates a new file ending in ``_tide_decomp.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_diurn.nc -tide 2 -incl ps temp "
-        f"{Blue}(extracts semi-diurnal tide component of ps and temp "
+        f"> MarsFiles 01336.atmos_diurn.nc -tide 2 -incl ps temp\n"
+        f"{Blue}(extracts semi-diurnal tide component of ps and\ntemp "
         f"variables; 2 harmonics)"
         f"{Nclr}\n\n"
     )
@@ -376,10 +378,10 @@ parser.add_argument('-regrid', '--regrid_XY_to_match', action=ExtAction,
         f"to the same standard grid [zstd, zagl, pstd, etc.].\n"
         f"{Yellow}Generates a new file ending in ``_regrid.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 01336.atmos_average_pstd.nc -regrid "
-        f"01336.atmos_average_pstd_c48.nc"
-        f"{Yellow}NOTE: name of regridded file does not matter."
-        f"{Green}> MarsInterp sim1/01336.atmos_average_pstd.nc -regrid "
+        f"> MarsFiles 01336.atmos_average_pstd.nc -regrid "
+        f"01336.atmos_average_pstd_c48.nc\n"
+        f"{Yellow}NOTE: regridded file name does not matter:\n"
+        f"{Green}> MarsFiles sim1/01336.atmos_average_pstd.nc -regrid "
         f"sim2/01336.atmos_average_pstd.nc"
         f"{Nclr}\n\n"
     )
@@ -408,7 +410,7 @@ parser.add_argument('-dim', '--dim_select', type=str, default=None,
         f"dimension on which to trim the file.\nAcceptable values are "
         f"'areo', 'lev', 'lat', 'lon'. Default = 'areo'.\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_average.nc --split 0 90 -dim areo"
+        f"> MarsFiles 01336.atmos_average.nc --split 0 90 -dim areo\n"
         f"> MarsFiles 01336.atmos_average.nc --split -70 -dim lat"
         f"{Nclr}\n\n"
     )
@@ -482,8 +484,8 @@ parser.add_argument('-ext', '--extension', type=str, default=None,
         f"CAP to create a new file with the extension name specified "
         f"here.\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 00334.atmos_average.nc -c -ext _comb"
-        f"  {Blue}(produces 00334.atmos_average_comb.nc and "
+        f"> MarsFiles 00334.atmos_average.nc -c -ext _comb\n"
+        f"{Blue}(Produces 00334.atmos_average_comb.nc and "
         f"preserves all other files)"
         f"{Nclr}\n\n"
     )
@@ -710,7 +712,7 @@ def split_files(file_list, split_dim):
             # size areo = (time, tod, scalar_axis)
             reducing_dim = np.squeeze(fNcdf.variables['areo'][:, 0, :])
         else:
-            reducing_dim = np.squeeze(fNcdf.variables[split_dim][:])
+            reducing_dim = np.squeeze(fNcdf.variables[split_dim][:, 0])
     else:
         if split_dim == 'areo':
             # size areo = (time, scalar_axis)
@@ -718,24 +720,28 @@ def split_files(file_list, split_dim):
         else:
             reducing_dim = np.squeeze(fNcdf.variables[split_dim][:])
 
+    if split_dim == 'areo':
+        print(f"\n{Yellow}Areo MOD(360):\n{reducing_dim%360.}\n")
     print(f"\n{Yellow}All values in dimension:\n{reducing_dim}\n")
+
+    dx=np.abs(reducing_dim[1]-reducing_dim[0])
 
     bounds_in=bounds.copy()
     if split_dim == 'areo':
-        while (bounds[0] < reducing_dim[0]):
+        while (bounds[0] < (reducing_dim[0]-dx)):
             bounds += 360.
         if len(np.atleast_1d(bounds)) == 2:
             while (bounds[1] < bounds[0]):
                 bounds[1] += 360.
 
     if len(np.atleast_1d(bounds)) < 2:
-        a=check_bounds(bounds[0],reducing_dim[0],reducing_dim[-1])
+        a=check_bounds(bounds[0],reducing_dim[0],reducing_dim[-1],dx)
         indices = [(np.abs(reducing_dim - bounds[0])).argmin()]
         dim_out = reducing_dim[indices]
         print(f"Requested value = {bounds[0]}\n"
               f"Nearest value = {dim_out[0]}\n")
     else:
-        a=check_bounds(bounds,reducing_dim[0],reducing_dim[-1])
+        a=check_bounds(bounds,reducing_dim[0],reducing_dim[-1],dx)
         if ((split_dim == 'lon') & (bounds[1] < bounds[0])):
             indices = np.where((reducing_dim <= bounds[1]) | (reducing_dim >= bounds[0]))[0]
         else:

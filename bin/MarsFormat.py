@@ -74,8 +74,8 @@ parser.add_argument('-gcm', '--gcm_name', type=str,
         f"Acceptable types include 'openmars', 'marswrf', 'emars', "
         f"and 'pcm' \n"
         f"{Green}Example:\n"
-        f"> MarsFormat openmars_file.nc -gcm openmars"
-        f"{Blue}Creates openmars_file_daily.nc"
+        f"> MarsFormat openmars_file.nc -gcm openmars\n"
+        f"{Blue}(Creates openmars_file_daily.nc)"
         f"{Nclr}\n\n"
     )
 )
@@ -86,11 +86,10 @@ parser.add_argument('-ba', '--bin_average', nargs="?", const=5,
         f"Calculate 5-day averages from instantaneous data. Generates "
         f"MGCM-like 'average' files.\n"
         f"{Green}Example:\n"
-        f"> MarsFormat openmars_file.nc -gcm openmars -ba "
-        f"{Blue}Creates openmars_file_average.nc"
-        f"{Blue}5-sol bin{Green}\n"
-        f"> MarsFormat openmars_file.nc -gcm openmars -ba 10 "
-        f"{Blue}10-sol bin"
+        f"> MarsFormat openmars_file.nc -gcm openmars -ba\n"
+        f"{Blue}(Creates openmars_file_average.nc; 5-sol bin){Green}\n"
+        f"> MarsFormat openmars_file.nc -gcm openmars -ba 10\n"
+        f"{Blue}(10-sol bin)"
         f"{Nclr}\n\n"
     )
 )
@@ -101,11 +100,10 @@ parser.add_argument('-bd', '--bin_diurn', action='store_true',
         f"Calculate 5-day averages binned by hour from instantaneous "
         f"data. Generates MGCM-like 'diurn' files.\n"
         f"{Green}Example:\n"
-        f"> MarsFormat openmars_file.nc -gcm openmars -bd "
-        f"{Blue}Creates openmars_file_daily.nc"
-        f"{Blue}uses a 5-sol bin{Green}\n"
-        f"> MarsFormat openmars_file.nc -gcm openmars -bd -ba 10 "
-        f"{Blue}uses a 10-sol bin"
+        f"> MarsFormat openmars_file.nc -gcm openmars -bd\n"
+        f"{Blue}(Creates openmars_file_daily.nc;  5-sol bin){Green}\n"
+        f"> MarsFormat openmars_file.nc -gcm openmars -bd -ba 10\n"
+        f"{Blue}(10-sol bin)"
         f"{Nclr}\n\n"
     )
 )
@@ -118,8 +116,8 @@ parser.add_argument('-rn', '--retain_names', action='store_true',
         f"Preserves the names of the variables and dimensions in the"
         f"original file.\n"
         f"{Green}Example:\n"
-        f"> MarsFormat openmars_file.nc -gcm openmars -rn"
-        f"{Blue}Creates openmars_file_daily.nc"
+        f"> MarsFormat openmars_file.nc -gcm openmars -rn\n"
+        f"{Blue}(Creates openmars_file_daily.nc)"
         f"{Nclr}\n\n"
     )
 )
