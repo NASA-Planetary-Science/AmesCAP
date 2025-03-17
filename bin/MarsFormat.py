@@ -264,14 +264,13 @@ def main():
         # ==============================================================
         elif model_type == 'openmars':
             # First save all variable FIELDNAM in attrs longname
-            for var_name in DS.data_vars:
-                #TODO grab vars and dims here!
+            var_list= list(DS.data_vars)+list(DS.coords)
+            for var_name in var_list:
                 var = DS[var_name]
                 if 'FIELDNAM' in var.attrs:
                     var.attrs['long_name'] = var.attrs['FIELDNAM']
                 if 'UNITS' in var.attrs:
                     var.attrs['units'] = var.attrs['UNITS']
-
 
             # Define Coordinates for New DataFrame
             time        = DS[model.dim_time]         # minutes since simulation start [m]
@@ -280,8 +279,8 @@ def main():
 
             DS = DS.assign(pfull=DS[model.dim_pfull]*ref_press)
 
-            DS['pfull'].attrs['long_name']='(MODIFIED IN POST-PROCESSING) ' + DS['lev'].attrs['FIELDNAM']
-            DS['pfull'].attrs['long_name']='Pa'
+            DS['pfull'].attrs['long_name']='(ADDED POST-PROCESSING) reference pressure'
+            DS['pfull'].attrs['units']='Pa'
 
             # add ak,bk as variables
             # add p_half dimensions as vertical grid coordinate
@@ -298,7 +297,7 @@ def main():
             DS = DS.assign(bk=(model.dim_phalf, np.array(bk)))
             DS = DS.assign(ak=(model.dim_phalf, np.zeros(len(DS[model.dim_pfull]) + 1)))
             
-            print('dim phalf=',model.dim_phalf)
+            
             # Update Variable Description & Longname
             DS['ak'].attrs['long_name']='(ADDED IN POST PROCESSING) pressure part of the hybrid coordinate'
             DS['ak'].attrs['units']='Pa'
@@ -538,7 +537,7 @@ def main():
 
             # initialize the new dataset
             DS_diurn = None
-
+         
             # loop through coarsened grid, slicing time dimension in 5 sol groups
             for i in range(0, int(days/nday)):
 
@@ -560,12 +559,19 @@ def main():
                     DS_diurn = idx
                 else:
                     DS_diurn = xr.concat([DS_diurn, idx], dim=model.dim_time)
-
+            
+            # ==== Overwrite the ak, bk arrays=== [AK]
+            #For some reason I can't track down why the ak('phalf') and bk('phalf') 
+            # turn into ak ('time', 'time_of_day_12', 'phalf'), which messes
+            # the pressure interpolation. 
+            DS_diurn['ak']=DS['ak']
+            DS_diurn['bk']=DS['bk']
+            
             # replace the time dimension with the time dimension from DS_average
-            DS_time=DS[model.dim_time]
-            DS_time_avg= DS_time.coarsen(**{model.dim_time:combinedN}).mean()
+            time_DS=DS[model.dim_time]
+            time_avg_DS= time_DS.coarsen(**{model.dim_time:combinedN}).mean()
 
-            DS_diurn[model.dim_time] = DS_time_avg[model.dim_time]
+            DS_diurn[model.dim_time] = time_avg_DS[model.dim_time]
             # Update the time coordinate attribute
             DS_diurn[model.dim_time].attrs['long_name'] = 'time averaged over %s sols'%(nday)
 
