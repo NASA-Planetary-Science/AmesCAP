@@ -6,7 +6,7 @@ products. The MGCM is the NASA Ames Mars Global Climate Model developed
 and maintained by the Mars Climate Modeling Center (MCMC). The MGCM 
 data repository is available at data.nas.nasa.gov/mcmc.
 
-The executable requires 2 arguments:
+The executable requires two arguments:
 
     * ``[input_file]``         The file to be transformed
     * ``[-gcm --gcm_name]``    The GCM from which the file originates
@@ -17,7 +17,7 @@ and optionally accepts:
     * ``[-ba, --bin_average]`` Bin non-MGCM files like 'average' files
     * ``[-bd, --bin_diurn]``   Bin non-MGCM files like 'diurn' files
 
-Third-party Requirements:
+Third-party requirements:
 
     * ``numpy``
     * ``netCDF4``

@@ -147,7 +147,7 @@ args = parser.parse_args()
 # ======================================================
 
 
-saveDir = (f"{os.getcwd()}/")
+save_dir = (f"{os.getcwd()}/")
 
 # available files by Ls:
 Ls_ini = np.array([
@@ -166,52 +166,54 @@ Ls_end = np.array([
     310, 316, 321, 327, 333, 338, 344, 349, 354, 0
 ])
 
-
-
-def download(url, filename):
+def download(url, file_name):
     """
     Downloads a file from the NAS Data Portal (data.nas.nasa.gov).
     
-    :param url: The url to download, e.g   'https://data.nas.nasa.gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_Ls000_Ls004.nc'
+    :param url: The url to download from, e.g 'https://data.nas.nasa.\
+        gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_\
+            Ls000_Ls004.nc'
     :type url: str
     
-    :param filename: The local filename e.g  '/lou/la4/akling/Data/LegacyGCM_Ls000_Ls004.nc'
-    :type filename: str
+    :param file_name: The local file_name e.g  '/lou/la4/akling/Data/L\
+        egacyGCM_Ls000_Ls004.nc'
+    :type file_name: str
 
-    :return: The requested file(s), downloaded and saved to the current \
-    directory.
+    :return: The requested file(s), downloaded and saved to the \
+        current directory.
 
     :raises FileNotFoundError: A file-not-found error.
 
     """
 
-    _ , fname=os.path.split(filename)
+    _, fname = os.path.split(file_name)
     response = requests.get(url, stream=True)
     total = response.headers.get('content-length')
 
     if response.status_code == 404:
-        print('Error during download, error code is: ',response.status_code)
+        print(f'Error during download, error code is: {response.status_code}')
     else:
-
-        #If we have access to the size of the file, return progress bar
         if total is not None:
-            with open(filename, 'wb') as f:
+            # If file size is known, return progress bar
+            with open(file_name, 'wb') as f:
                 downloaded = 0
-                if total :total = int(total)
-                for data in response.iter_content(chunk_size=max(int(total/1000), 1024*1024)):
+                if total:
+                    total = int(total)
+                for data in response.iter_content(
+                    chunk_size = max(int(total/1000), 1024*1024)
+                    ):
                     downloaded += len(data)
                     f.write(data)
                     status = int(50*downloaded/total)
-                    sys.stdout.write(f"\r[{'#'*status}{'.'*(50-status)}]")
+                    sys.stdout.write(f"\r[{'#'*status}{'.'*(50 - status)}]")
                     sys.stdout.flush()
             sys.stdout.write('\n')
         else:
-
-            #Header is unknown yet, skip the use of a progress bar
-            print('Downloading %s ...'%(fname))
-            with open(filename, 'wb')as f:
+            # If file size is unknown, skip progress bar
+            print(f"Downloading {fname}...")
+            with open(file_name, 'wb')as f:
                 f.write(response.content)
-            print('%s Done'%(fname))
+            print(f"{fname} Done")
 
 def file_list(list_of_files):
     print("Available files:")
@@ -231,18 +233,26 @@ def main():
         
     if args.list_files:
         # Send an HTTP GET request to the URL and store the response.
-        legacy_data = requests.get('https://data.nas.nasa.gov/mcmcref/legacygcm/')
-        fv3_data = requests.get('https://data.nas.nasa.gov/mcmcref/fv3betaout1/')
+        legacy_data = requests.get(
+            'https://data.nas.nasa.gov/mcmcref/legacygcm/'
+            )
+        fv3_data = requests.get(
+            'https://data.nas.nasa.gov/mcmcref/fv3betaout1/'
+            )
 
-        # Access the text content of the response, which contains the webpage's HTML.
+        # Access the text content of the response, which contains the 
+        # webpage's HTML.
         legacy_dir_text = legacy_data.text
         fv3_dir_text = fv3_data.text
 
         # Search for the URLs beginning with the below string
-        legacy_dir_search = "https://data\.nas\.nasa\.gov/legacygcm/legacygcmdata/"
+        legacy_dir_search = (
+            "https://data\.nas\.nasa\.gov/legacygcm/legacygcmdata/"
+            )
 
         legacy_urls = re.findall(
-            fr"{legacy_dir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+", legacy_dir_text
+            fr"{legacy_dir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+", 
+            legacy_dir_text
             )
 
         print("Available directories:")
@@ -253,65 +263,82 @@ def main():
         legacy_data = requests.get(legacy_urls[0])
         legacy_dir_text = legacy_data.text
 
-        legacy_files_available = re.findall(r'download="(fort\.11_[0-9]+)"', legacy_dir_text)
-        fv3_files_available = re.findall(r'href="[^"]*\/([^"\/]+\.nc)"', fv3_dir_text)
-
+        legacy_files_available = re.findall(r'download="(fort\.11_[0-9]+)"', 
+                                            legacy_dir_text)
+        fv3_files_available = re.findall(r'href="[^"]*\/([^"\/]+\.nc)"', 
+                                         fv3_dir_text)
 
         file_list(legacy_files_available)
         file_list(fv3_files_available)
 
     if args.directory_name:
         portal_dir=args.directory_name
-        if portal_dir in ['ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS', 'ACTIVECLDS_NCDF']:
-            url_requested="https://data.nas.nasa.gov/legacygcm/legacygcmdata/"+portal_dir+'/'
+        if portal_dir in [
+            'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS', 'ACTIVECLDS_NCDF'
+            ]:
+            requested_url = (
+                "https://data.nas.nasa.gov/legacygcm/legacygcmdata/"
+                + portal_dir 
+                + "/"
+                )
         elif portal_dir in ['FV3BETAOUT1']:
-            url_requested="https://data.nas.nasa.gov/legacygcm/fv3betaout1data/"
+            requested_url = (
+                "https://data.nas.nasa.gov/legacygcm/fv3betaout1data/"
+                )
 
         if not (args.ls or args.filename):
             prYellow("ERROR No file requested. Use [-ls --ls] or "
                      "[-f --filename] to specify a file to download.")
-            sys.exit(1)  # Use sys.exit(1) to return a non-zero exit code
+            sys.exit(1)  # Return a non-zero exit code
             
-        if args.ls :
-            data_input=np.asarray(args.ls)
-            if len(data_input)==1: #query only  the file that contains this Ls
-                i_start=np.argmin(np.abs(Ls_ini-data_input))
-                if data_input<Ls_ini[i_start]:i_start-=1
-                num_files=np.arange(i_start,i_start+1)
+        if args.ls:
+            data_input = np.asarray(args.ls)
+            if len(data_input) == 1:
+                # Query the file that contains this Ls
+                closest_index = np.argmin(np.abs(Ls_ini - data_input))
+                if data_input < Ls_ini[closest_index]:
+                    closest_index -= 1
+                file_list = np.arange(closest_index, closest_index + 1)
 
-            elif len(data_input)==2: #start stop  is provided
-                i_start=np.argmin(np.abs(Ls_ini-data_input[0]))
-                if data_input[0]<Ls_ini[i_start]:i_start-=1
+            elif len(data_input) == 2:
+                # Query files within this range of Ls
+                i_start = np.argmin(np.abs(Ls_ini - data_input[0]))
+                if data_input[0] < Ls_ini[i_start]:
+                    i_start -= 1
 
-                i_end=np.argmin(np.abs(Ls_end-data_input[1]))
-                if data_input[1]>Ls_end[i_end]:i_end+=1
+                i_end = np.argmin(np.abs(Ls_end - data_input[1]))
+                if data_input[1] > Ls_end[i_end]:
+                    i_end += 1
 
-                num_files=np.arange(i_start,i_end+1)
-            prCyan(f"Saving {len(num_files)} file(s) to {saveDir}")
-            for ii in num_files:
-                #Legacy .nc files
-                if portal_dir=='ACTIVECLDS_NCDF':
-                    file_name='LegacyGCM_Ls%03d_Ls%03d.nc'%(Ls_ini[ii],Ls_end[ii])
-                #fort.11 files
+                file_list = np.arange(i_start, i_end + 1)
+            
+            prCyan(f"Saving {len(file_list)} file(s) to {save_dir}")
+            
+            for ii in file_list:
+                if portal_dir == 'ACTIVECLDS_NCDF':
+                    # Legacy .nc files
+                    file_name = (
+                        f"LegacyGCM_Ls{Ls_ini[ii]:03d}_Ls{Ls_end[ii]:03d}.nc"
+                        )
                 else:
-                    file_name='fort.11_%04d'%(670+ii)
+                    # fort.11 files
+                    file_name = f"fort.11_{670+ii:04d}"
 
-                url = url_requested+file_name
-                filename=saveDir+file_name
-                #print('Downloading '+ file_name+ '...')
-                print('Downloading '+ url+ '...')
-                download(url,filename)
+                url = requested_url + file_name
+                file_name = save_dir + file_name
+                print(f"Downloading {url}...")
+                download(url, file_name)
 
         elif args.filename:
-            f_input=np.asarray(args.filename)
-            for ff in f_input :
-                url = url_requested+ff
-                filename=saveDir+ff
-                print('Downloading '+ url+ '...')#ff
-                download(url,filename)
+            requested_files = np.asarray(args.filename)
+            for f in requested_files:
+                url = requested_url + f
+                file_name = save_dir + f
+                print(f"Downloading {url}...")
+                download(url, file_name)
                 
     elif not args.list_files:
-        # If no directory is provided and it's not a list files request
+        # If no directory is provided and its not a -list request
         prYellow("ERROR: A directory must be specified unless using -list.")
         sys.exit(1)
         
