@@ -88,7 +88,7 @@ parser.add_argument('-t', '--interp_type', type=str, default='pstd',
 
 parser.add_argument('-v', '--vertical_grid', type=str, default=None,
     help=(
-        f"Layer IDs as defined in ``amescap_profile``. For first "
+        f"Layer IDs as defined in ``amescap_profile``.\nFor first "
         f"time use, copy ``amescap_profile`` to your home directory:\n"
         f"{Cyan}cp path/to/amesCAP/mars_templates/amescap_profile "
         f"~/.amescap_profile\n"
@@ -110,7 +110,7 @@ parser.add_argument('-incl', '--include', nargs='+',
 
 parser.add_argument('-print', '--print_grid', action='store_true',
     help=(
-        f"Print the vertical grid to the screen. {Yellow}This does not "
+        f"Print the vertical grid to the screen.\n{Yellow}This does not "
         f"run the interpolation, it only prints grid information.\n"
         f"{Green}Example:\n"
         f"> MarsInterp 01336.atmos_average.nc -t pstd -v p44 -print"
@@ -128,8 +128,8 @@ parser.add_argument('-ext', '--extension', type=str, default=None,
         f"here.\n"
         f"{Green}Example:\n"
         f"> MarsInterp 00334.atmos_average.nc -t pstd -ext _dflt_levs\n"
-        f"  {Blue} produces 00334.atmos_average_dflt_levs.nc and "
-        f"preserves all other files."
+        f"{Blue}(Produces 00334.atmos_average_dflt_levs.nc and "
+        f"preserves all other files)"
         f"{Nclr}\n\n"
     )
 )
