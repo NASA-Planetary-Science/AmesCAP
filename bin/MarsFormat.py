@@ -190,11 +190,11 @@ def main():
     file_list = [f.name for f in args.input_file]
     model_type = args.gcm_name  # e.g. 'legacy'
     for filei in file_list:
-        # Add path unless full path is provided
-        if '/' not in filei:
-            fullnameIN = path2data + '/' + filei
-        else:
+        # Use os.path.join for platform-independent path handling
+        if os.path.isabs(filei):
             fullnameIN = filei
+        else:
+            fullnameIN = os.path.join(path2data, filei)
 
         print('Processing...')
         # Load model variables, dimensions
@@ -542,7 +542,8 @@ def main():
             DS_average[model.dim_time].attrs['long_name'] = 'time averaged over %s sols'%(nday)
 
             # Create New File, set time dimension as unlimitted
-            fullnameOUT = fullnameIN[:-3]+ext+'.nc'
+            base_name = os.path.splitext(fullnameIN)[0]
+            fullnameOUT = f"{base_name}{ext}.nc"
             DS_average.to_netcdf(fullnameOUT,unlimited_dims=model.dim_time,format='NETCDF4_CLASSIC')
 
 
