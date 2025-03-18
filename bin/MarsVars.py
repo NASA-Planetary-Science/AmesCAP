@@ -479,6 +479,8 @@ parser.add_argument('--debug',  action='store_true',
  )
 
 args = parser.parse_args()
+debug = args.debug
+
 if args.input_file:
     for file in args.input_file:
         if not re.search(".nc", file.name):

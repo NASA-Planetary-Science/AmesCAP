@@ -268,6 +268,7 @@ parser.add_argument('--debug', action='store_true',
 
 # Handle mutually in/exclusive arguments (e.g., -sy requires Custom.in)
 args = parser.parse_args()
+debug = args.debug
 
 if args.template_file:
     if not (re.search(".in", args.template_file.name) or re.search(".nc", args.template_file.name)):

@@ -135,6 +135,7 @@ parser.add_argument('--debug', action='store_true',
  )
 
 args = parser.parse_args()
+debug = args.debug
 
 if args.sol is None and args.ls is None:
     parser.error(f"{Red}MarsCalendar requires either ``[-sol --sol]`` or "
