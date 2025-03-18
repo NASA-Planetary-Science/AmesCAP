@@ -52,7 +52,7 @@ jobs:
       - name: Set up AmesCAP configuration
         run: |
           # Create the necessary config file from the template
-          cp AmesCAP/mars_templates/amescap_profile ~/.amescap_profile
+          cp mars_templates/amescap_profile ~/.amescap_profile
     
       # Print out environment info
       - name: Show environment info
