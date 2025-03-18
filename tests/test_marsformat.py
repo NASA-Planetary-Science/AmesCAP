@@ -21,9 +21,8 @@ class TestMarsFormat(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test environment"""
-        # Create a temporary directory for test files
-        cls.test_dir = os.path.join(os.path.expanduser('~'), 'MarsFormat_test')
-        os.makedirs(cls.test_dir, exist_ok=True)
+        # Create a temporary directory for test files instead of a fixed path
+        cls.test_dir = tempfile.mkdtemp(prefix='MarsFormat_test_')
         
         # Project root directory
         cls.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
