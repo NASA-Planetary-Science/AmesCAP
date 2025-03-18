@@ -59,7 +59,7 @@ parser.add_argument('directory_name', type=str, nargs='?',
         f"Selects the simulation directory from the "
         f"NAS data portal ("
         f"{Cyan}https://data.nas.nasa.gov/mcmcref/){Nclr}\n"
-        f"Current directory options are:\n{Yellow}FV3BETAOUT1, ACTIVECLDS, "
+        f"Current directory options are:\n{Yellow}FV3BETAOUT1, "
         f"ACTIVECLDS, INERTCLDS, NEWBASE_ACTIVECLDS, ACTIVECLDS_NCDF\n"
         f"{Red}MUST be used with either ``-f`` or ``-ls``\n"
         f"{Green}Example:\n"
@@ -145,10 +145,10 @@ Ls_end = np.array([
 def download(url, filename):
     """
     Downloads a file from the NAS Data Portal (data.nas.nasa.gov).
-    
+
     :param url: The url to download, e.g   'https://data.nas.nasa.gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_Ls000_Ls004.nc'
     :type url: str
-    
+
     :param filename: The local filename e.g  '/lou/la4/akling/Data/LegacyGCM_Ls000_Ls004.nc'
     :type filename: str
 
@@ -201,7 +201,7 @@ def main():
     if not args.list_files and not args.directory_name:
         print("Error: You must specify either -list or a directory.")
         sys.exit(1)
-        
+
     if args.list_files:
         # Send an HTTP GET request to the URL and store the response.
         legacy_data = requests.get('https://data.nas.nasa.gov/mcmcref/legacygcm/')
@@ -244,7 +244,7 @@ def main():
             prYellow("ERROR No file requested. Use [-ls --ls] or "
                      "[-f --filename] to specify a file to download.")
             sys.exit(1)  # Use sys.exit(1) to return a non-zero exit code
-            
+
         if args.ls :
             data_input=np.asarray(args.ls)
             if len(data_input)==1: #query only  the file that contains this Ls
@@ -282,12 +282,12 @@ def main():
                 filename=saveDir+ff
                 print('Downloading '+ url+ '...')#ff
                 download(url,filename)
-                
+
     elif not args.list_files:
         # If no directory is provided and it's not a list files request
         prYellow("ERROR: A directory must be specified unless using -list.")
         sys.exit(1)
-        
+
 # ======================================================
 #                  END OF PROGRAM
 # ======================================================

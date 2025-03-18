@@ -2278,13 +2278,14 @@ def time_shift_calc(array, lon, timeo, timex=None):
     nsf = float(nsteps)
 
     timeo = np.squeeze(timeo)
-
+   
     # Array dimensions for output
     if timex is None:
         # Time shift all local times
         nsteps_out = nsteps
     else:
         nsteps_out = len(timex)
+        
 
     # Assuming ``time`` is the last dimension, check if it is a local
     # time ``timex``. If not, reshape the array into
@@ -2310,7 +2311,7 @@ def time_shift_calc(array, lon, timeo, timex=None):
         recl = 1
 
     array = np.reshape(array, (id, recl, nsteps))
-
+    
     # Create output array
     narray = np.zeros((id, recl, nsteps_out))
 
@@ -2370,6 +2371,7 @@ def time_shift_calc(array, lon, timeo, timex=None):
         for i in range(id):
             # Number of longitudes
             im = np.int32(imm[i, nd]) % 24
+            print('im=',im)
             ipa = np.int32(ipp[i, nd])
             frac = fraction[i, nd]
             narray[i, :, nd] = ((1.-frac) * array[i, :, im]
