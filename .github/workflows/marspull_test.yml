@@ -10,6 +10,13 @@ on:
       - '.github/workflows/marspull_test.yml'
   # Allow manual triggering of the workflow
   workflow_dispatch:
+  # Trigger on pull requests that modify MarsFormat or tests
+  pull_request:
+    branches: [ devel ]
+    paths:
+      - 'bin/MarsPull.py'
+      - 'tests/test_marspull.py'
+      - '.github/workflows/marspull_test.yml'
 
 jobs:
   test:
