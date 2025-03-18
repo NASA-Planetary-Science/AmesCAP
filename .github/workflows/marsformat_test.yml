@@ -49,13 +49,18 @@ jobs:
       - name: Install package
         run: pip install -e .
       
+      - name: Set up AmesCAP configuration
+        run: |
+          # Create the necessary config file from the template
+          cp AmesCAP/mars_templates/amescap_profile ~/.amescap_profile
+    
       # Print out environment info
       - name: Show environment info
         run: |
-            python -c "import os, sys, numpy, netCDF4, xarray; print(f'Python: {sys.version}, NumPy: {numpy.__version__}, NetCDF4: {netCDF4.__version__}, xarray: {xarray.__version__}')"
-            echo "Working directory: $(pwd)"
-            echo "Home directory: $HOME"
-            echo "Environment variables: $(env)"
+          python -c "import os, sys, numpy, netCDF4, xarray; print(f'Python: {sys.version}, NumPy: {numpy.__version__}, NetCDF4: {netCDF4.__version__}, xarray: {xarray.__version__}')"
+          echo "Working directory: $(pwd)"
+          echo "Home directory: $HOME"
+          echo "Environment variables: $(env)"
             
       # Run the tests
       - name: Run MarsFormat tests
