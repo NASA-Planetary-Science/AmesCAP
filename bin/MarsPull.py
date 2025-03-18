@@ -216,7 +216,7 @@ def download(url, file_name):
                 f.write(response.content)
             print(f"{fname} Done")
 
-def file_list(list_of_files):
+def print_file_list(list_of_files):
     print("Available files:")
     for file in list_of_files:
         print(file)
@@ -269,8 +269,8 @@ def main():
         fv3_files_available = re.findall(r'href="[^"]*\/([^"\/]+\.nc)"', 
                                          fv3_dir_text)
 
-        file_list(legacy_files_available)
-        file_list(fv3_files_available)
+        print_file_list(legacy_files_available)
+        print_file_list(fv3_files_available)
 
     if args.directory_name:
         portal_dir=args.directory_name
