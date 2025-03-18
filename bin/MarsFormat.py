@@ -178,6 +178,11 @@ def main():
         print(f"{Yellow}***Notice***  No operation requested. Use '-gcm' and specify openmars, marswrf, pcm, emars")
         exit()  # Exit cleanly
 
+    print(f"Running MarsFormat with args: {args}")
+    print(f"Current working directory: {os.getcwd()}")
+    print(f"Files in input_file: {[f.name for f in args.input_file]}")
+    print(f"File exists check: {all(os.path.exists(f.name) for f in args.input_file)}")
+
     path2data = os.getcwd()
 
     # Load all of the netcdf files
