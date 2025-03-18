@@ -50,7 +50,12 @@ jobs:
     # Install the package in editable mode
     - name: Install package
       run: pip install -e .
-    
+      
+    # Set CI environment variable
+    - name: Set CI environment variable
+      run: |
+        echo "CI=true" >> $GITHUB_ENV
+
     # Run the tests
     - name: Run MarsPull tests
       run: |
