@@ -125,6 +125,7 @@ parser.add_argument('-bd', '--bin_diurn', action='store_true',
     help=(
         f"Calculate 5-day averages binned by hour from instantaneous "
         f"data. Generates MGCM-like 'diurn' files.\n"
+        f"Works on non-MGCM files only.\n"
         f"{Green}Example:\n"
         f"> MarsFormat openmars_file.nc -gcm openmars -bd\n"
         f"{Blue}(Creates openmars_file_daily.nc;  5-sol bin){Green}\n"
@@ -178,17 +179,22 @@ def main():
         print(f"{Yellow}***Notice***  No operation requested. Use '-gcm' and specify openmars, marswrf, pcm, emars")
         exit()  # Exit cleanly
 
+    print(f"Running MarsFormat with args: {args}")
+    print(f"Current working directory: {os.getcwd()}")
+    print(f"Files in input_file: {[f.name for f in args.input_file]}")
+    print(f"File exists check: {all(os.path.exists(f.name) for f in args.input_file)}")
+
     path2data = os.getcwd()
 
     # Load all of the netcdf files
     file_list = [f.name for f in args.input_file]
     model_type = args.gcm_name  # e.g. 'legacy'
     for filei in file_list:
-        # Add path unless full path is provided
-        if '/' not in filei:
-            fullnameIN = path2data + '/' + filei
-        else:
+        # Use os.path.join for platform-independent path handling
+        if os.path.isabs(filei):
             fullnameIN = filei
+        else:
+            fullnameIN = os.path.join(path2data, filei)
 
         print('Processing...')
         # Load model variables, dimensions
@@ -536,7 +542,8 @@ def main():
             DS_average[model.dim_time].attrs['long_name'] = 'time averaged over %s sols'%(nday)
 
             # Create New File, set time dimension as unlimitted
-            fullnameOUT = fullnameIN[:-3]+ext+'.nc'
+            base_name = os.path.splitext(fullnameIN)[0]
+            fullnameOUT = f"{base_name}{ext}.nc"
             DS_average.to_netcdf(fullnameOUT,unlimited_dims=model.dim_time,format='NETCDF4_CLASSIC')
 
 

@@ -8,11 +8,9 @@ on:
       - 'bin/MarsPull.py'
       - 'tests/test_marspull.py'
       - '.github/workflows/marspull_test.yml'
-
   # Allow manual triggering of the workflow
   workflow_dispatch:
-
-  # Trigger on pull requests that modify MarsPull or tests
+  # Trigger on pull requests that modify MarsFormat or tests
   pull_request:
     branches: [ devel ]
     paths:
@@ -25,7 +23,7 @@ jobs:
     # Run on multiple OS and Python versions for comprehensive testing
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ['3.9', '3.10', '3.11']
     
     runs-on: ${{ matrix.os }}
@@ -42,6 +40,7 @@ jobs:
     
     # Install dependencies
     - name: Install dependencies
+      shell: bash
       run: |
         python -m pip install --upgrade pip
         pip install requests numpy
@@ -53,5 +52,4 @@ jobs:
     
     # Run the tests
     - name: Run MarsPull tests
-      run: |
-        python -m unittest tests/test_marspull.py
+      run: python -m unittest -v tests/test_marspull.py
