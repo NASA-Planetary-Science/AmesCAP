@@ -159,6 +159,7 @@ parser.add_argument('--debug', action='store_true',
  )
 
 args = parser.parse_args()
+debug = args.debug
 
 if args.input_file:
     for file in args.input_file:
@@ -268,11 +269,10 @@ def main():
                 if all(key in DS for key in ['T', 'T0', 'CP', 'R_D', 'P0', 'PB']):
                     gamma = DS.CP / (DS.CP - DS.R_D)
                     pfull3D = DS.P_TOP + DS.PB[0,:]
-                    temp = (DS.T + DS.T0) * (pfull3D / DS.P0)**((gamma-1.) / gamma)
-                    DS = DS.assign(temp=temp)
-                    DS['temp'].attrs['description'] = '(ADDED IN POST PROCESSING) Temperature'
-                    DS['temp'].attrs['long_name'] = '(ADDED IN POST PROCESSING) Temperature'
-                    DS['temp'].attrs['units'] = 'K'
+                    DS['T'] = (DS.T + DS.T0) * (pfull3D / DS.P0)**((gamma-1.) / gamma)
+                    DS['T'].attrs['description'] = '(MODIFIED IN POST PROCESSING) Temperature'
+                    DS['T'].attrs['long_name'] = '(MODIFIED IN POST PROCESSING) Temperature'
+                    DS['T'].attrs['units'] = 'K'
 
                 # Drop 'Times' variable if present (non-numerical values)
                 if 'Times' in DS:
