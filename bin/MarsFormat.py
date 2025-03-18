@@ -125,6 +125,7 @@ parser.add_argument('-bd', '--bin_diurn', action='store_true',
     help=(
         f"Calculate 5-day averages binned by hour from instantaneous "
         f"data. Generates MGCM-like 'diurn' files.\n"
+        f"Works on non-MGCM files only.\n"
         f"{Green}Example:\n"
         f"> MarsFormat openmars_file.nc -gcm openmars -bd\n"
         f"{Blue}(Creates openmars_file_daily.nc;  5-sol bin){Green}\n"

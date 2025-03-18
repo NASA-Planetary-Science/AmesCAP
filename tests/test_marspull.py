@@ -108,8 +108,8 @@ class TestMarsPull(unittest.TestCase):
     def test_list_option(self):
         """Test the list option to ensure it runs without errors"""
         # Skip this test in CI environments
-        if os.environ.get('CI') == 'true':
-            self.skipTest("Skipping network-dependent test in CI environment")
+        # if os.environ.get('CI') == 'true':
+        #     self.skipTest("Skipping network-dependent test in CI environment")
         
         result = self.run_mars_pull(['-list'])
         

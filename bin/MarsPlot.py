@@ -134,6 +134,8 @@ parser.add_argument('-i', '--inspect_file', nargs='?',
     help=(
         f"Print the content of a netCDF file to the screen.\nVariables "
         f"are sorted by dimension.\n"
+        f"Works on ANY netCDF file, including 'daily', diurn', "
+        f"'average', and 'fixed'\n"
         f"{Green}Example:\n"
         f"> MarsPlot -i 01336.atmos_daily.nc"
         f"{Nclr}\n\n"
@@ -164,9 +166,9 @@ parser.add_argument('-sy', '--stack_years', action='store_true',
     default=False,
     help=(
         f"Plot consecutive years of data over the same axes range (e.g."
-        f"Ls=0–360). For 1D time series plots.\nRequires ADD LINE "
-        f"in the Custom.in template (see template for instructions)."
-        f"\nDefault is to plot in monotonically increasing "
+        f"Ls=0–360). For 1D time series plots only.\nRequires ADD LINE "
+        f"in the Custom.in template (see template for instructions).\n"
+        f"Default action is to plot in monotonically increasing "
         f"format.\n"
         f"{Green}Example:\n"
         f"> MarsPlot Custom.in -sy"
@@ -235,6 +237,7 @@ parser.add_argument('-values', '--print_values', nargs='+',
     help=(
         f"For use with ``-i --inspect``:\nPrint the values of the "
         f"specified variable to the screen.\n"
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"{Green}Example:\n"
         f"> MarsPlot -i 01336.atmos_daily.nc -values temp\n"
         f"{Blue}(quotes '' req. for browsing dimensions){Green}\n"
@@ -248,6 +251,7 @@ parser.add_argument('-stats', '--statistics', nargs='+', default=None,
     help=(
         f"For use with ``-i --inspect``:\nPrint the min, mean, and max "
         f"values of the specified variable to the screen.\n"
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"{Green}Example:\n"
         f"> MarsPlot -i 01336.atmos_daily.nc -stats temp\n"
         f"{Blue}(quotes '' req. for browsing dimensions){Green}\n"
