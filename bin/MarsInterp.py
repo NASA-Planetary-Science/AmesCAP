@@ -102,10 +102,12 @@ parser.add_argument('input_file', nargs='+',
 
 parser.add_argument('-t', '--interp_type', type=str, default='pstd',
     help=(
-        f"Interpolation interp_: ``pstd``, ``zstd``, or ``zagl``.\n"
+        f"Interpolation to standard pressure (pstd), standard altitude "
+        f"(zstd), or altitude above ground level (zagl).\nWorks on "
+        f"'daily', 'average', and 'diurn' files.\n"
         f"{Green}Example:\n"
         f"> MarsInterp 01336.atmos_average.nc\n"
-        f"> MarsInterp 01336.atmos_average.nc -t pstd"
+        f"> MarsInterp 01336.atmos_average.nc -t pstd\n"
         f"{Nclr}\n\n"
     )
 )
@@ -114,8 +116,11 @@ parser.add_argument('-t', '--interp_type', type=str, default='pstd',
 
 parser.add_argument('-v', '--vertical_grid', type=str, default=None,
     help=(
-        f"Layer IDs as defined in ``amescap_profile``.\nFor first "
+        f"For use with ``-t``. Specify a custom vertical grid to "
+        f"interpolate to.\n"
+        f"Custom grids defined in ``amescap_profile``.\nFor first "
         f"time use, copy ``amescap_profile`` to your home directory:\n"
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"{Cyan}cp path/to/amesCAP/mars_templates/amescap_profile "
         f"~/.amescap_profile\n"
         f"{Green}Example:\n"
@@ -126,8 +131,9 @@ parser.add_argument('-v', '--vertical_grid', type=str, default=None,
 
 parser.add_argument('-incl', '--include', nargs='+',
     help=(
-        f"Only include the listed variables. Dimensions and 1D "
-        f"variables are always included.\n"
+        f"Only include the listed variables in the action. Dimensions "
+        f"and 1D variables are always included.\n"
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"{Green}Example:\n"
         f"> MarsInterp 01336.atmos_daily.nc -incl temp ps ts"
         f"{Nclr}\n\n"
@@ -153,8 +159,8 @@ parser.add_argument('-ext', '--extension', type=str, default=None,
         f"CAP to create a new file with the extension name specified "
         f"here.\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 00334.atmos_average.nc -t pstd -ext _dflt_levs\n"
-        f"{Blue}(Produces 00334.atmos_average_dflt_levs.nc and "
+        f"> MarsInterp 00334.atmos_average.nc -t pstd -ext _my_pstd\n"
+        f"{Blue}(Produces 00334.atmos_average_my_pstd.nc and "
         f"preserves all other files)"
         f"{Nclr}\n\n"
     )

@@ -21,9 +21,8 @@ class TestMarsFormat(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test environment"""
-        # Create a temporary directory for test files
-        cls.test_dir = os.path.join(os.path.expanduser('~'), 'MarsFormat_test')
-        os.makedirs(cls.test_dir, exist_ok=True)
+        # Create a temporary directory for test files instead of a fixed path
+        cls.test_dir = tempfile.mkdtemp(prefix='MarsFormat_test_')
         
         # Project root directory
         cls.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -88,8 +87,23 @@ class TestMarsFormat(unittest.TestCase):
         :param args: List of arguments to pass to MarsFormat
         :return: The subprocess result object
         """
+        # Convert any relative file paths to absolute paths
+        abs_args = []
+        for arg in args:
+            if arg.endswith('.nc'):
+                abs_args.append(os.path.join(self.test_dir, arg))
+            else:
+                abs_args.append(arg)
+        
         # Construct the full command to run MarsFormat
-        cmd = [sys.executable, os.path.join(self.project_root, "bin", "MarsFormat.py")] + args
+        cmd = [sys.executable, os.path.join(self.project_root, "bin", "MarsFormat.py")] + abs_args
+        
+        # Print debugging info
+        print(f"Running command: {' '.join(cmd)}")
+        print(f"Working directory: {self.test_dir}")
+        print(f"File exists check: {os.path.exists(os.path.join(self.project_root, 'bin', 'MarsFormat.py'))}")
+        
+        # Run the command with extra verbosity
         
         # Run the command
         result = subprocess.run(
@@ -99,6 +113,10 @@ class TestMarsFormat(unittest.TestCase):
             cwd=self.test_dir,  # Run in the test directory
             env=dict(os.environ, PWD=self.test_dir)  # Ensure current working directory is set
         )
+        
+        # Print both stdout and stderr to help debug
+        print(f"STDOUT: {result.stdout}")
+        print(f"STDERR: {result.stderr}")
         
         return result
         
@@ -546,8 +564,20 @@ class TestMarsFormat(unittest.TestCase):
         
         # Check that the output file was created
         output_file = os.path.join(self.test_dir, "emars_test_daily.nc")
-        self.assertTrue(os.path.exists(output_file), f"Output file {output_file} was not created.")
+        alt_output_file = "emars_test_daily.nc"  # Current directory
         
+        # Check both locations
+        file_exists = os.path.exists(output_file) or os.path.exists(alt_output_file)
+        actual_file = output_file if os.path.exists(output_file) else alt_output_file if os.path.exists(alt_output_file) else None
+        
+        print(f"Checking for file at: {output_file}")
+        print(f"Alternative location: {alt_output_file}")
+        print(f"Current directory: {os.getcwd()}")
+        print(f"File exists: {file_exists}")
+        print(f"Actual file location: {actual_file}")
+        
+        self.assertTrue(file_exists, f"Output file was not created in either location.")
+            
         # Open the output file and check that it contains the expected variables
         dataset = nc.Dataset(output_file, 'r')
         

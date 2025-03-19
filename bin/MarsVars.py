@@ -314,8 +314,9 @@ parser.add_argument('input_file', nargs='+',
 
 parser.add_argument('-add', '--add_variable', nargs='+', default=[],
     help=(
-        f"Add a new variable to file. Variables that can be added are "
-        f"listed below.\n"
+        f"Add a new variable to file. "
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
+        f"Variables that can be added are listed below.\n"
         f"{Green}Example:\n"
         f"> MarsVars 01336.atmos_average.nc -add rho\n{Yellow}\n"
         f"{add_help(master_list)}\n"
@@ -330,6 +331,7 @@ parser.add_argument('-zdiff', '--differentiate_wrt_z', nargs='+',
     default=[],
     help=(
         f"Differentiate a variable w.r.t. the Z axis.\n"
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"*Requires a variable with a vertical dimension*\n"
         f"A new variable ``d_dz_var`` in [Unit/m] will be added to the "
         f"file.\n"
@@ -343,6 +345,7 @@ parser.add_argument('-zdiff', '--differentiate_wrt_z', nargs='+',
 parser.add_argument('-col', '--column_integrate', nargs='+', default=[],
     help=(
         f"Integrate a variable through the column.\n"
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"*Requires a variable with a vertical dimension*\n"
         f"A new variable (``var_col``) in [kg/m2] will be added to the "
         f"file.\n"
@@ -356,6 +359,7 @@ parser.add_argument('-col', '--column_integrate', nargs='+', default=[],
 parser.add_argument('-zd', '--zonal_detrend', nargs='+', default=[],
     help=(
         f"Detrend a variable by substracting its zonal mean value.\n"
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"A new a variable (``var_p``) (for prime) will be added to the"
         f" file.\n"
         f"{Green}Example:\n"
@@ -368,6 +372,7 @@ parser.add_argument('-zd', '--zonal_detrend', nargs='+', default=[],
 parser.add_argument('-to_dz', '--dp_to_dz', nargs='+', default=[],
     help=(
         f"Convert aerosol opacity [op/Pa] to [op/m]. "
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"Requires ``DP`` & ``DZ`` to be present in the file already.\n"
         f"A new variable (``[variable]_dp_to_dz``) is added to the "
         f"file.\n"
@@ -381,6 +386,7 @@ parser.add_argument('-to_dz', '--dp_to_dz', nargs='+', default=[],
 parser.add_argument('-to_dp', '--dz_to_dp', nargs='+', default=[],
     help=(
         f"Convert aerosol opacity [op/m] to [op/Pa]. "
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"Requires ``DP`` & ``DZ`` to be present in the file already.\n"
         f"A new variable (``[variable]_dz_to_dp``) is added to the "
         f"file.\n"
@@ -394,6 +400,7 @@ parser.add_argument('-to_dp', '--dz_to_dp', nargs='+', default=[],
 parser.add_argument('-rm', '--remove_variable', nargs='+', default=[],
     help=(
         f"Remove a variable from a file.\n"
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"{Green}Example:\n"
         f"> MarsVars 01336.atmos_average.nc -rm ps"
         f"{Nclr}\n\n"
@@ -404,6 +411,7 @@ parser.add_argument('-extract', '--extract_copy', nargs='+', default=[],
     help=(
         f"Copy one or more variables from a file into a new file of "
         f"the same name with the appended extension: '_extract'.\n"
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"{Green}Example:\n"
         f"> MarsVars 01336.atmos_average.nc -extract ps temp\n"
         f"{Blue}(Creates 01336.atmos_average_extract.nc containing ps "
@@ -416,11 +424,12 @@ parser.add_argument('-extract', '--extract_copy', nargs='+', default=[],
 parser.add_argument('-edit', '--edit_variable', default=None,
     help=(
         f"Edit a variable's attributes or scale its values.\n"
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"Requires the use of one or more of the following flags:\n"
         f"``-rename``\n``-longname``\n``-unit``\n``-multiply``\n"
         f"{Green}Example:\n"
         f"> MarsVars 01336.atmos_average.nc -edit ps -rename ps_mbar "
-        f"-multiply 0.01 -longname 'Pressure scaled to mb' -unit 'mbar'"
+        f"-multiply 0.01 -longname 'Pressure in mb' -unit 'mbar'"
         f"{Nclr}\n\n"
     )
 )
@@ -431,6 +440,7 @@ parser.add_argument('-edit', '--edit_variable', default=None,
 parser.add_argument('-rename', '--rename', type=str, default=None,
     help=(
         f"Rename a variable. Requires ``-edit``.\n"
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"{Green}Example:\n"
         f"> MarsVars 01336.atmos_average.nc -edit ps -rename ps_mbar\n"
         f"{Nclr}\n\n"
@@ -441,6 +451,7 @@ parser.add_argument('-rename', '--rename', type=str, default=None,
 parser.add_argument('-longname', '--longname', type=str, default=None,
     help=(
         f"Change a variable's 'longname' attribute. Requires ``-edit``.\n"
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"{Green}Example:\n"
         f"> MarsVars 01336.atmos_average.nc -edit ps -longname "
         f"'Pressure scaled to mb'"
@@ -452,6 +463,7 @@ parser.add_argument('-longname', '--longname', type=str, default=None,
 parser.add_argument('-unit', '--unit', type=str, default=None,
     help=(
         f"Change a variable's unit text. Requires ``-edit``.\n"
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"{Green}Example:\n"
         f"> MarsVars 01336.atmos_average.nc -edit ps -unit 'mbar'"
         f"{Nclr}\n\n"
@@ -462,6 +474,7 @@ parser.add_argument('-unit', '--unit', type=str, default=None,
 parser.add_argument('-multiply', '--multiply', type=float, default=None,
     help=(
         f"Scale a variable's values. Requires ``-edit``.\n"
+        f"Works on 'daily', 'diurn', and 'average' files.\n"
         f"{Green}Example:\n"
         f"> MarsVars 01336.atmos_average.nc -edit ps -multiply 0.01"
         f"{Nclr}\n\n"
