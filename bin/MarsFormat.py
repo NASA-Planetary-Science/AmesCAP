@@ -6,7 +6,7 @@ products. The MGCM is the NASA Ames Mars Global Climate Model developed
 and maintained by the Mars Climate Modeling Center (MCMC). The MGCM 
 data repository is available at data.nas.nasa.gov/mcmc.
 
-The executable requires 2 arguments:
+The executable requires two arguments:
 
     * ``[input_file]``         The file to be transformed
     * ``[-gcm --gcm_name]``    The GCM from which the file originates
@@ -17,7 +17,7 @@ and optionally accepts:
     * ``[-ba, --bin_average]`` Bin non-MGCM files like 'average' files
     * ``[-bd, --bin_diurn]``   Bin non-MGCM files like 'diurn' files
 
-Third-party Requirements:
+Third-party requirements:
 
     * ``numpy``
     * ``netCDF4``
@@ -37,6 +37,7 @@ from amescap.Script_utils import (
 )
 
 # Load generic Python modules
+import sys          # System commands
 import argparse     # Parse arguments
 import os           # Access operating system functions
 import re           # Regular expressions
@@ -51,6 +52,31 @@ from amescap.Script_utils import (
 from amescap.FV3_utils import layers_mid_point_to_boundary
 
 xr.set_options(keep_attrs=True)
+
+import functools
+import traceback
+
+def debug_wrapper(func):
+    """
+    A decorator that wraps a function with error handling based on the 
+    --debug flag.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        global debug
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            if debug:
+                # In debug mode, show the full traceback
+                print(f"{Red}ERROR in {func.__name__}: {str(e)}{Nclr}")
+                traceback.print_exc()
+            else:
+                # In normal mode, show a clean error message
+                print(f"{Red}ERROR in {func.__name__}: {str(e)}\nUse "
+                      f"--debug for more information.{Nclr}")
+            return 1  # Error exit code
+    return wrapper
 
 # ======================================================
 #                  ARGUMENT PARSER
@@ -133,6 +159,7 @@ parser.add_argument('--debug', action='store_true',
  )
 
 args = parser.parse_args()
+debug = args.debug
 
 if args.input_file:
     for file in args.input_file:
@@ -144,6 +171,7 @@ if args.input_file:
 path2data = os.getcwd()
 ref_press = 725  # TODO hard-coded reference pressure
 
+@debug_wrapper
 def main():
     ext = ''  # Initialize empty extension
     if args.gcm_name not in ['marswrf', 'openmars', 'pcm', 'emars']:
@@ -241,11 +269,10 @@ def main():
                 if all(key in DS for key in ['T', 'T0', 'CP', 'R_D', 'P0', 'PB']):
                     gamma = DS.CP / (DS.CP - DS.R_D)
                     pfull3D = DS.P_TOP + DS.PB[0,:]
-                    temp = (DS.T + DS.T0) * (pfull3D / DS.P0)**((gamma-1.) / gamma)
-                    DS = DS.assign(temp=temp)
-                    DS['temp'].attrs['description'] = '(ADDED IN POST PROCESSING) Temperature'
-                    DS['temp'].attrs['long_name'] = '(ADDED IN POST PROCESSING) Temperature'
-                    DS['temp'].attrs['units'] = 'K'
+                    DS['T'] = (DS.T + DS.T0) * (pfull3D / DS.P0)**((gamma-1.) / gamma)
+                    DS['T'].attrs['description'] = '(MODIFIED IN POST PROCESSING) Temperature'
+                    DS['T'].attrs['long_name'] = '(MODIFIED IN POST PROCESSING) Temperature'
+                    DS['T'].attrs['units'] = 'K'
 
                 # Drop 'Times' variable if present (non-numerical values)
                 if 'Times' in DS:
@@ -583,5 +610,6 @@ def main():
             DS.to_netcdf(fullnameOUT,unlimited_dims=model.dim_time,format='NETCDF4_CLASSIC')
         print(f"{Cyan}{fullnameOUT} was created")
 
-if __name__ == '__main__':
-   main()
+if __name__ == "__main__":
+    exit_code = main()
+    sys.exit(exit_code)

@@ -41,6 +41,7 @@ from amescap.Script_utils import (
 )
 
 # Load generic Python modules
+import sys          # System commands
 import argparse     # Parse arguments
 import os           # Access operating system functions
 import subprocess   # Run command-line commands
@@ -67,6 +68,31 @@ from amescap.Ncdf_wrapper import Ncdf
 # ======================================================
 #                  DEFINITIONS
 # ======================================================
+
+import functools
+import traceback
+
+def debug_wrapper(func):
+    """
+    A decorator that wraps a function with error handling based on the 
+    --debug flag.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        global debug
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            if debug:
+                # In debug mode, show the full traceback
+                print(f"{Red}ERROR in {func.__name__}: {str(e)}{Nclr}")
+                traceback.print_exc()
+            else:
+                # In normal mode, show a clean error message
+                print(f"{Red}ERROR in {func.__name__}: {str(e)}\nUse "
+                      f"--debug for more information.{Nclr}")
+            return 1  # Error exit code
+    return wrapper
 
 # List of supported variables for [-add --add_variable]
 cap_str = " (derived w/CAP)"
@@ -453,6 +479,8 @@ parser.add_argument('--debug',  action='store_true',
  )
 
 args = parser.parse_args()
+debug = args.debug
+
 if args.input_file:
     for file in args.input_file:
         if not re.search(".nc", file.name):
@@ -1260,6 +1288,7 @@ def compute_WMFF(MF, rho, lev, interp_type):
 
 filepath = os.getcwd()
 
+@debug_wrapper
 def main():
     # Load all the .nc files
     file_list = [f.name for f in args.input_file]
@@ -2000,4 +2029,5 @@ def main():
 # ======================================================================
 
 if __name__ == "__main__":
-    main()
+    exit_code = main()
+    sys.exit(exit_code)

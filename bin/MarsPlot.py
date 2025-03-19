@@ -71,6 +71,31 @@ degr = u"\N{DEGREE SIGN}"
 global current_version
 current_version = 3.5
 
+import functools
+import traceback
+
+def debug_wrapper(func):
+    """
+    A decorator that wraps a function with error handling based on the 
+    --debug flag.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        global debug
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            if debug:
+                # In debug mode, show the full traceback
+                print(f"{Red}ERROR in {func.__name__}: {str(e)}{Nclr}")
+                traceback.print_exc()
+            else:
+                # In normal mode, show a clean error message
+                print(f"{Red}ERROR in {func.__name__}: {str(e)}\nUse "
+                      f"--debug for more information.{Nclr}")
+            return 1  # Error exit code
+    return wrapper
+
 # ======================================================
 #                  ARGUMENT PARSER
 # ======================================================
@@ -243,6 +268,7 @@ parser.add_argument('--debug', action='store_true',
 
 # Handle mutually in/exclusive arguments (e.g., -sy requires Custom.in)
 args = parser.parse_args()
+debug = args.debug
 
 if args.template_file:
     if not (re.search(".in", args.template_file.name) or re.search(".nc", args.template_file.name)):
@@ -309,6 +335,7 @@ if args.trim_text and (args.generate_template is False):
 # ======================================================================
 #                           MAIN PROGRAM
 # ======================================================================
+@debug_wrapper
 def main():
     global output_path, input_paths, out_format, debug
     output_path = os.getcwd()
@@ -4336,4 +4363,5 @@ class Fig_1D(object):
 # ======================================================================
 
 if __name__ == "__main__":
-    main()
+    exit_code = main()
+    sys.exit(exit_code)

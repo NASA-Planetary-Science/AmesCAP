@@ -7,8 +7,8 @@ name = "amescap"
 version = "0.3"
 description = "Analysis pipeline for the NASA Ames MGCM"
 readme = "README.md"
-requires-python = ">=3.7"
-license = {text = "MIT License"}
+requires-python = ">=3.8"
+license = {file = "LICENSE"}
 authors = [
     {name = "Mars Climate Modeling Center", email = "alexandre.m.kling@nasa.gov"}
 ]
@@ -20,6 +20,16 @@ dependencies = [
     "matplotlib>=3.8.2",
     "scipy>=1.11.4",
     "xarray>=2023.5.0",
+    "pyshtools>=4.13.1",
+    "pandas>=2.0.3",
+    "pyodbc>=4.0.39",
+]
+
+[project.optional-dependencies]
+dev = [
+  "sphinx>=7.2.6",
+  "sphinx-rtd-theme>=1.3.0rc1",
+  "sphinx-autoapi>=3.0.0",
 ]
 
 [project.scripts]
@@ -34,7 +44,6 @@ MarsCalendar = "bin.MarsCalendar:main"
 
 [tool.setuptools]
 packages = ["amescap", "bin"]
-package-dir = {""="."}
 
 [tool.setuptools.data-files]
 "mars_data" = ["mars_data/Legacy.fixed.nc"]
