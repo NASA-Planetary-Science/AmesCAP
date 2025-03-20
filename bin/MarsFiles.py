@@ -1059,7 +1059,10 @@ def process_time_shift(file_list):
                                   longname_txt, units_txt)
             elif (len(dims) == 5):
                 # time, tod, Z, lat, lon
-                z = dims.index(zaxis)
+                # hardcoded, would fail on variable(e.g. soil_temperature)
+                # that use a different vertical dimensions that pfull, zstd,zagl
+                z = 2
+                zaxis=dims[2]
                 var_val_tmp = np.transpose(value, (x, y, z, t, tod))
                 var_val_T = time_shift_calc(var_val_tmp, lons, tod_orig,
                                    tod_out = target_list)
