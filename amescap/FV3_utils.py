@@ -2239,29 +2239,29 @@ def polar_warming(T, lat, outside_range=np.nan):
                             PW_half_hemisphere(T_NH, lat_NH, outside_range)),
                            axis = 0))
 
-def time_shift_calc(array, lon, timeo, timex=None):
+def time_shift_calc(array, lon, tod_in, tod_out=None):
     """
     Conversion to uniform local time.
 
     :param array: variable to be shifted. Assume ``lon`` is the first
         dimension and ``time_of_day`` is the last dimension
     :type array: ND array
-    
+
     :param lon: longitude
     :type lon: 1D array
-    
-    :param timeo: ``time_of_day`` index from the input file
-    :type timeo: 1D array
-    
-    :param timex: local time(s) [hr] to shift to (e.g., ``"3. 15."``)
-    :type timex: float (optional)
+
+    :param tod_in: ``time_of_day`` index from the input file
+    :type tod_in: 1D array
+
+    :param tod_out: local time(s) [hr] to shift to (e.g., ``"3. 15."``)
+    :type tod_out: float (optional)
 
     :return: the array shifted to uniform local time
 
     .. note::
-        If ``timex`` is not specified, the file is interpolated
+        If ``tod_out`` is not specified, the file is interpolated
         on the same ``time_of_day`` as the input
-        
+
     """
     if np.shape(array) == len(array):
         print('Need longitude and time dimensions')
@@ -2269,63 +2269,37 @@ def time_shift_calc(array, lon, timeo, timex=None):
 
     # Get dimensions of array
     dims = np.shape(array)
-    end = len(dims) - 1
+    axis_tod = len(dims) - 1
+
     # Number of longitudes in file
-    id = dims[0]
+    ilon = dims[0]
     # Number of timesteps per day in input
-    nsteps = len(timeo)
-    # Number of timesteps per day in input
-    nsf = float(nsteps)
-
-    timeo = np.squeeze(timeo)
-   
+    N_tod_in = len(tod_in)
     # Array dimensions for output
-    if timex is None:
+    if tod_out is None:
         # Time shift all local times
-        nsteps_out = nsteps
+        N_tod_out = N_tod_in
     else:
-        nsteps_out = len(timex)
-        
-
-    # Assuming ``time`` is the last dimension, check if it is a local
-    # time ``timex``. If not, reshape the array into
-    # ``[..., days, local time]``
-    if dims[end] != nsteps:
-        ndays = dims[end] / nsteps
-        if (ndays * nsteps) != dims[end]:
-            print("Time dimensions do not conform")
-            return
-
-        array = np.reshape(array, (dims[0, end - 1], nsteps, ndays))
-        newdims = np.linspace(len(dims + 1), dtype = np.int32)
-        newdims[len(dims)-1] = len(dims)
-        newdims[len(dims)] = len(dims)-1
-        array = np.transpose(array, newdims)
-
-    # Get new dims of array if reshaped
-    dims = np.shape(array)
+        N_tod_out = len(tod_out)
 
     if len(dims) > 2:
         recl = np.prod(dims[1:len(dims)-1])
     else:
         recl = 1
 
-    array = np.reshape(array, (id, recl, nsteps))
-    
+    array = np.reshape(array, (ilon, recl, N_tod_in))
+
     # Create output array
-    narray = np.zeros((id, recl, nsteps_out))
+    narray = np.zeros((ilon, recl, N_tod_out))
 
     # Time increment of input data (in hours)
-    dt_samp = 24.0 / nsteps
+    dt_samp = 24.0 / N_tod_in
 
     # Time increment of output
-    if timex is None:
+    if tod_out is None:
         # Match dimensions of output file to input
         # Time increment of output data (in hours)
         dt_save = dt_samp
-    else:
-        # Assume output time increament is 1 hour
-        dt_save = 1.
 
     # Calculate interpolation indices
     # Convert east longitude to equivalent hours
@@ -2333,17 +2307,17 @@ def time_shift_calc(array, lon, timeo, timex=None):
     kk = np.where(xshif < 0)
     xshif[kk] = xshif[kk] + 24.
 
-    fraction = np.zeros((id, nsteps_out))
-    imm = np.zeros((id, nsteps_out))
-    ipp = np.zeros((id, nsteps_out))
+    fraction = np.zeros((ilon, N_tod_out))
+    imm = np.zeros((ilon, N_tod_out))
+    ipp = np.zeros((ilon, N_tod_out))
 
-    for nd in range(nsteps_out):
-        # dtt = nd*dt_save - xshif - timex[0] + dt_samp
-        if timex is None:
-            dtt = nd*dt_save - xshif - timeo[0] + dt_samp
+    for nd in range(N_tod_out):
+        # dtt = nd*dt_save - xshif - tod_out[0] + dt_samp
+        if tod_out is None:
+            dtt = nd*dt_save - xshif - tod_in[0] + dt_samp
         else:
             # ``time_out - xfshif - tod[0] + hrs/stpe`` in input
-            dtt = timex[nd] - xshif
+            dtt = tod_out[nd] - xshif
 
         # Ensure that local time is bounded by [0, 24] hours
         kk = np.where(dtt < 0.)
@@ -2352,12 +2326,17 @@ def time_shift_calc(array, lon, timeo, timex=None):
         # This is the index into the data aray
         im = np.floor(dtt/dt_samp)
         fraction[:, nd] = dtt - im*dt_samp
-        kk = np.where(im < 0.)
-        im[kk] = im[kk] + nsf
 
+        #Range check on im and im+1
+        kk = np.where(im < 0.)
+        im[kk] = im[kk] + N_tod_in
+        kk = np.where(im >= N_tod_in)
+        im[kk] = im[kk] - N_tod_in
+
+        #print('im A=',im)
         ipa = im + 1.
-        kk = np.where(ipa >= nsf)
-        ipa[kk] = ipa[kk] - nsf
+        kk = np.where(ipa >= N_tod_in)
+        ipa[kk] = ipa[kk] - N_tod_in
 
         imm[:, nd] = im[:]
         ipp[:, nd] = ipa[:]
@@ -2366,12 +2345,11 @@ def time_shift_calc(array, lon, timeo, timex=None):
     fraction = fraction / dt_samp
 
     # Now carry out the interpolation
-    for nd in range(nsteps_out):
+    for nd in range(N_tod_out):
         # Number of output time levels
-        for i in range(id):
+        for i in range(ilon):
             # Number of longitudes
             im = np.int32(imm[i, nd]) % 24
-            print('im=',im)
             ipa = np.int32(ipp[i, nd])
             frac = fraction[i, nd]
             narray[i, :, nd] = ((1.-frac) * array[i, :, im]
@@ -2379,11 +2357,12 @@ def time_shift_calc(array, lon, timeo, timex=None):
 
     narray = np.squeeze(narray)
     ndimsfinal = np.zeros(len(dims), dtype = int)
-    for nd in range(end):
+    for nd in range(axis_tod):
         ndimsfinal[nd] = dims[nd]
-    ndimsfinal[end] = nsteps_out
+    ndimsfinal[axis_tod] = N_tod_out
     narray = np.reshape(narray, ndimsfinal)
     return narray
+
 
 def lin_interp(X_in, X_ref, Y_ref):
     """

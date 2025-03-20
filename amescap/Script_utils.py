@@ -402,8 +402,6 @@ def FV3_file_type(fNcdf):
         interp_type = "zstd"
     if "zagl"  in dims:
         interp_type = "zagl"
-    if "zgrid" in dims:
-        interp_type = "zgrid"
 
     return f_type, interp_type
 

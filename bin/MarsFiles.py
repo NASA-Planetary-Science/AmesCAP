@@ -131,7 +131,7 @@ import traceback
 
 def debug_wrapper(func):
     """
-    A decorator that wraps a function with error handling based on the 
+    A decorator that wraps a function with error handling based on the
     --debug flag.
     """
     @functools.wraps(func)
@@ -961,6 +961,7 @@ def process_time_shift(file_list):
                         f"{out_ext}.nc")
 
         fdiurn = Dataset(input_file_name, "r", format = "NETCDF4_CLASSIC")
+        dim_list=fdiurn.dimensions.keys()
         # Define a netcdf object from the netcdf wrapper module
         fnew = Ncdf(output_file_name)
         # Copy some dimensions from the old file to the new file
@@ -974,10 +975,10 @@ def process_time_shift(file_list):
         fnew.copy_Ncaxis_with_content(fdiurn.variables["lon"])
         fnew.copy_Ncaxis_with_content(fdiurn.variables["lat"])
         fnew.copy_Ncaxis_with_content(fdiurn.variables["time"])
-        try:
-            fnew.copy_Ncaxis_with_content(fdiurn.variables["scalar_axis"])
-        except:
-            print(f'{Red}Could not find scalar axis')
+        #try:
+        #    fnew.copy_Ncaxis_with_content(fdiurn.variables["scalar_axis"])
+        #except:
+        #    print(f'{Red}Could not find scalar axis')
 
 
         # Only create a vertical axis if orig. file has 3D fields
@@ -985,7 +986,7 @@ def process_time_shift(file_list):
             fnew.copy_Ncaxis_with_content(fdiurn.variables[zaxis])
 
         # Take care of TOD dimension in new file
-        tod_orig = np.array(fdiurn.variables[tod_name_in])
+        tod_orig = fdiurn.variables[tod_name_in][:]
 
         if target_list is None:
             # If user does not specify which TOD(s) to do, do all 24
@@ -1025,14 +1026,21 @@ def process_time_shift(file_list):
 
         # Read in 4D field(s) and do the time shift. Exclude vars
         # not listed after --include in var_list
-        lons = np.array(fdiurn.variables["lon"])
+        lons = fdiurn.variables["lon"][:]
         var_list = filter_vars(fdiurn, args.include)
+        var_list = [item for item in var_list if item not in ["areo","MY"]]
 
         for var in var_list:
-            print(f"{Cyan}Processing: {var}...{Nclr}")
-            value = fdiurn.variables[var][:]
             dims = fdiurn.variables[var].dimensions
-            longname_txt, units_txt = get_longname_unit(fdiurn, var)
+
+            if tod_name_in not in dims and var not in ['time','pfull','lat','lon']:
+                print(f"{Cyan}Copying over: {var}...")
+                fnew.copy_Ncvar(fdiurn.variables[var])
+            else:
+                print(f"{Cyan}Processing: {var}...{Nclr}")
+                value = fdiurn.variables[var][:]
+                longname_txt, units_txt = get_longname_unit(fdiurn, var)
+
 
             if (len(dims) >= 4):
                 y = dims.index("lat")
@@ -1044,21 +1052,22 @@ def process_time_shift(file_list):
                 # time, tod, lat, lon
                 var_val_tmp = np.transpose(value, (x, y, t, tod))
                 var_val_T = time_shift_calc(var_val_tmp, lons, tod_orig,
-                                   timex = target_list)
+                                   tod_out = target_list)
                 var_out = np.transpose(var_val_T, (2, 3, 1, 0))
                 fnew.log_variable(var, var_out,
                                   ["time", tod_name_out, "lat", "lon"],
                                   longname_txt, units_txt)
-            if (len(dims) == 5):
+            elif (len(dims) == 5):
                 # time, tod, Z, lat, lon
                 z = dims.index(zaxis)
                 var_val_tmp = np.transpose(value, (x, y, z, t, tod))
                 var_val_T = time_shift_calc(var_val_tmp, lons, tod_orig,
-                                   timex = target_list)
+                                   tod_out = target_list)
                 var_out = np.transpose(var_val_T, (3, 4, 2, 1, 0))
                 fnew.log_variable(var, var_out,
                                   ["time", tod_name_out, zaxis, "lat", "lon"],
                                   longname_txt, units_txt)
+
         fnew.close()
         fdiurn.close()
     return

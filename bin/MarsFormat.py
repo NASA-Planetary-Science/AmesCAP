@@ -343,6 +343,12 @@ def main():
             print(f"{Cyan}Interpolating Staggered Variables to Standard Grid")
             variables_with_latu = [var for var in DS.variables if 'latu' in DS[var].dims]
             variables_with_lonv = [var for var in DS.variables if 'lonv' in DS[var].dims]
+            
+            #Replace time array in hours to sols:
+            DS[model.time] = DS[model.time].values/24.
+            DS[model.time].attrs['long_name'] = 'time'  
+            DS[model.time].attrs['units'] = 'days since 0000-00-00 00:00:00'
+            
             # Loop through, and unstagger. the dims_list process finds the dimensions of the variable and replaces west_east_stag with west_east
             print('     From latu to lat: ' + ', '.join(variables_with_latu ))
             for var_name in variables_with_latu:
