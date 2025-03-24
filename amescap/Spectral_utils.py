@@ -34,7 +34,7 @@ except Exception as exception:
 # ======================================================================
 #                           DEFINITIONS
 # ======================================================================
-import pyshtools
+#import pyshtools
 # def init_shtools():
 #     """
 #     The following code simply loads the pyshtools module and provides

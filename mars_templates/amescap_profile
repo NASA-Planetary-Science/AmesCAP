@@ -8,7 +8,7 @@ Ncdf time dimension          [integer]          {time}>                         
 Ncdf X longitude dimension   [integer]          {lon}>                            west_east,            longitude
 Ncdf Y latitude dimension    [integer]          {lat}>                            south_north,          latitude
 Ncdf Z reference pressure dimension  [integer]  {pfull}>        lev,              bottom_top,           altitude
-Ncdf Z layer boundaries dimension     [integer] {phalf}>
+Ncdf Z layer boundaries dimension     [integer] {phalf}>                                                interlayer
 Ncdf Z interpol. pressure dimension  [integer]  {pstd} >
 Ncdf Z interpol. distance dimension  [integer]  {zstd} >
 Ncdf Z interpol. distance above ground [integer]{zagl} >
@@ -28,7 +28,7 @@ X direction wind        [m/s]                   (ucomp)>       u,               
 Y direction wind        [m/s]                   (vcomp)>       v,                    V,                 ALSO_v
 Z direction wind        [m/s]                   (w)    >                             W
 vertical velocity       [Pa/s]                  (omega)>
-air temperature         [K]                     (temp) >                                        T
+air temperature         [K]                     (temp) >                                        
 surface temperature     [K]                     (ts)   >        tsurf,             TSK,                 ALSO_tsurf
 surface pressure        [Pa]                    (ps)   >                           PSFC
 potential temperature   [K]                     (theta)>
