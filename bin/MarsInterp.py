@@ -145,7 +145,7 @@ parser.add_argument('-print', '--print_grid', action='store_true',
         f"Print the vertical grid to the screen.\n{Yellow}This does not "
         f"run the interpolation, it only prints grid information.\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 01336.atmos_average.nc -t pstd -v p44 -print"
+        f"> MarsInterp 01336.atmos_average.nc -t pstd -v pstd_default -print"
         f"{Nclr}\n\n"
     )
 )
@@ -159,8 +159,8 @@ parser.add_argument('-ext', '--extension', type=str, default=None,
         f"CAP to create a new file with the extension name specified "
         f"here.\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 00334.atmos_average.nc -t pstd -ext _my_pstd\n"
-        f"{Blue}(Produces 00334.atmos_average_my_pstd.nc and "
+        f"> MarsInterp 01336.atmos_average.nc -t pstd -ext _my_pstd\n"
+        f"{Blue}(Produces 01336.atmos_average_my_pstd.nc and "
         f"preserves all other files)"
         f"{Nclr}\n\n"
     )
