@@ -19,20 +19,38 @@ Requirements:
 
 Recommended Installation
 ^^^^^^^^^^^^^^^^^^^^^^
-For reproducible analysis, we recommend installing CAP in a dedicated virtual environment::
+For reproducible analysis, we recommend installing CAP in a dedicated virtual environment. Please reference our :ref:`installation instructions <installation>` online. Briefly, a virtual environment looks like this::
 
-    # Create a new virtual environment
-    python3 -m venv amescap-env
+    # Create a new virtual environment with pip or conda:
+    python3 -m venv amescap-env # with pip
+    # OR
+    conda create -n amescap python=3.13 # with conda
 
-    # Activate the environment
-    source amescap-env/bin/activate     # On Unix/MacOS with bash
-    # or
-    source amescap-env/bin/activate.csh # On Unix/MacOS with csh/tcsh/zsh
-    # or
-    amescap-env\Scripts\activate        # On Windows
+    # Activate the environment, which varies by OS, shell, and package manager:
+    source amescap-env/bin/activate     # pip + Unix/MacOS (bash) OR Windows Cygwin
+    # OR
+    source amescap-env/bin/activate.csh # pip + Unix/MacOS (csh/tcsh/zsh)
+    # OR
+    amescap-env\Scripts\activate        # pip + Windows PowerShell
+    # OR
+    conda activate amescap-env          # conda + Unix/MacOS (bash, csh, tcsh, zsh) OR Windows Cygwin
+    # OR
+    .\amescap\Scripts\Activate.ps1      # conda + Windows PowerShell
 
     # Install CAP and its dependencies
     pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
+
+    # Copy amescap_profile to your home directory, which varies by OS, shell, and package manager:
+    # pip + Unix/MacOS (bash, csh, tcsh, zsh) OR Windows Cygwin:
+    cp amescap/mars_templates/amescap_profile ~/.amescap_profile
+    # OR pip + Windows Powershell:
+    Copy-Item .\amescap\mars_templates\amescap_profile -Destination $HOME\.amescap_profile
+    # OR conda + Unix/MacOS (bash, csh, tcsh, zsh):
+    cp /opt/anaconda3/envs/amescap/mars_templates/amescap-profile ~/.amescap-profile
+    # OR conda + Windows Cygwin:
+    cp /cygdrive/c/Users/YourUsername/anaconda3/envs/amescap/mars_templates/amescap-profile ~/.amescap-profile
+    # OR conda + Windows Powershell:
+    Copy-Item $env:USERPROFILE\anaconda3\envs\amescap\mars_templates\amescap-profile -Destination $HOME\.amescap-profile
 
 This ensures consistent package versions across different systems.
 
@@ -45,7 +63,7 @@ After installation, the following commands will be available:
 * ``MarsPlot`` - Create visualizations
 * ``MarsVars`` - Process and analyze variables
 * ``MarsFiles`` - Manage data files
-* ``MarsFormat`` - Convert between data formats
+* ``MarsFormat`` - Convert between model/reanalysis formats
 * ``MarsCalendar`` - Handle Mars calendar calculations
 
 Documentation
