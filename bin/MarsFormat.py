@@ -144,7 +144,7 @@ parser.add_argument('-rn', '--retain_names', action='store_true',
         f"original file.\n"
         f"{Green}Example:\n"
         f"> MarsFormat openmars_file.nc -gcm openmars -rn\n"
-        f"{Blue}(Creates openmars_file_daily.nc)"
+        f"{Blue}(Creates openmars_file_nat_daily.nc)"
         f"{Nclr}\n\n"
     )
 )
@@ -223,100 +223,178 @@ def main():
                     var.attrs['long_name'] = var.attrs['description']
 
             # Ensure mandatory dimensions and coordinates exist
-            try:
-                # Reformat Dimension Variables/Coords as Needed
-                # Handle potential missing dimensions or coordinates
-                if model.time not in DS:
-                    raise KeyError(f"Time dimension {model.time} not found")
-                if model.lat not in DS:
-                    raise KeyError(f"Latitude dimension {model.lat} not found")
-                if model.lon not in DS:
-                    raise KeyError(
-                        f"Longitude dimension {model.lon} not found"
-                        )
+            # Reformat Dimension Variables/Coords as Needed
+            # Handle potential missing dimensions or coordinates
+            if model.time not in DS:
+                raise KeyError(f"Time dimension {model.time} not found")
+            if model.lat not in DS:
+                raise KeyError(f"Latitude dimension {model.lat} not found")
+            if model.lon not in DS:
+                raise KeyError(
+                    f"Longitude dimension {model.lon} not found"
+                    )
 
-                # Time conversion (minutes to days)
-                time = (DS[model.time] / 60 / 24) if 'time' in DS else None
+            # Time conversion (minutes to days)
+            time = (DS[model.time] / 60 / 24) if 'time' in DS else None
 
-                # Handle latitude and longitude 
-                if len(DS[model.lat].shape) > 1:
-                    lat = DS[model.lat][0, :, 0]
-                    lon = DS[model.lon][0, 0, :]
-                else:
-                    lat = DS[model.lat]
-                    lon = DS[model.lon]
+            # Handle latitude and longitude 
+            if len(DS[model.lat].shape) > 1:
+                lat = DS[model.lat][0, :, 0]
+                lon = DS[model.lon][0, 0, :]
+            else:
+                lat = DS[model.lat]
+                lon = DS[model.lon]
+            
+            # Convert longitudes to 0-360
+            lon360 = (lon + 360)%360
+
+            # Update coordinates 
+            if time is not None:
+                DS[model.time] = time
+            DS[model.lon] = lon360
+            DS[model.lat] = lat
+            #==================================================================
+            # Derive ak, bk
+            #==================================================================
+           
+            #This employs ZNU (half, mass levels and ZNW (full, w) levels
+            phalf = DS.P_TOP.values[0] + DS.ZNW.values[0,:]*DS.P0
+            pfull = DS.P_TOP.values[0] + DS.ZNU.values[0,:]*DS.P0
+            
+            DS = DS.assign_coords(pfull=(model.dim_pfull, pfull))
+            DS = DS.assign_coords(phalf=(model.dim_phalf, phalf))
+            #y = x.expand_dims({"b": b_coords})
+
+            # Derive ak, bk
+            N_phalf=len(DS.bottom_top)+1
+            ak = np.zeros(N_phalf)
+            bk = np.zeros(N_phalf)
+            
+            ak[-1] = DS.P_TOP[0] # MarsWRF pressure increases w/N
+            bk[:] = DS.ZNW[0,:]
+            
+            #Fill-up ak, bk, pfull, phalf arrays
+            #DS['ak']=ak
+            #DS['bk']=bk
+            DS=DS.assign(ak=(model.dim_phalf, ak))
+            DS=DS.assign(bk=(model.dim_phalf, bk))
+        
+  
+           
+            DS.phalf.attrs['description'] = (
+                '(ADDED POST PROCESSING) pressure at layer interfaces')
+            DS.phalf.attrs['units'] = ('Pa')
+            
+            
+            
+            DS['ak'].attrs['description'] = (
+               '(ADDED POST PROCESSING)  pressure part of the hybrid coordinate')
+            DS['bk'].attrs['description'] = (
+            '(ADDED POST PROCESSING) vertical coordinate sigma value')
+            DS['ak'].attrs['units']='Pa'
+            DS['bk'].attrs['units']='None'
+     
+            zagl_lvl = ((DS.PH[:, :-1, :, :] + DS.PHB[0, :-1, :, :]) 
+                        /DS.G - DS.HGT[0, :, :])
+            zfull3D = (
+                0.5*(zagl_lvl[:, :-1, :, :] + zagl_lvl[:, 1:, :, :])
+                )
+
+
+            #==================================================================
+            # Derive atmospheric temperature [K]
+            #==================================================================
+            gamma = DS.CP / (DS.CP - DS.R_D)
+            pfull3D = DS.P_TOP + DS.PB[0,:]
+            temp = (DS.T + DS.T0) * (pfull3D / DS.P0)**((gamma-1.) / gamma)
+            DS = DS.assign(temp=temp)
+            DS['temp'].attrs['description'] = '(ADDED IN POST PROCESSING) Temperature'
+            DS['temp'].attrs['long_name'] = '(ADDED IN POST PROCESSING) Temperature'
+            DS['temp'].attrs['units'] = 'K'
+    
+            #==================================================================
+            # Interpolate U, V, W, Zfull onto Regular Mass Grid (from staggered)
+            #==================================================================
+            # For variables staggered x (lon) [t,z,y,x'] -> regular mass grid [t,z,y,x]:
+            # Step 1: Identify variables with the dimension 'west_east_stag' and _U not
+            # in the variable name (these are staggered grid identifiers like the staggered latitude, I think
+            variables_with_west_east_stag = [var for var in DS.variables if 'west_east_stag' in DS[var].dims and '_U' not in var]
+    
+            print(f"{Cyan}Interpolating Staggered Variables to Standard Grid")
+            # Loop through, and unstagger. the dims_list process finds the dimensoins of the variable and replaces west_east_stag with west_east
+            print('     From west_east_stag to west_east: ' + ', '.join(variables_with_west_east_stag))
+            for var_name in variables_with_west_east_stag:
+                var = getattr(DS, var_name)
+                dims = var.dims
+                # replace west_east_stag in dimensions with west_east
+                dims_list = list(dims)
+                for i, dim in enumerate(dims_list):
+                    if dim == 'west_east_stag':
+                        dims_list[i]='west_east'
+                        break # Stop the loop once the replacement is made
+                new_dims = tuple(dims_list)
+                # Note that XLONG_U is cyclic, e.g. LON[x,0]=LON[x,-1]=0
+                #Inspiration: pyhton-wrf destag.py 
+                # https://github.com/NCAR/wrf-python/blob/57116836593b7d7833e11cf11927453c6388487b/src/wrf/destag.py#L9
+            
+                transformed_var = 0.5 * (var.isel(west_east_stag=slice(None, -1)) + var.isel(west_east_stag=slice(1, None)))
+                DS[var_name] = xr.DataArray(transformed_var, dims=new_dims, coords={'XLAT':DS['XLAT']})
+            
+                DS[var_name].attrs['description'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
+                DS[var_name].attrs['long_name'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
+                DS[var_name].attrs['stagger'] = 'USTAGGERED IN POST-PROCESSING'
+            
+            # For variables staggered y (lat) [t,z,y',x] -> regular mass grid [t,z,y,x]: 
+            variables_with_south_north_stag = [var for var in DS.variables if 'south_north_stag' in DS[var].dims and '_V' not in var]
+            print('     From south_north_stag to south_north: '  + ', '.join(variables_with_south_north_stag))
+            for var_name in variables_with_south_north_stag:
+                var = getattr(DS, var_name)
+                dims = var.dims
+                # replace west_east_stag in dimensions with west_east
+                dims_list = list(dims)
+                for i, dim in enumerate(dims_list):
+                    if dim == 'south_north_stag':
+                        dims_list[i]='south_north'
+                        break # Stop the loop once the replacement is made
+                new_dims = tuple(dims_list)
                 
-                # Convert longitudes to 0-360
-                lon360 = (lon + 360)%360
+                transformed_var = 0.5 * (var.isel(south_north_stag=slice(None, -1)) + var.isel(south_north_stag=slice(1, None)))
+                DS[var_name] = xr.DataArray(transformed_var, dims=new_dims, coords={'XLONG':DS['XLONG']})
+                DS[var_name].attrs['description'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
+                DS[var_name].attrs['long_name'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
+                DS[var_name].attrs['stagger'] = 'USTAGGERED IN POST-PROCESSING'
+    
+            # For variables staggered p/z (height) [t,z',y,x] -> regular mass grid [t,z,y,x]:
+            variables_with_bottom_top_stag = [var for var in DS.variables if 'bottom_top_stag' in DS[var].dims and 'ZNW' not in var and 'phalf' not in var]
+            print('     From bottom_top_stag to bottom_top: '  + ', '.join(variables_with_bottom_top_stag))
+            for var_name in variables_with_bottom_top_stag:
+                var = getattr(DS, var_name)
+                dims = var.dims
+                # replace bottom_top_stag
+                dims_list = list(dims)
+                for i, dim in enumerate(dims_list):
+                    if dim == 'bottom_top_stag':
+                        dims_list[i]='bottom_top'
+                        break # Stop the loop once the replacement is made
+                new_dims = tuple(dims_list)
+                transformed_var = 0.5 * (var.sel(bottom_top_stag=slice(None, -1)) + var.sel(bottom_top_stag=slice(1, None)))
+                
+                DS[var_name] = xr.DataArray(transformed_var, dims=new_dims)
+                DS[var_name].attrs['description'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
+                DS[var_name].attrs['long_name'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
+                DS[var_name].attrs['stagger'] = 'USTAGGERED IN POST-PROCESSING'
+            
+    
+            #DS[model.w] = 0.5 * (DS[model.w][:,:-1,:,:] + DS[model.w][:,1:,:,:])
+    
+            # ALSO INTERPOLATE TO FIND *LAYER* HEIGHTS ABOVE THE SURFACE (i.e., above topography; m)
+            zfull3D = 0.5 * (zagl_lvl[:,:-1,:,:] + zagl_lvl[:,1:,:,:])
 
-                # Update coordinates 
-                if time is not None:
-                    DS[model.time] = time
-                DS[model.lon] = lon360
-                DS[model.lat] = lat
+            
+            print(f"{Red} Dropping 'Times' variable with non-numerical values")
+            DS=DS.drop_vars("Times")
 
-                # Derive pressure levels 
-                if (hasattr(DS, 'P_TOP') and 
-                    hasattr(DS, 'ZNU') and 
-                    hasattr(DS, 'P0')):
-                    pfull = DS.P_TOP[0] + DS.ZNU[0,:]*DS.P0
-                    phalf = DS.P_TOP[0] + DS.ZNW[0,:]*DS.P0
-                    
-                    DS = DS.assign_coords(phalf=phalf, pfull=pfull)
-                    DS.phalf.attrs['long_name'] = (
-                        '(ADDED POST PROCESSING) pressure at layer interfaces'
-                        )
-                    DS.phalf.attrs['description'] = (
-                        '(ADDED POST PROCESSING) pressure at layer interfaces'
-                        )
-                    DS.phalf.attrs['units'] = ('Pa')
 
-                    # Derive ak, bk
-                    ak = np.zeros(len(DS.phalf))
-                    bk = np.zeros(len(DS.phalf))
-                    ak[-1] = DS.P_TOP[0] # MarsWRF pressure increases w/N
-                    bk[:] = DS.ZNW[0,:]
-
-                    DS['ak'], DS['bk'] = ak, bk
-                    DS['ak'].attrs['long_name'] = ('(ADDED POST PROCESSING)')
-                    DS['bk'].attrs['long_name'] = ('(ADDED POST PROCESSING)')
-
-                # Calculate layer heights (if PH and PHB exist)
-                if ('PH' in DS and 
-                    'PHB' in DS and 
-                    'HGT' in DS and 
-                    'G' in DS):
-                    zagl_lvl = ((DS.PH[:, :-1, :, :] + DS.PHB[0, :-1, :, :]) 
-                                /DS.G - DS.HGT[0, :, :])
-                    zfull3D = (
-                        0.5*(zagl_lvl[:, :-1, :, :] + zagl_lvl[:, 1:, :, :])
-                        )
-
-                # Derive atmospheric temperature
-                if all(
-                    key in DS for key in ['T', 'T0', 'CP', 'R_D', 'P0', 'PB']
-                    ):
-                    gamma = DS.CP/(DS.CP - DS.R_D)
-                    pfull3D = DS.P_TOP + DS.PB[0,:]
-                    DS['T'] = ((DS.T + DS.T0)
-                               *(pfull3D / DS.P0)**((gamma-1.) / gamma))
-                    DS['T'].attrs['description'] = (
-                        '(MODIFIED POST PROCESSING) Temperature'
-                        )
-                    DS['T'].attrs['long_name'] = (
-                        '(MODIFIED POST PROCESSING) Temperature'
-                        )
-                    DS['T'].attrs['units'] = 'K'
-
-                # Drop 'Times' variable if present (non-numerical values)
-                if 'Times' in DS:
-                    DS = DS.drop_vars("Times")
-
-            except Exception as e:
-                print(f"{Red}Error processing MarsWRF data: {e}{Nclr}")
-                print(f"{Red}Available dimensions: {list(DS.dims)}{Nclr}")
-                print(f"{Red}Available variables: {list(DS.variables)}{Nclr}")
-                raise
             
         # --------------------------------------------------------------
         #                  OpenMars Specific Processing
@@ -511,16 +589,14 @@ def main():
         #                START PROCESSING FOR ALL MODELS
         # --------------------------------------------------------------
         # Check that vertical grid starts at TOA w/ largest level at surface
-        if DS[model.dim_pfull][0] != DS[model.dim_pfull].min():
-            # If TOA, lev = 0 is surface then flip
-            print(f"{Cyan}Current variables at start of processing for all "
-                  f"models:\n{list(DS.variables)}{Nclr}\n")
+        
+        if DS[model.pfull].values[0] != DS[model.pfull].values.min():
             DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
             # Flip phalf, ak, bk:
             DS = DS.isel(**{model.dim_phalf: slice(None, None, -1)})
             print(f"{Red}NOTE: all variables flipped along vertical "
                   f"dimension. Top of the atmosphere is now index = 0")
-
+        
         # Reorder dimensions
         print(f"{Cyan} Transposing variable dimensions to match order "
               f"expected in CAP")
@@ -556,7 +632,7 @@ def main():
         if args.retain_names:
             print(f"{Purple}Preserving original names for variable and "
                   f"dimensions")
-            ext = f'{ext}_nat'
+            ext= f'{ext}_nat'
         else:
             print(f"{Purple}Using standard FV3 names for variables and "
                   f"dimensions")
