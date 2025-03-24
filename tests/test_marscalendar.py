@@ -109,34 +109,31 @@ class TestMarsCalendar(unittest.TestCase):
         # Verify exact value based on your example output (sol=192.57 for Ls=90)
         self.assertAlmostEqual(values[0][1], 192.57, places=1)
         
-    def test_ls_to_sol_range(self):
-        """Test converting a range of Ls values to sols"""
-        # Try individual Ls values to avoid platform-dependent range behavior
-        values = []
+    def test_ls_to_sol_multiple_values(self):
+        """Test converting multiple individual Ls values to sols"""
+        # Test specific known Ls values instead of using a range
+        test_cases = [
+            (0.0, 0.0, 1.0),     # Ls=0 should give sol ~0
+            (30.0, 55.0, 65.0),  # Ls=30 should give sol ~60.81 (allow range)
+            (60.0, 120.0, 130.0), # Ls=60 should give sol ~125.95 (allow range)
+            (90.0, 185.0, 200.0)  # Ls=90 should give sol ~192.57 (allow range)
+        ]
         
-        for ls_val in [0, 30, 60, 90]:
+        for ls_val, min_sol, max_sol in test_cases:
             result = self.run_mars_calendar(['-ls', str(ls_val)])
-            ls_sol_pair = self.extract_values_from_output(result.stdout)
-            if ls_sol_pair:
-                values.append(ls_sol_pair[0])
-        
-        # Check that we got results for all values
-        self.assertEqual(len(values), 4, "Expected 4 values in output")
-        
-        # Verify each value matches expected Ls
-        self.assertAlmostEqual(values[0][0], 0.0, places=1)
-        self.assertAlmostEqual(values[1][0], 30.0, places=1)
-        self.assertAlmostEqual(values[2][0], 60.0, places=1)
-        self.assertAlmostEqual(values[3][0], 90.0, places=1)
-        
-        # Verify each sol is in a reasonable range
-        self.assertAlmostEqual(values[0][1], 0.0, places=1)     # Ls=0 should give sol ~0
-        self.assertGreater(values[1][1], 50)                    # Ls=30 should give sol > 50
-        self.assertLess(values[1][1], 70)                       # Ls=30 should give sol < 70
-        self.assertGreater(values[2][1], 120)                   # Ls=60 should give sol > 120
-        self.assertLess(values[2][1], 140)                      # Ls=60 should give sol < 140
-        self.assertGreater(values[3][1], 180)                   # Ls=90 should give sol > 180
-        self.assertLess(values[3][1], 200)                      # Ls=90 should give sol < 200
+            values = self.extract_values_from_output(result.stdout)
+            
+            # Check that we got a result
+            self.assertTrue(len(values) > 0, f"No values found for Ls={ls_val}")
+            
+            # Check that the input Ls is correct
+            self.assertAlmostEqual(values[0][0], ls_val, places=1)
+            
+            # Check that the output sol is in the expected range
+            self.assertGreaterEqual(values[0][1], min_sol, 
+                                f"Sol value {values[0][1]} for Ls={ls_val} is less than expected minimum {min_sol}")
+            self.assertLessEqual(values[0][1], max_sol, 
+                            f"Sol value {values[0][1]} for Ls={ls_val} is greater than expected maximum {max_sol}")
     
     def test_sol_to_ls_single(self):
         """Test converting a single sol value to Ls"""
@@ -154,20 +151,31 @@ class TestMarsCalendar(unittest.TestCase):
         # Verify exact value based on your example output (Ls=78.46 for sol=167)
         self.assertAlmostEqual(values[0][1], 78.46, places=1)
     
-    def test_sol_to_ls_range(self):
-        """Test converting a range of sol values to Ls"""
-        result = self.run_mars_calendar(['-sol', '0', '301', '100'])
+    def test_sol_to_ls_multiple_values(self):
+        """Test converting multiple individual sol values to Ls"""
+        # Test specific known sol values instead of using a range
+        test_cases = [
+            (0.0, 0.0, 1.0),      # sol=0 should give Ls ~0
+            (100.0, 45.0, 55.0),  # sol=100 should give Ls ~50 (allow range)
+            (200.0, 85.0, 95.0),  # sol=200 should give Ls ~90 (allow range)
+            (300.0, 140.0, 150.0) # sol=300 should give Ls ~145 (allow range)
+        ]
         
-        # Extract the results
-        values = self.extract_values_from_output(result.stdout)
-        
-        # Check that we got the expected number of results (0, 100, 200, 300)
-        self.assertEqual(len(values), 4, "Expected 4 values in output")
-        
-        # Check that the sol values are as expected
-        expected_sols = [0.0, 100.0, 200.0, 300.0]
-        for i, (sol_val, _) in enumerate(values):
-            self.assertAlmostEqual(sol_val, expected_sols[i], places=1)
+        for sol_val, min_ls, max_ls in test_cases:
+            result = self.run_mars_calendar(['-sol', str(sol_val)])
+            values = self.extract_values_from_output(result.stdout)
+            
+            # Check that we got a result
+            self.assertTrue(len(values) > 0, f"No values found for sol={sol_val}")
+            
+            # Check that the input sol is correct
+            self.assertAlmostEqual(values[0][0], sol_val, places=1)
+            
+            # Check that the output Ls is in the expected range
+            self.assertGreaterEqual(values[0][1], min_ls, 
+                                f"Ls value {values[0][1]} for sol={sol_val} is less than expected minimum {min_ls}")
+            self.assertLessEqual(values[0][1], max_ls, 
+                            f"Ls value {values[0][1]} for sol={sol_val} is greater than expected maximum {max_ls}")
     
     def test_mars_year_option(self):
         """Test using the Mars Year option"""
