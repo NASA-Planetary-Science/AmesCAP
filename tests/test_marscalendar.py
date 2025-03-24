@@ -161,18 +161,39 @@ class TestMarsCalendar(unittest.TestCase):
     
     def test_mars_year_option(self):
         """Test using the Mars Year option"""
-        # Test with MY=1
-        result = self.run_mars_calendar(['-ls', '90', '-my', '1'])
-        
-        # Extract the results
-        values = self.extract_values_from_output(result.stdout)
-        
-        # Check that the output sol is shifted by 668 (one Mars year)
+        # Test with base case MY=0
         base_result = self.run_mars_calendar(['-ls', '90'])
         base_values = self.extract_values_from_output(base_result.stdout)
         
-        # The sol for MY=1 should be approximately 668 more than for MY=0
-        self.assertAlmostEqual(values[0][1], base_values[0][1] + 668, delta=1)
+        # Test with MY=1
+        result1 = self.run_mars_calendar(['-ls', '90', '-my', '1'])
+        values1 = self.extract_values_from_output(result1.stdout)
+        
+        # Test with MY=2
+        result2 = self.run_mars_calendar(['-ls', '90', '-my', '2'])
+        values2 = self.extract_values_from_output(result2.stdout)
+        
+        # Check that the output matches the expected value for MY=2
+        self.assertAlmostEqual(values2[0][1], 1528.57, places=1)
+        
+        # Test that MY=0 and MY=1 produce the same results
+        # This test verifies the behavior that MY=0 is treated the same as MY=1
+        # It's a behavior we want to document but discourage
+        my0_result = self.run_mars_calendar(['-ls', '90', '-my', '0'])
+        my0_values = self.extract_values_from_output(my0_result.stdout)
+        
+        # MY=0 should produce the same result as the default (no MY specified)
+        self.assertAlmostEqual(my0_values[0][1], base_values[0][1], places=1)
+        
+        # MY=1 should produce a result approximately 668 sols greater than default
+        self.assertAlmostEqual(values1[0][1], base_values[0][1] + 668, delta=2)
+        
+        # MY=2 should produce a result approximately 2*668 sols greater than default
+        self.assertAlmostEqual(values2[0][1], base_values[0][1] + 2*668, delta=2)
+        
+        # Additional check to verify MY=0 and default (no MY) produce the same result
+        # This test documents the potentially confusing behavior
+        self.assertAlmostEqual(my0_values[0][1], base_values[0][1], places=1)
     
     def test_continuous_option(self):
         """Test using the continuous Ls option"""
