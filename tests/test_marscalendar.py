@@ -83,8 +83,8 @@ class TestMarsCalendar(unittest.TestCase):
         
         values = []
         for i in range(table_start, len(lines)):
-            if lines[i].strip():  # Skip empty lines
-                # Parse the line with format " 350.00  |  626.17"
+            if lines[i].strip() and not lines[i].strip().startswith('\n'):  # Skip empty lines
+                # Updated regex pattern to match actual output format
                 match = re.search(r'(\d+\.\d+)\s+\|\s+(\d+\.\d+)', lines[i])
                 if match:
                     input_val = float(match.group(1))
@@ -106,14 +106,13 @@ class TestMarsCalendar(unittest.TestCase):
         # Check that the input Ls is 90
         self.assertAlmostEqual(values[0][0], 90.0, places=1)
         
-        # Check that the output sol is approximately 167
-        # (This value should be verified against expected results for Ls=90)
-        self.assertGreater(values[0][1], 160)
-        self.assertLess(values[0][1], 175)
+        # Verify exact value based on your example output (sol=192.57 for Ls=90)
+        self.assertAlmostEqual(values[0][1], 192.57, places=1)
     
     def test_ls_to_sol_range(self):
         """Test converting a range of Ls values to sols"""
-        result = self.run_mars_calendar(['-ls', '0', '90', '30'])
+        # Use the exact command from your example
+        result = self.run_mars_calendar(['-ls', '0', '91', '30'])
         
         # Extract the results
         values = self.extract_values_from_output(result.stdout)
@@ -121,10 +120,13 @@ class TestMarsCalendar(unittest.TestCase):
         # Check that we got the expected number of results (0, 30, 60, 90)
         self.assertEqual(len(values), 4, "Expected 4 values in output")
         
-        # Check that the Ls values are as expected
+        # Check that the Ls values are exactly as shown in your example
         expected_ls = [0.0, 30.0, 60.0, 90.0]
-        for i, (ls_val, _) in enumerate(values):
+        expected_sols = [0.0, 60.81, 125.95, 192.57]
+        
+        for i, (ls_val, sol_val) in enumerate(values):
             self.assertAlmostEqual(ls_val, expected_ls[i], places=1)
+            self.assertAlmostEqual(sol_val, expected_sols[i], places=1)
     
     def test_sol_to_ls_single(self):
         """Test converting a single sol value to Ls"""
@@ -139,14 +141,12 @@ class TestMarsCalendar(unittest.TestCase):
         # Check that the input sol is 167
         self.assertAlmostEqual(values[0][0], 167.0, places=1)
         
-        # Check that the output Ls is approximately 90
-        # (This value should be verified against expected results for sol=167)
-        self.assertGreater(values[0][1], 85)
-        self.assertLess(values[0][1], 95)
+        # Verify exact value based on your example output (Ls=78.46 for sol=167)
+        self.assertAlmostEqual(values[0][1], 78.46, places=1)
     
     def test_sol_to_ls_range(self):
         """Test converting a range of sol values to Ls"""
-        result = self.run_mars_calendar(['-sol', '0', '300', '100'])
+        result = self.run_mars_calendar(['-sol', '0', '301', '100'])
         
         # Extract the results
         values = self.extract_values_from_output(result.stdout)
