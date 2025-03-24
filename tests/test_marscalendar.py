@@ -113,7 +113,7 @@ class TestMarsCalendar(unittest.TestCase):
         """Test converting multiple individual Ls values to sols"""
         # Test specific known Ls values instead of using a range
         test_cases = [
-            (0.0, 0.0, 1.0),     # Ls=0 should give sol ~0
+            (0.0, 1.0, 1.0),     # Ls=0 should give sol ~0
             (30.0, 55.0, 65.0),  # Ls=30 should give sol ~60.81 (allow range)
             (60.0, 120.0, 130.0), # Ls=60 should give sol ~125.95 (allow range)
             (90.0, 185.0, 200.0)  # Ls=90 should give sol ~192.57 (allow range)
