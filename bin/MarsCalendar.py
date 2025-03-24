@@ -222,7 +222,11 @@ def main():
     print(head_text)
     for i in range(0, len(input_arr)):
         # Print input_arr and corresponding output_arr
-        print(f" {input_arr[i]:<6.2f}  |  {(output_arr[i]):.2f}")
+        # Fix for negative zero on some platforms
+        out_val = output_arr[i]
+        if abs(out_val) < 1e-10:  # If very close to zero
+            out_val = abs(out_val)  # Convert to positive zero
+        print(f" {input_arr[i]:<6.2f}  |  {out_val:.2f}")
 
     print("\n")
 
