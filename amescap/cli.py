@@ -22,6 +22,7 @@ def main():
     class CustomHelpFormatter(argparse.HelpFormatter):
         def format_help(self):
             help_message = f"""
+{get_install_info()}
 {Cyan}
 Welcome to the NASA Ames Community Analysis Pipeline (CAP)!
 -----------------------------------------------------------{Nclr}
@@ -49,11 +50,16 @@ Then, change to the directory hosting your netCDF output files and pass an argum
 
 {Cyan}Model Compatibility
 -------------------{Nclr}
-CAP is currently compatible with output from the:
-- MCMC Legacy MGCM
-- MCMC FV3-based MGCM
+CAP is currently compatible with output from the following GCMs and reanalyses:
+- Legacy (NASA Ames MCMC)
+- FV3-based (NASA Ames MCMC)
 - Mars Weather Research and Forecasting Model (MarsWRF)
 - OpenMars
+- Planetary Climate Model (PCM)
+- eMars
+
+For more information on using CAP with these data, check out the MarsFormat executable:
+{Green}MarsFormat -h{Nclr}
 
 {Cyan}Additional Information
 ----------------------{Nclr}
