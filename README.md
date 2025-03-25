@@ -2,6 +2,7 @@
 
 CAP is a set of Python 3 libraries and command-line executables that streamline the downloading, processing and plotting modeling outputs from the NASA Ames Mars Climate Models. At the moment, both the NASA Ames Legacy GCM (Global Climate Model) and the NASA Ames GCM with the GFDL's FV3 dynamical core are supported.
 
+
 Please check the [tutorial/](./tutorial/) directory for:
 
 * Detailed installation instructions for Linux, MacOS, Windows [Step-by-Step Installation](./tutorial/CAP_Install.md)
