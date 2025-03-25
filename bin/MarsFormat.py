@@ -456,16 +456,25 @@ def main():
         #                 Emars Specific Processing
         # --------------------------------------------------------------
         elif model_type == 'emars':
+            
+
             # Interpolate U, V, onto Regular Mass Grid (from staggered)
             print(f"{Cyan}Interpolating Staggered Variables to Standard Grid")
 
             variables_with_latu = [var for var in DS.variables if 'latu' in DS[var].dims]
             variables_with_lonv = [var for var in DS.variables if 'lonv' in DS[var].dims]
             
-            #Replace time array in hours to sols:
+            
+            print(f"{Cyan}Changing time units from hours to sols]")
             DS[model.time] = DS[model.time].values/24.
             DS[model.time].attrs['long_name'] = 'time'  
             DS[model.time].attrs['units'] = 'days since 0000-00-00 00:00:00'
+            
+            
+            print(f"{Cyan}Converting reference pressure to [Pa]")
+            DS[model.pfull] = DS[model.pfull].values*100
+            DS[model.pfull].attrs['units'] = 'Pa'
+            
             
             # Loop through, and unstagger. the dims_list process finds the dimensions of the variable and replaces west_east_stag with west_east
             print('     From latu to lat: ' + ', '.join(variables_with_latu ))
@@ -692,7 +701,7 @@ def main():
             combinedN = int(iperday*nday)
             # Coarsen the 'time' dimension by a factor of 5 and average 
             # over each window
-            DS_average = DS.coarsen(**{model.dim_time:combinedN}).mean()
+            DS_average = DS.coarsen(**{model.dim_time:combinedN},boundary='trim').mean()
 
             # Update the time coordinate attribute
             DS_average[model.dim_time].attrs['long_name'] = (
@@ -757,17 +766,19 @@ def main():
                     DS_diurn = idx
                 else:
                     DS_diurn = xr.concat([DS_diurn, idx], dim=model.dim_time)
-            
+            #TODO
             # ==== Overwrite the ak, bk arrays=== [AK]
-            #For some reason I can't track down why the ak('phalf') and bk('phalf') 
-            # turn into ak ('time', 'time_of_day_12', 'phalf'), which messes
-            # the pressure interpolation. 
-            DS_diurn['ak']=DS['ak']
-            DS_diurn['bk']=DS['bk']
+            #For some reason I can't track down, the ak('phalf') and bk('phalf') 
+            # turn into ak ('time', 'time_of_day_12','phalf'), in PCM which messes
+            # the pressure interpolation.
+            
+            if len(DS_diurn[model.ak].dims)>1: 
+                DS_diurn[model.ak]=DS[model.ak]
+                DS_diurn[model.bk]=DS[model.bk]
             
             # replace the time dimension with the time dimension from DS_average
             time_DS=DS[model.dim_time]
-            time_avg_DS= time_DS.coarsen(**{model.dim_time:combinedN}).mean()
+            time_avg_DS= time_DS.coarsen(**{model.dim_time:combinedN},boundary='trim').mean()
 
             DS_diurn[model.dim_time] = time_avg_DS[model.dim_time]
 
