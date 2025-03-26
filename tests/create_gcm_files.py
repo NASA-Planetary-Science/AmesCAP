@@ -14,10 +14,10 @@ def create_emars_test():
     """Create emars_test.nc with the exact variables and structure as real EMARS files."""
     nc_file = Dataset('emars_test.nc', 'w', format='NETCDF4')
     
-    # Define dimensions - using exact dimensions from real EMARS files
-    time_dim = nc_file.createDimension('time', 120)
-    pfull_dim = nc_file.createDimension('pfull', 30)
-    phalf_dim = nc_file.createDimension('phalf', 31)
+    # Define dimensions - using exact dimensions from real EMARS files (updated)
+    time_dim = nc_file.createDimension('time', 1104)
+    pfull_dim = nc_file.createDimension('pfull', 28)
+    phalf_dim = nc_file.createDimension('phalf', 29)
     lat_dim = nc_file.createDimension('lat', 36)
     latu_dim = nc_file.createDimension('latu', 36)
     lon_dim = nc_file.createDimension('lon', 60)
@@ -43,8 +43,7 @@ def create_emars_test():
     create_var('V', ('time', 'pfull', 'lat', 'lonv'), 'm/s', 'meridional wind', -278.8, 422.0)
     create_var('ak', ('phalf',), 'pascal', 'pressure part of the hybrid coordinate', 0.0, 2.9)
     create_var('bk', ('phalf',), 'none', 'vertical coordinate sigma value', 0.0, 1.0)
-    earth_day_values = np.linspace(1, 31, 120).astype(int)  # Values from 1 to 31
-    create_var('earth_day', ('time',), 'Earth day', 'Earth day of the month', earth_day_values, earth_day_values)
+    create_var('earth_day', ('time',), 'Earth day', 'Earth day of the month', 1.0, 31.0)
     create_var('earth_hour', ('time',), 'Earth hour', 'Earth hour of the day', 0.0, 23.0)
     create_var('earth_minute', ('time',), 'Earth minute', 'Earth minute of the hour', 0.0, 59.0)
     create_var('earth_month', ('time',), 'Earth month', 'Earth month of the year', 5.0, 7.0)
@@ -56,13 +55,12 @@ def create_emars_test():
     create_var('lon', ('lon',), 'degree_E', 'longitude', 3.0, 357.0)
     create_var('lonv', ('lonv',), 'degree_E', 'longitude', 0.0, 354.0)
     create_var('macda_sol', ('time',), 'Martian year', 'sols after the start of MY 24', 3143.0, 3188.0)
-    mars_hour_values = np.tile(np.arange(0, 24), 5)[:120]
-    create_var('mars_hour', ('time',), 'Martian hour', 'hour of the Martian day', mars_hour_values, mars_hour_values)
+    create_var('mars_hour', ('time',), 'Martian hour', 'hour of the Martian day', 0.0, 23.0)
     create_var('mars_soy', ('time',), 'Martian sol', 'sols after the last Martian vernal equinox', 469.0, 514.0)
     create_var('pfull', ('pfull',), 'mb', 'ref full pressure level', 0.0, 7.7)
     create_var('phalf', ('phalf',), 'mb', 'ref half pressure level', 0.0, 7.7)
     create_var('ps', ('time', 'lat', 'lon'), 'pascal', 'surface pressure', 312.1, 1218.1)
-    create_var('time', ('time',), 'Martian hour', 'number of hours since start of file', 0.0, 1103.0)  # Changed max to 1103.0
+    create_var('time', ('time',), 'Martian hour', 'number of hours since start of file', 0.0, 1103.0)
     
     nc_file.close()
     print("Created emars_test.nc")
@@ -71,11 +69,11 @@ def create_openmars_test():
     """Create openmars_test.nc with the exact variables and structure as real OpenMARS files."""
     nc_file = Dataset('openmars_test.nc', 'w', format='NETCDF4')
     
-    # Define dimensions - using exact dimensions from real OpenMARS files
-    time_dim = nc_file.createDimension('time', 24)
+    # Define dimensions - using exact dimensions from real OpenMARS files (updated)
+    time_dim = nc_file.createDimension('time', 360)
     lat_dim = nc_file.createDimension('lat', 36)
     lon_dim = nc_file.createDimension('lon', 72)
-    lev_dim = nc_file.createDimension('lev', 40)
+    lev_dim = nc_file.createDimension('lev', 35)
     
     # Helper function to create a variable
     def create_var(name, dimensions, units, min_val, max_val, data_type=np.float32):
@@ -111,14 +109,14 @@ def create_pcm_test():
     """Create pcm_test.nc with the exact variables and structure as real PCM files."""
     nc_file = Dataset('pcm_test.nc', 'w', format='NETCDF4')
     
-    # Define dimensions - using exact dimensions from real PCM files
-    time_dim = nc_file.createDimension('Time', 6)  # Notice capitalized 'Time'
-    altitude_dim = nc_file.createDimension('altitude', 45)
-    latitude_dim = nc_file.createDimension('latitude', 36)
-    longitude_dim = nc_file.createDimension('longitude', 72)
-    interlayer_dim = nc_file.createDimension('interlayer', 46)  # For ap/bp variables
-    subsurface_dim = nc_file.createDimension('subsurface_layers', 11)
-    index_dim = nc_file.createDimension('index', 10)  # For controle variable
+    # Define dimensions - using exact dimensions from real PCM files (updated)
+    time_dim = nc_file.createDimension('Time', 100)
+    altitude_dim = nc_file.createDimension('altitude', 49)
+    latitude_dim = nc_file.createDimension('latitude', 49)
+    longitude_dim = nc_file.createDimension('longitude', 65)
+    interlayer_dim = nc_file.createDimension('interlayer', 50)
+    subsurface_dim = nc_file.createDimension('subsurface_layers', 18)
+    index_dim = nc_file.createDimension('index', 100)  # Changed to 100 to match controle variable shape
     
     # Helper function to create a variable
     def create_var(name, dimensions, units, longname, min_val, max_val, data_type=np.float32):
@@ -211,16 +209,16 @@ def create_marswrf_test():
     """Create marswrf_test.nc with the exact variables and structure as real MarsWRF files."""
     nc_file = Dataset('marswrf_test.nc', 'w', format='NETCDF4')
     
-    # Define dimensions - using exact dimensions from real MarsWRF files
-    time_dim = nc_file.createDimension('Time', 12)
-    date_str_len_dim = nc_file.createDimension('DateStrLen', 19)  # Length of date strings
-    bottom_top_dim = nc_file.createDimension('bottom_top', 30)
-    bottom_top_stag_dim = nc_file.createDimension('bottom_top_stag', 31)
-    south_north_dim = nc_file.createDimension('south_north', 36)
-    south_north_stag_dim = nc_file.createDimension('south_north_stag', 37)
-    west_east_dim = nc_file.createDimension('west_east', 60)
-    west_east_stag_dim = nc_file.createDimension('west_east_stag', 61)
-    soil_layers_stag_dim = nc_file.createDimension('soil_layers_stag', 4)
+    # Define dimensions - using exact dimensions from real MarsWRF files (updated)
+    time_dim = nc_file.createDimension('Time', 100)
+    date_str_len_dim = nc_file.createDimension('DateStrLen', 19)
+    bottom_top_dim = nc_file.createDimension('bottom_top', 43)
+    bottom_top_stag_dim = nc_file.createDimension('bottom_top_stag', 44)
+    south_north_dim = nc_file.createDimension('south_north', 90)
+    south_north_stag_dim = nc_file.createDimension('south_north_stag', 91)
+    west_east_dim = nc_file.createDimension('west_east', 180)
+    west_east_stag_dim = nc_file.createDimension('west_east_stag', 181)
+    soil_layers_stag_dim = nc_file.createDimension('soil_layers_stag', 15)
     
     # Helper function to create a variable
     def create_var(name, dimensions, units, min_val, max_val, data_type=np.float32):
@@ -228,7 +226,7 @@ def create_marswrf_test():
         if name == 'Times':
             var = nc_file.createVariable(name, 'S1', dimensions)
             for t in range(nc_file.dimensions['Time'].size):
-                date_str = f'2000-01-{t+1:02d}_00:00:00'
+                date_str = f'2000-01-{(t % 31) + 1:02d}_00:00:00'
                 for c in range(len(date_str)):
                     var[t, c] = date_str[c].encode('utf-8')
             return var
@@ -245,7 +243,7 @@ def create_marswrf_test():
     # Create Times variable (special handling)
     times_var = nc_file.createVariable('Times', 'S1', ('Time', 'DateStrLen'))
     for t in range(nc_file.dimensions['Time'].size):
-        date_str = f'2000-01-{t+1:02d}_00:00:00'
+        date_str = f'2000-01-{(t % 31) + 1:02d}_00:00:00'
         for c in range(len(date_str)):
             times_var[t, c] = date_str[c].encode('utf-8')
     
@@ -273,7 +271,6 @@ def create_marswrf_test():
     create_var('RDN', ('Time', 'bottom_top'), '', -400.0, 0.0)
     create_var('DNW', ('Time', 'bottom_top'), '', -0.0, -0.0)
     create_var('DN', ('Time', 'bottom_top'), '', -0.0, 0.0)
-    create_var('T_BASE', ('Time', 'bottom_top'), 'K', 0.0, 0.0)
     create_var('P_HYD', ('Time', 'bottom_top', 'south_north', 'west_east'), 'Pa', 1.1, 1330.7)
     create_var('PSFC', ('Time', 'south_north', 'west_east'), 'Pa', 86.5, 1331.8)
     create_var('T1_5', ('Time', 'south_north', 'west_east'), 'K', 142.1, 281.2)
@@ -283,14 +280,8 @@ def create_marswrf_test():
     create_var('U1M', ('Time', 'south_north', 'west_east'), 'm s-1', -19.2, 19.0)
     create_var('V1M', ('Time', 'south_north', 'west_east'), 'm s-1', -17.8, 20.2)
     create_var('RHOS', ('Time', 'south_north', 'west_east'), 'kg m-3', 0.0, 0.0)
-    create_var('T1M', ('Time', 'south_north', 'west_east'), 'm s-1', 0.0, 0.0)
-    create_var('TH1M', ('Time', 'south_north', 'west_east'), 'm s-1', 0.0, 0.0)
     create_var('RDX', ('Time',), '', 8.5e-06, 8.5e-06)
     create_var('RDY', ('Time',), '', 8.5e-06, 8.5e-06)
-    create_var('DTS', ('Time',), '', 0.0, 0.0)
-    create_var('DTSEPS', ('Time',), '', 0.0, 0.0)
-    create_var('RESM', ('Time',), '', 0.0, 0.0)
-    create_var('ZETATOP', ('Time',), '', 0.0, 0.0)
     create_var('CF1', ('Time',), '', 1.6, 1.6)
     create_var('CF2', ('Time',), '', -0.7, -0.7)
     create_var('CF3', ('Time',), '', 0.1, 0.1)
@@ -302,7 +293,6 @@ def create_marswrf_test():
     create_var('SLOPE', ('Time', 'south_north', 'west_east'), '', 6.4e-06, 1.7e-01)
     create_var('SLP_AZI', ('Time', 'south_north', 'west_east'), 'rad', 0.0, 6.3)
     create_var('TSLB', ('Time', 'soil_layers_stag', 'south_north', 'west_east'), 'K', 141.9, 308.7)
-    create_var('POROSITY', ('Time', 'soil_layers_stag', 'south_north', 'west_east'), '', 0.0, 0.0)
     create_var('SOIL_DEN', ('Time', 'soil_layers_stag', 'south_north', 'west_east'), '', 1500.0, 1500.0)
     create_var('SOIL_CAP', ('Time', 'soil_layers_stag', 'south_north', 'west_east'), '', 837.0, 837.0)
     create_var('SOIL_COND', ('Time', 'soil_layers_stag', 'south_north', 'west_east'), '', 0.0, 0.6)
@@ -314,9 +304,6 @@ def create_marswrf_test():
     create_var('COSZEN_MEAN', ('Time', 'south_north', 'west_east'), '', 0.0, 0.6)
     create_var('SUNBODY', ('Time',), '', 1.4, 1.7)
     create_var('KPBL', ('Time', 'south_north', 'west_east'), '', 4.0, 43.0)
-    create_var('MAPFAC_M', ('Time', 'south_north', 'west_east'), '', 0.0, 0.0)
-    create_var('MAPFAC_U', ('Time', 'south_north', 'west_east_stag'), '', 0.0, 0.0)
-    create_var('MAPFAC_V', ('Time', 'south_north_stag', 'west_east'), '', 0.0, 0.0)
     create_var('MAPFAC_MX', ('Time', 'south_north', 'west_east'), '', 1.0, 57.3)
     create_var('MAPFAC_MY', ('Time', 'south_north', 'west_east'), '', 1.0, 1.0)
     create_var('MAPFAC_UX', ('Time', 'south_north', 'west_east_stag'), '', 1.0, 57.3)
@@ -326,33 +313,18 @@ def create_marswrf_test():
     create_var('MAPFAC_VY', ('Time', 'south_north_stag', 'west_east'), '', 1.0, 1.0)
     create_var('F', ('Time', 'south_north', 'west_east'), 's-1', -1.4e-04, 1.4e-04)
     create_var('E', ('Time', 'south_north', 'west_east'), 's-1', 2.5e-06, 1.4e-04)
-    create_var('SINALPHA', ('Time', 'south_north', 'west_east'), '', 0.0, 0.0)
-    create_var('COSALPHA', ('Time', 'south_north', 'west_east'), '', 1.0, 1.0)
-    create_var('HGT', ('Time', 'south_north', 'west_east'), 'm', -7400.0, 19000.0)
-    create_var('SHADOWMASK', ('Time', 'south_north', 'west_east'), '-', 0.0, 0.0)
-    create_var('DLIF_EXTRA', ('Time', 'south_north', 'west_east'), 'kg/m^2', 0.0, 0.0)
-    create_var('DLIF_EXTRA_NUMBER', ('Time', 'south_north', 'west_east'), '/m^2', 0.0, 0.0)
     create_var('TSK', ('Time', 'south_north', 'west_east'), 'K', 142.0, 308.7)
     create_var('P_FIT_M', ('Time',), 'unitless', 1.1, 1.1)
     create_var('P_TOP', ('Time',), 'Pa', 0.0, 0.0)
-    create_var('T00', ('Time',), 'K', 0.0, 0.0)
-    create_var('P00', ('Time',), 'Pa', 0.0, 0.0)
-    create_var('TLP', ('Time',), '', 0.0, 0.0)
-    create_var('TISO', ('Time',), 'K', 0.0, 0.0)
-    create_var('MAX_MSTFX', ('Time',), '', 0.0, 0.0)
-    create_var('MAX_MSTFY', ('Time',), '', 0.0, 0.0)
     create_var('RTHRATEN', ('Time', 'bottom_top', 'south_north', 'west_east'), 'Pa K s-1', -14.9, 21.5)
     create_var('RTHRATLW', ('Time', 'bottom_top', 'south_north', 'west_east'), 'K s-1', -2.9e-02, 5.3e-02)
     create_var('RTHRATSW', ('Time', 'bottom_top', 'south_north', 'west_east'), 'K s-1', 0.0, 0.0)
     create_var('SWDOWN', ('Time', 'south_north', 'west_east'), 'W m-2', 0.0, 649.1)
     create_var('SWDOWNDIR', ('Time', 'south_north', 'west_east'), 'W m-2', 0.0, 557.6)
-    create_var('GSWSLOPE', ('Time', 'south_north', 'west_east'), 'W m-2', 0.0, 0.0)
     create_var('GSW', ('Time', 'south_north', 'west_east'), 'W m-2', 0.0, 554.6)
     create_var('GLW', ('Time', 'south_north', 'west_east'), 'W m-2', 1.0, 74.0)
-    create_var('SWNORM', ('Time', 'south_north', 'west_east'), 'W m-2', 0.0, 0.0)
     create_var('HRVIS', ('Time', 'bottom_top', 'south_north', 'west_east'), 'K/s', -0.0e+00, 2.9e-04)
     create_var('HRIR', ('Time', 'bottom_top', 'south_north', 'west_east'), 'K/s', -2.7e-02, 3.3e-02)
-    create_var('HRUV', ('Time', 'bottom_top', 'south_north', 'west_east'), 'K/s', 0.0, 0.0)
     create_var('HRAERVIS', ('Time', 'bottom_top', 'south_north', 'west_east'), 'K/s', -5.7e-06, 2.4e-03)
     create_var('HRAERIR', ('Time', 'bottom_top', 'south_north', 'west_east'), 'K/s', -1.1e-03, 1.1e-03)
     create_var('TOASW', ('Time', 'south_north', 'west_east'), 'W m-2', 0.0, 716.6)
@@ -382,25 +354,16 @@ def create_marswrf_test():
     create_var('RNET_2D', ('Time', 'south_north', 'west_east'), 'W m-2', -128.4, 289.9)
     create_var('FLHC', ('Time', 'south_north', 'west_east'), '', 0.0, 2.0)
     create_var('SOILTB', ('Time', 'south_north', 'west_east'), 'K', 0.0, 0.0)
-    create_var('SAVE_TOPO_FROM_REAL', ('Time',), 'flag', 0.0, 0.0)
     create_var('ANGSLOPE', ('Time', 'south_north', 'west_east'), 'radians', 6.4e-06, 1.7e-01)
     create_var('AZMSLOPE', ('Time', 'south_north', 'west_east'), 'radians', 0.0, 6.3)
-    create_var('H2OICE_BASE', ('Time', 'south_north', 'west_east'), 'kg/m^2', 0.0, 0.0)
-    create_var('H2OICE', ('Time', 'south_north', 'west_east'), 'kg/m^2', 0.0, 0.0)
     create_var('CO2ICE', ('Time', 'south_north', 'west_east'), 'kg/m^2', 0.0, 1697.5)
     create_var('CDOD_SCALE', ('Time', 'south_north', 'west_east'), 'Unitless', 1.0, 1.0)
     create_var('TAU_OD2D', ('Time', 'south_north', 'west_east'), 'Unitless', 0.0, 2.1)
-    create_var('TAU_CL2D', ('Time', 'south_north', 'west_east'), 'Unitless', 0.0, 0.0)
-    create_var('TAU_CO2CL2D', ('Time', 'south_north', 'west_east'), 'Unitless', 0.0, 0.0)
     create_var('FRAC_PERM_CO2', ('Time', 'south_north', 'west_east'), 'fraction', 0.0, 1.0)
     create_var('FRAC_PERM_H2O', ('Time', 'south_north', 'west_east'), 'fraction', 0.0, 1.0)
     create_var('GRD_ICE_PC', ('Time', 'south_north', 'west_east'), 'percent', 0.0, 1.0)
     create_var('GRD_ICE_DP', ('Time', 'south_north', 'west_east'), 'meters', -9999.0, 2.4)
-    create_var('DUST_MIX_DEPTH', ('Time', 'south_north', 'west_east'), 'meters', 0.0, 0.0)
     create_var('TAU_OD', ('Time', 'bottom_top', 'south_north', 'west_east'), 'unitless', 0.0, 0.9)
-    create_var('TAU_CO2CL', ('Time', 'bottom_top', 'south_north', 'west_east'), 'unitless', 0.0, 0.0)
-    create_var('SEED1', ('Time',), '', 0.0, 0.0)
-    create_var('SEED2', ('Time',), '', 0.0, 0.0)
     
     # Create the scalar constants
     cp_var = nc_file.createVariable('CP', np.float32, ())
