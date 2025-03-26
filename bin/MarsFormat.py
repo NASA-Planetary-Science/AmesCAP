@@ -128,7 +128,7 @@ parser.add_argument('-bd', '--bin_diurn', action='store_true',
         f"Works on non-MGCM files only.\n"
         f"{Green}Example:\n"
         f"> MarsFormat openmars_file.nc -gcm openmars -bd\n"
-        f"{Blue}(Creates openmars_file_daily.nc;  5-sol bin){Green}\n"
+        f"{Blue}(Creates openmars_file_diurn.nc;  5-sol bin){Green}\n"
         f"> MarsFormat openmars_file.nc -gcm openmars -bd -ba 10\n"
         f"{Blue}(10-sol bin)"
         f"{Nclr}\n\n"
