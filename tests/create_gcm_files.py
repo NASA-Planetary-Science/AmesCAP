@@ -221,7 +221,7 @@ def create_marswrf_test():
     soil_layers_stag_dim = nc_file.createDimension('soil_layers_stag', 15)
     
     # Helper function to create a variable
-    def create_var(name, dimensions, units, min_val, max_val, data_type=np.float32):
+    def create_var(name, dimensions, units, min_val, max_val, data_type=np.float32, is_coordinate=False):
         # Special handling for Times variable
         if name == 'Times':
             var = nc_file.createVariable(name, 'S1', dimensions)
@@ -235,6 +235,22 @@ def create_marswrf_test():
         if units:  # Some variables don't have units
             var.units = units
         
+        # Add description attribute to all variables
+        var.description = f"{name} variable"
+        
+        # For coordinate variables, add appropriate attributes
+        if is_coordinate:
+            if 'LAT' in name:
+                var.standard_name = 'latitude'
+                var.long_name = 'LATITUDE, SOUTH IS NEGATIVE'
+            elif 'LONG' in name:
+                var.standard_name = 'longitude'
+                var.long_name = 'LONGITUDE, WEST IS NEGATIVE'
+            
+            # Set the coordinates attribute which helps xarray recognize coordinate variables
+            if name == 'XLAT' or name == 'XLONG':
+                var.coordinates = 'XLONG XLAT'
+                
         shape = tuple(nc_file.dimensions[dim].size for dim in dimensions)
         var[:] = np.random.uniform(min_val, max_val, shape)
         
@@ -246,6 +262,14 @@ def create_marswrf_test():
         date_str = f'2000-01-{(t % 31) + 1:02d}_00:00:00'
         for c in range(len(date_str)):
             times_var[t, c] = date_str[c].encode('utf-8')
+    
+    # Create coordinate variables with is_coordinate=True flag
+    create_var('XLAT', ('Time', 'south_north', 'west_east'), 'degree_north', -89.0, 89.0, is_coordinate=True)
+    create_var('XLONG', ('Time', 'south_north', 'west_east'), 'degree_east', -179.0, 179.0, is_coordinate=True)
+    create_var('XLAT_U', ('Time', 'south_north', 'west_east_stag'), 'degree_north', -89.0, 89.0, is_coordinate=True)
+    create_var('XLONG_U', ('Time', 'south_north', 'west_east_stag'), 'degree_east', -178.0, 180.0, is_coordinate=True)
+    create_var('XLAT_V', ('Time', 'south_north_stag', 'west_east'), 'degree_north', -90.0, 90.0, is_coordinate=True)
+    create_var('XLONG_V', ('Time', 'south_north_stag', 'west_east'), 'degree_east', -179.0, 179.0, is_coordinate=True)
     
     # Create all variables from the MarsWRF file
     create_var('ZNU', ('Time', 'bottom_top'), '', 0.0, 1.0)
@@ -314,6 +338,7 @@ def create_marswrf_test():
     create_var('F', ('Time', 'south_north', 'west_east'), 's-1', -1.4e-04, 1.4e-04)
     create_var('E', ('Time', 'south_north', 'west_east'), 's-1', 2.5e-06, 1.4e-04)
     create_var('TSK', ('Time', 'south_north', 'west_east'), 'K', 142.0, 308.7)
+    create_var('HGT', ('Time', 'south_north', 'west_east'), 'm', -7.4e+03, 1.9e+04)
     create_var('P_FIT_M', ('Time',), 'unitless', 1.1, 1.1)
     create_var('P_TOP', ('Time',), 'Pa', 0.00568, 0.00568)
     create_var('RTHRATEN', ('Time', 'bottom_top', 'south_north', 'west_east'), 'Pa K s-1', -14.9, 21.5)
@@ -329,12 +354,6 @@ def create_marswrf_test():
     create_var('HRAERIR', ('Time', 'bottom_top', 'south_north', 'west_east'), 'K/s', -1.1e-03, 1.1e-03)
     create_var('TOASW', ('Time', 'south_north', 'west_east'), 'W m-2', 0.0, 716.6)
     create_var('TOALW', ('Time', 'south_north', 'west_east'), 'W m-2', 13.5, 419.4)
-    create_var('XLAT', ('Time', 'south_north', 'west_east'), 'degree_north', -89.0, 89.0)
-    create_var('XLONG', ('Time', 'south_north', 'west_east'), 'degree_east', -179.0, 179.0)
-    create_var('XLAT_U', ('Time', 'south_north', 'west_east_stag'), 'degree_north', -89.0, 89.0)
-    create_var('XLONG_U', ('Time', 'south_north', 'west_east_stag'), 'degree_east', -178.0, 180.0)
-    create_var('XLAT_V', ('Time', 'south_north_stag', 'west_east'), 'degree_north', -90.0, 90.0)
-    create_var('XLONG_V', ('Time', 'south_north_stag', 'west_east'), 'degree_east', -179.0, 179.0)
     create_var('ALBEDO', ('Time', 'south_north', 'west_east'), '-', 0.1, 0.8)
     create_var('CLAT', ('Time', 'south_north', 'west_east'), 'degree_north', -89.0, 89.0)
     create_var('CLONG', ('Time', 'south_north', 'west_east'), 'degree_east', -179.0, 179.0)
@@ -364,22 +383,27 @@ def create_marswrf_test():
     create_var('GRD_ICE_DP', ('Time', 'south_north', 'west_east'), 'meters', -9999.0, 2.4)
     create_var('TAU_OD', ('Time', 'bottom_top', 'south_north', 'west_east'), 'unitless', 0.0, 0.9)
     
-    # Create the scalar constants
-    cp_var = nc_file.createVariable('CP', np.float32, ())
-    cp_var.units = 'J kg-1 K-1'
-    cp_var[:] = 735.0
+    # Add global scalar constants
+    nc_file.setncattr('P0', 610.0)  # Reference pressure in Pa
+    nc_file.setncattr('G', 3.72)    # Gravity on Mars in m/s²
+    nc_file.setncattr('CP', 770.0)  # Specific heat capacity
+    nc_file.setncattr('R_D', 192.0) # Gas constant for Mars atmosphere
+    nc_file.setncattr('T0', 300.0)  # Reference temperature in K
+    # cp_var = nc_file.createVariable('CP', np.float32, ())
+    # cp_var.units = 'J kg-1 K-1'
+    # cp_var[:] = 735.0
     
-    g_var = nc_file.createVariable('G', np.float32, ())
-    g_var.units = 'm s-2'
-    g_var[:] = 3.7
+    # g_var = nc_file.createVariable('G', np.float32, ())
+    # g_var.units = 'm s-2'
+    # g_var[:] = 3.7
     
-    p0_var = nc_file.createVariable('P0', np.float32, ())
-    p0_var.units = 'Pa'
-    p0_var[:] = 610.0
+    # p0_var = nc_file.createVariable('P0', np.float32, ())
+    # p0_var.units = 'Pa'
+    # p0_var[:] = 610.0
     
-    r_d_var = nc_file.createVariable('R_D', np.float32, ())
-    r_d_var.units = 'J kg-1 K-1'
-    r_d_var[:] = 192.0
+    # r_d_var = nc_file.createVariable('R_D', np.float32, ())
+    # r_d_var.units = 'J kg-1 K-1'
+    # r_d_var[:] = 192.0
     
     nc_file.close()
     print("Created marswrf_test.nc")

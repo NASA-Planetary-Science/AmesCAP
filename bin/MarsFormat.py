@@ -339,7 +339,8 @@ def main():
             
                 transformed_var = 0.5 * (var.isel(west_east_stag=slice(None, -1)) + var.isel(west_east_stag=slice(1, None)))
                 DS[var_name] = xr.DataArray(transformed_var, dims=new_dims, coords={'XLAT':DS['XLAT']})
-            
+
+                print(f"\n{DS[var_name].attrs['description']}")
                 DS[var_name].attrs['description'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
                 DS[var_name].attrs['long_name'] = '(UNSTAGGERED IN POST-PROCESSING) ' + DS[var_name].attrs['description']
                 DS[var_name].attrs['stagger'] = 'USTAGGERED IN POST-PROCESSING'
