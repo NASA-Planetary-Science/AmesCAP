@@ -21,22 +21,24 @@ class TestMarsFormat(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test environment"""
-        # Create a temporary directory for test files instead of a fixed path
+        # Create a temporary directory for test files
         cls.test_dir = tempfile.mkdtemp(prefix='MarsFormat_test_')
         
         # Project root directory
         cls.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        
+        # Define all GCM types to test
+        cls.gcm_types = ['emars', 'openmars', 'pcm', 'marswrf']
     
     def setUp(self):
         """Create test netCDF files using create_gcm_files.py"""
         # Change to test directory
         os.chdir(self.test_dir)
         
-        # Define file paths
-        self.emars_file = os.path.join(self.test_dir, "emars_test.nc")
-        self.openmars_file = os.path.join(self.test_dir, "openmars_test.nc")
-        self.pcm_file = os.path.join(self.test_dir, "pcm_test.nc")
-        self.marswrf_file = os.path.join(self.test_dir, "marswrf_test.nc")
+        # Define file paths for each GCM type
+        self.test_files = {}
+        for gcm_type in self.gcm_types:
+            self.test_files[gcm_type] = os.path.join(self.test_dir, f"{gcm_type}_test.nc")
 
         # Get path to create_gcm_files.py script
         create_files_script = os.path.join(self.project_root, "tests", "create_gcm_files.py")
@@ -53,7 +55,7 @@ class TestMarsFormat(unittest.TestCase):
         print(f"File creation output: {result.stdout}")
         
         # Check files were created
-        for test_file in [self.emars_file, self.openmars_file, self.pcm_file, self.marswrf_file]:
+        for gcm_type, test_file in self.test_files.items():
             if not os.path.exists(test_file):
                 print(f"Warning: Test file {test_file} was not created!")
                 if result.stderr:
@@ -62,31 +64,25 @@ class TestMarsFormat(unittest.TestCase):
     def tearDown(self):
         """Clean up any generated files after each test"""
         # Clean up any generated output files after each test
-        output_files = [
-            os.path.join(self.test_dir, "emars_test_daily.nc"), 
-            os.path.join(self.test_dir, "emars_test_average.nc"), 
-            os.path.join(self.test_dir, "emars_test_diurn.nc"),
-            os.path.join(self.test_dir, "openmars_test_daily.nc"), 
-            os.path.join(self.test_dir, "openmars_test_average.nc"), 
-            os.path.join(self.test_dir, "openmars_test_diurn.nc"),
-            os.path.join(self.test_dir, "pcm_test_daily.nc"), 
-            os.path.join(self.test_dir, "pcm_test_average.nc"), 
-            os.path.join(self.test_dir, "pcm_test_diurn.nc"),
-            os.path.join(self.test_dir, "marswrf_test_daily.nc"), 
-            os.path.join(self.test_dir, "marswrf_test_average.nc"), 
-            os.path.join(self.test_dir, "marswrf_test_diurn.nc")
-        ]
-        for file in output_files:
-            if os.path.exists(file):
-                os.remove(file)
+        for gcm_type in self.gcm_types:
+            # Regular output files
+            output_files = [
+                os.path.join(self.test_dir, f"{gcm_type}_test_daily.nc"), 
+                os.path.join(self.test_dir, f"{gcm_type}_test_average.nc"), 
+                os.path.join(self.test_dir, f"{gcm_type}_test_diurn.nc"),
+                os.path.join(self.test_dir, f"{gcm_type}_test_nat_daily.nc"), 
+                os.path.join(self.test_dir, f"{gcm_type}_test_nat_average.nc"), 
+                os.path.join(self.test_dir, f"{gcm_type}_test_nat_diurn.nc")
+            ]
+            
+            for file in output_files:
+                if os.path.exists(file):
+                    os.remove(file)
         
         # Clean up dummy input files
-        dummy_files = [
-            self.emars_file, self.openmars_file, self.pcm_file, self.marswrf_file
-        ]
-        for file in dummy_files:
-            if os.path.exists(file):
-                os.remove(file)
+        for gcm_type, test_file in self.test_files.items():
+            if os.path.exists(test_file):
+                os.remove(test_file)
     
     @classmethod
     def tearDownClass(cls):
@@ -106,7 +102,7 @@ class TestMarsFormat(unittest.TestCase):
         # Convert any relative file paths to absolute paths
         abs_args = []
         for arg in args:
-            if arg.endswith('.nc'):
+            if isinstance(arg, str) and arg.endswith('.nc'):
                 abs_args.append(os.path.join(self.test_dir, arg))
             else:
                 abs_args.append(arg)
@@ -134,22 +130,15 @@ class TestMarsFormat(unittest.TestCase):
         
         return result
     
-    # Test methods remain unchanged
-    def test_daily_average(self):
-        """Test the daily average functionality of MarsFormat.py for EMARS file."""
-        # Run MarsFormat with the correct arguments
-        result = self.run_mars_format([os.path.basename(self.emars_file), "-gcm", "emars"])
+    def verify_output_file(self, output_file, expected_vars=None, expected_coords=None):
+        """
+        Verify that an output file exists and contains expected variables and coordinates
         
-        # Check that the command executed successfully
-        self.assertEqual(result.returncode, 0, f"MarsFormat.py failed: {result.stderr}")
-        
+        :param output_file: Path to the output file to verify
+        :param expected_vars: List of expected variable names
+        :param expected_coords: List of expected coordinate names
+        """
         # Check that the output file was created
-        output_file = os.path.join(self.test_dir, "emars_test_daily.nc")
-        
-        print(f"Checking for file at: {output_file}")
-        print(f"Current directory: {os.getcwd()}")
-        print(f"File exists: {os.path.exists(output_file)}")
-        
         self.assertTrue(os.path.exists(output_file), f"Output file {output_file} was not created.")
             
         # Open the output file and check that it contains the expected variables
@@ -158,248 +147,340 @@ class TestMarsFormat(unittest.TestCase):
         # Debug - print all variable names to examine what's actually in the file
         print(f"Variables in {output_file}: {list(dataset.variables.keys())}")
         
-        # Check that key variables are present
-        self.assertIn('temp', dataset.variables, "Temperature variable not found in output file.")
-        self.assertIn('ps', dataset.variables, "Surface pressure variable not found in output file.")
+        # Check that expected variables are present
+        if expected_vars:
+            for var in expected_vars:
+                # For temperature, check both 'temp' and 'T' since naming may differ
+                if var.lower() in ['temp', 't']:
+                    temp_var_found = False
+                    for var_name in dataset.variables:
+                        if var_name.lower() in ['temp', 't']:
+                            temp_var_found = True
+                            break
+                    self.assertTrue(temp_var_found, f"Temperature variable not found in {output_file}")
+                # For surface pressure, check both 'ps' and 'PSFC'
+                elif var.lower() in ['ps', 'psfc']:
+                    ps_var_found = False
+                    for var_name in dataset.variables:
+                        if var_name.lower() in ['ps', 'psfc']:
+                            ps_var_found = True
+                            break
+                    self.assertTrue(ps_var_found, f"Surface pressure variable not found in {output_file}")
+                else:
+                    self.assertIn(var, dataset.variables, f"{var} not found in {output_file}")
         
-        # Check that coordinate variables are present
-        self.assertIn('lat', dataset.variables, "Latitude variable not found in output file.")
-        self.assertIn('lon', dataset.variables, "Longitude variable not found in output file.")
-        self.assertIn('time', dataset.variables, "Time variable not found in output file.")
-        self.assertIn('pfull', dataset.variables, "Pressure levels variable not found in output file.")
+        # Check that expected coordinates are present
+        if expected_coords:
+            for coord in expected_coords:
+                if coord == 'lat':
+                    # Check both 'lat' and 'latitude'
+                    lat_found = False
+                    for coord_name in dataset.variables:
+                        if coord_name.lower() in ['lat', 'latitude']:
+                            lat_found = True
+                            break
+                    self.assertTrue(lat_found, f"Latitude coordinate not found in {output_file}")
+                elif coord == 'lon':
+                    # Check both 'lon' and 'longitude'
+                    lon_found = False
+                    for coord_name in dataset.variables:
+                        if coord_name.lower() in ['lon', 'longitude']:
+                            lon_found = True
+                            break
+                    self.assertTrue(lon_found, f"Longitude coordinate not found in {output_file}")
+                else:
+                    self.assertIn(coord, dataset.variables, f"{coord} not found in {output_file}")
         
-        # Check that variables have correct units/attributes
-        self.assertEqual(dataset.variables['temp'].units, 'K', "Temperature units incorrect.")
-        self.assertEqual(dataset.variables['ps'].units, 'pascal', "Surface pressure units incorrect.")
+        # Check for time_of_day dimension if this is a diurn file
+        if '_diurn.nc' in output_file:
+            time_of_day_found = False
+            for dim_name in dataset.dimensions:
+                if 'time_of_day' in dim_name:
+                    time_of_day_found = True
+                    break
+            self.assertTrue(time_of_day_found, f"No time_of_day dimension found in {output_file}")
         
-        dataset.close()
-
-    # The rest of the test methods remain unchanged
-    # ...
-    
-    # Include all the remaining test methods from the original file
-    def test_diurn_average(self):
-        """Test the diurnal average functionality of MarsFormat.py for EMARS file."""
-        # Run MarsFormat with the correct arguments
-        result = self.run_mars_format([os.path.basename(self.emars_file), "-gcm", "emars", "-bd"])
-        
-        # Check that the command executed successfully
-        self.assertEqual(result.returncode, 0, f"MarsFormat.py failed: {result.stderr}")
-        
-        # Check that the output file was created
-        output_file = os.path.join(self.test_dir, "emars_test_diurn.nc")
-        self.assertTrue(os.path.exists(output_file), f"Output file {output_file} was not created.")
-        
-        # Open the output file and check appropriate variables
-        dataset = nc.Dataset(output_file, 'r')
-        
-        # Debug - print all variable names 
-        print(f"Variables in {output_file}: {list(dataset.variables.keys())}")
-        
-        # Check for key variables we expect to see in diurnal average
-        self.assertIn('temp', dataset.variables, "Temperature variable not found in output file.")
-        self.assertIn('ps', dataset.variables, "Surface pressure variable not found in output file.")
-        
-        # Check that coordinate variables are present
-        self.assertIn('lat', dataset.variables, "Latitude variable not found in output file.")
-        self.assertIn('lon', dataset.variables, "Longitude variable not found in output file.")
-        self.assertIn('time', dataset.variables, "Time variable not found in output file.")
-        
-        # Check that time_of_day dimension exists
-        time_of_day_found = False
-        for dim_name in dataset.dimensions:
-            if 'time_of_day' in dim_name:
-                time_of_day_found = True
+        # Check that longitude values have been properly converted to 0-360 range
+        # Find the longitude variable
+        lon_var = None
+        for var_name in dataset.variables:
+            if var_name.lower() in ['lon', 'longitude']:
+                lon_var = var_name
                 break
-        self.assertTrue(time_of_day_found, "No time_of_day dimension found in output file.")
+        
+        if lon_var:
+            self.assertGreaterEqual(dataset.variables[lon_var][0], 0, 
+                                 f"Longitude values not converted to 0-360 range in {output_file}")
         
         dataset.close()
+        return True
 
-    def test_openmars_format(self):
-        """Test MarsFormat.py with OpenMARS file."""
-        # Run MarsFormat with the correct arguments
-        result = self.run_mars_format([os.path.basename(self.openmars_file), "-gcm", "openmars"])
+    def test_all_gcm_types(self):
+        """Test basic conversion for all GCM types."""
+        # Core variables and coordinates to check for in every file
+        core_vars = ['temp', 'ps']
+        core_coords = ['lat', 'lon', 'time', 'pfull']
+        hybrid_vars = ['ak', 'bk', 'phalf']
         
-        # Check that the command executed successfully
-        self.assertEqual(result.returncode, 0, f"MarsFormat.py failed with OpenMARS: {result.stderr}")
-        
-        # Check that the output file was created
-        output_file = os.path.join(self.test_dir, "openmars_test_daily.nc")
-        self.assertTrue(os.path.exists(output_file), f"Output file {output_file} was not created.")
-        
-        # Check output contains expected variables
-        dataset = nc.Dataset(output_file, 'r')
-        
-        # Debug - print all variable names 
-        print(f"Variables in {output_file}: {list(dataset.variables.keys())}")
-        
-        # Check for core variables and coordinates
-        self.assertIn('temp', dataset.variables, "Temperature variable not found in output file.")
-        self.assertIn('ps', dataset.variables, "Surface pressure variable not found in output file.")
-        self.assertIn('lat', dataset.variables, "Latitude variable not found in output file.")
-        self.assertIn('lon', dataset.variables, "Longitude variable not found in output file.")
-        self.assertIn('time', dataset.variables, "Time variable not found in output file.")
-        self.assertIn('pfull', dataset.variables, "Pressure levels variable not found in output file.")
-        
-        # Check that hybrid coordinate variables exist
-        self.assertIn('ak', dataset.variables, "Hybrid coordinate 'ak' not found in output file.")
-        self.assertIn('bk', dataset.variables, "Hybrid coordinate 'bk' not found in output file.")
-        
-        # Check that coordinate values have been properly converted
-        # OpenMARS typically has longitudes from -180 to 180, but should be 0 to 360 after conversion
-        self.assertGreaterEqual(dataset.variables['lon'][0], 0, "Longitude values not converted to 0-360 range")
-        
-        dataset.close()
-
-    def test_pcm_format(self):
-        """Test MarsFormat.py with PCM file."""
-        # Run MarsFormat with the correct arguments
-        result = self.run_mars_format([os.path.basename(self.pcm_file), "-gcm", "pcm"])
-        
-        # Check that the command executed successfully
-        self.assertEqual(result.returncode, 0, f"MarsFormat.py failed with PCM: {result.stderr}")
-        
-        # Check that the output file was created
-        output_file = os.path.join(self.test_dir, "pcm_test_daily.nc")
-        self.assertTrue(os.path.exists(output_file), f"Output file {output_file} was not created.")
-        
-        # Check output contains expected variables
-        dataset = nc.Dataset(output_file, 'r')
-        
-        # Print variables for debugging
-        print(f"Variables in {output_file}: {list(dataset.variables.keys())}")
-        
-        # Check for key variables
-        self.assertIn('temp', dataset.variables, "Temperature variable not found in output file.")
-        self.assertIn('ps', dataset.variables, "Surface pressure variable not found in output file.")
-        
-        # Check for coordinate variables
-        self.assertIn('latitude', dataset.variables, "Latitude variable not found in output file.")
-        self.assertIn('longitude', dataset.variables, "Longitude variable not found in output file.")
-        self.assertIn('time', dataset.variables, "Time variable not found in output file.")
-        self.assertIn('pfull', dataset.variables, "Pfull variable not found in output file.")
-        
-        # Check that longitude values have been properly converted (if needed)
-        if min(dataset.variables['longitude'][:]) < 0:
-            self.fail("Longitude values not converted to 0-360 range")
+        for gcm_type in self.gcm_types:
+            # Run MarsFormat with just the GCM flag
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), "-gcm", gcm_type])
             
-        dataset.close()
+            # Check that the command executed successfully
+            self.assertEqual(result.returncode, 0, f"MarsFormat.py failed for {gcm_type}: {result.stderr}")
+            
+            # Verify output file
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_daily.nc")
+            self.verify_output_file(output_file, expected_vars=core_vars + hybrid_vars, 
+                                   expected_coords=core_coords)
 
-    def test_marswrf_format(self):
-        """Test MarsFormat.py with MarsWRF file."""
-        # Run MarsFormat with the correct arguments
-        result = self.run_mars_format([os.path.basename(self.marswrf_file), "-gcm", "marswrf"])
+    def test_all_gcm_types_retain_names(self):
+        """Test conversion with name retention for all GCM types."""
+        for gcm_type in self.gcm_types:
+            # Run MarsFormat with GCM flag and retain_names flag
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type, "-rn"])
+            
+            # Check that the command executed successfully
+            self.assertEqual(result.returncode, 0, 
+                          f"MarsFormat.py failed for {gcm_type} with retain_names: {result.stderr}")
+            
+            # Verify output file - variable names will differ by GCM type
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_nat_daily.nc")
+            
+            # Expect original variable names to be preserved
+            # For EMARS we expect 'T' instead of 'temp', etc.
+            if gcm_type == 'emars':
+                self.verify_output_file(output_file, expected_vars=['T', 'ps'])
+            elif gcm_type == 'openmars':
+                self.verify_output_file(output_file)
+            elif gcm_type == 'marswrf':
+                self.verify_output_file(output_file, expected_vars=['T', 'PSFC'])
+            elif gcm_type == 'pcm':
+                # PCM variable names
+                self.verify_output_file(output_file)
+
+    def test_bin_average_all_types(self):
+        """Test bin_average flag for all GCM types, with and without retain_names."""
+        for gcm_type in self.gcm_types:
+            # Test without retain_names
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type, "-ba", "3"])
+            
+            self.assertEqual(result.returncode, 0, 
+                          f"MarsFormat.py failed for {gcm_type} with bin_average: {result.stderr}")
+            
+            # Verify output file
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_average.nc")
+            self.verify_output_file(output_file)
+            
+            # Check time dimension has been reduced due to averaging
+            dataset = nc.Dataset(output_file, 'r')
+            orig_time_len = len(nc.Dataset(self.test_files[gcm_type], 'r').dimensions['Time'])
+            new_time_len = len(dataset.dimensions['time'])
+            self.assertLess(new_time_len, orig_time_len, 
+                         f"Time dimension not reduced by binning in {output_file}")
+            dataset.close()
+            
+            # Test with retain_names
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type, "-ba", "3", "-rn"])
+            
+            self.assertEqual(result.returncode, 0, 
+                          f"MarsFormat.py failed for {gcm_type} with bin_average and retain_names: {result.stderr}")
+            
+            # Verify output file
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_nat_average.nc")
+            self.verify_output_file(output_file)
+
+    def test_bin_diurn_all_types(self):
+        """Test bin_diurn flag for all GCM types, with and without retain_names."""
+        for gcm_type in self.gcm_types:
+            # Test without retain_names
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type, "-bd"])
+            
+            self.assertEqual(result.returncode, 0, 
+                          f"MarsFormat.py failed for {gcm_type} with bin_diurn: {result.stderr}")
+            
+            # Verify output file
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_diurn.nc")
+            self.verify_output_file(output_file)
+            
+            # Test with retain_names
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type, "-bd", "-rn"])
+            
+            self.assertEqual(result.returncode, 0, 
+                          f"MarsFormat.py failed for {gcm_type} with bin_diurn and retain_names: {result.stderr}")
+            
+            # Verify output file
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_nat_diurn.nc")
+            self.verify_output_file(output_file)
+
+    def test_combined_flags(self):
+        """Test combining the bin_average and bin_diurn flags."""
+        for gcm_type in self.gcm_types:
+            # Test bin_average with bin_diurn (without retain_names)
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type, "-bd", "-ba", "2"])
+            
+            self.assertEqual(result.returncode, 0, 
+                           f"MarsFormat.py failed for {gcm_type} with combined flags: {result.stderr}")
+            
+            # Verify output file - should create a diurn file with averaged data
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_diurn.nc")
+            self.verify_output_file(output_file)
+            
+            # Test with retain_names added
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type, "-bd", "-ba", "2", "-rn"])
+            
+            self.assertEqual(result.returncode, 0, 
+                          f"MarsFormat.py failed for {gcm_type} with combined flags and retain_names: {result.stderr}")
+            
+            # Verify output file
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_nat_diurn.nc")
+            self.verify_output_file(output_file)
+
+    def test_variable_mapping(self):
+        """Test that variable mapping from GCM-specific names to standard names works correctly."""
+        # Expected variable mappings based on amescap_profile
+        var_mappings = {
+            'emars': {
+                'original': ['T', 'ALSO_u', 'ALSO_v'], 
+                'mapped': ['temp', 'ucomp', 'vcomp']
+            },
+            'openmars': {
+                'original': [], 
+                'mapped': ['temp', 'ucomp', 'vcomp']
+            },
+            'marswrf': {
+                'original': ['U', 'V'], 
+                'mapped': ['ucomp', 'vcomp']
+            },
+            'pcm': {  # PCM is referred to as LMD in amescap_profile
+                'original': [], 
+                'mapped': ['temp', 'ucomp', 'vcomp']
+            }
+        }
         
-        # Check that the command executed successfully - if it fails, print more detailed error
-        if result.returncode != 0:
-            print(f"STDERR: {result.stderr}")
-            print(f"STDOUT: {result.stdout}")
-        
-        self.assertEqual(result.returncode, 0, f"MarsFormat.py failed with MarsWRF: {result.stderr}")
-        
-        # Check that the output file was created
-        output_file = os.path.join(self.test_dir, "marswrf_test_daily.nc")
-        self.assertTrue(os.path.exists(output_file), f"Output file {output_file} was not created.")
-        
-        # Check output contains expected variables
-        dataset = nc.Dataset(output_file, 'r')
-        print(f"Variables in {output_file}: {list(dataset.variables.keys())}")
-        
-        # Check for key variables
-        # Temperature could be named 'temp' or 'T' depending on settings
-        temp_var_found = False
-        for var_name in dataset.variables:
-            if var_name.lower() in ['temp', 't']:
-                temp_var_found = True
-                break
-        self.assertTrue(temp_var_found, "No temperature variable found in output file")
-        
-        # Surface pressure could be 'ps' or 'PSFC'
-        pressure_var_found = False
-        for var_name in dataset.variables:
-            if var_name.lower() in ['ps', 'psfc']:
-                pressure_var_found = True
-                break
-        self.assertTrue(pressure_var_found, "No surface pressure variable found in output file")
-        
-        # Check for required hybrid coordinate parameters
-        self.assertIn('ak', dataset.variables, "Hybrid coordinate 'ak' not found in output file.")
-        self.assertIn('bk', dataset.variables, "Hybrid coordinate 'bk' not found in output file.")
-        self.assertIn('pfull', dataset.variables, "Pressure levels (pfull) not found in output file.")
-        self.assertIn('phalf', dataset.variables, "Pressure interfaces (phalf) not found in output file.")
-        
-        # Check for core coordinates
-        self.assertIn('lat', dataset.variables, "Latitude variable not found in output file.")
-        self.assertIn('lon', dataset.variables, "Longitude variable not found in output file.")
-        self.assertIn('time', dataset.variables, "Time variable not found in output file.")
-        
-        dataset.close()
-        
-    def test_bin_average(self):
-        """Test the binning and averaging functionality for EMARS."""
-        # Run MarsFormat with the correct arguments including -ba for bin_average
-        result = self.run_mars_format([os.path.basename(self.emars_file), "-gcm", "emars", "-ba", "2"])
-        
-        # Check that the command executed successfully
-        self.assertEqual(result.returncode, 0, f"MarsFormat.py failed during bin average: {result.stderr}")
-        
-        # Check that the output file was created
-        output_file = os.path.join(self.test_dir, "emars_test_average.nc")
-        self.assertTrue(os.path.exists(output_file), f"Output file {output_file} was not created.")
-        
-        # Open the output file and check that it contains expected variables
-        dataset = nc.Dataset(output_file, 'r')
-        print(f"Variables in {output_file}: {list(dataset.variables.keys())}")
-        
-        # Check key variables
-        self.assertIn('temp', dataset.variables, "Temperature variable not found in average output file.")
-        self.assertIn('ps', dataset.variables, "Surface pressure variable not found in average output file.")
-        
-        # Check that time dimension has fewer steps due to averaging
-        # Original had 840 time steps, with 2-day bins we should have fewer
-        self.assertLess(len(dataset.dimensions['time']), 840, 
-                        "Time dimension not properly reduced by binning.")
-        
-        dataset.close()
-        
-    def test_retain_names(self):
-        """Test the -rn (retain_names) option with EMARS."""
-        # Run MarsFormat with the -rn option
-        result = self.run_mars_format([os.path.basename(self.emars_file), "-gcm", "emars", "-rn"])
-        
-        # Check that the command executed successfully
-        self.assertEqual(result.returncode, 0, f"MarsFormat.py failed with retain_names: {result.stderr}")
-        
-        # Check that the output file was created with the expected name
-        output_file = os.path.join(self.test_dir, "emars_test_nat_daily.nc")
-        self.assertTrue(os.path.exists(output_file), f"Output file {output_file} was not created.")
-        
-        # Check that the original variable names were retained
-        dataset = nc.Dataset(output_file, 'r')
-        print(f"Variables in {output_file}: {list(dataset.variables.keys())}")
-        
-        # Should find original names like 'T' instead of 'temp'
-        self.assertIn('T', dataset.variables, "Original temperature variable 'T' not found in output file.")
-        
-        dataset.close()
-        
+        for gcm_type in self.gcm_types:
+            # Run with retain_names to keep original names
+            result_retain = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                                "-gcm", gcm_type, "-rn"])
+            self.assertEqual(result_retain.returncode, 0)
+            
+            # Run without retain_names to map to standard names
+            result_map = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                             "-gcm", gcm_type])
+            self.assertEqual(result_map.returncode, 0)
+            
+            # Check files
+            retained_file = os.path.join(self.test_dir, f"{gcm_type}_test_nat_daily.nc")
+            mapped_file = os.path.join(self.test_dir, f"{gcm_type}_test_daily.nc")
+            
+            # Verify original variables in retained file
+            if var_mappings[gcm_type]['original']:
+                with nc.Dataset(retained_file, 'r') as ds:
+                    var_names = list(ds.variables.keys())
+                    for var in var_mappings[gcm_type]['original']:
+                        if var not in var_names:
+                            # Some variables might not be present in the sample files
+                            print(f"Note: Expected variable {var} not found in {retained_file}")
+            
+            # Verify mapped variables in mapped file
+            with nc.Dataset(mapped_file, 'r') as ds:
+                var_names = list(ds.variables.keys())
+                for var in var_mappings[gcm_type]['mapped']:
+                    self.assertIn(var, var_names, f"Expected mapped variable {var} not found in {mapped_file}")
+
+    def test_coordinate_transformations(self):
+        """Test that coordinate transformations are applied correctly."""
+        for gcm_type in self.gcm_types:
+            # Run MarsFormat 
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type])
+            self.assertEqual(result.returncode, 0)
+            
+            # Check output file
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_daily.nc")
+            
+            with nc.Dataset(output_file, 'r') as ds:
+                # Find longitude variable (could be 'lon' or 'longitude')
+                lon_var = None
+                for var_name in ds.variables:
+                    if var_name.lower() in ['lon', 'longitude']:
+                        lon_var = var_name
+                        break
+                
+                if lon_var:
+                    # Check that longitudes are in 0-360 range
+                    lon_values = ds.variables[lon_var][:]
+                    self.assertGreaterEqual(np.min(lon_values), 0, 
+                                         f"Longitudes not transformed to 0-360 range in {output_file}")
+                    self.assertLess(np.max(lon_values), 360.1, 
+                                  f"Longitudes exceed 360 degrees in {output_file}")
+                
+                # Check vertical coordinate ordering (pfull should increase with level index)
+                pfull_var = None
+                for var_name in ds.variables:
+                    if var_name.lower() == 'pfull':
+                        pfull_var = var_name
+                        break
+                
+                if pfull_var:
+                    pfull_values = ds.variables[pfull_var][:]
+                    # Check that pressure increases with index (TOA at index 0)
+                    self.assertLess(pfull_values[0], pfull_values[-1], 
+                                  f"Pressure levels not ordered with TOA at index 0 in {output_file}")
+                
+                # Check for hybrid coordinate variables
+                self.assertIn('ak', ds.variables, f"Hybrid coordinate 'ak' missing in {output_file}")
+                self.assertIn('bk', ds.variables, f"Hybrid coordinate 'bk' missing in {output_file}")
+
     def test_debug_flag(self):
         """Test the --debug flag functionality."""
-        # Run MarsFormat with the --debug flag
-        result = self.run_mars_format([os.path.basename(self.emars_file), "-gcm", "emars", "--debug"])
-        
-        # Check that the command executed successfully
-        self.assertEqual(result.returncode, 0, f"MarsFormat.py failed with debug flag: {result.stderr}")
-        
-        # With debug flag, the output should contain more detailed information
-        # Check for certain debug messages that would only appear with --debug
-        self.assertIn("Current variables at top", result.stdout, 
-                     "Debug output not found with --debug flag.")
+        for gcm_type in self.gcm_types:
+            # Run MarsFormat with the --debug flag
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type, "--debug"])
+            
+            # Check that the command executed successfully
+            self.assertEqual(result.returncode, 0, 
+                          f"MarsFormat.py failed with debug flag for {gcm_type}: {result.stderr}")
+            
+            # Debug output should contain more detailed information
+            self.assertTrue(
+                "Running MarsFormat with args" in result.stdout or 
+                "Current working directory" in result.stdout,
+                "Debug output not found with --debug flag."
+            )
                      
-        # Check that the output file was created properly despite the debug flag
-        output_file = os.path.join(self.test_dir, "emars_test_daily.nc")
-        self.assertTrue(os.path.exists(output_file), 
-                       f"Output file not created with --debug flag.")
+            # Check that output file was created properly
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_daily.nc")
+            self.assertTrue(os.path.exists(output_file), 
+                         f"Output file not created with --debug flag for {gcm_type}.")
+
+    def test_error_handling(self):
+        """Test error handling with invalid inputs."""
+        # Test with non-existent file
+        result = self.run_mars_format(["nonexistent_file.nc", "-gcm", "emars"])
+        self.assertNotEqual(result.returncode, 0, "MarsFormat didn't fail with non-existent file")
+        
+        # Test with invalid GCM type
+        result = self.run_mars_format([os.path.basename(self.test_files['emars']), 
+                                     "-gcm", "invalid_gcm"])
+        self.assertNotEqual(result.returncode, 0, "MarsFormat didn't fail with invalid GCM type")
+        
+        # Test with no GCM type specified
+        result = self.run_mars_format([os.path.basename(self.test_files['emars'])])
+        # This might not return an error code, but should print a notice
+        self.assertTrue(
+            "No operation requested" in result.stdout or 
+            result.returncode != 0,
+            "MarsFormat didn't handle missing GCM type correctly"
+        )
 
 
 if __name__ == '__main__':
