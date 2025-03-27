@@ -699,9 +699,9 @@ def split_files(file_list, split_dim):
     :returns: new file with sliced dimensions
 
     """
-    if split_dim not in ['areo', 'lev', 'lat', 'lon']:
+    if split_dim not in ['time','areo', 'lev', 'lat', 'lon']:
         print(f"{Red}Split dimension must be one of the following:"
-              f"    areo, lev, lat, lon{Nclr}")
+              f"    time, areo, lev, lat, lon{Nclr}")
         exit()
 
     bounds = np.asarray(args.split).astype(float)
@@ -809,6 +809,7 @@ def split_files(file_list, split_dim):
         else:
             output_file_name = (f"{fpath}/{int(time_dim[0]):05d}{fname[5:-3]}_"
                                 f"Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
+        split_dim = 'time'
     elif split_dim == 'lat':
         new_bounds = [str(abs(int(b)))+"S" if b < 0 else str(int(b))+"N" for b in bounds]
         if len(np.atleast_1d(bounds)) < 2:
