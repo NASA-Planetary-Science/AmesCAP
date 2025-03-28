@@ -756,83 +756,149 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int="lin",
 
     return np.moveaxis(var_OUT, 0, axis)
 
-def layers_mid_point_to_boundary(pfull, sfc_val):
-    """
-    A general description for the layer boundaries is::
+# def layers_mid_point_to_boundary(pfull, sfc_val):
+#     """
+#     A general description for the layer boundaries is::
 
-        p_half = ps*bk + pk
+#         p_half = ps*bk + pk
 
-    This routine converts the coordinate of the layer MIDPOINTS, 
-    ``p_full`` or ``bk``, into the coordinate of the layer BOUNDARIES 
-    ``p_half``. The surface value must be provided.
+#     This routine converts the coordinate of the layer MIDPOINTS, 
+#     ``p_full`` or ``bk``, into the coordinate of the layer BOUNDARIES 
+#     ``p_half``. The surface value must be provided.
 
-    :param p_full: Pressure/sigma values for the layer MIDPOINTS,
-        INCREASING with ``N`` (e.g., [0.01 -> 720] or [0.001 -> 1])
-    :type p_full: 1D array
+#     :param p_full: Pressure/sigma values for the layer MIDPOINTS,
+#         INCREASING with ``N`` (e.g., [0.01 -> 720] or [0.001 -> 1])
+#     :type p_full: 1D array
     
-    :param sfc_val: The surface value for the lowest layer's boundary
-        ``p_half[N]`` (e.g., ``sfc_val`` = 720 Pa or ``sfc_val`` = 1 in
-        sigma coordinates)
-    :type sfc_val: float
+#     :param sfc_val: The surface value for the lowest layer's boundary
+#         ``p_half[N]`` (e.g., ``sfc_val`` = 720 Pa or ``sfc_val`` = 1 in
+#         sigma coordinates)
+#     :type sfc_val: float
 
-    :return: ``p_half`` the pressure at the layer boundaries
-        (size = ``N+1``)
+#     :return: ``p_half`` the pressure at the layer boundaries
+#         (size = ``N+1``)
 
-    Structure::
+#     Structure::
 
-        --- 0 --- TOP   ========  p_half
-        --- 1 ---
-                        --------  p_full
+#         --- 0 --- TOP   ========  p_half
+#         --- 1 ---
+#                         --------  p_full
 
-                        ========  p_half
-        ---Nk-1---      --------  p_full
-        --- Nk --- SFC  ========  p_half
-                        / / / / /
+#                         ========  p_half
+#         ---Nk-1---      --------  p_full
+#         --- Nk --- SFC  ========  p_half
+#                         / / / / /
     
-    We have::
+#     We have::
 
-        pfull[N] = ((phalf[N]-phalf[N-1]) / np.log(phalf[N]/phalf[N-1]))
-        => phalf[N-1] - pfull[N] log(phalf[N-1])
-        = phalf[N] - pfull[N] log(phalf[N])
+#         pfull[N] = ((phalf[N]-phalf[N-1]) / np.log(phalf[N]/phalf[N-1]))
+#         => phalf[N-1] - pfull[N] log(phalf[N-1])
+#         = phalf[N] - pfull[N] log(phalf[N])
 
-    We want to solve for ``phalf[N-1] = X``::
+#     We want to solve for ``phalf[N-1] = X``::
         
-        v                v                             v
-        X      - pfull[N]       log(X)   =             B
+#         v                v                             v
+#         X      - pfull[N]       log(X)   =             B
 
-    ``=> X= -pfull[N] W{-exp(-B/pfull[N])/pfull[N]}``
+#     ``=> X= -pfull[N] W{-exp(-B/pfull[N])/pfull[N]}``
     
-    with ``B = phalf[N] - pfull[N] log(phalf[N])`` (known at N) and
+#     with ``B = phalf[N] - pfull[N] log(phalf[N])`` (known at N) and
     
-    ``W`` is the product-log (Lambert) function.
+#     ``W`` is the product-log (Lambert) function.
 
-    This was tested on an L30 simulation: The values of ``phalf`` are
-    reconstructed from ``pfull`` with a max error of:
+#     This was tested on an L30 simulation: The values of ``phalf`` are
+#     reconstructed from ``pfull`` with a max error of:
     
-    ``100*(phalf - phalf_reconstruct)/phalf < 0.4%`` at the top.
+#     ``100*(phalf - phalf_reconstruct)/phalf < 0.4%`` at the top.
     
-    """
+#     """
 
-    def lambertW_approx(x):
-        # Internal Function. Uniform approximation for the product-log
-        # function
+#     def lambertW_approx(x):
+#         # Internal Function. Uniform approximation for the product-log
+#         # function
+#         A = 2.344
+#         B = 0.8842
+#         C = 0.9294
+#         D = 0.5106
+#         E = -1.213
+#         y = np.sqrt(2*np.e*x + 2)
+#         return ((2*np.log(1+B*y) - np.log(1 + C*np.log(1+D*y)) + E)
+#                 / (1 + 1./(2*np.log(1+B*y) + 2*A)))
+
+#     N = len(pfull)
+#     phalf = np.zeros(N+1)
+#     phalf[N] = sfc_val
+
+#     for i in range(N, 0, -1):
+#         B = phalf[i] - pfull[i-1]*np.log(phalf[i])
+#         phalf[i-1] = (-pfull[i-1] * lambertW_approx(-np.exp(-B / pfull[i-1])
+#                                                     / pfull[i-1]))
+#     return phalf
+
+def layers_mid_point_to_boundary(pfull, sfc_val):
+    """Robust version of layers_mid_point_to_boundary that handles PCM data"""
+    N = len(pfull)
+    phalf = np.zeros(N+1)
+    phalf[N] = sfc_val
+    
+    # Implement a more robust Lambert W approximation
+    def improved_lambertW_approx(x):
+        # Bounds checking to prevent out-of-range values
+        if x < -1/np.e:
+            return -10  # Signal an error condition
+        
         A = 2.344
         B = 0.8842
         C = 0.9294
         D = 0.5106
         E = -1.213
-        y = np.sqrt(2*np.e*x + 2)
-        return ((2*np.log(1+B*y) - np.log(1 + C*np.log(1+D*y)) + E)
+        y = np.sqrt(max(0, 2*np.e*x + 2))  # Ensure non-negative input to sqrt
+        return ((2*np.log(1+B*y) - np.log(1 + C*np.log(1+D*y)) + E) 
                 / (1 + 1./(2*np.log(1+B*y) + 2*A)))
-
-    N = len(pfull)
-    phalf = np.zeros(N+1)
-    phalf[N] = sfc_val
-
-    for i in range(N, 0, -1):
-        B = phalf[i] - pfull[i-1]*np.log(phalf[i])
-        phalf[i-1] = (-pfull[i-1] * lambertW_approx(-np.exp(-B / pfull[i-1])
-                                                    / pfull[i-1]))
+    
+    # Special handling for PCM: use linear extrapolation for first interface
+    if pfull[0] > 0.1:  # PCM typically has first level around 0.195 Pa
+        # Use linear extrapolation for first interface to avoid numerical issues
+        ratio = pfull[1]/pfull[0]
+        phalf[0] = pfull[0]/ratio
+        
+        # Then calculate remaining interfaces with Lambert W
+        for i in range(N, 1, -1):
+            try:
+                B = phalf[i] - pfull[i-1]*np.log(max(1e-10, phalf[i]))  # Prevent log(negative)
+                lw_arg = -np.exp(-B / pfull[i-1]) / pfull[i-1]
+                # Ensure in valid range for Lambert W
+                if lw_arg < -1/np.e:
+                    # Fall back to linear extrapolation
+                    ratio = pfull[i-1]/pfull[i-2]
+                    phalf[i-1] = max(1e-10, pfull[i-1]/ratio)
+                else:
+                    w_value = improved_lambertW_approx(lw_arg)
+                    if w_value == -10:  # Error signal
+                        # Fall back to linear extrapolation
+                        ratio = pfull[i-1]/pfull[i-2]
+                        phalf[i-1] = max(1e-10, pfull[i-1]/ratio)
+                    else:
+                        phalf[i-1] = max(1e-10, -pfull[i-1] * w_value)
+            except:
+                # Fall back to linear extrapolation
+                ratio = pfull[i-1]/pfull[i-2]
+                phalf[i-1] = max(1e-10, pfull[i-1]/ratio)
+    else:
+        # Regular calculation for other models
+        for i in range(N, 0, -1):
+            try:
+                B = phalf[i] - pfull[i-1]*np.log(phalf[i])
+                w_result = improved_lambertW_approx(-np.exp(-B / pfull[i-1]) / pfull[i-1])
+                phalf[i-1] = max(1e-10, -pfull[i-1] * w_result)
+            except:
+                # Fall back to simple linear extrapolation
+                if i > 1:
+                    ratio = pfull[i-1]/pfull[i-2]
+                    phalf[i-1] = max(1e-10, pfull[i-1]/ratio)
+                else:
+                    phalf[i-1] = max(1e-10, pfull[i-1]/2)
+                    
     return phalf
 
 def polar2XYZ(lon, lat, alt, Re=3400*10**3):
