@@ -781,21 +781,50 @@ def main():
             nday = args.bin_average
 
             # Output Binned Data to New **atmos_average.nc file
-            # Figure out number of timesteps per 5 sol
-            dt_in = DS[model.dim_time][1] - DS[model.dim_time][0]
-            print(f"DEBUG: dt_in = {dt_in}")
+            # Get time values and units
+            time_vals = DS[model.dim_time].values
+            time_units = DS[model.dim_time].attrs.get('units', '').lower()
+            time_desc = DS[model.dim_time].attrs.get('description', '').lower()
 
-            iperday = int(np.round(1/dt_in)) # at least one per day
-            print(f"DEBUG: iperday = {iperday}")
-            if iperday == 0:
-                print(f"{Red}***Error***: Operation not permitted because "
-                      f"time sampling in file < one time step per day")
-                break
+            if len(time_vals) < 2:
+                print(f"{Red}***Error***: File has only one time step, cannot perform averaging")
+                continue  # Skip to next file
 
-            combinedN = int(iperday*nday)
-            # Coarsen the 'time' dimension by a factor of 5 and average 
-            # over each window
-            DS_average = DS.coarsen(**{model.dim_time:combinedN},boundary='trim').mean()
+            # Calculate time step
+            dt_in = float(time_vals[1] - time_vals[0])
+            print(f"DEBUG: Raw dt_in = {dt_in} with units inferred from: {time_units or time_desc}")
+
+            # Convert to days if necessary
+            dt_days = dt_in
+            if 'minute' in time_units or 'minute' in time_desc:
+                dt_days = dt_in / 1440.0  # Convert minutes to days
+                print(f"DEBUG: Converting {dt_in} minutes to {dt_days} days")
+            elif 'hour' in time_units or 'hour' in time_desc:
+                dt_days = dt_in / 24.0  # Convert hours to days
+                print(f"DEBUG: Converting {dt_in} hours to {dt_days} days")
+
+            # Check if bin size is appropriate
+            if dt_days > nday:
+                print(f"{Red}***Error***: Requested bin size ({nday} days) is smaller than "
+                    f"the time step in the data ({dt_days:.2f} days)")
+                continue  # Skip to next file
+
+            # Calculate samples per day and samples per bin
+            samples_per_day = 1.0 / dt_days
+            samples_per_bin = nday * samples_per_day
+
+            # Need at least one sample per bin
+            if samples_per_bin < 1:
+                print(f"{Red}***Error***: Time sampling in file ({1.0/samples_per_day:.2f} days "
+                    f"between samples) is too coarse for {nday}-day bins")
+                continue  # Skip to next file
+
+            # Round to nearest integer for coarsen function
+            combinedN = max(1, int(round(samples_per_bin)))
+            print(f"DEBUG: Using {combinedN} time steps per {nday}-day bin")
+
+            # Coarsen and average
+            DS_average = DS.coarsen(**{model.dim_time:combinedN}, boundary='trim').mean()
 
             # Update the time coordinate attribute
             DS_average[model.dim_time].attrs['long_name'] = (
