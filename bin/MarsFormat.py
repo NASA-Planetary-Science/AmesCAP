@@ -609,6 +609,12 @@ def main():
                 if 'title' in var.attrs:
                     var.attrs['long_name'] = var.attrs['title']
 
+            # Print the values for debugging
+            if debug:
+                print(f"ap = {DS.ap.values}")
+                print(f"bp = {DS.bp.values}")
+
+            # Create pfull variable
             pfull = (DS.aps.values + DS.bps.values*ref_press)
             DS['pfull'] = (['altitude'],  pfull)
             DS['pfull'].attrs['long_name'] = '(ADDED POST-PROCESSING), reference pressure'
@@ -637,20 +643,6 @@ def main():
                 DS['phalf'] = (['interlayer'], phalf_values)
                 DS['phalf'].attrs['long_name'] = '(ADDED POST PROCESSING) pressure at layer interfaces'
                 DS['phalf'].attrs['units'] = 'Pa'
-                
-                # Also add ak and bk variables for consistency
-                bk_values = np.zeros(n_layers + 1)
-                bk_values[-1] = 1.0  # Surface has bk=1
-                DS['bk'] = (['interlayer'], bk_values)
-                DS['bk'].attrs['long_name'] = '(ADDED POST PROCESSING) vertical coordinate sigma value'
-                DS['bk'].attrs['units'] = 'None'
-                
-                ak_values = np.zeros(n_layers + 1)
-                DS['ak'] = (['interlayer'], ak_values)
-                DS['ak'].attrs['long_name'] = '(ADDED POST PROCESSING) pressure part of the hybrid coordinate'
-                DS['ak'].attrs['units'] = 'Pa'
-                print(f"ak = {DS['ak'].values}")
-                print(f"bk = {DS['bk'].values}")
 
         # --------------------------------------------------------------
         #                START PROCESSING FOR ALL MODELS
@@ -725,17 +717,6 @@ def main():
                     # Potential dimensions
                     if val in list(DS.dims):
                         model_dims[val] = key_i[4:]
-            
-            # When creating model_vars dictionary, add this check for PCM
-            if model_type == 'pcm':
-                # Remove any variables that we've already created directly
-                print(f"bp = {DS['bp'].values}")
-                print(f"ap = {DS['ap'].values}")
-                # Remove 'bp' and 'ap' if they are equal to 'bk' and 'ak'
-                if 'bp' in model_vars and model_vars['bp'] == 'bk':
-                    del model_vars['bp']
-                if 'ap' in model_vars and model_vars['ap'] == 'ak':
-                    del model_vars['ap']
                 
             # Sort the dictionaries to remove duplicates
             # Remove key/val duplicates: e.g if {'lat':'lat'}, there is 
