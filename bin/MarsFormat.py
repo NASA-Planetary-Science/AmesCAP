@@ -783,8 +783,10 @@ def main():
             # Output Binned Data to New **atmos_average.nc file
             # Figure out number of timesteps per 5 sol
             dt_in = DS[model.dim_time][1] - DS[model.dim_time][0]
+            print(f"DEBUG: dt_in = {dt_in}")
 
             iperday = int(np.round(1/dt_in)) # at least one per day
+            print(f"DEBUG: iperday = {iperday}")
             if iperday == 0:
                 print(f"{Red}***Error***: Operation not permitted because "
                       f"time sampling in file < one time step per day")
