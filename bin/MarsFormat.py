@@ -649,6 +649,8 @@ def main():
                 DS['ak'] = (['interlayer'], ak_values)
                 DS['ak'].attrs['long_name'] = '(ADDED POST PROCESSING) pressure part of the hybrid coordinate'
                 DS['ak'].attrs['units'] = 'Pa'
+                print(f"ak = {DS['ak'].values}")
+                print(f"bk = {DS['bk'].values}")
 
         # --------------------------------------------------------------
         #                START PROCESSING FOR ALL MODELS
@@ -724,6 +726,17 @@ def main():
                     if val in list(DS.dims):
                         model_dims[val] = key_i[4:]
             
+            # When creating model_vars dictionary, add this check for PCM
+            if model_type == 'pcm':
+                # Remove any variables that we've already created directly
+                print(f"bp = {DS['bp'].values}")
+                print(f"ap = {DS['ap'].values}")
+                # Remove 'bp' and 'ap' if they are equal to 'bk' and 'ak'
+                if 'bp' in model_vars and model_vars['bp'] == 'bk':
+                    del model_vars['bp']
+                if 'ap' in model_vars and model_vars['ap'] == 'ak':
+                    del model_vars['ap']
+                
             # Sort the dictionaries to remove duplicates
             # Remove key/val duplicates: e.g if {'lat':'lat'}, there is 
             # no need to rename that variable
