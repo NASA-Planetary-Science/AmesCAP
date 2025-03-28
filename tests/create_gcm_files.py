@@ -207,7 +207,7 @@ def create_emars_test():
     time_values = np.arange(0, 1.103e+03+1.0, 1.0).tolist()
     Ls_values = np.linspace(239.92, 269.82, 1104).tolist()
     MY_values = np.full(1104, 28.0).tolist()
-    lat_values = np.arange(-88.71428571, 88.71428571+0.1, 5.14285714).tolist()
+    lat_values = np.linspace(-88.71428571, 88.71428571, 36).tolist()
     latu_values = np.arange(-87.42857143, 87.42857143+0.1, 5.14285714).tolist()
     lon_values = np.arange(3, 357+1, 6).tolist()
     lonv_values = np.arange(0, 354+1, 6).tolist()
