@@ -240,15 +240,11 @@ def main():
         DS = xr.open_dataset(fullnameIN, decode_times=False)
         
         # Store the original time values and units before any modifications
-        original_time_vals = None
-        original_time_units = None
-        original_time_desc = None
-        
-        if model.time in DS:
-            original_time_vals = DS[model.time].values.copy()  # Use copy to ensure independence
-            original_time_units = DS[model.time].attrs.get('units', '')
-            original_time_desc = DS[model.time].attrs.get('description', '')
-            print(f"DEBUG: Saved original time values with units '{original_time_units}' and description '{original_time_desc}'")
+        # Store the original time values and units before any modifications
+        original_time_vals = DS[model.time].values.copy()  # This will always exist
+        original_time_units = DS[model.time].attrs.get('units', '')
+        original_time_desc = DS[model.time].attrs.get('description', '')
+        print(f"DEBUG: Saved original time values with units '{original_time_units}' and description '{original_time_desc}'")
         
         # Find and update time dimension name
         time_dim = get_time_dimension_name(DS, model)
@@ -790,43 +786,21 @@ def main():
         if args.bin_average:
             ext = f'{ext}_average'
             nday = args.bin_average
-
-            # Always use original time values for time step calculation if available
-            if original_time_vals is not None and len(original_time_vals) >= 2:
-                # Calculate time step from original unmodified values
-                dt_in = float(original_time_vals[1] - original_time_vals[0])
-                print(f"DEBUG: Using original time values with dt_in = {dt_in}")
-                
-                # Convert time step to days based on original units
-                dt_days = dt_in
-                if 'minute' in original_time_units.lower() or 'minute' in original_time_desc.lower():
-                    dt_days = dt_in / 1440.0  # Convert minutes to days
-                    print(f"DEBUG: Converting {dt_in} minutes to {dt_days} days")
-                elif 'hour' in original_time_units.lower() or 'hour' in original_time_desc.lower():
-                    dt_days = dt_in / 24.0  # Convert hours to days
-                    print(f"DEBUG: Converting {dt_in} hours to {dt_days} days")
-                else:
-                    print(f"DEBUG: No time unit found in original attributes, assuming 'days'")
+            
+            # Calculate time step from original unmodified values
+            dt_in = float(original_time_vals[1] - original_time_vals[0])
+            print(f"DEBUG: Using original time values with dt_in = {dt_in}")
+            
+            # Convert time step to days based on original units
+            dt_days = dt_in
+            if 'minute' in original_time_units.lower() or 'minute' in original_time_desc.lower():
+                dt_days = dt_in / 1440.0  # Convert minutes to days
+                print(f"DEBUG: Converting {dt_in} minutes to {dt_days} days")
+            elif 'hour' in original_time_units.lower() or 'hour' in original_time_desc.lower():
+                dt_days = dt_in / 24.0  # Convert hours to days
+                print(f"DEBUG: Converting {dt_in} hours to {dt_days} days")
             else:
-                # Fallback to current method if original values not available
-                time_vals = DS[model.dim_time].values
-                time_units = DS[model.dim_time].attrs.get('units', '').lower()
-                time_desc = DS[model.dim_time].attrs.get('description', '').lower()
-                
-                # Calculate time step
-                dt_in = float(time_vals[1] - time_vals[0])
-                print(f"DEBUG: Using current time values with dt_in = {dt_in}")
-                
-                # Convert to days if necessary
-                dt_days = dt_in
-                if 'minute' in time_units or 'minute' in time_desc:
-                    dt_days = dt_in / 1440.0  # Convert minutes to days
-                    print(f"DEBUG: Converting {dt_in} minutes to {dt_days} days")
-                elif 'hour' in time_units or 'hour' in time_desc:
-                    dt_days = dt_in / 24.0  # Convert hours to days
-                    print(f"DEBUG: Converting {dt_in} hours to {dt_days} days")
-                else:
-                    print(f"DEBUG: No time unit found in attributes, assuming 'days'")
+                print(f"DEBUG: No time unit found in original attributes, assuming 'days'")
             
             # Check if bin size is appropriate
             if dt_days >= nday:
@@ -880,15 +854,33 @@ def main():
                 nday = args.bin_average
             else:
                 nday = 5
-
-            dt_in = DS[model.dim_time][1] - DS[model.dim_time][0]
-            iperday = int(np.round(1/dt_in))
-            if iperday == 0:
-                print(f"{Red}***Error***: Operation not permitted because "
-                      f"time sampling in file < one time step per day")
-                break
+                
+            # Calculate time step from original unmodified values
+            dt_in = float(original_time_vals[1] - original_time_vals[0])
+            print(f"DEBUG: Using original time values with dt_in = {dt_in}")
             
+            # Convert time step to days based on original units
+            dt_days = dt_in
+            if 'minute' in original_time_units.lower() or 'minute' in original_time_desc.lower():
+                dt_days = dt_in / 1440.0  # Convert minutes to days
+                print(f"DEBUG: Converting {dt_in} minutes to {dt_days} days")
+            elif 'hour' in original_time_units.lower() or 'hour' in original_time_desc.lower():
+                dt_days = dt_in / 24.0  # Convert hours to days
+                print(f"DEBUG: Converting {dt_in} hours to {dt_days} days")
+            else:
+                print(f"DEBUG: No time unit found in original attributes, assuming 'days'")
+            
+            # Calculate samples per day and check if valid
+            samples_per_day = 1.0 / dt_days
+            if samples_per_day < 1:
+                print(f"{Red}***Error***: Operation not permitted because "
+                    f"time sampling in file < one time step per day")
+                continue  # Skip to next file
+            
+            # Calculate number of steps to bin
+            iperday = int(round(samples_per_day))
             combinedN = int(iperday * nday)
+            print(f"DEBUG: Using {combinedN} time steps per {nday}-day bin with {iperday} samples per day")
             
             # Output Binned Data to New  **atmos_diurn.nc file
             # create a new time of day dimension
