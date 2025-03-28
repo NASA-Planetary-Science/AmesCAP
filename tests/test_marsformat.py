@@ -40,26 +40,37 @@ class TestMarsFormat(unittest.TestCase):
         for gcm_type in self.gcm_types:
             self.test_files[gcm_type] = os.path.join(self.test_dir, f"{gcm_type}_test.nc")
 
-        # Get path to create_gcm_files.py script
-        create_files_script = os.path.join(self.project_root, "tests", "create_gcm_files.py")
+        # # Get path to create_gcm_files.py script
+        # create_files_script = os.path.join(self.project_root, "tests", "create_gcm_files.py")
         
-        # Execute the script to create test files
-        result = subprocess.run(
-            [sys.executable, create_files_script],
-            capture_output=True,
-            text=True,
-            cwd=self.test_dir
-        )
+        # # Execute the script to create test files
+        # result = subprocess.run(
+        #     [sys.executable, create_files_script],
+        #     capture_output=True,
+        #     text=True,
+        #     cwd=self.test_dir
+        # )
+        # Copy real data files
+        subprocess.run(['cp', os.path.expanduser('~/marsformat_data/emars_Ls240-270.nc'), 
+                        os.path.join(self.test_dir, 'emars_test.nc')], check=True)
+        subprocess.run(['cp', os.path.expanduser('~/marsformat_data/marswrf_d01_0001-00669.nc'), 
+                        os.path.join(self.test_dir, 'marswrf_test.nc')], check=True)
+        subprocess.run(['cp', os.path.expanduser('~/marsformat_data/openmars_Ls264-284.nc'), 
+                        os.path.join(self.test_dir, 'openmars_test.nc')], check=True)
+        subprocess.run(['cp', os.path.expanduser('~/marsformat_data/pcm_Ls264-280.nc'), 
+                        os.path.join(self.test_dir, 'pcm_test.nc')], check=True)
         
-        # Print output for debugging
-        print(f"File creation output: {result.stdout}")
+        print("File creation output: Copied real data files from ~/marsformat_data/")
+        
+        # # Print output for debugging
+        # print(f"File creation output: {result.stdout}")
         
         # Check files were created
         for gcm_type, test_file in self.test_files.items():
             if not os.path.exists(test_file):
                 print(f"Warning: Test file {test_file} was not created!")
-                if result.stderr:
-                    print(f"Error output: {result.stderr}")
+                # if result.stderr:
+                #     print(f"Error output: {result.stderr}")
     
     def tearDown(self):
         """Clean up any generated files after each test"""
