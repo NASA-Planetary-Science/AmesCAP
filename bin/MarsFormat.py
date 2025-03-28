@@ -624,19 +624,21 @@ def main():
             if 'interlayer' in DS.dims:
                 # First, use the actual ap and bp values from the file directly
                 if 'ap' in DS and 'bp' in DS:
-                    # Check if ap and bp arrays are ordered correctly
-                    print(f"DEBUG: PCM ap values: {DS.ap.values}")
-                    print(f"DEBUG: PCM bp values: {DS.bp.values}")
-                    
                     # Use ap and bp directly for phalf (these should already have n+1 values)
                     phalf_values = DS.ap.values + DS.bp.values * ref_press
                     
-                    # Ensure correct ordering (lowest pressure at index 0)
-                    if phalf_values[0] > phalf_values[1]:
+                    # Check if already in correct order - we want LOWEST pressure at index 0
+                    # Instead of automatically reversing, add a flag to track if we've already fixed the order
+                    if phalf_values[0] > phalf_values[-1]:
+                        print(f"DEBUG: phalf values already in correct order (decreasing with index)")
+                        already_flipped = True
+                    else:
                         print(f"DEBUG: Reversing phalf_values order")
                         phalf_values = phalf_values[::-1]
-                        
-                    print(f"DEBUG: PCM phalf values from ap/bp: {phalf_values}")
+                        already_flipped = True
+                    
+                    # Store this flag as a global variable or in the Dataset as an attribute
+                    DS.attrs['already_flipped_vertical'] = already_flipped
                 else:
                     # Fallback to calculating phalf from pfull
                     n_layers = len(pfull)
@@ -663,13 +665,18 @@ def main():
         #                START PROCESSING FOR ALL MODELS
         # --------------------------------------------------------------
         # Check that vertical grid starts at TOA w/ largest level at surface
-        
-        if DS[model.pfull].values[0] != DS[model.pfull].values.min():
-            DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
-            # Flip phalf, ak, bk:
-            DS = DS.isel(**{model.dim_phalf: slice(None, None, -1)})
-            print(f"{Red}NOTE: all variables flipped along vertical "
-                  f"dimension. Top of the atmosphere is now index = 0")
+        # Before flipping, check if we've already done it for this model type
+        if model_type == 'pcm' and DS.attrs.get('already_flipped_vertical', False):
+            print(f"{Cyan}Skipping vertical flip since this was already done in PCM processing")
+            # No need to flip again
+        else:
+            # Check if vertical grid needs flipping
+            if DS[model.pfull].values[0] != DS[model.pfull].values.min():
+                DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
+                # Flip phalf, ak, bk:
+                DS = DS.isel(**{model.dim_phalf: slice(None, None, -1)})
+                print(f"{Red}NOTE: all variables flipped along vertical "
+                    f"dimension. Top of the atmosphere is now index = 0")
         
         # Reorder dimensions
         print(f"{Cyan} Transposing variable dimensions to match order "
