@@ -423,25 +423,54 @@ def create_pcm_test():
     subsurface_dim = nc_file.createDimension('subsurface_layers', 18)
     index_dim = nc_file.createDimension('index', 100)
     
+    # Create variables with longname and units
     ap_var = nc_file.createVariable('ap', 'f4', ('interlayer',))
+    ap_var.units = "Pa"
+    
     bp_var = nc_file.createVariable('bp', 'f4', ('interlayer',))
+    bp_var.units = ""
+    
     altitude_var = nc_file.createVariable('altitude', 'f4', ('altitude',))
+    altitude_var.long_name = "pseudo-alt"
+    altitude_var.units = "km"
+    
     aps_var = nc_file.createVariable('aps', 'f4', ('altitude',))
+    aps_var.units = "Pa"
+    
     bps_var = nc_file.createVariable('bps', 'f4', ('altitude',))
+    bps_var.units = ""
+    
     controle_var = nc_file.createVariable('controle', 'f4', ('index',))
+    controle_var.units = ""
+    
     longitude_var = nc_file.createVariable('longitude', 'f4', ('longitude',))
+    longitude_var.long_name = "East longitude"
+    longitude_var.units = "degrees_east"
+    
     Ls_var = nc_file.createVariable('Ls', 'f4', ('Time',))
+    Ls_var.units = "deg"
+    
     Sols_var = nc_file.createVariable('Sols', 'f4', ('Time',))
+    Sols_var.units = "sols"
+    
     Time_var = nc_file.createVariable('Time', 'f4', ('Time',))
+    Time_var.long_name = "Time"
+    Time_var.units = "days since 0000-00-0 00:00:00"
+    
     soildepth_var = nc_file.createVariable('soildepth', 'f4', ('subsurface_layers',))
+    soildepth_var.long_name = "Soil mid-layer depth"
+    soildepth_var.units = "m"
+    
     latitude_var = nc_file.createVariable('latitude', 'f4', ('latitude',))
+    latitude_var.long_name = "North latitude"
+    latitude_var.units = "degrees_north"
 
     # --------- Generate realistic values for PCM-like data ----------
     latitude_values = np.arange(90, -90.1, -3.75).tolist()
     longitude_values = np.arange(-180, 180.1, 5.625).tolist()
     ls_step = (280.42017 - 264.49323) / (100 - 1)
-    sols_values = np.arange(1175.2489, 1199.9989+0.25, 0.25).tolist()
-    time_values = np.arange(488.25, 513.00 + 0.25/2, 0.25).tolist()
+    sols_values = np.linspace(1175.2489, 1199.9989, 100).tolist()
+    time_values = np.linspace(488.25, 513.00, 100).tolist()
 
     # controle: 100 values with first 11 specified and the rest zero
     def generate_controle(length=100):
@@ -548,7 +577,7 @@ def create_pcm_test():
     ap_var[:] = ap_values
     bp_var[:] = bp_values
     soildepth_var[:] = soildepth_values
-
+    
     # Helper function to create a variable
     def create_var(name, dimensions, units, longname, min_val, max_val, data_type=np.float32):
         var = nc_file.createVariable(name, data_type, dimensions)
