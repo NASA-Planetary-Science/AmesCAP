@@ -23,27 +23,90 @@ def create_emars_test():
     lon_dim = nc_file.createDimension('lon', 60)
     lonv_dim = nc_file.createDimension('lonv', 60)
     
+    # Create variables with longname and units
     lonv_var = nc_file.createVariable('lonv', 'f4', ('lonv',))
+    lonv_var.long_name = "longitude"
+    lonv_var.units = "degree_E"
+    
     lat_var = nc_file.createVariable('lat', 'f4', ('lat',))
+    lat_var.long_name = "latitude"
+    lat_var.units = "degree_N"
+    
     ak_var = nc_file.createVariable('ak', 'f4', ('phalf',))
+    ak_var.long_name = "pressure part of the hybrid coordinate"
+    ak_var.units = "pascal"
+    
     bk_var = nc_file.createVariable('bk', 'f4', ('phalf',))
+    bk_var.long_name = "vertical coordinate sigma value"
+    bk_var.units = "none"
+    
     phalf_var = nc_file.createVariable('phalf', 'f4', ('phalf',))
+    phalf_var.long_name = "ref half pressure level"
+    phalf_var.units = "mb"
+    
     latu_var = nc_file.createVariable('latu', 'f4', ('latu',))
+    latu_var.long_name = "latitude"
+    latu_var.units = "degree_N"
+    
     lon_var = nc_file.createVariable('lon', 'f4', ('lon',))
+    lon_var.long_name = "longitude"
+    lon_var.units = "degree_E"
+    
     Ls_var = nc_file.createVariable('Ls', 'f4', ('time',))
+    Ls_var.long_name = "areocentric longitude"
+    Ls_var.units = "deg"
+    
     MY_var = nc_file.createVariable('MY', 'f4', ('time',))
+    MY_var.long_name = "Mars Year"
+    MY_var.units = "Martian year"
+    
     earth_year_var = nc_file.createVariable('earth_year', 'f4', ('time',))
+    earth_year_var.long_name = "Earth year AD"
+    earth_year_var.units = "Earth year"
+    
     earth_month_var = nc_file.createVariable('earth_month', 'f4', ('time',))
+    earth_month_var.long_name = "Earth month of the year"
+    earth_month_var.units = "Earth month"
+    
     earth_day_var = nc_file.createVariable('earth_day', 'f4', ('time',))
+    earth_day_var.long_name = "Earth day of the month"
+    earth_day_var.units = "Earth day"
+    
     earth_hour_var = nc_file.createVariable('earth_hour', 'f4', ('time',))
+    earth_hour_var.long_name = "Earth hour of the day"
+    earth_hour_var.units = "Earth hour"
+    
     earth_minute_var = nc_file.createVariable('earth_minute', 'f4', ('time',))
+    earth_minute_var.long_name = "Earth minute of the hour"
+    earth_minute_var.units = "Earth minute"
+    
     earth_second_var = nc_file.createVariable('earth_second', 'f4', ('time',))
+    earth_second_var.long_name = "Earth second and fractional second of the minute"
+    earth_second_var.units = "Earth second"
+    
     emars_sol_var = nc_file.createVariable('emars_sol', 'f4', ('time',))
+    emars_sol_var.long_name = "sols after MY 22 perihelion"
+    emars_sol_var.units = "Martian sol"
+    
     macda_sol_var = nc_file.createVariable('macda_sol', 'f4', ('time',))
+    macda_sol_var.long_name = "sols after the start of MY 24"
+    macda_sol_var.units = "Martian year"
+    
     mars_hour_var = nc_file.createVariable('mars_hour', 'f4', ('time',))
+    mars_hour_var.long_name = "hour of the Martian day"
+    mars_hour_var.units = "Martian hour"
+    
     mars_soy_var = nc_file.createVariable('mars_soy', 'f4', ('time',))
+    mars_soy_var.long_name = "sols after the last Martian vernal equinox"
+    mars_soy_var.units = "Martian sol"
+    
     time_var = nc_file.createVariable('time', 'f4', ('time',))
+    time_var.long_name = "number of hours since start of file"
+    time_var.units = "Martian hour"
+    
     pfull_var = nc_file.createVariable('pfull', 'f4', ('pfull',))
+    pfull_var.long_name = "ref full pressure level"
+    pfull_var.units = "mb"
 
     # --------- Generate realistic values for EMARS-like data ----------
     # earth_month: Values represent month numbers (5=May, 6=June, 7=July)
