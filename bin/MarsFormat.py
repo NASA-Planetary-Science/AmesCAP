@@ -172,6 +172,35 @@ if args.input_file:
 path2data = os.getcwd()
 ref_press = 725  # TODO hard-coded reference pressure
 
+def get_time_dimension_name(DS, model):
+    """
+    Find the time dimension name in the dataset.
+    Updates the model object with the correct dimension name.
+    
+    Args:
+        DS: The xarray Dataset
+        model: Model object with dimension information
+        
+    Returns:
+        str: The actual time dimension name found
+    """
+    # First try the expected dimension name
+    if model.dim_time in DS.dims:
+        return model.dim_time
+        
+    # Check alternative names
+    possible_names = ['Time', 'time', 'ALSO_Time']
+    for name in possible_names:
+        if name in DS.dims:
+            print(f"{Yellow}Notice: Using '{name}' as time dimension instead of "
+                  f"'{model.dim_time}'{Nclr}")
+            model.dim_time = name
+            return name
+    
+    # If no time dimension is found, raise an error
+    raise KeyError(f"No time dimension found in dataset. Expected one of: "
+                  f"{model.dim_time}, {', '.join(possible_names)}")
+
 @debug_wrapper
 def main():
     ext = '' # Initialize empty extension
@@ -210,6 +239,9 @@ def main():
         # Open dataset with xarray
         DS = xr.open_dataset(fullnameIN, decode_times=False)
 
+        # Find and update time dimension name
+        time_dim = get_time_dimension_name(DS, model)
+        
         # --------------------------------------------------------------
         #                    MarsWRF Specific Processing
         # --------------------------------------------------------------
@@ -579,19 +611,17 @@ def main():
 
             pfull = (DS.aps.values + DS.bps.values*ref_press)
             DS['pfull'] = (['altitude'],  pfull)
-            DS['pfull'].attrs['long_name'] = (
-                '(ADDED POST-PROCESSING), reference pressure'
-                )
+            DS['pfull'].attrs['long_name'] = '(ADDED POST-PROCESSING), reference pressure'
             DS['pfull'].attrs['units'] = 'Pa'
 
-            #  Add missing phalf calculation
-            pfull_values = DS['pfull'].values
-            phalf_values = layers_mid_point_to_boundary(pfull_values, ref_press)
-            DS[model.phalf] = (['phalf'], phalf_values)
-            DS[model.phalf].attrs['long_name'] = (
-                '(ADDED POST PROCESSING) pressure at layer interfaces'
-                )
-            DS[model.phalf].attrs['units'] = 'Pa'
+            # Create phalf as a separate variable rather than a dimension replacement
+            if 'interlayer' in DS.dims:
+                # Create phalf but don't try to replace interlayer dimension
+                phalf_values = layers_mid_point_to_boundary(pfull, ref_press)
+                num_layers = len(phalf_values)
+                DS['phalf'] = (['interlayer'], phalf_values)
+                DS['phalf'].attrs['long_name'] = '(ADDED POST PROCESSING) pressure at layer interfaces'
+                DS['phalf'].attrs['units'] = 'Pa'
 
         # --------------------------------------------------------------
         #                START PROCESSING FOR ALL MODELS
@@ -673,12 +703,37 @@ def main():
             model_dims = {key: val for key, val in model_dims.items() if key != val}
             model_vars = {key: val for key, val in model_vars.items() if key != val}
             
-            DS = DS.swap_dims(dims_dict = model_dims)
-            DS = DS.rename_vars(name_dict = model_vars)
+            # Special handling for PCM to avoid dimension swap errors
+            dimension_swap_failed = False
+            if model_type == 'pcm':
+                try:
+                    DS = DS.swap_dims(dims_dict = model_dims)
+                except ValueError as e:
+                    if "replacement dimension" in str(e):
+                        print(f"{Yellow}Warning: PCM dimension swap failed. "
+                            f"Automatically using retain_names approach for dimensions.{Nclr}")
+                        # Skip the dimension swap but continue with variable renaming
+                        dimension_swap_failed = True
+                    else:
+                        # Re-raise other errors
+                        raise
+            else:
+                # Normal processing for other GCM types
+                DS = DS.swap_dims(dims_dict = model_dims)
             
-            print(f"{Cyan}Renamed variables:\n{list(DS.variables)}{Nclr}\n")
-            # Update CAP's internal variables dictionary
-            model = reset_FV3_names(model)
+            # Continue with variable renaming regardless of dimension swap status
+            if not dimension_swap_failed:
+                DS = DS.rename_vars(name_dict = model_vars)
+                print(f"{Cyan}Renamed variables:\n{list(DS.variables)}{Nclr}\n")
+                # Update CAP's internal variables dictionary
+                model = reset_FV3_names(model)
+            else:
+                # If dimension swap failed, still rename variables but handle as if using retain_names
+                DS = DS.rename_vars(name_dict = model_vars)
+                print(f"{Cyan}Renamed variables (with original dimensions):\n{list(DS.variables)}{Nclr}\n")
+                # Add the _nat suffix as if -rn was used, but we still renamed variables
+                if '_nat' not in ext:
+                    ext = f'{ext}_nat'
             
         # --------------------------------------------------------------
         # CREATE ATMOS_DAILY, ATMOS_AVERAGE, & ATMOS_DIURN FILES

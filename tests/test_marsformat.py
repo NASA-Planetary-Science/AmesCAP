@@ -276,7 +276,7 @@ class TestMarsFormat(unittest.TestCase):
         for gcm_type in self.gcm_types:
             # Test without retain_names
             result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
-                                         "-gcm", gcm_type, "-ba", "3"])
+                                         "-gcm", gcm_type, "-ba", "10"])
             
             self.assertEqual(result.returncode, 0, 
                           f"MarsFormat.py failed for {gcm_type} with bin_average: {result.stderr}")
@@ -295,7 +295,7 @@ class TestMarsFormat(unittest.TestCase):
             
             # Test with retain_names
             result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
-                                         "-gcm", gcm_type, "-ba", "3", "-rn"])
+                                         "-gcm", gcm_type, "-ba", "10", "-rn"])
             
             self.assertEqual(result.returncode, 0, 
                           f"MarsFormat.py failed for {gcm_type} with bin_average and retain_names: {result.stderr}")
