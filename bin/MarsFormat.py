@@ -620,24 +620,39 @@ def main():
             DS['pfull'].attrs['long_name'] = '(ADDED POST-PROCESSING), reference pressure'
             DS['pfull'].attrs['units'] = 'Pa'
 
-            # Create phalf directly using a simple linear interpolation
+            # Create phalf for PCM:
             if 'interlayer' in DS.dims:
-                n_layers = len(pfull)
-                phalf_values = np.zeros(n_layers + 1)
-                
-                # Middle interfaces - average adjacent mid-points
-                for i in range(n_layers-1):
-                    phalf_values[i+1] = 0.5 * (pfull[i] + pfull[i+1])
-                
-                # Top interface (extrapolate upward)
-                if n_layers > 1:
-                    dp = pfull[1] - pfull[0]
-                    phalf_values[0] = max(pfull[0] - dp/2, 1e-6)
+                # First, use the actual ap and bp values from the file directly
+                if 'ap' in DS and 'bp' in DS:
+                    # Check if ap and bp arrays are ordered correctly
+                    print(f"DEBUG: PCM ap values: {DS.ap.values}")
+                    print(f"DEBUG: PCM bp values: {DS.bp.values}")
+                    
+                    # Use ap and bp directly for phalf (these should already have n+1 values)
+                    phalf_values = DS.ap.values + DS.bp.values * ref_press
+                    
+                    # Ensure correct ordering (lowest pressure at index 0)
+                    if phalf_values[0] > phalf_values[1]:
+                        print(f"DEBUG: Reversing phalf_values order")
+                        phalf_values = phalf_values[::-1]
+                        
+                    print(f"DEBUG: PCM phalf values from ap/bp: {phalf_values}")
                 else:
-                    phalf_values[0] = max(pfull[0]/2, 1e-6)
-                
-                # Bottom interface (surface)
-                phalf_values[-1] = ref_press
+                    # Fallback to calculating phalf from pfull
+                    n_layers = len(pfull)
+                    phalf_values = np.zeros(n_layers + 1)
+                    
+                    # Top interface (should be smallest pressure)
+                    phalf_values[0] = max(pfull[0] * 0.5, 1e-6)
+                    
+                    # Middle interfaces - average adjacent mid-points
+                    for i in range(1, n_layers):
+                        phalf_values[i] = 0.5 * (pfull[i-1] + pfull[i])
+                    
+                    # Bottom interface (surface - should be largest pressure)
+                    phalf_values[-1] = ref_press
+                    
+                    print(f"DEBUG: PCM phalf values calculated from pfull: {phalf_values}")
                 
                 # Assign the values to the dataset
                 DS['phalf'] = (['interlayer'], phalf_values)
