@@ -620,63 +620,51 @@ def main():
             DS['pfull'].attrs['long_name'] = '(ADDED POST-PROCESSING), reference pressure'
             DS['pfull'].attrs['units'] = 'Pa'
 
-            # Create phalf for PCM:
-            if 'interlayer' in DS.dims:
-                # First, use the actual ap and bp values from the file directly
-                if 'ap' in DS and 'bp' in DS:
-                    # Use ap and bp directly for phalf (these should already have n+1 values)
-                    phalf_values = DS.ap.values + DS.bp.values * ref_press
-                    
-                    # Check if already in correct order - we want LOWEST pressure at index 0
-                    # Instead of automatically reversing, add a flag to track if we've already fixed the order
-                    if phalf_values[0] > phalf_values[-1]:
-                        print(f"DEBUG: phalf values already in correct order (decreasing with index)")
-                        already_flipped = True
-                    else:
-                        print(f"DEBUG: Reversing phalf_values order")
-                        phalf_values = phalf_values[::-1]
-                        already_flipped = True
-                    
-                    # Store this flag as a global variable or in the Dataset as an attribute
-                    DS.attrs['already_flipped_vertical'] = already_flipped
-                else:
-                    # Fallback to calculating phalf from pfull
-                    n_layers = len(pfull)
-                    phalf_values = np.zeros(n_layers + 1)
-                    
-                    # Top interface (should be smallest pressure)
-                    phalf_values[0] = max(pfull[0] * 0.5, 1e-6)
-                    
-                    # Middle interfaces - average adjacent mid-points
-                    for i in range(1, n_layers):
-                        phalf_values[i] = 0.5 * (pfull[i-1] + pfull[i])
-                    
-                    # Bottom interface (surface - should be largest pressure)
-                    phalf_values[-1] = ref_press
-                    
-                    print(f"DEBUG: PCM phalf values calculated from pfull: {phalf_values}")
+            # Replace the PCM phalf creation section with:
+            if 'ap' in DS and 'bp' in DS:
+                # Calculate phalf values from ap and bp
+                phalf_values = DS.ap.values + DS.bp.values * ref_press
                 
-                # Assign the values to the dataset
+                # Check the order - for vertical pressure coordinates, we want:
+                # - Lowest pressure (top of atmosphere) at index 0
+                # - Highest pressure (surface) at index -1
+                if phalf_values[0] > phalf_values[-1]:
+                    # Currently highest pressure is at index 0, so we need to flip
+                    print(f"{Yellow}PCM phalf has highest pressure at index 0, flipping to standard orientation")
+                    phalf_values = phalf_values[::-1]
+                    DS.attrs['vertical_dimension_flipped'] = True
+                else:
+                    # Already in the correct orientation
+                    print(f"{Green}PCM phalf values already in correct orientation (lowest at index 0)")
+                    DS.attrs['vertical_dimension_flipped'] = False
+                
+                # Store phalf values in the dataset
                 DS['phalf'] = (['interlayer'], phalf_values)
                 DS['phalf'].attrs['long_name'] = '(ADDED POST PROCESSING) pressure at layer interfaces'
                 DS['phalf'].attrs['units'] = 'Pa'
+                
+                # Also need to fix pfull to match phalf orientation
+                pfull = DS['pfull'].values
+                if DS.attrs['vertical_dimension_flipped'] and pfull[0] > pfull[-1]:
+                    # If we flipped phalf, also flip pfull for consistency
+                    DS['pfull'] = (['altitude'], pfull[::-1])
+                
 
         # --------------------------------------------------------------
         #                START PROCESSING FOR ALL MODELS
         # --------------------------------------------------------------
-        # Check that vertical grid starts at TOA w/ largest level at surface
-        # Before flipping, check if we've already done it for this model type
-        if model_type == 'pcm' and DS.attrs.get('already_flipped_vertical', False):
-            print(f"{Cyan}Skipping vertical flip since this was already done in PCM processing")
-            # No need to flip again
+        # In the common processing section where vertical flipping is done:
+        if model_type == 'pcm' and 'vertical_dimension_flipped' in DS.attrs:
+            print(f"{Cyan}Using PCM-specific vertical orientation handling")
+            # Skip automatic flipping - we've already handled it in PCM processing
         else:
-            # Check if vertical grid needs flipping
+            # Standard vertical processing for other models
             if DS[model.pfull].values[0] != DS[model.pfull].values.min():
                 DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
                 # Flip phalf, ak, bk:
                 DS = DS.isel(**{model.dim_phalf: slice(None, None, -1)})
-                print(f"{Red}NOTE: all variables flipped along vertical "
-                    f"dimension. Top of the atmosphere is now index = 0")
+                print(f"{Red}NOTE: all variables flipped along vertical dimension. "
+                    f"Top of the atmosphere is now index = 0")
         
         # Reorder dimensions
         print(f"{Cyan} Transposing variable dimensions to match order "
@@ -805,6 +793,16 @@ def main():
                 f'time averaged over {nday} sols'
                 )
 
+            # For PCM files, add this right after creating DS_average:
+            if model_type == 'pcm':
+                # Check if phalf is still in the correct orientation after binning
+                phalf_vals = DS_average['phalf'].values
+                
+                # Correct orientation: lowest pressure at index 0, highest at index -1
+                if phalf_vals[0] > phalf_vals[-1]:
+                    print(f"{Yellow}Warning: phalf orientation incorrect after binning, fixing...")
+                    DS_average['phalf'] = (['interlayer'], phalf_vals[::-1])
+        
             # Create New File, set time dimension as unlimitted
             base_name = os.path.splitext(fullnameIN)[0]
             fullnameOUT = f"{base_name}{ext}.nc"
