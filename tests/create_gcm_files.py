@@ -205,7 +205,7 @@ def create_emars_test():
 
     # Linear arrays:
     time_values = np.arange(0, 1.103e+03+1.0, 1.0).tolist()
-    Ls_values = np.arange(239.92, 269.82+0.03, 0.03).tolist()
+    Ls_values = np.linspace(239.92, 269.82, 1104).tolist()
     MY_values = np.full(1104, 28.0).tolist()
     lat_values = np.arange(-88.71428571, 88.71428571+0.1, 5.14285714).tolist()
     latu_values = np.arange(-87.42857143, 87.42857143+0.1, 5.14285714).tolist()
