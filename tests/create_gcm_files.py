@@ -321,11 +321,11 @@ def create_openmars_test():
     MY_var = nc_file.createVariable('MY', 'f4', ('time',))
     
     # Use these exact values from the real file
-    lon_values = np.arange(-180., 175.+5, 5).tolist()
-    lat_values = np.arange(87.49999, -87.49999-5, -5).tolist()
-    lev_values = np.arange(9.9949998e-01, 5.0824954e-05-0.001253249, -0.001253249).tolist()
-    time_values = np.arange(3181.0833, 3211.+0.0834, 0.0834).tolist()
-    Ls_values = np.arange(264.93198, 284.14746+0.054069, 0.054069).tolist()
+    lon_values = np.linspace(-180., 175., 72).tolist()
+    lat_values = np.linspace(87.49999, -87.49999, 36).tolist()
+    lev_values = np.linspace(9.9949998e-01, 5.0824954e-05, 35).tolist()
+    time_values = np.linspace(3181.0833, 3211., 360).tolist()
+    Ls_values = np.linspace(264.93198, 284.14746, 360).tolist()
     MY_values = np.linspace(28., 28., 360).tolist()
     
     lon_var[:] = lon_values
