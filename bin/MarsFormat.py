@@ -921,11 +921,12 @@ def main():
             #For some reason I can't track down, the ak('phalf') and bk('phalf') 
             # turn into ak ('time', 'time_of_day_12','phalf'), in PCM which messes
             # the pressure interpolation.
-            
-            if len(DS_diurn[model.ak].dims)>1: 
-                DS_diurn[model.ak]=DS[model.ak]
-                DS_diurn[model.bk]=DS[model.bk]
-            
+            if isinstance(DS_diurn[model.ak].dims, (list, tuple)) and len(DS_diurn[model.ak].dims) > 1:
+                print(f"DEBUG: Fixing dimensions for {model.ak} and {model.bk} in diurn file")
+                DS_diurn[model.ak] = DS[model.ak]
+                DS_diurn[model.bk] = DS[model.bk]
+                print(f"DEBUG: {DS_diurn[model.ak].dims} and {DS_diurn[model.bk].dims}")
+                
             # replace the time dimension with the time dimension from DS_average
             time_DS=DS[model.dim_time]
             time_avg_DS= time_DS.coarsen(**{model.dim_time:combinedN},boundary='trim').mean()
@@ -941,9 +942,13 @@ def main():
             if model_type == 'pcm' and DS_diurn is not None:
                 # Check if phalf is properly oriented
                 phalf_vals = DS_diurn['phalf'].values
-                if len(phalf_vals) > 1 and phalf_vals[0] > phalf_vals[-1]:
-                    print(f"{Yellow}Warning: phalf orientation incorrect in diurn file, fixing...")
-                    DS_diurn['phalf'] = (['interlayer'], phalf_vals[::-1])
+                if len(phalf_vals) > 1:
+                    # Compare the first and last elements as scalars
+                    first_val = float(phalf_vals[0])
+                    last_val = float(phalf_vals[-1])
+                    if first_val > last_val:
+                        print(f"{Yellow}Warning: phalf orientation incorrect in diurn file, fixing...")
+                        DS_diurn['phalf'] = (['interlayer'], phalf_vals[::-1])
         
             # Create New File, set time dimension as unlimitted
             fullnameOUT = f'{fullnameIN[:-3]}{ext}.nc'
