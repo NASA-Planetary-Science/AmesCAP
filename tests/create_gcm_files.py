@@ -129,67 +129,73 @@ def create_emars_test():
         
         return np.array(months[:length])
 
-    # earth_day: Follows monthly pattern through May, June, and July
+    # earth_day: Array of days in May, June, and July
     def generate_earth_days(length):
         days = []
         
-        # May: Day 17 appears twice, followed by days 18-31
+        # May: Days 17-31 (start with two 17s)
         days.extend([17] * 2)
-        
-        # Add May days 18-31
         for day in range(18, 32):
             days.extend([day] * 24)  # 24 entries per day
         
-        # Add June days 1-30
+        # June: Days 1-30
         for day in range(1, 31):
-            days.extend([day] * 24)  # 24 entries per day
-            
-        # Add July days 1-4 and possibly beyond
-        for day in range(1, 31):  # Allow up to day 31, will be trimmed
-            days.extend([day] * 24)  # 24 entries per day
+            days.extend([day] * 24)
+        
+        # July: Days 1-4 (and beyond if needed)
+        for day in range(1, 5):  # Looks like it goes up to day 4 based on array
+            days.extend([day] * 24)
             
         # Trim to expected length
         return np.array(days[:length])
 
-    # earth_hour: Pattern with skipped hours
+    # earth_hour: Complex pattern with occasional missing hours
     def generate_earth_hours(length):
-        # Earth hours follow a pattern but with occasional gaps
+        # I'll use the exact observed pattern rather than trying to recreate it with rules
+        # This provides the most accurate recreation of the original data
         hours = []
         
-        # Initial values (exactly as observed in the data)
-        initial_pattern = [22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16,
-                        17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                        11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 1, 2]
+        # First, add all hours from the provided sample
+        sample_hours = [22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 
+                        21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 
+                        19, 20, 21, 22, 23, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 
+                        18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 
+                        18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 
+                        17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 4, 5, 6, 7]
         
-        # Use the exact initial pattern
-        hours.extend(initial_pattern)
+        hours.extend(sample_hours)
         
-        # Then continue with a 24-hour cycle with occasional skips (at position 24, 49, etc.)
-        current_hour = 3  # Next hour after the initial pattern
-        i = len(hours)
+        # For remaining values, continue the observed pattern of mostly full hours with occasional skips
+        # The full pattern is complex, but we can approximate by continuing with full cycles
+        # and periodically skipping an hour
+        remaining = length - len(hours)
+        cycle = list(range(0, 24))  # Full day cycle
+        
+        current_pos = 0
+        skips_pattern = [8, 16, 19]  # Positions to skip in each 24-hour cycle (approximate)
         
         while len(hours) < length:
-            hours.append(current_hour)
-            current_hour = (current_hour + 1) % 24  # Wrap around at 24
+            hour = cycle[current_pos % 24]
+            if current_pos % 24 not in skips_pattern:
+                hours.append(hour)
+            current_pos += 1
             
-            # Skip an hour approximately every 24 positions, but position varies slightly
-            if (i + 1) % 24 == 0:
-                current_hour = (current_hour + 1) % 24
-            
-            i += 1
-        
         return np.array(hours[:length])
 
-    # earth_minute: Increments by exactly 2 minutes each step
+    # earth_minute: Pattern with varying increments
     def generate_earth_minutes(length):
         minutes = []
-        current_minute = 40  # Starting value
-        increment = 2  # Exact increment between values
+        current = 40  # Starting value
         
-        for _ in range(length):
-            minutes.append(current_minute)
-            current_minute = (current_minute + increment) % 60  # Increment and wrap around 60
+        # The pattern of increments appears to be [1, 2, 2, 1, 2, 2, 1, 2, 2, ...]
+        increments = [1, 2, 2, 1, 2, 2, 1, 2, 2]
+        i = 0
         
+        while len(minutes) < length:
+            minutes.append(current)
+            current = (current + increments[i % len(increments)]) % 60  # Wrap around at 60
+            i += 1
+            
         return np.array(minutes[:length])
 
     # earth_second: Decreases by precisely 21.0321 seconds each step
@@ -668,7 +674,7 @@ def create_marswrf_test():
     west_east_stag_dim = nc_file.createDimension('west_east_stag', 181)
     soil_layers_stag_dim = nc_file.createDimension('soil_layers_stag', 15)
     
-    # Create variables and populate with data
+        # Create variables and populate with data
     
     # Generate data for the Time dimension variables
     
@@ -684,27 +690,38 @@ def create_marswrf_test():
     # DTS, DTSEPS, RESM, ZETATOP, T00, P00, TLP, TISO: 100 zeros
     DTS_var = nc_file.createVariable('DTS', 'f4', ('Time',))
     DTS_var[:] = np.zeros(100)
+    DTS_var.description = "SMALL TIMESTEP"
     
     DTSEPS_var = nc_file.createVariable('DTSEPS', 'f4', ('Time',))
     DTSEPS_var[:] = np.zeros(100)
+    DTSEPS_var.description = "TIME WEIGHT CONSTANT FOR SMALL STEPS"
     
     RESM_var = nc_file.createVariable('RESM', 'f4', ('Time',))
     RESM_var[:] = np.zeros(100)
+    RESM_var.description = "TIME WEIGHT CONSTANT FOR SMALL STEPS"
     
     ZETATOP_var = nc_file.createVariable('ZETATOP', 'f4', ('Time',))
     ZETATOP_var[:] = np.zeros(100)
+    ZETATOP_var.description = "ZETA AT MODEL TOP"
     
     T00_var = nc_file.createVariable('T00', 'f4', ('Time',))
     T00_var[:] = np.zeros(100)
+    T00_var.description = "BASE STATE TEMPERATURE"
+    T00_var.units = "K"
     
     P00_var = nc_file.createVariable('P00', 'f4', ('Time',))
     P00_var[:] = np.zeros(100)
+    P00_var.description = "BASE STATE PRESURE"
+    P00_var.units = "Pa"
     
     TLP_var = nc_file.createVariable('TLP', 'f4', ('Time',))
     TLP_var[:] = np.zeros(100)
+    TLP_var.description = "BASE STATE LAPSE RATE"
     
     TISO_var = nc_file.createVariable('TISO', 'f4', ('Time',))
     TISO_var[:] = np.zeros(100)
+    TISO_var.description = "TEMP AT WHICH THE BASE T TURNS CONST"
+    TISO_var.units = "K"
     
     # CF1, CF2, CF3: 100 constant values
     CF1_var = nc_file.createVariable('CF1', 'f4', ('Time',))
@@ -837,7 +854,6 @@ def create_marswrf_test():
                                1.6646842, 1.6625097, 1.6593025, 1.6550785, 1.6498592, 1.6436712, 1.636547,
                                1.6285251, 1.6196501, 1.6099732, 1.5995522, 1.5884517, 1.5767441, 1.5645088,
                                1.5518329, 1.5388116])
-    SUNBODY_var.units = ""
     SUNBODY_var.description = "Sun-planet distance in AU"
     
     # P_FIT_M: 100 constant values
@@ -855,19 +871,25 @@ def create_marswrf_test():
     # MAX_MSTFX, MAX_MSTFY: 100 zeros
     MAX_MSTFX_var = nc_file.createVariable('MAX_MSTFX', 'f4', ('Time',))
     MAX_MSTFX_var[:] = np.zeros(100)
+    MAX_MSTFX_var.description = "Max map factor in domain"
     
     MAX_MSTFY_var = nc_file.createVariable('MAX_MSTFY', 'f4', ('Time',))
     MAX_MSTFY_var[:] = np.zeros(100)
+    MAX_MSTFY_var.description = "Max map factor in domain"
     
     # SEED1, SEED2, SAVE_TOPO_FROM_REAL: 100 zeros (integer type)
     SEED1_var = nc_file.createVariable('SEED1', 'i4', ('Time',))
     SEED1_var[:] = np.zeros(100, dtype=np.int32)
+    SEED1_var.description = "RANDOM SEED NUMBER 1"
     
     SEED2_var = nc_file.createVariable('SEED2', 'i4', ('Time',))
     SEED2_var[:] = np.zeros(100, dtype=np.int32)
+    SEED2_var.description = "RANDOM SEED NUMBER 2"
     
     SAVE_TOPO_FROM_REAL_var = nc_file.createVariable('SAVE_TOPO_FROM_REAL', 'i4', ('Time',))
     SAVE_TOPO_FROM_REAL_var[:] = np.zeros(100, dtype=np.int32)
+    SAVE_TOPO_FROM_REAL_var.description = "1=original topo from real/0=topo modified by WRF"
+    SAVE_TOPO_FROM_REAL_var.units = "flag"
 
     # Helper function to create a variable
     def create_var(name, dimensions, units, min_val, max_val, description="", data_type=np.float32, is_coordinate=False):
@@ -924,7 +946,7 @@ def create_marswrf_test():
     create_var('XLAT_V', ('Time', 'south_north_stag', 'west_east'), 'degree_north', -90.0, 90.0, "LATITUDE, SOUTH IS NEGATIVE", is_coordinate=True)
     create_var('XLONG_V', ('Time', 'south_north_stag', 'west_east'), 'degree_east', -179.0, 179.0, "LONGITUDE, WEST IS NEGATIVE", is_coordinate=True)
     
-    # Create all variables from the MarsWRF file
+    # Create all variables from the MarsWRF file with proper descriptions
     create_var('ZNU', ('Time', 'bottom_top'), '', 0.0, 1.0, "eta values on half (mass) levels")
     create_var('ZNW', ('Time', 'bottom_top_stag'), '', 0.0, 1.0, "eta values on full (w) levels")
     create_var('ZS', ('Time', 'soil_layers_stag'), 'm', 0.0, 19.7, "DEPTHS OF CENTERS OF SOIL LAYERS")
@@ -941,7 +963,7 @@ def create_marswrf_test():
     create_var('P', ('Time', 'bottom_top', 'south_north', 'west_east'), 'Pa', -267.2, 87.0, "perturbation pressure")
     create_var('PB', ('Time', 'bottom_top', 'south_north', 'west_east'), 'Pa', 1.6, 1243.7, "BASE STATE PRESSURE")
     
-    # Add all the other MarsWRF variables
+    # Add all the other MarsWRF variables with proper descriptions
     create_var('FNM', ('Time', 'bottom_top'), '', 0.0, 0.5, "upper weight for vertical stretching")
     create_var('FNP', ('Time', 'bottom_top'), '', 0.0, 0.7, "lower weight for vertical stretching")
     create_var('RDNW', ('Time', 'bottom_top'), '', -600.0, -40.0, "inverse d(eta) values between full (w) levels")
@@ -1031,7 +1053,7 @@ def create_marswrf_test():
 
     nc_file.close()
     print("Created marswrf_test.nc")
-
+    
 def main():
     """Main function to create all test files."""
     create_emars_test()
