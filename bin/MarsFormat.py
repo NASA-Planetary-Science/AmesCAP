@@ -614,14 +614,41 @@ def main():
             DS['pfull'].attrs['long_name'] = '(ADDED POST-PROCESSING), reference pressure'
             DS['pfull'].attrs['units'] = 'Pa'
 
-            # Create phalf as a separate variable rather than a dimension replacement
+            # Create phalf directly using a simple linear interpolation
             if 'interlayer' in DS.dims:
-                # Create phalf but don't try to replace interlayer dimension
-                phalf_values = layers_mid_point_to_boundary(pfull, ref_press)
-                num_layers = len(phalf_values)
+                n_layers = len(pfull)
+                phalf_values = np.zeros(n_layers + 1)
+                
+                # Middle interfaces - average adjacent mid-points
+                for i in range(n_layers-1):
+                    phalf_values[i+1] = 0.5 * (pfull[i] + pfull[i+1])
+                
+                # Top interface (extrapolate upward)
+                if n_layers > 1:
+                    dp = pfull[1] - pfull[0]
+                    phalf_values[0] = max(pfull[0] - dp/2, 1e-6)
+                else:
+                    phalf_values[0] = max(pfull[0]/2, 1e-6)
+                
+                # Bottom interface (surface)
+                phalf_values[-1] = ref_press
+                
+                # Assign the values to the dataset
                 DS['phalf'] = (['interlayer'], phalf_values)
                 DS['phalf'].attrs['long_name'] = '(ADDED POST PROCESSING) pressure at layer interfaces'
                 DS['phalf'].attrs['units'] = 'Pa'
+                
+                # Also add ak and bk variables for consistency
+                bk_values = np.zeros(n_layers + 1)
+                bk_values[-1] = 1.0  # Surface has bk=1
+                DS['bk'] = (['interlayer'], bk_values)
+                DS['bk'].attrs['long_name'] = '(ADDED POST PROCESSING) vertical coordinate sigma value'
+                DS['bk'].attrs['units'] = 'None'
+                
+                ak_values = np.zeros(n_layers + 1)
+                DS['ak'] = (['interlayer'], ak_values)
+                DS['ak'].attrs['long_name'] = '(ADDED POST PROCESSING) pressure part of the hybrid coordinate'
+                DS['ak'].attrs['units'] = 'Pa'
 
         # --------------------------------------------------------------
         #                START PROCESSING FOR ALL MODELS
