@@ -602,6 +602,12 @@ def main():
         #                 PCM Specific Processing
         # --------------------------------------------------------------
         elif model_type == 'pcm':
+            """
+            Process PCM model output:
+            1. Create pfull and phalf pressure coordinates
+            2. Ensure correct vertical ordering (lowest pressure at top)
+            3. Set attributes to prevent double-flipping
+            """
             print(f"{Cyan}Processing pcm file")
             # Adding long_name attibutes
             for var_name in DS.data_vars:
@@ -646,9 +652,10 @@ def main():
                 # Also need to fix pfull to match phalf orientation
                 pfull = DS['pfull'].values
                 if DS.attrs['vertical_dimension_flipped'] and pfull[0] > pfull[-1]:
-                    # If we flipped phalf, also flip pfull for consistency
-                    DS['pfull'] = (['altitude'], pfull[::-1])
-                
+                    # If we flipped phalf, also ensure pfull has lowest pressure at index 0
+                    if DS['pfull'].values[0] > DS['pfull'].values[-1]:
+                        DS['pfull'] = (['altitude'], DS['pfull'].values[::-1])
+                        print(f"{Yellow}Also flipped pfull values to match phalf orientation")                
 
         # --------------------------------------------------------------
         #                START PROCESSING FOR ALL MODELS
@@ -793,15 +800,15 @@ def main():
                 f'time averaged over {nday} sols'
                 )
 
-            # For PCM files, add this right after creating DS_average:
+            # For PCM files, ensure vertical orientation is preserved after averaging
             if model_type == 'pcm':
-                # Check if phalf is still in the correct orientation after binning
+                # Check phalf values and orientation
                 phalf_vals = DS_average['phalf'].values
-                
-                # Correct orientation: lowest pressure at index 0, highest at index -1
-                if phalf_vals[0] > phalf_vals[-1]:
-                    print(f"{Yellow}Warning: phalf orientation incorrect after binning, fixing...")
-                    DS_average['phalf'] = (['interlayer'], phalf_vals[::-1])
+                if len(phalf_vals) > 1:  # Only check if we have more than one value
+                    # Correct orientation: lowest pressure at index 0, highest at index -1
+                    if phalf_vals[0] > phalf_vals[-1]:
+                        print(f"{Yellow}Warning: phalf orientation incorrect after binning, fixing...")
+                        DS_average['phalf'] = (['interlayer'], phalf_vals[::-1])
         
             # Create New File, set time dimension as unlimitted
             base_name = os.path.splitext(fullnameIN)[0]
@@ -881,7 +888,15 @@ def main():
             DS_diurn[model.dim_time].attrs['long_name'] = (
                 f'time averaged over {nday} sols'
                 )
-
+            
+            # Also check diurn files for correct vertical orientation
+            if model_type == 'pcm' and DS_diurn is not None:
+                # Check if phalf is properly oriented
+                phalf_vals = DS_diurn['phalf'].values
+                if len(phalf_vals) > 1 and phalf_vals[0] > phalf_vals[-1]:
+                    print(f"{Yellow}Warning: phalf orientation incorrect in diurn file, fixing...")
+                    DS_diurn['phalf'] = (['interlayer'], phalf_vals[::-1])
+        
             # Create New File, set time dimension as unlimitted
             fullnameOUT = f'{fullnameIN[:-3]}{ext}.nc'
             DS_diurn.to_netcdf(fullnameOUT, unlimited_dims=model.dim_time, 
