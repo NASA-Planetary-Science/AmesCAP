@@ -579,21 +579,19 @@ def main():
 
             pfull = (DS.aps.values + DS.bps.values*ref_press)
             DS['pfull'] = (['altitude'],  pfull)
-            # Adding a pfull variable
-            # DS = DS.assign_coords(pfull=altitude)
             DS['pfull'].attrs['long_name'] = (
                 '(ADDED POST-PROCESSING), reference pressure'
                 )
             DS['pfull'].attrs['units'] = 'Pa'
 
-            # DS[model.phalf] = (ak + ref_press*bk)
-            # DS.phalf.attrs['long_name'] = (
-                # '(ADDED POST PROCESSING) pressure at layer interfaces'
-                # )
-            # DS.phalf.attrs['description'] = (
-                # '(ADDED POST PROCESSING) pressure at layer interfaces'
-                # )
-            # DS.phalf.attrs['units'] = 'Pa'
+            #  Add missing phalf calculation
+            pfull_values = DS['pfull'].values
+            phalf_values = layers_mid_point_to_boundary(pfull_values, ref_press)
+            DS[model.phalf] = (['phalf'], phalf_values)
+            DS[model.phalf].attrs['long_name'] = (
+                '(ADDED POST PROCESSING) pressure at layer interfaces'
+                )
+            DS[model.phalf].attrs['units'] = 'Pa'
 
         # --------------------------------------------------------------
         #                START PROCESSING FOR ALL MODELS

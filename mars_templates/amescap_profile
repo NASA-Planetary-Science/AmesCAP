@@ -28,7 +28,7 @@ X direction wind        [m/s]                   (ucomp)>       u,               
 Y direction wind        [m/s]                   (vcomp)>       v,                    V,                 ALSO_v
 Z direction wind        [m/s]                   (w)    >                             W
 vertical velocity       [Pa/s]                  (omega)>
-air temperature         [K]                     (temp) >                                        EMARS_T           
+air temperature         [K]                     (temp) >                                        T           
 surface temperature     [K]                     (ts)   >        tsurf,             TSK,                 ALSO_tsurf
 surface pressure        [Pa]                    (ps)   >                           PSFC
 potential temperature   [K]                     (theta)>
