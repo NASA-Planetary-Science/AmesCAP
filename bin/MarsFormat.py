@@ -921,16 +921,27 @@ def main():
             #For some reason I can't track down, the ak('phalf') and bk('phalf') 
             # turn into ak ('time', 'time_of_day_12','phalf'), in PCM which messes
             # the pressure interpolation.
-            if isinstance(DS_diurn[model.ak].dims, (list, tuple)) and len(DS_diurn[model.ak].dims) > 1:
-                print(f"DEBUG: Fixing dimensions for {model.ak} and {model.bk} in diurn file")
-                DS_diurn[model.ak] = DS[model.ak]
-                DS_diurn[model.bk] = DS[model.bk]
-                print(f"DEBUG: {DS_diurn[model.ak].dims} and {DS_diurn[model.bk].dims}")
+            # Safe approach to fix the dimensions for ak/bk arrays
+            # First check if these variables exist in the diurn dataset
+            ak_dims = None
+            bk_dims = None
+            
+            if model.ak in DS_diurn and model.bk in DS_diurn:
+                # Get the dimensions and print for debugging
+                ak_dims = DS_diurn[model.ak].dims
+                bk_dims = DS_diurn[model.bk].dims
+                print(f"DEBUG: {ak_dims} and {bk_dims}")
+                
+                # Use explicit dimension checks (safer than len(dims) > 1)
+                if any(dim != model.dim_phalf for dim in ak_dims):
+                    print(f"DEBUG: Fixing dimensions for {model.ak} and {model.bk} in diurn file")
+                    # Ensure we're assigning the correct structure
+                    DS_diurn[model.ak] = DS[model.ak].copy()
+                    DS_diurn[model.bk] = DS[model.bk].copy()
                 
             # replace the time dimension with the time dimension from DS_average
-            time_DS=DS[model.dim_time]
-            time_avg_DS= time_DS.coarsen(**{model.dim_time:combinedN},boundary='trim').mean()
-
+            time_DS = DS[model.dim_time]
+            time_avg_DS = time_DS.coarsen(**{model.dim_time:combinedN},boundary='trim').mean()
             DS_diurn[model.dim_time] = time_avg_DS[model.dim_time]
 
             # Update the time coordinate attribute
@@ -938,17 +949,20 @@ def main():
                 f'time averaged over {nday} sols'
                 )
             
-            # Also check diurn files for correct vertical orientation
-            if model_type == 'pcm' and DS_diurn is not None:
-                # Check if phalf is properly oriented
-                phalf_vals = DS_diurn['phalf'].values
-                if len(phalf_vals) > 1:
-                    # Compare the first and last elements as scalars
-                    first_val = float(phalf_vals[0])
-                    last_val = float(phalf_vals[-1])
-                    if first_val > last_val:
-                        print(f"{Yellow}Warning: phalf orientation incorrect in diurn file, fixing...")
-                        DS_diurn['phalf'] = (['interlayer'], phalf_vals[::-1])
+            # Safe phalf check for PCM files
+            if model_type == 'pcm' and DS_diurn is not None and 'phalf' in DS_diurn:
+                try:
+                    phalf_vals = DS_diurn['phalf'].values
+                    # Check if we have at least 2 elements
+                    if len(phalf_vals) > 1:
+                        # Extract actual values and convert to regular Python floats
+                        first_val = float(phalf_vals[0])
+                        last_val = float(phalf_vals[-1])
+                        if first_val > last_val:
+                            print(f"{Yellow}Warning: phalf orientation incorrect in diurn file, fixing...")
+                            DS_diurn['phalf'] = (DS_diurn['phalf'].dims, phalf_vals[::-1])
+                except Exception as e:
+                    print(f"{Yellow}Note: Could not check phalf orientation: {str(e)}")
         
             # Create New File, set time dimension as unlimitted
             fullnameOUT = f'{fullnameIN[:-3]}{ext}.nc'
