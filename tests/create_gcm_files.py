@@ -129,72 +129,71 @@ def create_emars_test():
         
         return np.array(months[:length])
 
-    # earth_day: Array of days in May, June, and July
+    # earth_day: Recreate exact pattern from the data
     def generate_earth_days(length):
+        # Use the actual values from your array
+        earth_day_pattern = [
+            17, 17, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 
+            18, 18, 18, 18, 18, 18, 18, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 
+            19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19
+        ]
+        
         days = []
+        days.extend(earth_day_pattern)
         
-        # May: Days 17-31 (start with two 17s)
-        days.extend([17] * 2)
-        for day in range(18, 32):
-            days.extend([day] * 24)  # 24 entries per day
-        
-        # June: Days 1-30
-        for day in range(1, 31):
-            days.extend([day] * 24)
-        
-        # July: Days 1-4 (and beyond if needed)
-        for day in range(1, 5):  # Looks like it goes up to day 4 based on array
-            days.extend([day] * 24)
-            
-        # Trim to expected length
+        # Continue pattern with 24 entries per day
+        current_day = 20  # Next day after pattern
+        while len(days) < length:
+            days.extend([current_day] * 24)
+            current_day += 1
+            # Reset at the end of each month
+            if current_day == 32:  # End of May
+                current_day = 1
+            elif current_day == 31 and len(days) >= 31*24+2:  # End of June
+                current_day = 1
+                
         return np.array(days[:length])
 
-    # earth_hour: Complex pattern with occasional missing hours
+    # earth_hour: Use exact values from the array
     def generate_earth_hours(length):
-        # I'll use the exact observed pattern rather than trying to recreate it with rules
-        # This provides the most accurate recreation of the original data
-        hours = []
+        # Copy the exact pattern from your data
+        earth_hour_values = [
+            22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 
+            21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 
+            19, 20, 21, 22, 23, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 
+            18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16
+        ]
         
-        # First, add all hours from the provided sample
-        sample_hours = [22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 
-                        21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 
-                        19, 20, 21, 22, 23, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 
-                        18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 
-                        18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 
-                        17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 4, 5, 6, 7]
-        
-        hours.extend(sample_hours)
-        
-        # For remaining values, continue the observed pattern of mostly full hours with occasional skips
-        # The full pattern is complex, but we can approximate by continuing with full cycles
-        # and periodically skipping an hour
-        remaining = length - len(hours)
-        cycle = list(range(0, 24))  # Full day cycle
-        
-        current_pos = 0
-        skips_pattern = [8, 16, 19]  # Positions to skip in each 24-hour cycle (approximate)
+        # Extend with a repeating pattern of hours
+        hours = earth_hour_values.copy()
         
         while len(hours) < length:
-            hour = cycle[current_pos % 24]
-            if current_pos % 24 not in skips_pattern:
-                hours.append(hour)
-            current_pos += 1
+            # Continue the pattern with occasional missing hours
+            # Pattern repeats approximately every 24 values but with some variation
+            next_section = [h % 24 for h in range(hours[-1]+1, hours[-1]+25)]
+            # Skip an hour occasionally (approximately once per 24-hour cycle)
+            skip_position = np.random.randint(8, 20)
+            next_section.pop(skip_position)
+            hours.extend(next_section)
             
         return np.array(hours[:length])
 
-    # earth_minute: Pattern with varying increments
+    # earth_minute: Follow the exact increment pattern
     def generate_earth_minutes(length):
-        minutes = []
-        current = 40  # Starting value
+        # Analyze the first few values to determine the pattern
+        # Original starts: [40, 41, 43, 45, 46, 48, 50, 51, 53, 54, 56, 58, 59, 1, 3, ...]
+        # Increments:     [  1,  2,  2,  1,  2,  2,  1,  2,  1,  2,  2,  1,  2, 2, ...]
         
-        # The pattern of increments appears to be [1, 2, 2, 1, 2, 2, 1, 2, 2, ...]
-        increments = [1, 2, 2, 1, 2, 2, 1, 2, 2]
-        i = 0
+        # Use these exact increments in a repeating pattern
+        increments = [1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 2, 1, 2, 2]
+        
+        minutes = [40]  # Start with the first value
+        idx = 0
         
         while len(minutes) < length:
-            minutes.append(current)
-            current = (current + increments[i % len(increments)]) % 60  # Wrap around at 60
-            i += 1
+            next_minute = (minutes[-1] + increments[idx % len(increments)]) % 60
+            minutes.append(next_minute)
+            idx += 1
             
         return np.array(minutes[:length])
 
