@@ -908,7 +908,7 @@ def main():
             else:
                 nday = 5
             
-            print(f"Using {nday}-day bins then binning {args.bin_diurn}x /day")
+            print(f"Using {nday}-day bins then diurnal binning")
                 
             # Calculate time step from original unmodified values
             dt_in = float(original_time_vals[1] - original_time_vals[0])
