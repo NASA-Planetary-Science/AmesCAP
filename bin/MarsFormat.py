@@ -787,9 +787,18 @@ def main():
             # no need to rename that variable
             model_dims = {key: val for key, val in model_dims.items() if key != val}
             model_vars = {key: val for key, val in model_vars.items() if key != val}
+            
+            # Add this after model_vars is created but before DS.rename_vars is called
+            if (model_type == 'marswrf' and 
+                'T' in model_vars and 
+                model_vars['T'] == 'temp'):
+                print(f"{Yellow}Note: Removing 'T' from variable mapping for "
+                      f"MarSWRF to avoid conflict with derived 'temp'")
+                del model_vars['T']  # Remove the T -> temp mapping
+            
             print(f"\n\nDEBUG: Model dimensions:\n{model_dims}")
             print(f"\n\nDEBUG: Model variables:\n{model_vars}")
-            print(f"\n\nDEBUG: {DS.keys()}")
+            
             # Special handling for PCM to avoid dimension swap errors
             dimension_swap_failed = False
             if model_type == 'pcm':
