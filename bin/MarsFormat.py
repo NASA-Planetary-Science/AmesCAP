@@ -257,8 +257,8 @@ def main():
         #                      MarsWRF Processing
         # --------------------------------------------------------------
         if model_type == 'marswrf':
-            print(f"{Cyan}Current variables at top of marswrf "
-                  f"processing: \n{list(DS.variables)}{Nclr}\n")
+            # print(f"{Cyan}Current variables at top of marswrf "
+            #       f"processing: \n{list(DS.variables)}{Nclr}\n")
             
             # First, save all variable descriptions in attrs longname
             for var_name in DS.data_vars:
@@ -788,7 +788,8 @@ def main():
             model_dims = {key: val for key, val in model_dims.items() if key != val}
             model_vars = {key: val for key, val in model_vars.items() if key != val}
             
-            # Add this after model_vars is created but before DS.rename_vars is called
+            # Avoiding conflict with derived 'temp' variable in MarsWRF
+            # T is perturb T in MarsWRF, and temp was derived earlier
             if (model_type == 'marswrf' and 
                 'T' in model_vars and 
                 model_vars['T'] == 'temp'):
@@ -820,13 +821,13 @@ def main():
             # Continue with variable renaming regardless of dimension swap status
             if not dimension_swap_failed:
                 DS = DS.rename_vars(name_dict = model_vars)
-                print(f"{Cyan}Renamed variables:\n{list(DS.variables)}{Nclr}\n")
+                # print(f"{Cyan}Renamed variables:\n{list(DS.variables)}{Nclr}\n")
                 # Update CAP's internal variables dictionary
                 model = reset_FV3_names(model)
             else:
                 # If dimension swap failed, still rename variables but handle as if using retain_names
                 DS = DS.rename_vars(name_dict = model_vars)
-                print(f"{Cyan}Renamed variables (with original dimensions):\n{list(DS.variables)}{Nclr}\n")
+                # print(f"{Cyan}Renamed variables (with original dimensions):\n{list(DS.variables)}{Nclr}\n")
                 # Add the _nat suffix as if -rn was used, but we still renamed variables
                 if '_nat' not in ext:
                     ext = f'{ext}_nat'
