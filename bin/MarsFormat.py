@@ -900,12 +900,15 @@ def main():
 
         elif args.bin_diurn:
             ext = f'{ext}_diurn'
+            print(f"Doing diurnal binning")
 
             # Custom number of sols
             if args.bin_average:
                 nday = args.bin_average
             else:
                 nday = 5
+            
+            print(f"Using {nday}-day bins then binning {args.bin_diurn}x /day")
                 
             # Calculate time step from original unmodified values
             dt_in = float(original_time_vals[1] - original_time_vals[0])
