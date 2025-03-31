@@ -285,12 +285,34 @@ class TestMarsFormat(unittest.TestCase):
             output_file = os.path.join(self.test_dir, f"{gcm_type}_test_average.nc")
             self.verify_output_file(output_file)
             
+            # Get appropriate time dimension name based on GCM type
+            if gcm_type in ['pcm', 'marswrf']:
+                input_time_dim = 'Time'
+            else:
+                input_time_dim = 'time'
+            
+            # Output files should always use 'time' as dimension
+            output_time_dim = 'time'
+
             # Check time dimension has been reduced due to averaging
             dataset = nc.Dataset(output_file, 'r')
-            orig_time_len = len(nc.Dataset(self.test_files[gcm_type], 'r').dimensions['Time'])
-            new_time_len = len(dataset.dimensions['time'])
+            orig_dataset = nc.Dataset(self.test_files[gcm_type], 'r')
+            
+            # Check if the expected dimension exists, if not try the alternatives
+            if input_time_dim not in orig_dataset.dimensions:
+                possible_names = ['Time', 'time', 'ALSO_Time']
+                for name in possible_names:
+                    if name in orig_dataset.dimensions:
+                        input_time_dim = name
+                        break
+            
+            orig_time_len = len(orig_dataset.dimensions[input_time_dim])
+            new_time_len = len(dataset.dimensions[output_time_dim])
+            
             self.assertLess(new_time_len, orig_time_len, 
-                         f"Time dimension not reduced by binning in {output_file}")
+                        f"Time dimension not reduced by binning in {output_file}")
+            
+            orig_dataset.close()
             dataset.close()
             
             # Test with retain_names
