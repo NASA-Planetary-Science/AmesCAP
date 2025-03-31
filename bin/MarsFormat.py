@@ -797,8 +797,8 @@ def main():
                       f"MarSWRF to avoid conflict with derived 'temp'")
                 del model_vars['T']  # Remove the T -> temp mapping
             
-            print(f"\n\nDEBUG: Model dimensions:\n{model_dims}")
-            print(f"\n\nDEBUG: Model variables:\n{model_vars}")
+            print(f"DEBUG: Model dimensions: {model_dims}")
+            print(f"DEBUG: Model variables: {model_vars}")
             
             # Special handling for PCM to avoid dimension swap errors
             dimension_swap_failed = False
@@ -835,7 +835,7 @@ def main():
         # --------------------------------------------------------------
         # CREATE ATMOS_DAILY, ATMOS_AVERAGE, & ATMOS_DIURN FILES
         # --------------------------------------------------------------
-        if args.bin_average:
+        if args.bin_average and not args.bin_diurn:
             ext = f'{ext}_average'
             nday = args.bin_average
             
