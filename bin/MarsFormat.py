@@ -767,7 +767,7 @@ def main():
             # .amescap_profile and may include names not present in file
             model_dims = dict()
             model_vars = dict()
-
+            
             # Loop over optential dims and vars in model
             for key_i in model.__dict__.keys():
                 val = getattr(model,key_i)
