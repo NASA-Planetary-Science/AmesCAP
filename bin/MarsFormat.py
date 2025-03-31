@@ -789,6 +789,7 @@ def main():
             model_vars = {key: val for key, val in model_vars.items() if key != val}
             print(f"\n\nDEBUG: Model dimensions:\n{model_dims}")
             print(f"\n\nDEBUG: Model variables:\n{model_vars}")
+            print(f"\n\nDEBUG: {DS.keys()}")
             # Special handling for PCM to avoid dimension swap errors
             dimension_swap_failed = False
             if model_type == 'pcm':
