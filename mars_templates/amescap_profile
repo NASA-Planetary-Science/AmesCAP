@@ -4,7 +4,7 @@
 # Model-specific dictionaries for (variables) and {dimensions}
 # Variable Long Name [unit]                 MGCM NAME > OPENMARS       , MARSWRF      , EMARS  , LMD
 <<<<<<<<<<<<<<| Variable dictionary |>>>>>>>>>>>>>
-Ncdf time dimension [integer]                   {time}>                , Time         ,        , ALSO_Time
+Ncdf time dimension [integer]                   {time}>                , Time         ,        , Time
 Ncdf X longitude dimension [integer]             {lon}>                , west_east    ,        , longitude
 Ncdf Y latitude dimension [integer]              {lat}>                , south_north  ,        , latitude
 Ncdf Z reference pressure dimension [integer]  {pfull}> lev            , bottom_top   ,        , altitude
@@ -13,7 +13,7 @@ Ncdf Z interpol. pressure dimension [integer]   {pstd}>                ,        
 Ncdf Z interpol. distance dimension [integer]   {zstd}>                ,              ,        ,
 Ncdf Z interpol. distance above ground [integer]{zagl}>                ,              ,        ,
 time values [days]                              (time)>                , XTIME        ,        , Time
-planetocentric longitudes [deg]                 (areo)> Ls             , L_S          ,        , ALSO_Ls
+planetocentric longitudes [deg]                 (areo)> Ls             , L_S          ,        , Ls
 longitudes [deg]                                 (lon)>                , XLONG        ,        , longitude
 latitudes [deg]                                  (lat)>                , XLAT         ,        , latitude
 Z model reference pressure layers [Pa]         (pfull)>                ,              ,        ,
@@ -24,12 +24,12 @@ pressure interpolated layers [Pa]               (pstd)>                ,        
 vertically interpolated layers [m]              (zstd)>                ,              ,        ,
 vertically interpolated layers above ground [m] (zagl)>                ,              ,        ,
 topography [m]                                 (zsurf)>                , HGT          ,        ,
-X direction wind [m/s]                         (ucomp)> u              , U            ,        , ALSO_u
-Y direction wind [m/s]                         (vcomp)> v              , V            ,        , ALSO_v
+X direction wind [m/s]                         (ucomp)> u              , U            ,        , u
+Y direction wind [m/s]                         (vcomp)> v              , V            ,        , v
 Z direction wind [m/s]                             (w)>                , W            ,        ,
 vertical velocity [Pa/s]                       (omega)>                ,              ,        ,
 air temperature [K]                             (temp)>                ,              , T      ,
-surface temperature [K]                           (ts)> tsurf          , TSK          ,        , ALSO_tsurf
+surface temperature [K]                           (ts)> tsurf          , TSK          ,        , tsurf
 surface pressure [Pa]                             (ps)>                , PSFC         ,        ,
 potential temperature [K]                      (theta)>                ,              ,        ,
 water mixing ratio [kg/kg]                  (vap_mass)> vap_mass_micro ,              ,        ,

@@ -787,7 +787,8 @@ def main():
             # no need to rename that variable
             model_dims = {key: val for key, val in model_dims.items() if key != val}
             model_vars = {key: val for key, val in model_vars.items() if key != val}
-            
+            print(f"\n\nDEBUG: Model dimensions:\n{model_dims}")
+            print(f"\n\nDEBUG: Model variables:\n{model_vars}")
             # Special handling for PCM to avoid dimension swap errors
             dimension_swap_failed = False
             if model_type == 'pcm':
