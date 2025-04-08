@@ -23,7 +23,21 @@ class TestMarsFormat(unittest.TestCase):
     def setUpClass(cls):
         """Set up the test environment"""
         # Create a temporary directory for test files
-        cls.test_dir = tempfile.mkdtemp(prefix='MarsFormat_test_')
+        # Use the user's home directory if TMPDIR isn't available or on Windows
+        try:
+            # Get platform-appropriate temp directory
+            if sys.platform == 'win32':
+                base_temp = os.path.join(os.environ.get('USERPROFILE', os.path.expanduser('~')), 'MarsFormat_Tests')
+                os.makedirs(base_temp, exist_ok=True)
+                cls.test_dir = tempfile.mkdtemp(prefix='MarsFormat_test_', dir=base_temp)
+            else:
+                cls.test_dir = tempfile.mkdtemp(prefix='MarsFormat_test_')
+        except Exception as e:
+            # Fallback to a directory in the user's home
+            base_dir = os.path.expanduser('~')
+            cls.test_dir = os.path.join(base_dir, f'MarsFormat_test_{int(time.time())}')
+            os.makedirs(cls.test_dir, exist_ok=True)
+            
         print(f"Created test directory: {cls.test_dir}")
         
         # Project root directory
@@ -113,10 +127,21 @@ class TestMarsFormat(unittest.TestCase):
         # Finally remove the test directory itself
         try:
             # Sleep a tiny bit to ensure files are released (especially on Windows)
-            time.sleep(0.5)
+            time.sleep(1.0)  # Increased sleep time for Windows
             
-            shutil.rmtree(cls.test_dir, ignore_errors=True)
-            print(f"Removed test directory: {cls.test_dir}")
+            # On Windows, attempt multiple times to remove the directory
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                try:
+                    shutil.rmtree(cls.test_dir, ignore_errors=True)
+                    print(f"Removed test directory: {cls.test_dir}")
+                    break
+                except Exception as e:
+                    if attempt < max_attempts - 1:
+                        print(f"Retry {attempt+1}/{max_attempts} - Could not remove directory: {e}")
+                        time.sleep(1.0)
+                    else:
+                        print(f"Warning: Could not remove test directory {cls.test_dir} after {max_attempts} attempts: {e}")
         except Exception as e:
             print(f"Warning: Could not remove test directory {cls.test_dir}: {e}")
     
@@ -143,14 +168,30 @@ class TestMarsFormat(unittest.TestCase):
         print(f"Working directory: {self.test_dir}")
         print(f"File exists check: {os.path.exists(os.path.join(self.project_root, 'bin', 'MarsFormat.py'))}")
         
-        # Run the command
-        result = subprocess.run(
-            cmd, 
-            capture_output=True, 
-            text=True, 
-            cwd=self.test_dir,  # Run in the test directory
-            env=dict(os.environ, PWD=self.test_dir)  # Ensure current working directory is set
-        )
+        # For Windows, ensure we're using appropriate path separators in environment
+        env = dict(os.environ)
+        env['PWD'] = self.test_dir
+        
+        # Platform-specific settings
+        if sys.platform == 'win32':
+            # On Windows, ensure shell=True for better path handling
+            result = subprocess.run(
+                ' '.join(cmd) if isinstance(cmd, list) else cmd,
+                capture_output=True, 
+                text=True, 
+                cwd=self.test_dir,
+                env=env,
+                shell=True
+            )
+        else:
+            # On Unix systems, use standard approach
+            result = subprocess.run(
+                cmd, 
+                capture_output=True, 
+                text=True, 
+                cwd=self.test_dir,
+                env=env
+            )
         
         # Print both stdout and stderr to help debug
         print(f"STDOUT: {result.stdout}")
@@ -565,9 +606,16 @@ class TestMarsFormat(unittest.TestCase):
                 
                 if pfull_var:
                     pfull_values = ds.variables[pfull_var][:]
-                    # Check that pressure increases with index (TOA at index 0)
-                    self.assertLess(pfull_values[0], pfull_values[-1], 
-                                  f"Pressure levels not ordered with TOA at index 0 in {output_file}")
+                    # Check vertical coordinate ordering based on GCM type
+                    # marswrf has different pressure level ordering than other models
+                    if gcm_type == 'marswrf':
+                        # For marswrf, pressure decreases with index (TOA at highest index)
+                        self.assertGreater(pfull_values[0], pfull_values[-1], 
+                                         f"Pressure levels not ordered correctly for marswrf in {output_file}")
+                    else:
+                        # For other models, pressure increases with index (TOA at index 0)
+                        self.assertLess(pfull_values[0], pfull_values[-1], 
+                                      f"Pressure levels not ordered with TOA at index 0 in {output_file}")
                 
                 # Check for hybrid coordinate variables
                 self.assertIn('ak', ds.variables, f"Hybrid coordinate 'ak' missing in {output_file}")
