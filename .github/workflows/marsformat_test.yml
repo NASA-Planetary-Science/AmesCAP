@@ -1,5 +1,11 @@
 name: MarsFormat Test Workflow
 
+# Cancel any in-progress job or previous runs
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 on:
   # Trigger the workflow on push to devel branch
   push:
@@ -72,6 +78,25 @@ jobs:
         echo "Home directory: $HOME"
         echo "Environment variables: $(env)"
     
-    # Run the integration tests
+    # Free up disk space
+    - name: Free up disk space
+      if: runner.os == 'Linux'
+      run: |
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+    
+    # Run the integration tests with cleanup between tests
     - name: Run MarsFormat tests
-      run: python -m unittest -v tests/test_marsformat.py
+      run: |
+        export TMPDIR=/tmp/marsformat_tests
+        mkdir -p $TMPDIR
+        python -m unittest -v tests/test_marsformat.py
+        
+    # Clean up temporary files to avoid disk space issues
+    - name: Clean up temp files
+      if: always()
+      run: |
+        find /tmp -name "MarsFormat_test_*" -type d -exec rm -rf {} + 2>/dev/null || true
+        rm -rf /tmp/marsformat_tests 2>/dev/null || true
