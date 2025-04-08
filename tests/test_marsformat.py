@@ -1,4 +1,38 @@
-#!/usr/bin/env python3
+def test_variable_mapping(self):
+        """Test that variable mapping from GCM-specific names to standard names works correctly."""
+        # Expected variable mappings based on amescap_profile
+        var_mappings = {
+            'emars': {
+                'original': ['T', 'ALSO_u', 'ALSO_v'], 
+                'mapped': ['temp', 'ucomp', 'vcomp']
+            },
+            'openmars': {
+                'original': [], 
+                'mapped': ['temp', 'ucomp', 'vcomp']
+            },
+            'marswrf': {
+                'original': ['U', 'V'], 
+                'mapped': ['ucomp', 'vcomp']
+            },
+            'pcm': {  # PCM is referred to as LMD in amescap_profile
+                'original': [], 
+                'mapped': ['temp', 'ucomp', 'vcomp']
+            }
+        }
+        
+        for gcm_type in self.gcm_types:
+            # Run with retain_names to keep original names
+            result_retain = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                                "-gcm", gcm_type, "-rn"])
+            self.assertEqual(result_retain.returncode, 0)
+            
+            # Run without retain_names to map to standard names
+            result_map = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                             "-gcm", gcm_type])
+            self.assertEqual(result_map.returncode, 0)
+            
+            # Check files
+            retained_#!/usr/bin/env python3
 """
 Integration tests for MarsFormat.py
 
@@ -141,22 +175,61 @@ class TestMarsFormat(unittest.TestCase):
     
     def tearDown(self):
         """Clean up any remaining files after each test"""
-        # If any test files somehow remain, clean them up
+        # Clean up all output files but preserve original test input files
         for gcm_type in self.gcm_types:
-            self.clean_output_files(gcm_type)
+            # Find all files related to this gcm_type that aren't the original test file
+            original_test_file = f"{gcm_type}_test.nc"
             
-            # Also check for any test_*.nc files
-            test_file = os.path.join(self.test_dir, f"{gcm_type}_test.nc")
-            if os.path.exists(test_file):
-                os.remove(test_file)
+            # Get all .nc files in the directory
+            for file_name in os.listdir(self.test_dir):
+                if file_name.endswith('.nc') and gcm_type in file_name and file_name != original_test_file:
+                    file_path = os.path.join(self.test_dir, file_name)
+                    try:
+                        os.remove(file_path)
+                        print(f"Cleaned up after test: {file_path}")
+                    except Exception as e:
+                        print(f"Warning: Could not remove {file_path}: {e}")
+        
+        # Make sure we're back in the test directory for the next test
+        os.chdir(self.test_dir)
     
     @classmethod
     def tearDownClass(cls):
         """Clean up the test environment"""
+        # First remove any output files that might still be around
+        for gcm_type in cls.gcm_types:
+            file_patterns = [
+                f"{gcm_type}_test_daily.nc", 
+                f"{gcm_type}_test_average.nc", 
+                f"{gcm_type}_test_diurn.nc",
+                f"{gcm_type}_test_nat_daily.nc", 
+                f"{gcm_type}_test_nat_average.nc", 
+                f"{gcm_type}_test_nat_diurn.nc",
+                f"{gcm_type}_test_combined.nc",
+                f"{gcm_type}_test_combined_diurn.nc",
+                f"{gcm_type}_test_combined_rn.nc",
+                f"{gcm_type}_test_combined_rn_nat_diurn.nc"
+            ]
+            
+            for pattern in file_patterns:
+                file_path = os.path.join(cls.test_dir, pattern)
+                if os.path.exists(file_path):
+                    try:
+                        os.remove(file_path)
+                        print(f"Cleaned up: {file_path}")
+                    except Exception as e:
+                        print(f"Warning: Could not remove {file_path}: {e}")
+        
+        # Finally remove the test directory itself
         try:
+            # Sleep a tiny bit to ensure files are released (especially on Windows)
+            import time
+            time.sleep(0.5)
+            
             shutil.rmtree(cls.test_dir, ignore_errors=True)
-        except Exception:
-            print(f"Warning: Could not remove test directory {cls.test_dir}")
+            print(f"Removed test directory: {cls.test_dir}")
+        except Exception as e:
+            print(f"Warning: Could not remove test directory {cls.test_dir}: {e}")
     
     def run_mars_format(self, args):
         """
@@ -206,80 +279,86 @@ class TestMarsFormat(unittest.TestCase):
         """
         # Check that the output file was created
         self.assertTrue(os.path.exists(output_file), f"Output file {output_file} was not created.")
+        
+        try:    
+            # Open the output file and check that it contains the expected variables
+            dataset = nc.Dataset(output_file, 'r')
             
-        # Open the output file and check that it contains the expected variables
-        dataset = nc.Dataset(output_file, 'r')
-        
-        # Debug - print all variable names to examine what's actually in the file
-        print(f"Variables in {output_file}: {list(dataset.variables.keys())}")
-        
-        # Check that expected variables are present
-        if expected_vars:
-            for var in expected_vars:
-                # For temperature, check both 'temp' and 'T' since naming may differ
-                if var.lower() in ['temp', 't']:
-                    temp_var_found = False
-                    for var_name in dataset.variables:
-                        if var_name.lower() in ['temp', 't']:
-                            temp_var_found = True
-                            break
-                    self.assertTrue(temp_var_found, f"Temperature variable not found in {output_file}")
-                # For surface pressure, check both 'ps' and 'PSFC'
-                elif var.lower() in ['ps', 'psfc']:
-                    ps_var_found = False
-                    for var_name in dataset.variables:
-                        if var_name.lower() in ['ps', 'psfc']:
-                            ps_var_found = True
-                            break
-                    self.assertTrue(ps_var_found, f"Surface pressure variable not found in {output_file}")
-                else:
-                    self.assertIn(var, dataset.variables, f"{var} not found in {output_file}")
-        
-        # Check that expected coordinates are present
-        if expected_coords:
-            for coord in expected_coords:
-                if coord == 'lat':
-                    # Check both 'lat' and 'latitude'
-                    lat_found = False
-                    for coord_name in dataset.variables:
-                        if coord_name.lower() in ['lat', 'latitude']:
-                            lat_found = True
-                            break
-                    self.assertTrue(lat_found, f"Latitude coordinate not found in {output_file}")
-                elif coord == 'lon':
-                    # Check both 'lon' and 'longitude'
-                    lon_found = False
-                    for coord_name in dataset.variables:
-                        if coord_name.lower() in ['lon', 'longitude']:
-                            lon_found = True
-                            break
-                    self.assertTrue(lon_found, f"Longitude coordinate not found in {output_file}")
-                else:
-                    self.assertIn(coord, dataset.variables, f"{coord} not found in {output_file}")
-        
-        # Check for time_of_day dimension if this is a diurn file
-        if '_diurn.nc' in output_file:
-            time_of_day_found = False
-            for dim_name in dataset.dimensions:
-                if 'time_of_day' in dim_name:
-                    time_of_day_found = True
+            # Debug - print all variable names to examine what's actually in the file
+            print(f"Variables in {output_file}: {list(dataset.variables.keys())}")
+            
+            # Check that expected variables are present
+            if expected_vars:
+                for var in expected_vars:
+                    # For temperature, check both 'temp' and 'T' since naming may differ
+                    if var.lower() in ['temp', 't']:
+                        temp_var_found = False
+                        for var_name in dataset.variables:
+                            if var_name.lower() in ['temp', 't']:
+                                temp_var_found = True
+                                break
+                        self.assertTrue(temp_var_found, f"Temperature variable not found in {output_file}")
+                    # For surface pressure, check both 'ps' and 'PSFC'
+                    elif var.lower() in ['ps', 'psfc']:
+                        ps_var_found = False
+                        for var_name in dataset.variables:
+                            if var_name.lower() in ['ps', 'psfc']:
+                                ps_var_found = True
+                                break
+                        self.assertTrue(ps_var_found, f"Surface pressure variable not found in {output_file}")
+                    else:
+                        self.assertIn(var, dataset.variables, f"{var} not found in {output_file}")
+            
+            # Check that expected coordinates are present
+            if expected_coords:
+                for coord in expected_coords:
+                    if coord == 'lat':
+                        # Check both 'lat' and 'latitude'
+                        lat_found = False
+                        for coord_name in dataset.variables:
+                            if coord_name.lower() in ['lat', 'latitude']:
+                                lat_found = True
+                                break
+                        self.assertTrue(lat_found, f"Latitude coordinate not found in {output_file}")
+                    elif coord == 'lon':
+                        # Check both 'lon' and 'longitude'
+                        lon_found = False
+                        for coord_name in dataset.variables:
+                            if coord_name.lower() in ['lon', 'longitude']:
+                                lon_found = True
+                                break
+                        self.assertTrue(lon_found, f"Longitude coordinate not found in {output_file}")
+                    else:
+                        self.assertIn(coord, dataset.variables, f"{coord} not found in {output_file}")
+            
+            # Check for time_of_day dimension if this is a diurn file
+            if '_diurn.nc' in output_file:
+                time_of_day_found = False
+                for dim_name in dataset.dimensions:
+                    if 'time_of_day' in dim_name:
+                        time_of_day_found = True
+                        break
+                self.assertTrue(time_of_day_found, f"No time_of_day dimension found in {output_file}")
+            
+            # Check that longitude values have been properly converted to 0-360 range
+            # Find the longitude variable
+            lon_var = None
+            for var_name in dataset.variables:
+                if var_name.lower() in ['lon', 'longitude']:
+                    lon_var = var_name
                     break
-            self.assertTrue(time_of_day_found, f"No time_of_day dimension found in {output_file}")
-        
-        # Check that longitude values have been properly converted to 0-360 range
-        # Find the longitude variable
-        lon_var = None
-        for var_name in dataset.variables:
-            if var_name.lower() in ['lon', 'longitude']:
-                lon_var = var_name
-                break
-        
-        if lon_var:
-            self.assertGreaterEqual(dataset.variables[lon_var][0], 0, 
-                                 f"Longitude values not converted to 0-360 range in {output_file}")
-        
-        dataset.close()
-        return True
+            
+            if lon_var:
+                self.assertGreaterEqual(dataset.variables[lon_var][0], 0, 
+                                    f"Longitude values not converted to 0-360 range in {output_file}")
+            
+            dataset.close()
+            return True
+        except Exception as e:
+            # Make sure to close the file even if an error occurs
+            if 'dataset' in locals():
+                dataset.close()
+            raise e
 
     def test_all_gcm_types(self):
         """Test basic conversion for all GCM types."""
@@ -361,25 +440,31 @@ class TestMarsFormat(unittest.TestCase):
             output_time_dim = 'time'
 
             # Check time dimension has been reduced due to averaging
-            dataset = nc.Dataset(output_file, 'r')
-            orig_dataset = nc.Dataset(self.test_files[gcm_type], 'r')
-            
-            # Check if the expected dimension exists, if not try the alternatives
-            if input_time_dim not in orig_dataset.dimensions:
-                possible_names = ['Time', 'time', 'ALSO_Time']
-                for name in possible_names:
-                    if name in orig_dataset.dimensions:
-                        input_time_dim = name
-                        break
-            
-            orig_time_len = len(orig_dataset.dimensions[input_time_dim])
-            new_time_len = len(dataset.dimensions[output_time_dim])
-            
-            self.assertLess(new_time_len, orig_time_len, 
-                        f"Time dimension not reduced by binning in {output_file}")
-            
-            orig_dataset.close()
-            dataset.close()
+            dataset = None
+            orig_dataset = None
+            try:
+                dataset = nc.Dataset(output_file, 'r')
+                orig_dataset = nc.Dataset(self.test_files[gcm_type], 'r')
+                
+                # Check if the expected dimension exists, if not try the alternatives
+                if input_time_dim not in orig_dataset.dimensions:
+                    possible_names = ['Time', 'time', 'ALSO_Time']
+                    for name in possible_names:
+                        if name in orig_dataset.dimensions:
+                            input_time_dim = name
+                            break
+                
+                orig_time_len = len(orig_dataset.dimensions[input_time_dim])
+                new_time_len = len(dataset.dimensions[output_time_dim])
+                
+                self.assertLess(new_time_len, orig_time_len, 
+                            f"Time dimension not reduced by binning in {output_file}")
+            finally:
+                # Ensure datasets are closed even if there's an exception
+                if dataset is not None:
+                    dataset.close()
+                if orig_dataset is not None:
+                    orig_dataset.close()
             
             # Clean up output file
             os.remove(output_file)
@@ -525,19 +610,32 @@ class TestMarsFormat(unittest.TestCase):
             
             # Verify original variables in retained file
             if var_mappings[gcm_type]['original']:
-                with nc.Dataset(retained_file, 'r') as ds:
-                    var_names = list(ds.variables.keys())
+                ds_retained = None
+                try:
+                    ds_retained = nc.Dataset(retained_file, 'r')
+                    var_names = list(ds_retained.variables.keys())
                     for var in var_mappings[gcm_type]['original']:
                         if var not in var_names:
                             # Some variables might not be present in the sample files
                             print(f"Note: Expected variable {var} not found in {retained_file}")
+                finally:
+                    if ds_retained is not None:
+                        ds_retained.close()
             
             # Verify mapped variables in mapped file
-            with nc.Dataset(mapped_file, 'r') as ds:
-                var_names = list(ds.variables.keys())
+            ds_mapped = None
+            try:
+                ds_mapped = nc.Dataset(mapped_file, 'r')
+                var_names = list(ds_mapped.variables.keys())
                 for var in var_mappings[gcm_type]['mapped']:
                     self.assertIn(var, var_names, f"Expected mapped variable {var} not found in {mapped_file}")
+            finally:
+                if ds_mapped is not None:
+                    ds_mapped.close()
             
+            # Clean up output files
+            os.remove(retained_file)
+            os.remove(mapped_file)
 
     def test_coordinate_transformations(self):
         """Test that coordinate transformations are applied correctly."""
