@@ -1,38 +1,4 @@
-def test_variable_mapping(self):
-        """Test that variable mapping from GCM-specific names to standard names works correctly."""
-        # Expected variable mappings based on amescap_profile
-        var_mappings = {
-            'emars': {
-                'original': ['T', 'ALSO_u', 'ALSO_v'], 
-                'mapped': ['temp', 'ucomp', 'vcomp']
-            },
-            'openmars': {
-                'original': [], 
-                'mapped': ['temp', 'ucomp', 'vcomp']
-            },
-            'marswrf': {
-                'original': ['U', 'V'], 
-                'mapped': ['ucomp', 'vcomp']
-            },
-            'pcm': {  # PCM is referred to as LMD in amescap_profile
-                'original': [], 
-                'mapped': ['temp', 'ucomp', 'vcomp']
-            }
-        }
-        
-        for gcm_type in self.gcm_types:
-            # Run with retain_names to keep original names
-            result_retain = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
-                                                "-gcm", gcm_type, "-rn"])
-            self.assertEqual(result_retain.returncode, 0)
-            
-            # Run without retain_names to map to standard names
-            result_map = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
-                                             "-gcm", gcm_type])
-            self.assertEqual(result_map.returncode, 0)
-            
-            # Check files
-            retained_#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Integration tests for MarsFormat.py
 
@@ -46,6 +12,7 @@ import unittest
 import shutil
 import tempfile
 import subprocess
+import time
 import netCDF4 as nc
 import numpy as np
 
@@ -57,90 +24,13 @@ class TestMarsFormat(unittest.TestCase):
         """Set up the test environment"""
         # Create a temporary directory for test files
         cls.test_dir = tempfile.mkdtemp(prefix='MarsFormat_test_')
+        print(f"Created test directory: {cls.test_dir}")
         
         # Project root directory
         cls.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         
         # Define all GCM types to test
         cls.gcm_types = ['emars', 'openmars', 'pcm', 'marswrf']
-    
-    def create_test_files(self, gcm_types=None):
-        """Create test netCDF files for specified GCM types
-        
-        :param gcm_types: List of GCM types to create files for. If None, create for all types.
-        :return: Dictionary mapping GCM types to file paths
-        """
-        if gcm_types is None:
-            gcm_types = self.gcm_types
-            
-        # Define file paths for each GCM type
-        test_files = {}
-        for gcm_type in gcm_types:
-            test_files[gcm_type] = os.path.join(self.test_dir, f"{gcm_type}_test.nc")
-
-        # Get path to create_gcm_files.py script
-        create_files_script = os.path.join(self.project_root, "tests", "create_gcm_files.py")
-        
-        # Execute the script to create test files
-        result = subprocess.run(
-            [sys.executable, create_files_script],
-            capture_output=True,
-            text=True,
-            cwd=self.test_dir
-        )
-        
-        # Print output for debugging
-        print(f"File creation output: {result.stdout}")
-        
-        # Check files were created
-        for gcm_type, test_file in test_files.items():
-            if not os.path.exists(test_file):
-                print(f"Warning: Test file {test_file} was not created!")
-                if result.stderr:
-                    print(f"Error output: {result.stderr}")
-                    
-        return test_files
-    
-    def clean_output_files(self, gcm_type, file_patterns=None):
-        """Clean up output files for a specific GCM type
-        
-        :param gcm_type: GCM type to clean up files for
-        :param file_patterns: List of file patterns to clean up. If None, use default patterns.
-        """
-        if file_patterns is None:
-            file_patterns = [
-                f"{gcm_type}_test_daily.nc", 
-                f"{gcm_type}_test_average.nc", 
-                f"{gcm_type}_test_diurn.nc",
-                f"{gcm_type}_test_nat_daily.nc", 
-                f"{gcm_type}_test_nat_average.nc", 
-                f"{gcm_type}_test_nat_diurn.nc"
-            ]
-        
-        for pattern in file_patterns:
-            file_path = os.path.join(self.test_dir, pattern)
-            if os.path.exists(file_path):
-                try:
-                    os.remove(file_path)
-                    print(f"Cleaned up: {file_path}")
-                except Exception as e:
-                    print(f"Warning: Could not remove {file_path}: {e}")
-    
-    def clean_input_files(self, file_paths):
-        """Clean up input files
-        
-        :param file_paths: List or dictionary of file paths to clean up
-        """
-        if isinstance(file_paths, dict):
-            file_paths = file_paths.values()
-            
-        for file_path in file_paths:
-            if os.path.exists(file_path):
-                try:
-                    os.remove(file_path)
-                    print(f"Cleaned up input file: {file_path}")
-                except Exception as e:
-                    print(f"Warning: Could not remove {file_path}: {e}")
     
     def setUp(self):
         """Create test netCDF files using create_gcm_files.py"""
@@ -223,7 +113,6 @@ class TestMarsFormat(unittest.TestCase):
         # Finally remove the test directory itself
         try:
             # Sleep a tiny bit to ensure files are released (especially on Windows)
-            import time
             time.sleep(0.5)
             
             shutil.rmtree(cls.test_dir, ignore_errors=True)
@@ -639,118 +528,108 @@ class TestMarsFormat(unittest.TestCase):
 
     def test_coordinate_transformations(self):
         """Test that coordinate transformations are applied correctly."""
-        # Create test files for this test
-        test_files = self.create_test_files()
-        
-        try:
-            for gcm_type in self.gcm_types:
-                # Run MarsFormat 
-                result = self.run_mars_format([os.path.basename(test_files[gcm_type]), 
-                                             "-gcm", gcm_type])
-                self.assertEqual(result.returncode, 0)
-                
-                # Check output file
-                output_file = os.path.join(self.test_dir, f"{gcm_type}_test_daily.nc")
-                
-                with nc.Dataset(output_file, 'r') as ds:
-                    # Find longitude variable (could be 'lon' or 'longitude')
-                    lon_var = None
-                    for var_name in ds.variables:
-                        if var_name.lower() in ['lon', 'longitude']:
-                            lon_var = var_name
-                            break
-                    
-                    if lon_var:
-                        # Check that longitudes are in 0-360 range
-                        lon_values = ds.variables[lon_var][:]
-                        self.assertGreaterEqual(np.min(lon_values), 0, 
-                                             f"Longitudes not transformed to 0-360 range in {output_file}")
-                        self.assertLess(np.max(lon_values), 360.1, 
-                                      f"Longitudes exceed 360 degrees in {output_file}")
-                    
-                    # Check vertical coordinate ordering (pfull should increase with level index)
-                    pfull_var = None
-                    for var_name in ds.variables:
-                        if var_name.lower() == 'pfull':
-                            pfull_var = var_name
-                            break
-                    
-                    if pfull_var:
-                        pfull_values = ds.variables[pfull_var][:]
-                        # Check that pressure increases with index (TOA at index 0)
-                        self.assertLess(pfull_values[0], pfull_values[-1], 
-                                      f"Pressure levels not ordered with TOA at index 0 in {output_file}")
-                    
-                    # Check for hybrid coordinate variables
-                    self.assertIn('ak', ds.variables, f"Hybrid coordinate 'ak' missing in {output_file}")
-                    self.assertIn('bk', ds.variables, f"Hybrid coordinate 'bk' missing in {output_file}")
-                
-                # Clean up output file
-                os.remove(output_file)
-        finally:
-            # Clean up test files regardless of test outcome
-            self.clean_input_files(test_files)
-
-    def test_debug_flag(self):
-        """Test the --debug flag functionality."""
-        # Create a single test file for the first GCM type to save memory
-        gcm_type = self.gcm_types[0]
-        test_files = self.create_test_files([gcm_type])
-        
-        try:
-            # Run MarsFormat with the --debug flag
-            result = self.run_mars_format([os.path.basename(test_files[gcm_type]), 
-                                         "-gcm", gcm_type, "--debug"])
+        for gcm_type in self.gcm_types:
+            # Run MarsFormat 
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type])
+            self.assertEqual(result.returncode, 0)
             
-            # Check that the command executed successfully
-            self.assertEqual(result.returncode, 0, 
-                          f"MarsFormat.py failed with debug flag for {gcm_type}: {result.stderr}")
-            
-            # Debug output should contain more detailed information
-            self.assertTrue(
-                "Running MarsFormat with args" in result.stdout or 
-                "Current working directory" in result.stdout,
-                "Debug output not found with --debug flag."
-            )
-                     
-            # Check that output file was created properly
+            # Check output file
             output_file = os.path.join(self.test_dir, f"{gcm_type}_test_daily.nc")
-            self.assertTrue(os.path.exists(output_file), 
-                         f"Output file not created with --debug flag for {gcm_type}.")
+            
+            ds = None
+            try:
+                ds = nc.Dataset(output_file, 'r')
+                
+                # Find longitude variable (could be 'lon' or 'longitude')
+                lon_var = None
+                for var_name in ds.variables:
+                    if var_name.lower() in ['lon', 'longitude']:
+                        lon_var = var_name
+                        break
+                
+                if lon_var:
+                    # Check that longitudes are in 0-360 range
+                    lon_values = ds.variables[lon_var][:]
+                    self.assertGreaterEqual(np.min(lon_values), 0, 
+                                         f"Longitudes not transformed to 0-360 range in {output_file}")
+                    self.assertLess(np.max(lon_values), 360.1, 
+                                  f"Longitudes exceed 360 degrees in {output_file}")
+                
+                # Check vertical coordinate ordering (pfull should increase with level index)
+                pfull_var = None
+                for var_name in ds.variables:
+                    if var_name.lower() == 'pfull':
+                        pfull_var = var_name
+                        break
+                
+                if pfull_var:
+                    pfull_values = ds.variables[pfull_var][:]
+                    # Check that pressure increases with index (TOA at index 0)
+                    self.assertLess(pfull_values[0], pfull_values[-1], 
+                                  f"Pressure levels not ordered with TOA at index 0 in {output_file}")
+                
+                # Check for hybrid coordinate variables
+                self.assertIn('ak', ds.variables, f"Hybrid coordinate 'ak' missing in {output_file}")
+                self.assertIn('bk', ds.variables, f"Hybrid coordinate 'bk' missing in {output_file}")
+            finally:
+                # Make sure to close the dataset even if there's an exception
+                if ds is not None:
+                    ds.close()
             
             # Clean up output file
             os.remove(output_file)
-        finally:
-            # Clean up test files
-            self.clean_input_files(test_files)
+
+    def test_debug_flag(self):
+        """Test the --debug flag functionality."""
+        # Use the first GCM type to save memory
+        gcm_type = self.gcm_types[0]
+        
+        # Run MarsFormat with the --debug flag
+        result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                     "-gcm", gcm_type, "--debug"])
+        
+        # Check that the command executed successfully
+        self.assertEqual(result.returncode, 0, 
+                      f"MarsFormat.py failed with debug flag for {gcm_type}: {result.stderr}")
+        
+        # Debug output should contain more detailed information
+        self.assertTrue(
+            "Running MarsFormat with args" in result.stdout or 
+            "Current working directory" in result.stdout,
+            "Debug output not found with --debug flag."
+        )
+                 
+        # Check that output file was created properly
+        output_file = os.path.join(self.test_dir, f"{gcm_type}_test_daily.nc")
+        self.assertTrue(os.path.exists(output_file), 
+                     f"Output file not created with --debug flag for {gcm_type}.")
+        
+        # Clean up output file
+        os.remove(output_file)
 
     def test_error_handling(self):
         """Test error handling with invalid inputs."""
         # For this test, we only need one GCM file
         gcm_type = 'emars'
-        test_files = self.create_test_files([gcm_type])
         
-        try:
-            # Test with non-existent file
-            result = self.run_mars_format(["nonexistent_file.nc", "-gcm", "emars"])
-            self.assertNotEqual(result.returncode, 0, "MarsFormat didn't fail with non-existent file")
-            
-            # Test with invalid GCM type
-            result = self.run_mars_format([os.path.basename(test_files[gcm_type]), 
-                                         "-gcm", "invalid_gcm"])
-            self.assertNotEqual(result.returncode, 0, "MarsFormat didn't fail with invalid GCM type")
-            
-            # Test with no GCM type specified
-            result = self.run_mars_format([os.path.basename(test_files[gcm_type])])
-            # This might not return an error code, but should print a notice
-            self.assertTrue(
-                "No operation requested" in result.stdout or 
-                result.returncode != 0,
-                "MarsFormat didn't handle missing GCM type correctly"
-            )
-        finally:
-            # Clean up test files
-            self.clean_input_files(test_files)
+        # Test with non-existent file
+        result = self.run_mars_format(["nonexistent_file.nc", "-gcm", "emars"])
+        self.assertNotEqual(result.returncode, 0, "MarsFormat didn't fail with non-existent file")
+        
+        # Test with invalid GCM type
+        result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                     "-gcm", "invalid_gcm"])
+        self.assertNotEqual(result.returncode, 0, "MarsFormat didn't fail with invalid GCM type")
+        
+        # Test with no GCM type specified
+        result = self.run_mars_format([os.path.basename(self.test_files[gcm_type])])
+        # This might not return an error code, but should print a notice
+        self.assertTrue(
+            "No operation requested" in result.stdout or 
+            result.returncode != 0,
+            "MarsFormat didn't handle missing GCM type correctly"
+        )
 
 
 if __name__ == '__main__':
