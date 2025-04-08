@@ -54,18 +54,6 @@ class TestMarsFormat(unittest.TestCase):
             text=True,
             cwd=self.test_dir
         )
-
-        # # Copy real data files
-        # subprocess.run(['cp', os.path.expanduser('~/marsformat_data/emars_Ls240-270.nc'), 
-        #                 os.path.join(self.test_dir, 'emars_test.nc')], check=True)
-        # subprocess.run(['cp', os.path.expanduser('~/marsformat_data/marswrf_d01_0001-00669.nc'), 
-        #                 os.path.join(self.test_dir, 'marswrf_test.nc')], check=True)
-        # subprocess.run(['cp', os.path.expanduser('~/marsformat_data/openmars_Ls264-284.nc'), 
-        #                 os.path.join(self.test_dir, 'openmars_test.nc')], check=True)
-        # subprocess.run(['cp', os.path.expanduser('~/marsformat_data/pcm_Ls264-280.nc'), 
-        #                 os.path.join(self.test_dir, 'pcm_test.nc')], check=True)
-        
-        # print("File creation output: Copied real data files from ~/marsformat_data/")
         
         # Print output for debugging
         print(f"File creation output: {result.stdout}")
@@ -121,9 +109,35 @@ class TestMarsFormat(unittest.TestCase):
                     print(f"Warning: Could not remove {file_path}: {e}")
     
     def setUp(self):
-        """Set up for each test - we don't create files here anymore"""
+        """Create test netCDF files using create_gcm_files.py"""
         # Change to test directory
         os.chdir(self.test_dir)
+        
+        # Define file paths for each GCM type
+        self.test_files = {}
+        for gcm_type in self.gcm_types:
+            self.test_files[gcm_type] = os.path.join(self.test_dir, f"{gcm_type}_test.nc")
+
+        # Get path to create_gcm_files.py script
+        create_files_script = os.path.join(self.project_root, "tests", "create_gcm_files.py")
+        
+        # Execute the script to create test files
+        result = subprocess.run(
+            [sys.executable, create_files_script],
+            capture_output=True,
+            text=True,
+            cwd=self.test_dir
+        )
+        
+        # Print output for debugging
+        print(f"File creation output: {result.stdout}")
+        
+        # Check files were created
+        for gcm_type, test_file in self.test_files.items():
+            if not os.path.exists(test_file):
+                print(f"Warning: Test file {test_file} was not created!")
+                if result.stderr:
+                    print(f"Error output: {result.stderr}")
     
     def tearDown(self):
         """Clean up any remaining files after each test"""
@@ -274,235 +288,203 @@ class TestMarsFormat(unittest.TestCase):
         core_coords = ['lat', 'lon', 'time', 'pfull']
         hybrid_vars = ['ak', 'bk', 'phalf']
         
-        # Create test files for this test
-        test_files = self.create_test_files()
+        # Use the existing test files created in setUp
+        test_files = {}
+        for gcm_type in self.gcm_types:
+            test_files[gcm_type] = os.path.join(self.test_dir, f"{gcm_type}_test.nc")
         
-        try:
-            for gcm_type in self.gcm_types:
-                # Run MarsFormat with just the GCM flag
-                result = self.run_mars_format([os.path.basename(test_files[gcm_type]), "-gcm", gcm_type])
-                
-                # Check that the command executed successfully
-                self.assertEqual(result.returncode, 0, f"MarsFormat.py failed for {gcm_type}: {result.stderr}")
-                
-                # Verify output file
-                output_file = os.path.join(self.test_dir, f"{gcm_type}_test_daily.nc")
-                self.verify_output_file(output_file, expected_vars=core_vars + hybrid_vars, 
-                                       expected_coords=core_coords)
-                
-                # Clean up output file immediately after verification
-                os.remove(output_file)
-        finally:
-            # Clean up test files regardless of test outcome
-            self.clean_input_files(test_files)
+        for gcm_type in self.gcm_types:
+            # Run MarsFormat with just the GCM flag
+            result = self.run_mars_format([os.path.basename(test_files[gcm_type]), "-gcm", gcm_type])
+            
+            # Check that the command executed successfully
+            self.assertEqual(result.returncode, 0, f"MarsFormat.py failed for {gcm_type}: {result.stderr}")
+            
+            # Verify output file
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_daily.nc")
+            self.verify_output_file(output_file, expected_vars=core_vars + hybrid_vars, 
+                                   expected_coords=core_coords)
+            
+            # Clean up output file immediately after verification
+            os.remove(output_file)
 
     def test_all_gcm_types_retain_names(self):
         """Test conversion with name retention for all GCM types."""
-        # Create test files for this test
-        test_files = self.create_test_files()
-        
-        try:
-            for gcm_type in self.gcm_types:
-                # Run MarsFormat with GCM flag and retain_names flag
-                result = self.run_mars_format([os.path.basename(test_files[gcm_type]), 
-                                             "-gcm", gcm_type, "-rn"])
-                
-                # Check that the command executed successfully
-                self.assertEqual(result.returncode, 0, 
-                              f"MarsFormat.py failed for {gcm_type} with retain_names: {result.stderr}")
-                
-                # Verify output file - variable names will differ by GCM type
-                output_file = os.path.join(self.test_dir, f"{gcm_type}_test_nat_daily.nc")
-                
-                # Expect original variable names to be preserved
-                # For EMARS we expect 'T' instead of 'temp', etc.
-                if gcm_type == 'emars':
-                    self.verify_output_file(output_file, expected_vars=['T', 'ps'])
-                elif gcm_type == 'openmars':
-                    self.verify_output_file(output_file)
-                elif gcm_type == 'marswrf':
-                    self.verify_output_file(output_file, expected_vars=['T', 'PSFC'])
-                elif gcm_type == 'pcm':
-                    # PCM variable names
-                    self.verify_output_file(output_file)
-                
-                # Clean up output file immediately after verification
-                os.remove(output_file)
-        finally:
-            # Clean up test files regardless of test outcome
-            self.clean_input_files(test_files)
+        for gcm_type in self.gcm_types:
+            # Run MarsFormat with GCM flag and retain_names flag
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type, "-rn"])
+            
+            # Check that the command executed successfully
+            self.assertEqual(result.returncode, 0, 
+                          f"MarsFormat.py failed for {gcm_type} with retain_names: {result.stderr}")
+            
+            # Verify output file - variable names will differ by GCM type
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_nat_daily.nc")
+            
+            # Expect original variable names to be preserved
+            # For EMARS we expect 'T' instead of 'temp', etc.
+            if gcm_type == 'emars':
+                self.verify_output_file(output_file, expected_vars=['T', 'ps'])
+            elif gcm_type == 'openmars':
+                self.verify_output_file(output_file)
+            elif gcm_type == 'marswrf':
+                self.verify_output_file(output_file, expected_vars=['T', 'PSFC'])
+            elif gcm_type == 'pcm':
+                # PCM variable names
+                self.verify_output_file(output_file)
+            
+            # Clean up output file immediately after verification
+            os.remove(output_file)
 
     def test_bin_average_all_types(self):
         """Test bin_average flag for all GCM types, with and without retain_names."""
-        # Create test files for this test
-        test_files = self.create_test_files()
-        
-        try:
-            for gcm_type in self.gcm_types:
-                # Test without retain_names
-                result = self.run_mars_format([os.path.basename(test_files[gcm_type]), 
-                                             "-gcm", gcm_type, "-ba", "20"])
-                
-                self.assertEqual(result.returncode, 0, 
-                              f"MarsFormat.py failed for {gcm_type} with bin_average: {result.stderr}")
-                
-                # Verify output file
-                output_file = os.path.join(self.test_dir, f"{gcm_type}_test_average.nc")
-                self.verify_output_file(output_file)
-                
-                # Get appropriate time dimension name based on GCM type
-                if gcm_type in ['pcm', 'marswrf']:
-                    input_time_dim = 'Time'
-                else:
-                    input_time_dim = 'time'
-                
-                # Output files should always use 'time' as dimension
-                output_time_dim = 'time'
+        for gcm_type in self.gcm_types:
+            # Test without retain_names
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type, "-ba", "20"])
+            
+            self.assertEqual(result.returncode, 0, 
+                          f"MarsFormat.py failed for {gcm_type} with bin_average: {result.stderr}")
+            
+            # Verify output file
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_average.nc")
+            self.verify_output_file(output_file)
+            
+            # Get appropriate time dimension name based on GCM type
+            if gcm_type in ['pcm', 'marswrf']:
+                input_time_dim = 'Time'
+            else:
+                input_time_dim = 'time'
+            
+            # Output files should always use 'time' as dimension
+            output_time_dim = 'time'
 
-                # Check time dimension has been reduced due to averaging
-                dataset = nc.Dataset(output_file, 'r')
-                orig_dataset = nc.Dataset(test_files[gcm_type], 'r')
-                
-                # Check if the expected dimension exists, if not try the alternatives
-                if input_time_dim not in orig_dataset.dimensions:
-                    possible_names = ['Time', 'time', 'ALSO_Time']
-                    for name in possible_names:
-                        if name in orig_dataset.dimensions:
-                            input_time_dim = name
-                            break
-                
-                orig_time_len = len(orig_dataset.dimensions[input_time_dim])
-                new_time_len = len(dataset.dimensions[output_time_dim])
-                
-                self.assertLess(new_time_len, orig_time_len, 
-                            f"Time dimension not reduced by binning in {output_file}")
-                
-                orig_dataset.close()
-                dataset.close()
-                
-                # Clean up output file
-                os.remove(output_file)
-                
-                # Test with retain_names
-                result = self.run_mars_format([os.path.basename(test_files[gcm_type]), 
-                                             "-gcm", gcm_type, "-ba", "20", "-rn"])
-                
-                self.assertEqual(result.returncode, 0, 
-                              f"MarsFormat.py failed for {gcm_type} with bin_average and retain_names: {result.stderr}")
-                
-                # Verify output file
-                output_file = os.path.join(self.test_dir, f"{gcm_type}_test_nat_average.nc")
-                self.verify_output_file(output_file)
-                
-                # Clean up output file
-                os.remove(output_file)
-        finally:
-            # Clean up test files regardless of test outcome
-            self.clean_input_files(test_files)
+            # Check time dimension has been reduced due to averaging
+            dataset = nc.Dataset(output_file, 'r')
+            orig_dataset = nc.Dataset(self.test_files[gcm_type], 'r')
+            
+            # Check if the expected dimension exists, if not try the alternatives
+            if input_time_dim not in orig_dataset.dimensions:
+                possible_names = ['Time', 'time', 'ALSO_Time']
+                for name in possible_names:
+                    if name in orig_dataset.dimensions:
+                        input_time_dim = name
+                        break
+            
+            orig_time_len = len(orig_dataset.dimensions[input_time_dim])
+            new_time_len = len(dataset.dimensions[output_time_dim])
+            
+            self.assertLess(new_time_len, orig_time_len, 
+                        f"Time dimension not reduced by binning in {output_file}")
+            
+            orig_dataset.close()
+            dataset.close()
+            
+            # Clean up output file
+            os.remove(output_file)
+            
+            # Test with retain_names
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type, "-ba", "20", "-rn"])
+            
+            self.assertEqual(result.returncode, 0, 
+                          f"MarsFormat.py failed for {gcm_type} with bin_average and retain_names: {result.stderr}")
+            
+            # Verify output file
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_nat_average.nc")
+            self.verify_output_file(output_file)
+            
+            # Clean up output file
+            os.remove(output_file)
 
     def test_bin_diurn_all_types(self):
         """Test bin_diurn flag for all GCM types, with and without retain_names."""
-        # Create test files for this test
-        test_files = self.create_test_files()
-        
-        try:
-            for gcm_type in self.gcm_types:
-                # Skip marswrf which is known to fail with bin_diurn
-                if gcm_type == 'marswrf':
-                    print(f"Skipping bin_diurn test for {gcm_type} as it's known to fail")
-                    continue
-                
-                # Test without retain_names
-                result = self.run_mars_format([os.path.basename(test_files[gcm_type]), 
-                                             "-gcm", gcm_type, "-bd"])
-                
-                self.assertEqual(result.returncode, 0, 
-                              f"MarsFormat.py failed for {gcm_type} with bin_diurn: {result.stderr}")
-                
-                # Verify output file
-                output_file = os.path.join(self.test_dir, f"{gcm_type}_test_diurn.nc")
-                self.verify_output_file(output_file)
-                
-                # Clean up output file
-                os.remove(output_file)
-                
-                # Test with retain_names
-                result = self.run_mars_format([os.path.basename(test_files[gcm_type]), 
-                                             "-gcm", gcm_type, "-bd", "-rn"])
-                
-                self.assertEqual(result.returncode, 0, 
-                              f"MarsFormat.py failed for {gcm_type} with bin_diurn and retain_names: {result.stderr}")
-                
-                # Verify output file
-                output_file = os.path.join(self.test_dir, f"{gcm_type}_test_nat_diurn.nc")
-                self.verify_output_file(output_file)
-                
-                # Clean up output file
-                os.remove(output_file)
-        finally:
-            # Clean up test files regardless of test outcome
-            self.clean_input_files(test_files)
+        for gcm_type in self.gcm_types:
+            # Skip marswrf which is known to fail with bin_diurn
+            if gcm_type == 'marswrf':
+                print(f"Skipping bin_diurn test for {gcm_type} as it's known to fail")
+                continue
+            
+            # Test without retain_names
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type, "-bd"])
+            
+            self.assertEqual(result.returncode, 0, 
+                          f"MarsFormat.py failed for {gcm_type} with bin_diurn: {result.stderr}")
+            
+            # Verify output file
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_diurn.nc")
+            self.verify_output_file(output_file)
+            
+            # Clean up output file
+            os.remove(output_file)
+            
+            # Test with retain_names
+            result = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                         "-gcm", gcm_type, "-bd", "-rn"])
+            
+            self.assertEqual(result.returncode, 0, 
+                          f"MarsFormat.py failed for {gcm_type} with bin_diurn and retain_names: {result.stderr}")
+            
+            # Verify output file
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_nat_diurn.nc")
+            self.verify_output_file(output_file)
+            
+            # Clean up output file
+            os.remove(output_file)
 
     def test_combined_flags(self):
         """Test combining the bin_average and bin_diurn flags."""
-        # We'll create files one at a time to save memory
         for gcm_type in self.gcm_types:
             # Skip marswrf for the same reason as above
             if gcm_type == 'marswrf':
                 continue
                 
-            # Create a single test file for this GCM type
-            test_files = self.create_test_files([gcm_type])
-            original_input = test_files[gcm_type]
+            # Create unique input files for this test to avoid conflicts with our main test files
+            unique_input = os.path.join(self.test_dir, f"{gcm_type}_test_combined.nc")
+            shutil.copy(self.test_files[gcm_type], unique_input)
             
-            try:
-                # Create a unique input file for this test to avoid conflicts
-                unique_input = os.path.join(self.test_dir, f"{gcm_type}_test_combined.nc")
-                shutil.copy(original_input, unique_input)
-                
-                # Test bin_average with bin_diurn (without retain_names)
-                result = self.run_mars_format([
-                    os.path.basename(unique_input), 
-                    "-gcm", gcm_type, 
-                    "-bd", "-ba", "2"
-                ])
-                
-                self.assertEqual(result.returncode, 0, 
-                            f"MarsFormat.py failed for {gcm_type} with combined flags: {result.stderr}")
-                
-                # Verify output file - should create a diurn file with averaged data
-                output_file = os.path.join(self.test_dir, f"{gcm_type}_test_combined_diurn.nc")
-                self.verify_output_file(output_file)
-                
-                # Clean up temporary files
-                os.remove(output_file)
-                os.remove(unique_input)
-                
-                # Create another unique input file for the retain_names test
-                unique_input_rn = os.path.join(self.test_dir, f"{gcm_type}_test_combined_rn.nc")
-                shutil.copy(original_input, unique_input_rn)
-                
-                # Test with retain_names added
-                result = self.run_mars_format([
-                    os.path.basename(unique_input_rn), 
-                    "-gcm", gcm_type, 
-                    "-bd", "-ba", "2", 
-                    "-rn"
-                ])
-                
-                self.assertEqual(result.returncode, 0, 
-                            f"MarsFormat.py failed for {gcm_type} with combined flags and retain_names: {result.stderr}")
-                
-                # Verify output file
-                output_file_rn = os.path.join(self.test_dir, f"{gcm_type}_test_combined_rn_nat_diurn.nc")
-                self.verify_output_file(output_file_rn)
-                
-                # Clean up temporary files
-                os.remove(output_file_rn)
-                os.remove(unique_input_rn)
-            finally:
-                # Clean up original input file
-                self.clean_input_files([original_input])
+            # Test bin_average with bin_diurn (without retain_names)
+            result = self.run_mars_format([
+                os.path.basename(unique_input), 
+                "-gcm", gcm_type, 
+                "-bd", "-ba", "2"
+            ])
+            
+            self.assertEqual(result.returncode, 0, 
+                        f"MarsFormat.py failed for {gcm_type} with combined flags: {result.stderr}")
+            
+            # Verify output file - should create a diurn file with averaged data
+            output_file = os.path.join(self.test_dir, f"{gcm_type}_test_combined_diurn.nc")
+            self.verify_output_file(output_file)
+            
+            # Clean up output file and the unique input file
+            os.remove(output_file)
+            os.remove(unique_input)
+            
+            # Create another unique input file for the retain_names test
+            unique_input_rn = os.path.join(self.test_dir, f"{gcm_type}_test_combined_rn.nc")
+            shutil.copy(self.test_files[gcm_type], unique_input_rn)
+            
+            # Test with retain_names added
+            result = self.run_mars_format([
+                os.path.basename(unique_input_rn), 
+                "-gcm", gcm_type, 
+                "-bd", "-ba", "2", 
+                "-rn"
+            ])
+            
+            self.assertEqual(result.returncode, 0, 
+                        f"MarsFormat.py failed for {gcm_type} with combined flags and retain_names: {result.stderr}")
+            
+            # Verify output file
+            output_file_rn = os.path.join(self.test_dir, f"{gcm_type}_test_combined_rn_nat_diurn.nc")
+            self.verify_output_file(output_file_rn)
+            
+            # Clean up output file and the unique input file
+            os.remove(output_file_rn)
+            os.remove(unique_input_rn)
 
     def test_variable_mapping(self):
         """Test that variable mapping from GCM-specific names to standard names works correctly."""
@@ -526,46 +508,36 @@ class TestMarsFormat(unittest.TestCase):
             }
         }
         
-        # Create test files for this test
-        test_files = self.create_test_files()
-        
-        try:
-            for gcm_type in self.gcm_types:
-                # Run with retain_names to keep original names
-                result_retain = self.run_mars_format([os.path.basename(test_files[gcm_type]), 
-                                                    "-gcm", gcm_type, "-rn"])
-                self.assertEqual(result_retain.returncode, 0)
-                
-                # Run without retain_names to map to standard names
-                result_map = self.run_mars_format([os.path.basename(test_files[gcm_type]), 
-                                                 "-gcm", gcm_type])
-                self.assertEqual(result_map.returncode, 0)
-                
-                # Check files
-                retained_file = os.path.join(self.test_dir, f"{gcm_type}_test_nat_daily.nc")
-                mapped_file = os.path.join(self.test_dir, f"{gcm_type}_test_daily.nc")
-                
-                # Verify original variables in retained file
-                if var_mappings[gcm_type]['original']:
-                    with nc.Dataset(retained_file, 'r') as ds:
-                        var_names = list(ds.variables.keys())
-                        for var in var_mappings[gcm_type]['original']:
-                            if var not in var_names:
-                                # Some variables might not be present in the sample files
-                                print(f"Note: Expected variable {var} not found in {retained_file}")
-                
-                # Verify mapped variables in mapped file
-                with nc.Dataset(mapped_file, 'r') as ds:
+        for gcm_type in self.gcm_types:
+            # Run with retain_names to keep original names
+            result_retain = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                                "-gcm", gcm_type, "-rn"])
+            self.assertEqual(result_retain.returncode, 0)
+            
+            # Run without retain_names to map to standard names
+            result_map = self.run_mars_format([os.path.basename(self.test_files[gcm_type]), 
+                                             "-gcm", gcm_type])
+            self.assertEqual(result_map.returncode, 0)
+            
+            # Check files
+            retained_file = os.path.join(self.test_dir, f"{gcm_type}_test_nat_daily.nc")
+            mapped_file = os.path.join(self.test_dir, f"{gcm_type}_test_daily.nc")
+            
+            # Verify original variables in retained file
+            if var_mappings[gcm_type]['original']:
+                with nc.Dataset(retained_file, 'r') as ds:
                     var_names = list(ds.variables.keys())
-                    for var in var_mappings[gcm_type]['mapped']:
-                        self.assertIn(var, var_names, f"Expected mapped variable {var} not found in {mapped_file}")
-                
-                # Clean up output files
-                os.remove(retained_file)
-                os.remove(mapped_file)
-        finally:
-            # Clean up test files regardless of test outcome
-            self.clean_input_files(test_files)
+                    for var in var_mappings[gcm_type]['original']:
+                        if var not in var_names:
+                            # Some variables might not be present in the sample files
+                            print(f"Note: Expected variable {var} not found in {retained_file}")
+            
+            # Verify mapped variables in mapped file
+            with nc.Dataset(mapped_file, 'r') as ds:
+                var_names = list(ds.variables.keys())
+                for var in var_mappings[gcm_type]['mapped']:
+                    self.assertIn(var, var_names, f"Expected mapped variable {var} not found in {mapped_file}")
+            
 
     def test_coordinate_transformations(self):
         """Test that coordinate transformations are applied correctly."""
