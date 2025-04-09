@@ -790,7 +790,109 @@ def create_marswrf_test():
     west_east_stag_dim = nc_file.createDimension('west_east_stag', 181)
     soil_layers_stag_dim = nc_file.createDimension('soil_layers_stag', 15)
     
-        # Create variables and populate with data
+    # Create and populate ZNU variable (eta values on half/mass levels)
+    ZNU_var = nc_file.createVariable('ZNU', 'f4', ('Time', 'bottom_top'))
+    znu_values = np.array([0.99916667, 0.99666667, 0.9916667, 0.9816667, 0.9625, 0.9375,
+                          0.9125, 0.8875, 0.8625, 0.8375, 0.8125, 0.7875,
+                          0.7625, 0.7375, 0.7125, 0.6875, 0.6625, 0.6375,
+                          0.6125, 0.5875, 0.5625, 0.5375, 0.5125, 0.4875,
+                          0.4625, 0.4375, 0.4125, 0.3875, 0.3625, 0.3375,
+                          0.3125, 0.2875, 0.2625, 0.23750001, 0.2125, 0.1875,
+                          0.1625, 0.13749999, 0.11250001, 0.08750001, 0.0625, 0.03749999,
+                          0.01249999])
+    # Repeat the same values for all 100 timesteps
+    ZNU_var[:] = np.tile(znu_values, (100, 1))
+    ZNU_var.description = "eta values on half (mass) levels"
+
+    # Create and populate FNM variable (upper weight for vertical stretching)
+    FNM_var = nc_file.createVariable('FNM', 'f4', ('Time', 'bottom_top'))
+    fnm_values = np.array([0., 0.33333334, 0.33333334, 0.33333334, 0.34782556, 0.5000006,
+                          0.4999994, 0.5000006, 0.5, 0.4999994, 0.5000006, 0.4999994,
+                          0.5000006, 0.5, 0.4999994, 0.5000006, 0.4999994, 0.5000006,
+                          0.5, 0.4999994, 0.5000006, 0.4999994, 0.5000006, 0.5,
+                          0.4999994, 0.5000006, 0.4999994, 0.5000006, 0.5, 0.4999994,
+                          0.5000006, 0.4999994, 0.5000006, 0.5, 0.4999994, 0.5000006,
+                          0.4999994, 0.5000006, 0.5, 0.4999994, 0.5000006, 0.4999994,
+                          0.5000006])
+    FNM_var[:] = np.tile(fnm_values, (100, 1))
+    FNM_var.description = "upper weight for vertical stretching"
+
+    # Create and populate FNP variable (lower weight for vertical stretching)
+    FNP_var = nc_file.createVariable('FNP', 'f4', ('Time', 'bottom_top'))
+    fnp_values = np.array([0., 0.6666667, 0.6666667, 0.6666667, 0.6521745, 0.4999994, 0.5000006,
+                          0.4999994, 0.5, 0.5000006, 0.4999994, 0.5000006, 0.4999994, 0.5,
+                          0.5000006, 0.4999994, 0.5000006, 0.4999994, 0.5, 0.5000006, 0.4999994,
+                          0.5000006, 0.4999994, 0.5, 0.5000006, 0.4999994, 0.5000006, 0.4999994,
+                          0.5, 0.5000006, 0.4999994, 0.5000006, 0.4999994, 0.5, 0.5000006,
+                          0.4999994, 0.5000006, 0.4999994, 0.5, 0.5000006, 0.4999994, 0.5000006,
+                          0.4999994])
+    FNP_var[:] = np.tile(fnp_values, (100, 1))
+    FNP_var.description = "lower weight for vertical stretching"
+
+    # Create and populate RDNW variable (inverse d(eta) values between full/w levels)
+    RDNW_var = nc_file.createVariable('RDNW', 'f4', ('Time', 'bottom_top'))
+    rdnw_values = np.array([-600.00055, -300.00027, -150.00014, -75.00007, -39.999943, -40.00004,
+                            -39.999943, -40.00004, -40.00004, -39.999943, -40.00004, -39.999943,
+                            -40.00004, -40.00004, -39.999943, -40.00004, -39.999943, -40.00004,
+                            -40.00004, -39.999943, -40.00004, -39.999943, -40.00004, -40.00004,
+                            -39.999943, -40.00004, -39.999943, -40.00004, -40.00004, -39.999943,
+                            -40.00004, -39.999943, -40.00004, -40.00004, -39.999943, -40.00004,
+                            -39.999943, -40.00004, -40.00004, -39.999943, -40.00004, -39.999943,
+                            -40.00004])
+    RDNW_var[:] = np.tile(rdnw_values, (100, 1))
+    RDNW_var.description = "inverse d(eta) values between full (w) levels"
+
+    # Create and populate RDN variable (inverse d(eta) values between half/mass levels)
+    RDN_var = nc_file.createVariable('RDN', 'f4', ('Time', 'bottom_top'))
+    rdn_values = np.array([0., -400.0004, -200.0002, -100.0001, -52.17388, -39.999992,
+                          -39.999992, -39.999992, -40.00004, -39.999992, -39.999992, -39.999992,
+                          -39.999992, -40.00004, -39.999992, -39.999992, -39.999992, -39.999992,
+                          -40.00004, -39.999992, -39.999992, -39.999992, -39.999992, -40.00004,
+                          -39.999992, -39.999992, -39.999992, -39.999992, -40.00004, -39.999992,
+                          -39.999992, -39.999992, -39.999992, -40.00004, -39.999992, -39.999992,
+                          -39.999992, -39.999992, -40.00004, -39.999992, -39.999992, -39.999992,
+                          -39.999992])
+    RDN_var[:] = np.tile(rdn_values, (100, 1))
+    RDN_var.description = "inverse d(eta) values between half (mass) levels"
+
+    # Create and populate DNW variable (d(eta) values between full/w levels)
+    DNW_var = nc_file.createVariable('DNW', 'f4', ('Time', 'bottom_top'))
+    dnw_values = np.array([-0.00166667, -0.00333333, -0.00666666, -0.01333332, -0.02500004, -0.02499998,
+                          -0.02500004, -0.02499998, -0.02499998, -0.02500004, -0.02499998, -0.02500004,
+                          -0.02499998, -0.02499998, -0.02500004, -0.02499998, -0.02500004, -0.02499998,
+                          -0.02499998, -0.02500004, -0.02499998, -0.02500004, -0.02499998, -0.02499998,
+                          -0.02500004, -0.02499998, -0.02500004, -0.02499998, -0.02499998, -0.02500004,
+                          -0.02499998, -0.02500004, -0.02499998, -0.02499998, -0.02500004, -0.02499998,
+                          -0.02500004, -0.02499998, -0.02499998, -0.02500004, -0.02499998, -0.02500004,
+                          -0.02499998])
+    DNW_var[:] = np.tile(dnw_values, (100, 1))
+    DNW_var.description = "d(eta) values between full (w) levels"
+
+    # Create and populate DN variable (d(eta) values between half/mass levels)
+    DN_var = nc_file.createVariable('DN', 'f4', ('Time', 'bottom_top'))
+    dn_values = np.array([0., -0.0025, -0.005, -0.00999999, -0.01916668, -0.02500001,
+                         -0.02500001, -0.02500001, -0.02499998, -0.02500001, -0.02500001, -0.02500001,
+                         -0.02500001, -0.02499998, -0.02500001, -0.02500001, -0.02500001, -0.02500001,
+                         -0.02499998, -0.02500001, -0.02500001, -0.02500001, -0.02500001, -0.02499998,
+                         -0.02500001, -0.02500001, -0.02500001, -0.02500001, -0.02499998, -0.02500001,
+                         -0.02500001, -0.02500001, -0.02500001, -0.02499998, -0.02500001, -0.02500001,
+                         -0.02500001, -0.02500001, -0.02499998, -0.02500001, -0.02500001, -0.02500001,
+                         -0.02500001])
+    DN_var[:] = np.tile(dn_values, (100, 1))
+    DN_var.description = "d(eta) values between half (mass) levels"
+
+    # Create and populate ZNW variable (eta values on full/w levels)
+    ZNW_var = nc_file.createVariable('ZNW', 'f4', ('Time', 'bottom_top_stag'))
+    znw_values = np.array([1., 0.99833333, 0.995, 0.98833334, 0.975, 0.95,
+                          0.925, 0.9, 0.875, 0.85, 0.825, 0.8,
+                          0.775, 0.75, 0.725, 0.7, 0.675, 0.65,
+                          0.625, 0.6, 0.575, 0.55, 0.525, 0.5,
+                          0.47500002, 0.45, 0.425, 0.39999998, 0.375, 0.35000002,
+                          0.325, 0.3, 0.27499998, 0.25, 0.22500002, 0.19999999,
+                          0.17500001, 0.14999998, 0.125, 0.10000002, 0.07499999, 0.05000001,
+                          0.02499998, 0.])
+    ZNW_var[:] = np.tile(znw_values, (100, 1))
+    ZNW_var.description = "eta values on full (w) levels"
     
     # Generate data for the Time dimension variables
     
@@ -972,7 +1074,7 @@ def create_marswrf_test():
                                1.6285251, 1.6196501, 1.6099732, 1.5995522, 1.5884517, 1.5767441, 1.5645088,
                                1.5518329, 1.5388116])
     SUNBODY_var.description = "Sun-planet distance in AU"
-    
+        
     # P_FIT_M: 100 constant values
     P_FIT_M_var = nc_file.createVariable('P_FIT_M', 'f4', ('Time',))
     P_FIT_M_var[:] = np.full(100, 1.1038098)
@@ -1064,8 +1166,6 @@ def create_marswrf_test():
     create_var('XLONG_V', ('Time', 'south_north_stag', 'west_east'), 'degree_east', -179.0, 179.0, "LONGITUDE, WEST IS NEGATIVE", is_coordinate=True)
     
     # Create all variables from the MarsWRF file with proper descriptions
-    create_var('ZNU', ('Time', 'bottom_top'), '', 0.0, 1.0, "eta values on half (mass) levels")
-    create_var('ZNW', ('Time', 'bottom_top_stag'), '', 0.0, 1.0, "eta values on full (w) levels")
     create_var('ZS', ('Time', 'soil_layers_stag'), 'm', 0.0, 19.7, "DEPTHS OF CENTERS OF SOIL LAYERS")
     create_var('DZS', ('Time', 'soil_layers_stag'), 'm', 0.0, 11.2, "THICKNESSES OF SOIL LAYERS")
     create_var('U', ('Time', 'bottom_top', 'south_north', 'west_east_stag'), 'm s-1', -514.7, 519.5, "x-wind component")
@@ -1081,12 +1181,6 @@ def create_marswrf_test():
     create_var('PB', ('Time', 'bottom_top', 'south_north', 'west_east'), 'Pa', 1.6, 1243.7, "BASE STATE PRESSURE")
     
     # Add all the other MarsWRF variables with proper descriptions
-    create_var('FNM', ('Time', 'bottom_top'), '', 0.0, 0.5, "upper weight for vertical stretching")
-    create_var('FNP', ('Time', 'bottom_top'), '', 0.0, 0.7, "lower weight for vertical stretching")
-    create_var('RDNW', ('Time', 'bottom_top'), '', -600.0, -40.0, "inverse d(eta) values between full (w) levels")
-    create_var('RDN', ('Time', 'bottom_top'), '', -400.0, 0.0, "inverse d(eta) values between half (mass) levels")
-    create_var('DNW', ('Time', 'bottom_top'), '', -0.025, -0.0017, "d(eta) values between full (w) levels")
-    create_var('DN', ('Time', 'bottom_top'), '', -0.025, 0.0, "d(eta) values between half (mass) levels")
     create_var('P_HYD', ('Time', 'bottom_top', 'south_north', 'west_east'), 'Pa', 1.1, 1330.7, "hydrostatic pressure")
     create_var('PSFC', ('Time', 'south_north', 'west_east'), 'Pa', 86.5, 1331.8, "SFC PRESSURE")
     create_var('T1_5', ('Time', 'south_north', 'west_east'), 'K', 142.1, 281.2, "TEMP at 1.5 M")
