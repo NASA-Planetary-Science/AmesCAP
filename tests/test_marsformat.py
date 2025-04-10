@@ -72,7 +72,6 @@ class TestMarsFormat(unittest.TestCase):
         #                 os.path.join(self.test_dir, 'pcm_test.nc')], check=True)
         
         # print("File creation output: Copied real data files from ~/marsformat_data/")
-
     
     def tearDown(self):
         """Clean up any generated files after each test"""
