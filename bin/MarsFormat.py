@@ -311,7 +311,7 @@ def main():
             bk = np.zeros(N_phalf)
             
             ak[-1] = DS.P_TOP[0] # MarsWRF pressure increases w/N
-            bk[:] = DS.ZNW[0,:]
+            bk[:] = np.array(DS.ZNW[0,:], copy=True)
             
             # Fill ak, bk, pfull, phalf arrays
             DS = DS.assign(ak=(model.dim_phalf, ak))
