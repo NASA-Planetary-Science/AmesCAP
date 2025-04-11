@@ -294,7 +294,7 @@ def create_mgcm_atmos_average():
     ts_var.long_name = 'Surface Temperature'
     ts_var.units = 'K'
     ts_var[:] = np.random.uniform(143.4, 258.7, size=(133, 48, 96))
-
+    
     ucomp_var = nc_file.createVariable('ucomp', 'f4', ('time', 'pfull', 'lat', 'lon'))
     ucomp_var.long_name = 'zonal wind'
     ucomp_var.units = 'm/sec'
@@ -401,12 +401,12 @@ def create_mgcm_atmos_average_pstd():
     pstd_var = nc_file.createVariable('pstd', 'f4', ('pstd',))
     pstd_var.long_name = 'standard pressure'
     pstd_var.units = 'Pa'
+    # Using exactly the pstd values from the file
     pstd_values = np.array([1.0e-05, 3.0e-05, 5.0e-05, 1.0e-04, 3.0e-04, 5.0e-04, 3.0e-03, 5.0e-03, 1.0e-02,
-                            3.0e-02, 5.0e-02, 1.0e-01, 2.0e-01, 3.0e-01, 5.0e-01, 1.0e+00, 2.0e+00, 3.0e+00,
-                            5.0e+00, 7.0e+00, 1.0e+01, 2.0e+01, 3.0e+01, 5.0e+01, 7.0e+01, 1.0e+02, 1.5e+02,
-                            2.0e+02, 2.5e+02, 3.0e+02, 3.5e+02, 4.0e+02, 4.5e+02, 5.0e+02, 5.3e+02, 5.5e+02,
-                            5.9e+02, 6.0e+02, 6.3e+02, 6.5e+02, 6.9e+02, 7.0e+02, 7.5e+02, 8.0e+02, 8.5e+02,
-                            9.0e+02, 9.5e+02, 1.0e+03])
+                           3.0e-02, 5.0e-02, 1.0e-01, 2.0e-01, 3.0e-01, 5.0e-01, 1.0e+00, 2.0e+00, 3.0e+00,
+                           5.0e+00, 7.0e+00, 1.0e+01, 2.0e+01, 3.0e+01, 5.0e+01, 7.0e+01, 1.0e+02, 1.5e+02,
+                           2.0e+02, 2.5e+02, 3.0e+02, 3.5e+02, 4.0e+02, 4.5e+02, 5.0e+02, 5.3e+02, 5.5e+02,
+                           5.9e+02, 6.0e+02, 6.3e+02, 6.5e+02, 6.9e+02, 7.0e+02, 7.5e+02, 8.0e+02])
     pstd_var[:] = pstd_values
     
     lon_var = nc_file.createVariable('lon', 'f4', ('lon',))
@@ -663,13 +663,13 @@ def create_mgcm_atmos_average_pstd_c48():
     pstd_var = nc_file.createVariable('pstd', 'f4', ('pstd',))
     pstd_var.long_name = 'pressure'
     pstd_var.units = 'Pa'
-    # Using values from the file but extending to 48 elements
+    # Using exactly the pstd values from the file but extending to 48 elements
     pstd_values = np.array([1.0e-05, 3.0e-05, 5.0e-05, 1.0e-04, 3.0e-04, 5.0e-04, 3.0e-03, 5.0e-03, 1.0e-02,
-                            3.0e-02, 5.0e-02, 1.0e-01, 2.0e-01, 3.0e-01, 5.0e-01, 1.0e+00, 2.0e+00, 3.0e+00,
-                            5.0e+00, 7.0e+00, 1.0e+01, 2.0e+01, 3.0e+01, 5.0e+01, 7.0e+01, 1.0e+02, 1.5e+02,
-                            2.0e+02, 2.5e+02, 3.0e+02, 3.5e+02, 4.0e+02, 4.5e+02, 5.0e+02, 5.3e+02, 5.5e+02,
-                            5.9e+02, 6.0e+02, 6.3e+02, 6.5e+02, 6.9e+02, 7.0e+02, 7.5e+02, 8.0e+02, 8.5e+02,
-                            9.0e+02, 9.5e+02, 1.0e+03])
+                           3.0e-02, 5.0e-02, 1.0e-01, 2.0e-01, 3.0e-01, 5.0e-01, 1.0e+00, 2.0e+00, 3.0e+00,
+                           5.0e+00, 7.0e+00, 1.0e+01, 2.0e+01, 3.0e+01, 5.0e+01, 7.0e+01, 1.0e+02, 1.5e+02,
+                           2.0e+02, 2.5e+02, 3.0e+02, 3.5e+02, 4.0e+02, 4.5e+02, 5.0e+02, 5.3e+02, 5.5e+02,
+                           5.9e+02, 6.0e+02, 6.3e+02, 6.5e+02, 6.9e+02, 7.0e+02, 7.5e+02, 8.0e+02, 8.5e+02,
+                           9.0e+02, 9.5e+02, 1.0e+03])
     pstd_var[:] = pstd_values
     
     # NOTE: This file uses different lat and lon values than the other files
