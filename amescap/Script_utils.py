@@ -812,8 +812,8 @@ def filter_vars(fNcdf, include_list=None, giveExclude=False):
             # Make sure the requested variables are present in file
             input_list_filtered.append(ivar)
         else:
-            print(f"{Yellow}***Warning*** In filter_vars(), "
-                  f"{ivar} not found in file")
+            print(f"{Yellow}***Warning*** from filter_vars(): "
+                  f"{ivar} not found in file.\n")
             exit()
 
     baseline_var = []
@@ -1291,25 +1291,44 @@ def ak_bk_loader(fNcdf):
 
     else:
         try:
-            name_fixed = find_fixedfile(fullpath_name)
-            f_fixed = Dataset(name_fixed, "r",
-                              format = "NETCDF4_CLASSIC")
-            allvars = f_fixed.variables.keys()
+            filepath, fname = extract_path_basename(fullpath_name)
+            if not 'average' in os.listdir(filepath):
+                # If neither is found, set-up a default name
+                name_average = "FixedFileNotFound"
+            else:
+                name_average = list(filter(lambda s: 'average' in s, os.listdir()))[0]
+        
+            f_average = Dataset(name_average, "r", format = "NETCDF4_CLASSIC")
+            allvars = f_average.variables.keys()
 
             if "ak" in allvars:
                 # Check for ``ak`` first, then ``pk``
-                ak = np.array(f_fixed.variables["ak"])
+                ak = np.array(f_average.variables["ak"])
             else:
-                ak = np.array(f_fixed.variables["pk"])
-            bk = np.array(f_fixed.variables["bk"])
-            f_fixed.close()
-            
+                ak = np.array(f_average.variables["pk"])
+            bk = np.array(f_average.variables["bk"])
+            f_average.close()
         except:
-            print(f"{Red}Fixed file does not exist in {filepath}. "
-                  f"Make sure the fixed file you are referencing "
-                  f"matches the FV3 filetype (e.g., ``fixed.tileX.nc`` "
-                  f"for operations on tile X)")
-            exit()
+            try:
+                name_fixed = find_fixedfile(fullpath_name)
+                f_fixed = Dataset(name_fixed, "r",
+                                format = "NETCDF4_CLASSIC")
+                allvars = f_fixed.variables.keys()
+
+                if "ak" in allvars:
+                    # Check for ``ak`` first, then ``pk``
+                    ak = np.array(f_fixed.variables["ak"])
+                else:
+                    ak = np.array(f_fixed.variables["pk"])
+                bk = np.array(f_fixed.variables["bk"])
+                f_fixed.close()
+                
+            except:
+                print(f"{Red}Fixed file does not exist in {filepath}. "
+                    f"Make sure the fixed file you are referencing "
+                    f"matches the FV3 filetype (e.g., ``fixed.tileX.nc`` "
+                    f"for operations on tile X)")
+                exit()
     return ak, bk
 
 def read_variable_dict_amescap_profile(f_Ncdf=None):

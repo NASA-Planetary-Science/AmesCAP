@@ -1383,14 +1383,13 @@ def main():
             exclude_list = filter_vars(f_IN,
                                        args.extract_copy,
                                        giveExclude = True)
-            print()
             ifile_tmp = f"{ifile[:-3]}_extract.nc"
             Log = Ncdf(ifile_tmp, "Edited in postprocessing")
             Log.copy_all_dims_from_Ncfile(f_IN)
             Log.copy_all_vars_from_Ncfile(f_IN, exclude_list)
             f_IN.close()
             Log.close()
-            print(f"{Cyan}complete{Nclr}")
+            print(f"{Cyan}complete{Nclr}\n")
 
         # ==============================================================
         #  Add Function
