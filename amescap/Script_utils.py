@@ -394,7 +394,7 @@ def FV3_file_type(fNcdf):
         pass
 
     dims = fNcdf.dimensions.keys()
-    if "pfull" in dims:
+    if "pfull" in dims or "phalf" in dims:
         interp_type = "pfull"
     if "pstd"  in dims:
         interp_type = "pstd"
