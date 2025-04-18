@@ -1411,6 +1411,7 @@ def main():
                 compat_file_fmt = (
                     ", ".join([f"{cf}" for cf in master_list[ivar][3]])
                     )
+                print(f"ftype: {f_type}, interp_type: {interp_type}, compat_file_fmt: {compat_file_fmt}")
                 if interp_type in compat_file_fmt:
                     pass
                 else:
