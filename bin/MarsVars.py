@@ -1383,14 +1383,13 @@ def main():
             exclude_list = filter_vars(f_IN,
                                        args.extract_copy,
                                        giveExclude = True)
-            print()
             ifile_tmp = f"{ifile[:-3]}_extract.nc"
             Log = Ncdf(ifile_tmp, "Edited in postprocessing")
             Log.copy_all_dims_from_Ncfile(f_IN)
             Log.copy_all_vars_from_Ncfile(f_IN, exclude_list)
             f_IN.close()
             Log.close()
-            print(f"{Cyan}{ifile} was created{Nclr}")
+            print(f"{Cyan}complete{Nclr}\n")
 
         # ==============================================================
         #  Add Function
@@ -1412,10 +1411,11 @@ def main():
                 compat_file_fmt = (
                     ", ".join([f"{cf}" for cf in master_list[ivar][3]])
                     )
+                print(f"ftype: {f_type}, interp_type: {interp_type}, compat_file_fmt: {compat_file_fmt}")
                 if interp_type in compat_file_fmt:
                     pass
                 else:
-                    if compat_file_fmt == 'pfull':
+                    if compat_file_fmt == 'pfull' or compat_file_fmt == 'phalf':
                         print(
                         f"\n{Red}ERROR: Variable '{Yellow}{ivar}{Red}' "
                         f"can only be added to non-interpolated file(s)"

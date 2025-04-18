@@ -81,7 +81,7 @@ Install CAP from the `NASA Planetary Science GitHub <https://github.com/NASA-Pla
 
    cp amescap/mars_templates/amescap_profile ~/.amescap_profile # For pip
    # OR
-   cp /opt/anaconda3/envs/amescap/mars_templates/amescap-profile ~/.amescap-profile # For conda
+   cp /opt/anaconda3/envs/amescap/mars_templates/amescap_profile ~/.amescap_profile # For conda
 
 5. Test your installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -231,7 +231,7 @@ Using **Windows Terminal (PowerShell)**:
    Copy-Item .\amescap\mars_templates\amescap_profile -Destination $HOME\.amescap_profile
 
    # For conda installation
-   Copy-Item $env:USERPROFILE\anaconda3\envs\amescap\mars_templates\amescap-profile -Destination $HOME\.amescap-profile
+   Copy-Item $env:USERPROFILE\anaconda3\envs\amescap\mars_templates\amescap_profile -Destination $HOME\.amescap_profile
 
 Using **Cygwin**:
 
@@ -241,7 +241,7 @@ Using **Cygwin**:
    cp amescap/mars_templates/amescap_profile ~/.amescap_profile
 
    # For conda installation (adjust path as needed)
-   cp /cygdrive/c/Users/YourUsername/anaconda3/envs/amescap/mars_templates/amescap-profile ~/.amescap-profile
+   cp /cygdrive/c/Users/YourUsername/anaconda3/envs/amescap/mars_templates/amescap_profile ~/.amescap_profile
 
 5. Test your installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~

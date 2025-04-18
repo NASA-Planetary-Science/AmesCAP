@@ -1924,7 +1924,12 @@ def daily_to_average(varIN, dt_in, nday=5, trim=True):
     vshape_in = varIN.shape
     # 0 is the time dimension
     Nin = vshape_in[0]
-
+    
+    # Add safety check for dt_in
+    if np.isclose(dt_in, 0.0):
+        print("Error: Time difference dt_in is zero or very close to zero.")
+        return None
+    
     iperday = int(np.round(1 / dt_in))
     combinedN = int(iperday * nday)
     N_even = Nin // combinedN
@@ -1981,6 +1986,12 @@ def daily_to_diurn(varIN, time_in):
         
     """
     dt_in = time_in[1] - time_in[0]
+    
+    # Add safety check for dt_in
+    if np.isclose(dt_in, 0.0):
+        print("Error: Time difference dt_in is zero or very close to zero.")
+        return None
+    
     iperday = int(np.round(1/dt_in))
     vshape_in = varIN.shape
     vreshape = np.append([-1, iperday], vshape_in[1:]).astype(int)
@@ -2239,130 +2250,179 @@ def polar_warming(T, lat, outside_range=np.nan):
                             PW_half_hemisphere(T_NH, lat_NH, outside_range)),
                            axis = 0))
 
-def time_shift_calc(array, lon, tod_in, tod_out=None):
+def time_shift_calc(var_in, lon, tod, target_times=None):
     """
     Conversion to uniform local time.
-
-    :param array: variable to be shifted. Assume ``lon`` is the first
-        dimension and ``time_of_day`` is the last dimension
-    :type array: ND array
-
+    
+    Mars rotates approx. 14.6° lon per Mars-hour (360° ÷ 24.6 hr)
+    Each 14.6° shift in lon represents a 1-hour shift in local time
+    This code uses the more precise calculation: lon_shift = 24.0 * lon / 360.
+    
+    :param var_in: variable to be shifted. Assume ``lon`` is the first
+        dimension and ``tod`` is the last dimension
+    :type var_in: ND array
+    
     :param lon: longitude
     :type lon: 1D array
-
-    :param tod_in: ``time_of_day`` index from the input file
-    :type tod_in: 1D array
-
-    :param tod_out: local time(s) [hr] to shift to (e.g., ``"3. 15."``)
-    :type tod_out: float (optional)
+    
+    :param tod: ``time_of_day`` index from the input file
+    :type tod: 1D array
+    
+    :param target_times: local time(s) [hr] to shift to (e.g., ``"3. 15."``)
+    :type target_times: float (optional)
 
     :return: the array shifted to uniform local time
 
     .. note::
-        If ``tod_out`` is not specified, the file is interpolated
-        on the same ``time_of_day`` as the input
-
+        If ``target_times`` is not specified, the file is interpolated
+        on the same ``tod`` as the input
+        
     """
-    if np.shape(array) == len(array):
+    if np.shape(var_in) == len(var_in):
         print('Need longitude and time dimensions')
         return
 
-    # Get dimensions of array
-    dims = np.shape(array)
-    axis_tod = len(dims) - 1
-
+    # Get dimensions of var_in
+    dims_in = np.shape(var_in)
+    n_dims_in = len(dims_in) - 1
+    
     # Number of longitudes in file
-    ilon = dims[0]
+    n_lon = dims_in[0]
+    
     # Number of timesteps per day in input
-    N_tod_in = len(tod_in)
+    n_tod_in = len(tod)
+    if n_tod_in == 0:
+        print('No time steps in input (time_shift_calc in FV3_utils.py)')
+        exit()
+        
+    # Number of timesteps per day in input
+    n_tod_in = float(n_tod_in)
+
+    tod = np.squeeze(tod)
+
     # Array dimensions for output
-    if tod_out is None:
+    if target_times is None:
         # Time shift all local times
-        N_tod_out = N_tod_in
+        n_tod_out = n_tod_in
     else:
-        N_tod_out = len(tod_out)
+        n_tod_out = len(target_times)
 
-    if len(dims) > 2:
-        recl = np.prod(dims[1:len(dims)-1])
+    # Assuming ``time`` is the last dimension, check if it is a local
+    # time ``target_times``. If not, reshape the array into
+    # ``[..., days, local time]``
+    if dims_in[n_dims_in] != n_tod_in:
+        n_days = dims_in[n_dims_in] / n_tod_in
+        if (n_days * n_tod_in) != dims_in[n_dims_in]:
+            print("Time dimensions do not conform")
+            return
+
+        var_in = np.reshape(var_in, (dims_in[0, n_dims_in - 1], n_tod_in, n_days))
+        dims_out = np.linspace(len(dims_in + 1), dtype = np.int32)
+        dims_out[len(dims_in)-1] = len(dims_in)
+        dims_out[len(dims_in)] = len(dims_in)-1
+        var_in = np.transpose(var_in, dims_out)
+
+    # Get new dims_in of var_in if reshaped
+    dims_in = np.shape(var_in)
+
+    if len(dims_in) > 2:
+        # Assuming lon is the first dimension and time is the last
+        # dimension, we need to reshape the array
+        # into ``[lon, time, ...]``. The ``...`` dimension is
+        # assumed to be the same size as the lon dimension.
+        # If there are more than 2 dimensions, we need to
+        # reshape the array into ``[lon, combined_dims, time]``
+        # where ``combined_dims`` is the product of all dimensions
+        # except first (lon) and last (time) = total # data points for
+        # each longitude-time combination
+        combined_dims = np.prod(dims_in[1:len(dims_in)-1])
     else:
-        recl = 1
+        combined_dims = 1
 
-    array = np.reshape(array, (ilon, recl, N_tod_in))
+    var_in = np.reshape(var_in, (n_lon, combined_dims, n_tod_in))
 
     # Create output array
-    narray = np.zeros((ilon, recl, N_tod_out))
+    var_out = np.zeros((n_lon, combined_dims, n_tod_out))
 
     # Time increment of input data (in hours)
-    dt_samp = 24.0 / N_tod_in
+    dt_in = 24.0 / n_tod_in
 
     # Time increment of output
-    if tod_out is None:
-        # Match dimensions of output file to input
-        # Time increment of output data (in hours)
-        dt_save = dt_samp
+    if target_times is None:
+        # Preserve original time sampling pattern (in hours) but shift 
+        # it for each lon so # timesteps in output = # timesteps in input
+        dt_out = dt_in
+    else:
+        # Interpolate to all local times
+        dt_out = 1.
 
     # Calculate interpolation indices
     # Convert east longitude to equivalent hours
-    xshif = 24.0 * lon / 360.
-    kk = np.where(xshif < 0)
-    xshif[kk] = xshif[kk] + 24.
+    lon_shift = 24.0 * lon / 360.
+    kk = np.where(lon_shift < 0)
+    lon_shift[kk] = lon_shift[kk] + 24.
 
-    fraction = np.zeros((ilon, N_tod_out))
-    imm = np.zeros((ilon, N_tod_out))
-    ipp = np.zeros((ilon, N_tod_out))
+    fraction = np.zeros((n_lon, n_tod_out))
+    lower_indices = np.zeros((n_lon, n_tod_out))
+    upper_indices = np.zeros((n_lon, n_tod_out))
 
-    for nd in range(N_tod_out):
-        # dtt = nd*dt_save - xshif - tod_out[0] + dt_samp
-        if tod_out is None:
-            dtt = nd*dt_save - xshif - tod_in[0] + dt_samp
+    # Core calculation
+    # target_times[n]: The target local Mars time we want (e.g., 15:00 local Mars time)
+    # lon_shift: The offset in Mars-hours due to Martian longitude
+    # The result dtt (delta time transform) tells us which time indices 
+    # in the original Mars data to interpolate between
+    for n in range(n_tod_out):
+        # dtt = n*dt_out - lon_shift - target_times[0] + dt_in
+        if target_times is None:
+            dtt = n*dt_out - lon_shift - tod[0] + dt_in
         else:
+            # For specifying target local times
             # ``time_out - xfshif - tod[0] + hrs/stpe`` in input
-            dtt = tod_out[nd] - xshif
+            dtt = target_times[n] - lon_shift
 
         # Ensure that local time is bounded by [0, 24] hours
         kk = np.where(dtt < 0.)
-        dtt[kk] = dtt[kk] + 24.
+        # dtt: time in OG data corresponding to time we want
+        dtt[kk] = dtt[kk] + 24. 
 
         # This is the index into the data aray
-        im = np.floor(dtt/dt_samp)
-        fraction[:, nd] = dtt - im*dt_samp
+        lower_idx = np.floor(dtt/dt_in) # time step before target local time
+        fraction[:, n] = dtt - lower_idx*dt_in
+        kk = np.where(lower_idx < 0.)
+        lower_idx[kk] = lower_idx[kk] + n_tod_in
 
-        #Range check on im and im+1
-        kk = np.where(im < 0.)
-        im[kk] = im[kk] + N_tod_in
-        kk = np.where(im >= N_tod_in)
-        im[kk] = im[kk] - N_tod_in
+        upper_idx = lower_idx + 1. # time step after target local time
+        kk = np.where(upper_idx >= n_tod_in)
+        upper_idx[kk] = upper_idx[kk] - n_tod_in
 
-        #print('im A=',im)
-        ipa = im + 1.
-        kk = np.where(ipa >= N_tod_in)
-        ipa[kk] = ipa[kk] - N_tod_in
-
-        imm[:, nd] = im[:]
-        ipp[:, nd] = ipa[:]
+        # Store lower_idx and upper_idx for each lon point and output time
+        lower_indices[:, n] = lower_idx[:]
+        upper_indices[:, n] = upper_idx[:]
 
     # Assume uniform time between input data samples
-    fraction = fraction / dt_samp
+    fraction = fraction / dt_in
 
     # Now carry out the interpolation
-    for nd in range(N_tod_out):
+    for n in range(n_tod_out):
         # Number of output time levels
-        for i in range(ilon):
+        for i in range(n_lon):
             # Number of longitudes
-            im = np.int32(imm[i, nd]) % 24
-            ipa = np.int32(ipp[i, nd])
-            frac = fraction[i, nd]
-            narray[i, :, nd] = ((1.-frac) * array[i, :, im]
-                                + frac * array[i, :, ipa])
+            lower_idx = np.int32(lower_indices[i, n]) % 24
+            upper_idx = np.int32(upper_indices[i, n])
+            frac = fraction[i, n]
+            # Interpolate between the two time levels
+            var_out[i, :, n] = (
+                (1.-frac) * var_in[i, :, lower_idx] 
+                + frac * var_in[i, :, upper_idx]
+                )
 
-    narray = np.squeeze(narray)
-    ndimsfinal = np.zeros(len(dims), dtype = int)
-    for nd in range(axis_tod):
-        ndimsfinal[nd] = dims[nd]
-    ndimsfinal[axis_tod] = N_tod_out
-    narray = np.reshape(narray, ndimsfinal)
-    return narray
-
+    var_out = np.squeeze(var_out)
+    dims_out = np.zeros(len(dims_in), dtype = int)
+    for d in range(n_dims_in):
+        dims_out[d] = dims_in[d]
+    dims_out[n_dims_in] = n_tod_out
+    var_out = np.reshape(var_out, dims_out)
+    return var_out
 
 def lin_interp(X_in, X_ref, Y_ref):
     """
