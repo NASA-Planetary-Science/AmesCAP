@@ -812,8 +812,9 @@ def filter_vars(fNcdf, include_list=None, giveExclude=False):
             # Make sure the requested variables are present in file
             input_list_filtered.append(ivar)
         else:
-            print(f"{Yellow}***Warning*** In filter_vars(), variable(s)"
+            print(f"{Yellow}***Warning*** In filter_vars(), "
                   f"{ivar} not found in file")
+            exit()
 
     baseline_var = []
     for ivar in  var_list:
