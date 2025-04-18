@@ -1414,7 +1414,7 @@ def main():
                 if interp_type in compat_file_fmt:
                     pass
                 else:
-                    if compat_file_fmt == 'pfull':
+                    if compat_file_fmt == 'pfull' or compat_file_fmt == 'phalf':
                         print(
                         f"\n{Red}ERROR: Variable '{Yellow}{ivar}{Red}' "
                         f"can only be added to non-interpolated file(s)"
