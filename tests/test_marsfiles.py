@@ -142,7 +142,7 @@ class TestMarsFiles(unittest.TestCase):
                 abs_args.append(arg)
         
         # Construct the full command to run MarsFiles
-        cmd = [sys.executable, '-m', 'bin.MarsFiles'] + abs_args
+        cmd = [sys.executable, '-m', 'MarsFiles'] + abs_args
         
         # Print the command being executed
         print(f"Running command: {' '.join(cmd)}")
