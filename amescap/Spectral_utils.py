@@ -15,11 +15,8 @@ Third-party Requirements:
 
 # Load generic Python modules
 import numpy as np
-#TODO fix import
-#import pyshtools as pyshtools
 
-
-from amescap.Script_utils import Yellow, Cyan, Nclr, progress
+from amescap.Script_utils import Yellow, Nclr, progress
 
 try:
     from scipy.signal import butter, filtfilt, detrend
@@ -34,37 +31,25 @@ except Exception as exception:
 # ======================================================================
 #                           DEFINITIONS
 # ======================================================================
-#import pyshtools
-# def init_shtools():
-#     """
-#     The following code simply loads the pyshtools module and provides
-#     adequate referencing. Since dependencies may need to be solved by
-#     the user, the module import is wrapped in a function that can be
-#     called as needed.
-
-#     :raises: Exception
-
-#     :return: imported module pyshtools or error
-#     """
-#     try:
-#         import pyshtools as pyshtools
-#         print('Successfully imported pyshtools')
-#     except ImportError as error_msg:
-#         print(f"{Yellow}__________________\n"
-#               f"Zonal decomposition relies on the pyshtools library, "
-#               f"referenced at:\n\n"
-#               f"Mark A. Wieczorek and Matthias Meschede (2018). "
-#               f"SHTools - Tools for working with spherical harmonics,"
-#               f"Geochemistry, Geophysics, Geosystems, 2574-2592, "
-#               f"doi:10.1029/2018GC007529\n Please consult installation "
-#               f"instructions at:\n"
-#               f"{Cyan}https://pypi.org/project/pyshtools\n"
-#               f"{Yellow}And install with:\n"
-#               f"{Cyan}pip install pyshtools{Nclr}")
-#         exit()
-#     except Exception as exception:
-#         # Output unexpected Exceptions.
-#         print(f"{exception.__class__.__name__}: {exception}")
+# Try to import pyshtools with proper error handling
+try:
+    import pyshtools
+    PYSHTOOLS_AVAILABLE = True
+except ImportError:
+    PYSHTOOLS_AVAILABLE = False
+    print(
+        "\033[93m__________________\n"
+        "Zonal decomposition relies on the pyshtools library, "
+        "referenced at:\n\n"
+        "Mark A. Wieczorek and Matthias Meschede (2018). "
+        "SHTools - Tools for working with spherical harmonics,"
+        "Geochemistry, Geophysics, Geosystems, 2574-2592, "
+        "doi:10.1029/2018GC007529\n Please consult installation "
+        "instructions at:\n"
+        "\033[96mhttps://pypi.org/project/pyshtools\n"
+        "\033[93mAnd install with:\n"
+        "\033[96mconda install -c conda-forge pyshtools\033[0m"
+    )
 
 def diurn_extract(VAR, N, tod, lon):
     """
@@ -468,8 +453,13 @@ def zonal_decomposition(VAR):
         smallest dimension. This matches the Nyquist frequency.
         
     """
-    # TODO: Not optimal but prevent issues when library is not installed
-    #init_shtools()
+    if not PYSHTOOLS_AVAILABLE:
+        raise ImportError(
+            "This function requires pyshtools. Install with:\n"
+            "conda install -c conda-forge pyshtools\n"
+            "or\n"
+            "pip install amescap[spectral]"
+        )
 
     var_shape = np.array(VAR.shape)
 
@@ -524,8 +514,13 @@ def zonal_construct(COEFFS_flat, VAR_shape, btype=None, low_highcut=None):
               -> dx min = {L_min} km, dx max = {L_max} km")
               
     """
-    # Not optimal but prevent issues when library is not installed
-    #init_shtools()
+    if not PYSHTOOLS_AVAILABLE:
+        raise ImportError(
+            "This function requires pyshtools. Install with:\n"
+            "conda install -c conda-forge pyshtools\n"
+            "or\n"
+            "pip install amescap[spectral]"
+        )
 
     # Initialization
     nflatten = COEFFS_flat.shape[0]

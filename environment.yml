@@ -1,0 +1,17 @@
+name: amescap
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.8
+  - netcdf4>=1.6.5
+  - numpy>=1.26.2
+  - matplotlib>=3.8.2
+  - scipy>=1.11.4
+  - xarray>=2023.5.0
+  - pandas>=2.0.3
+  - pyodbc>=4.0.39
+  - pyshtools
+  - pip
+  - pip:
+    - -e .

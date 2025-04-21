@@ -10,6 +10,7 @@ Installing CAP is done on the command line via ``git clone``. Here, we provide i
 :ref:`MacOS Installation <mac_install>`
 :ref:`Windows Installation <windows_install>`
 :ref:`NAS Installation <nas_install>`
+:ref:`Spectral Analysis Capabilities <spectral_analysis>`
 
 .. _mac_install:
 
@@ -376,3 +377,32 @@ Troubleshooting Tips
 * **Profile File Not Found**: Double-check the installation paths. The actual path may vary depending on your specific installation.
 * **Python Version**: If you need a different Python version, check available modules with ``module avail python``.
 * **Shell Type**: If you're unsure which shell you're using, run ``echo $SHELL`` to determine your current shell type.
+
+
+.. _spectral_analysis:
+
+Spectral Analysis Capabilities
+-----------------------------
+
+CAP includes optional spectral analysis capabilities that require additional dependencies. These capabilities leverage the ``pyshtools`` library for spherical harmonic transforms and other spectral analysis functions.
+
+Installing with Spectral Analysis Support
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are two recommended ways to install CAP with spectral analysis support:
+
+**Method 1: Using conda (recommended)**
+
+The conda installation method is recommended as it handles all the complex dependencies automatically:
+
+.. code-block:: bash
+
+   # Clone the repository
+   git clone https://github.com/NASA-Planetary-Science/AmesCAP.git
+   cd AmesCAP
+   
+   # Create conda environment with all dependencies including pyshtools
+   conda env create -f environment.yml
+   
+   # Activate the environment
+   conda activate amescap

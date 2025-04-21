@@ -40,6 +40,13 @@ For reproducible analysis, we recommend installing CAP in a dedicated virtual en
     # Install CAP and its dependencies
     pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 
+    # For spectral analysis capabilities (recommended for conda), include
+    # the optional dependencies in the installation command:
+    # Method 1: Using conda (recommended):
+    conda env create -f environment.yml  # Creates environment with all dependencies including pyshtools
+    # Method 2: Using pip:
+    pip install amescap[spectral]        # Adds optional spectral analysis dependencies
+
     # Copy amescap_profile to your home directory, which varies by OS, shell, and package manager:
     # pip + Unix/MacOS (bash, csh, tcsh, zsh) OR Windows Cygwin:
     cp amescap/mars_templates/amescap_profile ~/.amescap_profile

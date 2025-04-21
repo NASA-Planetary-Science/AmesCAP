@@ -25,6 +25,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+spectral = ["pyshtools>=4.10.0"]
 dev = [
   "sphinx>=7.2.6",
   "sphinx-rtd-theme>=1.3.0rc1",
