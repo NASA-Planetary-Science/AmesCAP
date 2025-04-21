@@ -694,13 +694,13 @@ def split_files(file_list, split_dim):
     if f_type == 'diurn':
         if split_dim == 'areo':
             # size areo = (time, tod, scalar_axis)
-            reducing_dim = np.squeeze(fNcdf.variables['areo'][:, 0, :])
+            reducing_dim = np.squeeze(fNcdf.variables[split_dim][:, 0, :])
         else:
-            reducing_dim = np.squeeze(fNcdf.variables[split_dim][:, 0])
+            reducing_dim = np.squeeze(fNcdf.variables[split_dim][:])
     else:
         if split_dim == 'areo':
             # size areo = (time, scalar_axis)
-            reducing_dim = np.squeeze(fNcdf.variables['areo'][:])
+            reducing_dim = np.squeeze(fNcdf.variables[split_dim][:])
         else:
             reducing_dim = np.squeeze(fNcdf.variables[split_dim][:])
 
