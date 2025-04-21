@@ -133,31 +133,28 @@ class TestMarsFormat(unittest.TestCase):
             else:
                 abs_args.append(arg)
         
-        # Construct the full command to run MarsFiles
-        cmd = [sys.executable, os.path.join(self.project_root, "bin", "MarsFiles.py")] + abs_args
+        # Construct the full command to run MarsFormat
+        cmd = [sys.executable, os.path.join(self.project_root, "bin", "MarsFormat.py")] + abs_args
         
         # Print debugging info
         print(f"Running command: {' '.join(cmd)}")
         print(f"Working directory: {self.test_dir}")
-        print(f"File exists check: {os.path.exists(os.path.join(self.project_root, 'bin', 'MarsFiles.py'))}")
+        print(f"File exists check: {os.path.exists(os.path.join(self.project_root, 'bin', 'MarsFormat.py'))}")
         
         # Run the command
-        try:
-            result = subprocess.run(
-                cmd, 
-                capture_output=True, 
-                text=True, 
-                cwd=self.test_dir,  # Run in the test directory
-                env=dict(os.environ, PWD=self.test_dir)  # Ensure current working directory is set
-            )
-            
-            # Print both stdout and stderr to help debug
-            print(f"STDOUT: {result.stdout}")
-            print(f"STDERR: {result.stderr}")
-            
-            return result
-        except Exception as e:
-            self.fail(f"Failed to run MarsFiles: {e}")
+        result = subprocess.run(
+            cmd, 
+            capture_output=True, 
+            text=True, 
+            cwd=self.test_dir,  # Run in the test directory
+            env=dict(os.environ, PWD=self.test_dir)  # Ensure current working directory is set
+        )
+        
+        # Print both stdout and stderr to help debug
+        print(f"STDOUT: {result.stdout}")
+        print(f"STDERR: {result.stderr}")
+        
+        return result
     
     def verify_output_file(self, output_file, expected_vars=None, expected_coords=None):
         """

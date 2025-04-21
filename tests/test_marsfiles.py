@@ -142,11 +142,12 @@ class TestMarsFiles(unittest.TestCase):
                 abs_args.append(arg)
         
         # Construct the full command to run MarsFiles
-        cmd = [sys.executable, '-m', 'MarsFiles'] + abs_args
+        cmd = [sys.executable, os.path.join(self.project_root, "bin", "MarsFiles.py")] + abs_args
         
-        # Print the command being executed
+        # Print debugging info
         print(f"Running command: {' '.join(cmd)}")
-        print(f"Working directory: {os.getcwd()}")
+        print(f"Working directory: {self.test_dir}")
+        print(f"File exists check: {os.path.exists(os.path.join(self.project_root, 'bin', 'MarsFiles.py'))}")
         
         # Run the command
         try:
@@ -154,13 +155,13 @@ class TestMarsFiles(unittest.TestCase):
                 cmd, 
                 capture_output=True, 
                 text=True, 
-                cwd=self.project_root,  # Run from the project root directory
+                cwd=self.test_dir,  # Run in the test directory
                 env=dict(os.environ, PWD=self.test_dir)  # Ensure current working directory is set
             )
             
-            # Print command execution results
-            print(f"Command STDOUT: {result.stdout}")
-            print(f"Command STDERR: {result.stderr}")
+            # Print both stdout and stderr to help debug
+            print(f"STDOUT: {result.stdout}")
+            print(f"STDERR: {result.stderr}")
             
             return result
         except Exception as e:
