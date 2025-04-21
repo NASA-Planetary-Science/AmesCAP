@@ -32,9 +32,9 @@ class TestMarsFiles(unittest.TestCase):
     
     @classmethod
     def create_test_files(cls):
-        """Create test netCDF files using create_netcdf_files.py"""
-        # cmd = [sys.executable, os.path.join(cls.project_root, 'tests', 'create_netcdf_files.py')]
-        cmd = [sys.executable, os.path.join(cls.project_root, 'tests', 'create_netcdf_files.py'), cls.test_dir]
+        """Create test netCDF files using create_ames_gcm_files.py"""
+        # cmd = [sys.executable, os.path.join(cls.project_root, 'tests', 'create_ames_gcm_files.py')]
+        cmd = [sys.executable, os.path.join(cls.project_root, 'tests', 'create_ames_gcm_files.py'), cls.test_dir]
         
         try:
             result = subprocess.run(
@@ -48,7 +48,7 @@ class TestMarsFiles(unittest.TestCase):
                 raise Exception(f"Failed to create test files: {result.stderr}")
             
         except Exception as e:
-            raise Exception(f"Error running create_netcdf_files.py: {e}")
+            raise Exception(f"Error running create_ames_gcm_files.py: {e}")
             
         # Verify files were created
         expected_files = [

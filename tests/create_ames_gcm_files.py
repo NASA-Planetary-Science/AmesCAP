@@ -22,6 +22,7 @@ def create_mgcm_fixed():
     # Create and populate lat variable
     lat_var = nc_file.createVariable('lat', 'f4', ('lat',))
     lat_var.long_name = 'latitude'
+    lat_var.units = 'degrees_N'
     lat_values = np.array([-88.125, -84.375, -80.625, -76.875, -73.125, -69.375, -65.625, -61.875, -58.125,
                          -54.375, -50.625, -46.875, -43.125, -39.375, -35.625, -31.875, -28.125, -24.375,
                          -20.625, -16.875, -13.125, -9.375, -5.625, -1.875, 1.875, 5.625, 9.375,
@@ -48,10 +49,12 @@ def create_mgcm_fixed():
     ])
     grid_yt_bnds_var[:] = grid_yt_bnds_values
     grid_yt_bnds_var.long_name = 'T-cell latitude'
+    grid_yt_bnds_var.units = 'degrees_N'
     
     # Create and populate lon variable
     lon_var = nc_file.createVariable('lon', 'f4', ('lon',))
     lon_var.long_name = 'longitude'
+    lon_var.units = 'degrees_E'
     lon_values = np.array([1.875, 5.625, 9.375, 13.125, 16.875, 20.625, 24.375, 28.125, 31.875,
                          35.625, 39.375, 43.125, 46.875, 50.625, 54.375, 58.125, 61.875, 65.625,
                          69.375, 73.125, 76.875, 80.625, 84.375, 88.125, 91.875, 95.625, 99.375,
@@ -95,6 +98,7 @@ def create_mgcm_fixed():
     ])
     grid_xt_bnds_var[:] = grid_xt_bnds_values
     grid_xt_bnds_var.long_name = 'T-cell longitude'
+    grid_xt_bnds_var.units = 'degrees_E'
     
     # Create and populate other variables
     zsurf_var = nc_file.createVariable('zsurf', 'f4', ('lat', 'lon'))
