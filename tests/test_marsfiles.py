@@ -26,28 +26,28 @@ class TestMarsFiles(unittest.TestCase):
         
         # Project root directory
         cls.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    
-    def setUp(self):
-        """Create test netCDF files and change to temporary directory before each test"""
-        # Change to test directory
-        os.chdir(self.test_dir)
         
         # Run the script to create test netCDF files
-        self.create_test_files()
+        cls.create_test_files()
     
-    def create_test_files(self):
+    @classmethod
+    def create_test_files(cls):
         """Create test netCDF files using create_ames_gcm_files.py"""
         # Get path to create_ames_gcm_files.py script
-        create_files_script = os.path.join(self.project_root, "tests", "create_ames_gcm_files.py")
+        create_files_script = os.path.join(cls.project_root, "tests", "create_ames_gcm_files.py")
         
         # Execute the script to create test files
+        cmd = [sys.executable, create_files_script, cls.test_dir]
+        
+        # Print the command being executed
+        print(f"Creating test files with command: {' '.join(cmd)}")
+        
         try:
             result = subprocess.run(
-                [sys.executable, create_files_script, self.test_dir],
+                cmd,
                 capture_output=True,
                 text=True,
-                cwd=self.test_dir,  # Run in the test directory
-                env=dict(os.environ, PWD=self.test_dir)  # Ensure current working directory is set
+                cwd=cls.project_root  # Run in the project root directory
             )
             
             # Print output for debugging
@@ -70,15 +70,17 @@ class TestMarsFiles(unittest.TestCase):
         ]
         
         for filename in expected_files:
-            filepath = os.path.join(self.test_dir, filename)
+            filepath = os.path.join(cls.test_dir, filename)
             if not os.path.exists(filepath):
-                print(f"Warning: Test file {filename} was not created!")
-                if result.stderr:
-                    print(f"Error output: {result.stderr}")
+                raise Exception(f"Test file {filename} was not created")
+    
+    def setUp(self):
+        """Change to temporary directory before each test"""
+        os.chdir(self.test_dir)
     
     def tearDown(self):
         """Clean up after each test"""
-        # Clean up any generated output files after each test
+        # Clean up any generated output files after each test but keep input files
         output_patterns = [
             '*_T.nc',
             '*_to_average.nc',
@@ -103,10 +105,6 @@ class TestMarsFiles(unittest.TestCase):
         
         # Return to test_dir
         os.chdir(self.test_dir)
-        
-        # Force garbage collection
-        import gc
-        gc.collect()
     
     @classmethod
     def tearDownClass(cls):
@@ -134,7 +132,7 @@ class TestMarsFiles(unittest.TestCase):
         # Construct the full command to run MarsFiles
         cmd = [sys.executable, '-m', 'bin.MarsFiles'] + abs_args
         
-        # Print debugging info
+        # Print the command being executed
         print(f"Running command: {' '.join(cmd)}")
         print(f"Working directory: {self.test_dir}")
         
@@ -151,11 +149,6 @@ class TestMarsFiles(unittest.TestCase):
             # Print both stdout and stderr to help debug
             print(f"STDOUT: {result.stdout}")
             print(f"STDERR: {result.stderr}")
-            
-            # Print stderr output for debugging if the command failed
-            if result.returncode != 0:
-                print(f"MarsFiles stderr: {result.stderr}")
-                print(f"MarsFiles stdout: {result.stdout}")
             
             return result
         except Exception as e:
@@ -185,7 +178,6 @@ class TestMarsFiles(unittest.TestCase):
         finally:
             nc.close()
     
-    # The rest of the test methods remain the same
     def test_help_message(self):
         """Test that help message can be displayed"""
         result = self.run_mars_files(['-h'])
