@@ -498,7 +498,7 @@ class TestMarsFiles(unittest.TestCase):
         self.assertEqual(result.returncode, 0, "Regrid command failed")
         
         # Check that output file was created
-        output_file = self.check_file_exists('01336.atmos_average_regrid.nc')
+        output_file = self.check_file_exists('01336.atmos_average_pstd_regrid.nc')
         
         # Verify that the grid dimensions match the target file
         nc_target = Dataset(os.path.join(self.test_dir, '01336.atmos_average_pstd_c48.nc'), 'r')
@@ -537,7 +537,7 @@ class TestMarsFiles(unittest.TestCase):
     
     def test_custom_extension(self):
         """Test using custom extension"""
-        result = self.run_mars_files(['01336.atmos_average.nc', '-zavg', '-ext', '_custom'])
+        result = self.run_mars_files(['01336.atmos_average.nc', '-zavg', '-ext', 'custom'])
         
         # Check for successful execution
         self.assertEqual(result.returncode, 0, "Zonal average with custom extension command failed")
