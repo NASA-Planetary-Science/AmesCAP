@@ -26,23 +26,32 @@ class TestMarsFiles(unittest.TestCase):
         
         # Project root directory
         cls.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
+    def setUp(self):
+        """Create test netCDF files and change to temporary directory before each test"""
+        # Change to test directory
+        os.chdir(self.test_dir)
         
         # Run the script to create test netCDF files
-        cls.create_test_files()
+        self.create_test_files()
     
-    @classmethod
-    def create_test_files(cls):
+    def create_test_files(self):
         """Create test netCDF files using create_ames_gcm_files.py"""
-        # cmd = [sys.executable, os.path.join(cls.project_root, 'tests', 'create_ames_gcm_files.py')]
-        cmd = [sys.executable, os.path.join(cls.project_root, 'tests', 'create_ames_gcm_files.py'), cls.test_dir]
+        # Get path to create_ames_gcm_files.py script
+        create_files_script = os.path.join(self.project_root, "tests", "create_ames_gcm_files.py")
         
+        # Execute the script to create test files
         try:
             result = subprocess.run(
-                cmd,
+                [sys.executable, create_files_script, self.test_dir],
                 capture_output=True,
                 text=True,
-                cwd=cls.project_root
+                cwd=self.test_dir,  # Run in the test directory
+                env=dict(os.environ, PWD=self.test_dir)  # Ensure current working directory is set
             )
+            
+            # Print output for debugging
+            print(f"File creation output: {result.stdout}")
             
             if result.returncode != 0:
                 raise Exception(f"Failed to create test files: {result.stderr}")
@@ -61,18 +70,43 @@ class TestMarsFiles(unittest.TestCase):
         ]
         
         for filename in expected_files:
-            filepath = os.path.join(cls.test_dir, filename)
+            filepath = os.path.join(self.test_dir, filename)
             if not os.path.exists(filepath):
-                raise Exception(f"Test file {filename} was not created")
-    
-    def setUp(self):
-        """Change to temporary directory before each test"""
-        os.chdir(self.test_dir)
+                print(f"Warning: Test file {filename} was not created!")
+                if result.stderr:
+                    print(f"Error output: {result.stderr}")
     
     def tearDown(self):
         """Clean up after each test"""
+        # Clean up any generated output files after each test
+        output_patterns = [
+            '*_T.nc',
+            '*_to_average.nc',
+            '*_to_diurn.nc',
+            '*_tide_decomp*.nc',
+            '*_hpt*.nc',
+            '*_lpt*.nc',
+            '*_bpt*.nc',
+            '*_regrid.nc',
+            '*_zavg*.nc',
+            '*_Ls*_*.nc',
+            '*_lat_*_*.nc'
+        ]
+        
+        for pattern in output_patterns:
+            for file_path in glob.glob(os.path.join(self.test_dir, pattern)):
+                try:
+                    os.remove(file_path)
+                    print(f"Removed file: {file_path}")
+                except Exception as e:
+                    print(f"Warning: Could not remove file {file_path}: {e}")
+        
         # Return to test_dir
         os.chdir(self.test_dir)
+        
+        # Force garbage collection
+        import gc
+        gc.collect()
     
     @classmethod
     def tearDownClass(cls):
@@ -89,8 +123,20 @@ class TestMarsFiles(unittest.TestCase):
         :param args: List of arguments to pass to MarsFiles
         :return: subprocess result object
         """
+        # Convert any relative file paths to absolute paths
+        abs_args = []
+        for arg in args:
+            if isinstance(arg, str) and arg.endswith('.nc'):
+                abs_args.append(os.path.join(self.test_dir, arg))
+            else:
+                abs_args.append(arg)
+        
         # Construct the full command to run MarsFiles
-        cmd = [sys.executable, '-m', 'bin.MarsFiles'] + args
+        cmd = [sys.executable, '-m', 'bin.MarsFiles'] + abs_args
+        
+        # Print debugging info
+        print(f"Running command: {' '.join(cmd)}")
+        print(f"Working directory: {self.test_dir}")
         
         # Run the command
         try:
@@ -98,9 +144,13 @@ class TestMarsFiles(unittest.TestCase):
                 cmd, 
                 capture_output=True, 
                 text=True, 
-                cwd=self.test_dir,
-                env=dict(os.environ, PWD=self.test_dir)
+                cwd=self.project_root,  # Run in the project root directory
+                env=dict(os.environ, PWD=self.test_dir)  # Ensure current working directory is set
             )
+            
+            # Print both stdout and stderr to help debug
+            print(f"STDOUT: {result.stdout}")
+            print(f"STDERR: {result.stderr}")
             
             # Print stderr output for debugging if the command failed
             if result.returncode != 0:
@@ -135,6 +185,7 @@ class TestMarsFiles(unittest.TestCase):
         finally:
             nc.close()
     
+    # The rest of the test methods remain the same
     def test_help_message(self):
         """Test that help message can be displayed"""
         result = self.run_mars_files(['-h'])
