@@ -8,7 +8,9 @@ Installation Instructions
 Installing CAP is done on the command line via ``git clone``. Here, we provide instructions for installing on Windows using Cygwin or PowerShell and pip or conda, MacOS using pip or conda, and the NASA Advanced Supercomputing (NAS) system using pip.
 
 :ref:`MacOS Installation <mac_install>`
+
 :ref:`Windows Installation <windows_install>`
+
 :ref:`NAS Installation <nas_install>`
 
 .. _mac_install:
@@ -73,6 +75,16 @@ Install CAP from the `NASA Planetary Science GitHub <https://github.com/NASA-Pla
 .. code-block:: bash
 
    pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
+
+.. note::
+
+   You can install a specific branch of the AmesCAP repository by appending ``@branch_name`` to the URL. For example, to install the ``devel`` branch, use:
+
+   .. code-block:: bash
+
+      pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git@devel
+   
+   This is useful if you want to test new features or bug fixes that are not yet in the main branch.
 
 4. Copy the profile file to your home directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -220,6 +232,16 @@ Using **conda** with **Cygwin**:
    # The same command works in both PowerShell and Cygwin
    pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 
+.. note::
+
+   You can install a specific branch of the AmesCAP repository by appending ``@branch_name`` to the URL. For example, to install the ``devel`` branch, use:
+
+   .. code-block:: bash
+
+      pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git@devel
+   
+   This is useful if you want to test new features or bug fixes that are not yet in the main branch.
+
 4. Copy the profile file to your home directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -342,6 +364,16 @@ Install CAP from the `NASA Planetary Science GitHub <https://github.com/NASA-Pla
 
    pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git
 
+.. note::
+
+   You can install a specific branch of the AmesCAP repository by appending ``@branch_name`` to the URL. For example, to install the ``devel`` branch, use:
+
+   .. code-block:: bash
+
+      pip install git+https://github.com/NASA-Planetary-Science/AmesCAP.git@devel
+   
+   This is useful if you want to test new features or bug fixes that are not yet in the main branch.
+   
 5. Copy the profile file to your home directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
