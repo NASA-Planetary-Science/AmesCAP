@@ -15,9 +15,6 @@ Third-party Requirements:
 
 # Load generic Python modules
 import numpy as np
-#TODO fix import
-#import pyshtools as pyshtools
-
 
 from amescap.Script_utils import Yellow, Cyan, Nclr, progress
 
@@ -34,38 +31,6 @@ except Exception as exception:
 # ======================================================================
 #                           DEFINITIONS
 # ======================================================================
-#import pyshtools
-# def init_shtools():
-#     """
-#     The following code simply loads the pyshtools module and provides
-#     adequate referencing. Since dependencies may need to be solved by
-#     the user, the module import is wrapped in a function that can be
-#     called as needed.
-
-#     :raises: Exception
-
-#     :return: imported module pyshtools or error
-#     """
-#     try:
-#         import pyshtools as pyshtools
-#         print('Successfully imported pyshtools')
-#     except ImportError as error_msg:
-#         print(f"{Yellow}__________________\n"
-#               f"Zonal decomposition relies on the pyshtools library, "
-#               f"referenced at:\n\n"
-#               f"Mark A. Wieczorek and Matthias Meschede (2018). "
-#               f"SHTools - Tools for working with spherical harmonics,"
-#               f"Geochemistry, Geophysics, Geosystems, 2574-2592, "
-#               f"doi:10.1029/2018GC007529\n Please consult installation "
-#               f"instructions at:\n"
-#               f"{Cyan}https://pypi.org/project/pyshtools\n"
-#               f"{Yellow}And install with:\n"
-#               f"{Cyan}pip install pyshtools{Nclr}")
-#         exit()
-#     except Exception as exception:
-#         # Output unexpected Exceptions.
-#         print(f"{exception.__class__.__name__}: {exception}")
-
 def diurn_extract(VAR, N, tod, lon):
     """
     Extract the diurnal component of a field. Original code by John
@@ -449,102 +414,3 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
         return VAR_trend + VAR_f
     else:
         return VAR_f
-
-def zonal_decomposition(VAR):
-    """
-    Decomposition into spherical harmonics. [A. Kling, 2020]
-
-    :param VAR: Detrend variable for decomposition. Lat is SECOND to
-        LAST dimension and lon is LAST (e.g., ``[time,lat,lon]`` or
-        ``[time,lev,lat,lon]``)
-
-    :return: (COEFFS) coefficient for harmonic decomposion, shape is
-        flattened (e.g., ``[time, 2, lat/2, lat/2]``
-        ``[time x lev, 2, lat/2, lat/2]``);
-        (power_per_l) power spectral density, shape is re-organized
-        (e.g., [time, lat/2] or [time, lev, lat/2])
-
-    .. NOTE:: Output size is (``[...,lat/2, lat/2]``) as lat is the
-        smallest dimension. This matches the Nyquist frequency.
-        
-    """
-    # TODO: Not optimal but prevent issues when library is not installed
-    #init_shtools()
-
-    var_shape = np.array(VAR.shape)
-
-    # Flatten array (e.g., [10, 36, lat, lon] -> [360, lat, lon])
-    nflatten = int(np.prod(var_shape[:-2]))
-    reshape_flat = np.append(nflatten, var_shape[-2:])
-    VAR = VAR.reshape(reshape_flat)
-
-    coeff_out_shape = np.append(var_shape[0:-2],
-                                [2, var_shape[-2]//2, var_shape[-2]//2])
-    psd_out_shape = np.append(var_shape[0:-2], var_shape[-2]//2)
-    coeff_flat_shape = np.append(nflatten, coeff_out_shape[-3:])
-    COEFFS = np.zeros(coeff_flat_shape)
-
-    psd = np.zeros((nflatten,var_shape[-2]//2))
-
-    for ii in range(0,nflatten):
-        COEFFS[ii,...] = pyshtools.expand.SHExpandDH(VAR[ii,...], sampling = 2)
-        psd[ii,:] = pyshtools.spectralanalysis.spectrum(COEFFS[ii,...])
-
-    return  COEFFS, psd.reshape(psd_out_shape)
-
-def zonal_construct(COEFFS_flat, VAR_shape, btype=None, low_highcut=None):
-    """
-    Recomposition into spherical harmonics
-
-    :param COEFFS_flat: Spherical harmonic coefficients as a flattened
-        array, (e.g., ``[time, lat, lon]`` or
-        ``[time x lev, 2, lat, lon]``)
-    :type COEFFS_flat: array
-    
-    :param VAR_shape: shape of the original variable
-    :type VAR_shape: tuple
-    
-    :param btype: filter type: "low", "high", or "band". If None,
-        returns reconstructed array using all zonal wavenumbers
-    :type btype: str or None
-    
-    :param low_high_cut: low, high or [low, high] zonal wavenumber
-    :type low_high_cut: int
-
-    :return: detrended variable reconstructed to original size
-        (e.g., [time, lev, lat, lon])
-
-    .. NOTE:: The minimum and maximum wavelenghts in [km] are computed::
-        dx = 2*np.pi * 3400
-        L_min = (1./kmax) * dx
-        L_max = 1./max(kmin, 1.e-20) * dx
-        if L_max > 1.e20:
-            L_max = np.inf
-        print("(kmin,kmax) = ({kmin}, {kmax})
-              -> dx min = {L_min} km, dx max = {L_max} km")
-              
-    """
-    # Not optimal but prevent issues when library is not installed
-    #init_shtools()
-
-    # Initialization
-    nflatten = COEFFS_flat.shape[0]
-    kmin = 0
-    kmax = COEFFS_flat.shape[-1]
-
-    VAR = np.zeros((nflatten, VAR_shape[-2], VAR_shape[-1]))
-
-    if btype == "low":
-        kmax= int(low_highcut)
-    if btype == "high":
-        kmin= int(low_highcut)
-    if btype == "band":
-        kmin, kmax= int(low_highcut[0]), int(low_highcut[1])
-
-    for ii in range(0, nflatten):
-        # Filtering
-        COEFFS_flat[ii, :, :kmin, :] = 0.
-        COEFFS_flat[ii, :, kmax:, :] = 0.
-        VAR[ii, :, :] = pyshtools.expand.MakeGridDH(COEFFS_flat[ii, :, :],
-                                                  sampling = 2)
-    return  VAR.reshape(VAR_shape)

@@ -21,9 +21,6 @@ and optionally accepts:
     * ``[-lpt, --low_pass_temporal]``     Temporal filter: low-pass
     * ``[-bpt, --band_pass_temporal]``    Temporal filter: band-pass
     * ``[-trend, --add_trend]``           Return amplitudes only (use with temporal filters)
-    * ``[-hps, --high_pass_spatial]``     Spatial filter: high-pass
-    * ``[-lps, --low_pass_spatial]``      Spatial filter: low-pass
-    * ``[-bps, --band_pass_spatial]``     Spatial filter: band-pass
     * ``[-tide, --tide_decomp]``          Extract diurnal tide and its harmonics
     * ``[-recon, --reconstruct]``         Reconstruct the first N harmonics
     * ``[-norm, --normalize]``            Provide ``-tide`` result in % amplitude
@@ -332,52 +329,6 @@ parser.add_argument('-bpt', '--band_pass_temporal', action=ExtAction,
     )
 )
 
-# Decomposition in zonal harmonics, disabled for initial CAP release:
-parser.add_argument('-hps', '--high_pass_spatial', action=ExtAction,
-    ext_content='_hps',
-    parser=parser,
-    nargs='+', type=int,
-    help=(
-        f"Spatial high-pass filtering: removes low-frequency noise. "
-        f"Only works with 'daily' files.\nRequires a cutoff frequency "
-        f"in Sols.\n"
-        f"{Yellow}Generates a new file ending in ``_hps.nc``\n"
-        f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_daily.nc -hps 10 -add_trend\n"
-        f"{Nclr}\n\n"
-    )
-)
-
-parser.add_argument('-lps', '--low_pass_spatial', action=ExtAction,
-    ext_content='_lps',
-    parser=parser,
-    nargs='+', type=int,
-    help=(
-        f"Spatial low-pass filtering: removes high-frequency noise "
-        f"(smoothing).\nOnly works with 'daily' files. Requires a "
-        f"cutoff frequency in Sols.\n"
-        f"{Yellow}Generates a new file ending in ``_lps.nc``\n"
-        f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_daily.nc -lps 20 -add_trend\n"
-        f"{Nclr}\n\n"
-    )
-)
-
-parser.add_argument('-bps', '--band_pass_spatial', action=ExtAction,
-    ext_content='_bps',
-    parser=parser,
-    nargs='+', type=int,
-    help=(
-        f"Spatial band-pass filtering: filters out frequencies "
-        f"specified by user.\nOnly works with 'daily' files. Requires a "
-        f"cutoff frequency in Sols.\nData detrended before filtering.\n"
-        f"{Yellow}Generates a new file ending in ``_bps.nc``\n"
-        f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_daily.nc -bps 10 20 -add_trend\n"
-        f"{Nclr}\n\n"
-    )
-)
-
 parser.add_argument('-tide', '--tide_decomp', action=ExtAction,
     ext_content='_tide_decomp',
     parser=parser,
@@ -572,8 +523,7 @@ if args.reconstruct and not args.tide_decomp:
 all_args = [args.bin_files, args.concatenate, args.split, args.time_shift,
             args.bin_average, args.bin_diurn, args.high_pass_temporal,
             args.low_pass_temporal, args.band_pass_temporal,
-            args.high_pass_spatial, args.low_pass_spatial,
-            args.band_pass_spatial, args.tide_decomp, args.normalize,
+            args.tide_decomp, args.normalize,
             args.regrid_XY_to_match, args.zonal_average]
 
 if (all(v is None or v is False for v in all_args) 
@@ -604,9 +554,6 @@ out_ext = (f"{args.time_shift_ext}"
             f"{args.low_pass_temporal_ext}"
             f"{args.band_pass_temporal_ext}"
             f"{args.add_trend_ext}"
-            f"{args.high_pass_spatial_ext}"
-            f"{args.low_pass_spatial_ext}"
-            f"{args.band_pass_spatial_ext}"
             f"{args.tide_decomp_ext}"
             f"{args.reconstruct_ext}"
             f"{args.normalize_ext}"
@@ -1534,164 +1481,7 @@ def main():
                         print(f"{Cyan}Copying variable: {ivar}{Nclr}")
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
-
-    # ------------------------------------------------------------------
-    #                      Zonal Decomposition Analysis
-    #                              Alex K.
-    # ------------------------------------------------------------------
-    elif (args.high_pass_spatial or
-          args.low_pass_spatial or
-          args.band_pass_spatial):
-        # This function requires scipy > 1.2.0. Import the package here
-        from amescap.Spectral_utils import (
-            zonal_decomposition, zonal_construct,init_shtools
-            )
-        # Load the module
-        init_shtools()
-        if args.high_pass_spatial:
-            btype = "high"
-            nk = np.asarray(args.high_pass_spatial).astype(int)
-            if len(np.atleast_1d(nk)) != 1:
-                print(f"{Red}***Error*** kmin accepts only one value")
-                exit()
-        if args.low_pass_spatial:
-            btype = "low"
-            nk = np.asarray(args.low_pass_spatial).astype(int)
-            if len(np.atleast_1d(nk)) != 1:
-                print(f"{Red}kmax accepts only one value")
-                exit()
-        if args.band_pass_spatial:
-            btype = "band"
-            nk = np.asarray(args.band_pass_spatial).astype(int)
-            if len(np.atleast_1d(nk)) != 2:
-                print(f"{Red}Requires two values: kmin kmax")
-                exit()
-
-        for file in file_list:
-            # Add path unless full path is provided
-            if not ("/" in file):
-                input_file_name = f"{data_dir}/{file}"
-            else:
-                input_file_name=file
-
-            output_file_name = (f"{input_file_name[:-3]}"
-                        f"{out_ext}.nc")
-
-            fname = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
-            # Get all variables
-            var_list = filter_vars(fname,args.include)
-            lon = fname.variables["lon"][:]
-            lat = fname.variables["lat"][:]
-            LON, LAT = np.meshgrid(lon,lat)
-
-            dlat = lat[1] - lat[0]
-            dx = 2*np.pi*3400
-
-            # Check if the frequency domain is allowed and display some
-            # information
-            if any(nn > len(lat)/2 for nn in nk):
-                print(
-                    f"{Red}***Warning***  maximum wavenumber cut-off cannot "
-                    f"be larger than the Nyquist criteria of nlat/2 = "
-                    f"{len(lat)/2} sol{Nclr}"
-                    )
-            elif btype == "low":
-                L_max = (1./nk) * dx
-                print(
-                    f"{Yellow}Low pass filter, allowing only wavelength > "
-                    f"{L_max} km{Nclr}"
-                    )
-            elif btype == "high":
-                L_min = (1./nk) * dx
-                print(
-                    f"{Yellow}High pass filter, allowing only wavelength < "
-                    f"{L_min} km{Nclr}"
-                    )
-            elif btype == "band":
-                L_min = (1. / nk[1]) * dx
-                L_max = 1. / max(nk[0], 1.e-20) * dx
-                if L_max > 1.e20:
-                    L_max = np.inf
-                print(
-                    f"{Yellow}Band pass filter, allowing only {L_min} km < "
-                    f"wavelength < {L_max} km{Nclr}"
-                    )
-
-            # Define a netcdf object from the netcdf wrapper module
-            fnew = Ncdf(output_file_name)
-            # Copy all dimensions but "time" from old -> new file
-            fnew.copy_all_dims_from_Ncfile(fname)
-
-            if btype == "low":
-                fnew.add_constant(
-                    "kmax", 
-                    nk,
-                    "Low-pass filter zonal wavenumber ",
-                    "wavenumber"
-                    )
-            elif btype == "high":
-                fnew.add_constant(
-                    "kmin", 
-                    nk,
-                    "High-pass filter zonal wavenumber ",
-                    "wavenumber"
-                    )
-            elif btype == "band":
-                fnew.add_constant(
-                    "kmin", 
-                    nk[0],
-                    "Band-pass filter low zonal wavenumber ",
-                    "wavenumber"
-                    )
-                fnew.add_constant(
-                    "kmax", 
-                    nk[1],
-                    "Band-pass filter high zonal wavenumber ",
-                    "wavenumber"
-                    )
-            low_highcut = nk
-
-            for ivar in var_list:
-                # Loop over all variables in the file
-                varNcf = fname.variables[ivar]
-                longname_txt, units_txt = get_longname_unit(fname, ivar)
-                if ("lat" in varNcf.dimensions and
-                    "lon" in varNcf.dimensions):
-                    print(f"{Cyan}Processing: {ivar}...{Nclr}")
-                    # Step 1: Detrend the data
-                    TREND = get_trend_2D(varNcf[:], LON, LAT,  "wmean")
-                    # Step 2: Calculate spherical harmonic coeffs
-                    COEFF, PSD = zonal_decomposition(varNcf[:] - TREND)
-                    # Step 3: Recompose the variable out of the coeffs
-                    VAR_filtered = zonal_construct(
-                        COEFF, 
-                        varNcf[:].shape,
-                        btype = btype,
-                        low_highcut = low_highcut
-                        )
-                    #Step 4: Add the trend, if requested
-                    if args.add_trend:
-                        var_out = VAR_filtered
-                    else:
-                        var_out = VAR_filtered + TREND
-
-                    fnew.log_variable(
-                        ivar, 
-                        var_out, 
-                        varNcf.dimensions,
-                        longname_txt, 
-                        units_txt
-                        )
-                else:
-                    if  ivar in ["pfull", "lat", "lon", "phalf", "pk", "bk",
-                                 "pstd", "zstd", "zagl", "time"]:
-                        print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
-                        fnew.copy_Ncaxis_with_content(fname.variables[ivar])
-                    else:
-                        print(f"{Cyan}Copying variable: {ivar}...{Nclr}")
-                        fnew.copy_Ncvar(fname.variables[ivar])
-            fnew.close()
-
+            
     # ------------------------------------------------------------------
     #                           Tidal Analysis
     #                           Alex K. & R. J. Wilson

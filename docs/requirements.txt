@@ -3,7 +3,6 @@ xarray==2023.5.0
 pyodbc==4.0.39
 setuptools==57.4.0
 pandas==2.0.3
-# pyshtools==4.13.1
 
 # Documentation dependencies
 sphinx==7.2.6
