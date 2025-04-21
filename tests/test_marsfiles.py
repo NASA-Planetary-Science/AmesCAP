@@ -367,25 +367,7 @@ class TestMarsFiles(unittest.TestCase):
         
         # Check that output file was created
         output_file = self.check_file_exists('01336.atmos_daily_hpt_trended.nc')
-    
-    def test_spatial_high_pass_filter(self):
-        """Test high-pass spatial filtering"""
-        result = self.run_mars_files(['01336.atmos_daily.nc', '-hps', '10'])
         
-        # Check for successful execution
-        # Note: This might fail if SHTOOLS is not installed
-        result_code = result.returncode
-        if result_code != 0:
-            # Check if it failed due to missing SHTOOLS
-            if "No module named 'pyshtools'" in result.stderr:
-                self.skipTest("SHTOOLS not available, skipping spatial filtering test")
-            else:
-                self.assertEqual(result_code, 0, "High-pass spatial filter command failed")
-        
-        # Check that output file was created if command succeeded
-        if result_code == 0:
-            output_file = self.check_file_exists('01336.atmos_daily_hps.nc')
-    
     def test_tide_decomposition(self):
         """Test tidal decomposition on diurn file"""
         result = self.run_mars_files(['01336.atmos_diurn.nc', '-tide', '2', '-incl', 'ps', 'temp'])

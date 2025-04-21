@@ -32,9 +32,6 @@ Functions
    amescap.Spectral_utils.reconstruct_diurn
    amescap.Spectral_utils.space_time
    amescap.Spectral_utils.zeroPhi_filter
-   amescap.Spectral_utils.zonal_construct
-   amescap.Spectral_utils.zonal_decomposition
-
 
 
 .. py:function:: diurn_extract(VAR, N, tod, lon)
@@ -174,57 +171,3 @@ Functions
    .. NOTE:: ``Wn=[low, high]`` are expressed as a function of the
        Nyquist frequency
        
-
-
-.. py:function:: zonal_construct(COEFFS_flat, VAR_shape, btype=None, low_highcut=None)
-
-   Recomposition into spherical harmonics
-
-   :param COEFFS_flat: Spherical harmonic coefficients as a flattened
-       array, (e.g., ``[time, lat, lon]`` or
-       ``[time x lev, 2, lat, lon]``)
-   :type COEFFS_flat: array
-
-   :param VAR_shape: shape of the original variable
-   :type VAR_shape: tuple
-
-   :param btype: filter type: "low", "high", or "band". If None,
-       returns reconstructed array using all zonal wavenumbers
-   :type btype: str or None
-
-   :param low_high_cut: low, high or [low, high] zonal wavenumber
-   :type low_high_cut: int
-
-   :return: detrended variable reconstructed to original size
-       (e.g., [time, lev, lat, lon])
-
-   .. NOTE:: The minimum and maximum wavelenghts in [km] are computed::
-       dx = 2*np.pi * 3400
-       L_min = (1./kmax) * dx
-       L_max = 1./max(kmin, 1.e-20) * dx
-       if L_max > 1.e20:
-           L_max = np.inf
-       print("(kmin,kmax) = ({kmin}, {kmax})
-             -> dx min = {L_min} km, dx max = {L_max} km")
-             
-
-
-.. py:function:: zonal_decomposition(VAR)
-
-   Decomposition into spherical harmonics. [A. Kling, 2020]
-
-   :param VAR: Detrend variable for decomposition. Lat is SECOND to
-       LAST dimension and lon is LAST (e.g., ``[time,lat,lon]`` or
-       ``[time,lev,lat,lon]``)
-
-   :return: (COEFFS) coefficient for harmonic decomposion, shape is
-       flattened (e.g., ``[time, 2, lat/2, lat/2]``
-       ``[time x lev, 2, lat/2, lat/2]``);
-       (power_per_l) power spectral density, shape is re-organized
-       (e.g., [time, lat/2] or [time, lev, lat/2])
-
-   .. NOTE:: Output size is (``[...,lat/2, lat/2]``) as lat is the
-       smallest dimension. This matches the Nyquist frequency.
-       
-
-
