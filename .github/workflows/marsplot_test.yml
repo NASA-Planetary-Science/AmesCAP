@@ -68,7 +68,11 @@ jobs:
         shell: pwsh
       - name: Verify Ghostscript installation
         run: |
-          gs --version
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            where gswin64.exe
+          else
+            which gs
+          fi
       # Set HOME for Windows since it might be used by the script
       - name: Set HOME environment variable for Windows
         if: runner.os == 'Windows'
