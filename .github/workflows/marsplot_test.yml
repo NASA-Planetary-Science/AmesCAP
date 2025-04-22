@@ -73,6 +73,7 @@ jobs:
           else
             which gs
           fi
+        shell: bash
       # Set HOME for Windows since it might be used by the script
       - name: Set HOME environment variable for Windows
         if: runner.os == 'Windows'
