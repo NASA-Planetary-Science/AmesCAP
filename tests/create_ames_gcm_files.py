@@ -568,10 +568,26 @@ def create_mgcm_atmos_diurn_pstd():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'time_of_day_24', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_vals = np.linspace(721.2, 1077.3, 133)
-    areo_data = np.zeros((133, 1))  # Create a 2D array with shape (133, 1)
-    for i in range(133):
-        areo_data[i, 0] = areo_vals[i]
+    
+    # Create base values for areo dimension
+    areo_base = np.linspace(721.2, 1077.3, 133)
+
+    # Create 3D array with shape (133, 24, 1)
+    areo_data = np.zeros((133, 24, 1))
+
+    # Fill array with increasing values
+    for t in range(133):
+        # Base value for this areo
+        base_val = areo_base[t]
+        
+        # Daily oscillation (values increase slightly throughout the day)
+        # Starting with a small offset and incrementing by a small amount
+        for tod in range(24):
+            # Small daily oscillation of ~0.4 degrees
+            daily_increment = (tod / 24.0) * 0.4
+            areo_data[t, tod, 0] = base_val - 0.2 + daily_increment
+
+    # Assign the data to the variable
     areo_var[:] = areo_data
     
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'time_of_day_24', 'lat', 'lon'))
@@ -653,11 +669,23 @@ def create_mgcm_atmos_diurn():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'time_of_day_24', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_vals = np.linspace(721.2, 1077.3, 133)
-    areo_data = np.zeros((133, 1))  # Create a 2D array with shape (133, 1)
-    for i in range(133):
-        areo_data[i, 0] = areo_vals[i]
-    areo_var[:] = areo_data
+    # Create base values for areo dimension
+    areo_base = np.linspace(721.2, 1077.3, 133)
+
+    # Create 3D array with shape (133, 24, 1)
+    areo_data = np.zeros((133, 24, 1))
+
+    # Fill array with increasing values
+    for t in range(133):
+        # Base value for this areo
+        base_val = areo_base[t]
+        
+        # Daily oscillation (values increase slightly throughout the day)
+        # Starting with a small offset and incrementing by a small amount
+        for tod in range(24):
+            # Small daily oscillation of ~0.4 degrees
+            daily_increment = (tod / 24.0) * 0.4
+            areo_data[t, tod, 0] = base_val - 0.2 + daily_increment
     
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'time_of_day_24', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
