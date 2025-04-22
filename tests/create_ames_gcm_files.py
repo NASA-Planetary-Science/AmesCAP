@@ -264,8 +264,11 @@ def create_mgcm_atmos_average():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_var[:] = np.linspace(722.2, 1076.5, 133)
-    areo_var = areo_var[:, np.newaxis]
+    areo_vals = np.linspace(722.2, 1076.5, 133)
+    areo_data = np.zeros((133, 1))  # Create a 2D array with shape (133, 1)
+    for i in range(133):
+        areo_data[i, 0] = areo_vals[i]
+    areo_var[:] = areo_data
     
     cldcol_var = nc_file.createVariable('cldcol', 'f4', ('time', 'lat', 'lon'))
     cldcol_var.long_name = 'ice column'
@@ -376,8 +379,11 @@ def create_mgcm_atmos_daily():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_var[:] = np.linspace(720.3, 1079.8, 2672)
-    areo_var = areo_var[:, np.newaxis]
+    areo_vals = np.linspace(720.3, 1079.8, 2672)
+    areo_data = np.zeros((2672, 1))  # Create a 2D array with shape (133, 1)
+    for i in range(2672):
+        areo_data[i, 0] = areo_vals[i]
+    areo_var[:] = areo_data
     
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
@@ -453,8 +459,11 @@ def create_mgcm_atmos_average_pstd():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_var[:] = np.linspace(723.7, 1076.9, 133)
-    areo_var = areo_var[:, np.newaxis]
+    areo_vals = np.linspace(723.7, 1076.9, 133)
+    areo_data = np.zeros((133, 1))  # Create a 2D array with shape (133, 1)
+    for i in range(133):
+        areo_data[i, 0] = areo_vals[i]
+    areo_var[:] = areo_data
     
     cldcol_var = nc_file.createVariable('cldcol', 'f4', ('time', 'lat', 'lon'))
     cldcol_var.long_name = 'ice column'
@@ -559,8 +568,11 @@ def create_mgcm_atmos_diurn_pstd():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'time_of_day_24', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_var[:] = np.linspace(721.2, 1077.3, 133)
-    areo_var = areo_var[:, np.newaxis]
+    areo_vals = np.linspace(721.2, 1077.3, 133)
+    areo_data = np.zeros((133, 1))  # Create a 2D array with shape (133, 1)
+    for i in range(133):
+        areo_data[i, 0] = areo_vals[i]
+    areo_var[:] = areo_data
     
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'time_of_day_24', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
@@ -641,8 +653,11 @@ def create_mgcm_atmos_diurn():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'time_of_day_24', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_var[:] = np.linspace(721.2, 1077.3, 133)
-    areo_var = areo_var[:, np.newaxis]
+    areo_vals = np.linspace(721.2, 1077.3, 133)
+    areo_data = np.zeros((133, 1))  # Create a 2D array with shape (133, 1)
+    for i in range(133):
+        areo_data[i, 0] = areo_vals[i]
+    areo_var[:] = areo_data
     
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'time_of_day_24', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
@@ -725,8 +740,11 @@ def create_mgcm_atmos_average_pstd_c48():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_var[:] = np.linspace(362.1, 716.6, 133)
-    areo_var = areo_var[:, np.newaxis]
+    areo_vals = np.linspace(362.1, 716.6, 133)
+    areo_data = np.zeros((133, 1))  # Create a 2D array with shape (133, 1)
+    for i in range(133):
+        areo_data[i, 0] = areo_vals[i]
+    areo_var[:] = areo_data
     
     temp_var = nc_file.createVariable('temp', 'f4', ('time', 'pstd', 'lat', 'lon'))
     temp_var.long_name = 'temperature'
