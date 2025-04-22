@@ -206,7 +206,10 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                         # Special case for areo then print modulo
                         print(f"{Cyan}areo (areo mod 360)={Nclr}")
                         for ii in var:
-                            print(ii, ii%360)
+                            if (len(np.shape(ii)) == 2):
+                                print(ii[0,:], ii[0,:]%360)
+                            else:
+                                print(ii, ii%360)
 
                     print(f"{Cyan}____________________________________________"
                           f"__________________________{Nclr}")
