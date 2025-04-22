@@ -62,7 +62,7 @@ jobs:
       - name: Verify Ghostscript installation
         run: |
           if [[ "$RUNNER_OS" == "Windows" ]]; then
-            where gs
+            where Ghostscript
           else
             which gs
           fi
