@@ -60,6 +60,10 @@ jobs:
         run: |
           choco install ghostscript
       - name: Verify Ghostscript installation
+        if: runner.os == 'Windows'
+        run: |
+          gswin64.exe --version
+        else:
         run: |
           gs --version
       # Set HOME for Windows since it might be used by the script
