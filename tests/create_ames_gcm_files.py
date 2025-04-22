@@ -569,23 +569,25 @@ def create_mgcm_atmos_diurn_pstd():
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
     
-    # Create base values for areo dimension
-    areo_base = np.linspace(721.2, 1077.3, 133)
-
     # Create 3D array with shape (133, 24, 1)
     areo_data = np.zeros((133, 24, 1))
 
-    # Fill array with increasing values
+    # Base value starts at 721.0
+    base = 721.0
+
+    # Time increment between days (looks like ~2.7 degrees from your data)
+    time_increment = 2.7
+
+    # Fill the array with the appropriate pattern
     for t in range(133):
-        # Base value for this areo
-        base_val = areo_base[t]
+        # Base value for this time step
+        time_base = base + (t * time_increment)
         
-        # Daily oscillation (values increase slightly throughout the day)
-        # Starting with a small offset and incrementing by a small amount
-        for tod in range(24):
-            # Small daily oscillation of ~0.4 degrees
-            daily_increment = (tod / 24.0) * 0.4
-            areo_data[t, tod, 0] = base_val - 0.2 + daily_increment
+        # Fill in hourly values for each time step
+        for h in range(24):
+            # Small increment throughout the day (about 0.02 degrees per hour based on your data)
+            hourly_increment = h * 0.02
+            areo_data[t, h, 0] = time_base + hourly_increment
 
     # Assign the data to the variable
     areo_var[:] = areo_data
