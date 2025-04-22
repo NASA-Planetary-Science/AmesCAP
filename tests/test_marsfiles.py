@@ -322,7 +322,7 @@ class TestMarsFiles(unittest.TestCase):
             ls_max = np.max(areo_values) % 360
             
             # Choose a range within the available values
-            ls_range = [ls_min, ls_max]
+            ls_range = [ls_min + 50 , ls_max - 50]
         finally:
             nc.close()
         
