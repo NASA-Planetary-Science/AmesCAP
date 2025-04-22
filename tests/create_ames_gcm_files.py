@@ -22,6 +22,7 @@ def create_mgcm_fixed():
     # Create and populate lat variable
     lat_var = nc_file.createVariable('lat', 'f4', ('lat',))
     lat_var.long_name = 'latitude'
+    lat_var.units = 'degrees_N'
     lat_values = np.array([-88.125, -84.375, -80.625, -76.875, -73.125, -69.375, -65.625, -61.875, -58.125,
                          -54.375, -50.625, -46.875, -43.125, -39.375, -35.625, -31.875, -28.125, -24.375,
                          -20.625, -16.875, -13.125, -9.375, -5.625, -1.875, 1.875, 5.625, 9.375,
@@ -48,10 +49,12 @@ def create_mgcm_fixed():
     ])
     grid_yt_bnds_var[:] = grid_yt_bnds_values
     grid_yt_bnds_var.long_name = 'T-cell latitude'
+    grid_yt_bnds_var.units = 'degrees_N'
     
     # Create and populate lon variable
     lon_var = nc_file.createVariable('lon', 'f4', ('lon',))
     lon_var.long_name = 'longitude'
+    lon_var.units = 'degrees_E'
     lon_values = np.array([1.875, 5.625, 9.375, 13.125, 16.875, 20.625, 24.375, 28.125, 31.875,
                          35.625, 39.375, 43.125, 46.875, 50.625, 54.375, 58.125, 61.875, 65.625,
                          69.375, 73.125, 76.875, 80.625, 84.375, 88.125, 91.875, 95.625, 99.375,
@@ -95,6 +98,7 @@ def create_mgcm_fixed():
     ])
     grid_xt_bnds_var[:] = grid_xt_bnds_values
     grid_xt_bnds_var.long_name = 'T-cell longitude'
+    grid_xt_bnds_var.units = 'degrees_E'
     
     # Create and populate other variables
     zsurf_var = nc_file.createVariable('zsurf', 'f4', ('lat', 'lon'))
@@ -260,7 +264,8 @@ def create_mgcm_atmos_average():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_var[:] = np.random.uniform(721.3, 1077.2, size=(133, 1))
+    areo_var[:] = np.linspace(722.2, 1076.5, 133)
+    areo_var = areo_var[:, np.newaxis]
     
     cldcol_var = nc_file.createVariable('cldcol', 'f4', ('time', 'lat', 'lon'))
     cldcol_var.long_name = 'ice column'
@@ -371,7 +376,8 @@ def create_mgcm_atmos_daily():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_var[:] = np.random.uniform(720.1, 1080.0, size=(2672, 1))
+    areo_var[:] = np.linspace(720.3, 1079.8, 2672)
+    areo_var = areo_var[:, np.newaxis]
     
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
@@ -447,7 +453,8 @@ def create_mgcm_atmos_average_pstd():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_var[:] = np.random.uniform(721.3, 1077.2, size=(133, 1))
+    areo_var[:] = np.linspace(723.7, 1076.9, 133)
+    areo_var = areo_var[:, np.newaxis]
     
     cldcol_var = nc_file.createVariable('cldcol', 'f4', ('time', 'lat', 'lon'))
     cldcol_var.long_name = 'ice column'
@@ -552,7 +559,8 @@ def create_mgcm_atmos_diurn_pstd():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'time_of_day_24', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_var[:] = np.random.uniform(721.1, 1077.4, size=(133, 24, 1))
+    areo_var[:] = np.linspace(721.2, 1077.3, 133)
+    areo_var = areo_var[:, np.newaxis]
     
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'time_of_day_24', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
@@ -633,7 +641,8 @@ def create_mgcm_atmos_diurn():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'time_of_day_24', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_var[:] = np.random.uniform(721.1, 1077.4, size=(133, 24, 1))
+    areo_var[:] = np.linspace(721.2, 1077.3, 133)
+    areo_var = areo_var[:, np.newaxis]
     
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'time_of_day_24', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
@@ -716,7 +725,8 @@ def create_mgcm_atmos_average_pstd_c48():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_var[:] = np.random.uniform(361.3, 717.2, size=(133, 1))
+    areo_var[:] = np.linspace(362.1, 716.6, 133)
+    areo_var = areo_var[:, np.newaxis]
     
     temp_var = nc_file.createVariable('temp', 'f4', ('time', 'pstd', 'lat', 'lon'))
     temp_var.long_name = 'temperature'

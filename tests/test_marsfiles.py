@@ -23,32 +23,47 @@ class TestMarsFiles(unittest.TestCase):
         """Set up the test environment"""
         # Create a temporary directory for the tests
         cls.test_dir = tempfile.mkdtemp(prefix='MarsFiles_test_')
+        print(f"Created temporary test directory: {cls.test_dir}")
         
         # Project root directory
         cls.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        print(f"Project root directory: {cls.project_root}")
         
         # Run the script to create test netCDF files
         cls.create_test_files()
     
     @classmethod
     def create_test_files(cls):
-        """Create test netCDF files using create_netcdf_files.py"""
-        # cmd = [sys.executable, os.path.join(cls.project_root, 'tests', 'create_netcdf_files.py')]
-        cmd = [sys.executable, os.path.join(cls.project_root, 'tests', 'create_netcdf_files.py'), cls.test_dir]
+        """Create test netCDF files using create_ames_gcm_files.py"""
+        # Get path to create_ames_gcm_files.py script
+        create_files_script = os.path.join(cls.project_root, "tests", "create_ames_gcm_files.py")
+        
+        # Execute the script to create test files - Important: pass the test_dir as argument
+        cmd = [sys.executable, create_files_script, cls.test_dir]
+        
+        # Print the command being executed
+        print(f"Creating test files with command: {' '.join(cmd)}")
         
         try:
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd=cls.project_root
+                cwd=cls.test_dir  # Run in the test directory to ensure files are created there
             )
+            
+            # Print output for debugging
+            print(f"File creation STDOUT: {result.stdout}")
+            print(f"File creation STDERR: {result.stderr}")
             
             if result.returncode != 0:
                 raise Exception(f"Failed to create test files: {result.stderr}")
             
         except Exception as e:
-            raise Exception(f"Error running create_netcdf_files.py: {e}")
+            raise Exception(f"Error running create_ames_gcm_files.py: {e}")
+        
+        # List files in the temp directory to debug
+        print(f"Files in test directory after creation: {os.listdir(cls.test_dir)}")
             
         # Verify files were created
         expected_files = [
@@ -63,14 +78,40 @@ class TestMarsFiles(unittest.TestCase):
         for filename in expected_files:
             filepath = os.path.join(cls.test_dir, filename)
             if not os.path.exists(filepath):
-                raise Exception(f"Test file {filename} was not created")
+                raise Exception(f"Test file {filename} was not created in {cls.test_dir}")
+            else:
+                print(f"Confirmed test file exists: {filepath}")
     
     def setUp(self):
         """Change to temporary directory before each test"""
         os.chdir(self.test_dir)
+        print(f"Changed to test directory: {os.getcwd()}")
     
     def tearDown(self):
         """Clean up after each test"""
+        # Clean up any generated output files after each test but keep input files
+        output_patterns = [
+            '*_T.nc',
+            '*_to_average.nc',
+            '*_to_diurn.nc',
+            '*_tide_decomp*.nc',
+            '*_hpt*.nc',
+            '*_lpt*.nc',
+            '*_bpt*.nc',
+            '*_regrid.nc',
+            '*_zavg*.nc',
+            '*_Ls*_*.nc',
+            '*_lat_*_*.nc'
+        ]
+        
+        for pattern in output_patterns:
+            for file_path in glob.glob(os.path.join(self.test_dir, pattern)):
+                try:
+                    os.remove(file_path)
+                    print(f"Removed file: {file_path}")
+                except Exception as e:
+                    print(f"Warning: Could not remove file {file_path}: {e}")
+        
         # Return to test_dir
         os.chdir(self.test_dir)
     
@@ -78,9 +119,12 @@ class TestMarsFiles(unittest.TestCase):
     def tearDownClass(cls):
         """Clean up the test environment"""
         try:
+            # List files in temp directory before deleting to debug
+            print(f"Files in test directory before cleanup: {os.listdir(cls.test_dir)}")
             shutil.rmtree(cls.test_dir, ignore_errors=True)
-        except Exception:
-            print(f"Warning: Could not remove test directory {cls.test_dir}")
+            print(f"Removed test directory: {cls.test_dir}")
+        except Exception as e:
+            print(f"Warning: Could not remove test directory {cls.test_dir}: {e}")
     
     def run_mars_files(self, args):
         """
@@ -89,8 +133,21 @@ class TestMarsFiles(unittest.TestCase):
         :param args: List of arguments to pass to MarsFiles
         :return: subprocess result object
         """
+        # Convert any relative file paths to absolute paths
+        abs_args = []
+        for arg in args:
+            if isinstance(arg, str) and arg.endswith('.nc'):
+                abs_args.append(os.path.join(self.test_dir, arg))
+            else:
+                abs_args.append(arg)
+        
         # Construct the full command to run MarsFiles
-        cmd = [sys.executable, '-m', 'bin.MarsFiles'] + args
+        cmd = [sys.executable, os.path.join(self.project_root, "bin", "MarsFiles.py")] + abs_args
+        
+        # Print debugging info
+        print(f"Running command: {' '.join(cmd)}")
+        print(f"Working directory: {self.test_dir}")
+        print(f"File exists check: {os.path.exists(os.path.join(self.project_root, 'bin', 'MarsFiles.py'))}")
         
         # Run the command
         try:
@@ -98,14 +155,13 @@ class TestMarsFiles(unittest.TestCase):
                 cmd, 
                 capture_output=True, 
                 text=True, 
-                cwd=self.test_dir,
-                env=dict(os.environ, PWD=self.test_dir)
+                cwd=self.test_dir,  # Run in the test directory
+                env=dict(os.environ, PWD=self.test_dir)  # Ensure current working directory is set
             )
             
-            # Print stderr output for debugging if the command failed
-            if result.returncode != 0:
-                print(f"MarsFiles stderr: {result.stderr}")
-                print(f"MarsFiles stdout: {result.stdout}")
+            # Print both stdout and stderr to help debug
+            print(f"STDOUT: {result.stdout}")
+            print(f"STDERR: {result.stderr}")
             
             return result
         except Exception as e:
@@ -135,6 +191,7 @@ class TestMarsFiles(unittest.TestCase):
         finally:
             nc.close()
     
+    # The rest of the test methods remain the same
     def test_help_message(self):
         """Test that help message can be displayed"""
         result = self.run_mars_files(['-h'])
@@ -441,7 +498,7 @@ class TestMarsFiles(unittest.TestCase):
         self.assertEqual(result.returncode, 0, "Regrid command failed")
         
         # Check that output file was created
-        output_file = self.check_file_exists('01336.atmos_average_regrid.nc')
+        output_file = self.check_file_exists('01336.atmos_average_pstd_regrid.nc')
         
         # Verify that the grid dimensions match the target file
         nc_target = Dataset(os.path.join(self.test_dir, '01336.atmos_average_pstd_c48.nc'), 'r')
@@ -480,7 +537,7 @@ class TestMarsFiles(unittest.TestCase):
     
     def test_custom_extension(self):
         """Test using custom extension"""
-        result = self.run_mars_files(['01336.atmos_average.nc', '-zavg', '-ext', '_custom'])
+        result = self.run_mars_files(['01336.atmos_average.nc', '-zavg', '-ext', 'custom'])
         
         # Check for successful execution
         self.assertEqual(result.returncode, 0, "Zonal average with custom extension command failed")
