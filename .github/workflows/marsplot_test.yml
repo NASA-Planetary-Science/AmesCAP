@@ -46,6 +46,22 @@ jobs:
       # Install the package in editable mode
       - name: Install package
         run: pip install -e .
+      - name: Install Ghostscript (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ghostscript
+      - name: Install Ghostscript (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install ghostscript
+      - name: Install Ghostscript (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install ghostscript
+      - name: Verify Ghostscript installation
+        run: |
+          gs --version
       # Set HOME for Windows since it might be used by the script
       - name: Set HOME environment variable for Windows
         if: runner.os == 'Windows'
