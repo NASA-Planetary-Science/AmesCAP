@@ -62,7 +62,7 @@ jobs:
       - name: Find Ghostscript executable on Windows
         if: runner.os == 'Windows'
         run: |
-          $gsPath = Get-ChildItem "C:\Program Files\gs\gs10.03.1\bin" -Recurse -Filter gswin64.exe | Select-Object -First 1
+          $gsPath = Get-ChildItem "C:\Program Files\gs" -Recurse -Filter gswin64.exe | Select-Object -First 1
           if (-not $gsPath) { throw "Ghostscript not found." }
           & $gsPath.FullName --version
         shell: pwsh
