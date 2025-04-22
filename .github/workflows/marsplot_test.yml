@@ -59,14 +59,16 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           choco install ghostscript
+      - name: Find Ghostscript executable on Windows
+        if: runner.os == 'Windows'
+        run: |
+          $gsPath = Get-ChildItem "C:\ProgramData\chocolatey\lib\ghostscript" -Recurse -Filter gswin64.exe | Select-Object -First 1
+          if (-not $gsPath) { throw "Ghostscript not found." }
+          & $gsPath.FullName --version
+        shell: pwsh
       - name: Verify Ghostscript installation
         run: |
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            where Ghostscript
-          else
-            which gs
-          fi
-        shell: bash
+          gs --version
       # Set HOME for Windows since it might be used by the script
       - name: Set HOME environment variable for Windows
         if: runner.os == 'Windows'
