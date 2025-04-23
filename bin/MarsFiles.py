@@ -683,6 +683,7 @@ def split_files(file_list, split_dim):
         exit()
 
     # Use os.path.join for platform-independent path handling
+    print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}\n\n")
     if os.path.dirname(file) == "":
         input_file_name = file
     else:
