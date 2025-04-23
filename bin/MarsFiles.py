@@ -1223,6 +1223,7 @@ def main():
         bin_period = args.bin_average
         for file in file_list:
             # Use os.path.join for platform-independent path handling
+            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}\n\n")
             if os.path.dirname(file) == "":
                 input_file_name = file
             else:
@@ -1315,6 +1316,7 @@ def main():
 
         for file in file_list:
             # Use os.path.join for platform-independent path handling
+            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}\n\n")
             if os.path.dirname(file) == "":
                 input_file_name = file
             else:
@@ -1423,6 +1425,7 @@ def main():
 
         for file in file_list:
             # Use os.path.join for platform-independent path handling
+            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}\n\n")
             if os.path.dirname(file) == "":
                 input_file_name = file
             else:
@@ -1536,6 +1539,7 @@ def main():
 
         for file in file_list:
             # Use os.path.join for platform-independent path handling
+            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}\n\n")
             if os.path.dirname(file) == "":
                 input_file_name = file
             else:
@@ -1690,6 +1694,7 @@ def main():
 
         for file in file_list:
             # Use os.path.join for platform-independent path handling
+            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}\n\n")
             if os.path.dirname(file) == "":
                 input_file_name = file
             else:
@@ -1743,6 +1748,7 @@ def main():
     elif args.zonal_average:
         for file in file_list:
             # Use os.path.join for platform-independent path handling
+            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}\n\n")
             if os.path.dirname(file) == "":
                 input_file_name = file
             else:
