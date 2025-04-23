@@ -586,10 +586,11 @@ def concatenate_files(file_list, full_file_list):
     # effect as combining files
     num_files = len(full_file_list)
     if (file_list[0][5:] == ".fixed.nc" and num_files >= 2):
-        try:
-            os.remove(full_file_list[i])
-        except OSError as e:
-            print(f"{Yellow}Warning: Could not remove {full_file_list[i]}: {e}{Nclr}")
+        for i in range(1, num_files):
+            try:
+                os.remove(full_file_list[i])
+            except OSError as e:
+                print(f"{Yellow}Warning: Could not remove {full_file_list[i]}: {e}{Nclr}")
         # rm_cmd = "rm -f "
         # for i in range(1, num_files):
         #     # 1-N files ensures file number 0 is preserved
