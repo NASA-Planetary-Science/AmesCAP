@@ -524,9 +524,13 @@ def main():
                 # PDF basename "Diagnostics":
                 # e.g., Custom.in -> Diagnostics.pdf, or
                 #       Custom_01.in -> Diagnostics_01.pdf
-                input_file = (f"{output_path}/"
-                                f"{args.template_file.name}")
-                basename = input_file.split("/")[-1].split(".")[0].strip()
+                input_file = (os.path.join(output_path,
+                                f"{args.template_file.name}"))
+
+                if platform.system() == "Windows":
+                    basename = input_file.split("\\")[-1].split(".")[0].strip()
+                else:
+                    basename = input_file.split("/")[-1].split(".")[0].strip()
             except:
                 # Use default PDF basename "Diagnostics".
                 basename = "Custom"
@@ -534,20 +538,20 @@ def main():
             # Generate PDF name
             if basename == "Custom":
                 # If template name = Custom.in -> Diagnostics.pdf
-                output_pdf = (f"{output_path}/Diagnostics.pdf")
+                output_pdf = os.path.join(output_path,"Diagnostics.pdf")
             elif basename[0:7] == "Custom_":
                 # If template name = Custom_XX.in -> Diagnostics_XX.pdf
-                output_pdf = (f"{output_path}/Diagnostics_{basename[7:9]}.pdf")
+                output_pdf = os.path.join(output_path,f"Diagnostics_{basename[7:9]}.pdf")
             else:
                 # If template name is NOT Custom.in, use prefix to
                 # generate PDF name
-                output_pdf = (f"{output_path}/{basename}.pdf")
+                output_pdf = os.path.join(output_path,f"{basename}.pdf")
 
             # Add quotes around PDF name (name -> "name")
             output_pdf = f'"{output_pdf}"'
 
             # Direct gs output to file instead of printing to screen
-            debug_filename = f"{output_path}/.debug_MCMC_plots.txt"
+            debug_filename = os.path.join(output_path,f".debug_MCMC_plots.txt")
             fdump = open(debug_filename, "w")
 
             gs_command=check_gs()
@@ -570,7 +574,7 @@ def main():
                 subprocess.call(cmd_txt, shell = True)
                 # Delete /plots dir only if created in this routine
                 if not dir_plot_present:
-                    cmd_txt = (f'rm -r "{output_path}"/plots')
+                    cmd_txt = (f'rm -r {os.path.join(output_path,"plots")}')
                     subprocess.call(cmd_txt, shell = True)
                 give_permission(output_pdf)
                 print(f"{output_pdf} was generated")
