@@ -29,13 +29,10 @@ jobs:
         include:
           - os: ubuntu-latest
             python-version: '3.11'
-            test-scope: 'full'
           - os: macos-latest 
             python-version: '3.11'
-            test-scope: 'basic'
           - os: windows-latest
             python-version: '3.11'
-            test-scope: 'basic'
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -54,56 +51,51 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
       
+      # Install dependencies
       - name: Install dependencies
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          pip install numpy netCDF4 xarray scipy matplotlib pytest
+          pip install numpy netCDF4 xarray scipy matplotlib
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       
+      # Install the package in editable mode
       - name: Install package
         run: pip install -e .
       
-      - name: Set up AmesCAP configuration (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          mkdir -p $HOME/.amescap
-          touch $HOME/.amescap_profile
-      
-      - name: Set up AmesCAP configuration (Windows)
+      # Create a patch for the test file to fix Windows path issues
+      - name: Create test_marsfiles.py path fix for Windows
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          New-Item -Path "$env:USERPROFILE\.amescap" -ItemType Directory -Force
-          New-Item -Path "$env:USERPROFILE\.amescap_profile" -ItemType File -Force
+          $content = Get-Content tests/test_marsfiles.py -Raw
+          # Fix path handling for Windows
+          $content = $content -replace "os\.path\.join\(self\.test_dir, file\)", "os.path.normpath(os.path.join(self.test_dir, file))"
+          Set-Content tests/test_marsfiles.py -Value $content
       
-      # Free up disk space on Linux for faster execution
-      - name: Free up disk space
-        if: runner.os == 'Linux'
-        run: |
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/share/boost
-      
-      # Run the help message test first as a quick check
+      # Run the help message test - fast and doesn't involve file operations
       - name: Run help message test
         run: |
           cd tests
           python -m unittest test_marsfiles.TestMarsFiles.test_help_message
       
-      # Run the basic tests on macOS and Windows
-      - name: Run basic tests
-        if: matrix.test-scope == 'basic'
+      # Run the most reliable tests first to get quick feedback
+      - name: Run reliable tests
         run: |
           cd tests
-          python -m unittest test_marsfiles.TestMarsFiles.test_help_message test_marsfiles.TestMarsFiles.test_zonal_average
-      
-      # Run the full test suite on Ubuntu
-      - name: Run full tests
-        if: matrix.test-scope == 'full'
+          python -m unittest test_marsfiles.TestMarsFiles.test_help_message
+          
+      # Run all tests with increased timeout
+      - name: Run all tests
         timeout-minutes: 15
         run: |
           cd tests
           python -m unittest test_marsfiles
+      
+      # Report file paths if things fail on Windows
+      - name: Debug Windows paths
+        if: runner.os == 'Windows' && failure()
+        shell: pwsh
+        run: |
+          Write-Host "Current directory: $(Get-Location)"
+          Write-Host "Test directory contents: $(Get-ChildItem -Path tests)"
