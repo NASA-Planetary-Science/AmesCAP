@@ -683,11 +683,12 @@ def split_files(file_list, split_dim):
         exit()
 
     # Use os.path.join for platform-independent path handling
-    print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}\n\n")
+    print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}")
     if os.path.dirname(file) == "":
         input_file_name = file
     else:
         input_file_name = os.path.join(data_dir, file)
+    print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
 
     file_base = os.path.splitext(input_file_name)[0]
     output_file_name = f"{file_base}{out_ext}.nc"
@@ -1223,11 +1224,12 @@ def main():
         bin_period = args.bin_average
         for file in file_list:
             # Use os.path.join for platform-independent path handling
-            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}\n\n")
+            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}")
             if os.path.dirname(file) == "":
                 input_file_name = file
             else:
                 input_file_name = os.path.join(data_dir, file)
+            print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
 
             file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
@@ -1316,11 +1318,12 @@ def main():
 
         for file in file_list:
             # Use os.path.join for platform-independent path handling
-            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}\n\n")
+            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}")
             if os.path.dirname(file) == "":
                 input_file_name = file
             else:
                 input_file_name = os.path.join(data_dir, file)
+            print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
 
             file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
@@ -1425,11 +1428,12 @@ def main():
 
         for file in file_list:
             # Use os.path.join for platform-independent path handling
-            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}\n\n")
+            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}")
             if os.path.dirname(file) == "":
                 input_file_name = file
             else:
                 input_file_name = os.path.join(data_dir, file)
+            print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
 
             file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
@@ -1539,11 +1543,12 @@ def main():
 
         for file in file_list:
             # Use os.path.join for platform-independent path handling
-            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}\n\n")
+            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}")
             if os.path.dirname(file) == "":
                 input_file_name = file
             else:
                 input_file_name = os.path.join(data_dir, file)
+            print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
 
             file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
@@ -1694,11 +1699,12 @@ def main():
 
         for file in file_list:
             # Use os.path.join for platform-independent path handling
-            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}\n\n")
+            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}")
             if os.path.dirname(file) == "":
                 input_file_name = file
             else:
                 input_file_name = os.path.join(data_dir, file)
+            print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
 
             file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
@@ -1748,11 +1754,12 @@ def main():
     elif args.zonal_average:
         for file in file_list:
             # Use os.path.join for platform-independent path handling
-            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}\n\n")
+            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}")
             if os.path.dirname(file) == "":
                 input_file_name = file
             else:
                 input_file_name = os.path.join(data_dir, file)
+            print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
 
             file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
