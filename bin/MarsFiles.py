@@ -1546,7 +1546,6 @@ def main():
                 varNcf = fdiurn.variables[ivar]
                 varIN = varNcf[:]
                 longname_txt, units_txt = get_longname_unit(fdiurn, ivar)
-                var_unit = getattr(varNcf, "units", "")
 
                 if (tod_name in varNcf.dimensions and
                     ivar not in [tod_name, "areo"] and
@@ -1559,8 +1558,7 @@ def main():
                         # time_of_day dimension
                         norm = np.mean(varIN, axis = 1)[:, np.newaxis, ...]
                         varIN = 100*(varIN-norm)/norm
-                        #units_txt = f"% of diurnal mean"
-                        var_unit = f"% of diurnal mean"
+                        units_txt = f"% of diurnal mean"
 
                     amp, phas = diurn_extract(
                         varIN.swapaxes(0, 1), 
@@ -1632,7 +1630,7 @@ def main():
                                 areo_new, 
                                 new_dim,
                                 longname_txt, 
-                                var_unit
+                                units_txt
                                 )
             fnew.close()
 
