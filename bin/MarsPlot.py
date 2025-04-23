@@ -556,9 +556,9 @@ def main():
 
             gs_command=check_gs()
             if platform.system() == "Windows":
-                subprocess.run(f"{gs_command} -version")
+                subprocess.run([f"{gs_command}", "-version"])
             else:
-                subprocess.run(f"{gs_command} --version")
+                subprocess.run([f"{gs_command}", "--version"])
             cmd_txt = (f"{gs_command} -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER "
                        f"-dEPSCrop -sOutputFile={output_pdf} {all_fig}")
 
