@@ -550,7 +550,7 @@ def main():
             debug_filename = f"{output_path}/.debug_MCMC_plots.txt"
             fdump = open(debug_filename, "w")
 
-            check_gs(gs_command)
+            gs_command=check_gs()
             cmd_txt = (f"{gs_command} -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER "
                        f"-dEPSCrop -sOutputFile={output_pdf} {all_fig}")
 
