@@ -77,24 +77,22 @@ import traceback
 import platform
 import shutil
 
-def check_gs():
-    if platform.system() == "Windows":
-        gswin64c_path = shutil.which('gswin64c.exe')
-        if not gswin64c_path:
-            print("Error: gswin64c.exe not found in PATH.")
-        else:
-            print("gswin64c found at: ",gswin64c_path)
-        gs_command = gswin64c_path  # or gswin32c depending on installation
+if platform.system() == "Windows":
+    gswin64c_path = shutil.which('gswin64c.exe')
+    if not gswin64c_path:
+        print("Error: gswin64c.exe not found in PATH.")
     else:
-        gs_path = shutil.which('gs')
-        gsbin_path = shutil.which('gs.bin')
-        if gs_path:
-            gs_command = "gs"
-        elif gsbin_path:
-            gs_command = "gs.bin"
-        else:
-            print(f"{Red}ERROR: Ghostscript not found{Nclr}")
-    return gs_command
+        print("gswin64c found at: ",gswin64c_path)
+    gs_command = gswin64c_path  # or gswin32c depending on installation
+else:
+    gs_path = shutil.which('gs')
+    gsbin_path = shutil.which('gs.bin')
+    if gs_path:
+        gs_command = "gs"
+    elif gsbin_path:
+        gs_command = "gs.bin"
+    else:
+        print(f"{Red}ERROR: Ghostscript not found{Nclr}")
 
 
 
@@ -554,7 +552,6 @@ def main():
             debug_filename = os.path.join(output_path,f".debug_MCMC_plots.txt")
             fdump = open(debug_filename, "w")
 
-            gs_command=check_gs()
             if platform.system() == "Windows":
                 subprocess.run([f"{gs_command}", "-version"])
             else:
