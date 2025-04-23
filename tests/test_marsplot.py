@@ -19,8 +19,7 @@ from netCDF4 import Dataset
 
 
 class TestMarsPlot(unittest.TestCase):
-    @classmethod  
-    def setup_ghostscript_alias():
+    def setup_ghostscript_alias(self):
         """
         Check if the OS is Windows, and if so, create an alias from 'gswin64c.exe' to 'gs'.
         Also handles potential naming conflicts.
@@ -248,6 +247,7 @@ HOLD OFF
         return filepath
     
     def test_help_message(self):
+        gsdef = self.setup_ghostscript_alias()
         """Test that help message can be displayed"""
         result = self.run_mars_plot(['-h'])
         
