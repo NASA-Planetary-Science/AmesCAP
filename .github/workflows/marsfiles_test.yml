@@ -22,42 +22,76 @@ on:
       - '.github/workflows/marsfiles_test.yml'
 jobs:
   test:
-    # Run on multiple OS and Python versions for comprehensive testing
+    # Optimize the test matrix to speed up execution
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]  # Removed Windows as Mars-related tools often have Unix assumptions
-        python-version: ['3.9', '3.10', '3.11']
+        include:
+          # Full test on Ubuntu with latest Python
+          - os: ubuntu-latest
+            python-version: '3.11'
+            full-test: true
+          # Basic test on macOS with latest Python
+          - os: macos-latest 
+            python-version: '3.11'
+            full-test: false
+          # Basic test on Windows with latest Python
+          - os: windows-latest
+            python-version: '3.11'
+            full-test: false
+      # Don't cancel all jobs if one fails
+      fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
       # Checkout the repository
       - uses: actions/checkout@v3
+      
       # Set up the specified Python version
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
+      
+      # Cache pip dependencies to speed up installation
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
       # Install dependencies
       - name: Install dependencies
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          pip install numpy netCDF4 xarray scipy matplotlib
+          pip install numpy netCDF4 xarray scipy matplotlib pytest pytest-xdist
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
       # Install the package in editable mode
       - name: Install package
         run: pip install -e .
+      
       # Set up AmesCAP configuration
-      - name: Set up AmesCAP configuration
+      - name: Set up AmesCAP configuration (Unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           mkdir -p $HOME/.amescap
           cp mars_templates/amescap_profile $HOME/.amescap_profile
+      
+      - name: Set up AmesCAP configuration (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -Path "$env:USERPROFILE\.amescap" -ItemType Directory -Force
+          Copy-Item -Path "mars_templates\amescap_profile" -Destination "$env:USERPROFILE\.amescap_profile" -Force
+      
       # Print out environment info
       - name: Show environment info
         run: |
           python -c "import os, sys, numpy, netCDF4, xarray, scipy, matplotlib; print(f'Python: {sys.version}, NumPy: {numpy.__version__}, NetCDF4: {netCDF4.__version__}, xarray: {xarray.__version__}, SciPy: {scipy.__version__}, Matplotlib: {matplotlib.__version__}')"
-          echo "Working directory: $(pwd)"
-          echo "Home directory: $HOME"
+      
       # Free up disk space
       - name: Free up disk space
         if: runner.os == 'Linux'
@@ -66,23 +100,56 @@ jobs:
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
           sudo rm -rf /usr/local/share/boost
+      
       # Create temporary directory for tests
-      - name: Create temporary test directory
+      - name: Create temporary test directory (Unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           mkdir -p $HOME/marsfiles_tests
           echo "TMPDIR=$HOME/marsfiles_tests" >> $GITHUB_ENV
+      
+      - name: Create temporary test directory (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -Path "$env:USERPROFILE\marsfiles_tests" -ItemType Directory -Force
+          echo "TMPDIR=$env:USERPROFILE\marsfiles_tests" >> $env:GITHUB_ENV
+      
       # Run the create_ames_gcm_files.py script to generate test files
-      - name: Prepare test files
+      - name: Prepare test files (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
           python tests/create_ames_gcm_files.py $HOME/marsfiles_tests
-      # Run the integration tests
-      - name: Run MarsFiles tests
+      
+      - name: Prepare test files (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          python -m unittest -v tests/test_marsfiles.py
+          python tests/create_ames_gcm_files.py $env:USERPROFILE\marsfiles_tests
+      
+      # Run the tests with different configurations based on the platform
+      - name: Run full tests (Ubuntu)
+        if: matrix.full-test == true
+        run: |
+          python -m pytest -v tests/test_marsfiles.py
+      
+      # Run a subset of tests on macOS and Windows to speed up execution
+      - name: Run basic tests (macOS/Windows)
+        if: matrix.full-test == false
+        run: |
+          python -m unittest tests.test_marsfiles.TestMarsFiles.test_help_message tests.test_marsfiles.TestMarsFiles.test_custom_extension tests.test_marsfiles.TestMarsFiles.test_include_vars tests.test_marsfiles.TestMarsFiles.test_zonal_average
+      
       # Clean up temporary files
-      - name: Clean up temp files
-        if: always()
+      - name: Clean up temp files (Unix)
+        if: runner.os != 'Windows' && always()
         shell: bash
         run: |
           rm -rf $HOME/marsfiles_tests || true
+      
+      - name: Clean up temp files (Windows)
+        if: runner.os == 'Windows' && always()
+        shell: pwsh
+        run: |
+          Remove-Item -Path "$env:USERPROFILE\marsfiles_tests" -Recurse -Force -ErrorAction SilentlyContinue
