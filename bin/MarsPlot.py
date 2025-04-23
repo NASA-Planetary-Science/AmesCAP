@@ -79,7 +79,10 @@ import shutil
 
 # In your code where you call Ghostscript
 if platform.system() == "Windows":
-    gs_command = "gswin64c.exe"  # or gswin32c depending on installation
+    gswin64c_path = shutil.which('gswin64c.exe')
+    if not gswin64c_path:
+        print("Error: gswin64c.exe not found in PATH.")
+    gs_command = gswin64c_path  # or gswin32c depending on installation
 else:
     gs_path = shutil.which('gs')
     gsbin_path = shutil.which('gs.bin')
