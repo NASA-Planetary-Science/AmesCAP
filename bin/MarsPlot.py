@@ -77,21 +77,24 @@ import traceback
 import platform
 import shutil
 
-# In your code where you call Ghostscript
-if platform.system() == "Windows":
-    gswin64c_path = shutil.which('gswin64c.exe')
-    if not gswin64c_path:
-        print("Error: gswin64c.exe not found in PATH.")
-    gs_command = gswin64c_path  # or gswin32c depending on installation
-else:
-    gs_path = shutil.which('gs')
-    gsbin_path = shutil.which('gs.bin')
-    if gs_path:
-        gs_command = "gs"
-    elif gsbin_path:
-        gs_command = "gs.bin"
+def check_gs():
+    if platform.system() == "Windows":
+        gswin64c_path = shutil.which('gswin64c.exe')
+        if not gswin64c_path:
+            print("Error: gswin64c.exe not found in PATH.")
+        else:
+            print("gswin64c found at: ",gswin64c_path)
+        gs_command = gswin64c_path  # or gswin32c depending on installation
     else:
-        print(f"{Red}ERROR: Ghostscript not found{Nclr}")
+        gs_path = shutil.which('gs')
+        gsbin_path = shutil.which('gs.bin')
+        if gs_path:
+            gs_command = "gs"
+        elif gsbin_path:
+            gs_command = "gs.bin"
+        else:
+            print(f"{Red}ERROR: Ghostscript not found{Nclr}")
+    return gs_command
 
 
 
@@ -547,6 +550,7 @@ def main():
             debug_filename = f"{output_path}/.debug_MCMC_plots.txt"
             fdump = open(debug_filename, "w")
 
+            check_gs(gs_command)
             cmd_txt = (f"{gs_command} -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER "
                        f"-dEPSCrop -sOutputFile={output_pdf} {all_fig}")
 
