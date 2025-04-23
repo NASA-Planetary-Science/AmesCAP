@@ -467,9 +467,9 @@ def main():
             Ncdf_num = select_range(Ncdf_num, bound)
 
         # Make folder "plots" in cwd
-        dir_plot_present = os.path.exists(f"{output_path}/plots")
+        dir_plot_present = os.path.exists(os.path.join(output_path,"plots"))
         if not dir_plot_present:
-            os.makedirs(f"{output_path}/plots")
+            os.makedirs(os.path.join(output_path,"plots"))
 
         # ============ Update Progress Bar ============
         global i_list
@@ -1593,7 +1593,7 @@ def make_template():
     """
     global customFileIN  # Will be modified
     global current_version
-    newname = f"{output_path}/Custom.in"
+    newname = os.path.join(output_path,"Custom.in")
     newname = create_name(newname)
 
     customFileIN = open(newname, "w")
@@ -2113,7 +2113,7 @@ def prep_file(var_name, file_type, simuID, sol_array):
     # Specific sol requested (e.g., [2400])
     Sol_num_current = [0]
 
-    if os.path.isfile(f"{input_paths[simuID]}/{file_type}.nc"):
+    if os.path.isfile(os.path.join(f"{input_paths[simuID]}",f"{file_type}.nc")):
         # First check if file on tape without a sol number
         # (e.g., Luca_dust_MY24_dust.nc exists on disk)
         file_has_sol_number = False
@@ -2137,11 +2137,11 @@ def prep_file(var_name, file_type, simuID, sol_array):
     for i in range(0, nfiles):
         if file_has_sol_number:
             # Sol number
-            file_list[i] = (f"{input_paths[simuID]}/"
-                            f"{int(Sol_num_current[i]):05}.{file_type}.nc")
+            file_list[i] = (os.path.join(input_paths[simuID],
+                            f"{int(Sol_num_current[i]):05}.{file_type}.nc"))
         else:
             # No sol number
-            file_list[i] = f"{input_paths[simuID]}/{file_type}.nc"
+            file_list[i] = os.path.join(input_paths[simuID],f"{file_type}.nc")
 
         check_file_tape(file_list[i])
 
@@ -2689,8 +2689,8 @@ class Fig_2D(object):
                 sensitive_name = "multi_panel"
 
             plt.tight_layout()
-            self.fig_name = (f"{output_path}/plots/"
-                             f"{sensitive_name}.{out_format}")
+            self.fig_name = (os.path.join(output_path,"plots",
+                             f"{sensitive_name}.{out_format}"))
             self.fig_name = create_name(self.fig_name)
             plt.savefig(self.fig_name, dpi=my_dpi)
             if out_format != "pdf":
@@ -4167,7 +4167,7 @@ class Fig_1D(object):
                 sensitive_name = "multi_panel"
 
             self.fig_name = (
-                f"{output_path}/plots/{sensitive_name}.{out_format}"
+                os.path.join(output_path,"plots",f"{sensitive_name}.{out_format}")
             )
             self.fig_name = create_name(self.fig_name)
 
