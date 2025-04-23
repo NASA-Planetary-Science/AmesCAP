@@ -692,6 +692,7 @@ def split_files(file_list, split_dim):
 
     file_base = os.path.splitext(input_file_name)[0]
     output_file_name = f"{file_base}{out_ext}.nc"
+    print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
             
     original_date = os.path.basename(os.path.splitext(input_file_name)[0])
 
@@ -789,12 +790,14 @@ def split_files(file_list, split_dim):
     if split_dim == 'time':
         if len(np.atleast_1d(bounds)) < 2:
             output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_nearest_sol{int(bounds_in[0]):03d}.nc")
+            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
             # output_file_name = (
             #     f"{fpath}/{int(time_dim):05d}{fname[5:-3]}_nearest_sol"
             #     f"{int(bounds_in[0]):03d}.nc"
             #     )
         else:
             output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_sol{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
+            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
             # output_file_name = (
             #     f"{fpath}/{int(time_dim[0]):05d}{fname[5:-3]}_sol"
             #     f"{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc"
@@ -802,12 +805,14 @@ def split_files(file_list, split_dim):
     elif split_dim =='areo':
         if len(np.atleast_1d(bounds)) < 2:
             output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_nearest_Ls{int(bounds_in[0]):03d}.nc")
+            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
             # output_file_name = (
             #     f"{fpath}/{int(time_dim):05d}{fname[5:-3]}_nearest_Ls"
             #     f"{int(bounds_in[0]):03d}.nc"
             #     )
         else:
             output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
+            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
             # output_file_name = (f"{fpath}/{int(time_dim[0]):05d}{fname[5:-3]}_"
             #                     f"Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
         split_dim = 'time'
@@ -827,6 +832,7 @@ def split_files(file_list, split_dim):
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
             output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_{new_bounds[0]}_{new_bounds[1]}.nc")
+            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
             # output_file_name = (
             #     f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}_"
             #     f"{new_bounds[0]}_{new_bounds[1]}.nc"
@@ -859,6 +865,7 @@ def split_files(file_list, split_dim):
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
             output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_{new_bounds[0]}_{new_bounds[1]}.nc")
+            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
             # output_file_name = (
             #     f"{fpath}/{original_date}{fname[5:-3]}_{new_bounds[0]}_"
             #     f"{new_bounds[1]}.nc"
@@ -866,12 +873,14 @@ def split_files(file_list, split_dim):
     else:
         if len(np.atleast_1d(bounds)) < 2:
             output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_nearest_{split_dim}_{int(bounds[0]):03d}.nc")
+            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
             # output_file_name = (
             #     f"{fpath}/{original_date}{fname[5:-3]}_nearest_{split_dim}_"
             #     f"{int(bounds[0]):03d}.nc"
             #     )
         else:
             output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
+            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
             # output_file_name = (
             #     f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}_"
             #     f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
@@ -879,6 +888,7 @@ def split_files(file_list, split_dim):
 
     # Append extension, if any:
     output_file_name = (f"{output_file_name[:-3]}{out_ext}.nc")
+    print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
     print(f"{Cyan}new filename = {output_file_name}")
     Log = Ncdf(output_file_name)
@@ -1001,6 +1011,7 @@ def process_time_shift(file_list):
         else:
             input_file_name = file
         output_file_name = (f"{input_file_name[:-3]}{out_ext}.nc")
+        print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
         fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
         # Define a netcdf object from the netcdf wrapper module
@@ -1233,6 +1244,7 @@ def main():
 
             file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
+            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
             fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
             var_list = filter_vars(fdaily, args.include)
@@ -1327,6 +1339,7 @@ def main():
 
             file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
+            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
             fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
             var_list = filter_vars(fdaily, args.include)
@@ -1437,6 +1450,7 @@ def main():
 
             file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
+            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
             fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
             var_list = filter_vars(fdaily, args.include)
@@ -1552,6 +1566,7 @@ def main():
 
             file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
+            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
             fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
 
@@ -1708,6 +1723,7 @@ def main():
 
             file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
+            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
             f_in = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
 
@@ -1763,6 +1779,7 @@ def main():
 
             file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
+            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
             fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
             var_list = filter_vars(fdaily, args.include) # Get all variables
