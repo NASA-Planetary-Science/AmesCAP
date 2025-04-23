@@ -613,7 +613,7 @@ def concatenate_files(file_list, full_file_list):
         exclude_list = []
 
     # Create a temporary file ending in _tmp.nc to work in
-    file_base = os.path.splitext(full_file_list[0])[:1]
+    file_base = os.path.splitext(full_file_list[0])[0]
     tmp_file = f"{file_base}_tmp.nc"
     Log = Ncdf(tmp_file, "Merged file")
     Log.merge_files_from_list(full_file_list, exclude_var=exclude_list)
@@ -688,7 +688,7 @@ def split_files(file_list, split_dim):
     else:
         input_file_name = os.path.join(data_dir, file)
 
-    file_base = os.path.splitext(input_file_name)[:1]
+    file_base = os.path.splitext(input_file_name)[0]
     output_file_name = f"{file_base}{out_ext}.nc"
             
     original_date = os.path.basename(os.path.splitext(input_file_name)[0])
@@ -779,33 +779,33 @@ def split_files(file_list, split_dim):
         time_dim = (np.squeeze(fNcdf.variables['time'][:]))[indices]
         print(f"time_dim = {time_dim}")
 
-    fpath, fname = extract_path_basename(input_file_name)
+    # For maintaining the 00000.atmos_average.nc format:
+    base_path = os.path.dirname(input_file_name)
+    file_name = os.path.basename(input_file_name)
+    # Split at the first dot to preserve the numeric prefix
+    file_date, file_base = file_name.split('.', 1)
     if split_dim == 'time':
         if len(np.atleast_1d(bounds)) < 2:
-            file_base = os.path.splitext(input_file_name)[1]
-            output_file_name = f"{int(time_dim):05d}.{file_base}_nearest_sol{int(bounds_in[0]):03d}.nc"
+            output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_nearest_sol{int(bounds_in[0]):03d}.nc")
             # output_file_name = (
             #     f"{fpath}/{int(time_dim):05d}{fname[5:-3]}_nearest_sol"
             #     f"{int(bounds_in[0]):03d}.nc"
             #     )
         else:
-            file_base = os.path.splitext(input_file_name)[:1]
-            output_file_name = f"{int(time_dim):05d}.{file_base}_sol{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc"
+            output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_sol{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
             # output_file_name = (
             #     f"{fpath}/{int(time_dim[0]):05d}{fname[5:-3]}_sol"
             #     f"{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc"
             #     )
     elif split_dim =='areo':
         if len(np.atleast_1d(bounds)) < 2:
-            file_base = os.path.splitext(input_file_name)[1]
-            output_file_name = f"{int(time_dim):05d}.{file_base}_nearest_Ls{int(bounds_in[0]):03d}.nc"
+            output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_nearest_Ls{int(bounds_in[0]):03d}.nc")
             # output_file_name = (
             #     f"{fpath}/{int(time_dim):05d}{fname[5:-3]}_nearest_Ls"
             #     f"{int(bounds_in[0]):03d}.nc"
             #     )
         else:
-            file_base = os.path.splitext(input_file_name)[1]
-            output_file_name = f"{int(time_dim):05d}.{file_base}_Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc"
+            output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
             # output_file_name = (f"{fpath}/{int(time_dim[0]):05d}{fname[5:-3]}_"
             #                     f"Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
         split_dim = 'time'
@@ -816,8 +816,7 @@ def split_files(file_list, split_dim):
             for b in bounds
             ]
         if len(np.atleast_1d(bounds)) < 2:
-            file_base = os.path.splitext(input_file_name)[1]
-            output_file_name = f"{original_date}.{file_base}_nearest_{split_dim}_{new_bounds[0]}.nc"
+            output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_nearest_{split_dim}_{new_bounds[0]}.nc")
             # output_file_name = (
             #     f"{fpath}/{original_date}{fname[5:-3]}_nearest_{split_dim}_"
             #     f"{new_bounds[0]}.nc"
@@ -825,8 +824,7 @@ def split_files(file_list, split_dim):
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
-            file_base = os.path.splitext(input_file_name)[1]
-            output_file_name = f"{original_date}.{file_base}_{split_dim}_{new_bounds[0]}_{new_bounds[1]}.nc"
+            output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_{new_bounds[0]}_{new_bounds[1]}.nc")
             # output_file_name = (
             #     f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}_"
             #     f"{new_bounds[0]}_{new_bounds[1]}.nc"
@@ -850,8 +848,7 @@ def split_files(file_list, split_dim):
         if len(np.atleast_1d(bounds)) < 2:
             print(f"{Yellow}bounds = {bounds[0]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]}")
-            file_base = os.path.splitext(input_file_name)[1]
-            output_file_name = f"{original_date}.{file_base}_{split_dim}_nearest_{new_bounds[0]}.nc"
+            output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_nearest_{new_bounds[0]}.nc")
             # output_file_name = (
             #     f"{fpath}/{original_date}{fname[5:-3]}_nearest_"
             #     f"{new_bounds[0]}.nc"
@@ -859,23 +856,20 @@ def split_files(file_list, split_dim):
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
-            file_base = os.path.splitext(input_file_name)[1]
-            output_file_name = f"{original_date}.{file_base}_{split_dim}_{new_bounds[0]}_{new_bounds[1]}.nc"
+            output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_{new_bounds[0]}_{new_bounds[1]}.nc")
             # output_file_name = (
             #     f"{fpath}/{original_date}{fname[5:-3]}_{new_bounds[0]}_"
             #     f"{new_bounds[1]}.nc"
             #     )
     else:
         if len(np.atleast_1d(bounds)) < 2:
-            file_base = os.path.splitext(input_file_name)[1]
-            output_file_name = f"{original_date}.{file_base}_nearest_{split_dim}_{int(bounds[0]):03d}.nc"
+            output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_nearest_{split_dim}_{int(bounds[0]):03d}.nc")
             # output_file_name = (
             #     f"{fpath}/{original_date}{fname[5:-3]}_nearest_{split_dim}_"
             #     f"{int(bounds[0]):03d}.nc"
             #     )
         else:
-            file_base = os.path.splitext(input_file_name)[1]
-            output_file_name = f"{original_date}.{file_base}_{split_dim}_{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
+            output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
             # output_file_name = (
             #     f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}_"
             #     f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
@@ -1233,7 +1227,7 @@ def main():
             else:
                 input_file_name = os.path.join(data_dir, file)
 
-            file_base = os.path.splitext(input_file_name)[:1]
+            file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
 
             fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
@@ -1325,7 +1319,7 @@ def main():
             else:
                 input_file_name = os.path.join(data_dir, file)
 
-            file_base = os.path.splitext(input_file_name)[:1]
+            file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
 
             fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
@@ -1433,7 +1427,7 @@ def main():
             else:
                 input_file_name = os.path.join(data_dir, file)
 
-            file_base = os.path.splitext(input_file_name)[:1]
+            file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
 
             fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
@@ -1546,7 +1540,7 @@ def main():
             else:
                 input_file_name = os.path.join(data_dir, file)
 
-            file_base = os.path.splitext(input_file_name)[:1]
+            file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
 
             fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
@@ -1700,7 +1694,7 @@ def main():
             else:
                 input_file_name = os.path.join(data_dir, file)
 
-            file_base = os.path.splitext(input_file_name)[:1]
+            file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
 
             f_in = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
@@ -1753,7 +1747,7 @@ def main():
             else:
                 input_file_name = os.path.join(data_dir, file)
 
-            file_base = os.path.splitext(input_file_name)[:1]
+            file_base = os.path.splitext(input_file_name)[0]
             output_file_name = f"{file_base}{out_ext}.nc"
 
             fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
