@@ -386,8 +386,8 @@ class TestMarsFiles(unittest.TestCase):
         try:
             # Should have a constant for filter cutoff
             found_constant = False
-            for attr_name in nc.ncattrs():
-                if 'sol_min' in attr_name:
+            for var_name in nc.variables():
+                if 'sol_min' in var_name:
                     found_constant = True
                     break
             
@@ -404,6 +404,20 @@ class TestMarsFiles(unittest.TestCase):
         
         # Check that output file was created
         output_file = self.check_file_exists('01336.atmos_daily_lpt.nc')
+        
+        # Verify that the output file has expected structure
+        nc = Dataset(output_file, 'r')
+        try:
+            # Should have a constant for filter cutoff
+            found_constant = False
+            for var_name in nc.variables():
+                if 'sol_max' in var_name:
+                    found_constant = True
+                    break
+            
+            self.assertTrue(found_constant, "No sol_max constant found in output file")
+        finally:
+            nc.close()
     
     def test_temporal_band_pass_filter(self):
         """Test band-pass temporal filtering"""
@@ -414,6 +428,28 @@ class TestMarsFiles(unittest.TestCase):
         
         # Check that output file was created
         output_file = self.check_file_exists('01336.atmos_daily_bpt.nc')
+        
+        # Verify that the output file has expected structure
+        nc = Dataset(output_file, 'r')
+        try:
+            # Should have a constant for filter cutoff
+            found_constant = False
+            for var_name in nc.variables():
+                if 'sol_min' in var_name:
+                    found_constant = True
+                    break
+            
+            self.assertTrue(found_constant, "No sol_min constant found in output file")
+
+            found_constant = False
+            for var_name in nc.variables():
+                if 'sol_max' in var_name:
+                    found_constant = True
+                    break
+            
+            self.assertTrue(found_constant, "No sol_max constant found in output file")
+        finally:
+            nc.close()
     
     def test_temporal_filter_with_trend(self):
         """Test temporal filtering with trend added back"""

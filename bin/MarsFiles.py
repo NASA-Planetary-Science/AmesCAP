@@ -1053,10 +1053,10 @@ def process_time_shift(file_list):
                 # time, tod, lat, lon
                 var_val_tmp = np.transpose(value, (x, y, t, tod))
                 var_val_T = time_shift_calc(
-                    var_val_tmp, 
-                    lons, 
-                    tod_orig,
-                    timex = target_list
+                    var_in = var_val_tmp, 
+                    lon = lons, 
+                    tod = tod_orig,
+                    target_times = target_list
                     )
                 var_out = np.transpose(var_val_T, (2, 3, 1, 0))
                 fnew.log_variable(
@@ -1071,10 +1071,10 @@ def process_time_shift(file_list):
                 z = dims.index(zaxis)
                 var_val_tmp = np.transpose(value, (x, y, z, t, tod))
                 var_val_T = time_shift_calc(
-                    var_val_tmp, 
-                    lons, 
-                    tod_orig,
-                    timex = target_list
+                    var_in = var_val_tmp, 
+                    lon = lons, 
+                    tod = tod_orig,
+                    target_times = target_list
                     )
                 var_out = np.transpose(var_val_T, (3, 4, 2, 1, 0))
                 fnew.log_variable(
