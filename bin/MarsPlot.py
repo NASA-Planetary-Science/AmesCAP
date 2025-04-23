@@ -555,6 +555,7 @@ def main():
             fdump = open(debug_filename, "w")
 
             gs_command=check_gs()
+            subprocess.run(f"{gs_command} -version")
             cmd_txt = (f"{gs_command} -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER "
                        f"-dEPSCrop -sOutputFile={output_pdf} {all_fig}")
 
