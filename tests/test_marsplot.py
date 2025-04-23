@@ -9,12 +9,58 @@ import os
 import sys
 import unittest
 import shutil
+import platform
 import subprocess
 import tempfile
 import glob
 import re
 import numpy as np
 from netCDF4 import Dataset
+
+def setup_ghostscript_alias():
+    """
+    Check if the OS is Windows, and if so, create an alias from 'gswin64c.exe' to 'gs'.
+    Also handles potential naming conflicts.
+    """
+    if platform.system() == 'Windows':
+        print("Windows OS detected, setting up Ghostscript aliases...")
+        
+        # Check if gswin64c.exe exists and is accessible
+        gswin64c_path = shutil.which('gswin64c.exe')
+        if not gswin64c_path:
+            print("Error: gswin64c.exe not found in PATH.")
+            return False
+            
+        # Check if 'gs' already exists
+        gs_path = shutil.which('gs')
+        
+        if gs_path:
+            print(f"Note: 'gs' already exists at {gs_path}")
+            return False
+        else:
+            # If gs doesn't exist, we can safely create the alias
+            # Get a suitable directory from PATH to place our batch file
+            path_dirs = os.environ['PATH'].split(os.pathsep)
+            writable_dirs = [d for d in path_dirs if os.access(d, os.W_OK)]
+            
+            if not writable_dirs:
+                print("Error: No writable directory found in PATH.")
+                return False
+                
+            target_dir = writable_dirs[0]
+            
+            # Create a batch file that redirects to gswin64c.exe
+            bat_content = f'@echo off\n"{gswin64c_path}" %*'
+            with open(os.path.join(target_dir, 'gs.bat'), 'w') as f:
+                f.write(bat_content)
+                
+            print(f"Created alias 'gs' for gswin64c.exe")
+            cmd_txt = (f"gs -version")
+            subprocess.check_call(cmd_txt, shell = True)
+            return True
+    else:
+        print("Not running on Windows. No action needed.")
+        return False
 
 class TestMarsPlot(unittest.TestCase):
     """Integration test suite for MarsPlot"""
@@ -465,4 +511,5 @@ HOLD OFF
 
 
 if __name__ == '__main__':
+    gsdef = setup_ghostscript_alias()
     unittest.main()
