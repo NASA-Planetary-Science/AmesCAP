@@ -385,7 +385,7 @@ HOLD OFF
     
     def test_run_in_portrait_mode(self):
         """Test running MarsPlot in portrait mode"""
-        result = self.run_mars_plot(['Custom.in', '-portrait', '-debug'])
+        result = self.run_mars_plot(['Custom.in', '-portrait', '--debug'])
         
         # Check for successful execution
         self.assertIn('Reading Custom.in', result.stdout)
