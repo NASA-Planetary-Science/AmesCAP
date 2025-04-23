@@ -384,9 +384,10 @@ class TestMarsFiles(unittest.TestCase):
         # Verify that the output file has expected structure
         nc = Dataset(output_file, 'r')
         try:
+            
             # Should have a constant for filter cutoff
             found_constant = False
-            for var_name in nc.variables():
+            for var_name in nc.variables:
                 if 'sol_min' in var_name:
                     found_constant = True
                     break
@@ -410,7 +411,7 @@ class TestMarsFiles(unittest.TestCase):
         try:
             # Should have a constant for filter cutoff
             found_constant = False
-            for var_name in nc.variables():
+            for var_name in nc.variables:
                 if 'sol_max' in var_name:
                     found_constant = True
                     break
@@ -434,7 +435,7 @@ class TestMarsFiles(unittest.TestCase):
         try:
             # Should have a constant for filter cutoff
             found_constant = False
-            for var_name in nc.variables():
+            for var_name in nc.variables:
                 if 'sol_min' in var_name:
                     found_constant = True
                     break
@@ -442,7 +443,7 @@ class TestMarsFiles(unittest.TestCase):
             self.assertTrue(found_constant, "No sol_min constant found in output file")
 
             found_constant = False
-            for var_name in nc.variables():
+            for var_name in nc.variables:
                 if 'sol_max' in var_name:
                     found_constant = True
                     break
