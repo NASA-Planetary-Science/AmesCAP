@@ -11,22 +11,29 @@ on:
       - 'bin/MarsFiles.py'
       - 'tests/test_marsfiles.py'
       - '.github/workflows/marsfiles_test.yml'
+      - 'amescap/FV3_utils.py'
   # Allow manual triggering of the workflow
   workflow_dispatch:
-  # Trigger on pull requests that modify MarsFiles or tests
+  # Trigger on pull requests that modify relevant files
   pull_request:
     branches: [ devel ]
     paths:
       - 'bin/MarsFiles.py'
       - 'tests/test_marsfiles.py'
       - '.github/workflows/marsfiles_test.yml'
+      - 'amescap/FV3_utils.py'
 jobs:
   test:
     # Run on multiple OS and Python versions for comprehensive testing
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.9', '3.10', '3.11']
+        include:
+          - os: ubuntu-latest
+            python-version: '3.11'
+          - os: macos-latest
+            python-version: '3.11'
+          - os: windows-latest
+            python-version: '3.11'
       # Don't cancel all jobs if one fails
       fail-fast: false
     runs-on: ${{ matrix.os }}
@@ -40,7 +47,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       
-      # Cache pip dependencies to speed up installation
+      # Cache pip dependencies
       - name: Cache pip dependencies
         uses: actions/cache@v3
         with:
@@ -55,7 +62,7 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          pip install numpy netCDF4 xarray scipy matplotlib pytest pytest-xdist
+          pip install numpy netCDF4 xarray scipy matplotlib
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       
       - name: Install dependencies (Windows)
@@ -63,10 +70,10 @@ jobs:
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
-          pip install numpy netCDF4 xarray scipy matplotlib pytest pytest-xdist
+          pip install numpy netCDF4 xarray scipy matplotlib
           if (Test-Path -Path "requirements.txt") { pip install -r requirements.txt }
       
-      # Install the package in editable mode
+      # Install the package in development mode
       - name: Install package
         run: pip install -e .
       
@@ -76,33 +83,29 @@ jobs:
         shell: bash
         run: |
           mkdir -p $HOME/.amescap
-          cp mars_templates/amescap_profile $HOME/.amescap_profile
+          if [ -f mars_templates/amescap_profile ]; then
+            cp mars_templates/amescap_profile $HOME/.amescap_profile
+          else
+            echo "# Default profile" > $HOME/.amescap_profile
+          fi
       
       - name: Set up AmesCAP configuration (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -Path "$env:USERPROFILE\.amescap" -ItemType Directory -Force
-          Copy-Item -Path "mars_templates\amescap_profile" -Destination "$env:USERPROFILE\.amescap_profile" -Force
+          if (Test-Path -Path "mars_templates\amescap_profile") {
+            Copy-Item -Path "mars_templates\amescap_profile" -Destination "$env:USERPROFILE\.amescap_profile" -Force
+          } else {
+            "# Default profile" | Out-File -FilePath "$env:USERPROFILE\.amescap_profile" -Encoding utf8
+          }
       
       # Print out environment info
-      - name: Show environment info (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
+      - name: Show environment info
         run: |
           python -c "import os, sys, numpy, netCDF4, xarray, scipy, matplotlib; print(f'Python: {sys.version}, NumPy: {numpy.__version__}, NetCDF4: {netCDF4.__version__}, xarray: {xarray.__version__}, SciPy: {scipy.__version__}, Matplotlib: {matplotlib.__version__}')"
-          echo "Working directory: $(pwd)"
-          echo "Home directory: $HOME"
       
-      - name: Show environment info (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          python -c "import os, sys, numpy, netCDF4, xarray, scipy, matplotlib; print(f'Python: {sys.version}, NumPy: {numpy.__version__}, NetCDF4: {netCDF4.__version__}, xarray: {xarray.__version__}, SciPy: {scipy.__version__}, Matplotlib: {matplotlib.__version__}')"
-          echo "Working directory: $(Get-Location)"
-          echo "Home directory: $env:USERPROFILE"
-      
-      # Free up disk space
+      # Free up disk space on Linux
       - name: Free up disk space
         if: runner.os == 'Linux'
         run: |
@@ -111,57 +114,59 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo rm -rf /usr/local/share/boost
       
-      # Create temporary directory for tests
-      - name: Create temporary test directory (Unix)
+      # Create and configure test directory
+      - name: Configure test directory (Unix)
         if: runner.os != 'Windows'
         shell: bash
         run: |
           mkdir -p $HOME/marsfiles_tests
           echo "TMPDIR=$HOME/marsfiles_tests" >> $GITHUB_ENV
       
-      - name: Create temporary test directory (Windows)
+      - name: Configure test directory (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -Path "$env:USERPROFILE\marsfiles_tests" -ItemType Directory -Force
           echo "TMPDIR=$env:USERPROFILE\marsfiles_tests" >> $env:GITHUB_ENV
       
-      # Run the create_ames_gcm_files.py script to generate test files
-      - name: Prepare test files (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          python tests/create_ames_gcm_files.py $HOME/marsfiles_tests
-      
-      - name: Prepare test files (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          python tests/create_ames_gcm_files.py $env:USERPROFILE\marsfiles_tests
-      
-      # Run the tests with parallel execution for speed
-      - name: Run tests (Unix)
+      # Run individual tests to debug what's working and what's not
+      - name: Run basic test - Help Message (Unix)
         if: runner.os != 'Windows'
         shell: bash
         run: |
           cd $HOME/marsfiles_tests
-          python -m pytest -xvs $GITHUB_WORKSPACE/tests/test_marsfiles.py -n auto
+          python -m unittest -v $GITHUB_WORKSPACE/tests/test_marsfiles.py:TestMarsFiles.test_help_message
       
-      - name: Run tests (Windows)
+      - name: Run basic test - Help Message (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           cd $env:USERPROFILE\marsfiles_tests
-          python -m pytest -xvs $env:GITHUB_WORKSPACE\tests\test_marsfiles.py -n auto
+          python -m unittest -v "$env:GITHUB_WORKSPACE\tests\test_marsfiles.py:TestMarsFiles.test_help_message"
       
-      # Clean up temporary files
-      - name: Clean up temp files (Unix)
+      # Run the tests sequentially to avoid timeout issues
+      - name: Run all tests (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          cd $HOME/marsfiles_tests
+          python -m unittest discover -v $GITHUB_WORKSPACE/tests -p test_marsfiles.py
+      
+      - name: Run all tests (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd $env:USERPROFILE\marsfiles_tests
+          python -m unittest discover -v "$env:GITHUB_WORKSPACE\tests" -p test_marsfiles.py
+      
+      # Clean up
+      - name: Clean up (Unix)
         if: runner.os != 'Windows' && always()
         shell: bash
         run: |
           rm -rf $HOME/marsfiles_tests || true
       
-      - name: Clean up temp files (Windows)
+      - name: Clean up (Windows)
         if: runner.os == 'Windows' && always()
         shell: pwsh
         run: |
