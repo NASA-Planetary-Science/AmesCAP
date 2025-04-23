@@ -554,10 +554,12 @@ def main():
 
             if platform.system() == "Windows":
                 subprocess.run([f"{gs_command}", "-version"])
+                cmd_txt = (f"{gs_command} -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER "
+                           f"-sOutputFile={output_pdf} {all_fig}")
             else:
                 subprocess.run([f"{gs_command}", "--version"])
-            cmd_txt = (f"{gs_command} -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER "
-                       f"-dEPSCrop -sOutputFile={output_pdf} {all_fig}")
+                cmd_txt = (f"{gs_command} -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER "
+                           f"-dEPSCrop -sOutputFile={output_pdf} {all_fig}")
 
             try:
                 # Test gs command again
