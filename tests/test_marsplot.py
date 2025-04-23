@@ -57,7 +57,7 @@ class TestMarsPlot(unittest.TestCase):
                     f.write(bat_content)
                     
                 print(f"Created alias 'gs' for gswin64c.exe")
-                result = subprocess.run('gs','-version',capture_output=True,
+                gsresult = subprocess.run('gswin64c','-version',capture_output=True,
                     text=True,
                     check=True)
                 return True
