@@ -58,7 +58,7 @@ class TestMarsPlot(unittest.TestCase):
                     
                 print(f"Created alias 'gs' for gswin64c.exe")
                 cmd_txt = (f"gs -version")
-                subprocess.check_call(cmd_txt, shell = True)
+                subprocess.run(cmd_txt)
                 return True
         else:
             print("Not running on Windows. No action needed.")
