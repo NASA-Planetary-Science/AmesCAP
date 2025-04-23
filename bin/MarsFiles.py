@@ -591,11 +591,6 @@ def concatenate_files(file_list, full_file_list):
                 os.remove(full_file_list[i])
             except OSError as e:
                 print(f"{Yellow}Warning: Could not remove {full_file_list[i]}: {e}{Nclr}")
-        # rm_cmd = "rm -f "
-        # for i in range(1, num_files):
-        #     # 1-N files ensures file number 0 is preserved
-        #     rm_cmd += f" {full_file_list[i]}"
-        # subprocess.run(rm_cmd, universal_newlines = True, shell = True)
         print(f"{Cyan}Cleaned all but {file_list[0]}{Nclr}")
         exit()
 
@@ -634,17 +629,12 @@ def concatenate_files(file_list, full_file_list):
 
     # Delete the files that were concatenated.
     # Apply the new name created above
-    rm_cmd = "rm -f "
     for file in full_file_list:
         try:
             os.remove(file)
         except OSError as e:
             print(f"{Yellow}Warning: Could not remove {file}: {e}{Nclr}")
-        # rm_cmd += f" {file}"
-
-    # cmd_txt = f"mv {tmp_file} {merged_file}"
-    # subprocess.run(rm_cmd, universal_newlines = True, shell = True)
-    # subprocess.run(cmd_txt, universal_newlines = True, shell = True)
+            
     try:
         os.rename(tmp_file, merged_file)
     except OSError as e:
@@ -791,30 +781,16 @@ def split_files(file_list, split_dim):
         if len(np.atleast_1d(bounds)) < 2:
             output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_nearest_sol{int(bounds_in[0]):03d}.nc")
             print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
-            # output_file_name = (
-            #     f"{fpath}/{int(time_dim):05d}{fname[5:-3]}_nearest_sol"
-            #     f"{int(bounds_in[0]):03d}.nc"
-            #     )
         else:
             output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_sol{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
             print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
-            # output_file_name = (
-            #     f"{fpath}/{int(time_dim[0]):05d}{fname[5:-3]}_sol"
-            #     f"{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc"
-            #     )
     elif split_dim =='areo':
         if len(np.atleast_1d(bounds)) < 2:
             output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_nearest_Ls{int(bounds_in[0]):03d}.nc")
             print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
-            # output_file_name = (
-            #     f"{fpath}/{int(time_dim):05d}{fname[5:-3]}_nearest_Ls"
-            #     f"{int(bounds_in[0]):03d}.nc"
-            #     )
         else:
             output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
             print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
-            # output_file_name = (f"{fpath}/{int(time_dim[0]):05d}{fname[5:-3]}_"
-            #                     f"Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
         split_dim = 'time'
     elif split_dim == 'lat':
         new_bounds = [
@@ -824,19 +800,11 @@ def split_files(file_list, split_dim):
             ]
         if len(np.atleast_1d(bounds)) < 2:
             output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_nearest_{split_dim}_{new_bounds[0]}.nc")
-            # output_file_name = (
-            #     f"{fpath}/{original_date}{fname[5:-3]}_nearest_{split_dim}_"
-            #     f"{new_bounds[0]}.nc"
-            #     )
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
             output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_{new_bounds[0]}_{new_bounds[1]}.nc")
             print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
-            # output_file_name = (
-            #     f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}_"
-            #     f"{new_bounds[0]}_{new_bounds[1]}.nc"
-            #     )
     elif split_dim == interp_type:
         if interp_type == 'pfull':
             new_bounds = [
@@ -857,37 +825,21 @@ def split_files(file_list, split_dim):
             print(f"{Yellow}bounds = {bounds[0]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]}")
             output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_nearest_{new_bounds[0]}.nc")
-            # output_file_name = (
-            #     f"{fpath}/{original_date}{fname[5:-3]}_nearest_"
-            #     f"{new_bounds[0]}.nc"
-            #     )
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
             output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_{new_bounds[0]}_{new_bounds[1]}.nc")
             print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
-            # output_file_name = (
-            #     f"{fpath}/{original_date}{fname[5:-3]}_{new_bounds[0]}_"
-            #     f"{new_bounds[1]}.nc"
-            #     )
     else:
         if len(np.atleast_1d(bounds)) < 2:
             output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_nearest_{split_dim}_{int(bounds[0]):03d}.nc")
             print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
-            # output_file_name = (
-            #     f"{fpath}/{original_date}{fname[5:-3]}_nearest_{split_dim}_"
-            #     f"{int(bounds[0]):03d}.nc"
-            #     )
         else:
             output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
             print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
-            # output_file_name = (
-            #     f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}_"
-            #     f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
-            #     )
 
     # Append extension, if any:
-    output_file_name = (f"{output_file_name[:-3]}{out_ext}.nc")
+    output_file_name = (f"{os.path.basename(output_file_name)}{out_ext}.nc")
     print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
     print(f"{Cyan}new filename = {output_file_name}")
@@ -1005,12 +957,13 @@ def process_time_shift(file_list):
         target_list = np.fromstring(args.time_shift, dtype=float, sep=" ")
 
     for file in file_list:
-        # Add path unless full path is provided
-        if not ("/" in file):
-            input_file_name = f"{data_dir}/{file}"
+        # Get the file name from the file object
+        if hasattr(file, 'name'):
+            input_file_name = file.name  # Get the name attribute of the file object
         else:
-            input_file_name = file
-        output_file_name = (f"{input_file_name[:-3]}{out_ext}.nc")
+            input_file_name = file  # In case it's already a string
+            
+        output_file_name = (f"{os.path.basename(input_file_name)}{out_ext}.nc")
         print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
         fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
@@ -1176,24 +1129,9 @@ def main():
                     f"'daily', or 'diurn'{Nclr}"
                     )
 
-        # lsmin = None
-        # lsmax = None
-
         if full_file_list[0][-3:] == ".nc":
             print("Processing Legacy MGCM netCDF files")
             for f in full_file_list:
-                # file_name = os.path.basename(f)
-                # ls_l = file_name[-12:-9]
-                # ls_r = file_name[-6:-3]
-
-                # if lsmin is None:
-                #     lsmin = ls_l
-                # else:
-                #     lsmin = str(min(int(lsmin), int(ls_l))).zfill(3)
-                # if lsmax is None:
-                #     lsmax = ls_r
-                # else:
-                #     lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
                 make_FV3_files(f, args.bin_files, True)
         elif "fort.11" in full_file_list[0]:
             print("Processing fort.11 files")
@@ -1935,10 +1873,6 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
                     bk[z + 1] = sgm[2*z + 2]
                 phalf[:] = pk[:] + pref*bk[:] # [Pa]
 
-                # DEPRECATED:
-                # pfull[:] = (phalf[1:]-phalf[:num])/(np.log(phalf[1:])
-                #             - np.log(phalf[:num]))
-
                 # First layer:
                 if pk[0] == 0 and bk[0] == 0:
                     pfull[0] = 0.5*(phalf[0] + phalf[1])
@@ -2016,8 +1950,6 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
 
     if "fixed" in typelistfv3:
         # Copy Legacy.fixed to current directory
-        # cmd_txt = f"cp {sys.prefix}/mars_data/Legacy.fixed.nc {fdate}.fixed.nc"
-        # subprocess.run(cmd_txt, universal_newlines = True, shell = True)
         source_file = os.path.join(sys.prefix, "mars_data", "Legacy.fixed.nc")
         dest_file = f"{fdate}.fixed.nc"
         import shutil
