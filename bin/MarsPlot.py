@@ -74,6 +74,23 @@ current_version = 3.5
 import functools
 import traceback
 
+import platform
+import shutil
+
+# In your code where you call Ghostscript
+if platform.system() == "Windows":
+    gs_command = "gswin64c"  # or gswin32c depending on installation
+else:
+    gs_path = shutil.which('gs')
+    gsbin_path = shutil.which('gs.bin')
+    if gs_path:
+        gs_command = "gs"
+    elif gsbin_path:
+        gs_command = "gs.bin"
+    else:
+        print(f"{Red}ERROR: Ghostscript not found{Nclr}")
+
+
 
 def debug_wrapper(func):
     """
@@ -527,18 +544,8 @@ def main():
             debug_filename = f"{output_path}/.debug_MCMC_plots.txt"
             fdump = open(debug_filename, "w")
 
-            try:
-                # Test whether gs command fails
-                cmd_txt = (f"gs -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER "
-                           f"-dEPSCrop -sOutputFile={output_pdf} {all_fig}")
-                subprocess.check_call(cmd_txt, shell = True, stdout = fdump,
-                                      stderr = fdump)
-            except subprocess.CalledProcessError:
-                # On NAS, gs renamed gs.bin, check_call returns nonzero,
-                # so use cmd_txt instead:
-                cmd_txt = (f"gs.bin -sDEVICE=pdfwrite -dNOPAUSE -dBATCH "
-                           f"-dSAFER -dEPSCrop -sOutputFile={output_pdf} "
-                           f"{all_fig}")
+            cmd_txt = (f"{gs_command} -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER "
+                       f"-dEPSCrop -sOutputFile={output_pdf} {all_fig}")
 
             try:
                 # Test gs command again
