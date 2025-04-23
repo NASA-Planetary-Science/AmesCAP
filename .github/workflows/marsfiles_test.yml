@@ -1,0 +1,88 @@
+name: MarsFiles Test Workflow
+# Cancel any in-progress job or previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+on:
+  # Trigger the workflow on push to devel branch
+  push:
+    branches: [ devel ]
+    paths:
+      - 'bin/MarsFiles.py'
+      - 'tests/test_marsfiles.py'
+      - '.github/workflows/marsfiles_test.yml'
+  # Allow manual triggering of the workflow
+  workflow_dispatch:
+  # Trigger on pull requests that modify MarsFiles or tests
+  pull_request:
+    branches: [ devel ]
+    paths:
+      - 'bin/MarsFiles.py'
+      - 'tests/test_marsfiles.py'
+      - '.github/workflows/marsfiles_test.yml'
+jobs:
+  test:
+    # Run on multiple OS and Python versions for comprehensive testing
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]  # Removed Windows as Mars-related tools often have Unix assumptions
+        python-version: ['3.9', '3.10', '3.11']
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Checkout the repository
+      - uses: actions/checkout@v3
+      # Set up the specified Python version
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      # Install dependencies
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy netCDF4 xarray scipy matplotlib
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      # Install the package in editable mode
+      - name: Install package
+        run: pip install -e .
+      # Set up AmesCAP configuration
+      - name: Set up AmesCAP configuration
+        shell: bash
+        run: |
+          mkdir -p $HOME/.amescap
+          cp mars_templates/amescap_profile $HOME/.amescap_profile
+      # Print out environment info
+      - name: Show environment info
+        run: |
+          python -c "import os, sys, numpy, netCDF4, xarray, scipy, matplotlib; print(f'Python: {sys.version}, NumPy: {numpy.__version__}, NetCDF4: {netCDF4.__version__}, xarray: {xarray.__version__}, SciPy: {scipy.__version__}, Matplotlib: {matplotlib.__version__}')"
+          echo "Working directory: $(pwd)"
+          echo "Home directory: $HOME"
+      # Free up disk space
+      - name: Free up disk space
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+      # Create temporary directory for tests
+      - name: Create temporary test directory
+        shell: bash
+        run: |
+          mkdir -p $HOME/marsfiles_tests
+          echo "TMPDIR=$HOME/marsfiles_tests" >> $GITHUB_ENV
+      # Run the create_ames_gcm_files.py script to generate test files
+      - name: Prepare test files
+        run: |
+          python tests/create_ames_gcm_files.py $HOME/marsfiles_tests
+      # Run the integration tests
+      - name: Run MarsFiles tests
+        run: |
+          python -m unittest -v tests/test_marsfiles.py
+      # Clean up temporary files
+      - name: Clean up temp files
+        if: always()
+        shell: bash
+        run: |
+          rm -rf $HOME/marsfiles_tests || true
