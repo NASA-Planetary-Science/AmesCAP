@@ -59,12 +59,13 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           choco install ghostscript
-      - name: Find Ghostscript executable on Windows
+      - name: Add Ghostscript to path on Windows
         if: runner.os == 'Windows'
         run: |
-          $gsPath = Get-ChildItem "C:\Program Files\gs" -Recurse -Filter gswin64.exe | Select-Object -First 1
-          if (-not $gsPath) { throw "Ghostscript not found." }
-          & $gsPath.FullName --version
+          $ghostscriptDir = Get-ChildItem "C:\Program Files\gs" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          $binPath = "$($ghostscriptDir.FullName)\bin"
+          echo "Ghostscript path: $binPath"
+          echo "$binPath" | Out-File -Append -Encoding ascii $env:GITHUB_PATH
         shell: pwsh
       - name: Verify Ghostscript installation (Windows)
         if: runner.os == 'Windows'
