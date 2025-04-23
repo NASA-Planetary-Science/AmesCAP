@@ -36,6 +36,7 @@ import warnings     # Suppress errors triggered by NaNs
 import matplotlib
 import re           # Regular expressions
 import numpy as np
+from pypdf import PdfReader, PdfWriter
 from netCDF4 import Dataset, MFDataset
 from warnings import filterwarnings
 import matplotlib.pyplot as plt
@@ -76,25 +77,6 @@ import traceback
 
 import platform
 import shutil
-
-if platform.system() == "Windows":
-    gswin64c_path = shutil.which('gswin64c.exe')
-    if not gswin64c_path:
-        print("Error: gswin64c.exe not found in PATH.")
-    else:
-        print("gswin64c found at: ",gswin64c_path)
-    gs_command = gswin64c_path  # or gswin32c depending on installation
-else:
-    gs_path = shutil.which('gs')
-    gsbin_path = shutil.which('gs.bin')
-    if gs_path:
-        gs_command = "gs"
-    elif gsbin_path:
-        gs_command = "gs.bin"
-    else:
-        print(f"{Red}ERROR: Ghostscript not found{Nclr}")
-
-
 
 def debug_wrapper(func):
     """
@@ -546,46 +528,28 @@ def main():
                 output_pdf = os.path.join(output_path,f"{basename}.pdf")
 
             # Add quotes around PDF name (name -> "name")
-            output_pdf = f'"{output_pdf}"'
+            output_pdfq = f'"{output_pdf}"'
 
             # Direct gs output to file instead of printing to screen
             debug_filename = os.path.join(output_path,f".debug_MCMC_plots.txt")
             fdump = open(debug_filename, "w")
 
-            if platform.system() == "Windows":
-                subprocess.run([f"{gs_command}", "-version"])
-                cmd_txt = (f"{gs_command} -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER "
-                           f"-sOutputFile={output_pdf} {all_fig}")
-            else:
-                subprocess.run([f"{gs_command}", "--version"])
-                cmd_txt = (f"{gs_command} -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER "
-                           f"-dEPSCrop -sOutputFile={output_pdf} {all_fig}")
+            writer = PdfWriter()
 
             try:
-                # Test gs command again
-                subprocess.check_call(cmd_txt, shell = True, stdout = fdump,
-                                      stderr = fdump)
-                # If successful, execute command
-                subprocess.call(cmd_txt, shell = True, stdout = fdump,
-                                stderr = fdump)
-                # Delete individual figures
-                cmd_txt = (f"rm -f {all_fig}")
-                subprocess.call(cmd_txt, shell = True, stdout = fdump,
-                                stderr = fdump)
-                # Delete debug_MCMC_plots.txt debug file
-                cmd_txt = (f'rm -f "{debug_filename}"')
-                subprocess.call(cmd_txt, shell = True)
-                # Delete /plots dir only if created in this routine
-                if not dir_plot_present:
-                    cmd_txt = (f'rm -r {os.path.join(output_path,"plots")}')
-                    subprocess.call(cmd_txt, shell = True)
-                give_permission(output_pdf)
-                print(f"{output_pdf} was generated")
+                for pdf_file in fig_list:
+                    reader = PdfReader(pdf_file)
+                    for page in reader.pages:
+                        writer.add_page(page)
 
+                with open(output_pdf, "wb") as f:
+                    writer.write(f)
+                give_permission(output_pdf)
+                print(f"{output_pdfq} was generated")
             except subprocess.CalledProcessError:
                 # If gs command fails again, prompt user to try
                 # generating PNG instead
-                print("ERROR with ghostscript when merging PDF, please "
+                print("ERROR with merging PDF, please "
                       "try a different format, such as PNG.")
                 if debug:
                     raise

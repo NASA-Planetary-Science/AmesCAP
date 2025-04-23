@@ -46,43 +46,6 @@ jobs:
       # Install the package in editable mode
       - name: Install package
         run: pip install -e .
-      - name: Install Ghostscript (Ubuntu)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ghostscript
-      - name: Install Ghostscript (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install ghostscript
-      - name: Install Ghostscript (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          choco install ghostscript
-      - name: Add Ghostscript to path on Windows
-        if: runner.os == 'Windows'
-        run: |
-          $ghostscriptDir = Get-ChildItem "C:\Program Files\gs" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-          $binPath = "$($ghostscriptDir.FullName)\bin"
-          echo "Ghostscript path: $binPath"
-          echo "$binPath" | Out-File -Append -Encoding ascii $env:GITHUB_PATH
-          echo "PATH=${PATH}:${binPath}" >> $GITHUB_ENV
-        shell: pwsh
-      - name: Verify Ghostscript installation (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          gswin64c -version
-        shell: pwsh
-      - name: Verify Ghostscript installation (Ubuntu)
-        if: runner.os == 'Linux'
-        run: |
-          gs --version
-        shell: bash
-      - name: Verify Ghostscript installation (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          gs --version
-        shell: bash        
       # Set HOME for Windows since it might be used by the script
       - name: Set HOME environment variable for Windows
         if: runner.os == 'Windows'
