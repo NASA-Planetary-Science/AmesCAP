@@ -36,6 +36,7 @@ import warnings     # Suppress errors triggered by NaNs
 import matplotlib
 import re           # Regular expressions
 import numpy as np
+from pypdf import PdfReader, PdfWriter
 from netCDF4 import Dataset, MFDataset
 from warnings import filterwarnings
 import matplotlib.pyplot as plt
@@ -73,6 +74,9 @@ current_version = 3.5
 
 import functools
 import traceback
+
+import platform
+import shutil
 
 def debug_wrapper(func):
     """
@@ -443,9 +447,9 @@ def main():
             Ncdf_num = select_range(Ncdf_num, bound)
 
         # Make folder "plots" in cwd
-        dir_plot_present = os.path.exists(f"{output_path}/plots")
+        dir_plot_present = os.path.exists(os.path.join(output_path,"plots"))
         if not dir_plot_present:
-            os.makedirs(f"{output_path}/plots")
+            os.makedirs(os.path.join(output_path,"plots"))
 
         # ============ Update Progress Bar ============
         global i_list
@@ -500,9 +504,13 @@ def main():
                 # PDF basename "Diagnostics":
                 # e.g., Custom.in -> Diagnostics.pdf, or
                 #       Custom_01.in -> Diagnostics_01.pdf
-                input_file = (f"{output_path}/"
-                                f"{args.template_file.name}")
-                basename = input_file.split("/")[-1].split(".")[0].strip()
+                input_file = (os.path.join(output_path,
+                                f"{args.template_file.name}"))
+
+                if platform.system() == "Windows":
+                    basename = input_file.split("\\")[-1].split(".")[0].strip()
+                else:
+                    basename = input_file.split("/")[-1].split(".")[0].strip()
             except:
                 # Use default PDF basename "Diagnostics".
                 basename = "Custom"
@@ -510,60 +518,38 @@ def main():
             # Generate PDF name
             if basename == "Custom":
                 # If template name = Custom.in -> Diagnostics.pdf
-                output_pdf = (f"{output_path}/Diagnostics.pdf")
+                output_pdf = os.path.join(output_path,"Diagnostics.pdf")
             elif basename[0:7] == "Custom_":
                 # If template name = Custom_XX.in -> Diagnostics_XX.pdf
-                output_pdf = (f"{output_path}/Diagnostics_{basename[7:9]}.pdf")
+                output_pdf = os.path.join(output_path,f"Diagnostics_{basename[7:9]}.pdf")
             else:
                 # If template name is NOT Custom.in, use prefix to
                 # generate PDF name
-                output_pdf = (f"{output_path}/{basename}.pdf")
+                output_pdf = os.path.join(output_path,f"{basename}.pdf")
 
             # Add quotes around PDF name (name -> "name")
-            output_pdf = f'"{output_pdf}"'
+            output_pdfq = f'"{output_pdf}"'
 
             # Direct gs output to file instead of printing to screen
-            debug_filename = f"{output_path}/.debug_MCMC_plots.txt"
+            debug_filename = os.path.join(output_path,f".debug_MCMC_plots.txt")
             fdump = open(debug_filename, "w")
 
-            try:
-                # Test whether gs command fails
-                cmd_txt = (f"gs -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER "
-                           f"-dEPSCrop -sOutputFile={output_pdf} {all_fig}")
-                subprocess.check_call(cmd_txt, shell = True, stdout = fdump,
-                                      stderr = fdump)
-            except subprocess.CalledProcessError:
-                # On NAS, gs renamed gs.bin, check_call returns nonzero,
-                # so use cmd_txt instead:
-                cmd_txt = (f"gs.bin -sDEVICE=pdfwrite -dNOPAUSE -dBATCH "
-                           f"-dSAFER -dEPSCrop -sOutputFile={output_pdf} "
-                           f"{all_fig}")
+            writer = PdfWriter()
 
             try:
-                # Test gs command again
-                subprocess.check_call(cmd_txt, shell = True, stdout = fdump,
-                                      stderr = fdump)
-                # If successful, execute command
-                subprocess.call(cmd_txt, shell = True, stdout = fdump,
-                                stderr = fdump)
-                # Delete individual figures
-                cmd_txt = (f"rm -f {all_fig}")
-                subprocess.call(cmd_txt, shell = True, stdout = fdump,
-                                stderr = fdump)
-                # Delete debug_MCMC_plots.txt debug file
-                cmd_txt = (f'rm -f "{debug_filename}"')
-                subprocess.call(cmd_txt, shell = True)
-                # Delete /plots dir only if created in this routine
-                if not dir_plot_present:
-                    cmd_txt = (f'rm -r "{output_path}"/plots')
-                    subprocess.call(cmd_txt, shell = True)
+                for pdf_file in fig_list:
+                    reader = PdfReader(pdf_file)
+                    for page in reader.pages:
+                        writer.add_page(page)
+
+                with open(output_pdf, "wb") as f:
+                    writer.write(f)
                 give_permission(output_pdf)
-                print(f"{output_pdf} was generated")
-
+                print(f"{output_pdfq} was generated")
             except subprocess.CalledProcessError:
                 # If gs command fails again, prompt user to try
                 # generating PNG instead
-                print("ERROR with ghostscript when merging PDF, please "
+                print("ERROR with merging PDF, please "
                       "try a different format, such as PNG.")
                 if debug:
                     raise
@@ -1574,7 +1560,7 @@ def make_template():
     """
     global customFileIN  # Will be modified
     global current_version
-    newname = f"{output_path}/Custom.in"
+    newname = os.path.join(output_path,"Custom.in")
     newname = create_name(newname)
 
     customFileIN = open(newname, "w")
@@ -2094,7 +2080,7 @@ def prep_file(var_name, file_type, simuID, sol_array):
     # Specific sol requested (e.g., [2400])
     Sol_num_current = [0]
 
-    if os.path.isfile(f"{input_paths[simuID]}/{file_type}.nc"):
+    if os.path.isfile(os.path.join(f"{input_paths[simuID]}",f"{file_type}.nc")):
         # First check if file on tape without a sol number
         # (e.g., Luca_dust_MY24_dust.nc exists on disk)
         file_has_sol_number = False
@@ -2118,11 +2104,11 @@ def prep_file(var_name, file_type, simuID, sol_array):
     for i in range(0, nfiles):
         if file_has_sol_number:
             # Sol number
-            file_list[i] = (f"{input_paths[simuID]}/"
-                            f"{int(Sol_num_current[i]):05}.{file_type}.nc")
+            file_list[i] = (os.path.join(input_paths[simuID],
+                            f"{int(Sol_num_current[i]):05}.{file_type}.nc"))
         else:
             # No sol number
-            file_list[i] = f"{input_paths[simuID]}/{file_type}.nc"
+            file_list[i] = os.path.join(input_paths[simuID],f"{file_type}.nc")
 
         check_file_tape(file_list[i])
 
@@ -2670,8 +2656,8 @@ class Fig_2D(object):
                 sensitive_name = "multi_panel"
 
             plt.tight_layout()
-            self.fig_name = (f"{output_path}/plots/"
-                             f"{sensitive_name}.{out_format}")
+            self.fig_name = (os.path.join(output_path,"plots",
+                             f"{sensitive_name}.{out_format}"))
             self.fig_name = create_name(self.fig_name)
             plt.savefig(self.fig_name, dpi=my_dpi)
             if out_format != "pdf":
@@ -4148,7 +4134,7 @@ class Fig_1D(object):
                 sensitive_name = "multi_panel"
 
             self.fig_name = (
-                f"{output_path}/plots/{sensitive_name}.{out_format}"
+                os.path.join(output_path,"plots",f"{sensitive_name}.{out_format}")
             )
             self.fig_name = create_name(self.fig_name)
 
