@@ -680,7 +680,7 @@ def split_files(file_list, split_dim):
     print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
 
     file_base = os.path.splitext(input_file_name)[0]
-    output_file_name = f"{file_base}{out_ext}"
+    output_file_name = f"{file_base}{out_ext}.nc"
     print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
             
     original_date = os.path.basename(os.path.splitext(input_file_name)[0])
@@ -1180,7 +1180,7 @@ def main():
             print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
 
             file_base = os.path.splitext(input_file_name)[0]
-            output_file_name = f"{file_base}{out_ext}"
+            output_file_name = f"{file_base}{out_ext}.nc"
             print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
             fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
@@ -1275,7 +1275,7 @@ def main():
             print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
 
             file_base = os.path.splitext(input_file_name)[0]
-            output_file_name = f"{file_base}{out_ext}"
+            output_file_name = f"{file_base}{out_ext}.nc"
             print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
             fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
@@ -1386,7 +1386,7 @@ def main():
             print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
 
             file_base = os.path.splitext(input_file_name)[0]
-            output_file_name = f"{file_base}{out_ext}"
+            output_file_name = f"{file_base}{out_ext}.nc"
             print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
             fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
@@ -1502,7 +1502,7 @@ def main():
             print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
 
             file_base = os.path.splitext(input_file_name)[0]
-            output_file_name = f"{file_base}{out_ext}"
+            output_file_name = f"{file_base}{out_ext}.nc"
             print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
             fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
@@ -1659,7 +1659,7 @@ def main():
             print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
 
             file_base = os.path.splitext(input_file_name)[0]
-            output_file_name = f"{file_base}{out_ext}"
+            output_file_name = f"{file_base}{out_ext}.nc"
             print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
             f_in = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
@@ -1715,7 +1715,7 @@ def main():
             print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
 
             file_base = os.path.splitext(input_file_name)[0]
-            output_file_name = f"{file_base}{out_ext}"
+            output_file_name = f"{file_base}{out_ext}.nc"
             print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
             fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
