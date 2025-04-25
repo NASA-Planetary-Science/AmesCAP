@@ -778,70 +778,52 @@ def split_files(file_list, split_dim):
     file_date, file_base = file_name.split('.', 1)
     if split_dim == 'time':
         if len(np.atleast_1d(bounds)) < 2:
-            output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_nearest_sol{int(bounds_in[0]):03d}.nc")
-            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+            out_name = (f"{int(time_dim):05d}.{file_base}_nearest_sol{int(bounds_in[0]):03d}.nc")
         else:
-            output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_sol{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
-            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+            out_name = (f"{int(time_dim):05d}.{file_base}_sol{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
     elif split_dim =='areo':
         if len(np.atleast_1d(bounds)) < 2:
-            output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_nearest_Ls{int(bounds_in[0]):03d}.nc")
-            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+            out_name = (f"{int(time_dim):05d}.{file_base}_nearest_Ls{int(bounds_in[0]):03d}.nc")
         else:
-            output_file_name = os.path.join(base_path, f"{int(time_dim):05d}.{file_base}_Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
-            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+            out_name = (f"{int(time_dim):05d}.{file_base}_Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
         split_dim = 'time'
     elif split_dim == 'lat':
-        new_bounds = [
-            f"{abs(int(b))}S" if b < 0 
-            else f"{int(b)}N" 
-            for b in bounds
-            ]
+        new_bounds = [f"{abs(int(b))}S" if b < 0 
+                      else f"{int(b)}N" for b in bounds]
         if len(np.atleast_1d(bounds)) < 2:
-            output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_nearest_{split_dim}_{new_bounds[0]}.nc")
+            out_name = (f"{original_date}.{file_base}_nearest_{split_dim}_{new_bounds[0]}.nc")
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
-            output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_{new_bounds[0]}_{new_bounds[1]}.nc")
-            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+            out_name = (f"{original_date}.{file_base}_{split_dim}_{new_bounds[0]}_{new_bounds[1]}.nc")
     elif split_dim == interp_type:
         if interp_type == 'pfull':
-            new_bounds = [
-                f"{abs(int(b*100))}Pa" if b < 1 
-                else f"{int(b)}{unt_txt} "
-                for b in bounds
-                ]
+            new_bounds = [f"{abs(int(b*100))}Pa" if b < 1 
+                          else f"{int(b)}{unt_txt} " for b in bounds]
         elif interp_type == 'pstd':
-            new_bounds = [
-                f"{abs(int(b*100))}hPa" if b < 1 
-                else f"{int(b)}{unt_txt}"
-                for b in bounds
-                ]
+            new_bounds = [f"{abs(int(b*100))}hPa" if b < 1 
+                          else f"{int(b)}{unt_txt}" for b in bounds]
         else:
             new_bounds = [f"{int(b)}{unt_txt}" for b in bounds]
             
         if len(np.atleast_1d(bounds)) < 2:
             print(f"{Yellow}bounds = {bounds[0]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]}")
-            output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_nearest_{new_bounds[0]}.nc")
+            out_name = (f"{original_date}.{file_base}_{split_dim}_nearest_{new_bounds[0]}.nc")
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
-            output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_{new_bounds[0]}_{new_bounds[1]}.nc")
-            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+            out_name = (f"{original_date}.{file_base}_{split_dim}_{new_bounds[0]}_{new_bounds[1]}.nc")
     else:
         if len(np.atleast_1d(bounds)) < 2:
-            output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_nearest_{split_dim}_{int(bounds[0]):03d}.nc")
-            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+            out_name = (f"{original_date}.{file_base}_nearest_{split_dim}_{int(bounds[0]):03d}.nc")
         else:
-            output_file_name = os.path.join(base_path, f"{original_date}.{file_base}_{split_dim}_{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
-            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+            out_name = (f"{original_date}.{file_base}_{split_dim}_{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
 
     # Append extension, if any:
-    output_file_name = (f"{os.path.basename(output_file_name)}{out_ext}")
+    output_file_name = os.path.join(base_path, out_name)
     print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
-    print(f"{Cyan}new filename = {output_file_name}")
     Log = Ncdf(output_file_name)
 
     Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim=[split_dim])
