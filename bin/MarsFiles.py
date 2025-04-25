@@ -1095,10 +1095,15 @@ def main():
     # Make a list of input files including the full path to the dir
     full_file_list = []
     for file in file_list:
-        if not ("/" in file):
-            full_file_list.append(f"{data_dir}/{file}")
+        if os.path.dirname(file) == "":
+            full_file_list = file
         else:
-            full_file_list.append(f"{file}")
+            full_file_list = os.path.join(data_dir, file)
+        print(f"{Yellow}full_file_list = {full_file_list}{Nclr}\n\n")
+        # if not ("/" in file):
+        #     full_file_list.append(f"{data_dir}/{file}")
+        # else:
+        #     full_file_list.append(f"{file}")
 
     if args.bin_files and args.concatenate:
         print(
@@ -1636,9 +1641,17 @@ def main():
     elif args.regrid_XY_to_match:
         name_target = args.regrid_XY_to_match[0]
 
+        if os.path.isabs(name_target):
+            # Use the path as-is if it's already an absolute path
+            name_target = os.path.normpath(name_target)
+        else:
+            # If it's a relative path, join with data_dir
+            name_target = os.path.normpath(os.path.join(data_dir, name_target))
+        print(f"{Yellow}name_target = {name_target}{Nclr}\n\n")
+            
         # Add path unless full path is provided
-        if not ("/" in name_target):
-            name_target = f"{data_dir}/{name_target}"
+        # if not ("/" in name_target):
+        #     name_target = f"{data_dir}/{name_target}"
         fNcdf_t = Dataset(name_target, "r")
 
         for file in file_list:
