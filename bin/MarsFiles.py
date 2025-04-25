@@ -65,7 +65,7 @@ from amescap.FV3_utils import (
 )
 from amescap.Script_utils import (
     find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile,
-    get_longname_unit, extract_path_basename, check_bounds
+    get_longname_unit, check_bounds
 )
 
 # ------------------------------------------------------
@@ -952,8 +952,10 @@ def process_time_shift(file_list):
             input_file_name = file.name  # Get the name attribute of the file object
         else:
             input_file_name = file  # In case it's already a string
-            
-        output_file_name = (f"{os.path.basename(input_file_name)}{out_ext}.nc")
+        
+        file_name = os.path.splitext(input_file_name)[0]
+        base_path = os.path.dirname(input_file_name)
+        output_file_name = os.path.join(base_path, f"{file_name}{out_ext}")
         print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
         fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
@@ -980,7 +982,7 @@ def process_time_shift(file_list):
             fnew.copy_Ncaxis_with_content(fdiurn.variables[zaxis])
 
         # Take care of TOD dimension in new file
-        tod_orig = np.array(fdiurn.variables[tod_name_in])
+        tod_orig = np.array(fdiurn.variables[tod_name_in][:])
 
         if target_list is None:
             # If user does not specify which TOD(s) to do, do all 24
@@ -1028,7 +1030,7 @@ def process_time_shift(file_list):
 
         # Read in 4D field(s) and do the time shift. Exclude vars
         # not listed after --include in var_list
-        lons = np.array(fdiurn.variables["lon"])
+        lons = np.array(fdiurn.variables["lon"][:])
         var_list = filter_vars(fdiurn, args.include)
 
         for var in var_list:
