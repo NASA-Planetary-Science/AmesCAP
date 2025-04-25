@@ -673,15 +673,22 @@ def split_files(file_list, split_dim):
         exit()
 
     # Use os.path.join for platform-independent path handling
-    if os.path.dirname(file) == "":
-        input_file_name = file
-    else:
-        input_file_name = os.path.join(data_dir, file)
-    print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
+    for file in file_list:
+        # Get the file name from the file object
+        if hasattr(file, 'name'):
+            input_file_name = file.name  # Get the name attribute of the file object
+        else:
+            input_file_name = file  # In case it's already a string
+        # if os.path.dirname(file) == "":
+        #     input_file_name = file
+        # else:
+        #     input_file_name = os.path.join(data_dir, file)
+            
+    print(f"{Yellow}split input_file_name = {input_file_name}{Nclr}\n\n")
 
     file_base = os.path.splitext(input_file_name)[0]
     output_file_name = f"{file_base}{out_ext}.nc"
-    print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+    print(f"{Cyan}split output_file_name = {output_file_name}{Nclr}")
             
     original_date = os.path.basename(os.path.splitext(input_file_name)[0])
 
