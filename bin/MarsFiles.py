@@ -953,10 +953,14 @@ def process_time_shift(file_list):
         else:
             input_file_name = file  # In case it's already a string
         
+        file_base = os.path.splitext(input_file_name)[0]
+        output_file_name = f"{file_base}{out_ext}.nc"
+        print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+        
         file_name = os.path.splitext(input_file_name)[0]
         base_path = os.path.dirname(input_file_name)
-        output_file_name = os.path.join(base_path, f"{file_name}{out_ext}")
-        print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+        output_file_name2 = os.path.join(base_path, f"{file_name}{out_ext}")
+        print(f"{Cyan}output_file_name2 = {output_file_name2}{Nclr}")
 
         fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
         # Define a netcdf object from the netcdf wrapper module
