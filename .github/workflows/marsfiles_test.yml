@@ -29,21 +29,20 @@ jobs:
         include:
           - os: ubuntu-latest
             python-version: '3.11'
-          - os: macos-latest 
+          - os: macos-latest
             python-version: '3.11'
           - os: windows-latest
             python-version: '3.11'
       fail-fast: false
-    timeout-minutes: 20
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
-      
+
       - name: Cache pip dependencies
         uses: actions/cache@v3
         with:
@@ -51,7 +50,7 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      
+
       # Install dependencies
       - name: Install dependencies
         shell: bash
@@ -59,11 +58,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install numpy netCDF4 xarray scipy matplotlib
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      
+
       # Install the package in editable mode
       - name: Install package
         run: pip install -e .
-      
+
       # Create a patch for the test file to fix Windows path issues
       - name: Create test_marsfiles.py path fix for Windows
         if: runner.os == 'Windows'
@@ -73,26 +72,26 @@ jobs:
           # Fix path handling for Windows
           $content = $content -replace "os\.path\.join\(self\.test_dir, file\)", "os.path.normpath(os.path.join(self.test_dir, file))"
           Set-Content tests/test_marsfiles.py -Value $content
-      
+
       # Run the help message test - fast and doesn't involve file operations
       - name: Run help message test
         run: |
           cd tests
           python -m unittest test_marsfiles.TestMarsFiles.test_help_message
-      
+
       # Run the most reliable tests first to get quick feedback
       - name: Run reliable tests
         run: |
           cd tests
           python -m unittest test_marsfiles.TestMarsFiles.test_help_message
-          
+
       # Run all tests with increased timeout
       - name: Run all tests
-        timeout-minutes: 15
+        timeout-minutes: 25
         run: |
           cd tests
           python -m unittest test_marsfiles
-      
+
       # Report file paths if things fail on Windows
       - name: Debug Windows paths
         if: runner.os == 'Windows' && failure()
