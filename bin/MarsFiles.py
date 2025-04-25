@@ -679,10 +679,6 @@ def split_files(file_list, split_dim):
             input_file_name = file.name  # Get the name attribute of the file object
         else:
             input_file_name = file  # In case it's already a string
-        # if os.path.dirname(file) == "":
-        #     input_file_name = file
-        # else:
-        #     input_file_name = os.path.join(data_dir, file)
             
     print(f"{Yellow}split input_file_name = {input_file_name}{Nclr}\n\n")
 
@@ -777,6 +773,12 @@ def split_files(file_list, split_dim):
     if split_dim in ('time', 'areo'):
         time_dim = (np.squeeze(fNcdf.variables['time'][:]))[indices]
         print(f"time_dim = {time_dim}")
+        
+        # If time_dim is an array with multiple values, use the first one for naming
+        if hasattr(time_dim, '__len__') and len(time_dim) > 1:
+            time_value = time_dim[0]  # Use the first time value for the filename
+        else:
+            time_value = time_dim  # Use as is if it's a scalar
 
     # For maintaining the 00000.atmos_average.nc format:
     base_path = os.path.dirname(input_file_name)
@@ -785,14 +787,14 @@ def split_files(file_list, split_dim):
     file_date, file_base = file_name.split('.', 1)
     if split_dim == 'time':
         if len(np.atleast_1d(bounds)) < 2:
-            out_name = (f"{int(time_dim):05d}.{file_base}_nearest_sol{int(bounds_in[0]):03d}.nc")
+            out_name = (f"{int(time_value):05d}.{file_base}_nearest_sol{int(bounds_in[0]):03d}.nc")
         else:
-            out_name = (f"{int(time_dim):05d}.{file_base}_sol{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
+            out_name = (f"{int(time_value):05d}.{file_base}_sol{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
     elif split_dim =='areo':
         if len(np.atleast_1d(bounds)) < 2:
-            out_name = (f"{int(time_dim):05d}.{file_base}_nearest_Ls{int(bounds_in[0]):03d}.nc")
+            out_name = (f"{int(time_value):05d}.{file_base}_nearest_Ls{int(bounds_in[0]):03d}.nc")
         else:
-            out_name = (f"{int(time_dim):05d}.{file_base}_Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
+            out_name = (f"{int(time_value):05d}.{file_base}_Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
         split_dim = 'time'
     elif split_dim == 'lat':
         new_bounds = [f"{abs(int(b))}S" if b < 0 
@@ -951,7 +953,7 @@ def process_time_shift(file_list):
         else:
             input_file_name = file  # In case it's already a string
             
-        output_file_name = (f"{os.path.basename(input_file_name)}{out_ext}")
+        output_file_name = (f"{os.path.basename(input_file_name)}{out_ext}.nc")
         print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
 
         fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
