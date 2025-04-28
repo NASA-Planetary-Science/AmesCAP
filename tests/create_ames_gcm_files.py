@@ -7,6 +7,7 @@ in the mgcm_contents.txt file.
 
 import numpy as np
 from netCDF4 import Dataset
+import sys
 import os
 
 def create_mgcm_fixed():
@@ -162,12 +163,18 @@ def create_mgcm_fixed():
     nc_file.close()
     print("Created 01336.fixed.nc")
 
-def create_mgcm_atmos_average():
+def create_mgcm_atmos_average(short=False):
     """Create atmos_average.nc with the exact variables and structure as specified."""
     nc_file = Dataset('01336.atmos_average.nc', 'w', format='NETCDF4')
-    
+
+    # Shorten file length if wanted
+    if short:
+        len_time = 2
+    else:
+        len_time = 133
+
     # Define dimensions
-    time_dim = nc_file.createDimension('time', 133)
+    time_dim = nc_file.createDimension('time', len_time)
     lat_dim = nc_file.createDimension('lat', 48)
     lon_dim = nc_file.createDimension('lon', 96)
     pfull_dim = nc_file.createDimension('pfull', 30)
@@ -180,7 +187,7 @@ def create_mgcm_atmos_average():
     time_var = nc_file.createVariable('time', 'f4', ('time',))
     time_var.long_name = 'time'
     time_var.units = 'days'
-    time_var[:] = np.linspace(1338.5, 1998.5, 133)
+    time_var[:] = np.linspace(1338.5, 1998.5, len_time)
     
     lat_var = nc_file.createVariable('lat', 'f4', ('lat',))
     lat_var.long_name = 'latitude'
@@ -264,64 +271,70 @@ def create_mgcm_atmos_average():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_vals = np.linspace(722.2, 1076.5, 133)
-    areo_data = np.zeros((133, 1))  # Create a 2D array with shape (133, 1)
-    for i in range(133):
+    areo_vals = np.linspace(722.2, 1076.5, len_time)
+    areo_data = np.zeros((len_time, 1))  # Create a 2D array with shape (len_time, 1)
+    for i in range(len_time):
         areo_data[i, 0] = areo_vals[i]
     areo_var[:] = areo_data
     
     cldcol_var = nc_file.createVariable('cldcol', 'f4', ('time', 'lat', 'lon'))
     cldcol_var.long_name = 'ice column'
-    cldcol_var[:] = np.random.uniform(1.2e-11, 4.1e-02, size=(133, 48, 96))
+    cldcol_var[:] = np.random.uniform(1.2e-11, 4.1e-02, size=(len_time, 48, 96))
     
     dst_mass_micro_var = nc_file.createVariable('dst_mass_micro', 'f4', ('time', 'pfull', 'lat', 'lon'))
     dst_mass_micro_var.long_name = 'dust_mass'
-    dst_mass_micro_var[:] = np.random.uniform(1.5e-17, 2.5e-04, size=(133, 30, 48, 96))
+    dst_mass_micro_var[:] = np.random.uniform(1.5e-17, 2.5e-04, size=(len_time, 30, 48, 96))
     
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
     ps_var.units = 'Pa'
-    ps_var[:] = np.random.uniform(176.8, 1318.8, size=(133, 48, 96))
+    ps_var[:] = np.random.uniform(176.8, 1318.8, size=(len_time, 48, 96))
     
     r_var = nc_file.createVariable('r', 'f4', ('time', 'pfull', 'lat', 'lon'))
     r_var.long_name = 'specific humidity'
     r_var.units = 'kg/kg'
-    r_var[:] = np.random.uniform(8.6e-13, 3.4e-03, size=(133, 30, 48, 96))
+    r_var[:] = np.random.uniform(8.6e-13, 3.4e-03, size=(len_time, 30, 48, 96))
     
     taudust_IR_var = nc_file.createVariable('taudust_IR', 'f4', ('time', 'lat', 'lon'))
     taudust_IR_var.long_name = 'Dust opacity IR'
     taudust_IR_var.units = 'op'
-    taudust_IR_var[:] = np.random.uniform(0.0, 0.5, size=(133, 48, 96))
+    taudust_IR_var[:] = np.random.uniform(0.0, 0.5, size=(len_time, 48, 96))
     
     temp_var = nc_file.createVariable('temp', 'f4', ('time', 'pfull', 'lat', 'lon'))
     temp_var.long_name = 'temperature'
     temp_var.units = 'K'
-    temp_var[:] = np.random.uniform(104.1, 258.8, size=(133, 30, 48, 96))
+    temp_var[:] = np.random.uniform(104.1, 258.8, size=(len_time, 30, 48, 96))
     
     ts_var = nc_file.createVariable('ts', 'f4', ('time', 'lat', 'lon'))
     ts_var.long_name = 'Surface Temperature'
     ts_var.units = 'K'
-    ts_var[:] = np.random.uniform(143.4, 258.7, size=(133, 48, 96))
+    ts_var[:] = np.random.uniform(143.4, 258.7, size=(len_time, 48, 96))
     
     ucomp_var = nc_file.createVariable('ucomp', 'f4', ('time', 'pfull', 'lat', 'lon'))
     ucomp_var.long_name = 'zonal wind'
     ucomp_var.units = 'm/sec'
-    ucomp_var[:] = np.random.uniform(-268.7, 212.7, size=(133, 30, 48, 96))
+    ucomp_var[:] = np.random.uniform(-268.7, 212.7, size=(len_time, 30, 48, 96))
     
     vcomp_var = nc_file.createVariable('vcomp', 'f4', ('time', 'pfull', 'lat', 'lon'))
     vcomp_var.long_name = 'meridional wind'
     vcomp_var.units = 'm/sec'
-    vcomp_var[:] = np.random.uniform(-97.5, 109.6, size=(133, 30, 48, 96))
+    vcomp_var[:] = np.random.uniform(-97.5, 109.6, size=(len_time, 30, 48, 96))
     
     nc_file.close()
     print("Created 01336.atmos_average.nc")
 
-def create_mgcm_atmos_daily():
+def create_mgcm_atmos_daily(short=False):
     """Create atmos_daily.nc with the exact variables and structure as specified."""
     nc_file = Dataset('01336.atmos_daily.nc', 'w', format='NETCDF4')
-    
+
+    # Shorten file length if wanted
+    if short:
+        len_time = 2
+    else:
+        len_time = 2672
+
     # Define dimensions
-    time_dim = nc_file.createDimension('time', 2672)
+    time_dim = nc_file.createDimension('time', len_time)
     lat_dim = nc_file.createDimension('lat', 48)
     lon_dim = nc_file.createDimension('lon', 96)
     pfull_dim = nc_file.createDimension('pfull', 30)
@@ -331,7 +344,7 @@ def create_mgcm_atmos_daily():
     time_var = nc_file.createVariable('time', 'f4', ('time',))
     time_var.long_name = 'time'
     time_var.units = 'days'
-    time_var[:] = np.linspace(1336.2, 2004.0, 2672)
+    time_var[:] = np.linspace(1336.2, 2004.0, len_time)
     
     lat_var = nc_file.createVariable('lat', 'f4', ('lat',))
     lat_var.long_name = 'latitude'
@@ -379,31 +392,37 @@ def create_mgcm_atmos_daily():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_vals = np.linspace(720.3, 1079.8, 2672)
-    areo_data = np.zeros((2672, 1))  # Create a 2D array with shape (133, 1)
-    for i in range(2672):
+    areo_vals = np.linspace(720.3, 1079.8, len_time)
+    areo_data = np.zeros((len_time, 1))  # Create a 2D array with shape (133, 1)
+    for i in range(len_time):
         areo_data[i, 0] = areo_vals[i]
     areo_var[:] = areo_data
     
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
     ps_var.units = 'Pa'
-    ps_var[:] = np.random.uniform(170.3, 1340.2, size=(2672, 48, 96))
+    ps_var[:] = np.random.uniform(170.3, 1340.2, size=(len_time, 48, 96))
     
     temp_var = nc_file.createVariable('temp', 'f4', ('time', 'pfull', 'lat', 'lon'))
     temp_var.long_name = 'temperature'
     temp_var.units = 'K'
-    temp_var[:] = np.random.uniform(101.6, 283.9, size=(2672, 30, 48, 96))
+    temp_var[:] = np.random.uniform(101.6, 283.9, size=(len_time, 30, 48, 96))
     
     nc_file.close()
     print("Created 01336.atmos_daily.nc")
 
-def create_mgcm_atmos_average_pstd():
+def create_mgcm_atmos_average_pstd(short=False):
     """Create atmos_average_pstd.nc with the exact variables and structure as specified."""
     nc_file = Dataset('01336.atmos_average_pstd.nc', 'w', format='NETCDF4')
+
+    # Shorten file length if wanted
+    if short:
+        len_time = 2
+    else:
+        len_time = 133
     
     # Define dimensions
-    time_dim = nc_file.createDimension('time', 133)
+    time_dim = nc_file.createDimension('time', len_time)
     pstd_dim = nc_file.createDimension('pstd', 44)
     lat_dim = nc_file.createDimension('lat', 48)
     lon_dim = nc_file.createDimension('lon', 96)
@@ -449,7 +468,7 @@ def create_mgcm_atmos_average_pstd():
     time_var = nc_file.createVariable('time', 'f4', ('time',))
     time_var.long_name = 'time'
     time_var.units = 'days'
-    time_var[:] = np.linspace(1338.5, 1998.5, 133)
+    time_var[:] = np.linspace(1338.5, 1998.5, len_time)
     
     scalar_axis_var = nc_file.createVariable('scalar_axis', 'f4', ('scalar_axis',))
     scalar_axis_var.long_name = 'none'
@@ -459,64 +478,70 @@ def create_mgcm_atmos_average_pstd():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_vals = np.linspace(723.7, 1076.9, 133)
-    areo_data = np.zeros((133, 1))  # Create a 2D array with shape (133, 1)
-    for i in range(133):
+    areo_vals = np.linspace(723.7, 1076.9, len_time)
+    areo_data = np.zeros((len_time, 1))  # Create a 2D array with shape (len_time, 1)
+    for i in range(len_time):
         areo_data[i, 0] = areo_vals[i]
     areo_var[:] = areo_data
     
     cldcol_var = nc_file.createVariable('cldcol', 'f4', ('time', 'lat', 'lon'))
     cldcol_var.long_name = 'ice column'
-    cldcol_var[:] = np.random.uniform(1.2e-11, 4.1e-02, size=(133, 48, 96))
+    cldcol_var[:] = np.random.uniform(1.2e-11, 4.1e-02, size=(len_time, 48, 96))
     
     dst_mass_micro_var = nc_file.createVariable('dst_mass_micro', 'f4', ('time', 'pstd', 'lat', 'lon'))
     dst_mass_micro_var.long_name = 'dust_mass'
-    dst_mass_micro_var[:] = np.random.uniform(2.5e-16, 2.0e-04, size=(133, 44, 48, 96))
+    dst_mass_micro_var[:] = np.random.uniform(2.5e-16, 2.0e-04, size=(len_time, 44, 48, 96))
     
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
     ps_var.units = 'Pa'
-    ps_var[:] = np.random.uniform(176.8, 1318.8, size=(133, 48, 96))
+    ps_var[:] = np.random.uniform(176.8, 1318.8, size=(len_time, 48, 96))
     
     r_var = nc_file.createVariable('r', 'f4', ('time', 'pstd', 'lat', 'lon'))
     r_var.long_name = 'specific humidity'
     r_var.units = 'kg/kg'
-    r_var[:] = np.random.uniform(9.2e-13, 3.4e-03, size=(133, 44, 48, 96))
+    r_var[:] = np.random.uniform(9.2e-13, 3.4e-03, size=(len_time, 44, 48, 96))
     
     taudust_IR_var = nc_file.createVariable('taudust_IR', 'f4', ('time', 'lat', 'lon'))
     taudust_IR_var.long_name = 'Dust opacity IR'
     taudust_IR_var.units = 'op'
-    taudust_IR_var[:] = np.random.uniform(0.0, 0.5, size=(133, 48, 96))
+    taudust_IR_var[:] = np.random.uniform(0.0, 0.5, size=(len_time, 48, 96))
     
     temp_var = nc_file.createVariable('temp', 'f4', ('time', 'pstd', 'lat', 'lon'))
     temp_var.long_name = 'temperature'
     temp_var.units = 'K'
-    temp_var[:] = np.random.uniform(104.8, 258.5, size=(133, 44, 48, 96))
+    temp_var[:] = np.random.uniform(104.8, 258.5, size=(len_time, 44, 48, 96))
     
     ts_var = nc_file.createVariable('ts', 'f4', ('time', 'lat', 'lon'))
     ts_var.long_name = 'Surface Temperature'
     ts_var.units = 'K'
-    ts_var[:] = np.random.uniform(143.4, 258.7, size=(133, 48, 96))
+    ts_var[:] = np.random.uniform(143.4, 258.7, size=(len_time, 48, 96))
     
     ucomp_var = nc_file.createVariable('ucomp', 'f4', ('time', 'pstd', 'lat', 'lon'))
     ucomp_var.long_name = 'zonal wind'
     ucomp_var.units = 'm/sec'
-    ucomp_var[:] = np.random.uniform(-258.5, 209.6, size=(133, 44, 48, 96))
+    ucomp_var[:] = np.random.uniform(-258.5, 209.6, size=(len_time, 44, 48, 96))
     
     vcomp_var = nc_file.createVariable('vcomp', 'f4', ('time', 'pstd', 'lat', 'lon'))
     vcomp_var.long_name = 'meridional wind'
     vcomp_var.units = 'm/sec'
-    vcomp_var[:] = np.random.uniform(-94.7, 108.6, size=(133, 44, 48, 96))
+    vcomp_var[:] = np.random.uniform(-94.7, 108.6, size=(len_time, 44, 48, 96))
     
     nc_file.close()
     print("Created 01336.atmos_average_pstd.nc")
 
-def create_mgcm_atmos_diurn_pstd():
+def create_mgcm_atmos_diurn_pstd(short=False):
     """Create atmos_diurn_pstd.nc with the exact variables and structure as specified."""
     nc_file = Dataset('01336.atmos_diurn_pstd.nc', 'w', format='NETCDF4')
+
+    # Shorten file length if wanted
+    if short:
+        len_time = 2
+    else:
+        len_time = 133
     
     # Define dimensions
-    time_dim = nc_file.createDimension('time', 133)
+    time_dim = nc_file.createDimension('time', len_time)
     time_of_day_24_dim = nc_file.createDimension('time_of_day_24', 24)
     lat_dim = nc_file.createDimension('lat', 48)
     lon_dim = nc_file.createDimension('lon', 96)
@@ -526,7 +551,7 @@ def create_mgcm_atmos_diurn_pstd():
     time_var = nc_file.createVariable('time', 'f4', ('time',))
     time_var.long_name = 'time'
     time_var.units = 'days'
-    time_var[:] = np.linspace(1338.5, 1998.5, 133)
+    time_var[:] = np.linspace(1338.5, 1998.5, len_time)
     
     time_of_day_24_var = nc_file.createVariable('time_of_day_24', 'f4', ('time_of_day_24',))
     time_of_day_24_var.long_name = 'time of day'
@@ -570,13 +595,13 @@ def create_mgcm_atmos_diurn_pstd():
     areo_var.units = 'degrees'
     
     # Create base values for areo dimension
-    areo_base = np.linspace(721.2, 1077.3, 133)
+    areo_base = np.linspace(721.2, 1077.3, len_time)
 
-    # Create 3D array with shape (133, 24, 1)
-    areo_data = np.zeros((133, 24, 1))
+    # Create 3D array with shape (len_time, 24, 1)
+    areo_data = np.zeros((len_time, 24, 1))
 
     # Fill array with increasing values
-    for t in range(133):
+    for t in range(len_time):
         # Base value for this areo
         base_val = areo_base[t]
         
@@ -593,17 +618,23 @@ def create_mgcm_atmos_diurn_pstd():
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'time_of_day_24', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
     ps_var.units = 'Pa'
-    ps_var[:] = np.random.uniform(167.9, 1338.7, size=(133, 24, 48, 96))
+    ps_var[:] = np.random.uniform(167.9, 1338.7, size=(len_time, 24, 48, 96))
     
     nc_file.close()
     print("Created 01336.atmos_diurn_pstd.nc")
 
-def create_mgcm_atmos_diurn():
+def create_mgcm_atmos_diurn(short=False):
     """Create atmos_diurn.nc with the exact variables and structure as specified."""
     nc_file = Dataset('01336.atmos_diurn.nc', 'w', format='NETCDF4')
+
+    # Shorten file length if wanted
+    if short:
+        len_time = 2
+    else:
+        len_time = 133
     
     # Define dimensions
-    time_dim = nc_file.createDimension('time', 133)
+    time_dim = nc_file.createDimension('time', len_time)
     time_of_day_24_dim = nc_file.createDimension('time_of_day_24', 24)
     pfull_dim = nc_file.createDimension('pfull', 30)
     lat_dim = nc_file.createDimension('lat', 48)
@@ -614,7 +645,7 @@ def create_mgcm_atmos_diurn():
     time_var = nc_file.createVariable('time', 'f4', ('time',))
     time_var.long_name = 'time'
     time_var.units = 'days'
-    time_var[:] = np.linspace(1338.5, 1998.5, 133)
+    time_var[:] = np.linspace(1338.5, 1998.5, len_time)
     
     time_of_day_24_var = nc_file.createVariable('time_of_day_24', 'f4', ('time_of_day_24',))
     time_of_day_24_var.long_name = 'time of day'
@@ -670,13 +701,13 @@ def create_mgcm_atmos_diurn():
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
     # Create base values for areo dimension
-    areo_base = np.linspace(721.2, 1077.3, 133)
+    areo_base = np.linspace(721.2, 1077.3, len_time)
 
-    # Create 3D array with shape (133, 24, 1)
-    areo_data = np.zeros((133, 24, 1))
+    # Create 3D array with shape (len_time, 24, 1)
+    areo_data = np.zeros((len_time, 24, 1))
 
     # Fill array with increasing values
-    for t in range(133):
+    for t in range(len_time):
         # Base value for this areo
         base_val = areo_base[t]
         
@@ -693,22 +724,28 @@ def create_mgcm_atmos_diurn():
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'time_of_day_24', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
     ps_var.units = 'Pa'
-    ps_var[:] = np.random.uniform(167.9, 1338.7, size=(133, 24, 48, 96))
+    ps_var[:] = np.random.uniform(167.9, 1338.7, size=(len_time, 24, 48, 96))
     
     temp_var = nc_file.createVariable('temp', 'f4', ('time', 'time_of_day_24', 'pfull', 'lat', 'lon'))
     temp_var.long_name = 'temperature'
     temp_var.units = 'K'
-    temp_var[:] = np.random.uniform(101.6, 286.5, size=(133, 24, 30, 48, 96))
+    temp_var[:] = np.random.uniform(101.6, 286.5, size=(len_time, 24, 30, 48, 96))
     
     nc_file.close()
     print("Created 01336.atmos_diurn.nc")
 
-def create_mgcm_atmos_average_pstd_c48():
+def create_mgcm_atmos_average_pstd_c48(short=False):
     """Create atmos_average_pstd_c48.nc with the exact variables and structure as specified."""
     nc_file = Dataset('01336.atmos_average_pstd_c48.nc', 'w', format='NETCDF4')
+
+    # Shorten file length if wanted
+    if short:
+        len_time = 2
+    else:
+        len_time = 133
     
     # Define dimensions - note this file has different lat/lon dimensions
-    time_dim = nc_file.createDimension('time', 133)
+    time_dim = nc_file.createDimension('time', len_time)
     pstd_dim = nc_file.createDimension('pstd', 48)
     lat_dim = nc_file.createDimension('lat', 90)
     lon_dim = nc_file.createDimension('lon', 180)
@@ -761,7 +798,7 @@ def create_mgcm_atmos_average_pstd_c48():
     time_var = nc_file.createVariable('time', 'f4', ('time',))
     time_var.long_name = 'time'
     time_var.units = 'days'
-    time_var[:] = np.linspace(670.5, 1330.5, 133)
+    time_var[:] = np.linspace(670.5, 1330.5, len_time)
     
     scalar_axis_var = nc_file.createVariable('scalar_axis', 'f4', ('scalar_axis',))
     scalar_axis_var.long_name = 'none'
@@ -771,31 +808,38 @@ def create_mgcm_atmos_average_pstd_c48():
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_vals = np.linspace(362.1, 716.6, 133)
-    areo_data = np.zeros((133, 1))  # Create a 2D array with shape (133, 1)
-    for i in range(133):
+    areo_vals = np.linspace(362.1, 716.6, len_time)
+    areo_data = np.zeros((len_time, 1))  # Create a 2D array with shape (len_time, 1)
+    for i in range(len_time):
         areo_data[i, 0] = areo_vals[i]
     areo_var[:] = areo_data
     
     temp_var = nc_file.createVariable('temp', 'f4', ('time', 'pstd', 'lat', 'lon'))
     temp_var.long_name = 'temperature'
     temp_var.units = 'K'
-    temp_var[:] = np.random.uniform(106.9, 260.6, size=(133, 48, 90, 180))
+    temp_var[:] = np.random.uniform(106.9, 260.6, size=(len_time, 48, 90, 180))
     
     nc_file.close()
     print("Created 01336.atmos_average_pstd_c48.nc")
 
-def main():
+def main(short=False):
     """Main function to create all MGCM test files."""
+    if short:
+        print("Making short GCM files")
     create_mgcm_fixed()
-    create_mgcm_atmos_average()
-    create_mgcm_atmos_daily()
-    create_mgcm_atmos_average_pstd()
-    create_mgcm_atmos_diurn_pstd()
-    create_mgcm_atmos_diurn()
-    create_mgcm_atmos_average_pstd_c48()
+    create_mgcm_atmos_average(short)
+    create_mgcm_atmos_daily(short)
+    create_mgcm_atmos_average_pstd(short)
+    create_mgcm_atmos_diurn_pstd(short)
+    create_mgcm_atmos_diurn(short)
+    create_mgcm_atmos_average_pstd_c48(short)
     
     print("All MGCM test NetCDF files created successfully.")
 
 if __name__ == "__main__":
-    main()
+    short_flag = False
+    if len(sys.argv) > 1:
+        for arg in sys.argv:
+            if arg.lower() == "short":
+                short_flag = True
+    main(short=short_flag)
