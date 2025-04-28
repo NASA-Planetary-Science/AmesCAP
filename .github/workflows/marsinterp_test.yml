@@ -1,0 +1,101 @@
+name: MarsFiles Test Workflow
+# Cancel any in-progress job or previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+on:
+  # Trigger the workflow on push to devel branch
+  push:
+    branches: [ devel ]
+    paths:
+      - 'bin/MarsInterp.py'
+      - 'tests/test_marsinterp.py'
+      - '.github/workflows/marsinterp_test.yml'
+      - 'amescap/FV3_utils.py'
+  # Allow manual triggering of the workflow
+  workflow_dispatch:
+  # Trigger on pull requests that modify relevant files
+  pull_request:
+    branches: [ devel ]
+    paths:
+      - 'bin/MarsInterp.py'
+      - 'tests/test_marsinterp.py'
+      - '.github/workflows/marsinterp_test.yml'
+      - 'amescap/FV3_utils.py'
+jobs:
+  test:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: '3.11'
+          - os: macos-latest
+            python-version: '3.11'
+          - os: windows-latest
+            python-version: '3.11'
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # Install dependencies
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy netCDF4 xarray scipy matplotlib
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # Install the package in editable mode
+      - name: Install package
+        run: pip install -e .
+
+      # Create a patch for the test file to fix Windows path issues
+      - name: Create test_marsinterp.py path fix for Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $content = Get-Content tests/test_marsfiles.py -Raw
+          # Fix path handling for Windows
+          $content = $content -replace "os\.path\.join\(self\.test_dir, file\)", "os.path.normpath(os.path.join(self.test_dir, file))"
+          Set-Content tests/test_marsinterp.py -Value $content
+
+      # Run the help message test - fast and doesn't involve file operations
+      - name: Run help message test
+        run: |
+          cd tests
+          python -m unittest test_marsinterp.TestMarsInterp.test_help_message
+
+      # Run the most reliable tests first to get quick feedback
+      - name: Run reliable tests
+        run: |
+          cd tests
+          python -m unittest test_marsinterp.TestMarsInterp.test_help_message
+
+      # Run all tests with increased timeout
+      - name: Run all tests
+        timeout-minutes: 25
+        run: |
+          cd tests
+          python -m unittest test_marsinterp
+
+      # Report file paths if things fail on Windows
+      - name: Debug Windows paths
+        if: runner.os == 'Windows' && failure()
+        shell: pwsh
+        run: |
+          Write-Host "Current directory: $(Get-Location)"
+          Write-Host "Test directory contents: $(Get-ChildItem -Path tests)"
