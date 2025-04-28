@@ -505,14 +505,15 @@ class Fort(object):
 
         # Define dimensions
         for ivar in ["lat", "lon", "pfull", "phalf", "zgrid"]:
-            if ivar =="lon":
-                cart_ax="X"
-            if ivar =="lat":
-                cart_ax="Y"
+            if ivar == "lon":
+                cart_ax = "X"
+            if ivar == "lat":
+                cart_ax = "Y"
             if ivar in ["pfull", "phalf", "zgrid"]:
-                cart_ax="Z"
+                cart_ax = "Z"
             fort_var = self.variables[ivar]
-            Log.add_dim_with_content(dimension_name = ivar, DATAin = fort_var,
+            Log.add_dim_with_content(dimension_name = ivar, 
+                                     DATAin = fort_var,
                                      longname_txt = fort_var.long_name,
                                      units_txt = fort_var.units,
                                      cart_txt = cart_ax)
@@ -527,15 +528,20 @@ class Fort(object):
         time_in = self.variables["time"]
         time_out = daily_to_average(varIN = fort_var,
                                     dt_in = (time_in[1]-time_in[0]),
-                                    nday = day_average, trim = True)
-        Log.log_axis1D(variable_name = "time", DATAin = time_out,
-                       dim_name = "time", longname_txt = time_in.long_name,
-                       units_txt = time_in.units, cart_txt = "T")
+                                    nday = day_average, 
+                                    trim = True)
+        Log.log_axis1D(variable_name = "time", 
+                       DATAin = time_out,
+                       dim_name = "time", 
+                       longname_txt = time_in.long_name,
+                       units_txt = time_in.units, 
+                       cart_txt = "T")
 
         # Log static variables
         for ivar in ["pk", "bk"]:
             fort_var = self.variables[ivar]
-            Log.log_variable(variable_name = ivar, DATAin = fort_var,
+            Log.log_variable(variable_name = ivar, 
+                             DATAin = fort_var,
                              dim_array = fort_var.dimensions,
                              longname_txt = fort_var.long_name,
                              units_txt = fort_var.units)
@@ -546,8 +552,10 @@ class Fort(object):
                 fort_var = self.variables[ivar]
                 var_out = daily_to_average(varIN = fort_var,
                                            dt_in = (time_in[1]-time_in[0]),
-                                           nday = day_average, trim = True)
-                Log.log_variable(variable_name = ivar, DATAin = var_out,
+                                           nday = day_average, 
+                                           trim = True)
+                Log.log_variable(variable_name = ivar, 
+                                 DATAin = var_out,
                                  dim_array = fort_var.dimensions,
                                  longname_txt = fort_var.long_name,
                                  units_txt = fort_var.units)
@@ -570,7 +578,8 @@ class Fort(object):
             if ivar in ["pfull" , "phalf", "zgrid"]:
                 cart_ax="Z"
             fort_var=self.variables[ivar]
-            Log.add_dim_with_content(dimension_name = ivar, DATAin = fort_var,
+            Log.add_dim_with_content(dimension_name = ivar, 
+                                     DATAin = fort_var,
                                      longname_txt = fort_var.long_name,
                                      units_txt = fort_var.units,
                                      cart_txt = cart_ax)
