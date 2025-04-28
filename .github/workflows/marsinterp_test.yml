@@ -87,18 +87,6 @@ jobs:
           $content = $content -replace "os\.path\.join\(self\.test_dir, file\)", "os.path.normpath(os.path.join(self.test_dir, file))"
           Set-Content tests/test_marsinterp.py -Value $content
 
-      # Run the help message test - fast and doesn't involve file operations
-      - name: Run help message test
-        run: |
-          cd tests
-          python -m unittest test_marsinterp.TestMarsInterp.test_help_message
-
-      # Run the most reliable tests first to get quick feedback
-      - name: Run reliable tests
-        run: |
-          cd tests
-          python -m unittest test_marsinterp.TestMarsInterp.test_help_message
-
       # Run all tests with increased timeout
       - name: Run all tests
         timeout-minutes: 25
