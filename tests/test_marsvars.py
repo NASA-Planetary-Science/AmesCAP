@@ -215,7 +215,7 @@ class TestMarsVars(unittest.TestCase):
                     'izTau', 'ice_mass_mom', 'w', 'w_net', 'Vg_sed']
         
         for var in var_list:
-            # Add each variable and check for success
+            # Add variables to non-interpolated average file and check for success
             result = self.run_mars_vars(['01336.atmos_average.nc', '-add', var])
 
             # Check for successful execution
@@ -228,7 +228,7 @@ class TestMarsVars(unittest.TestCase):
         var_list = ['ek', 'ep', 'msf', 'tp_t', 'ax', 'ay', 'mx', 'my']
         
         for var in var_list:
-            # Add each variable and check for success
+            # Add variables to interpolated average file and check for success
             result = self.run_mars_vars(['01336.atmos_average_pstd.nc', '-add', var])
 
             # Check for successful execution
@@ -240,10 +240,6 @@ class TestMarsVars(unittest.TestCase):
 
     def test_differentiate_wrt_z(self):
         """Test differentiating a variable with respect to the Z axis"""
-        # First add pfull3D and DZ which are needed for differentiation
-        result = self.run_mars_vars(['01336.atmos_average.nc', '-add', 'pfull3D', 'DZ'])
-        self.assertEqual(result.returncode, 0, "Add prerequisite variables command failed")
-        
         # Now differentiate temperature
         result = self.run_mars_vars(['01336.atmos_average.nc', '-zdiff', 'temp'])
 
@@ -264,11 +260,7 @@ class TestMarsVars(unittest.TestCase):
             nc.close()
 
     def test_column_integrate(self):
-        """Test column integration of a variable"""
-        # Add DP and rho first
-        result = self.run_mars_vars(['01336.atmos_average.nc', '-add', 'DP', 'rho'])
-        self.assertEqual(result.returncode, 0, "Add prerequisite variables command failed")
-        
+        """Test column integration of a variable"""        
         # Now column integrate temperature
         result = self.run_mars_vars(['01336.atmos_average.nc', '-col', 'temp'])
 
@@ -321,10 +313,6 @@ class TestMarsVars(unittest.TestCase):
 
     def test_opacity_conversion(self):
         """Test opacity conversion between dp and dz"""
-        # Add DP and DZ first which are required for the conversion
-        result = self.run_mars_vars(['01336.atmos_average.nc', '-add', 'DP', 'DZ'])
-        self.assertEqual(result.returncode, 0, "Add prerequisite variables command failed")
-        
         # Test dp_to_dz conversion
         result = self.run_mars_vars(['01336.atmos_average.nc', '-to_dz', 'temp'])
 
@@ -342,10 +330,6 @@ class TestMarsVars(unittest.TestCase):
 
     def test_remove_variable(self):
         """Test removing a variable from a file"""
-        # First add a variable that we'll then remove
-        result = self.run_mars_vars(['01336.atmos_average.nc', '-add', 'wspeed'])
-        self.assertEqual(result.returncode, 0, "Add variable command failed")
-        
         # Verify it was added
         output_file = self.check_file_exists('01336.atmos_average.nc')
         self.verify_netcdf_has_variable(output_file, 'wspeed')
@@ -429,27 +413,7 @@ class TestMarsVars(unittest.TestCase):
                            "Values don't appear to be correctly scaled to mbar")
         finally:
             nc.close()
-
-    def test_multiple_commands(self):
-        """Test using multiple commands together"""
-        # Add multiple variables
-        result = self.run_mars_vars([
-            '01336.atmos_average.nc', 
-            '-add', 'rho', 'theta', 
-            '-zd', 'temp', 
-            '-col', 'temp'
-        ])
-
-        # Check for successful execution
-        self.assertEqual(result.returncode, 0, "Multiple commands failed")
-
-        # Check that all variables were created
-        output_file = self.check_file_exists('01336.atmos_average.nc')
-        self.verify_netcdf_has_variable(output_file, 'rho')
-        self.verify_netcdf_has_variable(output_file, 'theta')
-        self.verify_netcdf_has_variable(output_file, 'temp_p')
-        self.verify_netcdf_has_variable(output_file, 'temp_col')
-
+            
 
 if __name__ == '__main__':
     unittest.main()

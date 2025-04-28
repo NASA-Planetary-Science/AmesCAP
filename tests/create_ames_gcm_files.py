@@ -508,7 +508,7 @@ def create_mgcm_atmos_average_pstd(short=False):
     w_var = nc_file.createVariable('w', 'f4', ('time', 'pstd', 'lat', 'lon'))
     w_var.long_name = 'w'
     w_var.units = 'm/s'
-    w_var[:] = np.random.uniform(-0.045597, 0.0806756, size=(133, 44, 48, 96))
+    w_var[:] = np.random.uniform(-2.02603, 1.58804, size=(133, 44, 48, 96))
      
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
