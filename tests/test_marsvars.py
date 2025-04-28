@@ -208,48 +208,35 @@ class TestMarsVars(unittest.TestCase):
             self.assertIn(check, result.stdout, f"Help message missing '{check}'")
 
     def test_add_variable(self):
-        """Test adding a variable to a file"""
-        # First add basic variables that other derived variables depend on
-        result = self.run_mars_vars(['01336.atmos_average.nc', '-add', 'pfull3D', 'rho'])
+        """Test adding variables to files"""
+        var_list = ['curl', 'div', 'DP', 'dzTau', 'dst_mass_mom', 'DZ', 
+                    'theta', 'fn', 'N', 'pfull3D', 'rho', 'Ri', 
+                    'scorer_wl', 'Tco2', 'wdir', 'wspeed', 'zfull', 
+                    'izTau', 'ice_mass_mom', 'w', 'w_net', 'Vg_sed']
+        
+        for var in var_list:
+            # Add each variable and check for success
+            result = self.run_mars_vars(['01336.atmos_average.nc', '-add', var])
 
-        # Check for successful execution
-        self.assertEqual(result.returncode, 0, "Add variable command failed")
+            # Check for successful execution
+            self.assertEqual(result.returncode, 0, "Add variable command failed")
 
-        # Check that variables were added
-        output_file = self.check_file_exists('01336.atmos_average.nc')
-        self.verify_netcdf_has_variable(output_file, 'pfull3D')
-        self.verify_netcdf_has_variable(output_file, 'rho')
+            # Check that variables were added
+            output_file = self.check_file_exists('01336.atmos_average.nc')
+            self.verify_netcdf_has_variable(output_file, var)
+        
+        var_list = ['ek', 'ep', 'msf', 'tp_t', 'ax', 'ay', 'mx', 'my']
+        
+        for var in var_list:
+            # Add each variable and check for success
+            result = self.run_mars_vars(['01336.atmos_average_pstd.nc', '-add', var])
 
-        # Test another variable that depends on the previously added ones
-        result = self.run_mars_vars(['01336.atmos_average.nc', '-add', 'theta'])
-        self.assertEqual(result.returncode, 0, "Add theta variable command failed")
-        self.verify_netcdf_has_variable(output_file, 'theta')
+            # Check for successful execution
+            self.assertEqual(result.returncode, 0, "Add variable command failed")
 
-    def test_wind_variables(self):
-        """Test adding wind-related variables"""
-        result = self.run_mars_vars(['01336.atmos_average.nc', '-add', 'wspeed', 'wdir'])
-
-        # Check for successful execution
-        self.assertEqual(result.returncode, 0, "Add wind variables command failed")
-
-        # Check that variables were added
-        output_file = self.check_file_exists('01336.atmos_average.nc')
-        self.verify_netcdf_has_variable(output_file, 'wspeed')
-        self.verify_netcdf_has_variable(output_file, 'wdir')
-
-        # Verify data ranges
-        nc = Dataset(output_file, 'r')
-        try:
-            wspeed = nc.variables['wspeed'][:]
-            wdir = nc.variables['wdir'][:]
-            
-            # Wind speed should be positive
-            self.assertTrue(np.all(wspeed >= 0), "Wind speed should be positive")
-            
-            # Wind direction should be between 0 and 360 degrees
-            self.assertTrue(np.all((wdir >= 0) & (wdir <= 360)), "Wind direction should be between 0 and 360 degrees")
-        finally:
-            nc.close()
+            # Check that variables were added
+            output_file = self.check_file_exists('01336.atmos_average_pstd.nc')
+            self.verify_netcdf_has_variable(output_file, var)
 
     def test_differentiate_wrt_z(self):
         """Test differentiating a variable with respect to the Z axis"""

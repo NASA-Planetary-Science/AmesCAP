@@ -500,6 +500,16 @@ def create_mgcm_atmos_average_pstd(short=False):
     dst_mass_micro_var.long_name = 'dust_mass'
     dst_mass_micro_var[:] = np.random.uniform(2.5e-16, 2.0e-04, size=(len_time, 44, 48, 96))
     
+    omega_var = nc_file.createVariable('omega', 'f4', ('time', 'pstd', 'lat', 'lon'))
+    omega_var.long_name = 'vertical wind'
+    omega_var.units = 'Pa/s'
+    omega_var[:] = np.random.uniform(-0.045597, 0.0806756, size=(133, 44, 48, 96))
+    
+    w_var = nc_file.createVariable('w', 'f4', ('time', 'pstd', 'lat', 'lon'))
+    w_var.long_name = 'w'
+    w_var.units = 'm/s'
+    w_var[:] = np.random.uniform(-0.045597, 0.0806756, size=(133, 44, 48, 96))
+     
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
     ps_var.units = 'Pa'
