@@ -1,4 +1,4 @@
-name: MarsFiles Test Workflow
+name: MarsInterp Test Workflow
 # Cancel any in-progress job or previous runs
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -82,7 +82,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $content = Get-Content tests/test_marsfiles.py -Raw
+          $content = Get-Content tests/test_marsinterp.py -Raw
           # Fix path handling for Windows
           $content = $content -replace "os\.path\.join\(self\.test_dir, file\)", "os.path.normpath(os.path.join(self.test_dir, file))"
           Set-Content tests/test_marsinterp.py -Value $content
