@@ -737,7 +737,7 @@ Azimuthal projections accept optional arguments:
 Adjusting Figure Format and Size
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Change the output format with ``[-ftype --figure_filetype]``: choose between *pdf* (default, requires ghostscript), *png*, or *eps*
+- Change the output format with ``[-ftype --figure_filetype]``: choose between *pdf* (default), *png*, or *eps*
 - Adjust page width with ``[-pw --pixel_width]`` (default: 2000 pixels)
 - Switch to portrait orientation with ``[-portrait --portrait_mode]``
 

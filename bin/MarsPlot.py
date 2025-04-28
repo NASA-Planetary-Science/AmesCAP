@@ -183,8 +183,8 @@ parser.add_argument('-sy', '--stack_years', action='store_true',
 parser.add_argument('-ftype', '--figure_filetype', default=None,
     type=str, choices=['pdf', 'eps', 'png'],
     help=(
-        f"Output file format.\n Default is PDF if ghostscript (gs) is "
-        f"available, else PNG.\n Supported formats: PDF, EPS, PNG.\n"
+        f"Output file format.\n Default is PDF else PNG.\n"
+        f"Supported formats: PDF, EPS, PNG.\n"
         f"{Green}Example:\n"
         f"> MarsPlot Custom.in -ftype png"
         f"{Nclr}\n\n"
@@ -487,8 +487,8 @@ def main():
         progress(100, 100, "Done")
 
         # ============ For Multipage PDF ============
-        # Make multipage PDF out of figures in /plots using ghostscript
-        # (gs). Remove individual plots. Debug files when complete.
+        # Make multipage PDF out of figures in /plots. Remove individual 
+        # plots. Debug files when complete.
         if out_format == "pdf" and len(fig_list) > 0:
             print("Merging figures...")
             # Construct string of figure names separated by spaces
