@@ -2294,10 +2294,10 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
     if n_tod_in == 0:
         print('No time steps in input (time_shift_calc in FV3_utils.py)')
         exit()
-        
-    # Number of timesteps per day in input
-    n_tod_in = float(n_tod_in)
-
+    
+    # Store as float for calculations but keep integer version for reshaping
+    n_tod_in_float = float(n_tod_in)
+    
     tod = np.squeeze(tod)
 
     # Array dimensions for output
@@ -2311,13 +2311,14 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
     # time ``target_times``. If not, reshape the array into
     # ``[..., days, local time]``
     if dims_in[n_dims_in] != n_tod_in:
-        n_days = dims_in[n_dims_in] / n_tod_in
+        n_days = dims_in[n_dims_in] // n_tod_in  # Integer division
         if (n_days * n_tod_in) != dims_in[n_dims_in]:
             print("Time dimensions do not conform")
             return
 
-        var_in = np.reshape(var_in, (dims_in[0, n_dims_in - 1], n_tod_in, n_days))
-        dims_out = np.linspace(len(dims_in + 1), dtype = np.int32)
+        # Fix the incorrect indexing
+        var_in = np.reshape(var_in, (dims_in[0], dims_in[n_dims_in - 1], n_tod_in, n_days))
+        dims_out = np.linspace(len(dims_in) + 1, dtype=np.int32)
         dims_out[len(dims_in)-1] = len(dims_in)
         dims_out[len(dims_in)] = len(dims_in)-1
         var_in = np.transpose(var_in, dims_out)
@@ -2335,17 +2336,18 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
         # where ``combined_dims`` is the product of all dimensions
         # except first (lon) and last (time) = total # data points for
         # each longitude-time combination
-        combined_dims = np.prod(dims_in[1:len(dims_in)-1])
+        combined_dims = int(np.prod(dims_in[1:len(dims_in)-1]))  # Ensure integer
     else:
         combined_dims = 1
 
+    # Use integer n_tod_in for reshaping
     var_in = np.reshape(var_in, (n_lon, combined_dims, n_tod_in))
 
     # Create output array
     var_out = np.zeros((n_lon, combined_dims, n_tod_out))
 
     # Time increment of input data (in hours)
-    dt_in = 24.0 / n_tod_in
+    dt_in = 24.0 / n_tod_in_float  # Use float version for calculations
 
     # Time increment of output
     if target_times is None:
@@ -2389,11 +2391,11 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
         lower_idx = np.floor(dtt/dt_in) # time step before target local time
         fraction[:, n] = dtt - lower_idx*dt_in
         kk = np.where(lower_idx < 0.)
-        lower_idx[kk] = lower_idx[kk] + n_tod_in
+        lower_idx[kk] = lower_idx[kk] + n_tod_in_float  # Use float version
 
         upper_idx = lower_idx + 1. # time step after target local time
-        kk = np.where(upper_idx >= n_tod_in)
-        upper_idx[kk] = upper_idx[kk] - n_tod_in
+        kk = np.where(upper_idx >= n_tod_in_float)  # Use float version
+        upper_idx[kk] = upper_idx[kk] - n_tod_in_float  # Use float version
 
         # Store lower_idx and upper_idx for each lon point and output time
         lower_indices[:, n] = lower_idx[:]
@@ -2407,7 +2409,7 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
         # Number of output time levels
         for i in range(n_lon):
             # Number of longitudes
-            lower_idx = np.int32(lower_indices[i, n]) % 24
+            lower_idx = np.int32(lower_indices[i, n]) % n_tod_in  # Use modulo with integer n_tod_in
             upper_idx = np.int32(upper_indices[i, n])
             frac = fraction[i, n]
             # Interpolate between the two time levels
@@ -2417,7 +2419,7 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
                 )
 
     var_out = np.squeeze(var_out)
-    dims_out = np.zeros(len(dims_in), dtype = int)
+    dims_out = np.zeros(len(dims_in), dtype=int)
     for d in range(n_dims_in):
         dims_out[d] = dims_in[d]
     dims_out[n_dims_in] = n_tod_out
