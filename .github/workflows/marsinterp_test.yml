@@ -26,13 +26,8 @@ jobs:
   test:
     strategy:
       matrix:
-        include:
-          - os: ubuntu-latest
-            python-version: '3.11'
-          - os: macos-latest
-            python-version: '3.11'
-          - os: windows-latest
-            python-version: '3.11'
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.9', '3.10', '3.11']
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -62,6 +57,25 @@ jobs:
       # Install the package in editable mode
       - name: Install package
         run: pip install -e .
+
+      # Copy the profile file (Linux/macOS)
+      - name: Copy profile file (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          # Copy the profile file
+          cp mars_templates/amescap_profile ~/.amescap_profile
+        shell: bash
+      
+      # Copy the profile file (Windows)
+      - name: Copy profile file (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # Set home directory
+          $homeDir = $env:USERPROFILE
+
+          # Copy the profile file
+          Copy-Item -Path "mars_templates\amescap_profile" -Destination $homeDir -Force
+        shell: pwsh
 
       # Create a patch for the test file to fix Windows path issues
       - name: Create test_marsinterp.py path fix for Windows
