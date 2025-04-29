@@ -293,6 +293,11 @@ def create_mgcm_atmos_average(short=False):
     ice_mass_micro_var.long_name = 'ice_mass'
     ice_mass_micro_var[:] = np.random.uniform(-5.8e-34, 3.1e-03, size=(133, 30, 48, 96))
     
+    omega_var = nc_file.createVariable('omega', 'f4', ('time', 'pstd', 'lat', 'lon'))
+    omega_var.long_name = 'vertical wind'
+    omega_var.units = 'Pa/s'
+    omega_var[:] = np.random.uniform(-0.045597, 0.0806756, size=(133, 44, 48, 96))
+    
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
     ps_var.units = 'Pa'
