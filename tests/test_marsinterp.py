@@ -335,7 +335,7 @@ class TestMarsInterp(unittest.TestCase):
     def test_custom_extension(self):
         """Test creating output with a custom extension"""
         extension = "custom_test"
-        result = self.run_mars_interp(['01336.atmos_average.nc', '-ext', extension])
+        result = self.run_mars_interp(['01336.atmos_average.nc', '-ext', extension, '--debug'])
         
         # Check for successful execution
         self.assertIn("Completed in", result.stdout, "Missing completion message")
