@@ -1455,297 +1455,288 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
     # Now add the variables in the correct order
     for var in variables_to_add:
         try:
-            with Dataset(ifile, "a", format="NETCDF4_CLASSIC") as f:
-                # Skip if already in file (could have been added as a dependency)
-                if var in f.variables:
-                    print(f"{Yellow}Variable {var} is already in the file.{Nclr}")
-                    continue
+            f = Dataset(ifile, "a", format="NETCDF4_CLASSIC")
+            f_type, interp_type = FV3_file_type(f)
+            
+            print(f"Processing: {var}...")
+            
+            # Define lev_T and lev_T_out for this file - THIS IS THE CRITICAL FIX
+            if f_type == "diurn":
+                # [t, tod, lev, lat, lon]
+                # -> [lev, tod, t, lat, lon]
+                # -> [t, tod, lev, lat, lon]
+                lev_T = [2, 1, 0, 3, 4]
+                # [0 1 2 3 4] -> [2 1 0 3 4] -> [2 1 0 3 4]
+                lev_T_out = [1, 2, 0, 3, 4]
+                # In diurn file, level is the 3rd axis:
+                # [t, tod, lev, lat, lon]
+                lev_axis = 2
+            else:
+                # [t, lev, lat, lon]
+                # -> [lev, t, lat, lon]
+                # -> [t, lev, lat, lon]
+                lev_T = [1, 0, 2, 3]
+                # [0 1 2 3] -> [1 0 2 3] -> [1 0 2 3]
+                lev_T_out = lev_T
+                # In average and daily files, level is the 2nd
+                # axis = [t, lev, lat, lon]
+                lev_axis = 1
                 
-                print(f"Processing: {var}...")
+            # Make lev_T and lev_T_out available to compute functions
+            globals()['lev_T'] = lev_T
+            globals()['lev_T_out'] = lev_T_out
+            
+            # temp and ps are always required. Get dimension
+            dim_out = f.variables["temp"].dimensions
+            temp = f.variables["temp"][:]
+            shape_out = temp.shape
+            
+            if interp_type == "pfull":
+                # Load ak and bk for pressure calculation.
+                # Usually required.
+                ak, bk = ak_bk_loader(f)
                 
-                # Here, call the existing add variable code
-                # This would be the existing code that computes and adds the variable
-                # Check file compatibility
-                f_type, interp_type = FV3_file_type(f)
-                
-                if interp_type == "pfull":
-                    # Load ak and bk for pressure calculation.
-                    # Usually required.
-                    ak, bk = ak_bk_loader(f)
+                # level, ps, and p_3d are often required.
+                lev = f.variables["pfull"][:]
+                ps = f.variables["ps"][:]
+                p_3D = compute_p_3D(ps, ak, bk, shape_out)
 
-                # temp and ps are always required. Get dimension
-                dim_out = f.variables["temp"].dimensions
-                temp = f.variables["temp"][:]
-                shape_out = temp.shape
+            elif interp_type == "pstd":
+                # If file interpolated to pstd, calculate the 3D
+                # pressure field.
+                lev = f.variables["pstd"][:]
 
+                # Create the right shape that includes all time steps
+                rshp_shape = [1 for i in range(0, len(shape_out))]
+                rshp_shape[0] = shape_out[0]  # Set the correct number of time steps
+                rshp_shape[lev_axis] = len(lev)
+
+                # Reshape and broadcast properly
+                p_levels = lev.reshape([1, len(lev), 1, 1])
+                p_3D = np.broadcast_to(p_levels, shape_out)
+
+            else:
+                try:
+                    # If requested interp_type is zstd, or zagl,
+                    # pfull3D is required before interpolation.
+                    # Some computations (e.g. wind speed) do not
+                    # require pfull3D and will work without it,
+                    # so we use a try statement here.
+                    p_3D = f.variables["pfull3D"][:]
+                except:
+                    pass
+
+            if var == "dzTau":
+                if "dst_mass_micro" in f.variables.keys():
+                    q = f.variables["dst_mass_micro"][:]
+                elif "dst_mass_mom" in f.variables.keys():
+                    q = f.variables["dst_mass_mom"][:]
+                OUT = compute_xzTau(q, temp, lev, C_dst, f_type)
+
+            if var == "izTau":
+                if "ice_mass_micro" in f.variables.keys():
+                    q = f.variables["ice_mass_micro"][:]
+                elif "ice_mass_mom" in f.variables.keys():
+                    q = f.variables["ice_mass_mom"][:]
+                OUT = compute_xzTau(q, temp, lev, C_ice, f_type)
+
+            if var == "dst_mass_micro" or var == "dst_mass_mom":
+                xTau = f.variables["dzTau"][:]
+                OUT = compute_mmr(xTau, temp, lev, C_dst, f_type)
+
+            if var == "ice_mass_micro" or var == "ice_mass_mom":
+                xTau = f.variables["izTau"][:]
+                OUT = compute_mmr(xTau, temp, lev, C_ice, f_type)
+
+            if var == "Vg_sed":
+                if "dst_mass_micro" in f.variables.keys():
+                    xTau = f.variables["dst_mass_micro"][:]
+                elif "dst_mass_mom" in f.variables.keys():
+                    xTau = f.variables["dst_mass_mom"][:]
+                if "dst_num_micro" in f.variables.keys():
+                    nTau = f.variables["dst_num_micro"][:]
+                elif "dst_num_mom" in f.variables.keys():
+                    nTau = f.variables["dst_num_mom"][:]
+                OUT = compute_Vg_sed(xTau, nTau, temp)
+
+            if var == "w_net":
+                Vg = f.variables["Vg_sed"][:]
+                wvar = f.variables["w"][:]
+                OUT = compute_w_net(Vg, wvar)
+
+            if var == "pfull3D":
+                OUT = p_3D
+
+            if var == "DP":
+                OUT = compute_DP_3D(ps, ak, bk, shape_out)
+
+            if var == "rho":
+                OUT = compute_rho(p_3D, temp)
+
+            if var == "theta":
+                OUT = compute_theta(p_3D, ps, temp, f_type)
+
+            if var == "w":
+                omega = f.variables["omega"][:]
+                rho = compute_rho(p_3D, temp)
+                OUT = compute_w(rho, omega)
+
+            if var == "zfull":
+                OUT = compute_zfull(ps, ak, bk, temp)
+
+            if var == "DZ":
+                OUT = compute_DZ_3D(ps, ak, bk, temp, shape_out)
+
+            if var == "wspeed" or var == "wdir":
+                ucomp = f.variables["ucomp"][:]
+                vcomp = f.variables["vcomp"][:]
+                theta, mag = cart_to_azimut_TR(ucomp, vcomp,
+                                                mode="from")
+                if var == "wdir":
+                    OUT = theta
+                if var == "wspeed":
+                    OUT = mag
+
+            if var == "N":
+                theta = compute_theta(p_3D, ps, temp, f_type)
+                zfull = compute_zfull(ps, ak, bk, temp)
+                OUT = compute_N(theta, zfull)
+
+            if var == "Ri":
+                theta = compute_theta(p_3D, ps, temp, f_type)
+                zfull = compute_zfull(ps, ak, bk, temp)
+                N = compute_N(theta, zfull)
+
+                ucomp = f.variables["ucomp"][:]
+                vcomp = f.variables["vcomp"][:]
+                du_dz = dvar_dh(
+                    ucomp.transpose(lev_T),
+                    zfull.transpose(lev_T)
+                    ).transpose(lev_T)
+                dv_dz = dvar_dh(
+                    vcomp.transpose(lev_T),
+                    zfull.transpose(lev_T)
+                    ).transpose(lev_T)
+                OUT = N**2 / (du_dz**2 + dv_dz**2)
+
+            # .. note:: lev_T swaps dims 0 & 1, ensuring level is
+            # the first dimension for the differentiation
+
+            if var == "Tco2":
+                OUT = compute_Tco2(p_3D)
+
+            if var == "scorer_wl":
+                ucomp = f.variables["ucomp"][:]
+                theta = compute_theta(p_3D, ps, temp, f_type)
+                zfull = compute_zfull(ps, ak, bk, temp)
+                N = compute_N(theta, zfull)
+                OUT = compute_scorer(N, ucomp, zfull)
+
+            if var in ["div", "curl", "fn"]:
+                lat = f.variables["lat"][:]
+                lon = f.variables["lon"][:]
+                ucomp = f.variables["ucomp"][:]
+                vcomp = f.variables["vcomp"][:]
+
+            if var == "div":
+                OUT = spherical_div(ucomp, vcomp, lon, lat,
+                                    R=3400*1000.,
+                                    spacing="regular")
+
+            if var == "curl":
+                OUT = spherical_curl(ucomp, vcomp, lon, lat,
+                                        R=3400*1000.,
+                                        spacing="regular")
+
+            if var == "fn":
+                theta = f.variables["theta"][:]
+                OUT = frontogenesis(ucomp, vcomp, theta, lon, lat,
+                                    R=3400*1000.,
+                                    spacing="regular")
+
+            # ==================================================
+            #               Interpolated Files
+            # ==================================================
+            # All interpolated files have the following
+            if interp_type != "pfull":
+                lev = f.variables[interp_type][:]
+
+            # The next several variables can ONLY be added to
+            # pressure interpolated files.
+            if var == "msf":
+                vcomp = f.variables["vcomp"][:]
+                lat = f.variables["lat"][:]
                 if f_type == "diurn":
-                    # [t, tod, lev, lat, lon]
-                    # -> [lev, tod, t, lat, lon]
+                    # [lev, lat, t, tod, lon]
                     # -> [t, tod, lev, lat, lon]
-                    lev_T = [2, 1, 0, 3, 4]
-                    # [0 1 2 3 4] -> [2 1 0 3 4] -> [2 1 0 3 4]
-                    lev_T_out = [1, 2, 0, 3, 4]
-                    # In diurn file, level is the 3rd axis:
-                    # [t, tod, lev, lat, lon]
-                    lev_axis = 2
+                    # [0 1 2 3 4] -> [2 3 0 1 4]
+                    OUT = mass_stream(
+                        vcomp.transpose([2, 3, 0, 1, 4]), lat, lev,
+                        type=interp_type
+                    ).transpose([2, 3, 0, 1, 4])
                 else:
+                    OUT = mass_stream(
+                        vcomp.transpose([1, 2, 3, 0]), lat, lev,
+                        type=interp_type
+                    ).transpose([3, 0, 1, 2])
                     # [t, lev, lat, lon]
-                    # -> [lev, t, lat, lon]
-                    # -> [t, lev, lat, lon]
-                    lev_T = [1, 0, 2, 3]
-                    # [0 1 2 3] -> [1 0 2 3] -> [1 0 2 3]
-                    lev_T_out = lev_T
-                    # In average and daily files, level is the 2nd
-                    # axis = [t, lev, lat, lon]
-                    lev_axis = 1
+                    # -> [lev, lat, lon, t]
+                    # ->  [t, lev, lat, lon]
+                    # [0 1 2 3] -> [1 2 3 0] -> [3 0 1 2]
 
-                # ==================================================
-                #               Non-Interpolated Files
-                # ==================================================
+            if var == "ep":
+                OUT = compute_Ep(temp)
 
-                if interp_type == "pfull":
-                    # level, ps, and p_3d are often required.
-                    lev = f.variables["pfull"][:]
-                    ps = f.variables["ps"][:]
-                    p_3D = compute_p_3D(ps, ak, bk, shape_out)
+            if var == "ek":
+                ucomp = f.variables["ucomp"][:]
+                vcomp = f.variables["vcomp"][:]
+                OUT = compute_Ek(ucomp, vcomp)
 
-                elif interp_type == "pstd":
-                    # If file interpolated to pstd, calculate the 3D
-                    # pressure field.
-                    lev = f.variables["pstd"][:]
-
-                    # Create the right shape that includes all time steps
-                    rshp_shape = [1 for i in range(0, len(shape_out))]
-                    rshp_shape[0] = shape_out[0]  # Set the correct number of time steps
-                    rshp_shape[lev_axis] = len(lev)
-
-                    # p_3D = lev.reshape(rshp_shape)
-                    # Reshape and broadcast properly
-                    p_levels = lev.reshape([1, len(lev), 1, 1])
-                    p_3D = np.broadcast_to(p_levels, shape_out)
-
-                else:
-                    try:
-                        # If requested interp_type is zstd, or zagl,
-                        # pfull3D is required before interpolation.
-                        # Some computations (e.g. wind speed) do not
-                        # require pfull3D and will work without it,
-                        # so we use a try statement here.
-                        p_3D = f.variables["pfull3D"][:]
-                    except:
-                        pass
-
-                if var == "dzTau":
-                    if "dst_mass_micro" in f.variables.keys():
-                        q = f.variables["dst_mass_micro"][:]
-                    elif "dst_mass_mom" in f.variables.keys():
-                        q = f.variables["dst_mass_mom"][:]
-                    OUT = compute_xzTau(q, temp, lev, C_dst, f_type)
-
-                if var == "izTau":
-                    if "ice_mass_micro" in f.variables.keys():
-                        q = f.variables["ice_mass_micro"][:]
-                    elif "ice_mass_mom" in f.variables.keys():
-                        q = f.variables["ice_mass_mom"][:]
-                    OUT = compute_xzTau(q, temp, lev, C_ice, f_type)
-
-                if var == "dst_mass_micro" or var == "dst_mass_mom":
-                    xTau = f.variables["dzTau"][:]
-                    OUT = compute_mmr(xTau, temp, lev, C_dst, f_type)
-
-                if var == "ice_mass_micro" or var == "ice_mass_mom":
-                    xTau = f.variables["izTau"][:]
-                    OUT = compute_mmr(xTau, temp, lev, C_ice, f_type)
-
-                if var == "Vg_sed":
-                    if "dst_mass_micro" in f.variables.keys():
-                        xTau = f.variables["dst_mass_micro"][:]
-                    elif "dst_mass_mom" in f.variables.keys():
-                        xTau = f.variables["dst_mass_mom"][:]
-                    if "dst_num_micro" in f.variables.keys():
-                        nTau = f.variables["dst_num_micro"][:]
-                    elif "dst_num_mom" in f.variables.keys():
-                        nTau = f.variables["dst_num_mom"][:]
-                    OUT = compute_Vg_sed(xTau, nTau, temp)
-
-                if var == "w_net":
-                    Vg = f.variables["Vg_sed"][:]
-                    wvar = f.variables["w"][:]
-                    OUT = compute_w_net(Vg, wvar)
-
-                if var == "pfull3D":
-                    OUT = p_3D
-
-                if var == "DP":
-                    OUT = compute_DP_3D(ps, ak, bk, shape_out)
-
-                if var == "rho":
-                    OUT = compute_rho(p_3D, temp)
-
-                if var == "theta":
-                    OUT = compute_theta(p_3D, ps, temp, f_type)
-
-                if var == "w":
-                    omega = f.variables["omega"][:]
-                    rho = compute_rho(p_3D, temp)
-                    OUT = compute_w(rho, omega)
-
-                if var == "zfull":
-                    OUT = compute_zfull(ps, ak, bk, temp)
-
-                if var == "DZ":
-                    OUT = compute_DZ_3D(ps, ak, bk, temp, shape_out)
-
-                if var == "wspeed" or var == "wdir":
-                    ucomp = f.variables["ucomp"][:]
-                    vcomp = f.variables["vcomp"][:]
-                    theta, mag = cart_to_azimut_TR(ucomp, vcomp,
-                                                    mode="from")
-                    if var == "wdir":
-                        OUT = theta
-                    if var == "wspeed":
-                        OUT = mag
-
-                if var == "N":
-                    theta = compute_theta(p_3D, ps, temp, f_type)
-                    zfull = compute_zfull(ps, ak, bk, temp)
-                    OUT = compute_N(theta, zfull)
-
-                if var == "Ri":
-                    theta = compute_theta(p_3D, ps, temp, f_type)
-                    zfull = compute_zfull(ps, ak, bk, temp)
-                    N = compute_N(theta, zfull)
-
-                    ucomp = f.variables["ucomp"][:]
-                    vcomp = f.variables["vcomp"][:]
-                    du_dz = dvar_dh(
-                        ucomp.transpose(lev_T),
-                        zfull.transpose(lev_T)
-                        ).transpose(lev_T)
-                    dv_dz = dvar_dh(
-                        vcomp.transpose(lev_T),
-                        zfull.transpose(lev_T)
-                        ).transpose(lev_T)
-                    OUT = N**2 / (du_dz**2 + dv_dz**2)
-
-                # .. note:: lev_T swaps dims 0 & 1, ensuring level is
-                # the first dimension for the differentiation
-
-                if var == "Tco2":
-                    OUT = compute_Tco2(p_3D)
-
-                if var == "scorer_wl":
-                    ucomp = f.variables["ucomp"][:]
-                    theta = compute_theta(p_3D, ps, temp, f_type)
-                    zfull = compute_zfull(ps, ak, bk, temp)
-                    N = compute_N(theta, zfull)
-                    OUT = compute_scorer(N, ucomp, zfull)
-
-                if var in ["div", "curl", "fn"]:
-                    lat = f.variables["lat"][:]
-                    lon = f.variables["lon"][:]
-                    ucomp = f.variables["ucomp"][:]
-                    vcomp = f.variables["vcomp"][:]
-
-                if var == "div":
-                    OUT = spherical_div(ucomp, vcomp, lon, lat,
-                                        R=3400*1000.,
-                                        spacing="regular")
-
-                if var == "curl":
-                    OUT = spherical_curl(ucomp, vcomp, lon, lat,
-                                            R=3400*1000.,
-                                            spacing="regular")
-
-                if var == "fn":
-                    theta = f.variables["theta"][:]
-                    OUT = frontogenesis(ucomp, vcomp, theta, lon, lat,
-                                        R=3400*1000.,
-                                        spacing="regular")
-
-                # ==================================================
-                #               Interpolated Files
-                # ==================================================
-                # All interpolated files have the following
-                if interp_type != "pfull":
-                    lev = f.variables[interp_type][:]
-
-                # The next several variables can ONLY be added to
-                # pressure interpolated files.
-                if var == "msf":
-                    vcomp = f.variables["vcomp"][:]
-                    lat = f.variables["lat"][:]
-                    if f_type == "diurn":
-                        # [lev, lat, t, tod, lon]
-                        # -> [t, tod, lev, lat, lon]
-                        # [0 1 2 3 4] -> [2 3 0 1 4]
-                        OUT = mass_stream(
-                            vcomp.transpose([2, 3, 0, 1, 4]), lat, lev,
-                            type=interp_type
-                        ).transpose([2, 3, 0, 1, 4])
-                    else:
-                        OUT = mass_stream(
-                            vcomp.transpose([1, 2, 3, 0]), lat, lev,
-                            type=interp_type
-                        ).transpose([3, 0, 1, 2])
-                        # [t, lev, lat, lon]
-                        # -> [lev, lat, lon, t]
-                        # ->  [t, lev, lat, lon]
-                        # [0 1 2 3] -> [1 2 3 0] -> [3 0 1 2]
-
-                if var == "ep":
-                    OUT = compute_Ep(temp)
-
-                if var == "ek":
-                    ucomp = f.variables["ucomp"][:]
-                    vcomp = f.variables["vcomp"][:]
-                    OUT = compute_Ek(ucomp, vcomp)
-
-                if var == "mx":
-                    OUT = compute_MF(f.variables["ucomp"][:],
-                                        f.variables["w"][:])
-
-                if var == "my":
-                    OUT = compute_MF(f.variables["vcomp"][:],
-                                        f.variables["w"][:])
-
-                if var == "ax":
-                    mx = compute_MF(f.variables["ucomp"][:],
+            if var == "mx":
+                OUT = compute_MF(f.variables["ucomp"][:],
                                     f.variables["w"][:])
-                    rho = f.variables["rho"][:]
-                    OUT = compute_WMFF(mx, rho, lev, interp_type)
 
-                if var == "ay":
-                    my = compute_MF(f.variables["vcomp"][:],
+            if var == "my":
+                OUT = compute_MF(f.variables["vcomp"][:],
                                     f.variables["w"][:])
-                    rho = f.variables["rho"][:]
-                    OUT = compute_WMFF(my, rho, lev, interp_type)
 
-                if var == "tp_t":
-                    OUT = zonal_detrend(temp)/temp
+            if var == "ax":
+                mx = compute_MF(f.variables["ucomp"][:],
+                                f.variables["w"][:])
+                rho = f.variables["rho"][:]
+                OUT = compute_WMFF(mx, rho, lev, interp_type)
 
-                if interp_type == "pfull":
-                    # Filter out NANs in the native files
-                    OUT[np.isnan(OUT)] = fill_value
+            if var == "ay":
+                my = compute_MF(f.variables["vcomp"][:],
+                                f.variables["w"][:])
+                rho = f.variables["rho"][:]
+                OUT = compute_WMFF(my, rho, lev, interp_type)
 
-                else:
-                    # Add NANs to the interpolated files
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("ignore",
-                                                category = RuntimeWarning)
-                        OUT[OUT > 1.e30] = np.nan
-                        OUT[OUT < -1.e30] = np.nan
+            if var == "tp_t":
+                OUT = zonal_detrend(temp)/temp
 
-                # Log the variable
-                var_Ncdf = f.createVariable(var, "f4", dim_out)
-                var_Ncdf.long_name = (master_list[var][0]
-                                        + cap_str)
-                var_Ncdf.units = master_list[var][1]
-                var_Ncdf[:] = OUT
+            if interp_type == "pfull":
+                # Filter out NANs in the native files
+                OUT[np.isnan(OUT)] = fill_value
 
-                print(f"{Green}*** Variable '{var}' added successfully ***{Nclr}")
-                f.close()
-                
+            else:
+                # Add NANs to the interpolated files
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore",
+                                            category = RuntimeWarning)
+                    OUT[OUT > 1.e30] = np.nan
+                    OUT[OUT < -1.e30] = np.nan
+
+            # Log the variable
+            var_Ncdf = f.createVariable(var, "f4", dim_out)
+            var_Ncdf.long_name = (master_list[var][0]
+                                    + cap_str)
+            var_Ncdf.units = master_list[var][1]
+            var_Ncdf[:] = OUT
+
+            print(f"{Green}*** Variable '{var}' added successfully ***{Nclr}")
+            f.close()
+            
         except Exception as e:
             except_message(debug, e, var, ifile)
             
