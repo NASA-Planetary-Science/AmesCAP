@@ -404,6 +404,7 @@ def main():
         # --inspect: Inspect content of netcdf file
         # NAS-specific, check if the file is on tape (Lou only)
         check_file_tape(args.inspect_file)
+        print("Attempting to access file:", args.inspect_file)
         if args.print_values:
             # Print variable content to screen
             print_varContent(args.inspect_file,
@@ -414,6 +415,7 @@ def main():
                              args.statistics, True)
         else:
             # Show information for all variables
+            print("Attempting to access file:", args.inspect_file)
             print_fileContent(args.inspect_file)
 
     elif args.generate_template:
@@ -443,7 +445,7 @@ def main():
         Ncdf_num = get_Ncdf_num()
 
         if Ncdf_num is not None:
-            # Apply bounds to desired dates
+            # Apply bounds to desired date
             Ncdf_num = select_range(Ncdf_num, bound)
 
         # Make folder "plots" in cwd
