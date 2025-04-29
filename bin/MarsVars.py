@@ -1407,7 +1407,7 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
     def add_with_dependencies(var):
         """Helper function to add a variable and its dependencies to the list"""
         if var in visited:
-            return
+            return True # Already processed this variable
         
         visited.add(var)
         
@@ -1415,7 +1415,7 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
         with Dataset(ifile, "a", format="NETCDF4_CLASSIC") as f:
             # Skip if already in file
             if var in f.variables:
-                return
+                return True
                 
             # Check file compatibility
             f_type, interp_type = FV3_file_type(f)
@@ -1425,19 +1425,36 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
                     print(f"{Red}ERROR: Variable '{Yellow}{var}{Red}' can only be added to non-interpolated file(s){Nclr}")
                 else:
                     print(f"{Red}ERROR: Variable '{Yellow}{var}{Red}' can only be added to file(s) ending in: {Yellow}{compat_file_fmt}{Nclr}")
-                return
+                return False
                 
             # Get dependencies for this variable
             dependencies = master_list[var][2]
             
-            # First add all dependencies
+            # Check each dependency
+            all_deps_ok = True
             for dep in dependencies:
-                if dep in master_list and dep not in f.variables:
-                    add_with_dependencies(dep)
-        
-        # Add this variable after its dependencies
-        if var not in variables_to_add:
-            variables_to_add.append(var)
+                if dep in f.variables:
+                    # Dependency already exists in file
+                    continue
+                    
+                if dep in master_list:
+                    # Dependency can be added
+                    if not add_with_dependencies(dep):
+                        # If any dependency fails, mark this variable as failing too
+                        all_deps_ok = False
+                        print(f"{Red}Cannot add {var}: Required dependency {dep} cannot be added{Nclr}")
+                else:
+                    # This dependency is not in master_list and can't be added
+                    print(f"{Red}Cannot add {var}: Required dependency {dep} is not in the list of supported variables{Nclr}")
+                    all_deps_ok = False
+            
+            # If all dependencies are good, add this variable to our list
+            if all_deps_ok:
+                if var not in variables_to_add:
+                    variables_to_add.append(var)
+                return True
+            else:
+                return False
     
     # Process each requested variable
     for var in add_list:
