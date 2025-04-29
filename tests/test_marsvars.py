@@ -210,9 +210,9 @@ class TestMarsVars(unittest.TestCase):
     def test_add_variable(self):
         """Test adding variables to files"""
         var_list = ['curl', 'div', 'DP', 'dzTau', 'dst_mass_mom', 'DZ', 
-                    'theta', 'fn', 'N', 'pfull3D', 'rho', 'Ri', 
+                    'theta', 'N', 'pfull3D', 'rho', 'Ri', 
                     'scorer_wl', 'Tco2', 'wdir', 'wspeed', 'zfull', 
-                    'izTau', 'ice_mass_mom', 'w', 'w_net', 'Vg_sed']
+                    'izTau', 'ice_mass_mom', 'w', 'Vg_sed', 'w_net']
         
         for var in var_list:
             # Add variables to non-interpolated average file and check for success
@@ -225,7 +225,7 @@ class TestMarsVars(unittest.TestCase):
             output_file = self.check_file_exists('01336.atmos_average.nc')
             self.verify_netcdf_has_variable(output_file, var)
         
-        var_list = ['ek', 'ep', 'msf', 'tp_t', 'ax', 'ay', 'mx', 'my']
+        var_list = ['fn', 'ek', 'ep', 'msf', 'tp_t', 'ax', 'ay', 'mx', 'my']
         
         for var in var_list:
             # Add variables to interpolated average file and check for success

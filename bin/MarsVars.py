@@ -1354,9 +1354,9 @@ def main():
                             stdout = open(os.devnull, "w"),
                             stderr = open(os.devnull, "w")
                         )
-                    except Exception as exception:
-                        print(f"{exception.__class__.__name__ }: "
-                              f"{exception.message}")
+                    except Exception as e:
+                        print(f"{e.__class__.__name__ }: "
+                              f"{e.message}")
 
             except subprocess.CalledProcessError:
                 # If ncks is not available, use internal method
@@ -1397,36 +1397,61 @@ def main():
         # If the list is not empty, load ak and bk for the pressure
         # calculation. ak and bk are always necessary.
 
+        # Create a list to track variables that need to be added, including dependencies
+        variables_to_add = []
+        failed_variables = []
+
+        # First pass: Build the list of variables to add, including dependencies
         for ivar in add_list:
             if ivar not in master_list.keys():
                 # If the variable to be added is NOT supported
                 print(f"{Red}Variable ``{ivar}`` is not supported and "
                       f"cannot be added to the file.{Nclr}")
-                exit()
-
+                failed_variables.append(ivar)
+                continue
+            
+            try:
+                with Dataset(ifile, "a", format="NETCDF4_CLASSIC") as f:
+                    # Check if variable already exists
+                    if ivar in f.variables:
+                        print(f"{Yellow}Variable {ivar} already exists in the file.{Nclr}")
+                        continue
+                        
+                    # Check file compatibility
+                    f_type, interp_type = FV3_file_type(f)
+                    compat_file_fmt = ", ".join([cf for cf in master_list[ivar][3]])
+                    
+                    if interp_type not in master_list[ivar][3]:
+                        if "pfull" in compat_file_fmt or "phalf" in compat_file_fmt:
+                            print(f"{Red}ERROR: Variable '{Yellow}{ivar}{Red}' can only be added to non-interpolated file(s){Nclr}")
+                        else:
+                            print(f"{Red}ERROR: Variable '{Yellow}{ivar}{Red}' can only be added to file(s) ending in: {Yellow}{compat_file_fmt}{Nclr}")
+                        failed_variables.append(ivar)
+                        continue
+                    
+                    # Check dependencies
+                    if check_dependencies(f, ivar, master_list, add_missing=True):
+                        # If all dependencies are present or can be added, add this variable to our list
+                        if ivar not in variables_to_add:
+                            variables_to_add.append(ivar)
+                        
+                        # Check if we need to add any missing dependencies
+                        for dep_var in master_list[ivar][2]:
+                            if dep_var not in f.variables and dep_var not in variables_to_add:
+                                variables_to_add.append(dep_var)
+                    else:
+                        # If dependencies cannot be satisfied
+                        failed_variables.append(ivar)
+            
+            except Exception as e:
+                print(f"{Red}Error checking dependencies for {ivar}: {str(e)}{Nclr}")
+                failed_variables.append(ivar)
+        
+        # Second pass: Add variables in order (dependencies first)
+        for ivar in variables_to_add:
             try:
                 f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
                 f_type, interp_type = FV3_file_type(f)
-
-                compat_file_fmt = (
-                    ", ".join([f"{cf}" for cf in master_list[ivar][3]])
-                    )
-                print(f"ftype: {f_type}, interp_type: {interp_type}, compat_file_fmt: {compat_file_fmt}")
-                if interp_type in compat_file_fmt:
-                    pass
-                else:
-                    if compat_file_fmt == 'pfull' or compat_file_fmt == 'phalf':
-                        print(
-                        f"\n{Red}ERROR: Variable '{Yellow}{ivar}{Red}' "
-                        f"can only be added to non-interpolated file(s)"
-                        f"{Nclr}\n")
-                    else:
-                        print(
-                            f"\n{Red}ERROR: Variable '{Yellow}{ivar}"
-                            f"{Red}' can only be added to file(s) "
-                            f"ending in: {Yellow}{compat_file_fmt}"
-                            f"{Nclr}\n")
-                    exit()
 
                 print(f"Processing: {ivar}...")
 
@@ -1704,12 +1729,13 @@ def main():
                                       + cap_str)
                 var_Ncdf.units = master_list[ivar][1]
                 var_Ncdf[:] = OUT
+                
+                print(f"{Green}*** Variable '{ivar}' added successfully ***{Nclr}")
                 f.close()
-                print(f"{Green}*** Variable '{ivar}' added "
-                      f"successfully ***{Nclr}")
 
-            except Exception as exception:
-                except_message(debug,exception,ivar,ifile)
+            except Exception as e:
+                except_message(debug, e, ivar, ifile)
+                
         # ==============================================================
         #                   Vertical Differentiation
         # ==============================================================
@@ -1799,8 +1825,8 @@ def main():
                     f.close()
 
                     print(f"d_dz_{idiff}: {Green}Done{Nclr}")
-                except Exception as exception:
-                    except_message(debug,exception,idiff,ifile,pre="d_dz_")
+                except Exception as e:
+                    except_message(debug,e,idiff,ifile,pre="d_dz_")
 
         # ==============================================================
         #                       Zonal Detrending
@@ -1834,8 +1860,8 @@ def main():
                     f.close()
 
                     print(f"{izdetrend}_p: {Green}Done{Nclr}")
-                except Exception as exception:
-                    except_message(debug,exception,izdetrend,ifile,ext="_p")
+                except Exception as e:
+                    except_message(debug,e,izdetrend,ifile,ext="_p")
 
         # ==============================================================
         #           Opacity Conversion (dp_to_dz and dz_to_dp)
@@ -1875,8 +1901,8 @@ def main():
 
                     print(f"{idp_to_dz}_dp_to_dz: {Green}Done{Nclr}")
 
-                except Exception as exception:
-                    except_message(debug,exception,idp_to_dz,ifile,ext="_dp_to_dz")
+                except Exception as e:
+                    except_message(debug,e,idp_to_dz,ifile,ext="_dp_to_dz")
 
         for idz_to_dp in dz_to_dp_list:
             # ========= Case 2: dz_to_dp
@@ -1912,8 +1938,8 @@ def main():
 
                     print(f"{idz_to_dp}_dz_to_dp: {Green}Done{Nclr}")
 
-                except Exception as exception:
-                    except_message(debug,exception,idz_to_dp,ifile,ext="_dz_to_dp")
+                except Exception as e:
+                    except_message(debug,e,idz_to_dp,ifile,ext="_dz_to_dp")
 
         # ==============================================================
         #                    Column Integration
@@ -1991,8 +2017,8 @@ def main():
 
                     print(f"{icol}_col: {Green}Done{Nclr}")
 
-                except Exception as exception:
-                    except_message(debug,exception,icol,ifile,ext="_col")
+                except Exception as e:
+                    except_message(debug,e,icol,ifile,ext="_col")
         if edit_var:
             f_IN = Dataset(ifile, "r", format = "NETCDF4_CLASSIC")
             ifile_tmp = f"{ifile[:-3]}_tmp.nc"
