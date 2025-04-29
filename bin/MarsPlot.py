@@ -402,9 +402,9 @@ def main():
 
     if args.inspect_file:
         # --inspect: Inspect content of netcdf file
+        print("Attempting to access file:", args.inspect_file)
         # NAS-specific, check if the file is on tape (Lou only)
         check_file_tape(args.inspect_file)
-        print("Attempting to access file:", args.inspect_file)
         if args.print_values:
             # Print variable content to screen
             print_varContent(args.inspect_file,
@@ -415,7 +415,7 @@ def main():
                              args.statistics, True)
         else:
             # Show information for all variables
-            print("Attempting to access file:", args.inspect_file)
+            print("doing inspect")
             print_fileContent(args.inspect_file)
 
     elif args.generate_template:
