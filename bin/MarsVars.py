@@ -1391,6 +1391,52 @@ def check_dependencies(f, var, master_list, add_missing=True, dependency_chain=N
 
 
 # =====================================================================
+def check_variable_exists(var_name, file_vars):
+    """Check if a variable exists in the file, considering alternative naming conventions"""
+    if var_name in file_vars:
+        return True
+        
+    # Handle _micro/_mom naming variations
+    if var_name.endswith('_micro'):
+        alt_name = var_name.replace('_micro', '_mom')
+        if alt_name in file_vars:
+            return True
+    elif var_name.endswith('_mom'):
+        alt_name = var_name.replace('_mom', '_micro')
+        if alt_name in file_vars:
+            return True
+    elif var_name == 'dst_num_mom':
+        # Special case for dst_num_mom/dst_num_micro
+        if 'dst_num_micro' in file_vars:
+            return True
+            
+    return False
+
+
+# =====================================================================
+def get_existing_var_name(var_name, file_vars):
+    """Get the actual variable name that exists in the file"""
+    if var_name in file_vars:
+        return var_name
+        
+    # Check alternative names
+    if var_name.endswith('_micro'):
+        alt_name = var_name.replace('_micro', '_mom')
+        if alt_name in file_vars:
+            return alt_name
+    elif var_name.endswith('_mom'):
+        alt_name = var_name.replace('_mom', '_micro')
+        if alt_name in file_vars:
+            return alt_name
+    elif var_name == 'dst_num_mom':
+        # Special case for dst_num_mom/dst_num_micro
+        if 'dst_num_micro' in file_vars:
+            return 'dst_num_micro'
+            
+    return var_name  # Return original if no match found
+
+
+# =====================================================================
 def process_add_variables(ifile, add_list, master_list, debug=False):
     """
     Process the list of variables to add, handling dependencies appropriately.
@@ -1400,182 +1446,123 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
     :param master_list: Dictionary of supported variables and their dependencies
     :param debug: Whether to show debug information
     """
-    # Helper function to check if a variable or its alternative name exists
-    def variable_exists(var_name, file_vars):
-        """Check if a variable exists, considering alternative naming conventions"""
-        if var_name in file_vars:
-            return True
-            
-        # Handle _micro/_mom naming variations
-        if var_name.endswith('_micro'):
-            alt_name = var_name.replace('_micro', '_mom')
-            if alt_name in file_vars:
-                return True
-        elif var_name.endswith('_mom'):
-            alt_name = var_name.replace('_mom', '_micro')
-            if alt_name in file_vars:
-                return True
-                
-        return False
+        # Create a topologically sorted list of variables to add
+    variables_to_add = []
+    already_in_file = []
     
-    # Helper function to get the actual variable name that exists
-    def get_existing_var(var_name, file_vars):
-        """Get the actual variable name that exists in the file"""
-        if var_name in file_vars:
-            return var_name
-            
-        # Check alternative names
-        if var_name.endswith('_micro'):
-            alt_name = var_name.replace('_micro', '_mom')
-            if alt_name in file_vars:
-                return alt_name
-        elif var_name.endswith('_mom'):
-            alt_name = var_name.replace('_mom', '_micro')
-            if alt_name in file_vars:
-                return alt_name
-                
-        return None
-    
-    # Check if all requested variables already exist in the file
+    # First check if all requested variables already exist in the file
     with Dataset(ifile, "r", format="NETCDF4_CLASSIC") as f:
         file_vars = set(f.variables.keys())
-        already_in_file = [var for var in add_list if variable_exists(var, file_vars)]
         
-        # If all requested variables are in the file, report this and exit
+        # Check if all requested variables are already in the file
+        for var in add_list:
+            if check_variable_exists(var, file_vars):
+                existing_name = get_existing_var_name(var, file_vars)
+                already_in_file.append((var, existing_name))
+        
+        # If all requested variables exist, report and exit
         if len(already_in_file) == len(add_list):
             if len(add_list) == 1:
-                print(f"{Yellow}Variable '{add_list[0]}' is already in the file.{Nclr}")
+                var, actual_var = already_in_file[0]
+                if var == actual_var:
+                    print(f"{Yellow}Variable '{var}' is already in the file.{Nclr}")
+                else:
+                    print(f"{Yellow}Variable '{var}' is already in the file (as '{actual_var}').{Nclr}")
             else:
                 print(f"{Yellow}All requested variables are already in the file:{Nclr}")
-                for var in already_in_file:
-                    actual_var = get_existing_var(var, file_vars)
-                    if actual_var != var:
-                        print(f"{Yellow}  - {var} (as {actual_var}){Nclr}")
-                    else:
+                for var, actual_var in already_in_file:
+                    if var == actual_var:
                         print(f"{Yellow}  - {var}{Nclr}")
-            return  # Exit the function - nothing to do
-        
-    # Create a topologically sorted list of variables to add
-    variables_to_add = []
-    visited = set()
-    already_in_file = []  # Track variables that are already in the file
-    failed_vars = []      # Track variables that failed to process
+                    else:
+                        print(f"{Yellow}  - {var} (as '{actual_var}'){Nclr}")
+            return
     
     def add_with_dependencies(var):
         """Helper function to add a variable and its dependencies to the list"""
-        if var in visited:
-            return var in variables_to_add or var in already_in_file
-        
-        visited.add(var)
+        # Skip if already processed
+        if var in variables_to_add:
+            return True
         
         # Open the file to check dependencies
         with Dataset(ifile, "a", format="NETCDF4_CLASSIC") as f:
+            file_vars = set(f.variables.keys())
+            
             # Skip if already in file
-            if var in f.variables:
+            if check_variable_exists(var, file_vars):
                 return True
+
+            f_type, interp_type = FV3_file_type(f)
                 
             # Check file compatibility
-            f_type, interp_type = FV3_file_type(f)
             if interp_type not in master_list[var][3]:
-                compat_file_fmt = ", ".join([cf for cf in master_list[var][3]])
-                if "pfull" in compat_file_fmt or "phalf" in compat_file_fmt:
-                    print(f"{Red}ERROR: Variable '{Yellow}{var}{Red}' can only be added to non-interpolated file(s){Nclr}")
-                else:
-                    print(f"{Red}ERROR: Variable '{Yellow}{var}{Red}' can only be added to file(s) ending in: {Yellow}{compat_file_fmt}{Nclr}")
+                compat_file_fmt = ", ".join(master_list[var][3])
+                print(f"{Red}ERROR: Variable '{Yellow}{var}{Red}' can only be added to file type: {Yellow}{compat_file_fmt}{Nclr}")
                 return False
                 
-            # Get dependencies for this variable
-            dependencies = master_list[var][2]
-            
             # Check each dependency
-            missing_deps = []
-            for dep in dependencies:
-                if dep in f.variables:
-                    # Dependency already exists in file
+            all_deps_ok = True
+            for dep in master_list[var][2]:
+                # Skip if already in file (including alternative names)
+                if check_variable_exists(dep, file_vars):
                     continue
                     
+                # If dependency can be added, try to add it
                 if dep in master_list:
-                    # Dependency can be added - try recursively
                     if not add_with_dependencies(dep):
-                        missing_deps.append(dep)
+                        all_deps_ok = False
+                        print(f"{Red}Cannot add {var}: Required dependency {dep} cannot be added{Nclr}")
                 else:
-                    # This dependency is not in master_list and can't be added
-                    missing_deps.append(dep)
+                    # Cannot add this dependency
+                    all_deps_ok = False
                     print(f"{Red}Cannot add {var}: Required dependency {dep} is not in the list of supported variables{Nclr}")
             
-            # If any dependencies couldn't be added, fail this variable too
-            if missing_deps:
-                deps_str = ", ".join(missing_deps)
-                print(f"{Red}Cannot add {var}: Missing required dependencies: {deps_str}{Nclr}")
-                failed_vars.append(var)
-                return False
-            
-            # All dependencies are satisfied, add this variable to our list
-            if var not in variables_to_add:
+            if all_deps_ok:
                 variables_to_add.append(var)
-            return True
+                return True
+            else:
+                return False
     
-    # Process each requested variable
+        # Check all requested variables
     for var in add_list:
         if var not in master_list:
             print(f"{Red}Variable '{var}' is not supported and cannot be added to the file.{Nclr}")
             continue
             
-        try:
-            add_with_dependencies(var)
-        except Exception as e:
-            print(f"{Red}Error processing {var}: {str(e)}{Nclr}")
-            failed_vars.append(var)
-            if debug:
-                traceback.print_exc()
+        # Skip if already in file
+        with Dataset(ifile, "r", format="NETCDF4_CLASSIC") as f:
+            if check_variable_exists(var, f.variables.keys()):
+                existing_name = get_existing_var_name(var, f.variables.keys())
+                if var != existing_name:
+                    print(f"{Yellow}Variable '{var}' is already in the file (as '{existing_name}').{Nclr}")
+                else:
+                    print(f"{Yellow}Variable '{var}' is already in the file.{Nclr}")
+                continue
+        
+        # Try to add the variable and its dependencies
+        add_with_dependencies(var)
     
-    # Print feedback about already existing variables
-    if already_in_file and set(already_in_file) >= set(add_list):
-        print(f"{Yellow}All requested variables are already in the file:{Nclr}")
-        for var in already_in_file:
-            if var in add_list:
-                print(f"{Yellow}  - {var}{Nclr}")
-        return
-    elif already_in_file:
-        print(f"{Yellow}The following requested variables are already in the file:{Nclr}")
-        for var in already_in_file:
-            if var in add_list:
-                print(f"{Yellow}  - {var}{Nclr}")
-                
     # Now add the variables in the correct order
-    added_vars = []
     for var in variables_to_add:
         try:
             f = Dataset(ifile, "a", format="NETCDF4_CLASSIC")
-            f_type, interp_type = FV3_file_type(f)
             
-             # Skip if already in file (double-check)
-            if var in f.variables:
+            # Skip if already in file (double-check)
+            if check_variable_exists(var, f.variables.keys()):
                 f.close()
                 continue
-            
+                
             print(f"Processing: {var}...")
             
-            # Define lev_T and lev_T_out for this file - THIS IS THE CRITICAL FIX
+            # Define lev_T and lev_T_out for this file
+            f_type, interp_type = FV3_file_type(f)
+            
             if f_type == "diurn":
-                # [t, tod, lev, lat, lon]
-                # -> [lev, tod, t, lat, lon]
-                # -> [t, tod, lev, lat, lon]
                 lev_T = [2, 1, 0, 3, 4]
-                # [0 1 2 3 4] -> [2 1 0 3 4] -> [2 1 0 3 4]
                 lev_T_out = [1, 2, 0, 3, 4]
-                # In diurn file, level is the 3rd axis:
-                # [t, tod, lev, lat, lon]
                 lev_axis = 2
             else:
-                # [t, lev, lat, lon]
-                # -> [lev, t, lat, lon]
-                # -> [t, lev, lat, lon]
                 lev_T = [1, 0, 2, 3]
-                # [0 1 2 3] -> [1 0 2 3] -> [1 0 2 3]
                 lev_T_out = lev_T
-                # In average and daily files, level is the 2nd
-                # axis = [t, lev, lat, lon]
                 lev_axis = 1
                 
             # Make lev_T and lev_T_out available to compute functions
@@ -1831,17 +1818,12 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
             var_Ncdf[:] = OUT
 
             # After successfully adding
-            added_vars.append(var)
             print(f"{Green}*** Variable '{var}' added successfully ***{Nclr}")
             f.close()
             
         except Exception as e:
             except_message(debug, e, var, ifile)
-    
-    # Final summary
-    if not added_vars and not already_in_file and add_list:
-        print(f"{Red}No variables were added. Please check the error messages above.{Nclr}")
-        
+            
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
