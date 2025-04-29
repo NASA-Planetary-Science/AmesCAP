@@ -58,6 +58,13 @@ jobs:
       - name: Install package
         run: pip install -e .
 
+      # Set HOME for Windows since it might be used by the script
+      - name: Set HOME environment variable for Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          echo "HOME=$env:USERPROFILE" >> $env:GITHUB_ENV
+          
       # Copy the profile file (Linux/macOS)
       - name: Copy profile file (Linux/macOS)
         if: runner.os != 'Windows'
