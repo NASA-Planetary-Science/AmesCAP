@@ -284,12 +284,12 @@ def add_help(var_list):
     help_text = (f"{'VARIABLE':9s} {'DESCRIPTION':33s} {'UNIT':11s} "
                  f"{'REQUIRED VARIABLES':24s} {'SUPPORTED FILETYPES'}"
                  f"\n{Cyan}")
-    for ivar in var_list.keys():
-        longname, unit, reqd_var, compat_files = var_list[ivar]
+    for var in var_list.keys():
+        longname, unit, reqd_var, compat_files = var_list[var]
         reqd_var_fmt = ", ".join([f"{rv}" for rv in reqd_var])
         compat_file_fmt = ", ".join([f"{cf}" for cf in compat_files])
         help_text += (
-            f"{ivar:9s} {longname:33s} {unit:11s} {reqd_var_fmt:24s} "
+            f"{var:9s} {longname:33s} {unit:11s} {reqd_var_fmt:24s} "
             f"{compat_file_fmt}\n"
             )
     return(help_text)
@@ -1297,23 +1297,36 @@ def compute_WMFF(MF, rho, lev, interp_type):
 
 
 # =====================================================================
-def check_dependencies(f, ivar, master_list, add_missing=True):
+def check_dependencies(f, var, master_list, add_missing=True, dependency_chain=None):
     """
     Check if all dependencies for a variable are present in the file,
     and optionally try to add missing dependencies.
     
     :param f: NetCDF file object
-    :param ivar: Variable to check dependencies for
+    :param var: Variable to check dependencies for
     :param master_list: Dictionary of supported variables and their dependencies
     :param add_missing: Whether to try adding missing dependencies (default: True)
+    :param dependency_chain: List of variables in the current dependency chain (for detecting cycles)
     :return: True if all dependencies are present or successfully added, False otherwise
     """
-    if ivar not in master_list:
-        print(f"{Red}Variable `{ivar}` is not in the master list of supported variables.{Nclr}")
+    # Initialize dependency chain if None
+    if dependency_chain is None:
+        dependency_chain = []
+    
+    # Check if we're in a circular dependency
+    if var in dependency_chain:
+        print(f"{Red}Circular dependency detected: {' -> '.join(dependency_chain + [var])}{Nclr}")
+        return False
+    
+    # Add current variable to dependency chain
+    dependency_chain = dependency_chain + [var]
+    
+    if var not in master_list:
+        print(f"{Red}Variable `{var}` is not in the master list of supported variables.{Nclr}")
         return False
     
     # Get the list of required variables for this variable
-    required_vars = master_list[ivar][2]
+    required_vars = master_list[var][2]
     
     # Check each required variable
     missing_vars = []
@@ -1328,7 +1341,7 @@ def check_dependencies(f, ivar, master_list, add_missing=True):
     if not add_missing:
         # Dependencies are missing but we're not adding them
         dependency_list = ", ".join(missing_vars)
-        print(f"{Red}Missing dependencies for {ivar}: {dependency_list}{Nclr}")
+        print(f"{Red}Missing dependencies for {var}: {dependency_list}{Nclr}")
         return False
     
     # Try to add missing dependencies
@@ -1338,34 +1351,33 @@ def check_dependencies(f, ivar, master_list, add_missing=True):
     for missing_var in missing_vars:
         # Check if we can add this dependency (must be in master_list)
         if missing_var in master_list:
-            # Recursively check dependencies for this variable
-            if check_dependencies(f, missing_var, master_list, add_missing=True):
+            # Recursively check dependencies for this variable, passing the current dependency chain
+            if check_dependencies(f, missing_var, master_list, add_missing=True, dependency_chain=dependency_chain):
                 # If dependencies are satisfied, try to add the variable
                 try:
-                    print(f"{Yellow}Attempting to add dependency {missing_var} for {ivar}...{Nclr}")
+                    print(f"{Yellow}Dependency {missing_var} for {var} can be added{Nclr}")
                     # Get the file type and interpolation type
                     f_type, interp_type = FV3_file_type(f)
                     
                     # Check if the interpolation type is compatible with this variable
                     compat_file_fmt = ", ".join([cf for cf in master_list[missing_var][3]])
-                    if interp_type not in compat_file_fmt:
+                    if interp_type not in master_list[missing_var][3]:
                         print(f"{Red}Cannot add {missing_var}: incompatible file type {interp_type}{Nclr}")
                         failed_to_add.append(missing_var)
                         continue
                     
-                    # We don't automatically add the variable here - we'll leave that to the main add loop
-                    # Just mark it as successfully checked for dependencies
+                    # Mark it as successfully checked
                     successfully_added.append(missing_var)
                     
                 except Exception as e:
-                    print(f"{Red}Error adding dependency {missing_var}: {str(e)}{Nclr}")
+                    print(f"{Red}Error checking dependency {missing_var}: {str(e)}{Nclr}")
                     failed_to_add.append(missing_var)
             else:
                 # If dependencies for this dependency are not satisfied
                 failed_to_add.append(missing_var)
         else:
             # This dependency is not in the master list, cannot be added
-            print(f"{Red}Dependency {missing_var} for {ivar} is not in the master list and cannot be added automatically{Nclr}")
+            print(f"{Red}Dependency {missing_var} for {var} is not in the master list and cannot be added automatically{Nclr}")
             failed_to_add.append(missing_var)
     
     # Check if all dependencies were added
@@ -1374,9 +1386,369 @@ def check_dependencies(f, ivar, master_list, add_missing=True):
     else:
         # Some dependencies could not be added
         dependency_list = ", ".join(failed_to_add)
-        print(f"{Red}Cannot add {ivar}: missing dependencies {dependency_list}{Nclr}")
+        print(f"{Red}Cannot add {var}: missing dependencies {dependency_list}{Nclr}")
         return False
+
+
+# =====================================================================
+def process_add_variables(ifile, add_list, master_list, debug=False):
+    """
+    Process the list of variables to add, handling dependencies appropriately.
     
+    :param ifile: Input file path
+    :param add_list: List of variables to add
+    :param master_list: Dictionary of supported variables and their dependencies
+    :param debug: Whether to show debug information
+    """
+    # Create a topologically sorted list of variables to add
+    variables_to_add = []
+    visited = set()
+    
+    def add_with_dependencies(var):
+        """Helper function to add a variable and its dependencies to the list"""
+        if var in visited:
+            return
+        
+        visited.add(var)
+        
+        # Open the file to check dependencies
+        with Dataset(ifile, "a", format="NETCDF4_CLASSIC") as f:
+            # Skip if already in file
+            if var in f.variables:
+                return
+                
+            # Check file compatibility
+            f_type, interp_type = FV3_file_type(f)
+            if interp_type not in master_list[var][3]:
+                compat_file_fmt = ", ".join([cf for cf in master_list[var][3]])
+                if "pfull" in compat_file_fmt or "phalf" in compat_file_fmt:
+                    print(f"{Red}ERROR: Variable '{Yellow}{var}{Red}' can only be added to non-interpolated file(s){Nclr}")
+                else:
+                    print(f"{Red}ERROR: Variable '{Yellow}{var}{Red}' can only be added to file(s) ending in: {Yellow}{compat_file_fmt}{Nclr}")
+                return
+                
+            # Get dependencies for this variable
+            dependencies = master_list[var][2]
+            
+            # First add all dependencies
+            for dep in dependencies:
+                if dep in master_list and dep not in f.variables:
+                    add_with_dependencies(dep)
+        
+        # Add this variable after its dependencies
+        if var not in variables_to_add:
+            variables_to_add.append(var)
+    
+    # Process each requested variable
+    for var in add_list:
+        if var not in master_list:
+            print(f"{Red}Variable '{var}' is not supported and cannot be added to the file.{Nclr}")
+            continue
+            
+        try:
+            add_with_dependencies(var)
+        except Exception as e:
+            print(f"{Red}Error processing {var}: {str(e)}{Nclr}")
+            if debug:
+                traceback.print_exc()
+    
+    # Now add the variables in the correct order
+    for var in variables_to_add:
+        try:
+            with Dataset(ifile, "a", format="NETCDF4_CLASSIC") as f:
+                # Skip if already in file (could have been added as a dependency)
+                if var in f.variables:
+                    print(f"{Yellow}Variable {var} is already in the file.{Nclr}")
+                    continue
+                
+                print(f"Processing: {var}...")
+                
+                # Here, call the existing add variable code
+                # This would be the existing code that computes and adds the variable
+                # Check file compatibility
+                f_type, interp_type = FV3_file_type(f)
+                
+                if interp_type == "pfull":
+                    # Load ak and bk for pressure calculation.
+                    # Usually required.
+                    ak, bk = ak_bk_loader(f)
+
+                # temp and ps are always required. Get dimension
+                dim_out = f.variables["temp"].dimensions
+                temp = f.variables["temp"][:]
+                shape_out = temp.shape
+
+                if f_type == "diurn":
+                    # [t, tod, lev, lat, lon]
+                    # -> [lev, tod, t, lat, lon]
+                    # -> [t, tod, lev, lat, lon]
+                    lev_T = [2, 1, 0, 3, 4]
+                    # [0 1 2 3 4] -> [2 1 0 3 4] -> [2 1 0 3 4]
+                    lev_T_out = [1, 2, 0, 3, 4]
+                    # In diurn file, level is the 3rd axis:
+                    # [t, tod, lev, lat, lon]
+                    lev_axis = 2
+                else:
+                    # [t, lev, lat, lon]
+                    # -> [lev, t, lat, lon]
+                    # -> [t, lev, lat, lon]
+                    lev_T = [1, 0, 2, 3]
+                    # [0 1 2 3] -> [1 0 2 3] -> [1 0 2 3]
+                    lev_T_out = lev_T
+                    # In average and daily files, level is the 2nd
+                    # axis = [t, lev, lat, lon]
+                    lev_axis = 1
+
+                # ==================================================
+                #               Non-Interpolated Files
+                # ==================================================
+
+                if interp_type == "pfull":
+                    # level, ps, and p_3d are often required.
+                    lev = f.variables["pfull"][:]
+                    ps = f.variables["ps"][:]
+                    p_3D = compute_p_3D(ps, ak, bk, shape_out)
+
+                elif interp_type == "pstd":
+                    # If file interpolated to pstd, calculate the 3D
+                    # pressure field.
+                    lev = f.variables["pstd"][:]
+
+                    # Create the right shape that includes all time steps
+                    rshp_shape = [1 for i in range(0, len(shape_out))]
+                    rshp_shape[0] = shape_out[0]  # Set the correct number of time steps
+                    rshp_shape[lev_axis] = len(lev)
+
+                    # p_3D = lev.reshape(rshp_shape)
+                    # Reshape and broadcast properly
+                    p_levels = lev.reshape([1, len(lev), 1, 1])
+                    p_3D = np.broadcast_to(p_levels, shape_out)
+
+                else:
+                    try:
+                        # If requested interp_type is zstd, or zagl,
+                        # pfull3D is required before interpolation.
+                        # Some computations (e.g. wind speed) do not
+                        # require pfull3D and will work without it,
+                        # so we use a try statement here.
+                        p_3D = f.variables["pfull3D"][:]
+                    except:
+                        pass
+
+                if var == "dzTau":
+                    if "dst_mass_micro" in f.variables.keys():
+                        q = f.variables["dst_mass_micro"][:]
+                    elif "dst_mass_mom" in f.variables.keys():
+                        q = f.variables["dst_mass_mom"][:]
+                    OUT = compute_xzTau(q, temp, lev, C_dst, f_type)
+
+                if var == "izTau":
+                    if "ice_mass_micro" in f.variables.keys():
+                        q = f.variables["ice_mass_micro"][:]
+                    elif "ice_mass_mom" in f.variables.keys():
+                        q = f.variables["ice_mass_mom"][:]
+                    OUT = compute_xzTau(q, temp, lev, C_ice, f_type)
+
+                if var == "dst_mass_micro" or var == "dst_mass_mom":
+                    xTau = f.variables["dzTau"][:]
+                    OUT = compute_mmr(xTau, temp, lev, C_dst, f_type)
+
+                if var == "ice_mass_micro" or var == "ice_mass_mom":
+                    xTau = f.variables["izTau"][:]
+                    OUT = compute_mmr(xTau, temp, lev, C_ice, f_type)
+
+                if var == "Vg_sed":
+                    if "dst_mass_micro" in f.variables.keys():
+                        xTau = f.variables["dst_mass_micro"][:]
+                    elif "dst_mass_mom" in f.variables.keys():
+                        xTau = f.variables["dst_mass_mom"][:]
+                    if "dst_num_micro" in f.variables.keys():
+                        nTau = f.variables["dst_num_micro"][:]
+                    elif "dst_num_mom" in f.variables.keys():
+                        nTau = f.variables["dst_num_mom"][:]
+                    OUT = compute_Vg_sed(xTau, nTau, temp)
+
+                if var == "w_net":
+                    Vg = f.variables["Vg_sed"][:]
+                    wvar = f.variables["w"][:]
+                    OUT = compute_w_net(Vg, wvar)
+
+                if var == "pfull3D":
+                    OUT = p_3D
+
+                if var == "DP":
+                    OUT = compute_DP_3D(ps, ak, bk, shape_out)
+
+                if var == "rho":
+                    OUT = compute_rho(p_3D, temp)
+
+                if var == "theta":
+                    OUT = compute_theta(p_3D, ps, temp, f_type)
+
+                if var == "w":
+                    omega = f.variables["omega"][:]
+                    rho = compute_rho(p_3D, temp)
+                    OUT = compute_w(rho, omega)
+
+                if var == "zfull":
+                    OUT = compute_zfull(ps, ak, bk, temp)
+
+                if var == "DZ":
+                    OUT = compute_DZ_3D(ps, ak, bk, temp, shape_out)
+
+                if var == "wspeed" or var == "wdir":
+                    ucomp = f.variables["ucomp"][:]
+                    vcomp = f.variables["vcomp"][:]
+                    theta, mag = cart_to_azimut_TR(ucomp, vcomp,
+                                                    mode="from")
+                    if var == "wdir":
+                        OUT = theta
+                    if var == "wspeed":
+                        OUT = mag
+
+                if var == "N":
+                    theta = compute_theta(p_3D, ps, temp, f_type)
+                    zfull = compute_zfull(ps, ak, bk, temp)
+                    OUT = compute_N(theta, zfull)
+
+                if var == "Ri":
+                    theta = compute_theta(p_3D, ps, temp, f_type)
+                    zfull = compute_zfull(ps, ak, bk, temp)
+                    N = compute_N(theta, zfull)
+
+                    ucomp = f.variables["ucomp"][:]
+                    vcomp = f.variables["vcomp"][:]
+                    du_dz = dvar_dh(
+                        ucomp.transpose(lev_T),
+                        zfull.transpose(lev_T)
+                        ).transpose(lev_T)
+                    dv_dz = dvar_dh(
+                        vcomp.transpose(lev_T),
+                        zfull.transpose(lev_T)
+                        ).transpose(lev_T)
+                    OUT = N**2 / (du_dz**2 + dv_dz**2)
+
+                # .. note:: lev_T swaps dims 0 & 1, ensuring level is
+                # the first dimension for the differentiation
+
+                if var == "Tco2":
+                    OUT = compute_Tco2(p_3D)
+
+                if var == "scorer_wl":
+                    ucomp = f.variables["ucomp"][:]
+                    theta = compute_theta(p_3D, ps, temp, f_type)
+                    zfull = compute_zfull(ps, ak, bk, temp)
+                    N = compute_N(theta, zfull)
+                    OUT = compute_scorer(N, ucomp, zfull)
+
+                if var in ["div", "curl", "fn"]:
+                    lat = f.variables["lat"][:]
+                    lon = f.variables["lon"][:]
+                    ucomp = f.variables["ucomp"][:]
+                    vcomp = f.variables["vcomp"][:]
+
+                if var == "div":
+                    OUT = spherical_div(ucomp, vcomp, lon, lat,
+                                        R=3400*1000.,
+                                        spacing="regular")
+
+                if var == "curl":
+                    OUT = spherical_curl(ucomp, vcomp, lon, lat,
+                                            R=3400*1000.,
+                                            spacing="regular")
+
+                if var == "fn":
+                    theta = f.variables["theta"][:]
+                    OUT = frontogenesis(ucomp, vcomp, theta, lon, lat,
+                                        R=3400*1000.,
+                                        spacing="regular")
+
+                # ==================================================
+                #               Interpolated Files
+                # ==================================================
+                # All interpolated files have the following
+                if interp_type != "pfull":
+                    lev = f.variables[interp_type][:]
+
+                # The next several variables can ONLY be added to
+                # pressure interpolated files.
+                if var == "msf":
+                    vcomp = f.variables["vcomp"][:]
+                    lat = f.variables["lat"][:]
+                    if f_type == "diurn":
+                        # [lev, lat, t, tod, lon]
+                        # -> [t, tod, lev, lat, lon]
+                        # [0 1 2 3 4] -> [2 3 0 1 4]
+                        OUT = mass_stream(
+                            vcomp.transpose([2, 3, 0, 1, 4]), lat, lev,
+                            type=interp_type
+                        ).transpose([2, 3, 0, 1, 4])
+                    else:
+                        OUT = mass_stream(
+                            vcomp.transpose([1, 2, 3, 0]), lat, lev,
+                            type=interp_type
+                        ).transpose([3, 0, 1, 2])
+                        # [t, lev, lat, lon]
+                        # -> [lev, lat, lon, t]
+                        # ->  [t, lev, lat, lon]
+                        # [0 1 2 3] -> [1 2 3 0] -> [3 0 1 2]
+
+                if var == "ep":
+                    OUT = compute_Ep(temp)
+
+                if var == "ek":
+                    ucomp = f.variables["ucomp"][:]
+                    vcomp = f.variables["vcomp"][:]
+                    OUT = compute_Ek(ucomp, vcomp)
+
+                if var == "mx":
+                    OUT = compute_MF(f.variables["ucomp"][:],
+                                        f.variables["w"][:])
+
+                if var == "my":
+                    OUT = compute_MF(f.variables["vcomp"][:],
+                                        f.variables["w"][:])
+
+                if var == "ax":
+                    mx = compute_MF(f.variables["ucomp"][:],
+                                    f.variables["w"][:])
+                    rho = f.variables["rho"][:]
+                    OUT = compute_WMFF(mx, rho, lev, interp_type)
+
+                if var == "ay":
+                    my = compute_MF(f.variables["vcomp"][:],
+                                    f.variables["w"][:])
+                    rho = f.variables["rho"][:]
+                    OUT = compute_WMFF(my, rho, lev, interp_type)
+
+                if var == "tp_t":
+                    OUT = zonal_detrend(temp)/temp
+
+                if interp_type == "pfull":
+                    # Filter out NANs in the native files
+                    OUT[np.isnan(OUT)] = fill_value
+
+                else:
+                    # Add NANs to the interpolated files
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore",
+                                                category = RuntimeWarning)
+                        OUT[OUT > 1.e30] = np.nan
+                        OUT[OUT < -1.e30] = np.nan
+
+                # Log the variable
+                var_Ncdf = f.createVariable(var, "f4", dim_out)
+                var_Ncdf.long_name = (master_list[var][0]
+                                        + cap_str)
+                var_Ncdf.units = master_list[var][1]
+                var_Ncdf[:] = OUT
+
+                print(f"{Green}*** Variable '{var}' added successfully ***{Nclr}")
+                f.close()
+                
+        except Exception as e:
+            except_message(debug, e, var, ifile)
+            
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
@@ -1478,345 +1850,342 @@ def main():
         # ==============================================================
         # If the list is not empty, load ak and bk for the pressure
         # calculation. ak and bk are always necessary.
-
-        # Create a list to track variables that need to be added, including dependencies
-        variables_to_add = []
-        failed_variables = []
+        process_add_variables(ifile, add_list, master_list, debug)
 
         # First pass: Build the list of variables to add, including dependencies
-        for ivar in add_list:
-            if ivar not in master_list.keys():
-                # If the variable to be added is NOT supported
-                print(f"{Red}Variable ``{ivar}`` is not supported and "
-                      f"cannot be added to the file.{Nclr}")
-                failed_variables.append(ivar)
-                continue
+        # for ivar in add_list:
+        #     if ivar not in master_list.keys():
+        #         # If the variable to be added is NOT supported
+        #         print(f"{Red}Variable ``{ivar}`` is not supported and "
+        #               f"cannot be added to the file.{Nclr}")
+        #         failed_variables.append(ivar)
+        #         continue
             
-            try:
-                with Dataset(ifile, "a", format="NETCDF4_CLASSIC") as f:
-                    # Check if variable already exists
-                    if ivar in f.variables:
-                        print(f"{Yellow}Variable {ivar} already exists in the file.{Nclr}")
-                        continue
+        #     try:
+        #         with Dataset(ifile, "a", format="NETCDF4_CLASSIC") as f:
+        #             # Check if variable already exists
+        #             if ivar in f.variables:
+        #                 print(f"{Yellow}Variable {ivar} already exists in the file.{Nclr}")
+        #                 continue
                         
-                    # Check file compatibility
-                    f_type, interp_type = FV3_file_type(f)
-                    compat_file_fmt = ", ".join([cf for cf in master_list[ivar][3]])
+        #             # Check file compatibility
+        #             f_type, interp_type = FV3_file_type(f)
+        #             compat_file_fmt = ", ".join([cf for cf in master_list[ivar][3]])
                     
-                    if interp_type not in master_list[ivar][3]:
-                        if "pfull" in compat_file_fmt or "phalf" in compat_file_fmt:
-                            print(f"{Red}ERROR: Variable '{Yellow}{ivar}{Red}' can only be added to non-interpolated file(s){Nclr}")
-                        else:
-                            print(f"{Red}ERROR: Variable '{Yellow}{ivar}{Red}' can only be added to file(s) ending in: {Yellow}{compat_file_fmt}{Nclr}")
-                        failed_variables.append(ivar)
-                        continue
+        #             if interp_type not in master_list[ivar][3]:
+        #                 if "pfull" in compat_file_fmt or "phalf" in compat_file_fmt:
+        #                     print(f"{Red}ERROR: Variable '{Yellow}{ivar}{Red}' can only be added to non-interpolated file(s){Nclr}")
+        #                 else:
+        #                     print(f"{Red}ERROR: Variable '{Yellow}{ivar}{Red}' can only be added to file(s) ending in: {Yellow}{compat_file_fmt}{Nclr}")
+        #                 failed_variables.append(ivar)
+        #                 continue
                     
-                    # Check dependencies
-                    if check_dependencies(f, ivar, master_list, add_missing=True):
-                        # If all dependencies are present or can be added, add this variable to our list
-                        if ivar not in variables_to_add:
-                            variables_to_add.append(ivar)
+        #             # Check dependencies
+        #             if check_dependencies(f, ivar, master_list, add_missing=True):
+        #                 # If all dependencies are present or can be added, add this variable to our list
+        #                 if ivar not in variables_to_add:
+        #                     variables_to_add.append(ivar)
                         
-                        # Check if we need to add any missing dependencies
-                        for dep_var in master_list[ivar][2]:
-                            if dep_var not in f.variables and dep_var not in variables_to_add:
-                                variables_to_add.append(dep_var)
-                    else:
-                        # If dependencies cannot be satisfied
-                        failed_variables.append(ivar)
+        #                 # Check if we need to add any missing dependencies
+        #                 for dep_var in master_list[ivar][2]:
+        #                     if dep_var not in f.variables and dep_var not in variables_to_add:
+        #                         variables_to_add.append(dep_var)
+        #             else:
+        #                 # If dependencies cannot be satisfied
+        #                 failed_variables.append(ivar)
             
-            except Exception as e:
-                print(f"{Red}Error checking dependencies for {ivar}: {str(e)}{Nclr}")
-                failed_variables.append(ivar)
+        #     except Exception as e:
+        #         print(f"{Red}Error checking dependencies for {ivar}: {str(e)}{Nclr}")
+        #         failed_variables.append(ivar)
         
-        # Second pass: Add variables in order (dependencies first)
-        for ivar in variables_to_add:
-            try:
-                f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
-                f_type, interp_type = FV3_file_type(f)
+        # # Second pass: Add variables in order (dependencies first)
+        # for ivar in variables_to_add:
+        #     try:
+        #         f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
+        #         f_type, interp_type = FV3_file_type(f)
 
-                print(f"Processing: {ivar}...")
+        #         print(f"Processing: {ivar}...")
 
-                if interp_type == "pfull":
-                    # Load ak and bk for pressure calculation.
-                    # Usually required.
-                    ak, bk = ak_bk_loader(f)
+                # if interp_type == "pfull":
+                #     # Load ak and bk for pressure calculation.
+                #     # Usually required.
+                #     ak, bk = ak_bk_loader(f)
 
-                # temp and ps are always required. Get dimension
-                dim_out = f.variables["temp"].dimensions
-                temp = f.variables["temp"][:]
-                shape_out = temp.shape
+                # # temp and ps are always required. Get dimension
+                # dim_out = f.variables["temp"].dimensions
+                # temp = f.variables["temp"][:]
+                # shape_out = temp.shape
 
-                if f_type == "diurn":
-                    # [t, tod, lev, lat, lon]
-                    # -> [lev, tod, t, lat, lon]
-                    # -> [t, tod, lev, lat, lon]
-                    lev_T = [2, 1, 0, 3, 4]
-                    # [0 1 2 3 4] -> [2 1 0 3 4] -> [2 1 0 3 4]
-                    lev_T_out = [1, 2, 0, 3, 4]
-                    # In diurn file, level is the 3rd axis:
-                    # [t, tod, lev, lat, lon]
-                    lev_axis = 2
-                else:
-                    # [t, lev, lat, lon]
-                    # -> [lev, t, lat, lon]
-                    # -> [t, lev, lat, lon]
-                    lev_T = [1, 0, 2, 3]
-                    # [0 1 2 3] -> [1 0 2 3] -> [1 0 2 3]
-                    lev_T_out = lev_T
-                    # In average and daily files, level is the 2nd
-                    # axis = [t, lev, lat, lon]
-                    lev_axis = 1
+                # if f_type == "diurn":
+                #     # [t, tod, lev, lat, lon]
+                #     # -> [lev, tod, t, lat, lon]
+                #     # -> [t, tod, lev, lat, lon]
+                #     lev_T = [2, 1, 0, 3, 4]
+                #     # [0 1 2 3 4] -> [2 1 0 3 4] -> [2 1 0 3 4]
+                #     lev_T_out = [1, 2, 0, 3, 4]
+                #     # In diurn file, level is the 3rd axis:
+                #     # [t, tod, lev, lat, lon]
+                #     lev_axis = 2
+                # else:
+                #     # [t, lev, lat, lon]
+                #     # -> [lev, t, lat, lon]
+                #     # -> [t, lev, lat, lon]
+                #     lev_T = [1, 0, 2, 3]
+                #     # [0 1 2 3] -> [1 0 2 3] -> [1 0 2 3]
+                #     lev_T_out = lev_T
+                #     # In average and daily files, level is the 2nd
+                #     # axis = [t, lev, lat, lon]
+                #     lev_axis = 1
 
-                # ==================================================
-                #               Non-Interpolated Files
-                # ==================================================
+                # # ==================================================
+                # #               Non-Interpolated Files
+                # # ==================================================
 
-                if interp_type == "pfull":
-                    # level, ps, and p_3d are often required.
-                    lev = f.variables["pfull"][:]
-                    ps = f.variables["ps"][:]
-                    p_3D = compute_p_3D(ps, ak, bk, shape_out)
+                # if interp_type == "pfull":
+                #     # level, ps, and p_3d are often required.
+                #     lev = f.variables["pfull"][:]
+                #     ps = f.variables["ps"][:]
+                #     p_3D = compute_p_3D(ps, ak, bk, shape_out)
 
-                elif interp_type == "pstd":
-                    # If file interpolated to pstd, calculate the 3D
-                    # pressure field.
-                    lev = f.variables["pstd"][:]
+                # elif interp_type == "pstd":
+                #     # If file interpolated to pstd, calculate the 3D
+                #     # pressure field.
+                #     lev = f.variables["pstd"][:]
 
-                    # Create the right shape that includes all time steps
-                    rshp_shape = [1 for i in range(0, len(shape_out))]
-                    rshp_shape[0] = shape_out[0]  # Set the correct number of time steps
-                    rshp_shape[lev_axis] = len(lev)
+                #     # Create the right shape that includes all time steps
+                #     rshp_shape = [1 for i in range(0, len(shape_out))]
+                #     rshp_shape[0] = shape_out[0]  # Set the correct number of time steps
+                #     rshp_shape[lev_axis] = len(lev)
 
-                    # p_3D = lev.reshape(rshp_shape)
-                    # Reshape and broadcast properly
-                    p_levels = lev.reshape([1, len(lev), 1, 1])
-                    p_3D = np.broadcast_to(p_levels, shape_out)
+                #     # p_3D = lev.reshape(rshp_shape)
+                #     # Reshape and broadcast properly
+                #     p_levels = lev.reshape([1, len(lev), 1, 1])
+                #     p_3D = np.broadcast_to(p_levels, shape_out)
 
-                else:
-                    try:
-                        # If requested interp_type is zstd, or zagl,
-                        # pfull3D is required before interpolation.
-                        # Some computations (e.g. wind speed) do not
-                        # require pfull3D and will work without it,
-                        # so we use a try statement here.
-                        p_3D = f.variables["pfull3D"][:]
-                    except:
-                        pass
+                # else:
+                #     try:
+                #         # If requested interp_type is zstd, or zagl,
+                #         # pfull3D is required before interpolation.
+                #         # Some computations (e.g. wind speed) do not
+                #         # require pfull3D and will work without it,
+                #         # so we use a try statement here.
+                #         p_3D = f.variables["pfull3D"][:]
+                #     except:
+                #         pass
 
-                if ivar == "dzTau":
-                    if "dst_mass_micro" in f.variables.keys():
-                        q = f.variables["dst_mass_micro"][:]
-                    elif "dst_mass_mom" in f.variables.keys():
-                        q = f.variables["dst_mass_mom"][:]
-                    OUT = compute_xzTau(q, temp, lev, C_dst, f_type)
+                # if ivar == "dzTau":
+                #     if "dst_mass_micro" in f.variables.keys():
+                #         q = f.variables["dst_mass_micro"][:]
+                #     elif "dst_mass_mom" in f.variables.keys():
+                #         q = f.variables["dst_mass_mom"][:]
+                #     OUT = compute_xzTau(q, temp, lev, C_dst, f_type)
 
-                if ivar == "izTau":
-                    if "ice_mass_micro" in f.variables.keys():
-                        q = f.variables["ice_mass_micro"][:]
-                    elif "ice_mass_mom" in f.variables.keys():
-                        q = f.variables["ice_mass_mom"][:]
-                    OUT = compute_xzTau(q, temp, lev, C_ice, f_type)
+                # if ivar == "izTau":
+                #     if "ice_mass_micro" in f.variables.keys():
+                #         q = f.variables["ice_mass_micro"][:]
+                #     elif "ice_mass_mom" in f.variables.keys():
+                #         q = f.variables["ice_mass_mom"][:]
+                #     OUT = compute_xzTau(q, temp, lev, C_ice, f_type)
 
-                if ivar == "dst_mass_micro" or ivar == "dst_mass_mom":
-                    xTau = f.variables["dzTau"][:]
-                    OUT = compute_mmr(xTau, temp, lev, C_dst, f_type)
+                # if ivar == "dst_mass_micro" or ivar == "dst_mass_mom":
+                #     xTau = f.variables["dzTau"][:]
+                #     OUT = compute_mmr(xTau, temp, lev, C_dst, f_type)
 
-                if ivar == "ice_mass_micro" or ivar == "ice_mass_mom":
-                    xTau = f.variables["izTau"][:]
-                    OUT = compute_mmr(xTau, temp, lev, C_ice, f_type)
+                # if ivar == "ice_mass_micro" or ivar == "ice_mass_mom":
+                #     xTau = f.variables["izTau"][:]
+                #     OUT = compute_mmr(xTau, temp, lev, C_ice, f_type)
 
-                if ivar == "Vg_sed":
-                    if "dst_mass_micro" in f.variables.keys():
-                        xTau = f.variables["dst_mass_micro"][:]
-                    elif "dst_mass_mom" in f.variables.keys():
-                        xTau = f.variables["dst_mass_mom"][:]
-                    if "dst_num_micro" in f.variables.keys():
-                        nTau = f.variables["dst_num_micro"][:]
-                    elif "dst_num_mom" in f.variables.keys():
-                        nTau = f.variables["dst_num_mom"][:]
-                    OUT = compute_Vg_sed(xTau, nTau, temp)
+                # if ivar == "Vg_sed":
+                #     if "dst_mass_micro" in f.variables.keys():
+                #         xTau = f.variables["dst_mass_micro"][:]
+                #     elif "dst_mass_mom" in f.variables.keys():
+                #         xTau = f.variables["dst_mass_mom"][:]
+                #     if "dst_num_micro" in f.variables.keys():
+                #         nTau = f.variables["dst_num_micro"][:]
+                #     elif "dst_num_mom" in f.variables.keys():
+                #         nTau = f.variables["dst_num_mom"][:]
+                #     OUT = compute_Vg_sed(xTau, nTau, temp)
 
-                if ivar == "w_net":
-                    Vg = f.variables["Vg_sed"][:]
-                    wvar = f.variables["w"][:]
-                    OUT = compute_w_net(Vg, wvar)
+                # if ivar == "w_net":
+                #     Vg = f.variables["Vg_sed"][:]
+                #     wvar = f.variables["w"][:]
+                #     OUT = compute_w_net(Vg, wvar)
 
-                if ivar == "pfull3D":
-                    OUT = p_3D
+                # if ivar == "pfull3D":
+                #     OUT = p_3D
 
-                if ivar == "DP":
-                    OUT = compute_DP_3D(ps, ak, bk, shape_out)
+                # if ivar == "DP":
+                #     OUT = compute_DP_3D(ps, ak, bk, shape_out)
 
-                if ivar == "rho":
-                    OUT = compute_rho(p_3D, temp)
+                # if ivar == "rho":
+                #     OUT = compute_rho(p_3D, temp)
 
-                if ivar == "theta":
-                    OUT = compute_theta(p_3D, ps, temp, f_type)
+                # if ivar == "theta":
+                #     OUT = compute_theta(p_3D, ps, temp, f_type)
 
-                if ivar == "w":
-                    omega = f.variables["omega"][:]
-                    rho = compute_rho(p_3D, temp)
-                    OUT = compute_w(rho, omega)
+                # if ivar == "w":
+                #     omega = f.variables["omega"][:]
+                #     rho = compute_rho(p_3D, temp)
+                #     OUT = compute_w(rho, omega)
 
-                if ivar == "zfull":
-                    OUT = compute_zfull(ps, ak, bk, temp)
+                # if ivar == "zfull":
+                #     OUT = compute_zfull(ps, ak, bk, temp)
 
-                if ivar == "DZ":
-                    OUT = compute_DZ_3D(ps, ak, bk, temp, shape_out)
+                # if ivar == "DZ":
+                #     OUT = compute_DZ_3D(ps, ak, bk, temp, shape_out)
 
-                if ivar == "wspeed" or ivar == "wdir":
-                    ucomp = f.variables["ucomp"][:]
-                    vcomp = f.variables["vcomp"][:]
-                    theta, mag = cart_to_azimut_TR(ucomp, vcomp,
-                                                   mode="from")
-                    if ivar == "wdir":
-                        OUT = theta
-                    if ivar == "wspeed":
-                        OUT = mag
+                # if ivar == "wspeed" or ivar == "wdir":
+                #     ucomp = f.variables["ucomp"][:]
+                #     vcomp = f.variables["vcomp"][:]
+                #     theta, mag = cart_to_azimut_TR(ucomp, vcomp,
+                #                                    mode="from")
+                #     if ivar == "wdir":
+                #         OUT = theta
+                #     if ivar == "wspeed":
+                #         OUT = mag
 
-                if ivar == "N":
-                    theta = compute_theta(p_3D, ps, temp, f_type)
-                    zfull = compute_zfull(ps, ak, bk, temp)
-                    OUT = compute_N(theta, zfull)
+                # if ivar == "N":
+                #     theta = compute_theta(p_3D, ps, temp, f_type)
+                #     zfull = compute_zfull(ps, ak, bk, temp)
+                #     OUT = compute_N(theta, zfull)
 
-                if ivar == "Ri":
-                    theta = compute_theta(p_3D, ps, temp, f_type)
-                    zfull = compute_zfull(ps, ak, bk, temp)
-                    N = compute_N(theta, zfull)
+                # if ivar == "Ri":
+                #     theta = compute_theta(p_3D, ps, temp, f_type)
+                #     zfull = compute_zfull(ps, ak, bk, temp)
+                #     N = compute_N(theta, zfull)
 
-                    ucomp = f.variables["ucomp"][:]
-                    vcomp = f.variables["vcomp"][:]
-                    du_dz = dvar_dh(
-                        ucomp.transpose(lev_T),
-                        zfull.transpose(lev_T)
-                        ).transpose(lev_T)
-                    dv_dz = dvar_dh(
-                        vcomp.transpose(lev_T),
-                        zfull.transpose(lev_T)
-                        ).transpose(lev_T)
-                    OUT = N**2 / (du_dz**2 + dv_dz**2)
+                #     ucomp = f.variables["ucomp"][:]
+                #     vcomp = f.variables["vcomp"][:]
+                #     du_dz = dvar_dh(
+                #         ucomp.transpose(lev_T),
+                #         zfull.transpose(lev_T)
+                #         ).transpose(lev_T)
+                #     dv_dz = dvar_dh(
+                #         vcomp.transpose(lev_T),
+                #         zfull.transpose(lev_T)
+                #         ).transpose(lev_T)
+                #     OUT = N**2 / (du_dz**2 + dv_dz**2)
 
-                # .. note:: lev_T swaps dims 0 & 1, ensuring level is
-                # the first dimension for the differentiation
+                # # .. note:: lev_T swaps dims 0 & 1, ensuring level is
+                # # the first dimension for the differentiation
 
-                if ivar == "Tco2":
-                    OUT = compute_Tco2(p_3D)
+                # if ivar == "Tco2":
+                #     OUT = compute_Tco2(p_3D)
 
-                if ivar == "scorer_wl":
-                    ucomp = f.variables["ucomp"][:]
-                    theta = compute_theta(p_3D, ps, temp, f_type)
-                    zfull = compute_zfull(ps, ak, bk, temp)
-                    N = compute_N(theta, zfull)
-                    OUT = compute_scorer(N, ucomp, zfull)
+                # if ivar == "scorer_wl":
+                #     ucomp = f.variables["ucomp"][:]
+                #     theta = compute_theta(p_3D, ps, temp, f_type)
+                #     zfull = compute_zfull(ps, ak, bk, temp)
+                #     N = compute_N(theta, zfull)
+                #     OUT = compute_scorer(N, ucomp, zfull)
 
-                if ivar in ["div", "curl", "fn"]:
-                    lat = f.variables["lat"][:]
-                    lon = f.variables["lon"][:]
-                    ucomp = f.variables["ucomp"][:]
-                    vcomp = f.variables["vcomp"][:]
+                # if ivar in ["div", "curl", "fn"]:
+                #     lat = f.variables["lat"][:]
+                #     lon = f.variables["lon"][:]
+                #     ucomp = f.variables["ucomp"][:]
+                #     vcomp = f.variables["vcomp"][:]
 
-                if ivar == "div":
-                    OUT = spherical_div(ucomp, vcomp, lon, lat,
-                                        R=3400*1000.,
-                                        spacing="regular")
+                # if ivar == "div":
+                #     OUT = spherical_div(ucomp, vcomp, lon, lat,
+                #                         R=3400*1000.,
+                #                         spacing="regular")
 
-                if ivar == "curl":
-                    OUT = spherical_curl(ucomp, vcomp, lon, lat,
-                                         R=3400*1000.,
-                                         spacing="regular")
+                # if ivar == "curl":
+                #     OUT = spherical_curl(ucomp, vcomp, lon, lat,
+                #                          R=3400*1000.,
+                #                          spacing="regular")
 
-                if ivar == "fn":
-                    theta = f.variables["theta"][:]
-                    OUT = frontogenesis(ucomp, vcomp, theta, lon, lat,
-                                        R=3400*1000.,
-                                        spacing="regular")
+                # if ivar == "fn":
+                #     theta = f.variables["theta"][:]
+                #     OUT = frontogenesis(ucomp, vcomp, theta, lon, lat,
+                #                         R=3400*1000.,
+                #                         spacing="regular")
 
-                # ==================================================
-                #               Interpolated Files
-                # ==================================================
-                # All interpolated files have the following
-                if interp_type != "pfull":
-                    lev = f.variables[interp_type][:]
+                # # ==================================================
+                # #               Interpolated Files
+                # # ==================================================
+                # # All interpolated files have the following
+                # if interp_type != "pfull":
+                #     lev = f.variables[interp_type][:]
 
-                # The next several variables can ONLY be added to
-                # pressure interpolated files.
-                if ivar == "msf":
-                    vcomp = f.variables["vcomp"][:]
-                    lat = f.variables["lat"][:]
-                    if f_type == "diurn":
-                        # [lev, lat, t, tod, lon]
-                        # -> [t, tod, lev, lat, lon]
-                        # [0 1 2 3 4] -> [2 3 0 1 4]
-                        OUT = mass_stream(
-                            vcomp.transpose([2, 3, 0, 1, 4]), lat, lev,
-                            type=interp_type
-                        ).transpose([2, 3, 0, 1, 4])
-                    else:
-                        OUT = mass_stream(
-                            vcomp.transpose([1, 2, 3, 0]), lat, lev,
-                            type=interp_type
-                        ).transpose([3, 0, 1, 2])
-                        # [t, lev, lat, lon]
-                        # -> [lev, lat, lon, t]
-                        # ->  [t, lev, lat, lon]
-                        # [0 1 2 3] -> [1 2 3 0] -> [3 0 1 2]
+                # # The next several variables can ONLY be added to
+                # # pressure interpolated files.
+                # if ivar == "msf":
+                #     vcomp = f.variables["vcomp"][:]
+                #     lat = f.variables["lat"][:]
+                #     if f_type == "diurn":
+                #         # [lev, lat, t, tod, lon]
+                #         # -> [t, tod, lev, lat, lon]
+                #         # [0 1 2 3 4] -> [2 3 0 1 4]
+                #         OUT = mass_stream(
+                #             vcomp.transpose([2, 3, 0, 1, 4]), lat, lev,
+                #             type=interp_type
+                #         ).transpose([2, 3, 0, 1, 4])
+                #     else:
+                #         OUT = mass_stream(
+                #             vcomp.transpose([1, 2, 3, 0]), lat, lev,
+                #             type=interp_type
+                #         ).transpose([3, 0, 1, 2])
+                #         # [t, lev, lat, lon]
+                #         # -> [lev, lat, lon, t]
+                #         # ->  [t, lev, lat, lon]
+                #         # [0 1 2 3] -> [1 2 3 0] -> [3 0 1 2]
 
-                if ivar == "ep":
-                    OUT = compute_Ep(temp)
+                # if ivar == "ep":
+                #     OUT = compute_Ep(temp)
 
-                if ivar == "ek":
-                    ucomp = f.variables["ucomp"][:]
-                    vcomp = f.variables["vcomp"][:]
-                    OUT = compute_Ek(ucomp, vcomp)
+                # if ivar == "ek":
+                #     ucomp = f.variables["ucomp"][:]
+                #     vcomp = f.variables["vcomp"][:]
+                #     OUT = compute_Ek(ucomp, vcomp)
 
-                if ivar == "mx":
-                    OUT = compute_MF(f.variables["ucomp"][:],
-                                     f.variables["w"][:])
+                # if ivar == "mx":
+                #     OUT = compute_MF(f.variables["ucomp"][:],
+                #                      f.variables["w"][:])
 
-                if ivar == "my":
-                    OUT = compute_MF(f.variables["vcomp"][:],
-                                     f.variables["w"][:])
+                # if ivar == "my":
+                #     OUT = compute_MF(f.variables["vcomp"][:],
+                #                      f.variables["w"][:])
 
-                if ivar == "ax":
-                    mx = compute_MF(f.variables["ucomp"][:],
-                                    f.variables["w"][:])
-                    rho = f.variables["rho"][:]
-                    OUT = compute_WMFF(mx, rho, lev, interp_type)
+                # if ivar == "ax":
+                #     mx = compute_MF(f.variables["ucomp"][:],
+                #                     f.variables["w"][:])
+                #     rho = f.variables["rho"][:]
+                #     OUT = compute_WMFF(mx, rho, lev, interp_type)
 
-                if ivar == "ay":
-                    my = compute_MF(f.variables["vcomp"][:],
-                                    f.variables["w"][:])
-                    rho = f.variables["rho"][:]
-                    OUT = compute_WMFF(my, rho, lev, interp_type)
+                # if ivar == "ay":
+                #     my = compute_MF(f.variables["vcomp"][:],
+                #                     f.variables["w"][:])
+                #     rho = f.variables["rho"][:]
+                #     OUT = compute_WMFF(my, rho, lev, interp_type)
 
-                if ivar == "tp_t":
-                    OUT = zonal_detrend(temp)/temp
+                # if ivar == "tp_t":
+                #     OUT = zonal_detrend(temp)/temp
 
-                if interp_type == "pfull":
-                    # Filter out NANs in the native files
-                    OUT[np.isnan(OUT)] = fill_value
+                # if interp_type == "pfull":
+                #     # Filter out NANs in the native files
+                #     OUT[np.isnan(OUT)] = fill_value
 
-                else:
-                    # Add NANs to the interpolated files
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("ignore",
-                                              category = RuntimeWarning)
-                        OUT[OUT > 1.e30] = np.nan
-                        OUT[OUT < -1.e30] = np.nan
+                # else:
+                #     # Add NANs to the interpolated files
+                #     with warnings.catch_warnings():
+                #         warnings.simplefilter("ignore",
+                #                               category = RuntimeWarning)
+                #         OUT[OUT > 1.e30] = np.nan
+                #         OUT[OUT < -1.e30] = np.nan
 
-                # Log the variable
-                var_Ncdf = f.createVariable(ivar, "f4", dim_out)
-                var_Ncdf.long_name = (master_list[ivar][0]
-                                      + cap_str)
-                var_Ncdf.units = master_list[ivar][1]
-                var_Ncdf[:] = OUT
+                # # Log the variable
+                # var_Ncdf = f.createVariable(ivar, "f4", dim_out)
+                # var_Ncdf.long_name = (master_list[ivar][0]
+                #                       + cap_str)
+                # var_Ncdf.units = master_list[ivar][1]
+                # var_Ncdf[:] = OUT
                 
-                print(f"{Green}*** Variable '{ivar}' added successfully ***{Nclr}")
-                f.close()
+                # print(f"{Green}*** Variable '{ivar}' added successfully ***{Nclr}")
+                # f.close()
 
-            except Exception as e:
-                except_message(debug, e, ivar, ifile)
+            # except Exception as e:
+            #     except_message(debug, e, ivar, ifile)
                 
         # ==============================================================
         #                   Vertical Differentiation
