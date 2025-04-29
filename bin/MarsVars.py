@@ -1403,11 +1403,13 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
     # Create a topologically sorted list of variables to add
     variables_to_add = []
     visited = set()
+    already_in_file = []  # Track variables that are already in the file
+    failed_vars = []      # Track variables that failed to process
     
     def add_with_dependencies(var):
         """Helper function to add a variable and its dependencies to the list"""
         if var in visited:
-            return True # Already processed this variable
+            return var in variables_to_add or var in already_in_file
         
         visited.add(var)
         
@@ -1431,30 +1433,32 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
             dependencies = master_list[var][2]
             
             # Check each dependency
-            all_deps_ok = True
+            missing_deps = []
             for dep in dependencies:
                 if dep in f.variables:
                     # Dependency already exists in file
                     continue
                     
                 if dep in master_list:
-                    # Dependency can be added
+                    # Dependency can be added - try recursively
                     if not add_with_dependencies(dep):
-                        # If any dependency fails, mark this variable as failing too
-                        all_deps_ok = False
-                        print(f"{Red}Cannot add {var}: Required dependency {dep} cannot be added{Nclr}")
+                        missing_deps.append(dep)
                 else:
                     # This dependency is not in master_list and can't be added
+                    missing_deps.append(dep)
                     print(f"{Red}Cannot add {var}: Required dependency {dep} is not in the list of supported variables{Nclr}")
-                    all_deps_ok = False
             
-            # If all dependencies are good, add this variable to our list
-            if all_deps_ok:
-                if var not in variables_to_add:
-                    variables_to_add.append(var)
-                return True
-            else:
+            # If any dependencies couldn't be added, fail this variable too
+            if missing_deps:
+                deps_str = ", ".join(missing_deps)
+                print(f"{Red}Cannot add {var}: Missing required dependencies: {deps_str}{Nclr}")
+                failed_vars.append(var)
                 return False
+            
+            # All dependencies are satisfied, add this variable to our list
+            if var not in variables_to_add:
+                variables_to_add.append(var)
+            return True
     
     # Process each requested variable
     for var in add_list:
@@ -1466,14 +1470,34 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
             add_with_dependencies(var)
         except Exception as e:
             print(f"{Red}Error processing {var}: {str(e)}{Nclr}")
+            failed_vars.append(var)
             if debug:
                 traceback.print_exc()
     
+    # Print feedback about already existing variables
+    if already_in_file and set(already_in_file) >= set(add_list):
+        print(f"{Yellow}All requested variables are already in the file:{Nclr}")
+        for var in already_in_file:
+            if var in add_list:
+                print(f"{Yellow}  - {var}{Nclr}")
+        return
+    elif already_in_file:
+        print(f"{Yellow}The following requested variables are already in the file:{Nclr}")
+        for var in already_in_file:
+            if var in add_list:
+                print(f"{Yellow}  - {var}{Nclr}")
+                
     # Now add the variables in the correct order
+    added_vars = []
     for var in variables_to_add:
         try:
             f = Dataset(ifile, "a", format="NETCDF4_CLASSIC")
             f_type, interp_type = FV3_file_type(f)
+            
+             # Skip if already in file (double-check)
+            if var in f.variables:
+                f.close()
+                continue
             
             print(f"Processing: {var}...")
             
@@ -1751,12 +1775,18 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
             var_Ncdf.units = master_list[var][1]
             var_Ncdf[:] = OUT
 
+            # After successfully adding
+            added_vars.append(var)
             print(f"{Green}*** Variable '{var}' added successfully ***{Nclr}")
             f.close()
             
         except Exception as e:
             except_message(debug, e, var, ifile)
-            
+    
+    # Final summary
+    if not added_vars and not already_in_file and add_list:
+        print(f"{Red}No variables were added. Please check the error messages above.{Nclr}")
+        
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
