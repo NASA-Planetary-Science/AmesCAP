@@ -1511,11 +1511,11 @@ def main():
                         q = f.variables["ice_mass_mom"][:]
                     OUT = compute_xzTau(q, temp, lev, C_ice, f_type)
 
-                if ivar == "dst_mass_micro" or var == "dst_mass_mom":
+                if ivar == "dst_mass_micro" or ivar == "dst_mass_mom":
                     xTau = f.variables["dzTau"][:]
                     OUT = compute_mmr(xTau, temp, lev, C_dst, f_type)
 
-                if ivar == "ice_mass_micro" or var == "ice_mass_mom":
+                if ivar == "ice_mass_micro" or ivar == "ice_mass_mom":
                     xTau = f.variables["izTau"][:]
                     OUT = compute_mmr(xTau, temp, lev, C_ice, f_type)
 
