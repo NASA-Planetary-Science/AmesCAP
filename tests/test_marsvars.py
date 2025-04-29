@@ -240,20 +240,20 @@ class TestMarsVars(unittest.TestCase):
 
     def test_differentiate_wrt_z(self):
         """Test differentiating a variable with respect to the Z axis"""
-        # Now differentiate temperature
-        result = self.run_mars_vars(['01336.atmos_average.nc', '-zdiff', 'temp'])
+        # Now differentiate dst_mass_micro
+        result = self.run_mars_vars(['01336.atmos_average.nc', '-zdiff', 'dst_mass_micro'])
 
         # Check for successful execution
         self.assertEqual(result.returncode, 0, "Differentiate variable command failed")
 
         # Check that the output variable was created
         output_file = self.check_file_exists('01336.atmos_average.nc')
-        self.verify_netcdf_has_variable(output_file, 'd_dz_temp')
+        self.verify_netcdf_has_variable(output_file, 'd_dz_dst_mass_micro')
 
         # Verify units and naming
         nc = Dataset(output_file, 'r')
         try:
-            var = nc.variables['d_dz_temp']
+            var = nc.variables['d_dz_dst_mass_micro']
             self.assertIn('/m', var.units, "Units should contain '/m'")
             self.assertIn('vertical gradient', var.long_name.lower(), "Long name should mention vertical gradient")
         finally:
@@ -261,29 +261,29 @@ class TestMarsVars(unittest.TestCase):
 
     def test_column_integrate(self):
         """Test column integration of a variable"""        
-        # Now column integrate temperature
-        result = self.run_mars_vars(['01336.atmos_average.nc', '-col', 'temp'])
+        # Now column integrate dst_mass_micro
+        result = self.run_mars_vars(['01336.atmos_average.nc', '-col', 'dst_mass_micro'])
 
         # Check for successful execution
         self.assertEqual(result.returncode, 0, "Column integrate command failed")
 
         # Check that the output variable was created
         output_file = self.check_file_exists('01336.atmos_average.nc')
-        self.verify_netcdf_has_variable(output_file, 'temp_col')
+        self.verify_netcdf_has_variable(output_file, 'dst_mass_micro_col')
 
         # Verify that the vertical dimension is removed in the output variable
         nc = Dataset(output_file, 'r')
         try:
-            # Original temperature has vertical dimension
-            temp_dims = nc.variables['temp'].dimensions
-            temp_col_dims = nc.variables['temp_col'].dimensions
+            # Original dst_mass_micro has vertical dimension
+            dst_mass_micro_dims = nc.variables['dst_mass_micro'].dimensions
+            dst_mass_micro_col_dims = nc.variables['dst_mass_micro_col'].dimensions
             
-            # temp_col should have one less dimension than temp
-            self.assertEqual(len(temp_dims) - 1, len(temp_col_dims), 
+            # dst_mass_micro_col should have one less dimension than dst_mass_micro
+            self.assertEqual(len(dst_mass_micro_dims) - 1, len(dst_mass_micro_col_dims), 
                             "Column integrated variable should have one less dimension")
             
             # Verify units
-            self.assertIn('/m2', nc.variables['temp_col'].units, 
+            self.assertIn('/m2', nc.variables['dst_mass_micro_col'].units, 
                           "Column integrated variable should have units with /m2")
         finally:
             nc.close()
@@ -397,9 +397,6 @@ class TestMarsVars(unittest.TestCase):
         # Verify the attributes and scaling were applied
         nc = Dataset(output_file, 'r')
         try:
-            # Original ps should be gone
-            self.assertNotIn('ps', nc.variables, "Original ps variable should be gone")
-            
             # New variable should have the specified attributes
             ps_mbar = nc.variables['ps_mbar']
             self.assertEqual(ps_mbar.long_name, 'Surface Pressure in Millibars', 
@@ -409,7 +406,10 @@ class TestMarsVars(unittest.TestCase):
             # Values should be scaled by 0.01
             # We can't directly compare to the original since it's gone,
             # but we can check if values are in a reasonable range for mbar (~6-10 mbar for Mars)
-            self.assertTrue(np.all((ps_mbar[:] > 5) & (ps_mbar[:] < 15)), 
+            # self.assertTrue(np.all((ps_mbar[:] > 5) & (ps_mbar[:] < 15)), 
+            #                "Values don't appear to be correctly scaled to mbar")
+            ps = nc.variables['ps']
+            self.assertTrue(np.all((ps[:] * 0.01) == ps_mbar[:]), 
                            "Values don't appear to be correctly scaled to mbar")
         finally:
             nc.close()
