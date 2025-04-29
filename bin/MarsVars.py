@@ -173,7 +173,7 @@ master_list = {
     'Ri': [
         "Richardson number",
         'none',
-        ['ps', 'temp', 'uccomp', 'vcomp'],
+        ['ps', 'temp', 'ucomp', 'vcomp'],
         ['pfull']
     ],
     'scorer_wl': [
@@ -1400,19 +1400,59 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
     :param master_list: Dictionary of supported variables and their dependencies
     :param debug: Whether to show debug information
     """
+    # Helper function to check if a variable or its alternative name exists
+    def variable_exists(var_name, file_vars):
+        """Check if a variable exists, considering alternative naming conventions"""
+        if var_name in file_vars:
+            return True
+            
+        # Handle _micro/_mom naming variations
+        if var_name.endswith('_micro'):
+            alt_name = var_name.replace('_micro', '_mom')
+            if alt_name in file_vars:
+                return True
+        elif var_name.endswith('_mom'):
+            alt_name = var_name.replace('_mom', '_micro')
+            if alt_name in file_vars:
+                return True
+                
+        return False
+    
+    # Helper function to get the actual variable name that exists
+    def get_existing_var(var_name, file_vars):
+        """Get the actual variable name that exists in the file"""
+        if var_name in file_vars:
+            return var_name
+            
+        # Check alternative names
+        if var_name.endswith('_micro'):
+            alt_name = var_name.replace('_micro', '_mom')
+            if alt_name in file_vars:
+                return alt_name
+        elif var_name.endswith('_mom'):
+            alt_name = var_name.replace('_mom', '_micro')
+            if alt_name in file_vars:
+                return alt_name
+                
+        return None
+    
     # Check if all requested variables already exist in the file
     with Dataset(ifile, "r", format="NETCDF4_CLASSIC") as f:
         file_vars = set(f.variables.keys())
-        already_in_file = [var for var in add_list if var in file_vars]
+        already_in_file = [var for var in add_list if variable_exists(var, file_vars)]
         
         # If all requested variables are in the file, report this and exit
-        if set(already_in_file) == set(add_list):
+        if len(already_in_file) == len(add_list):
             if len(add_list) == 1:
                 print(f"{Yellow}Variable '{add_list[0]}' is already in the file.{Nclr}")
             else:
                 print(f"{Yellow}All requested variables are already in the file:{Nclr}")
                 for var in already_in_file:
-                    print(f"{Yellow}  - {var}{Nclr}")
+                    actual_var = get_existing_var(var, file_vars)
+                    if actual_var != var:
+                        print(f"{Yellow}  - {var} (as {actual_var}){Nclr}")
+                    else:
+                        print(f"{Yellow}  - {var}{Nclr}")
             return  # Exit the function - nothing to do
         
     # Create a topologically sorted list of variables to add
