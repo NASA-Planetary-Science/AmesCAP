@@ -64,26 +64,14 @@ jobs:
         shell: pwsh
         run: |
           echo "HOME=$env:USERPROFILE" >> $env:GITHUB_ENV
-          
-      # Copy the profile file (Linux/macOS)
-      - name: Copy profile file (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: |
-          # Copy the profile file
-          cp mars_templates/amescap_profile ~/.amescap_profile
+
+      # Set up AmesCAP configuration - handle platform differences
+      - name: Set up AmesCAP configuration
         shell: bash
-      
-      # Copy the profile file (Windows)
-      - name: Copy profile file (Windows)
-        if: runner.os == 'Windows'
         run: |
-          # Set home directory
-          $homeDir = $env:USERPROFILE
-
-          # Copy the profile file
-          Copy-Item -Path "mars_templates\amescap_profile" -Destination $homeDir -Force
-        shell: pwsh
-
+          mkdir -p $HOME/.amescap
+          cp mars_templates/amescap_profile $HOME/.amescap_profile
+          
       # Create a patch for the test file to fix Windows path issues
       - name: Create test_marsinterp.py path fix for Windows
         if: runner.os == 'Windows'
