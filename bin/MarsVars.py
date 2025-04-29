@@ -1691,6 +1691,9 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
 
                 ucomp = f.variables["ucomp"][:]
                 vcomp = f.variables["vcomp"][:]
+                
+                # lev_T swaps dims 0 & 1, ensuring level is the first 
+                # dimension
                 du_dz = dvar_dh(
                     ucomp.transpose(lev_T),
                     zfull.transpose(lev_T)
@@ -1700,9 +1703,6 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
                     zfull.transpose(lev_T)
                     ).transpose(lev_T)
                 OUT = N**2 / (du_dz**2 + dv_dz**2)
-
-            # .. note:: lev_T swaps dims 0 & 1, ensuring level is
-            # the first dimension for the differentiation
 
             if var == "Tco2":
                 OUT = compute_Tco2(p_3D)
@@ -1827,16 +1827,6 @@ filepath = os.getcwd()
 def main():
     # Load all the .nc files
     file_list = [f.name for f in args.input_file]
-    add_list = args.add_variable
-    zdiff_list = args.differentiate_wrt_z
-    zdetrend_list = args.zonal_detrend
-    dp_to_dz_list = args.dp_to_dz
-    dz_to_dp_list = args.dz_to_dp
-    col_list = args.column_integrate
-    remove_list = args.remove_variable
-    extract_list = args.extract_copy
-    edit_var = args.edit_variable
-    debug = args.debug
 
     # An array to swap vertical axis forward and backward:
     # [1, 0, 2, 3] for [t, lev, lat, lon] and
@@ -1859,7 +1849,7 @@ def main():
         # ==============================================================
         # Remove Function
         # ==============================================================
-        if remove_list:
+        if args.remove_variable:
             try:
                 # If ncks is available, use it
                 cmd_txt = "ncks --version"
@@ -1867,6 +1857,9 @@ def main():
                                       stdout = open(os.devnull, "w"),
                                       stderr = open(os.devnull, "w"))
                 print("Using ncks.")
+                
+                remove_list = args.remove_variable
+                
                 for ivar in remove_list:
                     print(f"Creating new file {ifile} without {ivar}:")
                     cmd_txt = f"ncks -C -O -x -v {ivar} {ifile} {ifile}"
@@ -1898,7 +1891,7 @@ def main():
         # ==============================================================
         # Extract Function
         # ==============================================================
-        if extract_list:
+        if args.extract_copy:
             f_IN = Dataset(ifile, "r", format = "NETCDF4_CLASSIC")
 
             # The variable to exclude
@@ -1918,213 +1911,234 @@ def main():
         # ==============================================================
         # If the list is not empty, load ak and bk for the pressure
         # calculation. ak and bk are always necessary.
-        if add_list:
-            process_add_variables(ifile, add_list, master_list, debug)
+        if args.add_variable:
+            process_add_variables(ifile, args.add_variable, master_list, debug)
         
         # ==============================================================
         #                   Vertical Differentiation
         # ==============================================================
-        for idiff in zdiff_list:
+        for idiff in args.differentiate_wrt_z:
             f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
             f_type, interp_type = FV3_file_type(f)
 
+            # Use check_variable_exists instead of direct key lookup
+            if not check_variable_exists(idiff, f.variables.keys()):
+                print(f"{Red}zdiff error: variable {idiff} is not present in {ifile}{Nclr}")
+                f.close()
+                continue
+            
             if interp_type == "pfull":
                 ak, bk = ak_bk_loader(f)
-
-            if idiff not in f.variables.keys():
-                print(f"{Red}zdiff error: variable {idiff} is not "
-                      f"present in {ifile}{Nclr}")
-                f.close()
+                
+            print(f"Differentiating: {idiff}...")
+            
+            if f_type == "diurn":
+                lev_T = [2, 1, 0, 3, 4]
             else:
-                print(f"Differentiating: {idiff}...")
-                if f_type == "diurn":
-                    lev_T = [2, 1, 0, 3, 4]
-                else:
-                    # If [t, lat, lon] -> [lev, t, lat, lon]
-                    lev_T = [1, 0, 2, 3]
-                try:
-                    var = f.variables[idiff][:]
-                    lname_text, unit_text = get_longname_unit(f, idiff)
-                    # Remove the last ] to update the units (e.g [kg]
-                    # to [kg/m])
-                    new_unit = f"{unit_text[:-2]}/m]"
-                    new_lname = f"vertical gradient of {lname_text}"
-                    # temp and ps are always required. Get dimension
-                    dim_out = f.variables["temp"].dimensions
-                    if interp_type == "pfull":
-                        if "zfull" in f.variables.keys():
-                            zfull = f.variables["zfull"][:]
-                        else:
-                            temp = f.variables["temp"][:]
-                            ps = f.variables["ps"][:]
-                            # Z is the first axis
-                            zfull = fms_Z_calc(
-                                ps, ak, bk, temp.transpose(lev_T),
-                                topo=0., lev_type="full"
-                                ).transpose(lev_T)
+                # If [t, lat, lon] -> [lev, t, lat, lon]
+                lev_T = [1, 0, 2, 3]
+                
+            try:
+                # Get the actual variable name in case of alternative names
+                actual_var_name = get_existing_var_name(idiff, f.variables.keys())
+                var = f.variables[actual_var_name][:]
 
-                        # Average file: zfull = [lev, t, lat, lon]
-                        # Diurn file: zfull = [lev, tod, t, lat, lon]
-                        # Differentiate the variable w.r.t. Z:
+                lname_text, unit_text = get_longname_unit(f, actual_var_name)
+                # Remove the last ] to update the units (e.g [kg]
+                # to [kg/m])
+                new_unit = f"{unit_text[:-2]}/m]"
+                new_lname = f"vertical gradient of {lname_text}"
+                
+                # temp and ps are always required. Get dimension
+                dim_out = f.variables["temp"].dimensions
+                if interp_type == "pfull":
+                    if "zfull" in f.variables.keys():
+                        zfull = f.variables["zfull"][:]
+                    else:
+                        temp = f.variables["temp"][:]
+                        ps = f.variables["ps"][:]
+                        # Z is the first axis
+                        zfull = fms_Z_calc(
+                            ps, ak, bk, temp.transpose(lev_T),
+                            topo=0., lev_type="full"
+                            ).transpose(lev_T)
+
+                    # Average file: zfull = [lev, t, lat, lon]
+                    # Diurn file: zfull = [lev, tod, t, lat, lon]
+                    # Differentiate the variable w.r.t. Z:
+                    darr_dz = dvar_dh(
+                        var.transpose(lev_T),
+                        zfull.transpose(lev_T)
+                        ).transpose(lev_T)
+
+                    # .. note:: lev_T swaps dims 0 & 1, ensuring level
+                    # is the first dimension for the differentiation
+
+                elif interp_type == "pstd":
+                    # If pstd, requires zfull
+                    if "zfull" in f.variables.keys():
+                        zfull = f.variables["zfull"][:]
                         darr_dz = dvar_dh(
                             var.transpose(lev_T),
                             zfull.transpose(lev_T)
                             ).transpose(lev_T)
-
-                        # .. note:: lev_T swaps dims 0 & 1, ensuring level
-                        # is the first dimension for the differentiation
-
-                    elif interp_type == "pstd":
-                        # If pstd, requires zfull
-                        if "zfull" in f.variables.keys():
-                            zfull = f.variables["zfull"][:]
-                            darr_dz = dvar_dh(
-                                var.transpose(lev_T),
-                                zfull.transpose(lev_T)
-                                ).transpose(lev_T)
-                        else:
-                            lev = f.variables[interp_type][:]
-                            temp = f.variables["temp"][:]
-                            dzfull_pstd = compute_DZ_full_pstd(
-                                lev, temp
-                                )
-                            darr_dz = (dvar_dh(
-                                var.transpose(lev_T)
-                                ).transpose(lev_T) / dzfull_pstd)
-
-                    elif interp_type in ["zagl", "zstd"]:
+                    else:
                         lev = f.variables[interp_type][:]
-                        darr_dz = dvar_dh(
-                            var.transpose(lev_T), lev
-                            ).transpose(lev_T)
-                    # .. note:: lev_T swaps dims 0 & 1, ensuring level is
-                    # the first dimension for the differentiation
+                        temp = f.variables["temp"][:]
+                        dzfull_pstd = compute_DZ_full_pstd(
+                            lev, temp
+                            )
+                        darr_dz = (dvar_dh(
+                            var.transpose(lev_T)
+                            ).transpose(lev_T) / dzfull_pstd)
 
-                    # Log the variable
-                    var_Ncdf = f.createVariable(
-                        f"d_dz_{idiff}", "f4", dim_out
-                        )
-                    var_Ncdf.long_name = (new_lname + cap_str)
-                    var_Ncdf.units = new_unit
-                    var_Ncdf[:] = darr_dz
-                    f.close()
+                elif interp_type in ["zagl", "zstd"]:
+                    lev = f.variables[interp_type][:]
+                    darr_dz = dvar_dh(
+                        var.transpose(lev_T), lev
+                        ).transpose(lev_T)
+                # .. note:: lev_T swaps dims 0 & 1, ensuring level is
+                # the first dimension for the differentiation
 
-                    print(f"d_dz_{idiff}: {Green}Done{Nclr}")
-                except Exception as e:
-                    except_message(debug,e,idiff,ifile,pre="d_dz_")
+                # Create new variable
+                var_Ncdf = f.createVariable(f"d_dz_{idiff}", "f4", dim_out)
+                var_Ncdf.long_name = (new_lname + cap_str)
+                var_Ncdf.units = new_unit
+                var_Ncdf[:] = darr_dz
+                
+                f.close()
+                print(f"d_dz_{idiff}: {Green}Done{Nclr}")
+                
+            except Exception as e:
+                except_message(debug, e, idiff, ifile, pre="d_dz_")
 
         # ==============================================================
         #                       Zonal Detrending
         # ==============================================================
-        for izdetrend in zdetrend_list:
+        for izdetrend in args.zonal_detrend:
             f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
-            f_type, interp_type = FV3_file_type(f)
-            if izdetrend not in f.variables.keys():
-                print(f"{Red}zdiff error: variable {izdetrend} is not "
-                      f"in {ifile}{Nclr}")
+            
+            # Use check_variable_exists instead of direct key lookup
+            if not check_variable_exists(izdetrend, f.variables.keys()):
+                print(f"{Red}zonal detrend error: variable {izdetrend} is not in {ifile}{Nclr}")
                 f.close()
-            else:
-                print(f"Detrending: {izdetrend}...")
-                try:
-                    var = f.variables[izdetrend][:]
-                    lname_text, unit_text = get_longname_unit(
-                        f, izdetrend
-                        )
-                    new_lname = f"zonal perturbation of {lname_text}"
+                continue
+            
+            print(f"Detrending: {izdetrend}...")
+            
+            try:
+                # Get the actual variable name in case of alternative names
+                actual_var_name = get_existing_var_name(izdetrend, f.variables.keys())
+                var = f.variables[actual_var_name][:]
+                
+                lname_text, unit_text = get_longname_unit(f, actual_var_name)
+                new_lname = f"zonal perturbation of {lname_text}"
 
-                    # Get dimension
-                    dim_out = f.variables[izdetrend].dimensions
+                # Get dimension
+                dim_out = f.variables[actual_var_name].dimensions
 
-                    # Log the variable
-                    var_Ncdf = f.createVariable(
-                        izdetrend+"_p", "f4", dim_out
-                        )
-                    var_Ncdf.long_name = (new_lname + cap_str)
-                    var_Ncdf.units = unit_text
-                    var_Ncdf[:] = zonal_detrend(var)
-                    f.close()
-
-                    print(f"{izdetrend}_p: {Green}Done{Nclr}")
-                except Exception as e:
-                    except_message(debug,e,izdetrend,ifile,ext="_p")
+                # Log the variable
+                var_Ncdf = f.createVariable(izdetrend+"_p", "f4", dim_out)
+                var_Ncdf.long_name = (new_lname + cap_str)
+                var_Ncdf.units = unit_text
+                var_Ncdf[:] = zonal_detrend(var)
+                
+                f.close()
+                print(f"{izdetrend}_p: {Green}Done{Nclr}")
+                
+            except Exception as e:
+                except_message(debug, e, izdetrend, ifile, ext="_p")
 
         # ==============================================================
         #           Opacity Conversion (dp_to_dz and dz_to_dp)
         # ==============================================================
-        for idp_to_dz in dp_to_dz_list:
-            # ========= Case 1: dp_to_dz
+        for idp_to_dz in args.dp_to_dz:
             f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
             f_type, interp_type = FV3_file_type(f)
-            if idp_to_dz not in f.variables.keys():
-                print(f"{Red}dp_to_dz error: variable {idp_to_dz} is "
-                      f"not in {ifile}{Nclr}")
+            
+            # Use check_variable_exists instead of direct key lookup
+            if not check_variable_exists(idp_to_dz, f.variables.keys()):
+                print(f"{Red}dp_to_dz error: variable {idp_to_dz} is not in {ifile}{Nclr}")
                 f.close()
-            else:
-                print("Converting: {idp_to_dz}...")
+                continue
 
-                try:
-                    var = f.variables[idp_to_dz][:]
-                    new_unit = (getattr(f.variables[idp_to_dz],
-                                        "units", "")
-                                + "/m")
-                    new_lname = (getattr(f.variables[idp_to_dz],
-                                         "long_name", "")
-                                 + " rescaled to meter-1")
-                    # Get dimension
-                    dim_out = f.variables[idp_to_dz].dimensions
+            print(f"Converting: {idp_to_dz}...")
 
-                    # Log the variable
-                    var_Ncdf = f.createVariable(
-                        f"{idp_to_dz}_dp_to_dz", "f4", dim_out
-                        )
-                    var_Ncdf.long_name = (new_lname + cap_str)
-                    var_Ncdf.units = new_unit
-                    var_Ncdf[:] = (var
-                                   * f.variables["DP"][:]
-                                   / f.variables["DZ"][:])
+            try:
+                # Get the actual variable name in case of alternative names
+                actual_var_name = get_existing_var_name(idp_to_dz, f.variables.keys())
+                var = f.variables[actual_var_name][:]
+                
+                # Ensure required variables (DP, DZ) exist
+                if not (check_variable_exists('DP', f.variables.keys()) and 
+                        check_variable_exists('DZ', f.variables.keys())):
+                    print(f"{Red}Error: DP and DZ variables required for conversion{Nclr}")
                     f.close()
+                    continue
+                
+                new_unit = (getattr(f.variables[actual_var_name], "units", "") + "/m")
+                new_lname = (getattr(f.variables[actual_var_name], "long_name", "") + " rescaled to meter-1")
+                
+                # Get dimension
+                dim_out = f.variables[actual_var_name].dimensions
 
-                    print(f"{idp_to_dz}_dp_to_dz: {Green}Done{Nclr}")
+                # Log the variable
+                var_Ncdf = f.createVariable(f"{idp_to_dz}_dp_to_dz", "f4", dim_out)
+                var_Ncdf.long_name = (new_lname + cap_str)
+                var_Ncdf.units = new_unit
+                var_Ncdf[:] = (
+                    var * f.variables["DP"][:] / f.variables["DZ"][:]
+                    )
+                
+                f.close()
+                print(f"{idp_to_dz}_dp_to_dz: {Green}Done{Nclr}")
 
-                except Exception as e:
-                    except_message(debug,e,idp_to_dz,ifile,ext="_dp_to_dz")
+            except Exception as e:
+                except_message(debug, e, idp_to_dz, ifile, ext="_dp_to_dz")
 
-        for idz_to_dp in dz_to_dp_list:
-            # ========= Case 2: dz_to_dp
+        for idz_to_dp in args.dz_to_dp:
             f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
             f_type, interp_type = FV3_file_type(f)
-            if idz_to_dp not in f.variables.keys():
-                print(f"{Red}dz_to_dp error: variable {idz_to_dp} is "
-                      f"not in {ifile}{Nclr}")
+            
+            # Use check_variable_exists instead of direct key lookup
+            if not check_variable_exists(idz_to_dp, f.variables.keys()):
+                print(f"{Red}dz_to_dp error: variable {idz_to_dp} is not in {ifile}{Nclr}")
                 f.close()
-            else:
-                print(f"Converting: {idz_to_dp}...")
+                continue
 
-                try:
-                    var = f.variables[idz_to_dp][:]
-                    new_unit = (getattr(f.variables[idz_to_dp],
-                                        "units", "")
-                                + "/m")
-                    new_lname = (getattr(f.variables[idz_to_dp],
-                                         "long_name", "")
-                                 + " rescaled to Pa-1")
-                    # Get dimension
-                    dim_out = f.variables[idz_to_dp].dimensions
+            print(f"Converting: {idz_to_dp}...")
 
-                    # Log the variable
-                    var_Ncdf = f.createVariable(
-                        f"{idz_to_dp}_dz_to_dp", "f4", dim_out
-                        )
-                    var_Ncdf.long_name = (new_lname + cap_str)
-                    var_Ncdf.units = new_unit
-                    var_Ncdf[:] = (var * f.variables["DP"][:] 
-                                   / f.variables["DZ"][:])
+            try:
+                # Get the actual variable name in case of alternative names
+                actual_var_name = get_existing_var_name(idz_to_dp, f.variables.keys())
+                var = f.variables[actual_var_name][:]
+                
+                # Ensure required variables (DP, DZ) exist
+                if not (check_variable_exists('DP', f.variables.keys()) and 
+                        check_variable_exists('DZ', f.variables.keys())):
+                    print(f"{Red}Error: DP and DZ variables required for conversion{Nclr}")
                     f.close()
+                    continue
+                
+                new_unit = (getattr(f.variables[actual_var_name], "units", "") + "/m")
+                new_lname = (getattr(f.variables[actual_var_name], "long_name", "") + " rescaled to Pa-1")
+                
+                # Get dimension
+                dim_out = f.variables[actual_var_name].dimensions
 
-                    print(f"{idz_to_dp}_dz_to_dp: {Green}Done{Nclr}")
+                # Log the variable
+                var_Ncdf = f.createVariable(f"{idz_to_dp}_dz_to_dp", "f4", dim_out)
+                var_Ncdf.long_name = (new_lname + cap_str)
+                var_Ncdf.units = new_unit
+                var_Ncdf[:] = (
+                    var * f.variables["DP"][:] / f.variables["DZ"][:]
+                    )
+                
+                f.close()
+                print(f"{idz_to_dp}_dz_to_dp: {Green}Done{Nclr}")
 
-                except Exception as e:
-                    except_message(debug,e,idz_to_dp,ifile,ext="_dz_to_dp")
+            except Exception as e:
+                except_message(debug, e, idz_to_dp, ifile, ext="_dz_to_dp")
 
         # ==============================================================
         #                    Column Integration
@@ -2145,78 +2159,86 @@ def main():
                             p_top
 
         """
-        for icol in col_list:
+        for icol in args.column_integrate:
             f = Dataset(ifile, "a")
             f_type, interp_type = FV3_file_type(f)
 
             if interp_type == "pfull":
                 ak, bk = ak_bk_loader(f)
-            if icol not in f.variables.keys():
-                print(f"{Red}column integration error: variable {icol} "
-                      f"is not in {ifile}{Nclr}")
+            
+            # Use check_variable_exists instead of direct key lookup
+            if not check_variable_exists(icol, f.variables.keys()):
+                print(f"{Red}column integration error: variable {icol} is not in {ifile}{Nclr}")
                 f.close()
-            else:
-                print(f"Performing column integration: {icol}...")
-                try:
-                    var = f.variables[icol][:]
-                    lname_text, unit_text = get_longname_unit(f, icol)
-                    # turn "kg/kg" -> "kg/m2"
-                    new_unit = f"{unit_text[:-3]}/m2"
-                    new_lname = f"column integration of {lname_text}"
-                    # temp and ps always required
-                    # Get dimension
-                    dim_in = f.variables["temp"].dimensions
-                    shape_in = f.variables["temp"].shape
-                    # TODO edge cases where time = 1
-                    if f_type == "diurn":
-                        # if [t, tod, lat, lon]
-                        lev_T = [2, 1, 0, 3, 4]
-                        # -> [lev, tod, t, lat, lon]
-                        dim_out = tuple(
-                            [dim_in[0], dim_in[1], dim_in[3], dim_in[4]]
-                            )
-                        # In diurn, lev is the 3rd axis (index 2):
-                        # [t, tod, lev, lat, lon]
-                        lev_axis = 2
-                    else:
-                        # if [t, lat, lon]
-                        lev_T = [1, 0, 2, 3]
-                        # -> [lev, t, lat, lon]
-                        dim_out = tuple(
-                            [dim_in[0], dim_in[2], dim_in[3]]
-                            )
-                        lev_axis = 1
-
-                    ps = f.variables["ps"][:]
-                    DP = compute_DP_3D(ps, ak, bk, shape_in)
-                    out = np.sum(var * DP / g, axis=lev_axis)
-
-                    # Log the variable
-                    var_Ncdf = f.createVariable(
-                        f"{icol}_col", "f4", dim_out
+                continue
+    
+            print(f"Performing column integration: {icol}...")
+            
+            try:
+                # Get the actual variable name in case of alternative names
+                actual_var_name = get_existing_var_name(icol, f.variables.keys())
+                var = f.variables[actual_var_name][:]
+                
+                lname_text, unit_text = get_longname_unit(f, actual_var_name)
+                # turn "kg/kg" -> "kg/m2"
+                new_unit = f"{unit_text[:-3]}/m2"
+                new_lname = f"column integration of {lname_text}"
+                
+                # temp and ps always required
+                # Get dimension
+                dim_in = f.variables["temp"].dimensions
+                shape_in = f.variables["temp"].shape
+                
+                # TODO edge cases where time = 1
+                
+                if f_type == "diurn":
+                    # if [t, tod, lat, lon]
+                    lev_T = [2, 1, 0, 3, 4]
+                    # -> [lev, tod, t, lat, lon]
+                    dim_out = tuple(
+                        [dim_in[0], dim_in[1], dim_in[3], dim_in[4]]
                         )
-                    var_Ncdf.long_name = (new_lname + cap_str)
-                    var_Ncdf.units = new_unit
-                    var_Ncdf[:] = out
-                    f.close()
+                    # In diurn, lev is the 3rd axis (index 2):
+                    # [t, tod, lev, lat, lon]
+                    lev_axis = 2
+                else:
+                    # if [t, lat, lon]
+                    lev_T = [1, 0, 2, 3]
+                    # -> [lev, t, lat, lon]
+                    dim_out = tuple(
+                        [dim_in[0], dim_in[2], dim_in[3]]
+                        )
+                    lev_axis = 1
 
-                    print(f"{icol}_col: {Green}Done{Nclr}")
+                ps = f.variables["ps"][:]
+                DP = compute_DP_3D(ps, ak, bk, shape_in)
+                out = np.sum(var * DP / g, axis=lev_axis)
 
-                except Exception as e:
-                    except_message(debug,e,icol,ifile,ext="_col")
-        if edit_var:
+                # Log the variable
+                var_Ncdf = f.createVariable(f"{icol}_col", "f4", dim_out)
+                var_Ncdf.long_name = (new_lname + cap_str)
+                var_Ncdf.units = new_unit
+                var_Ncdf[:] = out
+                
+                f.close()
+                print(f"{icol}_col: {Green}Done{Nclr}")
+
+            except Exception as e:
+                except_message(debug, e, icol, ifile, ext="_col")
+                
+        if args.edit_variable:
             f_IN = Dataset(ifile, "r", format = "NETCDF4_CLASSIC")
             ifile_tmp = f"{ifile[:-3]}_tmp.nc"
             Log = Ncdf(ifile_tmp, "Edited in postprocessing")
             Log.copy_all_dims_from_Ncfile(f_IN)
 
             # Copy all variables but this one
-            Log.copy_all_vars_from_Ncfile(f_IN, exclude_var = edit_var)
+            Log.copy_all_vars_from_Ncfile(f_IN, exclude_var = args.edit_variable)
 
             # Read value, longname, units, name, and log the new var
-            var_Ncdf = f_IN.variables[edit_var]
+            var_Ncdf = f_IN.variables[args.edit_variable]
 
-            name_text = edit_var
+            name_text = args.edit_variable
             vals = var_Ncdf[:]
             dim_out = var_Ncdf.dimensions
             lname_text = getattr(var_Ncdf, "long_name", "")
