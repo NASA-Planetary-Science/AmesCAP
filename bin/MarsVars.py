@@ -1400,6 +1400,21 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
     :param master_list: Dictionary of supported variables and their dependencies
     :param debug: Whether to show debug information
     """
+    # Check if all requested variables already exist in the file
+    with Dataset(ifile, "r", format="NETCDF4_CLASSIC") as f:
+        file_vars = set(f.variables.keys())
+        already_in_file = [var for var in add_list if var in file_vars]
+        
+        # If all requested variables are in the file, report this and exit
+        if set(already_in_file) == set(add_list):
+            if len(add_list) == 1:
+                print(f"{Yellow}Variable '{add_list[0]}' is already in the file.{Nclr}")
+            else:
+                print(f"{Yellow}All requested variables are already in the file:{Nclr}")
+                for var in already_in_file:
+                    print(f"{Yellow}  - {var}{Nclr}")
+            return  # Exit the function - nothing to do
+        
     # Create a topologically sorted list of variables to add
     variables_to_add = []
     visited = set()
