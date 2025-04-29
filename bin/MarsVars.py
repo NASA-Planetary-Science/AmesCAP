@@ -1295,6 +1295,88 @@ def compute_WMFF(MF, rho, lev, interp_type):
         # is not multiplied by g.
         return -1/rho*darr_dz
 
+
+# =====================================================================
+def check_dependencies(f, ivar, master_list, add_missing=True):
+    """
+    Check if all dependencies for a variable are present in the file,
+    and optionally try to add missing dependencies.
+    
+    :param f: NetCDF file object
+    :param ivar: Variable to check dependencies for
+    :param master_list: Dictionary of supported variables and their dependencies
+    :param add_missing: Whether to try adding missing dependencies (default: True)
+    :return: True if all dependencies are present or successfully added, False otherwise
+    """
+    if ivar not in master_list:
+        print(f"{Red}Variable `{ivar}` is not in the master list of supported variables.{Nclr}")
+        return False
+    
+    # Get the list of required variables for this variable
+    required_vars = master_list[ivar][2]
+    
+    # Check each required variable
+    missing_vars = []
+    for req_var in required_vars:
+        if req_var not in f.variables:
+            missing_vars.append(req_var)
+    
+    if not missing_vars:
+        # All dependencies are present
+        return True
+    
+    if not add_missing:
+        # Dependencies are missing but we're not adding them
+        dependency_list = ", ".join(missing_vars)
+        print(f"{Red}Missing dependencies for {ivar}: {dependency_list}{Nclr}")
+        return False
+    
+    # Try to add missing dependencies
+    successfully_added = []
+    failed_to_add = []
+    
+    for missing_var in missing_vars:
+        # Check if we can add this dependency (must be in master_list)
+        if missing_var in master_list:
+            # Recursively check dependencies for this variable
+            if check_dependencies(f, missing_var, master_list, add_missing=True):
+                # If dependencies are satisfied, try to add the variable
+                try:
+                    print(f"{Yellow}Attempting to add dependency {missing_var} for {ivar}...{Nclr}")
+                    # Get the file type and interpolation type
+                    f_type, interp_type = FV3_file_type(f)
+                    
+                    # Check if the interpolation type is compatible with this variable
+                    compat_file_fmt = ", ".join([cf for cf in master_list[missing_var][3]])
+                    if interp_type not in compat_file_fmt:
+                        print(f"{Red}Cannot add {missing_var}: incompatible file type {interp_type}{Nclr}")
+                        failed_to_add.append(missing_var)
+                        continue
+                    
+                    # We don't automatically add the variable here - we'll leave that to the main add loop
+                    # Just mark it as successfully checked for dependencies
+                    successfully_added.append(missing_var)
+                    
+                except Exception as e:
+                    print(f"{Red}Error adding dependency {missing_var}: {str(e)}{Nclr}")
+                    failed_to_add.append(missing_var)
+            else:
+                # If dependencies for this dependency are not satisfied
+                failed_to_add.append(missing_var)
+        else:
+            # This dependency is not in the master list, cannot be added
+            print(f"{Red}Dependency {missing_var} for {ivar} is not in the master list and cannot be added automatically{Nclr}")
+            failed_to_add.append(missing_var)
+    
+    # Check if all dependencies were added
+    if not failed_to_add:
+        return True
+    else:
+        # Some dependencies could not be added
+        dependency_list = ", ".join(failed_to_add)
+        print(f"{Red}Cannot add {ivar}: missing dependencies {dependency_list}{Nclr}")
+        return False
+    
 # ======================================================
 #                  MAIN PROGRAM
 # ======================================================
