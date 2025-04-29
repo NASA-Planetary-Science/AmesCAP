@@ -305,6 +305,7 @@ Troubleshooting Tips
 * **Virtual Environment Not Activating**: Ensure you're using the correct activation script for your shell.
 * **Package Installation Failures**: Check your internet connection and ensure Git is properly installed.
 * **Profile File Not Found**: Double-check the installation paths. The actual path may vary depending on your specific installation.
+* **HOME**: If you encounter errors related to HOME not defined, set the variable: ``$env:HOME = $HOME`` (PowerShell) or ``export HOME="$USERPROFILE"`` (Cygwin)
 
 .. _nas_install:
 
