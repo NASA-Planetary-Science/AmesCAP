@@ -2072,7 +2072,7 @@ def main():
                 # Ensure required variables (DP, DZ) exist
                 if not (check_variable_exists('DP', f.variables.keys()) and 
                         check_variable_exists('DZ', f.variables.keys())):
-                    print(f"{Red}Error: DP and DZ variables required for conversion{Nclr}")
+                    print(f"{Red}Error: DP and DZ variables required for conversion. Add them with CAP:\n{cyan}MarsVars {ifile} -add DP DZ{Nclr}")
                     f.close()
                     continue
                 
