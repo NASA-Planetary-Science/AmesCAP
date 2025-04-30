@@ -650,14 +650,12 @@ def compute_xzTau(q, temp, lev, const, f_type):
     """
     if f_type == "diurn":
         # Handle diurn files 
-        PT = np.repeat(
-            lev,
-            (q.shape[0] * q.shape[1] * q.shape[3] * q.shape[4])
-        )
-        PT = np.reshape(
-            PT,
-            (q.shape[2], q.shape[0], q.shape[1], q.shape[3], q.shape[4])
-        )
+        PT = np.repeat(lev,
+                       (q.shape[0] * q.shape[1] * q.shape[3] * q.shape[4]))
+        PT = np.reshape(PT,
+                        (q.shape[2], q.shape[0], q.shape[1], q.shape[3], 
+                         q.shape[4])
+                        )
         # (lev, tim, tod, lat, lon) -> (tim, tod, lev, lat, lon)
         P = PT.transpose((1, 2, 0, 3, 4))
     else:
@@ -672,18 +670,10 @@ def compute_xzTau(q, temp, lev, const, f_type):
             else:
                 # Handle other shapes appropriately
                 P[..., z, :, :] = lev[z]
-                
-        # PT = np.repeat(lev, (q.shape[0] * q.shape[2] * q.shape[3]))
-        # PT = np.reshape(
-        #     PT,
-        #     (q.shape[1], q.shape[0], q.shape[2], q.shape[3])
-        # )
-        # # Swap dimensions 0 and 1 (time and lev)
-        # P = PT.transpose(lev_T)
 
     rho_z = P / (Rd*temp)
-    # Converts mass mixing ratio (q) from kg/kg -> ppm (mg/kg)
-    # Converts extinction (xzTau) from m-1 -> km-1
+    # Convert mass mixing ratio (q) from kg/kg -> ppm (mg/kg)
+    # Convert extinction (xzTau) from m-1 -> km-1
     xzTau = (rho_z * (q*1.e6)/const) * 1000
     return xzTau
 
@@ -716,11 +706,13 @@ def compute_mmr(xTau, temp, lev, const, f_type):
     """
     if f_type == "diurn":
         # Handle diurnal files
-        PT = np.repeat(lev,(xTau.shape[0] * xTau.shape[1]
-                            * xTau.shape[3] * xTau.shape[4]))
-        PT = np.reshape(PT, (xTau.shape[2], xTau.shape[0],
-                             xTau.shape[1], xTau.shape[3],
-                             xTau.shape[4]))
+        PT = np.repeat(
+            lev, (xTau.shape[0] * xTau.shape[1] * xTau.shape[3] * xTau.shape[4])
+            )
+        PT = np.reshape(
+            PT, (xTau.shape[2], xTau.shape[0], xTau.shape[1], xTau.shape[3], 
+                 xTau.shape[4])
+            )
         # (lev, tim, tod, lat, lon) -> (tim, tod, lev, lat, lon)
         P = PT.transpose((1, 2, 0, 3, 4))
     else:
@@ -734,21 +726,15 @@ def compute_mmr(xTau, temp, lev, const, f_type):
             else:
                 # Handle other shapes appropriately
                 P[..., z, :, :] = lev[z]
-        # PT = np.repeat(lev, (xTau.shape[0] * xTau.shape[2]
-        #                      * xTau.shape[3]))
-        # PT = np.reshape(PT,(xTau.shape[1], xTau.shape[0],
-        #                     xTau.shape[2], xTau.shape[3]))
-        # # Swap dimensions 0 and 1 (time and lev)
-        # P = PT.transpose(lev_T)
-
+                
     rho_z = P / (Rd*temp)
-    # Converts extinction (xzTau) from km-1 -> m-1
-    # Converts mass mixing ratio (q) from ppm (kg/kg) -> mg/kg
+    # Convert extinction (xzTau) from km-1 -> m-1
+    # Convert mass mixing ratio (q) from ppm (kg/kg) -> mg/kg
     q = (const * (xTau/1000) / rho_z) / 1.e6
     return q
 
 # =====================================================================
-def compute_Vg_sed(xTau, nTau, temp):
+def compute_Vg_sed(xTau, nTau, T):
     """
     Calculate the sedimentation rate of the dust.
 
@@ -758,8 +744,8 @@ def compute_Vg_sed(xTau, nTau, temp):
     :param nTau: Dust or ice NUMBER mixing ratio (None)
     :type nTau: array [time, lev, lat, lon]
 
-    :param temp: Temperature (K)
-    :type temp: array [time, lev, lat, lon]
+    :param T: Temperature (K)
+    :type T: array [time, lev, lat, lon]
 
     :raises:
 
@@ -767,16 +753,18 @@ def compute_Vg_sed(xTau, nTau, temp):
     :rtype: array [time, lev, lat, lon]
 
     """
-    r0 = (((3.*xTau) / (4.*np.pi*rho_dst*nTau)) ** (1/3)
-          * np.exp(-3 * (sigma**2) / 2))
-    Rp = r0 * np.exp(3.5*sigma**2)
+    r0 = (
+        ((3.*xTau) / (4.*np.pi*rho_dst*nTau)) ** (1/3)
+        * np.exp(-3 * sigma**2 / 2)
+        )
+    Rp = r0 * np.exp(3.5 * sigma**2)
     c = (2/9) * rho_dst * (Rp)**2 * g
-    eta = n0 * ((temp/T0)**(3/2)) * ((T0+S0)/(temp+S0))
-    v = np.sqrt((3*Kb*temp) / mass_co2)
+    eta = n0 * ((T/T0)**(3/2)) * ((T0+S0)/(T+S0))
+    v = np.sqrt((3*Kb*T) / mass_co2)
     mfp = (2*eta) / (rho_air*v)
     Kn = mfp / Rp
     alpha = 1.246 + 0.42*np.exp(-0.87/Kn)
-    Vg = c*(1 + alpha*Kn)/eta
+    Vg = c * (1 + alpha*Kn)/eta
     return Vg
 
 # =====================================================================
@@ -803,7 +791,7 @@ def compute_w_net(Vg, wvar):
     return w_net
 
 # =====================================================================
-def compute_theta(p_3D, ps, temp, f_type):
+def compute_theta(p_3D, ps, T, f_type):
     """
     Compute the potential temperature.
 
@@ -813,8 +801,8 @@ def compute_theta(p_3D, ps, temp, f_type):
     :param ps: Surface pressure (Pa)
     :type ps: array [time, lat, lon]
 
-    :param temp: Temperature (K)
-    :type temp: array [time, lev, lat, lon]
+    :param T: Temperature (K)
+    :type T: array [time, lev, lat, lon]
 
     :param f_type: The FV3 file type: diurn, daily, or average
     :type f_type: str
@@ -829,13 +817,12 @@ def compute_theta(p_3D, ps, temp, f_type):
     # Broadcast dimensions
     if f_type == "diurn":
         # (time, tod, lat, lon) -> (time, tod, 1, lat, lon)
-        ps_shape = [ps.shape[0], ps.shape[1], 1, ps.shape[2],
-                    ps.shape[3]]
+        ps_shape = [ps.shape[0], ps.shape[1], 1, ps.shape[2], ps.shape[3]]
     else:
         # (time, lat, lon) -> (time, 1, lat, lon)
         ps_shape = [ps.shape[0], 1, ps.shape[1], ps.shape[2]]
 
-    return temp * (np.reshape(ps, ps_shape)/p_3D) ** theta_exp
+    return T * (np.reshape(ps, ps_shape)/p_3D) ** theta_exp
 
 # =====================================================================
 def compute_w(rho, omega):
@@ -870,7 +857,7 @@ def compute_w(rho, omega):
     return -omega / (rho*g)
 
 # =====================================================================
-def compute_zfull(ps, ak, bk, temp):
+def compute_zfull(ps, ak, bk, T):
     """
     Calculate the altitude of the layer midpoints above ground level.
 
@@ -883,8 +870,8 @@ def compute_zfull(ps, ak, bk, temp):
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
 
-    :param temp: Temperature (K)
-    :type temp: array [time, lev, lat, lon]
+    :param T: Temperature (K)
+    :type T: array [time, lev, lat, lon]
 
     :raises:
 
@@ -892,8 +879,9 @@ def compute_zfull(ps, ak, bk, temp):
     :rtype: array [time, lev, lat, lon]
 
     """
-    zfull = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T),
-                       topo=0., lev_type="full")
+    zfull = fms_Z_calc(
+        ps, ak, bk, T.transpose(lev_T), topo=0., lev_type="full"
+        )
 
     # .. note:: lev_T swaps dims 0 & 1, ensuring level is the first
     # dimension for the calculation
@@ -902,7 +890,7 @@ def compute_zfull(ps, ak, bk, temp):
     return zfull
 
 # =====================================================================
-def compute_zhalf(ps, ak, bk, temp):
+def compute_zhalf(ps, ak, bk, T):
     """
     Calculate the altitude of the layer interfaces above ground level.
 
@@ -915,8 +903,8 @@ def compute_zhalf(ps, ak, bk, temp):
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
 
-    :param temp: Temperature (K)
-    :type temp: array [time, lev, lat, lon]
+    :param T: Temperature (K)
+    :type T: array [time, lev, lat, lon]
 
     :raises:
 
@@ -924,8 +912,9 @@ def compute_zhalf(ps, ak, bk, temp):
     :rtype: array [time, lev, lat, lon]
 
     """
-    zhalf = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T),
-                       topo=0., lev_type="half")
+    zhalf = fms_Z_calc(
+        ps, ak, bk, T.transpose(lev_T), topo=0., lev_type="half"
+        )
 
     # .. note:: lev_T swaps dims 0 & 1, ensuring level is the first
     # dimension for the calculation
@@ -934,7 +923,7 @@ def compute_zhalf(ps, ak, bk, temp):
     return zhalf
 
 # =====================================================================
-def compute_DZ_full_pstd(pstd, temp, ftype="average"):
+def compute_DZ_full_pstd(pstd, T, ftype="average"):
     """
     Calculate the thickness of a layer from the midpoint of the
     standard pressure levels (``pstd``).
@@ -954,8 +943,8 @@ def compute_DZ_full_pstd(pstd, temp, ftype="average"):
     :param pstd: Vertical coordinate (pstd; Pa)
     :type pstd: array [lev]
 
-    :param temp: Temperature (K)
-    :type temp: array [time, lev, lat, lon]
+    :param T: Temperature (K)
+    :type T: array [time, lev, lat, lon]
 
     :param f_type: The FV3 file type: diurn, daily, or average
     :type f_stype: str
@@ -973,10 +962,10 @@ def compute_DZ_full_pstd(pstd, temp, ftype="average"):
         axis = 1
 
     # Make lev the first dimension, swapping it with time
-    temp = np.swapaxes(temp, 0, axis)
+    T = np.swapaxes(T, 0, axis)
 
     # Create a new shape = [1, 1, 1, 1]
-    new_shape = [1 for i in range(0, len(temp.shape))]
+    new_shape = [1 for i in range(0, len(T.shape))]
 
     # Make the first dimesion = the length of the lev dimension (pstd)
     new_shape[0] = len(pstd)
@@ -984,17 +973,19 @@ def compute_DZ_full_pstd(pstd, temp, ftype="average"):
     # Reshape pstd according to new_shape
     pstd_reshaped = pstd.reshape(new_shape)
 
-    # Ensure pstd is broadcast to match the shape of temp 
+    # Ensure pstd is broadcast to match the shape of T 
     # (along non-level dimensions)
-    broadcast_shape = list(temp.shape)
+    broadcast_shape = list(T.shape)
     broadcast_shape[0] = len(pstd)  # Keep level dimension the same
     pstd_broadcast = np.broadcast_to(pstd_reshaped, broadcast_shape)
     
     # Compute thicknesses using avg. temperature of both layers
-    DZ_full_pstd = np.zeros_like(temp)
+    DZ_full_pstd = np.zeros_like(T)
     DZ_full_pstd[0:-1, ...] = (
-        -rgas * 0.5 * (temp[1:, ...]+temp[0:-1, ...]) / g
-        * np.log(pstd_broadcast[1:, ...]/pstd_broadcast[0:-1, ...])
+        -rgas * 0.5 
+        * (T[1:, ...] + T[0:-1, ...]) 
+        / g
+        * np.log(pstd_broadcast[1:, ...] / pstd_broadcast[0:-1, ...])
     )
 
     # There is nothing to differentiate the last layer with, so copy
@@ -1172,13 +1163,14 @@ def compute_DZ_3D(ps, ak, bk, temp, shape_out):
     """
 
     # Get the 3D altitude field from fms_Z_calc
-    z_half3D = fms_Z_calc(ps, ak, bk, temp.transpose(lev_T), topo=0.,
-                          lev_type="half")
+    z_half3D = fms_Z_calc(
+        ps, ak, bk, temp.transpose(lev_T), topo=0., lev_type="half"
+        )
     # fms_press_calc will swap dimensions 0 and 1 so p_half3D has
     # dimensions = [lev, t, lat, lon]
 
     # Calculate the differences in pressure between each layer midpoint
-    DZ_3D = z_half3D[0:-1, ...]-z_half3D[1:, ..., ]
+    DZ_3D = z_half3D[0:-1, ...] - z_half3D[1:, ..., ]
     # .. note:: the reversed order: Z decreases with increasing levels
 
     # Swap dimensions 0 and 1, back to [t, lev, lat, lon]
@@ -1204,7 +1196,7 @@ def compute_Ep(temp):
     :rtype: array [time, lev, lat, lon]
 
     """
-    return 0.5*g**2*(zonal_detrend(temp)/(temp*N))**2
+    return 0.5 * g**2 * (zonal_detrend(temp) / (temp*N))**2
 
 # =====================================================================
 def compute_Ek(ucomp, vcomp):
@@ -1225,7 +1217,7 @@ def compute_Ek(ucomp, vcomp):
     :rtype: array [time, lev, lat, lon]
 
     """
-    return 0.5*(zonal_detrend(ucomp)**2+zonal_detrend(vcomp)**2)
+    return 0.5 * (zonal_detrend(ucomp)**2 + zonal_detrend(vcomp)**2)
 
 # =====================================================================
 def compute_MF(UVcomp, w):
@@ -1244,7 +1236,7 @@ def compute_MF(UVcomp, w):
     :rtype: array [time, lev, lat, lon]
 
     """
-    return zonal_detrend(UVcomp)*zonal_detrend(w)
+    return zonal_detrend(UVcomp) * zonal_detrend(w)
 
 # =====================================================================
 def compute_WMFF(MF, rho, lev, interp_type):
@@ -1293,21 +1285,22 @@ def compute_WMFF(MF, rho, lev, interp_type):
     else:
         # zagl and zstd grids have levels in meters, so du/dz
         # is not multiplied by g.
-        return -1/rho*darr_dz
+        return -1/rho * darr_dz
 
 
 # =====================================================================
-def check_dependencies(f, var, master_list, add_missing=True, dependency_chain=None):
+def check_dependencies(f, var, master_list, add_missing=True, 
+                       dependency_chain=None):
     """
-    Check if all dependencies for a variable are present in the file,
-    and optionally try to add missing dependencies.
+    Check if all dependencies (deps.) for a variable are present in the file,
+    and optionally try to add missing deps..
     
     :param f: NetCDF file object
-    :param var: Variable to check dependencies for
-    :param master_list: Dictionary of supported variables and their dependencies
-    :param add_missing: Whether to try adding missing dependencies (default: True)
-    :param dependency_chain: List of variables in the current dependency chain (for detecting cycles)
-    :return: True if all dependencies are present or successfully added, False otherwise
+    :param var: Variable to check deps. for
+    :param master_list: Dict of supported vars and their deps.
+    :param add_missing: Whether to try adding missing deps. (default: True)
+    :param dependency_chain: List of vars in the current dep. chain (for detecting cycles)
+    :return: True if all deps. are present or successfully added, False otherwise
     """
     # Initialize dependency chain if None
     if dependency_chain is None:
@@ -1315,14 +1308,16 @@ def check_dependencies(f, var, master_list, add_missing=True, dependency_chain=N
     
     # Check if we're in a circular dependency
     if var in dependency_chain:
-        print(f"{Red}Circular dependency detected: {' -> '.join(dependency_chain + [var])}{Nclr}")
+        print(f"{Red}Circular dependency detected: "
+              f"{' -> '.join(dependency_chain + [var])}{Nclr}")
         return False
     
     # Add current variable to dependency chain
     dependency_chain = dependency_chain + [var]
     
     if var not in master_list:
-        print(f"{Red}Variable `{var}` is not in the master list of supported variables.{Nclr}")
+        print(f"{Red}Variable `{var}` is not in the master list of supported "
+              f"variables.{Nclr}")
         return False
     
     # Get the list of required variables for this variable
@@ -1351,18 +1346,24 @@ def check_dependencies(f, var, master_list, add_missing=True, dependency_chain=N
     for missing_var in missing_vars:
         # Check if we can add this dependency (must be in master_list)
         if missing_var in master_list:
-            # Recursively check dependencies for this variable, passing the current dependency chain
-            if check_dependencies(f, missing_var, master_list, add_missing=True, dependency_chain=dependency_chain):
+            # Recursively check dependencies for this variable, passing 
+            # the current dependency chain
+            if check_dependencies(f, 
+                                  missing_var, 
+                                  master_list, 
+                                  add_missing=True, 
+                                  dependency_chain=dependency_chain):
                 # If dependencies are satisfied, try to add the variable
                 try:
-                    print(f"{Yellow}Dependency {missing_var} for {var} can be added{Nclr}")
+                    print(f"{Yellow}Dependency {missing_var} for {var} can "
+                          f"be added{Nclr}")
                     # Get the file type and interpolation type
                     f_type, interp_type = FV3_file_type(f)
                     
                     # Check if the interpolation type is compatible with this variable
-                    compat_file_fmt = ", ".join([cf for cf in master_list[missing_var][3]])
                     if interp_type not in master_list[missing_var][3]:
-                        print(f"{Red}Cannot add {missing_var}: incompatible file type {interp_type}{Nclr}")
+                        print(f"{Red}Cannot add {missing_var}: incompatible "
+                              f"file type {interp_type}{Nclr}")
                         failed_to_add.append(missing_var)
                         continue
                     
@@ -1370,14 +1371,16 @@ def check_dependencies(f, var, master_list, add_missing=True, dependency_chain=N
                     successfully_added.append(missing_var)
                     
                 except Exception as e:
-                    print(f"{Red}Error checking dependency {missing_var}: {str(e)}{Nclr}")
+                    print(f"{Red}Error checking dependency {missing_var}: "
+                          f"{str(e)}{Nclr}")
                     failed_to_add.append(missing_var)
             else:
                 # If dependencies for this dependency are not satisfied
                 failed_to_add.append(missing_var)
         else:
             # This dependency is not in the master list, cannot be added
-            print(f"{Red}Dependency {missing_var} for {var} is not in the master list and cannot be added automatically{Nclr}")
+            print(f"{Red}Dependency {missing_var} for {var} is not in the "
+                  f"master list and cannot be added automatically{Nclr}")
             failed_to_add.append(missing_var)
     
     # Check if all dependencies were added
@@ -1386,13 +1389,17 @@ def check_dependencies(f, var, master_list, add_missing=True, dependency_chain=N
     else:
         # Some dependencies could not be added
         dependency_list = ", ".join(failed_to_add)
-        print(f"{Red}Cannot add {var}: missing dependencies {dependency_list}{Nclr}")
+        print(f"{Red}Cannot add {var}: missing dependencies "
+              f"{dependency_list}{Nclr}")
         return False
 
 
 # =====================================================================
 def check_variable_exists(var_name, file_vars):
-    """Check if a variable exists in the file, considering alternative naming conventions"""
+    """
+    Check if a variable exists in the file, considering alternative 
+    naming conventions
+    """
     if var_name in file_vars:
         return True
         
@@ -1405,10 +1412,10 @@ def check_variable_exists(var_name, file_vars):
         alt_name = var_name.replace('_mom', '_micro')
         if alt_name in file_vars:
             return True
-    elif var_name == 'dst_num_mom':
-        # Special case for dst_num_mom/dst_num_micro
-        if 'dst_num_micro' in file_vars:
-            return True
+    # elif var_name == 'dst_num_mom':
+    #     # Special case for dst_num_mom/dst_num_micro
+    #     if 'dst_num_micro' in file_vars:
+    #         return True
             
     return False
 
@@ -1428,20 +1435,20 @@ def get_existing_var_name(var_name, file_vars):
         alt_name = var_name.replace('_mom', '_micro')
         if alt_name in file_vars:
             return alt_name
-    elif var_name == 'dst_num_mom':
-        # Special case for dst_num_mom/dst_num_micro
-        if 'dst_num_micro' in file_vars:
-            return 'dst_num_micro'
+    # elif var_name == 'dst_num_mom':
+    #     # Special case for dst_num_mom/dst_num_micro
+    #     if 'dst_num_micro' in file_vars:
+    #         return 'dst_num_micro'
             
     return var_name  # Return original if no match found
 
 
 # =====================================================================
-def process_add_variables(ifile, add_list, master_list, debug=False):
+def process_add_variables(file_name, add_list, master_list, debug=False):
     """
     Process the list of variables to add, handling dependencies appropriately.
     
-    :param ifile: Input file path
+    :param file_name: Input file path
     :param add_list: List of variables to add
     :param master_list: Dictionary of supported variables and their dependencies
     :param debug: Whether to show debug information
@@ -1451,7 +1458,7 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
     already_in_file = []
     
     # First check if all requested variables already exist in the file
-    with Dataset(ifile, "r", format="NETCDF4_CLASSIC") as f:
+    with Dataset(file_name, "r", format="NETCDF4_CLASSIC") as f:
         file_vars = set(f.variables.keys())
         
         # Check if all requested variables are already in the file
@@ -1465,11 +1472,14 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
             if len(add_list) == 1:
                 var, actual_var = already_in_file[0]
                 if var == actual_var:
-                    print(f"{Yellow}Variable '{var}' is already in the file.{Nclr}")
+                    print(f"{Yellow}Variable '{var}' is already in the file."
+                          f"{Nclr}")
                 else:
-                    print(f"{Yellow}Variable '{var}' is already in the file (as '{actual_var}').{Nclr}")
+                    print(f"{Yellow}Variable '{var}' is already in the file "
+                          f"(as '{actual_var}').{Nclr}")
             else:
-                print(f"{Yellow}All requested variables are already in the file:{Nclr}")
+                print(f"{Yellow}All requested variables are already in the "
+                      f"file:{Nclr}")
                 for var, actual_var in already_in_file:
                     if var == actual_var:
                         print(f"{Yellow}  - {var}{Nclr}")
@@ -1478,13 +1488,16 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
             return
     
     def add_with_dependencies(var):
-        """Helper function to add a variable and its dependencies to the list"""
+        """
+        Helper function to add a variable and its dependencies to the list
+        """
+        
         # Skip if already processed
         if var in variables_to_add:
             return True
         
         # Open the file to check dependencies
-        with Dataset(ifile, "a", format="NETCDF4_CLASSIC") as f:
+        with Dataset(file_name, "a", format="NETCDF4_CLASSIC") as f:
             file_vars = set(f.variables.keys())
             
             # Skip if already in file
@@ -1496,7 +1509,8 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
             # Check file compatibility
             if interp_type not in master_list[var][3]:
                 compat_file_fmt = ", ".join(master_list[var][3])
-                print(f"{Red}ERROR: Variable '{Yellow}{var}{Red}' can only be added to file type: {Yellow}{compat_file_fmt}{Nclr}")
+                print(f"{Red}ERROR: Variable '{Yellow}{var}{Red}' can only be "
+                      f"added to file type: {Yellow}{compat_file_fmt}{Nclr}")
                 return False
                 
             # Check each dependency
@@ -1510,11 +1524,13 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
                 if dep in master_list:
                     if not add_with_dependencies(dep):
                         all_deps_ok = False
-                        print(f"{Red}Cannot add {var}: Required dependency {dep} cannot be added{Nclr}")
+                        print(f"{Red}Cannot add {var}: Required dependency "
+                              f"{dep} cannot be added{Nclr}")
                 else:
                     # Cannot add this dependency
                     all_deps_ok = False
-                    print(f"{Red}Cannot add {var}: Required dependency {dep} is not in the list of supported variables{Nclr}")
+                    print(f"{Red}Cannot add {var}: Required dependency {dep} "
+                          f"is not in the list of supported variables{Nclr}")
             
             if all_deps_ok:
                 variables_to_add.append(var)
@@ -1525,17 +1541,20 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
         # Check all requested variables
     for var in add_list:
         if var not in master_list:
-            print(f"{Red}Variable '{var}' is not supported and cannot be added to the file.{Nclr}")
+            print(f"{Red}Variable '{var}' is not supported and cannot be "
+                  f"added to the file.{Nclr}")
             continue
             
         # Skip if already in file
-        with Dataset(ifile, "r", format="NETCDF4_CLASSIC") as f:
+        with Dataset(file_name, "r", format="NETCDF4_CLASSIC") as f:
             if check_variable_exists(var, f.variables.keys()):
                 existing_name = get_existing_var_name(var, f.variables.keys())
                 if var != existing_name:
-                    print(f"{Yellow}Variable '{var}' is already in the file (as '{existing_name}').{Nclr}")
+                    print(f"{Yellow}Variable '{var}' is already in the file "
+                          f"(as '{existing_name}').{Nclr}")
                 else:
-                    print(f"{Yellow}Variable '{var}' is already in the file.{Nclr}")
+                    print(f"{Yellow}Variable '{var}' is already in the file."
+                          f"{Nclr}")
                 continue
         
         # Try to add the variable and its dependencies
@@ -1544,7 +1563,7 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
     # Now add the variables in the correct order
     for var in variables_to_add:
         try:
-            f = Dataset(ifile, "a", format="NETCDF4_CLASSIC")
+            f = Dataset(file_name, "a", format="NETCDF4_CLASSIC")
             
             # Skip if already in file (double-check)
             if check_variable_exists(var, f.variables.keys()):
@@ -1752,15 +1771,15 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
                     # [lev, lat, t, tod, lon]
                     # -> [t, tod, lev, lat, lon]
                     # [0 1 2 3 4] -> [2 3 0 1 4]
-                    OUT = mass_stream(
-                        vcomp.transpose([2, 3, 0, 1, 4]), lat, lev,
-                        type=interp_type
-                    ).transpose([2, 3, 0, 1, 4])
+                    OUT = mass_stream(vcomp.transpose([2, 3, 0, 1, 4]), 
+                                      lat, 
+                                      lev,
+                                      type=interp_type).transpose([2, 3, 0, 1, 4])
                 else:
-                    OUT = mass_stream(
-                        vcomp.transpose([1, 2, 3, 0]), lat, lev,
-                        type=interp_type
-                    ).transpose([3, 0, 1, 2])
+                    OUT = mass_stream(vcomp.transpose([1, 2, 3, 0]), 
+                                      lat, 
+                                      lev,
+                                      type=interp_type).transpose([3, 0, 1, 2])
                     # [t, lev, lat, lon]
                     # -> [lev, lat, lon, t]
                     # ->  [t, lev, lat, lon]
@@ -1791,7 +1810,7 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
                 OUT = compute_WMFF(my, rho, lev, interp_type)
 
             if var == "tp_t":
-                OUT = zonal_detrend(temp)/temp
+                OUT = zonal_detrend(temp) / temp
 
             if interp_type == "pfull":
                 # Filter out NANs in the native files
@@ -1800,7 +1819,7 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
             else:
                 # Add NANs to the interpolated files
                 with warnings.catch_warnings():
-                    warnings.simplefilter("ignore", category = RuntimeWarning)
+                    warnings.simplefilter("ignore", category=RuntimeWarning)
                     OUT[OUT > 1.e30] = np.nan
                     OUT[OUT < -1.e30] = np.nan
 
@@ -1815,7 +1834,7 @@ def process_add_variables(ifile, add_list, master_list, debug=False):
             f.close()
             
         except Exception as e:
-            except_message(debug, e, var, ifile)
+            except_message(debug, e, var, file_name)
             
 # ======================================================
 #                  MAIN PROGRAM
@@ -1836,14 +1855,14 @@ def main():
     global lev_T_out
 
     # For all the files
-    for ifile in file_list:
+    for input_file in file_list:
         # First check if file is on the disk (Lou only)
         # Create a wrapper object to pass to check_file_tape
         class FileWrapper:
             def __init__(self, name):
                 self.name = name
 
-        file_wrapper = FileWrapper(ifile)
+        file_wrapper = FileWrapper(input_file)
         check_file_tape(file_wrapper)
 
         # ==============================================================
@@ -1853,52 +1872,52 @@ def main():
             try:
                 # If ncks is available, use it
                 cmd_txt = "ncks --version"
-                subprocess.check_call(cmd_txt, shell = True,
-                                      stdout = open(os.devnull, "w"),
-                                      stderr = open(os.devnull, "w"))
+                subprocess.check_call(cmd_txt, 
+                                      shell=True,
+                                      stdout=open(os.devnull, "w"),
+                                      stderr=open(os.devnull, "w"))
                 print("Using ncks.")
                 
                 remove_list = args.remove_variable
                 
                 for ivar in remove_list:
-                    print(f"Creating new file {ifile} without {ivar}:")
-                    cmd_txt = f"ncks -C -O -x -v {ivar} {ifile} {ifile}"
+                    print(f"Creating new file {input_file} without {ivar}:")
+                    cmd_txt = f"ncks -C -O -x -v {ivar} {input_file} {input_file}"
                     try:
-                        subprocess.check_call(
-                            cmd_txt, shell = True,
-                            stdout = open(os.devnull, "w"),
-                            stderr = open(os.devnull, "w")
-                        )
+                        subprocess.check_call(cmd_txt, 
+                                              shell=True,
+                                              stdout=open(os.devnull, "w"),
+                                              stderr=open(os.devnull, "w"))
                     except Exception as e:
-                        print(f"{e.__class__.__name__ }: "
-                              f"{e.message}")
+                        print(f"{e.__class__.__name__ }: {e.message}")
 
             except subprocess.CalledProcessError:
                 # If ncks is not available, use internal method
                 print("Using internal method.")
-                f_IN = Dataset(ifile, "r", format = "NETCDF4_CLASSIC")
-                ifile_tmp = f"{ifile[:-3]}_tmp.nc"
+                f_IN = Dataset(input_file, "r", format="NETCDF4_CLASSIC")
+                ifile_tmp = f"{input_file[:-3]}_tmp.nc"
                 Log = Ncdf(ifile_tmp, "Edited postprocess")
                 Log.copy_all_dims_from_Ncfile(f_IN)
                 Log.copy_all_vars_from_Ncfile(f_IN, remove_list)
                 f_IN.close()
                 Log.close()
-                cmd_txt = f"mv {ifile_tmp} {ifile}"
-                p = subprocess.run(cmd_txt, universal_newlines = True,
-                                   shell = True)
-                print(f"{Cyan}{ifile} was updated{Nclr}")
+                cmd_txt = f"mv {ifile_tmp} {input_file}"
+                p = subprocess.run(cmd_txt, 
+                                   universal_newlines = True,
+                                   shell=True)
+                print(f"{Cyan}{input_file} was updated{Nclr}")
 
         # ==============================================================
         # Extract Function
         # ==============================================================
         if args.extract_copy:
-            f_IN = Dataset(ifile, "r", format = "NETCDF4_CLASSIC")
+            f_IN = Dataset(input_file, "r", format="NETCDF4_CLASSIC")
 
             # The variable to exclude
             exclude_list = filter_vars(f_IN,
                                        args.extract_copy,
                                        giveExclude = True)
-            ifile_tmp = f"{ifile[:-3]}_extract.nc"
+            ifile_tmp = f"{input_file[:-3]}_extract.nc"
             Log = Ncdf(ifile_tmp, "Edited in postprocessing")
             Log.copy_all_dims_from_Ncfile(f_IN)
             Log.copy_all_vars_from_Ncfile(f_IN, exclude_list)
@@ -1912,18 +1931,20 @@ def main():
         # If the list is not empty, load ak and bk for the pressure
         # calculation. ak and bk are always necessary.
         if args.add_variable:
-            process_add_variables(ifile, args.add_variable, master_list, debug)
+            process_add_variables(input_file, args.add_variable, master_list, 
+                                  debug)
         
         # ==============================================================
         #                   Vertical Differentiation
         # ==============================================================
         for idiff in args.differentiate_wrt_z:
-            f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
+            f = Dataset(input_file, "a", format="NETCDF4_CLASSIC")
             f_type, interp_type = FV3_file_type(f)
 
             # Use check_variable_exists instead of direct key lookup
             if not check_variable_exists(idiff, f.variables.keys()):
-                print(f"{Red}zdiff error: variable {idiff} is not present in {ifile}{Nclr}")
+                print(f"{Red}zdiff error: variable {idiff} is not present "
+                      f"in {input_file}{Nclr}")
                 f.close()
                 continue
             
@@ -1958,18 +1979,18 @@ def main():
                         temp = f.variables["temp"][:]
                         ps = f.variables["ps"][:]
                         # Z is the first axis
-                        zfull = fms_Z_calc(
-                            ps, ak, bk, temp.transpose(lev_T),
-                            topo=0., lev_type="full"
-                            ).transpose(lev_T)
+                        zfull = fms_Z_calc(ps, 
+                                           ak, 
+                                           bk, 
+                                           temp.transpose(lev_T), 
+                                           topo=0., 
+                                           lev_type="full").transpose(lev_T)
 
                     # Average file: zfull = [lev, t, lat, lon]
                     # Diurn file: zfull = [lev, tod, t, lat, lon]
                     # Differentiate the variable w.r.t. Z:
-                    darr_dz = dvar_dh(
-                        var.transpose(lev_T),
-                        zfull.transpose(lev_T)
-                        ).transpose(lev_T)
+                    darr_dz = dvar_dh(var.transpose(lev_T),
+                                      zfull.transpose(lev_T)).transpose(lev_T)
 
                     # .. note:: lev_T swaps dims 0 & 1, ensuring level
                     # is the first dimension for the differentiation
@@ -1979,24 +2000,21 @@ def main():
                     if "zfull" in f.variables.keys():
                         zfull = f.variables["zfull"][:]
                         darr_dz = dvar_dh(
-                            var.transpose(lev_T),
-                            zfull.transpose(lev_T)
+                            var.transpose(lev_T), zfull.transpose(lev_T)
                             ).transpose(lev_T)
                     else:
                         lev = f.variables[interp_type][:]
                         temp = f.variables["temp"][:]
-                        dzfull_pstd = compute_DZ_full_pstd(
-                            lev, temp
-                            )
+                        dzfull_pstd = compute_DZ_full_pstd(lev, temp)
                         darr_dz = (dvar_dh(
                             var.transpose(lev_T)
-                            ).transpose(lev_T) / dzfull_pstd)
+                            ).transpose(lev_T) 
+                                   / dzfull_pstd)
 
                 elif interp_type in ["zagl", "zstd"]:
                     lev = f.variables[interp_type][:]
-                    darr_dz = dvar_dh(
-                        var.transpose(lev_T), lev
-                        ).transpose(lev_T)
+                    darr_dz = dvar_dh(var.transpose(lev_T), 
+                                      lev).transpose(lev_T)
                 # .. note:: lev_T swaps dims 0 & 1, ensuring level is
                 # the first dimension for the differentiation
 
@@ -2007,20 +2025,21 @@ def main():
                 var_Ncdf[:] = darr_dz
                 
                 f.close()
-                print(f"d_dz_{idiff}: {Green}Done{Nclr}")
+                print(f"{Green}d_dz_{idiff}: Done{Nclr}")
                 
             except Exception as e:
-                except_message(debug, e, idiff, ifile, pre="d_dz_")
+                except_message(debug, e, idiff, input_file, pre="d_dz_")
 
         # ==============================================================
         #                       Zonal Detrending
         # ==============================================================
         for izdetrend in args.zonal_detrend:
-            f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
+            f = Dataset(input_file, "a", format="NETCDF4_CLASSIC")
             
             # Use check_variable_exists instead of direct key lookup
             if not check_variable_exists(izdetrend, f.variables.keys()):
-                print(f"{Red}zonal detrend error: variable {izdetrend} is not in {ifile}{Nclr}")
+                print(f"{Red}zonal detrend error: variable {izdetrend} is "
+                      f"not in {input_file}{Nclr}")
                 f.close()
                 continue
             
@@ -2044,25 +2063,24 @@ def main():
                 var_Ncdf[:] = zonal_detrend(var)
                 
                 f.close()
-                print(f"{izdetrend}_p: {Green}Done{Nclr}")
+                print(f"{Green}{izdetrend}_p: Done{Nclr}")
                 
             except Exception as e:
-                except_message(debug, e, izdetrend, ifile, ext="_p")
+                except_message(debug, e, izdetrend, input_file, ext="_p")
 
         # ==============================================================
         #           Opacity Conversion (dp_to_dz and dz_to_dp)
         # ==============================================================
         for idp_to_dz in args.dp_to_dz:
-            f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
+            f = Dataset(input_file, "a", format="NETCDF4_CLASSIC")
             f_type, interp_type = FV3_file_type(f)
             
             # Use check_variable_exists instead of direct key lookup
             if not check_variable_exists(idp_to_dz, f.variables.keys()):
-                print(f"{Red}dp_to_dz error: variable {idp_to_dz} is not in {ifile}{Nclr}")
+                print(f"{Red}dp_to_dz error: variable {idp_to_dz} is not "
+                      f"in {input_file}{Nclr}")
                 f.close()
                 continue
-
-            print(f"Converting: {idp_to_dz}...")
 
             try:
                 # Get the actual variable name in case of alternative names
@@ -2072,12 +2090,18 @@ def main():
                 # Ensure required variables (DP, DZ) exist
                 if not (check_variable_exists('DP', f.variables.keys()) and 
                         check_variable_exists('DZ', f.variables.keys())):
-                    print(f"{Red}Error: DP and DZ variables required for conversion. Add them with CAP:\n{Nclr}MarsVars {ifile} -add DP DZ")
+                    print(f"{Red}Error: DP and DZ variables required for "
+                          f"conversion. Add them with CAP:\n{Nclr}MarsVars "
+                          f"{input_file} -add DP DZ")
                     f.close()
                     continue
                 
-                new_unit = (getattr(f.variables[actual_var_name], "units", "") + "/m")
-                new_lname = (getattr(f.variables[actual_var_name], "long_name", "") + " rescaled to meter-1")
+                print(f"Converting: {idp_to_dz}...")
+                
+                new_unit = (getattr(f.variables[actual_var_name], "units", "") 
+                            + "/m")
+                new_lname = (getattr(f.variables[actual_var_name], "long_name", "") 
+                             + " rescaled to meter-1")
                 
                 # Get dimension
                 dim_out = f.variables[actual_var_name].dimensions
@@ -2091,18 +2115,19 @@ def main():
                     )
                 
                 f.close()
-                print(f"{idp_to_dz}_dp_to_dz: {Green}Done{Nclr}")
+                print(f"{Green}{idp_to_dz}_dp_to_dz: Done{Nclr}")
 
             except Exception as e:
-                except_message(debug, e, idp_to_dz, ifile, ext="_dp_to_dz")
+                except_message(debug, e, idp_to_dz, input_file, ext="_dp_to_dz")
 
         for idz_to_dp in args.dz_to_dp:
-            f = Dataset(ifile, "a", format = "NETCDF4_CLASSIC")
+            f = Dataset(input_file, "a", format="NETCDF4_CLASSIC")
             f_type, interp_type = FV3_file_type(f)
             
             # Use check_variable_exists instead of direct key lookup
             if not check_variable_exists(idz_to_dp, f.variables.keys()):
-                print(f"{Red}dz_to_dp error: variable {idz_to_dp} is not in {ifile}{Nclr}")
+                print(f"{Red}dz_to_dp error: variable {idz_to_dp} is not "
+                      f"in {input_file}{Nclr}")
                 f.close()
                 continue
 
@@ -2116,12 +2141,15 @@ def main():
                 # Ensure required variables (DP, DZ) exist
                 if not (check_variable_exists('DP', f.variables.keys()) and 
                         check_variable_exists('DZ', f.variables.keys())):
-                    print(f"{Red}Error: DP and DZ variables required for conversion{Nclr}")
+                    print(f"{Red}Error: DP and DZ variables required for "
+                          f"conversion{Nclr}")
                     f.close()
                     continue
                 
-                new_unit = (getattr(f.variables[actual_var_name], "units", "") + "/m")
-                new_lname = (getattr(f.variables[actual_var_name], "long_name", "") + " rescaled to Pa-1")
+                new_unit = (getattr(f.variables[actual_var_name], "units", "") 
+                            + "/m")
+                new_lname = (getattr(f.variables[actual_var_name], "long_name", "") 
+                             + " rescaled to Pa-1")
                 
                 # Get dimension
                 dim_out = f.variables[actual_var_name].dimensions
@@ -2135,10 +2163,10 @@ def main():
                     )
                 
                 f.close()
-                print(f"{idz_to_dp}_dz_to_dp: {Green}Done{Nclr}")
+                print(f"{Green}{idz_to_dp}_dz_to_dp: Done{Nclr}")
 
             except Exception as e:
-                except_message(debug, e, idz_to_dp, ifile, ext="_dz_to_dp")
+                except_message(debug, e, idz_to_dp, input_file, ext="_dz_to_dp")
 
         # ==============================================================
         #                    Column Integration
@@ -2157,10 +2185,9 @@ def main():
                 >  col = \
                         /__ var (dp/g)
                             p_top
-
         """
         for icol in args.column_integrate:
-            f = Dataset(ifile, "a")
+            f = Dataset(input_file, "a")
             f_type, interp_type = FV3_file_type(f)
 
             if interp_type == "pfull":
@@ -2168,7 +2195,8 @@ def main():
             
             # Use check_variable_exists instead of direct key lookup
             if not check_variable_exists(icol, f.variables.keys()):
-                print(f"{Red}column integration error: variable {icol} is not in {ifile}{Nclr}")
+                print(f"{Red}column integration error: variable {icol} is "
+                      f"not in {input_file}{Nclr}")
                 f.close()
                 continue
     
@@ -2205,14 +2233,12 @@ def main():
                     # if [t, lat, lon]
                     lev_T = [1, 0, 2, 3]
                     # -> [lev, t, lat, lon]
-                    dim_out = tuple(
-                        [dim_in[0], dim_in[2], dim_in[3]]
-                        )
+                    dim_out = tuple([dim_in[0], dim_in[2], dim_in[3]])
                     lev_axis = 1
 
                 ps = f.variables["ps"][:]
                 DP = compute_DP_3D(ps, ak, bk, shape_in)
-                out = np.sum(var * DP / g, axis=lev_axis)
+                out = np.sum(var*DP / g, axis=lev_axis)
 
                 # Log the variable
                 var_Ncdf = f.createVariable(f"{icol}_col", "f4", dim_out)
@@ -2221,14 +2247,14 @@ def main():
                 var_Ncdf[:] = out
                 
                 f.close()
-                print(f"{icol}_col: {Green}Done{Nclr}")
+                print(f"{Green}{icol}_col: Done{Nclr}")
 
             except Exception as e:
-                except_message(debug, e, icol, ifile, ext="_col")
+                except_message(debug, e, icol, input_file, ext="_col")
                 
         if args.edit_variable:
-            f_IN = Dataset(ifile, "r", format = "NETCDF4_CLASSIC")
-            ifile_tmp = f"{ifile[:-3]}_tmp.nc"
+            f_IN = Dataset(input_file, "r", format="NETCDF4_CLASSIC")
+            ifile_tmp = f"{input_file[:-3]}_tmp.nc"
             Log = Ncdf(ifile_tmp, "Edited in postprocessing")
             Log.copy_all_dims_from_Ncfile(f_IN)
 
@@ -2259,16 +2285,17 @@ def main():
                     name_text, vals, dim_out, lname_text, unit_text
                     )
             else:
-                Log.log_axis1D(name_text, vals, dim_out, lname_text,
-                               unit_text, cart_text)
+                Log.log_axis1D(
+                    name_text, vals, dim_out, lname_text, unit_text, cart_text
+                    )
             f_IN.close()
             Log.close()
 
             # Rename the new file
-            cmd_txt = f"mv {ifile_tmp} {ifile}"
-            subprocess.call(cmd_txt, shell = True)
+            cmd_txt = f"mv {ifile_tmp} {input_file}"
+            subprocess.call(cmd_txt, shell=True)
 
-            print(f"{Cyan}{ifile} was updated{Nclr}")
+            print(f"{Cyan}{input_file} was updated{Nclr}")
 
 # ======================================================================
 #                           END OF PROGRAM
