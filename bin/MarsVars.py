@@ -1869,43 +1869,19 @@ def main():
         # Remove Function
         # ==============================================================
         if args.remove_variable:
-            try:
-                # If ncks is available, use it
-                cmd_txt = "ncks --version"
-                subprocess.check_call(cmd_txt, 
-                                      shell=True,
-                                      stdout=open(os.devnull, "w"),
-                                      stderr=open(os.devnull, "w"))
-                print("Using ncks.")
-                
-                remove_list = args.remove_variable
-                
-                for ivar in remove_list:
-                    print(f"Creating new file {input_file} without {ivar}:")
-                    cmd_txt = f"ncks -C -O -x -v {ivar} {input_file} {input_file}"
-                    try:
-                        subprocess.check_call(cmd_txt, 
-                                              shell=True,
-                                              stdout=open(os.devnull, "w"),
-                                              stderr=open(os.devnull, "w"))
-                    except Exception as e:
-                        print(f"{e.__class__.__name__ }: {e.message}")
-
-            except subprocess.CalledProcessError:
-                # If ncks is not available, use internal method
-                print("Using internal method.")
-                f_IN = Dataset(input_file, "r", format="NETCDF4_CLASSIC")
-                ifile_tmp = f"{input_file[:-3]}_tmp.nc"
-                Log = Ncdf(ifile_tmp, "Edited postprocess")
-                Log.copy_all_dims_from_Ncfile(f_IN)
-                Log.copy_all_vars_from_Ncfile(f_IN, remove_list)
-                f_IN.close()
-                Log.close()
-                cmd_txt = f"mv {ifile_tmp} {input_file}"
-                p = subprocess.run(cmd_txt, 
-                                   universal_newlines = True,
-                                   shell=True)
-                print(f"{Cyan}{input_file} was updated{Nclr}")
+            remove_list = args.remove_variable
+            
+            f_IN = Dataset(input_file, "r", format="NETCDF4_CLASSIC")
+            ifile_tmp = f"{input_file[:-3]}_tmp.nc"
+            Log = Ncdf(ifile_tmp, "Edited postprocess")
+            Log.copy_all_dims_from_Ncfile(f_IN)
+            Log.copy_all_vars_from_Ncfile(f_IN, remove_list)
+            f_IN.close()
+            Log.close()
+            
+            cmd_txt = f"mv {ifile_tmp} {input_file}"
+            p = subprocess.run(cmd_txt, universal_newlines = True, shell=True)
+            print(f"{Cyan}{input_file} was updated{Nclr}")
 
         # ==============================================================
         # Extract Function
