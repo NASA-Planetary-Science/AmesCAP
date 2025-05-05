@@ -181,7 +181,7 @@ master_list = {
         ['pfull']
     ],
     'scorer_wl': [
-        "Scorer horiz. λ = 2π/√(l^2)",
+        "Scorer horiz. lambda = 2π/√(l^2)",
         'm',
         ['ps', 'temp', 'ucomp'],
         ['pfull']
