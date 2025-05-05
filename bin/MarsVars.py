@@ -708,6 +708,86 @@ def safe_move_file(src_file, dst_file, max_attempts=5, delay=1):
     print(f"{Red}Failed to move file after {max_attempts} attempts{Nclr}")
     return False
 
+
+def force_close_netcdf_files(file_or_dir, delay=1.0):
+    """
+    Aggressively try to ensure netCDF files are closed on Windows systems
+    
+    :param file_or_dir: Path to the file or directory to process
+    :param delay: Delay in seconds after forcing closure
+    """
+    import gc
+    
+    # Only needed on Windows
+    if os.name != 'nt':
+        return
+        
+    # Force Python's garbage collection multiple times
+    for _ in range(3):
+        gc.collect()
+    
+    # On Windows, add delay to allow file handles to be fully released
+    time.sleep(delay)
+
+def safe_copy_replace(src_file, dst_file, max_attempts=5, delay=1.0):
+    """
+    Windows-specific approach to copy file contents and replace destination
+    This avoids move operations which are more likely to fail with locking
+    
+    :param src_file: Source file path
+    :param dst_file: Destination file path
+    :param max_attempts: Maximum number of retry attempts
+    :param delay: Base delay between attempts (increases with retries)
+    :return: True if successful, False otherwise
+    """
+    import gc
+    
+    print(f"Performing copy-replace: {src_file} -> {dst_file}")
+    
+    # Force garbage collection to release file handles
+    force_close_netcdf_files(os.path.dirname(dst_file), delay=delay)
+    
+    # Check if source file exists
+    if not os.path.exists(src_file):
+        print(f"{Red}Source file does not exist: {src_file}{Nclr}")
+        return False
+    
+    for attempt in range(max_attempts):
+        try:
+            # Rather than moving, copy the contents
+            with open(src_file, 'rb') as src:
+                src_data = src.read()
+            
+            # Close the source file and force GC
+            gc.collect()
+            time.sleep(delay)
+            
+            # Write to destination
+            with open(dst_file, 'wb') as dst:
+                dst.write(src_data)
+            
+            # Verify file sizes match
+            if os.path.getsize(src_file) == os.path.getsize(dst_file):
+                # Now remove the source file
+                try:
+                    os.remove(src_file)
+                except:
+                    print(f"{Yellow}Warning: Source file {src_file} could not be removed, but destination was updated{Nclr}")
+                
+                print(f"{Green}File successfully replaced on attempt {attempt+1}{Nclr}")
+                return True
+            else:
+                raise Exception("File sizes don't match after copy")
+                
+        except Exception as e:
+            print(f"{Yellow}File replace attempt {attempt+1} failed: {e}{Nclr}")
+            # Wait longer with each attempt
+            time.sleep(delay * (attempt + 1))
+            # Force GC again
+            force_close_netcdf_files(os.path.dirname(dst_file), delay=delay*(attempt+1))
+    
+    print(f"{Red}Failed to replace file after {max_attempts} attempts{Nclr}")
+    return False
 # ===========================
 
 def compute_p_3D(ps, ak, bk, shape_out):
@@ -2011,15 +2091,15 @@ def main():
         if args.remove_variable:
             remove_list = args.remove_variable
             
-            # Ensure any existing files are properly closed
-            ensure_file_closed(input_file)
-            
             # Create path for temporary file using os.path for cross-platform
             ifile_tmp = os.path.splitext(input_file)[0] + "_tmp.nc"
-            
+
             # Remove any existing temporary file
             if os.path.exists(ifile_tmp):
-                safe_remove_file(ifile_tmp)
+                try:
+                    os.remove(ifile_tmp)
+                except:
+                    print(f"{Yellow}Warning: Could not remove existing temporary file: {ifile_tmp}{Nclr}")
             
             # Open, copy, and close files
             try:
@@ -2030,16 +2110,26 @@ def main():
                 f_IN.close()
                 Log.close()
                 
-                # Use our safe_move_file function instead of shell command
-                if safe_move_file(ifile_tmp, input_file):
-                    print(f"{Cyan}{input_file} was updated{Nclr}")
+                # Handle differently based on platform
+                if os.name == 'nt':
+                    # On Windows, use our specialized copy-replace method
+                    if safe_copy_replace(ifile_tmp, input_file):
+                        print(f"{Cyan}{input_file} was updated{Nclr}")
+                    else:
+                        print(f"{Red}Failed to update {input_file} - using original file{Nclr}")
                 else:
-                    print(f"{Red}Failed to update {input_file} - file may be incomplete{Nclr}")
+                    # On Unix systems, use standard move
+                    shutil.move(ifile_tmp, input_file)
+                    print(f"{Cyan}{input_file} was updated{Nclr}")
+            
             except Exception as e:
                 print(f"{Red}Error in remove_variable: {str(e)}{Nclr}")
                 # Clean up temporary file if it exists
                 if os.path.exists(ifile_tmp):
-                    safe_remove_file(ifile_tmp)
+                    try:
+                        os.remove(ifile_tmp)
+                    except:
+                        pass
 
         # ==============================================================
         # Extract Function
