@@ -52,6 +52,8 @@ import numpy as np
 from netCDF4 import Dataset
 import shutil       # For cross-platform file operations
 import time         # For implementing delays in file operations
+import io
+import locale
 
 # Force matplotlib NOT to load Xwindows backend
 matplotlib.use("Agg")
@@ -709,6 +711,40 @@ def safe_move_file(src_file, dst_file, max_attempts=5, delay=1):
     return False
 
 
+# ==== FIX FOR UNICODE ENCODING ERROR IN HELP MESSAGE ====
+# Helper function to handle Unicode output properly on Windows
+def safe_print(text):
+    """Print text safely, handling encoding issues on Windows"""
+    try:
+        # Try to print directly
+        print(text)
+    except UnicodeEncodeError:
+        # If that fails, encode with the console's encoding and replace problematic characters
+        console_encoding = locale.getpreferredencoding()
+        encoded_text = text.encode(console_encoding, errors='replace').decode(console_encoding)
+        print(encoded_text)
+
+# Patch argparse.ArgumentParser._print_message to handle Unicode
+original_print_message = argparse.ArgumentParser._print_message
+def patched_print_message(self, message, file=None):
+    """Patched version of _print_message that handles Unicode encoding errors"""
+    if file is None:
+        file = sys.stdout
+    
+    try:
+        # Try the original method first
+        original_print_message(self, message, file)
+    except UnicodeEncodeError:
+        # If that fails, use a StringIO to capture the output
+        output = io.StringIO()
+        original_print_message(self, message, output)
+        safe_print(output.getvalue())
+
+# Apply the patch
+argparse.ArgumentParser._print_message = patched_print_message
+
+
+# ==== IMPROVED FILE HANDLING FOR WINDOWS ====
 def force_close_netcdf_files(file_or_dir, delay=1.0):
     """
     Aggressively try to ensure netCDF files are closed on Windows systems
@@ -788,6 +824,8 @@ def safe_copy_replace(src_file, dst_file, max_attempts=5, delay=1.0):
     
     print(f"{Red}Failed to replace file after {max_attempts} attempts{Nclr}")
     return False
+
+
 # ===========================
 
 def compute_p_3D(ps, ak, bk, shape_out):
@@ -2497,23 +2535,26 @@ def main():
                 except_message(debug, e, icol, input_file, ext="_col")
                 
         if args.edit_variable:
-            # Ensure any existing files are properly closed
-            ensure_file_closed(input_file)
-            
             # Create path for temporary file using os.path for cross-platform
             ifile_tmp = os.path.splitext(input_file)[0] + "_tmp.nc"
             
             # Remove any existing temporary file
             if os.path.exists(ifile_tmp):
-                safe_remove_file(ifile_tmp)
+                try:
+                    os.remove(ifile_tmp)
+                except:
+                    print(f"{Yellow}Warning: Could not remove existing temporary file: {ifile_tmp}{Nclr}")
             
             try:
+                # Open input file in read mode
                 f_IN = Dataset(input_file, "r", format="NETCDF4_CLASSIC")
+                
+                # Create a new temporary file
                 Log = Ncdf(ifile_tmp, "Edited in postprocessing")
                 Log.copy_all_dims_from_Ncfile(f_IN)
 
                 # Copy all variables but this one
-                Log.copy_all_vars_from_Ncfile(f_IN, exclude_var = args.edit_variable)
+                Log.copy_all_vars_from_Ncfile(f_IN, exclude_var=args.edit_variable)
 
                 # Read value, longname, units, name, and log the new var
                 var_Ncdf = f_IN.variables[args.edit_variable]
@@ -2542,19 +2583,31 @@ def main():
                     Log.log_axis1D(
                         name_text, vals, dim_out, lname_text, unit_text, cart_text
                         )
+                    
+                # Close files to release handles
                 f_IN.close()
                 Log.close()
 
-                # Use our safe_move_file function instead of shell command
-                if safe_move_file(ifile_tmp, input_file):
-                    print(f"{Cyan}{input_file} was updated{Nclr}")
+                # Handle differently based on platform
+                if os.name == 'nt':
+                    # On Windows, use our specialized copy-replace method
+                    if safe_copy_replace(ifile_tmp, input_file):
+                        print(f"{Cyan}{input_file} was updated{Nclr}")
+                    else:
+                        print(f"{Red}Failed to update {input_file} - using original file{Nclr}")
                 else:
-                    print(f"{Red}Failed to update {input_file} - file may be incomplete{Nclr}")
+                    # On Unix systems, use standard move
+                    shutil.move(ifile_tmp, input_file)
+                    print(f"{Cyan}{input_file} was updated{Nclr}")
+            
             except Exception as e:
                 print(f"{Red}Error in edit_variable: {str(e)}{Nclr}")
                 # Clean up temporary file if it exists
                 if os.path.exists(ifile_tmp):
-                    safe_remove_file(ifile_tmp)
+                    try:
+                        os.remove(ifile_tmp)
+                    except:
+                        pass
 
 # ======================================================================
 #                           END OF PROGRAM
