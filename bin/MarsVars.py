@@ -50,6 +50,8 @@ import re           # Regular expressions
 import matplotlib
 import numpy as np
 from netCDF4 import Dataset
+import shutil       # For cross-platform file operations
+import time         # For implementing delays in file operations
 
 # Force matplotlib NOT to load Xwindows backend
 matplotlib.use("Agg")
@@ -570,6 +572,141 @@ N = 0.01  # For wave potential energy calc. [rad/s]
 # For mmr <-> extinction rate calculations:
 C_dst = (4/3) * (rho_dst/Qext_dst) * Reff_dst # = 12114.286 [m-2]
 C_ice = (4/3) * (rho_ice/Qext_ice) * Reff_ice # = 2188.874 [m-2]
+
+# ======================================================================
+# Helper functions for cross-platform file operations
+# ======================================================================
+
+def ensure_file_closed(filepath, delay=0.5):
+    """
+    Try to ensure a file is not being accessed by the system.
+    This is especially helpful for Windows environments.
+    
+    :param filepath: Path to the file
+    :param delay: Delay in seconds to wait for handles to release
+    """
+    if not os.path.exists(filepath):
+        return
+        
+    # Force garbage collection to release file handles
+    import gc
+    gc.collect()
+    
+    # For Windows systems, try to explicitly close open handles
+    if os.name == 'nt':
+        try:
+            # Try to open and immediately close the file to check access
+            with open(filepath, 'rb') as f:
+                pass
+        except Exception:
+            # If we can't open it, wait a bit for any handles to be released
+            print(f"{Yellow}File {filepath} appears to be locked, waiting...{Nclr}")
+            time.sleep(delay)
+    
+    # Give the system time to release any file locks
+    time.sleep(delay)
+
+def safe_remove_file(filepath, max_attempts=5, delay=1):
+    """
+    Safely remove a file with retries for Windows file locking issues
+    
+    :param filepath: Path to the file to remove
+    :param max_attempts: Number of attempts to make
+    :param delay: Delay between attempts in seconds
+    :return: True if successful, False otherwise
+    """
+    if not os.path.exists(filepath):
+        return True
+        
+    print(f"Removing file: {filepath}")
+    
+    for attempt in range(max_attempts):
+        try:
+            # Try to ensure file is not locked
+            ensure_file_closed(filepath)
+            
+            # Try to remove the file
+            os.remove(filepath)
+            
+            # Verify removal
+            if not os.path.exists(filepath):
+                print(f"{Green}File removal successful on attempt {attempt+1}{Nclr}")
+                return True
+                
+        except Exception as e:
+            print(f"{Yellow}File removal attempt {attempt+1} failed: {e}{Nclr}")
+            if attempt < max_attempts - 1:
+                print(f"Retrying in {delay} seconds...")
+                time.sleep(delay)
+    
+    print(f"{Red}Failed to remove file after {max_attempts} attempts{Nclr}")
+    return False
+
+def safe_move_file(src_file, dst_file, max_attempts=5, delay=1):
+    """
+    Safely move a file with retries for Windows file locking issues
+    
+    :param src_file: Source file path
+    :param dst_file: Destination file path
+    :param max_attempts: Number of attempts to make
+    :param delay: Delay between attempts in seconds
+    :return: True if successful, False otherwise
+    """
+    print(f"Moving file: {src_file} -> {dst_file}")
+    
+    for attempt in range(max_attempts):
+        try:
+            # Ensure both files have all handles closed
+            ensure_file_closed(src_file)
+            ensure_file_closed(dst_file)
+            
+            # On Windows, try to remove the destination first if it exists
+            if os.path.exists(dst_file):
+                if not safe_remove_file(dst_file):
+                    # If we can't remove it, try a different approach
+                    if os.name == 'nt':
+                        # For Windows, try alternative approach
+                        print(f"{Yellow}Could not remove existing file, trying alternative method...{Nclr}")
+                        # Try to use shutil.copy2 + remove instead of move
+                        shutil.copy2(src_file, dst_file)
+                        time.sleep(delay)  # Wait before trying to remove source
+                        os.remove(src_file)
+                    else:
+                        # For other platforms, try standard move with force option
+                        shutil.move(src_file, dst_file, copy_function=shutil.copy2)
+                else:
+                    # Destination was successfully removed, now do a normal move
+                    shutil.move(src_file, dst_file)
+            else:
+                # No existing destination, just do a normal move
+                shutil.move(src_file, dst_file)
+            
+            # Verify the move was successful
+            if os.path.exists(dst_file) and not os.path.exists(src_file):
+                print(f"{Green}File move successful on attempt {attempt+1}{Nclr}")
+                return True
+            else:
+                raise Exception("File move verification failed")
+                
+        except Exception as e:
+            print(f"{Yellow}File move attempt {attempt+1} failed: {e}{Nclr}")
+            if attempt < max_attempts - 1:
+                print(f"Retrying in {delay} seconds...")
+                time.sleep(delay * (attempt + 1))  # Increasing delay for subsequent attempts
+    
+    # Last resort: try copy and then remove if move fails after all attempts
+    try:
+        print(f"{Yellow}Trying final fallback: copy + remove{Nclr}")
+        shutil.copy2(src_file, dst_file)
+        safe_remove_file(src_file)
+        if os.path.exists(dst_file):
+            print(f"{Green}Fallback succeeded: file copied to destination{Nclr}")
+            return True
+    except Exception as e:
+        print(f"{Red}Fallback also failed: {e}{Nclr}")
+    
+    print(f"{Red}Failed to move file after {max_attempts} attempts{Nclr}")
+    return False
 
 # ===========================
 
@@ -1864,42 +2001,83 @@ def main():
 
         file_wrapper = FileWrapper(input_file)
         check_file_tape(file_wrapper)
-
+        
+        # Before any operations, ensure file is accessible
+        ensure_file_closed(input_file)
+        
         # ==============================================================
         # Remove Function
         # ==============================================================
         if args.remove_variable:
             remove_list = args.remove_variable
             
-            f_IN = Dataset(input_file, "r", format="NETCDF4_CLASSIC")
-            ifile_tmp = f"{input_file[:-3]}_tmp.nc"
-            Log = Ncdf(ifile_tmp, "Edited postprocess")
-            Log.copy_all_dims_from_Ncfile(f_IN)
-            Log.copy_all_vars_from_Ncfile(f_IN, remove_list)
-            f_IN.close()
-            Log.close()
+            # Ensure any existing files are properly closed
+            ensure_file_closed(input_file)
             
-            cmd_txt = f"mv {ifile_tmp} {input_file}"
-            p = subprocess.run(cmd_txt, universal_newlines = True, shell=True)
-            print(f"{Cyan}{input_file} was updated{Nclr}")
+            # Create path for temporary file using os.path for cross-platform
+            ifile_tmp = os.path.splitext(input_file)[0] + "_tmp.nc"
+            
+            # Remove any existing temporary file
+            if os.path.exists(ifile_tmp):
+                safe_remove_file(ifile_tmp)
+            
+            # Open, copy, and close files
+            try:
+                f_IN = Dataset(input_file, "r", format="NETCDF4_CLASSIC")
+                Log = Ncdf(ifile_tmp, "Edited postprocess")
+                Log.copy_all_dims_from_Ncfile(f_IN)
+                Log.copy_all_vars_from_Ncfile(f_IN, remove_list)
+                f_IN.close()
+                Log.close()
+                
+                # Use our safe_move_file function instead of shell command
+                if safe_move_file(ifile_tmp, input_file):
+                    print(f"{Cyan}{input_file} was updated{Nclr}")
+                else:
+                    print(f"{Red}Failed to update {input_file} - file may be incomplete{Nclr}")
+            except Exception as e:
+                print(f"{Red}Error in remove_variable: {str(e)}{Nclr}")
+                # Clean up temporary file if it exists
+                if os.path.exists(ifile_tmp):
+                    safe_remove_file(ifile_tmp)
 
         # ==============================================================
         # Extract Function
         # ==============================================================
         if args.extract_copy:
-            f_IN = Dataset(input_file, "r", format="NETCDF4_CLASSIC")
-
-            # The variable to exclude
-            exclude_list = filter_vars(f_IN,
-                                       args.extract_copy,
-                                       giveExclude = True)
-            ifile_tmp = f"{input_file[:-3]}_extract.nc"
-            Log = Ncdf(ifile_tmp, "Edited in postprocessing")
-            Log.copy_all_dims_from_Ncfile(f_IN)
-            Log.copy_all_vars_from_Ncfile(f_IN, exclude_list)
-            f_IN.close()
-            Log.close()
-            print(f"{Cyan}complete{Nclr}\n")
+            # Ensure any existing files are properly closed
+            ensure_file_closed(input_file)
+            
+            # Create path for extract file using os.path for cross-platform
+            ifile_extract = os.path.splitext(input_file)[0] + "_extract.nc"
+            
+            # Remove any existing extract file
+            if os.path.exists(ifile_extract):
+                safe_remove_file(ifile_extract)
+            
+            try:
+                f_IN = Dataset(input_file, "r", format="NETCDF4_CLASSIC")
+                # The variable to exclude
+                exclude_list = filter_vars(f_IN,
+                                        args.extract_copy,
+                                        giveExclude = True)
+                
+                Log = Ncdf(ifile_extract, "Edited in postprocessing")
+                Log.copy_all_dims_from_Ncfile(f_IN)
+                Log.copy_all_vars_from_Ncfile(f_IN, exclude_list)
+                f_IN.close()
+                Log.close()
+                
+                # Verify the extract file was created successfully
+                if os.path.exists(ifile_extract):
+                    print(f"{Cyan}Extract file created: {ifile_extract}{Nclr}\n")
+                else:
+                    print(f"{Red}Failed to create extract file{Nclr}\n")
+            except Exception as e:
+                print(f"{Red}Error in extract_copy: {str(e)}{Nclr}")
+                # Clean up extract file if it exists but is incomplete
+                if os.path.exists(ifile_extract):
+                    safe_remove_file(ifile_extract)
 
         # ==============================================================
         #  Add Function
@@ -2229,49 +2407,64 @@ def main():
                 except_message(debug, e, icol, input_file, ext="_col")
                 
         if args.edit_variable:
-            f_IN = Dataset(input_file, "r", format="NETCDF4_CLASSIC")
-            ifile_tmp = f"{input_file[:-3]}_tmp.nc"
-            Log = Ncdf(ifile_tmp, "Edited in postprocessing")
-            Log.copy_all_dims_from_Ncfile(f_IN)
+            # Ensure any existing files are properly closed
+            ensure_file_closed(input_file)
+            
+            # Create path for temporary file using os.path for cross-platform
+            ifile_tmp = os.path.splitext(input_file)[0] + "_tmp.nc"
+            
+            # Remove any existing temporary file
+            if os.path.exists(ifile_tmp):
+                safe_remove_file(ifile_tmp)
+            
+            try:
+                f_IN = Dataset(input_file, "r", format="NETCDF4_CLASSIC")
+                Log = Ncdf(ifile_tmp, "Edited in postprocessing")
+                Log.copy_all_dims_from_Ncfile(f_IN)
 
-            # Copy all variables but this one
-            Log.copy_all_vars_from_Ncfile(f_IN, exclude_var = args.edit_variable)
+                # Copy all variables but this one
+                Log.copy_all_vars_from_Ncfile(f_IN, exclude_var = args.edit_variable)
 
-            # Read value, longname, units, name, and log the new var
-            var_Ncdf = f_IN.variables[args.edit_variable]
+                # Read value, longname, units, name, and log the new var
+                var_Ncdf = f_IN.variables[args.edit_variable]
 
-            name_text = args.edit_variable
-            vals = var_Ncdf[:]
-            dim_out = var_Ncdf.dimensions
-            lname_text = getattr(var_Ncdf, "long_name", "")
-            unit_text = getattr(var_Ncdf, "units", "")
-            cart_text = getattr(var_Ncdf, "cartesian_axis", "")
+                name_text = args.edit_variable
+                vals = var_Ncdf[:]
+                dim_out = var_Ncdf.dimensions
+                lname_text = getattr(var_Ncdf, "long_name", "")
+                unit_text = getattr(var_Ncdf, "units", "")
+                cart_text = getattr(var_Ncdf, "cartesian_axis", "")
 
-            if args.rename:
-                name_text = args.rename
-            if args.longname:
-                lname_text = args.longname
-            if args.unit:
-                unit_text = args.unit
-            if args.multiply:
-                vals *= args.multiply
+                if args.rename:
+                    name_text = args.rename
+                if args.longname:
+                    lname_text = args.longname
+                if args.unit:
+                    unit_text = args.unit
+                if args.multiply:
+                    vals *= args.multiply
 
-            if cart_text == "":
-                Log.log_variable(
-                    name_text, vals, dim_out, lname_text, unit_text
-                    )
-            else:
-                Log.log_axis1D(
-                    name_text, vals, dim_out, lname_text, unit_text, cart_text
-                    )
-            f_IN.close()
-            Log.close()
+                if cart_text == "":
+                    Log.log_variable(
+                        name_text, vals, dim_out, lname_text, unit_text
+                        )
+                else:
+                    Log.log_axis1D(
+                        name_text, vals, dim_out, lname_text, unit_text, cart_text
+                        )
+                f_IN.close()
+                Log.close()
 
-            # Rename the new file
-            cmd_txt = f"mv {ifile_tmp} {input_file}"
-            subprocess.call(cmd_txt, shell=True)
-
-            print(f"{Cyan}{input_file} was updated{Nclr}")
+                # Use our safe_move_file function instead of shell command
+                if safe_move_file(ifile_tmp, input_file):
+                    print(f"{Cyan}{input_file} was updated{Nclr}")
+                else:
+                    print(f"{Red}Failed to update {input_file} - file may be incomplete{Nclr}")
+            except Exception as e:
+                print(f"{Red}Error in edit_variable: {str(e)}{Nclr}")
+                # Clean up temporary file if it exists
+                if os.path.exists(ifile_tmp):
+                    safe_remove_file(ifile_tmp)
 
 # ======================================================================
 #                           END OF PROGRAM
