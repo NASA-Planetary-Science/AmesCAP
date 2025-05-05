@@ -1,5 +1,8 @@
 name: MarsPull Test Workflow
-
+# Cancel any in-progress job or previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 on:
   # Trigger the workflow on push to devel branch
   push:
