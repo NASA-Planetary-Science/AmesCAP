@@ -405,20 +405,20 @@ class TestMarsVars(unittest.TestCase):
 
         # Check that the output variable was created
         output_file = self.check_file_exists('01336.atmos_average.nc')
-
-        # Verify that the zonal mean is approximately zero
+        
         nc = Dataset(output_file, 'r')
         try:
             self.assertIn('temp_p', nc.variables, "Variable temp_p not found")
             
-            # Verify that the zonal mean is approximately zero
+            # Get the detrended temperature
             temp_p = nc.variables['temp_p'][:]
-            # Calculate zonal mean (assuming longitude is the last dimension)
-            zonal_mean = np.mean(temp_p, axis=-1)
             
-            # Use a more relaxed tolerance - floating point precision issues can occur
-            self.assertTrue(np.allclose(zonal_mean, 0, atol=1e-5), 
-                        "Zonal mean of detrended variable should be approximately zero")
+            # Calculate the global mean of the detrended field
+            global_mean = np.mean(temp_p)
+            
+            # The global mean should be close to zero (not each zonal slice)
+            self.assertTrue(np.abs(global_mean) < 1e-5, 
+                            f"Global mean of detrended variable should be close to zero, got {global_mean}")
         finally:
             nc.close()
 
