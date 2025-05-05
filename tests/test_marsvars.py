@@ -18,6 +18,9 @@ from netCDF4 import Dataset
 class TestMarsVars(unittest.TestCase):
     """Integration test suite for MarsVars"""
 
+    # Class attribute for storing modified files
+    modified_files = {}
+    
     @classmethod
     def setUpClass(cls):
         """Set up the test environment"""
