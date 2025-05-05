@@ -834,23 +834,16 @@ def compute_p_3D(ps, ak, bk, shape_out):
 
     :param ps: Surface pressure (Pa)
     :type ps: array [time, lat, lon]
-
     :param ak: Vertical coordinate pressure value (Pa)
     :type ak: array [phalf]
-
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
-
     :param shape_out: Determines how to handle the dimensions of p_3D.
         If ``len(time) = 1`` (one timestep), ``p_3D`` is returned as
         [1, lev, lat, lon] as opposed to [lev, lat, lon]
     :type shape_out: float
-
-    :raises:
-
     :return: ``p_3D`` The full 3D pressure array (Pa)
     :rtype: array [time, lev, lat, lon]
-
     """
     p_3D = fms_press_calc(ps, ak, bk, lev_type="full")
     # Swap dimensions 0 and 1 (time and lev)
@@ -864,15 +857,10 @@ def compute_rho(p_3D, temp):
 
     :param p_3D: Pressure (Pa)
     :type p_3D: array [time, lev, lat, lon]
-
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
-
-    :raises:
-
     :return: Density (kg/m^3)
     :rtype: array [time, lev, lat, lon]
-
     """
     return p_3D / (rgas*temp)
 
@@ -884,24 +872,16 @@ def compute_xzTau(q, temp, lev, const, f_type):
 
     :param q: Dust or ice mass mixing ratio (ppm)
     :type q: array [time, lev, lat, lon]
-
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
-
     :param lev: Vertical coordinate (e.g., pstd) (e.g., Pa)
     :type lev: array [lev]
-
     :param const: Dust or ice constant
     :type const: array
-
     :param f_type: The FV3 file type: diurn, daily, or average
     :type f_stype: str
-
-    :raises:
-
     :return: ``xzTau`` Dust or ice extinction rate (km-1)
     :rtype: array [time, lev, lat, lon]
-
     """
     if f_type == "diurn":
         # Handle diurn files 
@@ -940,24 +920,16 @@ def compute_mmr(xTau, temp, lev, const, f_type):
 
     :param xTau: Dust or ice extinction rate (km-1)
     :type xTau: array [time, lev, lat, lon]
-
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
-
     :param lev: Vertical coordinate (e.g., pstd) (e.g., Pa)
     :type lev: array [lev]
-
     :param const: Dust or ice constant
     :type const: array
-
     :param f_type: The FV3 file type: diurn, daily, or average
     :type f_stype: str
-
-    :raises:
-
     :return: ``q``, Dust or ice mass mixing ratio (ppm)
     :rtype: array [time, lev, lat, lon]
-
     """
     if f_type == "diurn":
         # Handle diurnal files
@@ -995,18 +967,12 @@ def compute_Vg_sed(xTau, nTau, T):
 
     :param xTau: Dust or ice MASS mixing ratio (ppm)
     :type xTau: array [time, lev, lat, lon]
-
     :param nTau: Dust or ice NUMBER mixing ratio (None)
     :type nTau: array [time, lev, lat, lon]
-
     :param T: Temperature (K)
     :type T: array [time, lev, lat, lon]
-
-    :raises:
-
     :return: ``Vg`` Dust sedimentation rate (m/s)
     :rtype: array [time, lev, lat, lon]
-
     """
     r0 = (
         ((3.*xTau) / (4.*np.pi*rho_dst*nTau)) ** (1/3)
@@ -1032,15 +998,10 @@ def compute_w_net(Vg, wvar):
 
     :param Vg: Dust sedimentation rate (m/s)
     :type Vg: array [time, lev, lat, lon]
-
     :param wvar: Vertical wind (m/s)
     :type wvar: array [time, lev, lat, lon]
-
-    :raises:
-
     :return: `w_net` Net vertical wind speed (m/s)
     :rtype: array [time, lev, lat, lon]
-
     """
     w_net = np.subtract(wvar, Vg)
     return w_net
@@ -1052,21 +1013,14 @@ def compute_theta(p_3D, ps, T, f_type):
 
     :param p_3D: The full 3D pressure array (Pa)
     :type p_3D: array [time, lev, lat, lon]
-
     :param ps: Surface pressure (Pa)
     :type ps: array [time, lat, lon]
-
     :param T: Temperature (K)
     :type T: array [time, lev, lat, lon]
-
     :param f_type: The FV3 file type: diurn, daily, or average
     :type f_type: str
-
-    :raises:
-
     :return: Potential temperature (K)
     :rtype: array [time, lev, lat, lon]
-
     """
     theta_exp = R / (M_co2*Cp)
     # Broadcast dimensions
@@ -1099,15 +1053,10 @@ def compute_w(rho, omega):
 
     :param rho: Atmospheric density (kg/m^3)
     :type rho: array [time, lev, lat, lon]
-
     :param omega: Rate of change in pressure at layer midpoint (Pa/s)
     :type omega: array [time, lev, lat, lon]
-
-    :raises:
-
     :return: vertical wind (m/s)
     :rtype: array [time, lev, lat, lon]
-
     """
     return -omega / (rho*g)
 
@@ -1118,21 +1067,14 @@ def compute_zfull(ps, ak, bk, T):
 
     :param ps: Surface pressure (Pa)
     :type ps: array [time, lat, lon]
-
     :param ak: Vertical coordinate pressure value (Pa)
     :type ak: array [phalf]
-
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
-
     :param T: Temperature (K)
     :type T: array [time, lev, lat, lon]
-
-    :raises:
-
     :return: ``zfull`` (m)
     :rtype: array [time, lev, lat, lon]
-
     """
     zfull = fms_Z_calc(
         ps, ak, bk, T.transpose(lev_T), topo=0., lev_type="full"
@@ -1151,21 +1093,14 @@ def compute_zhalf(ps, ak, bk, T):
 
     :param ps: Surface pressure (Pa)
     :type ps: array [time, lat, lon]
-
     :param ak: Vertical coordinate pressure value (Pa)
     :type ak: array [phalf]
-
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
-
     :param T: Temperature (K)
     :type T: array [time, lev, lat, lon]
-
-    :raises:
-
     :return: ``zhalf`` (m)
     :rtype: array [time, lev, lat, lon]
-
     """
     zhalf = fms_Z_calc(
         ps, ak, bk, T.transpose(lev_T), topo=0., lev_type="half"
@@ -1197,18 +1132,12 @@ def compute_DZ_full_pstd(pstd, T, ftype="average"):
 
     :param pstd: Vertical coordinate (pstd; Pa)
     :type pstd: array [lev]
-
     :param T: Temperature (K)
     :type T: array [time, lev, lat, lon]
-
     :param f_type: The FV3 file type: diurn, daily, or average
     :type f_stype: str
-
-    :raises:
-
     :return: DZ_full_pstd, Layer thicknesses (Pa)
     :rtype: array [time, lev, lat, lon]
-
     """
     # Determine whether the lev dimension is located at i = 1 or i = 2
     if ftype == "diurn":
@@ -1260,15 +1189,10 @@ def compute_N(theta, zfull):
 
     :param theta: Potential temperature (K)
     :type theta: array [time, lev, lat, lon]
-
     :param zfull: Altitude above ground level at the layer midpoint (m)
     :type zfull: array [time, lev, lat, lon]
-
-    :raises:
-
     :return: ``N``, Brunt Vaisala freqency [rad/s]
     :rtype: array [time, lev, lat, lon]
-
     """
     # Differentiate theta w.r.t. zfull to obdain d(theta)/dz
     dtheta_dz = dvar_dh(theta.transpose(lev_T),
@@ -1291,12 +1215,8 @@ def compute_Tco2(P_3D):
 
     :param P_3D: The full 3D pressure array (Pa)
     :type p_3D: array [time, lev, lat, lon]
-
-    :raises:
-
     :return: CO2 frost point [K]
     :rtype: array [time, lev, lat, lon]
-
     """
     # Set some constants
     B = -3167.8 # K
@@ -1321,18 +1241,12 @@ def compute_scorer(N, ucomp, zfull):
 
     :param N: Brunt Vaisala freqency (rad/s)
     :type N: float [time, lev, lat, lon]
-
     :param ucomp: Zonal wind (m/s)
     :type ucomp: array [time, lev, lat, lon]
-
     :param zfull: Altitude above ground level at the layer midpoint (m)
     :type zfull: array [time, lev, lat, lon]
-
-    :raises:
-
     :return: ``scorer_wl`` Scorer horizontal wavelength (m)
     :rtype: array [time, lev, lat, lon]
-
     """
     # Differentiate U w.r.t. zfull TWICE to obdain d^2U/dz^2
     dUdz = dvar_dh(ucomp.transpose(lev_T),
@@ -1360,23 +1274,16 @@ def compute_DP_3D(ps, ak, bk, shape_out):
 
     :param ps: Surface pressure (Pa)
     :type ps: array [time, lat, lon]
-
     :param ak: Vertical coordinate pressure value (Pa)
     :type ak: array [phalf]
-
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
-
     :param shape_out: Determines how to handle the dimensions of DP_3D.
         If len(time) = 1 (one timestep), DP_3D is returned as
         [1, lev, lat, lon] as opposed to [lev, lat, lon]
     :type shape_out: float
-
-    :raises:
-
     :return: ``DP`` Layer thickness in pressure units (Pa)
     :rtype: array [time, lev, lat, lon]
-
     """
     # Get the 3D pressure field from fms_press_calc
     p_half3D = fms_press_calc(ps, ak, bk, lev_type="half")
@@ -1398,23 +1305,16 @@ def compute_DZ_3D(ps, ak, bk, temp, shape_out):
 
     :param ps: Surface pressure (Pa)
     :type ps: array [time, lat, lon]
-
     :param ak: Vertical coordinate pressure value (Pa)
     :type ak: array [phalf]
-
     :param bk: Vertical coordinate sigma value (None)
     :type bk: array [phalf]
-
     :param shape_out: Determines how to handle the dimensions of DZ_3D.
         If len(time) = 1 (one timestep), DZ_3D is returned as
         [1, lev, lat, lon] as opposed to [lev, lat, lon]
     :type shape_out: float
-
-    :raises:
-
     :return: ``DZ`` Layer thickness in altitude units (m)
     :rtype: array [time, lev, lat, lon]
-
     """
 
     # Get the 3D altitude field from fms_Z_calc
@@ -1444,12 +1344,8 @@ def compute_Ep(temp):
 
     :param temp: Temperature (K)
     :type temp: array [time, lev, lat, lon]
-
-    :raises:
-
     :return: ``Ep`` Wave potential energy (J/kg)
     :rtype: array [time, lev, lat, lon]
-
     """
     return 0.5 * g**2 * (zonal_detrend(temp) / (temp*N))**2
 
@@ -1462,15 +1358,10 @@ def compute_Ek(ucomp, vcomp):
 
     :param ucomp: Zonal wind (m/s)
     :type ucomp: array [time, lev, lat, lon]
-
     :param vcomp: Meridional wind (m/s)
     :type vcomp: array [time, lev, lat, lon]
-
-    :raises:
-
     :return: ``Ek`` Wave kinetic energy (J/kg)
     :rtype: array [time, lev, lat, lon]
-
     """
     return 0.5 * (zonal_detrend(ucomp)**2 + zonal_detrend(vcomp)**2)
 
@@ -1481,15 +1372,10 @@ def compute_MF(UVcomp, w):
 
     :param UVcomp: Zonal or meridional wind (ucomp or vcomp)(m/s)
     :type UVcomp: array
-
     :param w: Vertical wind (m/s)
     :type w: array [time, lev, lat, lon]
-
-    :raises:
-
     :return: ``u'w'`` or ``v'w'``, Zonal/meridional momentum flux (J/kg)
     :rtype: array [time, lev, lat, lon]
-
     """
     return zonal_detrend(UVcomp) * zonal_detrend(w)
 
@@ -1512,22 +1398,15 @@ def compute_WMFF(MF, rho, lev, interp_type):
 
     :param MF: Zonal/meridional momentum flux (J/kg)
     :type MF: array [time, lev, lat, lon]
-
     :param rho: Atmospheric density (kg/m^3)
     :type rho: array [time, lev, lat, lon]
-
     :param lev: Array for the vertical grid (zagl, zstd, pstd, or pfull)
     :type lev: array [lev]
-
     :param interp_type: The vertical grid type (``zagl``, ``zstd``,
         ``pstd``, or ``pfull``)
     :type interp_type: str
-
-    :raises:
-
     :return: The zonal or meridional wave-mean flow forcing (m/s2)
     :rtype: array [time, lev, lat, lon]
-
     """
     # Differentiate the momentum flux (MF)
     darr_dz = dvar_dh((rho*MF).transpose(lev_T), lev).transpose(lev_T)
