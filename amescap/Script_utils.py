@@ -242,21 +242,13 @@ def give_permission(filename):
     except subprocess.CalledProcessError:
         pass
 
-def check_file_tape(fileNcdf, abort=False):
+def check_file_tape(fileNcdf):
     """
-    For use in the NAS environnment only.
-    Checks whether a file is exists on the disk by running the command
-    ``dmls -l`` on NAS. This prevents the program from stalling if the
-    files need to be migrated from the disk to the tape.
-
+    Checks whether a file exists on the disk. If on a NAS system,
+    also checks if the file needs to be migrated from tape.
+    
     :param fileNcdf: full path to a netcdf file or a file object with a name attribute
     :type fileNcdf: str or file object
-    
-    :param abort: If True, exit the program. Defaults to False
-    :type abort: bool, optional
-
-    :return: None
-    
     """
     # Get the filename, whether passed as string or as file object
     filename = fileNcdf if isinstance(fileNcdf, str) else fileNcdf.name
@@ -265,42 +257,58 @@ def check_file_tape(fileNcdf, abort=False):
     if not re.search(".nc", filename):
         print(f"{Red}{filename} is not a netCDF file{Nclr}")
         exit()
-        
-    try:
-        # Check if the file exists on the disk, exit otherwise. If it
-        # exists, copy it over from the disk.
-        # Check if dmls command is available
-        subprocess.check_call(["dmls"], shell = True,
-                              stdout = open(os.devnull, "w"),
-                              stderr = open(os.devnull, "w"))
-        # Get the last columns of the ls command (filename and status)
-        cmd_txt = f"dmls -l {filename}| awk '{{print $8,$9}}'"
-        # Get 3-letter identifier from dmls -l command, convert byte to
-        # string for Python3
-        dmls_out = subprocess.check_output(cmd_txt,
-                                           shell = True).decode("utf-8")
-        if dmls_out[1:4] not in ["DUL", "REG", "MIG"]:
-            # If file is OFFLINE, UNMIGRATING etc...
-            if abort :
-                print(f"{Red}*** Error ***\n{dmls_out}\n{dmls_out[6:-1]} "
-                      f"is not available on disk, status is: {dmls_out[0:5]}"
-                      f"CHECK file status with ``dmls -l *.nc`` and run "
-                      f"``dmget *.nc`` to migrate the files.\nExiting now..."
+    
+    # First check if the file exists at all
+    if not os.path.isfile(filename):
+        print(f"{Red}File {filename} does not exist{Nclr}")
+        exit()
+    
+    # Check if we're on a NAS system by looking for specific environment variables
+    # or filesystem paths that are unique to NAS
+    is_nas = False
+    
+    # Method 1: Check for NAS-specific environment variables
+    nas_env_vars = ['PBS_JOBID', 'SGE_ROOT', 'NOBACKUP', 'NASA_ROOT']
+    for var in nas_env_vars:
+        if var in os.environ:
+            is_nas = True
+            break
+    
+    # Method 2: Check for NAS-specific directories
+    nas_paths = ['/nobackup', '/nobackupp', '/u/scicon']
+    for path in nas_paths:
+        if os.path.exists(path):
+            is_nas = True
+            break
+    
+    # Only perform NAS-specific operations if we're on a NAS system
+    if is_nas:
+        try:
+            # Check if dmls command is available
+            subprocess.check_call(["dmls"], shell=True,
+                                  stdout=open(os.devnull, "w"),
+                                  stderr=open(os.devnull, "w"))
+            
+            # Get the last columns of the ls command (filename and status)
+            cmd_txt = f"dmls -l {filename}| awk '{{print $8,$9}}'"
+            
+            # Get identifier from dmls -l command
+            dmls_out = subprocess.check_output(cmd_txt, shell=True).decode("utf-8")
+            
+            if dmls_out[1:4] not in ["DUL", "REG", "MIG"]:
+                # If file is OFFLINE, UNMIGRATING etc...
+                print(f"{Yellow}*** Warning ***\n{dmls_out[6:-1]} "
+                      f"is not loaded on disk (Status: {dmls_out[0:5]}). "
+                      f"Please migrate it to disk with:\n"
+                      f"``dmget {dmls_out[6:-1]}``\n then try again."
                       f"\n{Nclr}")
                 exit()
-            else:
-                print(f"{Yellow}*** Warning ***\n{dmls_out[6:-1]} is not  "
-                      f"available on the disk. Status: {dmls_out[0:5]}.\n"
-                      f"Consider checking file status with ``dmls -l *.nc`` "
-                      f"and run ``dmget *.nc`` to migrate the files.\n"
-                      f"Waiting for file to be migrated to the disk, this "
-                      f"may take awhile...")
-    except subprocess.CalledProcessError:
-        # Return an eror message
-        if abort:
-             exit()
-        else:
+        except (subprocess.CalledProcessError, FileNotFoundError, IndexError):
+            # If there's any issue with the dmls command, log it but continue
+            if "--debug" in sys.argv:
+                print(f"{Yellow}Warning: Could not check tape status for {filename}{Nclr}")
             pass
+    # Otherwise, we're not on a NAS system, so just continue
 
 
 def get_Ncdf_path(fNcdf):

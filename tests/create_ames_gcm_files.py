@@ -285,6 +285,19 @@ def create_mgcm_atmos_average(short=False):
     dst_mass_micro_var.long_name = 'dust_mass'
     dst_mass_micro_var[:] = np.random.uniform(1.5e-17, 2.5e-04, size=(len_time, 30, 48, 96))
     
+    dst_num_micro_var = nc_file.createVariable('dst_num_micro', 'f4', ('time', 'pfull', 'lat', 'lon'))
+    dst_num_micro_var.long_name = 'dust_number'
+    dst_num_micro_var[:] = np.random.uniform(-3.8e-15, 6.3e+10, size=(133, 30, 48, 96))
+    
+    ice_mass_micro_var = nc_file.createVariable('ice_mass_micro', 'f4', ('time', 'pfull', 'lat', 'lon'))
+    ice_mass_micro_var.long_name = 'ice_mass'
+    ice_mass_micro_var[:] = np.random.uniform(-5.8e-34, 3.1e-03, size=(133, 30, 48, 96))
+    
+    omega_var = nc_file.createVariable('omega', 'f4', ('time', 'pfull', 'lat', 'lon'))
+    omega_var.long_name = 'vertical wind'
+    omega_var.units = 'Pa/s'
+    omega_var[:] = np.random.uniform(-0.045597, 0.0806756, size=(133, 30, 48, 96))
+    
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
     ps_var.units = 'Pa'
@@ -492,6 +505,26 @@ def create_mgcm_atmos_average_pstd(short=False):
     dst_mass_micro_var.long_name = 'dust_mass'
     dst_mass_micro_var[:] = np.random.uniform(2.5e-16, 2.0e-04, size=(len_time, 44, 48, 96))
     
+    theta_var = nc_file.createVariable('theta', 'f4', ('time', 'pstd', 'lat', 'lon'))
+    theta_var.long_name = 'Potential temperature'
+    theta_var.units = 'K'
+    theta_var[:] = np.random.uniform(104.113, 3895.69, size=(133, 44, 48, 96))
+    
+    rho_var = nc_file.createVariable('rho', 'f4', ('time', 'pstd', 'lat', 'lon'))
+    rho_var.long_name = 'Density'
+    rho_var.units = 'kg/m^3'
+    rho_var[:] = np.random.uniform(7.05091e-07, 0.0668856, size=(133, 44, 48, 96))
+    
+    omega_var = nc_file.createVariable('omega', 'f4', ('time', 'pstd', 'lat', 'lon'))
+    omega_var.long_name = 'vertical wind'
+    omega_var.units = 'Pa/s'
+    omega_var[:] = np.random.uniform(-0.045597, 0.0806756, size=(133, 44, 48, 96))
+    
+    w_var = nc_file.createVariable('w', 'f4', ('time', 'pstd', 'lat', 'lon'))
+    w_var.long_name = 'w'
+    w_var.units = 'm/s'
+    w_var[:] = np.random.uniform(-2.02603, 1.58804, size=(133, 44, 48, 96))
+     
     ps_var = nc_file.createVariable('ps', 'f4', ('time', 'lat', 'lon'))
     ps_var.long_name = 'surface pressure'
     ps_var.units = 'Pa'

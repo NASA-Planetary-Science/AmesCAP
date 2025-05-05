@@ -1,5 +1,8 @@
 name: MarsPull Test Workflow
-
+# Cancel any in-progress job or previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 on:
   # Trigger the workflow on push to devel branch
   push:
@@ -25,31 +28,29 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ['3.9', '3.10', '3.11']
-    
     runs-on: ${{ matrix.os }}
-    
     steps:
-    # Checkout the repository
-    - uses: actions/checkout@v3
-    
-    # Set up the specified Python version
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    
-    # Install dependencies
-    - name: Install dependencies
-      shell: bash
-      run: |
-        python -m pip install --upgrade pip
-        pip install requests numpy
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    
-    # Install the package in editable mode
-    - name: Install package
-      run: pip install -e .
-    
-    # Run the tests
-    - name: Run MarsPull tests
-      run: python -m unittest -v tests/test_marspull.py
+      # Checkout the repository
+      - uses: actions/checkout@v3
+      
+      # Set up the specified Python version
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      # Install dependencies
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests numpy
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
+      # Install the package in editable mode
+      - name: Install package
+        run: pip install -e .
+      
+      # Run the tests
+      - name: Run MarsPull tests
+        run: python -m unittest -v tests/test_marspull.py
