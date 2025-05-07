@@ -83,7 +83,7 @@ jobs:
       # Install the package with spectral extension
       - name: Install package with spectral capabilities
         run: |
-          pip install -e .[spectral]
+          pip install -e .
       
       # Create a test profile if needed
       - name: Create amescap profile

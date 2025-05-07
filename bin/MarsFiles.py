@@ -59,6 +59,7 @@ import warnings     # Suppress errors triggered by NaNs
 import re           # Regular expressions
 import numpy as np
 from netCDF4 import Dataset
+import shutil
 
 # Load amesCAP modules
 from amescap.Ncdf_wrapper import (Ncdf, Fort)
@@ -67,7 +68,7 @@ from amescap.FV3_utils import (
 )
 from amescap.Script_utils import (
     find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile,
-    get_longname_unit, extract_path_basename, check_bounds
+    get_longname_unit, check_bounds
 )
 
 # ------------------------------------------------------
@@ -647,10 +648,8 @@ def concatenate_files(file_list, full_file_list):
 
     :param file_list: list of file names
     :type file_list: list
-
     :param full_file_list: list of file names and full paths
     :type full_file_list: list
-
     """
     print(f"{Yellow}Using internal method for concatenation{Nclr}")
 
@@ -658,11 +657,14 @@ def concatenate_files(file_list, full_file_list):
     # effect as combining files
     num_files = len(full_file_list)
     if (file_list[0][5:] == ".fixed.nc" and num_files >= 2):
-        rm_cmd = "rm -f "
         for i in range(1, num_files):
             # 1-N files ensures file number 0 is preserved
-            rm_cmd += f" {full_file_list[i]}"
-        subprocess.run(rm_cmd, universal_newlines = True, shell = True)
+            try:
+                os.remove(full_file_list[i])
+            except OSError as e:
+                print(f"Warning: Could not remove {full_file_list[i]}: {e}")
+            exit()
+            
         print(f"{Cyan}Cleaned all but {file_list[0]}{Nclr}")
         exit()
 
@@ -680,7 +682,8 @@ def concatenate_files(file_list, full_file_list):
         exclude_list = []
 
     # Create a temporary file ending in _tmp.nc to work in
-    tmp_file = f"{full_file_list[0][:-3]}_tmp.nc"
+    base_name = os.path.splitext(full_file_list[0])[0]
+    tmp_file = os.path.normpath(f"{base_name}_tmp.nc")
     Log = Ncdf(tmp_file, "Merged file")
     Log.merge_files_from_list(full_file_list, exclude_var=exclude_list)
     Log.close()
@@ -690,7 +693,8 @@ def concatenate_files(file_list, full_file_list):
     # First, rename temporary file for the final merged file
     #   For Legacy netCDF files, rename using initial and end Ls
     #   For MGCM netCDF files, rename to the first file in the list
-    if file_list[0][:12] == "LegacyGCM_Ls":
+    base_name = os.path.basename(file_list[0])
+    if base_name.startswith("LegacyGCM_Ls"):
         ls_ini = file_list[0][12:15]
         ls_end = file_list[-1][18:21]
         merged_file = f"LegacyGCM_Ls{ls_ini}_Ls{ls_end}.nc"
@@ -699,14 +703,17 @@ def concatenate_files(file_list, full_file_list):
 
     # Delete the files that were concatenated.
     # Apply the new name created above
-    rm_cmd = "rm -f "
     for file in full_file_list:
-        rm_cmd += f" {file}"
-
-    cmd_txt = f"mv {tmp_file} {merged_file}"
-    subprocess.run(rm_cmd, universal_newlines = True, shell = True)
-    subprocess.run(cmd_txt, universal_newlines = True, shell = True)
-    print(f"{Cyan}{merged_file} was created from a merge{Nclr}")
+        try:
+            os.remove(file)
+        except OSError as e:
+            print(f"Warning: Could not remove {file}: {e}")
+            
+    try:
+        shutil.move(tmp_file, merged_file)
+        print(f"{Cyan}{merged_file} was created from a merge{Nclr}")
+    except OSError as e:
+        print(f"Warning: Could not move {tmp_file} to {merged_file}: {e}")
 
     return
 
@@ -717,9 +724,7 @@ def split_files(file_list, split_dim):
 
     :param file_list: list of file names
     :type split_dim: dimension along which to perform extraction
-
     :returns: new file with sliced dimensions
-
     """
     if split_dim not in ['time','areo', 'lev', 'lat', 'lon']:
         print(f"{Red}Split dimension must be one of the following:"
@@ -737,7 +742,7 @@ def split_files(file_list, split_dim):
 
     # Add path unless full path is provided
     if not ("/" in file_list[0]):
-        input_file_name = f"{data_dir}/{file_list[0]}"
+        input_file_name = os.path.normpath(os.path.join(data_dir, file_list[0]))
     else:
         input_file_name = file_list[0]
     original_date = (input_file_name.split('.')[0]).split('/')[-1]
@@ -828,27 +833,30 @@ def split_files(file_list, split_dim):
         time_dim = (np.squeeze(fNcdf.variables['time'][:]))[indices]
         print(f"time_dim = {time_dim}")
 
-    fpath, fname = extract_path_basename(input_file_name)
+    fpath = os.path.dirname(input_file_name)
+    fname = os.path.basename(input_file_name)
     if split_dim == 'time':
         if len(np.atleast_1d(bounds)) < 2:
-            output_file_name = (
-                f"{fpath}/{int(time_dim):05d}{fname[5:-3]}_nearest_sol"
-                f"{int(bounds_in[0]):03d}.nc"
-                )
+            base_name = (f"{int(time_dim):05d}{fname[5:-3]}_nearest_sol"
+                         f"{int(bounds_in[0]):03d}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath, 
+                                                              f"{base_name}.nc")))
         else:
-            output_file_name = (
-                f"{fpath}/{int(time_dim[0]):05d}{fname[5:-3]}_sol"
-                f"{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc"
-                )
+            base_name = (f"{int(time_dim[0]):05d}{fname[5:-3]}_sol"
+                         f"{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath, 
+                                                              f"{base_name}.nc")))
     elif split_dim =='areo':
         if len(np.atleast_1d(bounds)) < 2:
-            output_file_name = (
-                f"{fpath}/{int(time_dim):05d}{fname[5:-3]}_nearest_Ls"
-                f"{int(bounds_in[0]):03d}.nc"
-                )
+            base_name = (f"{int(time_dim):05d}{fname[5:-3]}_nearest_Ls"
+                         f"{int(bounds_in[0]):03d}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath, 
+                                                              f"{base_name}.nc")))
         else:
-            output_file_name = (f"{fpath}/{int(time_dim[0]):05d}{fname[5:-3]}_"
-                                f"Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
+            base_name = (f"{int(time_dim[0]):05d}{fname[5:-3]}_"
+                         f"Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath, 
+                                                              f"{base_name}.nc")))
         split_dim = 'time'
     elif split_dim == 'lat':
         new_bounds = [
@@ -857,17 +865,17 @@ def split_files(file_list, split_dim):
             for b in bounds
             ]
         if len(np.atleast_1d(bounds)) < 2:
-            output_file_name = (
-                f"{fpath}/{original_date}{fname[5:-3]}_nearest_{split_dim}_"
-                f"{new_bounds[0]}.nc"
-                )
+            base_name = (f"{original_date}{fname[5:-3]}_nearest_{split_dim}_"
+                         f"{new_bounds[0]}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath, 
+                                                              f"{base_name}.nc")))
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
-            output_file_name = (
-                f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}_"
-                f"{new_bounds[0]}_{new_bounds[1]}.nc"
-                )
+            base_name = (f"{original_date}{fname[5:-3]}_{split_dim}_"
+                         f"{new_bounds[0]}_{new_bounds[1]}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath, 
+                                                              f"{base_name}.nc")))
     elif split_dim == interp_type:
         if interp_type == 'pfull':
             new_bounds = [
@@ -887,28 +895,28 @@ def split_files(file_list, split_dim):
         if len(np.atleast_1d(bounds)) < 2:
             print(f"{Yellow}bounds = {bounds[0]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]}")
-            output_file_name = (
-                f"{fpath}/{original_date}{fname[5:-3]}_nearest_"
-                f"{new_bounds[0]}.nc"
-                )
+            base_name = (f"{original_date}{fname[5:-3]}_nearest_"
+                         f"{new_bounds[0]}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath, 
+                                                              f"{base_name}.nc")))
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
-            output_file_name = (
-                f"{fpath}/{original_date}{fname[5:-3]}_{new_bounds[0]}_"
-                f"{new_bounds[1]}.nc"
-                )
+            base_name = (f"{original_date}{fname[5:-3]}_{new_bounds[0]}_"
+                         f"{new_bounds[1]}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath, 
+                                                              f"{base_name}.nc")))
     else:
         if len(np.atleast_1d(bounds)) < 2:
-            output_file_name = (
-                f"{fpath}/{original_date}{fname[5:-3]}_nearest_{split_dim}_"
-                f"{int(bounds[0]):03d}.nc"
-                )
+            base_name = (f"{original_date}{fname[5:-3]}_nearest_{split_dim}_"
+                         f"{int(bounds[0]):03d}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath, 
+                                                              f"{base_name}.nc")))
         else:
-            output_file_name = (
-                f"{fpath}/{original_date}{fname[5:-3]}_{split_dim}_"
-                f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc"
-                )
+            base_name = (f"{original_date}{fname[5:-3]}_{split_dim}_"
+                         f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath, 
+                                                              f"{base_name}.nc")))
 
     # Append extension, if any:
     output_file_name = (f"{output_file_name[:-3]}{out_ext}.nc")
@@ -1019,7 +1027,6 @@ def process_time_shift(file_list):
 
     :param file_list: list of file names
     :type file_list: list
-
     """
     if args.time_shift == 999:
         # Target local times requested by user
@@ -1030,10 +1037,11 @@ def process_time_shift(file_list):
     for file in file_list:
         # Add path unless full path is provided
         if not ("/" in file):
-            input_file_name = f"{data_dir}/{file}"
+            input_file_name = os.path.normpath(os.path.join(data_dir, file))
         else:
             input_file_name = file
-        output_file_name = (f"{input_file_name[:-3]}{out_ext}.nc")
+        base_name = os.path.splitext(input_file_name)[0]
+        output_file_name = os.path.normpath(f"{base_name}{out_ext}.nc")
 
         fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
         # Define a netcdf object from the netcdf wrapper module
@@ -1174,7 +1182,7 @@ def main():
     full_file_list = []
     for file in file_list:
         if not ("/" in file):
-            full_file_list.append(f"{data_dir}/{file}")
+            full_file_list.append(os.path.normpath(os.path.join(data_dir, file)))
         else:
             full_file_list.append(f"{file}")
 
@@ -1258,7 +1266,7 @@ def main():
         for file in file_list:
             # Add path unless full path is provided
             if not ("/" in file):
-                input_file_name = f"{data_dir}/{file}"
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
             else:
                 input_file_name = file
 
@@ -1350,7 +1358,7 @@ def main():
         for file in file_list:
             # Add path unless full path is provided
             if not ("/" in file):
-                input_file_name = f"{data_dir}/{file}"
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
             else:
                 input_file_name = file
 
@@ -1458,11 +1466,12 @@ def main():
         for file in file_list:
             if not ("/" in file):
                 # Add path unless full path is provided
-                input_file_name = f"{data_dir}/{file}"
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
             else:
                 input_file_name = file
 
-            output_file_name = (f"{input_file_name[:-3]}{out_ext}.nc")
+            base_name = os.path.splitext(input_file_name)[0]
+            output_file_name = os.path.normpath(f"{base_name}{out_ext}.nc")
             fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
             var_list = filter_vars(fdaily, args.include)
             time = fdaily.variables["time"][:]
@@ -1589,7 +1598,7 @@ def main():
         for file in file_list:
             # Add path unless full path is provided
             if not ("/" in file):
-                input_file_name = f"{data_dir}/{file}"
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
             else:
                 input_file_name=file
 
@@ -1725,11 +1734,12 @@ def main():
         for file in file_list:
             # Add path unless full path is provided
             if not ("/" in file):
-                input_file_name = f"{data_dir}/{file}"
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
             else:
                 input_file_name = file
 
-            output_file_name = (f"{input_file_name[:-3]}{out_ext}.nc")
+            base_name = os.path.splitext(input_file_name)[0]
+            output_file_name = os.path.normpath(f"{base_name}{out_ext}.nc")
 
             fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
 
@@ -1874,17 +1884,18 @@ def main():
 
         # Add path unless full path is provided
         if not ("/" in name_target):
-            name_target = f"{data_dir}/{name_target}"
+            name_target = os.path.normpath(os.path.join(data_dir, name_target))
         fNcdf_t = Dataset(name_target, "r")
 
         for file in file_list:
             # Add path unless full path is provided
             if not ("/" in file):
-                input_file_name = f"{data_dir}/{file}"
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
             else:
                 input_file_name = file
 
-            output_file_name = (f"{input_file_name[:-3]}{out_ext}.nc")
+            base_name = os.path.splitext(input_file_name)[0]
+            output_file_name = os.path.normpath(f"{base_name}{out_ext}.nc")
 
             f_in = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
 
@@ -1932,11 +1943,12 @@ def main():
         for file in file_list:
             if not ("/" in file):
                 # Add path unless full path is provided
-                input_file_name = f"{data_dir}/{file}"
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
             else:
                 input_file_name = file
 
-            output_file_name = (f"{input_file_name[:-3]}{out_ext}.nc")
+            base_name = os.path.splitext(input_file_name)[0]
+            output_file_name = os.path.normpath(f"{base_name}{out_ext}.nc")
 
             fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
             var_list = filter_vars(fdaily, args.include) # Get all variables
@@ -2007,18 +2019,14 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
 
     :param fpath: Full path to the Legacy netcdf files
     :type fpath: str
-
     :param typelistfv3: MGCM-like file type: ``average``, ``daily``,
         or ``diurn``
     :type typelistfv3: list
-
     :param renameFV3: Rename the files from Legacy_LsXXX_LsYYY.nc to
         ``XXXXX.atmos_average.nc`` following MGCM output conventions
     :type renameFV3: bool
-
     :return: The MGCM-like files: ``XXXXX.atmos_average.nc``,
         ``XXXXX.atmos_daily.nc``, ``XXXXX.atmos_diurn.nc``.
-
     """
     historyDir = os.getcwd()
     histfile = Dataset(fpath, "r", format="NETCDF4_CLASSIC")
@@ -2037,13 +2045,10 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
 
         :param newf: path to target file
         :type newf: str
-
         :param typefv3: identifies type of file: ``average``,
             ``daily``, or ``diurn``
         :type typefv3: str
-
         :return: netCDF file with minimum required variables
-
         """
         for dname in histdims:
             if dname == "nlon":
@@ -2173,9 +2178,13 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
 
     if "fixed" in typelistfv3:
         # Copy Legacy.fixed to current directory
-        cmd_txt = f"cp {sys.prefix}/mars_data/Legacy.fixed.nc {fdate}.fixed.nc"
-        subprocess.run(cmd_txt, universal_newlines = True, shell = True)
-        print(f"{os.getcwd()}/{fdate}.fixed.nc was copied locally")
+        source_file = os.path.normpath(os.path.join(sys.prefix, "mars_data", "Legacy.fixed.nc"))
+        dest_file = os.path.normpath(os.path.join(os.getcwd(), f"{fdate}.fixed.nc"))
+        try:
+            shutil.copy2(source_file, dest_file)
+            print(f"Copied {source_file} to {dest_file}")
+        except OSError as e:
+            print(f"Warning: Could not copy fixed file: {e}")
 
 def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
     """
@@ -2183,24 +2192,18 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
 
     :param histfile: file to perform time average on
     :type histfile: str
-
     :param newf: path to target file
     :type newf: str
-
     :param avgtime: whether ``histfile`` has averaged fields
         (e.g., ``atmos_average``)
     :type avgtime: bool
-
     :param avgtod: whether ``histfile`` has a diurnal time dimenion
         (e.g., ``atmos_diurn``)
     :type avgtod: bool
-
     :param bin_period: the time binning period if `histfile` has
         averaged fields (i.e., if ``avgtime==True``), defaults to 5
     :type bin_period: int, optional
-
     :return: a time-averaged file
-
     """
     histvars = histfile.variables.keys()
     for vname in histvars:
@@ -2368,15 +2371,11 @@ def change_vname_longname_unit(vname, longname_txt, units_txt):
 
     :param vname: variable name
     :type vname: str
-
     :param longname_txt: variable description
     :type longname_txt: str
-
     :param units_txt: variable units
     :type units_txt: str
-
     :return: variable name and corresponding description and unit
-
     """
     if vname == "psurf":
         vname = "ps"
@@ -2431,13 +2430,10 @@ def replace_dims(dims, todflag):
 
     :param dims: dimensions of the variable
     :type dims: str
-
     :param todflag: indicates whether there exists a ``time_of_day``
         dimension
     :type todflag: bool
-
     :return: new dimension names for the variable
-
     """
     newdims = dims
     if "nlat" in dims:
@@ -2462,16 +2458,12 @@ def replace_at_index(tuple_dims, idx, new_name):
     :param tuple_dims: the dimensions as tuples e.g. (``pfull``,
         ``nlat``, ``nlon``)
     :type tuple_dims: tuple
-
     :param idx: index indicating axis with the dimensions to update
         (e.g. ``idx = 1``  for ``nlat``)
     :type idx: int
-
     :param new_name: new dimension name (e.g. ``latitude``)
     :type new_name: str
-
     :return: updated dimensions
-
     """
     if new_name is None:
         return tuple_dims[:idx] + tuple_dims[idx+1:]
@@ -2484,19 +2476,15 @@ def ls2sol_1year(Ls_deg, offset=True, round10=True):
 
     :param Ls_deg: solar longitude [°]
     :type Ls_deg: float
-
     :param offset: if True, force year to start at Ls 0
     :type offset: bool
-
     :param round10: if True, round to the nearest 10 sols
     :type round10: bool
-
     :returns: ``Ds`` the sol number
-
+    
     ..note::
         For the moment, this is consistent with 0 <= Ls <= 359.99, but
         not for monotically increasing Ls.
-
     """
     Ls_perihelion = 250.99    # Ls at perihelion
     tperi = 485.35  # Time (in sols) at perihelion
