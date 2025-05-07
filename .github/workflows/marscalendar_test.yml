@@ -49,4 +49,6 @@ jobs:
         run: pip install -e .
       # Run the tests
       - name: Run MarsCalendar tests
-        run: python -m unittest -v tests/test_marscalendar.py
+        run: |
+          cd tests
+          python -m unittest -v test_marscalendar.py
