@@ -61,7 +61,7 @@ jobs:
 
       # Install the package in editable mode
       - name: Install package
-        run: pip install -e .
+        run: pip install -e .[spectral]
 
       # Create a patch for the test file to fix Windows path issues
       - name: Create test_marsfiles.py path fix for Windows
