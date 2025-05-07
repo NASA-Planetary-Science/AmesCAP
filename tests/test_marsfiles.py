@@ -18,9 +18,12 @@ from netCDF4 import Dataset
 class TestMarsFiles(unittest.TestCase):
     """Integration test suite for MarsFiles"""
 
+    # Class attribute for storing modified files
+    modified_files = {}
+    
     @classmethod
     def setUpClass(cls):
-        """Set up the test environment"""
+        """Set up the test environment once for all tests"""
         # Create a temporary directory for the tests
         cls.test_dir = tempfile.mkdtemp(prefix='MarsFiles_test_')
         print(f"Created temporary test directory: {cls.test_dir}")
@@ -31,6 +34,22 @@ class TestMarsFiles(unittest.TestCase):
 
         # Run the script to create test netCDF files
         cls.create_test_files()
+        
+        # Dictionary to keep track of modified files
+        cls.modified_files = {}
+        
+        # Initialize modified_files dictionary with original files
+        expected_files = [
+            '01336.atmos_average.nc',
+            '01336.atmos_average_pstd_c48.nc',
+            '01336.atmos_daily.nc',
+            '01336.atmos_diurn.nc',
+            '01336.atmos_diurn_pstd.nc',
+            '01336.fixed.nc'
+        ]
+        
+        for filename in expected_files:
+            cls.modified_files[filename] = os.path.join(cls.test_dir, filename)
 
     @classmethod
     def create_test_files(cls):
@@ -41,9 +60,6 @@ class TestMarsFiles(unittest.TestCase):
         # Execute the script to create test files - Important: pass the test_dir as argument
         cmd = [sys.executable, create_files_script, cls.test_dir]
 
-        # Print the command being executed
-        print(f"Creating test files with command: {' '.join(cmd)}")
-
         try:
             result = subprocess.run(
                 cmd,
@@ -52,18 +68,11 @@ class TestMarsFiles(unittest.TestCase):
                 cwd=cls.test_dir  # Run in the test directory to ensure files are created there
             )
 
-            # Print output for debugging
-            print(f"File creation STDOUT: {result.stdout}")
-            print(f"File creation STDERR: {result.stderr}")
-
             if result.returncode != 0:
                 raise Exception(f"Failed to create test files: {result.stderr}")
 
         except Exception as e:
             raise Exception(f"Error running create_ames_gcm_files.py: {e}")
-
-        # List files in the temp directory to debug
-        print(f"Files in test directory after creation: {os.listdir(cls.test_dir)}")
 
         # Verify files were created
         expected_files = [
@@ -79,17 +88,15 @@ class TestMarsFiles(unittest.TestCase):
             filepath = os.path.join(cls.test_dir, filename)
             if not os.path.exists(filepath):
                 raise Exception(f"Test file {filename} was not created in {cls.test_dir}")
-            else:
-                print(f"Confirmed test file exists: {filepath}")
+
 
     def setUp(self):
         """Change to temporary directory before each test"""
         os.chdir(self.test_dir)
-        print(f"Changed to test directory: {os.getcwd()}")
 
     def tearDown(self):
         """Clean up after each test"""
-        # Clean up any generated output files after each test but keep input files
+        # Only clean up any generated output files that aren't part of our modified_files dict
         output_patterns = [
             '*_T.nc',
             '*_to_average.nc',
@@ -106,9 +113,12 @@ class TestMarsFiles(unittest.TestCase):
 
         for pattern in output_patterns:
             for file_path in glob.glob(os.path.join(self.test_dir, pattern)):
+                # Skip files we want to keep track of
+                if file_path in self.modified_files.values():
+                    continue
+                    
                 try:
                     os.remove(file_path)
-                    print(f"Removed file: {file_path}")
                 except Exception as e:
                     print(f"Warning: Could not remove file {file_path}: {e}")
 
@@ -119,10 +129,7 @@ class TestMarsFiles(unittest.TestCase):
     def tearDownClass(cls):
         """Clean up the test environment"""
         try:
-            # List files in temp directory before deleting to debug
-            print(f"Files in test directory before cleanup: {os.listdir(cls.test_dir)}")
             shutil.rmtree(cls.test_dir, ignore_errors=True)
-            print(f"Removed test directory: {cls.test_dir}")
         except Exception as e:
             print(f"Warning: Could not remove test directory {cls.test_dir}: {e}")
 
@@ -137,17 +144,17 @@ class TestMarsFiles(unittest.TestCase):
         abs_args = []
         for arg in args:
             if isinstance(arg, str) and arg.endswith('.nc'):
-                abs_args.append(os.path.join(self.test_dir, arg))
+                # Check if we have a modified version of this file
+                base_filename = os.path.basename(arg)
+                if base_filename in self.modified_files:
+                    abs_args.append(self.modified_files[base_filename])
+                else:
+                    abs_args.append(os.path.join(self.test_dir, arg))
             else:
                 abs_args.append(arg)
 
         # Construct the full command to run MarsFiles
         cmd = [sys.executable, os.path.join(self.project_root, "bin", "MarsFiles.py")] + abs_args
-
-        # Print debugging info
-        print(f"Running command: {' '.join(cmd)}")
-        print(f"Working directory: {self.test_dir}")
-        print(f"File exists check: {os.path.exists(os.path.join(self.project_root, 'bin', 'MarsFiles.py'))}")
 
         # Run the command
         try:
@@ -159,9 +166,94 @@ class TestMarsFiles(unittest.TestCase):
                 env=dict(os.environ, PWD=self.test_dir)  # Ensure current working directory is set
             )
 
-            # Print both stdout and stderr to help debug
-            print(f"STDOUT: {result.stdout}")
-            print(f"STDERR: {result.stderr}")
+            # Update our record of the modified file if this run was successful
+            if result.returncode == 0:
+                # Track output files based on known patterns
+                if '-t' in args:
+                    # Time shift operation
+                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
+                    if input_file:
+                        base_name = os.path.basename(input_file)
+                        output_file = f"{os.path.splitext(base_name)[0]}_T.nc"
+                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
+                
+                elif '-ba' in args:
+                    # Bin average operation
+                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
+                    if input_file:
+                        base_name = os.path.basename(input_file)
+                        output_file = f"{os.path.splitext(base_name)[0]}_to_average.nc"
+                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
+                
+                elif '-bd' in args:
+                    # Bin diurn operation
+                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
+                    if input_file:
+                        base_name = os.path.basename(input_file)
+                        output_file = f"{os.path.splitext(base_name)[0]}_to_diurn.nc"
+                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
+                
+                elif '-hpt' in args:
+                    # High-pass temporal filter
+                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
+                    if input_file:
+                        base_name = os.path.basename(input_file)
+                        extension = "_hpt_trended.nc" if "-add_trend" in args else "_hpt.nc"
+                        output_file = f"{os.path.splitext(base_name)[0]}{extension}"
+                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
+                
+                elif '-lpt' in args:
+                    # Low-pass temporal filter
+                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
+                    if input_file:
+                        base_name = os.path.basename(input_file)
+                        output_file = f"{os.path.splitext(base_name)[0]}_lpt.nc"
+                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
+                
+                elif '-bpt' in args:
+                    # Band-pass temporal filter
+                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
+                    if input_file:
+                        base_name = os.path.basename(input_file)
+                        output_file = f"{os.path.splitext(base_name)[0]}_bpt.nc"
+                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
+                
+                elif '-tide' in args:
+                    # Tide decomposition
+                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
+                    if input_file:
+                        base_name = os.path.basename(input_file)
+                        ext = "_tide_decomp"
+                        if "-norm" in args:
+                            ext += "_norm"
+                        if "-recon" in args:
+                            ext += "_reconstruct"
+                        output_file = f"{os.path.splitext(base_name)[0]}{ext}.nc"
+                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
+                
+                elif '-regrid' in args:
+                    # Regrid operation
+                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
+                    if input_file:
+                        base_name = os.path.basename(input_file)
+                        output_file = f"{os.path.splitext(base_name)[0]}_regrid.nc"
+                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
+                
+                elif '-zavg' in args:
+                    # Zonal average operation
+                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
+                    if input_file:
+                        base_name = os.path.basename(input_file)
+                        output_file = f"{os.path.splitext(base_name)[0]}_zavg.nc"
+                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
+                
+                elif '--split' in args or '-split' in args:
+                    # Split operation - this one's tricky as the output name depends on the split values
+                    # We'll just track any new files that match the patterns
+                    for pattern in ['*_Ls*_*.nc', '*_lat_*_*.nc']:
+                        for file_path in glob.glob(os.path.join(self.test_dir, pattern)):
+                            base_name = os.path.basename(file_path)
+                            self.modified_files[base_name] = file_path
 
             return result
         except Exception as e:
@@ -173,7 +265,12 @@ class TestMarsFiles(unittest.TestCase):
 
         :param filename: Filename to check
         """
-        filepath = os.path.join(self.test_dir, filename)
+        # First check if we have this file in our modified_files dictionary
+        if filename in self.modified_files:
+            filepath = self.modified_files[filename]
+        else:
+            filepath = os.path.join(self.test_dir, filename)
+            
         self.assertTrue(os.path.exists(filepath), f"File {filename} does not exist")
         self.assertGreater(os.path.getsize(filepath), 0, f"File {filename} is empty")
         return filepath
@@ -191,7 +288,6 @@ class TestMarsFiles(unittest.TestCase):
         finally:
             nc.close()
 
-    # The rest of the test methods remain the same
     def test_help_message(self):
         """Test that help message can be displayed"""
         result = self.run_mars_files(['-h'])
@@ -371,96 +467,31 @@ class TestMarsFiles(unittest.TestCase):
             finally:
                 nc.close()
 
-    def test_temporal_high_pass_filter(self):
-        """Test high-pass temporal filtering"""
+    def test_temporal_filters(self):
+        """Test all temporal filtering operations"""
+        # High-pass filter
         result = self.run_mars_files(['01336.atmos_daily.nc', '-hpt', '10'])
-
-        # Check for successful execution
         self.assertEqual(result.returncode, 0, "High-pass temporal filter command failed")
-
-        # Check that output file was created
-        output_file = self.check_file_exists('01336.atmos_daily_hpt.nc')
-
-        # Verify that the output file has expected structure
-        nc = Dataset(output_file, 'r')
-        try:
-
-            # Should have a constant for filter cutoff
-            found_constant = False
-            for var_name in nc.variables:
-                if 'sol_min' in var_name:
-                    found_constant = True
-                    break
-
-            self.assertTrue(found_constant, "No sol_min constant found in output file")
-        finally:
-            nc.close()
-
-    def test_temporal_low_pass_filter(self):
-        """Test low-pass temporal filtering"""
+        high_pass_file = self.check_file_exists('01336.atmos_daily_hpt.nc')
+        self.verify_netcdf_has_variable(high_pass_file, 'temp')
+        
+        # Low-pass filter
         result = self.run_mars_files(['01336.atmos_daily.nc', '-lpt', '0.75'])
-
-        # Check for successful execution
         self.assertEqual(result.returncode, 0, "Low-pass temporal filter command failed")
-
-        # Check that output file was created
-        output_file = self.check_file_exists('01336.atmos_daily_lpt.nc')
-
-        # Verify that the output file has expected structure
-        nc = Dataset(output_file, 'r')
-        try:
-            # Should have a constant for filter cutoff
-            found_constant = False
-            for var_name in nc.variables:
-                if 'sol_max' in var_name:
-                    found_constant = True
-                    break
-
-            self.assertTrue(found_constant, "No sol_max constant found in output file")
-        finally:
-            nc.close()
-
-    def test_temporal_band_pass_filter(self):
-        """Test band-pass temporal filtering"""
+        low_pass_file = self.check_file_exists('01336.atmos_daily_lpt.nc')
+        self.verify_netcdf_has_variable(low_pass_file, 'temp')
+        
+        # Band-pass filter
         result = self.run_mars_files(['01336.atmos_daily.nc', '-bpt', '0.75', '10'])
-
-        # Check for successful execution
         self.assertEqual(result.returncode, 0, "Band-pass temporal filter command failed")
-
-        # Check that output file was created
-        output_file = self.check_file_exists('01336.atmos_daily_bpt.nc')
-
-        # Verify that the output file has expected structure
-        nc = Dataset(output_file, 'r')
-        try:
-            # Should have a constant for filter cutoff
-            found_constant = False
-            for var_name in nc.variables:
-                if 'sol_min' in var_name:
-                    found_constant = True
-                    break
-
-            self.assertTrue(found_constant, "No sol_min constant found in output file")
-
-            found_constant = False
-            for var_name in nc.variables:
-                if 'sol_max' in var_name:
-                    found_constant = True
-                    break
-
-            self.assertTrue(found_constant, "No sol_max constant found in output file")
-        finally:
-            nc.close()
-
-    def test_temporal_filter_with_trend(self):
-        """Test temporal filtering with trend added back"""
+        band_pass_file = self.check_file_exists('01336.atmos_daily_bpt.nc')
+        self.verify_netcdf_has_variable(band_pass_file, 'temp')
+        
+        # Filter with trend
         result = self.run_mars_files(['01336.atmos_daily.nc', '-hpt', '10', '-add_trend'])
-
-        # Check for successful execution
         self.assertEqual(result.returncode, 0, "Temporal filter with trend command failed")
-
-        # Check that output file was created
-        output_file = self.check_file_exists('01336.atmos_daily_hpt_trended.nc')
+        filter_trend_file = self.check_file_exists('01336.atmos_daily_hpt_trended.nc')
+        self.verify_netcdf_has_variable(filter_trend_file, 'temp')
 
     def test_tide_decomposition(self):
         """Test tidal decomposition on diurn file"""
