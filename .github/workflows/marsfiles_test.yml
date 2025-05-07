@@ -59,9 +59,42 @@ jobs:
           pip install numpy netCDF4 xarray scipy matplotlib
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # Install the package in editable mode
-      - name: Install package
-        run: pip install -e .[spectral]
+      # Install pyshtools for spatial analysis capabilities
+      - name: Install pyshtools and spectral dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfftw3-dev
+          pip install pyshtools
+
+      - name: Install pyshtools and spectral dependencies (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          pip install pyshtools
+
+      - name: Install pyshtools and spectral dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          pip install pyshtools
+
+      # Install the package with spectral extension
+      - name: Install package with spectral capabilities
+        run: |
+          pip install -e .[spectral]
+      
+      # Create a test profile if needed
+      - name: Create amescap profile
+        shell: bash
+        run: |
+          mkdir -p $HOME
+          mkdir -p mars_templates
+          echo "# AmesCAP profile" > mars_templates/amescap_profile
+          echo "export PYTHONPATH=$PYTHONPATH:$(pwd)" >> mars_templates/amescap_profile
+          cp mars_templates/amescap_profile $HOME/.amescap_profile
+          echo "Created profile at $HOME/.amescap_profile"
 
       # Create a patch for the test file to fix Windows path issues
       - name: Create test_marsfiles.py path fix for Windows
