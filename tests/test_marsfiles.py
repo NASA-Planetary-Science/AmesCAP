@@ -15,6 +15,13 @@ import glob
 import numpy as np
 from netCDF4 import Dataset
 
+# Check if pyshtools is available
+try:
+    import pyshtools
+    HAVE_PYSHTOOLS = True
+except ImportError:
+    HAVE_PYSHTOOLS = False
+    
 class TestMarsFiles(unittest.TestCase):
     """Integration test suite for MarsFiles"""
 
@@ -495,6 +502,10 @@ class TestMarsFiles(unittest.TestCase):
 
     def test_tide_decomposition(self):
         """Test tidal decomposition on diurn file"""
+        if not HAVE_PYSHTOOLS:
+            self.skipTest("pyshtools is not available in this version of CAP."
+                          "Install it to run this test.")
+        
         result = self.run_mars_files(['01336.atmos_diurn.nc', '-tide', '2', '-incl', 'ps', 'temp'])
 
         # Check for successful execution
@@ -511,6 +522,10 @@ class TestMarsFiles(unittest.TestCase):
 
     def test_tide_decomposition_with_normalize(self):
         """Test tidal decomposition with normalization"""
+        if not HAVE_PYSHTOOLS:
+            self.skipTest("pyshtools is not available in this version of CAP."
+                          "Install it to run this test.")
+            
         result = self.run_mars_files(['01336.atmos_diurn.nc', '-tide', '2', '-incl', 'ps', '-norm'])
 
         # Check for successful execution
@@ -542,6 +557,10 @@ class TestMarsFiles(unittest.TestCase):
 
     def test_tide_decomposition_with_reconstruct(self):
         """Test tidal decomposition with reconstruction"""
+        if not HAVE_PYSHTOOLS:
+            self.skipTest("pyshtools is not available in this version of CAP."
+                          "Install it to run this test.")
+            
         result = self.run_mars_files(['01336.atmos_diurn.nc', '-tide', '2', '-incl', 'ps', '-recon'])
 
         # Check for successful execution

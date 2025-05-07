@@ -398,6 +398,11 @@ parser.add_argument('-tide', '--tide_decomp', action=ExtAction,
     parser=parser,
     nargs='+', type=int,
     help=(
+        f"{Red}"
+        f"REQUIRES SPECIAL INSTALL:\nSee 'Spectral Analysis "
+        f"Capabilities' in the installation instructions at \n"
+        f"https://amescap.readthedocs.io/en/latest/installation.html"
+        f"{Nclr}\n"
         f"Use fourier decomposition to break down the signal into N "
         f"harmonics.\nOnly works with 'diurn' files.\nReturns the phase "
         f"and amplitude of the variable.\n"
@@ -1818,7 +1823,7 @@ def main():
                             amp.swapaxes(0,1),
                             new_dim,
                             f"tidal amplitude for {longname_txt}",
-                            units_txt
+                            var_unit
                             )
                         fnew.log_variable(
                             f"{ivar}_phas", 

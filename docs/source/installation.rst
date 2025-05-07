@@ -443,7 +443,7 @@ The conda installation method is recommended as it handles all the complex depen
 .. code-block:: bash
 
    # Clone the repository
-   git clone clone -b pyshtools https://github.com/NASA-Planetary-Science/AmesCAP.git
+   git clone clone -b devel https://github.com/NASA-Planetary-Science/AmesCAP.git
    cd AmesCAP
    
    # Create conda environment with all dependencies including pyshtools
