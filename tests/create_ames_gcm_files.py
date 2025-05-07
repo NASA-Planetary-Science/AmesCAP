@@ -169,7 +169,7 @@ def create_mgcm_atmos_average(short=False):
 
     # Shorten file length if wanted
     if short:
-        len_time = 2
+        len_time = 5
     else:
         len_time = 133
 
@@ -342,7 +342,7 @@ def create_mgcm_atmos_daily(short=False):
 
     # Shorten file length if wanted
     if short:
-        len_time = 2
+        len_time = 40
     else:
         len_time = 2672
 
@@ -357,7 +357,10 @@ def create_mgcm_atmos_daily(short=False):
     time_var = nc_file.createVariable('time', 'f4', ('time',))
     time_var.long_name = 'time'
     time_var.units = 'days'
-    time_var[:] = np.linspace(1336.2, 2004.0, len_time)
+    if short:
+        time_var[:] = np.linspace(1336.2, 1336.2+float(len_time)/4., len_time)
+    else:
+        time_var[:] = np.linspace(1336.2, 2004.0, len_time)
     
     lat_var = nc_file.createVariable('lat', 'f4', ('lat',))
     lat_var.long_name = 'latitude'
@@ -405,7 +408,10 @@ def create_mgcm_atmos_daily(short=False):
     areo_var = nc_file.createVariable('areo', 'f4', ('time', 'scalar_axis'))
     areo_var.long_name = 'areo'
     areo_var.units = 'degrees'
-    areo_vals = np.linspace(720.3, 1079.8, len_time)
+    if short:
+        areo_vals = np.linspace(720.3, 720.3+0.538*float(len_time)/4., len_time)
+    else:
+        areo_vals = np.linspace(720.3, 1079.8, len_time)
     areo_data = np.zeros((len_time, 1))  # Create a 2D array with shape (len_time, 1)
     for i in range(len_time):
         areo_data[i, 0] = areo_vals[i]
@@ -430,7 +436,7 @@ def create_mgcm_atmos_average_pstd(short=False):
 
     # Shorten file length if wanted
     if short:
-        len_time = 2
+        len_time = 5
     else:
         len_time = 133
     
@@ -569,7 +575,7 @@ def create_mgcm_atmos_diurn_pstd(short=False):
 
     # Shorten file length if wanted
     if short:
-        len_time = 2
+        len_time = 5
     else:
         len_time = 133
     
@@ -662,7 +668,7 @@ def create_mgcm_atmos_diurn(short=False):
 
     # Shorten file length if wanted
     if short:
-        len_time = 2
+        len_time = 5
     else:
         len_time = 133
     
@@ -773,7 +779,7 @@ def create_mgcm_atmos_average_pstd_c48(short=False):
 
     # Shorten file length if wanted
     if short:
-        len_time = 2
+        len_time = 5
     else:
         len_time = 133
     

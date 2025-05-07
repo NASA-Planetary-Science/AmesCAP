@@ -21,7 +21,7 @@ class TestMarsFiles(BaseTestCase):
 
     PREFIX = "MarsFiles_test_"
     FILESCRIPT = "create_ames_gcm_files.py"
-    SHORTFILE = ""
+    SHORTFILE = "short"
 
     # Verify files were created
     expected_files = [
