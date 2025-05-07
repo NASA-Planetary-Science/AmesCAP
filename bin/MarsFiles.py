@@ -1124,7 +1124,7 @@ def process_time_shift(file_list):
                     var_val_tmp, 
                     lons, 
                     tod_orig,
-                    timex = target_list
+                    target_times = target_list
                     )
                 var_out = np.transpose(var_val_T, (2, 3, 1, 0))
                 fnew.log_variable(
@@ -1142,7 +1142,7 @@ def process_time_shift(file_list):
                     var_val_tmp, 
                     lons, 
                     tod_orig,
-                    timex = target_list
+                    target_times = target_list
                     )
                 var_out = np.transpose(var_val_T, (3, 4, 2, 1, 0))
                 fnew.log_variable(
