@@ -564,7 +564,7 @@ class TestMarsFiles(unittest.TestCase):
         result = self.run_mars_files(['01336.atmos_diurn.nc', '-tide', '2', '-incl', 'ps', '-recon'])
 
         # Check for successful execution
-        self.assertEqual(result.returncode, 0, "Tide decomposition with reconstruction command failed")
+        self.assertEqual(result.returncode, 0, "Tide decomposition with reconstruction and include commands failed")
 
         # Check that output file was created
         output_file = self.check_file_exists('01336.atmos_diurn_tide_decomp_reconstruct.nc')
@@ -573,6 +573,39 @@ class TestMarsFiles(unittest.TestCase):
         self.verify_netcdf_has_variable(output_file, 'ps_N1')
         self.verify_netcdf_has_variable(output_file, 'ps_N2')
 
+        # Verify that only included variables (plus dimensions) are in the output
+        nc = Dataset(output_file, 'r')
+        try:
+            # Should have ps and temp
+            self.assertIn('ps', nc.variables, "Variable ps not found in output")
+
+            # Should not have other variables that might be in the original file
+            # This check depends on what's in your test files, adjust as needed
+            all_vars = set(nc.variables.keys())
+            expected_vars = {'ps', 'time', 'lat', 'lon'}
+            # Add any dimension variables
+            for dim in nc.dimensions:
+                expected_vars.add(dim)
+
+            # Check if there are unexpected variables
+            # Skip this test if we don't know what all variables should be
+            # This is just an example of a possible check
+            unexpected_vars = all_vars - expected_vars
+            for var in unexpected_vars:
+                # Skip dimension variables and coordinate variables
+                if var in nc.dimensions or var in ['areo', 'scalar_axis'] or var.startswith('time_of_day'):
+                    continue
+                # Skip typical dimension bounds variables
+                if var.endswith('_bnds') or var.endswith('_bounds'):
+                    continue
+                # Skip typical dimension coordinate variables
+                if var in ['pfull', 'phalf', 'pstd', 'zstd', 'zagl', 'pk', 'bk']:
+                    continue
+
+                self.fail(f"Unexpected variable {var} found in output")
+        finally:
+            nc.close()
+            
     def test_regrid(self):
         """Test regridding operation"""
         result = self.run_mars_files([
@@ -631,50 +664,6 @@ class TestMarsFiles(unittest.TestCase):
 
         # Check that output file was created with custom extension
         output_file = self.check_file_exists('01336.atmos_average_zavg_custom.nc')
-
-    def test_include_vars(self):
-        """Test including only specific variables"""
-        result = self.run_mars_files(['01336.atmos_average.nc', '-zavg', '-incl', 'ps', 'temp'])
-
-        # Check for successful execution
-        self.assertEqual(result.returncode, 0, "Zonal average with include command failed")
-
-        # Check that output file was created
-        output_file = self.check_file_exists('01336.atmos_average_zavg.nc')
-
-        # Verify that only included variables (plus dimensions) are in the output
-        nc = Dataset(output_file, 'r')
-        try:
-            # Should have ps and temp
-            self.assertIn('ps', nc.variables, "Variable ps not found in output")
-            self.assertIn('temp', nc.variables, "Variable temp not found in output")
-
-            # Should not have other variables that might be in the original file
-            # This check depends on what's in your test files, adjust as needed
-            all_vars = set(nc.variables.keys())
-            expected_vars = {'ps', 'temp', 'time', 'lat', 'lon'}
-            # Add any dimension variables
-            for dim in nc.dimensions:
-                expected_vars.add(dim)
-
-            # Check if there are unexpected variables
-            # Skip this test if we don't know what all variables should be
-            # This is just an example of a possible check
-            unexpected_vars = all_vars - expected_vars
-            for var in unexpected_vars:
-                # Skip dimension variables and coordinate variables
-                if var in nc.dimensions or var in ['areo', 'scalar_axis'] or var.startswith('time_of_day'):
-                    continue
-                # Skip typical dimension bounds variables
-                if var.endswith('_bnds') or var.endswith('_bounds'):
-                    continue
-                # Skip typical dimension coordinate variables
-                if var in ['pfull', 'phalf', 'pstd', 'zstd', 'zagl', 'pk', 'bk']:
-                    continue
-
-                self.fail(f"Unexpected variable {var} found in output")
-        finally:
-            nc.close()
 
 
 if __name__ == '__main__':
