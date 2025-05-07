@@ -23,6 +23,30 @@ class TestMarsFiles(BaseTestCase):
     FILESCRIPT = "create_ames_gcm_files.py"
     SHORTFILE = ""
 
+    # Verify files were created
+    expected_files = [
+        '01336.atmos_average.nc',
+        '01336.atmos_average_pstd_c48.nc',
+        '01336.atmos_daily.nc',
+        '01336.atmos_diurn.nc',
+        '01336.atmos_diurn_pstd.nc',
+        '01336.fixed.nc'
+    ]
+    # Remove files created by the tests
+    output_patterns = [
+        '*_T.nc',
+        '*_to_average.nc',
+        '*_to_diurn.nc',
+        '*_tide_decomp*.nc',
+        '*_hpt*.nc',
+        '*_lpt*.nc',
+        '*_bpt*.nc',
+        '*_regrid.nc',
+        '*_zavg*.nc',
+        '*_Ls*_*.nc',
+        '*_lat_*_*.nc'
+    ]
+
     def run_mars_files(self, args):
         """
         Run MarsFiles using subprocess

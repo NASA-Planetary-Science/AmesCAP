@@ -20,6 +20,19 @@ class BaseTestCase(unittest.TestCase):
     FILESCRIPT = "create_ames_gcm_files.py"
     SHORTFILE = "short"
 
+    # Verify files were created
+    expected_files = [
+        '01336.atmos_average.nc',
+        '01336.atmos_average_pstd_c48.nc',
+        '01336.atmos_daily.nc',
+        '01336.atmos_diurn.nc',
+        '01336.atmos_diurn_pstd.nc',
+        '01336.fixed.nc'
+    ]
+    # Remove files created by the tests
+    output_patterns = [
+    ]
+
     @classmethod
     def setUpClass(cls):
         """Set up the test environment"""
@@ -65,17 +78,7 @@ class BaseTestCase(unittest.TestCase):
         # List files in the temp directory to debug
         print(f"Files in test directory after creation: {os.listdir(cls.test_dir)}")
 
-        # Verify files were created
-        expected_files = [
-            '01336.atmos_average.nc',
-            '01336.atmos_average_pstd_c48.nc',
-            '01336.atmos_daily.nc',
-            '01336.atmos_diurn.nc',
-            '01336.atmos_diurn_pstd.nc',
-            '01336.fixed.nc'
-        ]
-
-        for filename in expected_files:
+        for filename in cls.expected_files:
             filepath = os.path.join(cls.test_dir, filename)
             if not os.path.exists(filepath):
                 raise Exception(f"Test file {filename} was not created in {cls.test_dir}")
@@ -90,21 +93,8 @@ class BaseTestCase(unittest.TestCase):
     def tearDown(self):
         """Clean up after each test"""
         # Clean up any generated output files after each test but keep input files
-        output_patterns = [
-            '*_T.nc',
-            '*_to_average.nc',
-            '*_to_diurn.nc',
-            '*_tide_decomp*.nc',
-            '*_hpt*.nc',
-            '*_lpt*.nc',
-            '*_bpt*.nc',
-            '*_regrid.nc',
-            '*_zavg*.nc',
-            '*_Ls*_*.nc',
-            '*_lat_*_*.nc'
-        ]
 
-        for pattern in output_patterns:
+        for pattern in self.output_patterns:
             for file_path in glob.glob(os.path.join(self.test_dir, pattern)):
                 try:
                     os.remove(file_path)
