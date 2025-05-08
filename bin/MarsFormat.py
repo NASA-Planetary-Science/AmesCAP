@@ -44,6 +44,8 @@ import re           # Regular expressions
 import numpy as np
 import xarray as xr
 from netCDF4 import Dataset
+import functools    # For function decorators
+import traceback    # For printing stack traces
 
 # Load amesCAP modules
 from amescap.Script_utils import (
@@ -52,9 +54,6 @@ from amescap.Script_utils import (
 from amescap.FV3_utils import layers_mid_point_to_boundary
 
 xr.set_options(keep_attrs=True)
-
-import functools
-import traceback
 
 def debug_wrapper(func):
     """

@@ -318,6 +318,8 @@ class TestMarsFiles(unittest.TestCase):
 
         for check in help_checks:
             self.assertIn(check, result.stdout, f"Help message missing '{check}'")
+        
+        print("✓ Help message displayed successfully")
 
     def test_time_shift(self):
         """Test time_shift operation on diurn file"""
@@ -332,6 +334,8 @@ class TestMarsFiles(unittest.TestCase):
         # Verify that the output file has expected structure
         self.verify_netcdf_has_variable(output_file, 'time')
         self.verify_netcdf_has_variable(output_file, 'time_of_day_24')  # Default is 24 time of day bins
+        
+        print("✓ Time shift operation succeeded")
 
     def test_time_shift_specific_times(self):
         """Test time_shift operation with specific local times"""
@@ -364,6 +368,8 @@ class TestMarsFiles(unittest.TestCase):
             self.assertAlmostEqual(values[1], 15.0, delta=0.5)
         finally:
             nc.close()
+        
+        print("✓ Time shift with specific times succeeded")
 
     def test_bin_average(self):
         """Test bin_average operation on daily file"""
@@ -390,6 +396,8 @@ class TestMarsFiles(unittest.TestCase):
         finally:
             nc_in.close()
             nc_out.close()
+        
+        print("✓ Bin average operation succeeded")
 
     def test_bin_diurn(self):
         """Test bin_diurn operation on daily file"""
@@ -414,6 +422,8 @@ class TestMarsFiles(unittest.TestCase):
             self.assertTrue(found_tod, "No time_of_day dimension found in output file")
         finally:
             nc.close()
+        
+        print("✓ Bin diurn operation succeeded")
 
     def test_split_file_by_areo(self):
         """Test split operation on average file by Ls (areo)"""
@@ -445,6 +455,8 @@ class TestMarsFiles(unittest.TestCase):
         # Check that output file was created - name will depend on Ls values
         ls_files = glob.glob(os.path.join(self.test_dir, '*_Ls*_*.nc'))
         self.assertTrue(len(ls_files) > 0, "No output files from split operation found")
+        
+        print(f"✓ Split file by areo succeeded (Ls range: {ls_range[0]}-{ls_range[1]})")
 
     def test_split_file_by_lat(self):
         """Test split operation on average file by latitude"""
@@ -473,6 +485,38 @@ class TestMarsFiles(unittest.TestCase):
                 self.assertLessEqual(max(lat_values), 45)
             finally:
                 nc.close()
+        
+        print("✓ Split file by latitude succeeded")
+        
+    def test_split_file_by_lon(self):
+        """Test split operation on average file by longitude"""
+        result = self.run_mars_files([
+            '01336.atmos_average.nc',
+            '--split',
+            '10',
+            '20',
+            '-dim',
+            'lon'
+        ])
+
+        # Check for successful execution
+        self.assertEqual(result.returncode, 0, "Split by longitude command failed")
+
+        # Check that output file was created
+        lon_files = glob.glob(os.path.join(self.test_dir, '*_lon_*_*.nc'))
+        self.assertTrue(len(lon_files) > 0, "No output files from split by longitude operation found")
+
+        # Verify the longitude range in the output file
+        if lon_files:
+            nc = Dataset(lon_files[0], 'r')
+            try:
+                lon_values = nc.variables['lon'][:]
+                self.assertGreaterEqual(min(lon_values), 10)
+                self.assertLessEqual(max(lon_values), 20)
+            finally:
+                nc.close()
+        
+        print("✓ Split file by longitude succeeded")
 
     def test_temporal_filters(self):
         """Test all temporal filtering operations"""
@@ -481,24 +525,48 @@ class TestMarsFiles(unittest.TestCase):
         self.assertEqual(result.returncode, 0, "High-pass temporal filter command failed")
         high_pass_file = self.check_file_exists('01336.atmos_daily_hpt.nc')
         self.verify_netcdf_has_variable(high_pass_file, 'temp')
+        print("✓ High-pass temporal filter succeeded")
         
         # Low-pass filter
         result = self.run_mars_files(['01336.atmos_daily.nc', '-lpt', '0.75'])
         self.assertEqual(result.returncode, 0, "Low-pass temporal filter command failed")
         low_pass_file = self.check_file_exists('01336.atmos_daily_lpt.nc')
         self.verify_netcdf_has_variable(low_pass_file, 'temp')
+        print("✓ Low-pass temporal filter succeeded")
         
         # Band-pass filter
-        result = self.run_mars_files(['01336.atmos_daily.nc', '-bpt', '0.75', '10'])
-        self.assertEqual(result.returncode, 0, "Band-pass temporal filter command failed")
-        band_pass_file = self.check_file_exists('01336.atmos_daily_bpt.nc')
+        result = self.run_mars_files(['01336.atmos_daily.nc', '-bpt', '0.75', '10', '-add_trend'])
+        self.assertEqual(result.returncode, 0, "Band-pass temporal filter with trend command failed")
+        band_pass_file = self.check_file_exists('01336.atmos_daily_bpt_trended.nc')
         self.verify_netcdf_has_variable(band_pass_file, 'temp')
+        print("✓ Band-pass temporal filter succeeded")
+    
+    def test_spatial_filters(self):
+        """Test all spatial filtering operations"""
+        if not HAVE_PYSHTOOLS:
+            self.skipTest("pyshtools is not available in this version of CAP."
+                          "Install it to run this test.")
+            
+        # High-pass filter
+        result = self.run_mars_files(['01336.atmos_daily.nc', '-hps', '10'])
+        self.assertEqual(result.returncode, 0, "High-pass spatial filter command failed")
+        high_pass_file = self.check_file_exists('01336.atmos_daily_hps.nc')
+        self.verify_netcdf_has_variable(high_pass_file, 'temp')
+        print("✓ High-pass spatial filter succeeded")
         
-        # Filter with trend
-        result = self.run_mars_files(['01336.atmos_daily.nc', '-hpt', '10', '-add_trend'])
-        self.assertEqual(result.returncode, 0, "Temporal filter with trend command failed")
-        filter_trend_file = self.check_file_exists('01336.atmos_daily_hpt_trended.nc')
-        self.verify_netcdf_has_variable(filter_trend_file, 'temp')
+        # Low-pass filter
+        result = self.run_mars_files(['01336.atmos_daily.nc', '-lps', '20'])
+        self.assertEqual(result.returncode, 0, "Low-pass spatial filter command failed")
+        low_pass_file = self.check_file_exists('01336.atmos_daily_lps.nc')
+        self.verify_netcdf_has_variable(low_pass_file, 'temp')
+        print("✓ Low-pass spatial filter succeeded")
+        
+        # Band-pass filter
+        result = self.run_mars_files(['01336.atmos_daily.nc', '-bps', '10', '20', '-add_trend'])
+        self.assertEqual(result.returncode, 0, "Band-pass spatial filter with trend command failed")
+        band_pass_file = self.check_file_exists('01336.atmos_daily_bps_trended.nc')
+        self.verify_netcdf_has_variable(band_pass_file, 'temp')
+        print("✓ Band-pass spatial filter succeeded")
 
     def test_tide_decomposition(self):
         """Test tidal decomposition on diurn file"""
@@ -519,6 +587,8 @@ class TestMarsFiles(unittest.TestCase):
         self.verify_netcdf_has_variable(output_file, 'ps_phas')
         self.verify_netcdf_has_variable(output_file, 'temp_amp')
         self.verify_netcdf_has_variable(output_file, 'temp_phas')
+        
+        print("✓ Tide decomposition succeeded")
 
     def test_tide_decomposition_with_normalize(self):
         """Test tidal decomposition with normalization"""
@@ -554,6 +624,8 @@ class TestMarsFiles(unittest.TestCase):
                         "Normalized amplitude should have '%' in units or a 'normalized' attribute")
         finally:
             nc.close()
+            
+        print("✓ Tide decomposition with normalization succeeded")
 
     def test_tide_decomposition_with_reconstruct(self):
         """Test tidal decomposition with reconstruction"""
@@ -572,12 +644,14 @@ class TestMarsFiles(unittest.TestCase):
         # Verify output has reconstructed harmonics
         self.verify_netcdf_has_variable(output_file, 'ps_N1')
         self.verify_netcdf_has_variable(output_file, 'ps_N2')
+        
+        print("✓ Tide decomposition with reconstruction succeeded")
 
         # Verify that only included variables (plus dimensions) are in the output
         nc = Dataset(output_file, 'r')
         try:
             # Should have ps and temp
-            self.assertIn('ps_N1', nc.variables, "Variable ps not found in output")
+            self.assertIn('ps_N1', nc.variables, "Variable ps_N1 not found in output")
 
             # Should not have other variables that might be in the original file
             # This check depends on what's in the test files, adjust as needed
@@ -603,6 +677,8 @@ class TestMarsFiles(unittest.TestCase):
                 self.fail(f"Unexpected variable {var} found in output")
         finally:
             nc.close()
+        
+        print("✓ Include argument succeeded")
             
     def test_regrid(self):
         """Test regridding operation"""
@@ -635,6 +711,8 @@ class TestMarsFiles(unittest.TestCase):
         finally:
             nc_target.close()
             nc_output.close()
+        
+        print("✓ Regrid operation succeeded")
 
     def test_zonal_average(self):
         """Test zonal averaging operation"""
@@ -652,6 +730,8 @@ class TestMarsFiles(unittest.TestCase):
             self.assertEqual(len(nc.dimensions['lon']), 1, "Longitude dimension should have size 1")
         finally:
             nc.close()
+        
+        print("✓ Zonal average operation succeeded")
 
     def test_custom_extension(self):
         """Test using custom extension"""
@@ -662,6 +742,8 @@ class TestMarsFiles(unittest.TestCase):
 
         # Check that output file was created with custom extension
         output_file = self.check_file_exists('01336.atmos_average_zavg_custom.nc')
+        
+        print("✓ Custom extension operation succeeded")
 
 
 if __name__ == '__main__':
