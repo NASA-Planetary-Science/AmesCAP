@@ -53,4 +53,6 @@ jobs:
       
       # Run the tests
       - name: Run MarsPull tests
-        run: python -m unittest -v tests/test_marspull.py
+        run: |
+          cd tests
+          python -m unittest -v test_marspull.py

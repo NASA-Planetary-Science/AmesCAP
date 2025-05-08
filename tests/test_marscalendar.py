@@ -14,31 +14,14 @@ import tempfile
 import argparse
 import subprocess
 import re
+from base_test import BaseTestCase
 
-class TestMarsCalendar(unittest.TestCase):
+class TestMarsCalendar(BaseTestCase):
     """Integration test suite for MarsCalendar"""
-    
-    @classmethod
-    def setUpClass(cls):
-        """Set up the test environment"""
-        # Create a temporary directory in the user's home directory
-        cls.test_dir = os.path.join(os.path.expanduser('~'), 'MarsCalendar_test')
-        os.makedirs(cls.test_dir, exist_ok=True)
-        
-        # Project root directory
-        cls.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    
-    def setUp(self):
-        """Change to temporary directory before each test"""
-        os.chdir(self.test_dir)
-    
-    @classmethod
-    def tearDownClass(cls):
-        """Clean up the test environment"""
-        try:
-            shutil.rmtree(cls.test_dir, ignore_errors=True)
-        except Exception:
-            print(f"Warning: Could not remove test directory {cls.test_dir}")
+
+    PREFIX = "MarsCalendar_test_"
+    FILESCRIPT = "create_ames_gcm_files.py"
+    SHORTFILE = "short"
     
     def run_mars_calendar(self, args):
         """
