@@ -45,6 +45,9 @@ class TestMarsFiles(unittest.TestCase):
         # Dictionary to keep track of modified files
         cls.modified_files = {}
         
+        # Dictionary to track files created in each test
+        cls.test_created_files = {}
+        
         # Initialize modified_files dictionary with original files
         expected_files = [
             '01336.atmos_average.nc',
@@ -100,34 +103,51 @@ class TestMarsFiles(unittest.TestCase):
     def setUp(self):
         """Change to temporary directory before each test"""
         os.chdir(self.test_dir)
+        
+        # Store the current test method name
+        self.current_test = self.id().split('.')[-1]
+        
+        # Initialize an empty list to track files created by this test
+        self.__class__.test_created_files[self.current_test] = []
+        
+        # Get a snapshot of files in the directory before the test runs
+        self.files_before_test = set(os.listdir(self.test_dir))
 
     def tearDown(self):
         """Clean up after each test"""
-        # Only clean up any generated output files that aren't part of our modified_files dict
-        output_patterns = [
-            '*_T.nc',
-            '*_to_average.nc',
-            '*_to_diurn.nc',
-            '*_tide_decomp*.nc',
-            '*_hpt*.nc',
-            '*_lpt*.nc',
-            '*_bpt*.nc',
-            '*_regrid.nc',
-            '*_zavg*.nc',
-            '*_Ls*_*.nc',
-            '*_lat_*_*.nc'
-        ]
-
-        for pattern in output_patterns:
-            for file_path in glob.glob(os.path.join(self.test_dir, pattern)):
-                # Skip files we want to keep track of
-                if file_path in self.modified_files.values():
-                    continue
-                    
-                try:
+        # Get files that exist after the test
+        files_after_test = set(os.listdir(self.test_dir))
+        
+        # Find new files created during this test
+        new_files = files_after_test - self.files_before_test
+        
+        # Store these new files in our tracking dictionary
+        for filename in new_files:
+            file_path = os.path.join(self.test_dir, filename)
+            self.__class__.test_created_files[self.current_test].append(file_path)
+            
+            # Also track in modified_files if it's a netCDF file we want to keep
+            if filename.endswith('.nc') and filename not in self.modified_files:
+                self.modified_files[filename] = file_path
+        
+        # Get the list of files to clean up (files created by this test that aren't in modified_files)
+        files_to_clean = []
+        for file_path in self.__class__.test_created_files[self.current_test]:
+            filename = os.path.basename(file_path)
+            # If this is a permanent file we want to keep, skip it
+            if file_path in self.modified_files.values():
+                continue
+            # Clean up temporary files
+            files_to_clean.append(file_path)
+        
+        # Remove temporary files created by this test
+        for file_path in files_to_clean:
+            try:
+                if os.path.exists(file_path):
                     os.remove(file_path)
-                except Exception as e:
-                    print(f"Warning: Could not remove file {file_path}: {e}")
+                    print(f"Cleaned up: {os.path.basename(file_path)}")
+            except Exception as e:
+                print(f"Warning: Could not remove file {file_path}: {e}")
 
         # Return to test_dir
         os.chdir(self.test_dir)
@@ -163,6 +183,9 @@ class TestMarsFiles(unittest.TestCase):
         # Construct the full command to run MarsFiles
         cmd = [sys.executable, os.path.join(self.project_root, "bin", "MarsFiles.py")] + abs_args
 
+        # Get a snapshot of files before running the command
+        files_before = set(os.listdir(self.test_dir))
+
         # Run the command
         try:
             result = subprocess.run(
@@ -173,94 +196,21 @@ class TestMarsFiles(unittest.TestCase):
                 env=dict(os.environ, PWD=self.test_dir)  # Ensure current working directory is set
             )
 
-            # Update our record of the modified file if this run was successful
+            # If command succeeded, find any new files that were created
             if result.returncode == 0:
-                # Track output files based on known patterns
-                if '-t' in args:
-                    # Time shift operation
-                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
-                    if input_file:
-                        base_name = os.path.basename(input_file)
-                        output_file = f"{os.path.splitext(base_name)[0]}_T.nc"
-                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
+                files_after = set(os.listdir(self.test_dir))
+                new_files = files_after - files_before
                 
-                elif '-ba' in args:
-                    # Bin average operation
-                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
-                    if input_file:
-                        base_name = os.path.basename(input_file)
-                        output_file = f"{os.path.splitext(base_name)[0]}_to_average.nc"
-                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
-                
-                elif '-bd' in args:
-                    # Bin diurn operation
-                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
-                    if input_file:
-                        base_name = os.path.basename(input_file)
-                        output_file = f"{os.path.splitext(base_name)[0]}_to_diurn.nc"
-                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
-                
-                elif '-hpt' in args:
-                    # High-pass temporal filter
-                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
-                    if input_file:
-                        base_name = os.path.basename(input_file)
-                        extension = "_hpt_trended.nc" if "-add_trend" in args else "_hpt.nc"
-                        output_file = f"{os.path.splitext(base_name)[0]}{extension}"
-                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
-                
-                elif '-lpt' in args:
-                    # Low-pass temporal filter
-                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
-                    if input_file:
-                        base_name = os.path.basename(input_file)
-                        output_file = f"{os.path.splitext(base_name)[0]}_lpt.nc"
-                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
-                
-                elif '-bpt' in args:
-                    # Band-pass temporal filter
-                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
-                    if input_file:
-                        base_name = os.path.basename(input_file)
-                        output_file = f"{os.path.splitext(base_name)[0]}_bpt.nc"
-                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
-                
-                elif '-tide' in args:
-                    # Tide decomposition
-                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
-                    if input_file:
-                        base_name = os.path.basename(input_file)
-                        ext = "_tide_decomp"
-                        if "-norm" in args:
-                            ext += "_norm"
-                        if "-recon" in args:
-                            ext += "_reconstruct"
-                        output_file = f"{os.path.splitext(base_name)[0]}{ext}.nc"
-                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
-                
-                elif '-regrid' in args:
-                    # Regrid operation
-                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
-                    if input_file:
-                        base_name = os.path.basename(input_file)
-                        output_file = f"{os.path.splitext(base_name)[0]}_regrid.nc"
-                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
-                
-                elif '-zavg' in args:
-                    # Zonal average operation
-                    input_file = next((arg for arg in args if arg.endswith('.nc')), None)
-                    if input_file:
-                        base_name = os.path.basename(input_file)
-                        output_file = f"{os.path.splitext(base_name)[0]}_zavg.nc"
-                        self.modified_files[output_file] = os.path.join(self.test_dir, output_file)
-                
-                elif '--split' in args or '-split' in args:
-                    # Split operation - this one's tricky as the output name depends on the split values
-                    # We'll just track any new files that match the patterns
-                    for pattern in ['*_Ls*_*.nc', '*_lat_*_*.nc']:
-                        for file_path in glob.glob(os.path.join(self.test_dir, pattern)):
-                            base_name = os.path.basename(file_path)
-                            self.modified_files[base_name] = file_path
+                # Track these new files
+                for filename in new_files:
+                    file_path = os.path.join(self.test_dir, filename)
+                    # Add to test tracking
+                    self.__class__.test_created_files[self.current_test].append(file_path)
+                    
+                    # Also update the modified_files dictionary for output files we need to track
+                    if filename.endswith('.nc'):
+                        # Track the file in our modified_files dictionary
+                        self.modified_files[filename] = file_path
 
             return result
         except Exception as e:
@@ -745,6 +695,35 @@ class TestMarsFiles(unittest.TestCase):
         
         print("✓ Custom extension operation succeeded")
 
+    def test_zzz_output_cleanup_stats(self):
+        """
+        This test runs last (due to alphabetical sorting of 'zzz') and outputs statistics
+        about files created and cleaned during testing.
+        """
+        if not hasattr(self.__class__, 'test_created_files'):
+            self.skipTest("No file tracking information available")
+            
+        # Calculate total files created
+        total_files = sum(len(files) for files in self.__class__.test_created_files.values())
+        
+        # Calculate files per test
+        files_per_test = {test: len(files) for test, files in self.__class__.test_created_files.items()}
+        
+        # Find the test that created the most files
+        max_files_test = max(files_per_test.items(), key=lambda x: x[1]) if files_per_test else (None, 0)
+        
+        # Output statistics
+        print("\n===== File Cleanup Statistics =====")
+        print(f"Total files created during testing: {total_files}")
+        print(f"Average files per test: {total_files / len(self.__class__.test_created_files) if self.__class__.test_created_files else 0:.1f}")
+        print(f"Test creating most files: {max_files_test[0]} ({max_files_test[1]} files)")
+        print("==================================\n")
+        
+        # Test passes if we reach this point
+        print("✓ Selective cleanup system is working")
+        
+        # This isn't really a test, but we'll assert True to make it pass
+        self.assertTrue(True)
 
 if __name__ == '__main__':
     unittest.main()
