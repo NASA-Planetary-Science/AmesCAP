@@ -26,12 +26,20 @@ and optionally accepts:
 
 Third-party Requirements:
 
-    * ``numpy``
-    * ``netCDF4``
+    * ``sys``
     * ``argparse``
     * ``os``
-    * ``subprocess``
+    * ``warnings``
+    * ``re``
+    * ``numpy``
+    * ``netCDF4``
+    * ``shutil``
+    * ``functools``
+    * ``traceback``
     * ``matplotlib``
+    * ``time``
+    * ``io``
+    * ``locale``
 
 """
 
@@ -44,13 +52,14 @@ from amescap.Script_utils import (
 import sys          # System commands
 import argparse     # Parse arguments
 import os           # Access operating system functions
-import subprocess   # Run command-line commands
 import warnings     # Suppress errors triggered by NaNs
 import re           # Regular expressions
-import matplotlib
 import numpy as np
 from netCDF4 import Dataset
-import shutil       # For cross-platform file operations
+import shutil       # For OS-friendly file operations
+import functools    # For function decorators
+import traceback    # For printing stack traces
+import matplotlib
 import time         # For implementing delays in file operations
 import io
 import locale
@@ -72,9 +81,6 @@ from amescap.Ncdf_wrapper import Ncdf
 # ======================================================
 #                  DEFINITIONS
 # ======================================================
-
-import functools
-import traceback
 
 def debug_wrapper(func):
     """

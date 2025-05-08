@@ -577,10 +577,10 @@ class TestMarsFiles(unittest.TestCase):
         nc = Dataset(output_file, 'r')
         try:
             # Should have ps and temp
-            self.assertIn('ps', nc.variables, "Variable ps not found in output")
+            self.assertIn('ps_N1', nc.variables, "Variable ps not found in output")
 
             # Should not have other variables that might be in the original file
-            # This check depends on what's in your test files, adjust as needed
+            # This check depends on what's in the test files, adjust as needed
             all_vars = set(nc.variables.keys())
             expected_vars = {'ps_N1', 'ps_N2', 'time', 'lat', 'lon'}
             # Add any dimension variables
@@ -588,8 +588,6 @@ class TestMarsFiles(unittest.TestCase):
                 expected_vars.add(dim)
 
             # Check if there are unexpected variables
-            # Skip this test if we don't know what all variables should be
-            # This is just an example of a possible check
             unexpected_vars = all_vars - expected_vars
             for var in unexpected_vars:
                 # Skip dimension variables and coordinate variables

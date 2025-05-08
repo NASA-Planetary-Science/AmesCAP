@@ -29,12 +29,11 @@ from amescap.Script_utils import (
 import sys          # System commands
 import argparse     # Parse arguments
 import numpy as np
+import functools    # For function decorators
+import traceback    # For printing stack traces
 
 # Load amesCAP modules
 from amescap.FV3_utils import (sol2ls, ls2sol)
-
-import functools
-import traceback
 
 def debug_wrapper(func):
     """

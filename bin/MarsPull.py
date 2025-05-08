@@ -12,8 +12,13 @@ The executable requires 2 arguments:
 
 Third-party Requirements:
 
-    * ``numpy``
+    * ``sys``
     * ``argparse``
+    * ``os``
+    * ``re``
+    * ``numpy``
+    * ``functools``
+    * ``traceback``
     * ``requests``
 
 List of Functions:
@@ -31,13 +36,11 @@ from amescap.Script_utils import (
 import sys          # System commands
 import argparse     # Parse arguments
 import os           # Access operating system functions
-import requests     # Download data from website
 import re           # Regular expressions
 import numpy as np
-import requests     # make HTTP requests
-
-import functools
-import traceback
+import functools    # For function decorators
+import traceback    # For printing stack traces
+import requests     # Download data from website
 
 def debug_wrapper(func):
     """

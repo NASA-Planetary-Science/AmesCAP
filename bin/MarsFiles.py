@@ -34,14 +34,16 @@ and optionally accepts:
 
 Third-party Requirements:
 
-    * ``numpy``
-    * ``netCDF4``
     * ``sys``
     * ``argparse``
     * ``os``
-    * ``subprocess``
     * ``warnings``
-
+    * ``re``
+    * ``numpy``
+    * ``netCDF4``
+    * ``shutil``
+    * ``functools``
+    * ``traceback``
 """
 
 # Make print statements appear in color
@@ -51,15 +53,15 @@ from amescap.Script_utils import (
 
 # Load generic Python Modules
 import sys          # System commands
-import sys          # System commands
 import argparse     # Parse arguments
 import os           # Access operating system functions
-import subprocess   # Run command-line commands
 import warnings     # Suppress errors triggered by NaNs
 import re           # Regular expressions
 import numpy as np
 from netCDF4 import Dataset
-import shutil
+import shutil       # For OS-friendly file operations
+import functools    # For function decorators
+import traceback    # For printing stack traces
 
 # Load amesCAP modules
 from amescap.Ncdf_wrapper import (Ncdf, Fort)
@@ -127,12 +129,10 @@ class ExtArgumentParser(argparse.ArgumentParser):
 
         return namespace
 
-import functools
-import traceback
 
 def debug_wrapper(func):
     """
-    A decorator that wraps a function with error handling based on the 
+    A decorator that wraps a function with error handling based on the
     --debug flag.
     """
     @functools.wraps(func)
@@ -561,7 +561,7 @@ debug = args.debug
 
 if args.input_file:
     for file in args.input_file:
-        if not (re.search(".nc", file.name) or 
+        if not (re.search(".nc", file.name) or
                 re.search("fort.11", file.name)):
             parser.error(
                 f"{Red}{file.name} is not a netCDF or fort.11 file{Nclr}"
@@ -597,13 +597,13 @@ all_args = [args.bin_files, args.concatenate, args.split, args.time_shift,
             args.band_pass_spatial, args.tide_decomp, args.normalize,
             args.regrid_XY_to_match, args.zonal_average]
 
-if (all(v is None or v is False for v in all_args) 
+if (all(v is None or v is False for v in all_args)
     and args.include is not None):
     parser.error(f"{Red}[-incl --include] must be used with another "
                  f"argument{Nclr}")
     exit()
 
-if (all(v is None or v is False for v in all_args) and 
+if (all(v is None or v is False for v in all_args) and
     args.extension is not None):
     parser.error(f"{Red}[-ext --extension] must be used with another "
                  f"argument{Nclr}")
@@ -664,7 +664,7 @@ def concatenate_files(file_list, full_file_list):
             except OSError as e:
                 print(f"Warning: Could not remove {full_file_list[i]}: {e}")
             exit()
-            
+
         print(f"{Cyan}Cleaned all but {file_list[0]}{Nclr}")
         exit()
 
@@ -708,7 +708,7 @@ def concatenate_files(file_list, full_file_list):
             os.remove(file)
         except OSError as e:
             print(f"Warning: Could not remove {file}: {e}")
-            
+
     try:
         shutil.move(tmp_file, merged_file)
         print(f"{Cyan}{merged_file} was created from a merge{Nclr}")
@@ -784,7 +784,7 @@ def split_files(file_list, split_dim):
 
     if split_dim == 'areo':
         print(f"\n{Yellow}Areo MOD(360):\n{reducing_dim%360.}\n")
-    
+
     print(f"\n{Yellow}All values in dimension:\n{reducing_dim}\n")
 
     dx = np.abs(reducing_dim[1] - reducing_dim[0])
@@ -807,12 +807,12 @@ def split_files(file_list, split_dim):
         check_bounds(bounds, reducing_dim[0], reducing_dim[-1], dx)
         if ((split_dim == 'lon') & (bounds[1] < bounds[0])):
             indices = np.where(
-                (reducing_dim <= bounds[1]) | 
+                (reducing_dim <= bounds[1]) |
                 (reducing_dim >= bounds[0])
                 )[0]
         else:
             indices = np.where(
-                (reducing_dim >= bounds[0]) & 
+                (reducing_dim >= bounds[0]) &
                 (reducing_dim <= bounds[1])
                 )[0]
         dim_out = reducing_dim[indices]
@@ -820,7 +820,7 @@ def split_files(file_list, split_dim):
             f"Requested range = {bounds_in[0]} - {bounds_in[1]}\n"
             f"Corresponding values = {dim_out}\n"
             )
-        
+
         if len(indices) == 0:
             print(
                 f"{Red}Warning, no values were found in the range {split_dim} "
@@ -839,83 +839,83 @@ def split_files(file_list, split_dim):
         if len(np.atleast_1d(bounds)) < 2:
             base_name = (f"{int(time_dim):05d}{fname[5:-3]}_nearest_sol"
                          f"{int(bounds_in[0]):03d}.nc")
-            output_file_name = (os.path.normpath(os.path.join(fpath, 
+            output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             base_name = (f"{int(time_dim[0]):05d}{fname[5:-3]}_sol"
                          f"{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
-            output_file_name = (os.path.normpath(os.path.join(fpath, 
+            output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
     elif split_dim =='areo':
         if len(np.atleast_1d(bounds)) < 2:
             base_name = (f"{int(time_dim):05d}{fname[5:-3]}_nearest_Ls"
                          f"{int(bounds_in[0]):03d}.nc")
-            output_file_name = (os.path.normpath(os.path.join(fpath, 
+            output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             base_name = (f"{int(time_dim[0]):05d}{fname[5:-3]}_"
                          f"Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
-            output_file_name = (os.path.normpath(os.path.join(fpath, 
+            output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         split_dim = 'time'
     elif split_dim == 'lat':
         new_bounds = [
-            f"{abs(int(b))}S" if b < 0 
-            else f"{int(b)}N" 
+            f"{abs(int(b))}S" if b < 0
+            else f"{int(b)}N"
             for b in bounds
             ]
         if len(np.atleast_1d(bounds)) < 2:
             base_name = (f"{original_date}{fname[5:-3]}_nearest_{split_dim}_"
                          f"{new_bounds[0]}.nc")
-            output_file_name = (os.path.normpath(os.path.join(fpath, 
+            output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
             base_name = (f"{original_date}{fname[5:-3]}_{split_dim}_"
                          f"{new_bounds[0]}_{new_bounds[1]}.nc")
-            output_file_name = (os.path.normpath(os.path.join(fpath, 
+            output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
     elif split_dim == interp_type:
         if interp_type == 'pfull':
             new_bounds = [
-                f"{abs(int(b*100))}Pa" if b < 1 
+                f"{abs(int(b*100))}Pa" if b < 1
                 else f"{int(b)}{unt_txt} "
                 for b in bounds
                 ]
         elif interp_type == 'pstd':
             new_bounds = [
-                f"{abs(int(b*100))}hPa" if b < 1 
+                f"{abs(int(b*100))}hPa" if b < 1
                 else f"{int(b)}{unt_txt}"
                 for b in bounds
                 ]
         else:
             new_bounds = [f"{int(b)}{unt_txt}" for b in bounds]
-            
+
         if len(np.atleast_1d(bounds)) < 2:
             print(f"{Yellow}bounds = {bounds[0]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]}")
             base_name = (f"{original_date}{fname[5:-3]}_nearest_"
                          f"{new_bounds[0]}.nc")
-            output_file_name = (os.path.normpath(os.path.join(fpath, 
+            output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
             base_name = (f"{original_date}{fname[5:-3]}_{new_bounds[0]}_"
                          f"{new_bounds[1]}.nc")
-            output_file_name = (os.path.normpath(os.path.join(fpath, 
+            output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
     else:
         if len(np.atleast_1d(bounds)) < 2:
             base_name = (f"{original_date}{fname[5:-3]}_nearest_{split_dim}_"
                          f"{int(bounds[0]):03d}.nc")
-            output_file_name = (os.path.normpath(os.path.join(fpath, 
+            output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             base_name = (f"{original_date}{fname[5:-3]}_{split_dim}_"
                          f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
-            output_file_name = (os.path.normpath(os.path.join(fpath, 
+            output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
 
     # Append extension, if any:
@@ -994,10 +994,10 @@ def split_files(file_list, split_dim):
                 var_out = varNcf[:, indices, :, :]
             longname_txt, units_txt = get_longname_unit(fNcdf, ivar)
             Log.log_variable(
-                ivar, 
-                var_out, 
+                ivar,
+                var_out,
                 varNcf.dimensions,
-                longname_txt, 
+                longname_txt,
                 units_txt
                 )
         else:
@@ -1073,7 +1073,7 @@ def process_time_shift(file_list):
             # If user does not specify which TOD(s) to do, do all 24
             tod_name_out = tod_name_in
             fnew.copy_Ncaxis_with_content(fdiurn.variables[tod_name_in])
-            
+
             # Only copy "areo" if it exists in the original file
             if "areo" in fdiurn.variables.keys():
                 fnew.copy_Ncvar(fdiurn.variables["areo"])
@@ -1082,13 +1082,13 @@ def process_time_shift(file_list):
             # axis as necessary
             tod_name_out = f"time_of_day_{(len(target_list)):02}"
             fnew.add_dim_with_content(
-                tod_name_out, 
+                tod_name_out,
                 target_list,
                 longname_txt = "time of day",
                 units_txt = ("[hours since 0000-00-00 00:00:00]"),
                 cart_txt = ""
                 )
-            
+
             # Create areo variable with the new size
             areo_shape = fdiurn.variables["areo"].shape
             areo_dims = fdiurn.variables["areo"].dimensions
@@ -1106,8 +1106,8 @@ def process_time_shift(file_list):
                 areo_out[:, i, 0] = fdiurn.variables["areo"][:, j, 0]
 
             fnew.add_dim_with_content(
-                dimension_name = "scalar_axis", 
-                DATAin = [0], 
+                dimension_name = "scalar_axis",
+                DATAin = [0],
                 longname_txt = "none",
                 units_txt = "none"
                 )
@@ -1134,17 +1134,17 @@ def process_time_shift(file_list):
                 # time, tod, lat, lon
                 var_val_tmp = np.transpose(value, (x, y, t, tod))
                 var_val_T = time_shift_calc(
-                    var_val_tmp, 
-                    lons, 
+                    var_val_tmp,
+                    lons,
                     tod_orig,
                     target_times = target_list
                     )
                 var_out = np.transpose(var_val_T, (2, 3, 1, 0))
                 fnew.log_variable(
-                    var, 
+                    var,
                     var_out,
                     ["time", tod_name_out, "lat", "lon"],
-                    longname_txt, 
+                    longname_txt,
                     units_txt
                     )
             if (len(dims) == 5):
@@ -1152,14 +1152,14 @@ def process_time_shift(file_list):
                 z = dims.index(zaxis)
                 var_val_tmp = np.transpose(value, (x, y, z, t, tod))
                 var_val_T = time_shift_calc(
-                    var_val_tmp, 
-                    lons, 
+                    var_val_tmp,
+                    lons,
                     tod_orig,
                     target_times = target_list
                     )
                 var_out = np.transpose(var_val_T, (3, 4, 2, 1, 0))
                 fnew.log_variable(
-                    var, 
+                    var,
                     var_out,
                     ["time", tod_name_out, zaxis, "lat", "lon"],
                     longname_txt,
@@ -1258,7 +1258,7 @@ def main():
     #               Bin a daily file as an average file
     #                               Alex K.
     # ------------------------------------------------------------------
-    elif (args.bin_average and 
+    elif (args.bin_average and
           not args.bin_diurn):
 
         # Generate output file name
@@ -1307,8 +1307,8 @@ def main():
             fnew.add_dimension("time", None)
             time_out = daily_to_average(time[:], time_increment, bin_period)
             fnew.log_axis1D(
-                "time", 
-                time_out, 
+                "time",
+                time_out,
                 "time",
                 longname_txt = "sol number",
                 units_txt = "days since 0000-00-00 00:00:00",
@@ -1322,16 +1322,16 @@ def main():
                 if "time" in varNcf.dimensions:
                     print(f"{Cyan}Processing: {ivar}{Nclr}")
                     var_out = daily_to_average(
-                        varNcf[:], 
-                        time_increment, 
+                        varNcf[:],
+                        time_increment,
                         bin_period
                         )
                     longname_txt, units_txt = get_longname_unit(fdaily, ivar)
                     fnew.log_variable(
-                        ivar, 
-                        var_out, 
+                        ivar,
+                        var_out,
                         varNcf.dimensions,
-                        longname_txt, 
+                        longname_txt,
                         units_txt
                         )
                 else:
@@ -1418,8 +1418,8 @@ def main():
                         var_out = daily_to_average(var_out, 1., bin_period)
                     longname_txt, units_txt = get_longname_unit(fdaily, ivar)
                     fnew.log_variable(
-                        ivar, 
-                        var_out, 
+                        ivar,
+                        var_out,
                         dims_out,
                         longname_txt,
                         units_txt
@@ -1493,14 +1493,14 @@ def main():
 
             if btype == "low":
                 fnew.add_constant(
-                    "sol_max", 
+                    "sol_max",
                     nsol,
                     "Low-pass filter cut-off period ",
                     "sol"
                     )
             elif btype == "high":
                 fnew.add_constant(
-                    "sol_min", 
+                    "sol_min",
                     nsol,
                     "High-pass filter cut-off period ",
                     "sol"
@@ -1513,7 +1513,7 @@ def main():
                     "sol"
                     )
                 fnew.add_constant(
-                    "sol_max", 
+                    "sol_max",
                     nsol[1],
                     "High-pass filter high cut-off period ",
                     "sol"
@@ -1522,7 +1522,7 @@ def main():
             if dt == 0:
                 print(f"{Red}***Error*** dt = 0, time dimension is not increasing")
                 exit()
-                
+
             fs = 1/(dt) # frequency in sol-1
             if btype == "band":
                 # Flip the sols so that the low frequency comes first
@@ -1538,20 +1538,20 @@ def main():
                     ivar not in ["time", "areo"]):
                     print(f"{Cyan}Processing: {ivar}{Nclr}")
                     var_out = zeroPhi_filter(
-                        varNcf[:], 
-                        btype, 
-                        low_highcut, 
-                        fs, 
-                        axis = 0, 
+                        varNcf[:],
+                        btype,
+                        low_highcut,
+                        fs,
+                        axis = 0,
                         order = 4,
                         add_trend = args.add_trend
                         )
                     longname_txt, units_txt = get_longname_unit(fdaily, ivar)
                     fnew.log_variable(
-                        ivar, 
-                        var_out, 
+                        ivar,
+                        var_out,
                         varNcf.dimensions,
-                        longname_txt, 
+                        longname_txt,
                         units_txt
                         )
                 else:
@@ -1571,8 +1571,8 @@ def main():
     elif (args.high_pass_spatial or
           args.low_pass_spatial or
           args.band_pass_spatial):
-        from amescap.Spectral_utils import (zonal_decomposition, 
-                                            zonal_construct, 
+        from amescap.Spectral_utils import (zonal_decomposition,
+                                            zonal_construct,
                                             init_shtools)
         # Load the module
         init_shtools()
@@ -1652,27 +1652,27 @@ def main():
 
             if btype == "low":
                 fnew.add_constant(
-                    "kmax", 
+                    "kmax",
                     nk,
                     "Low-pass filter zonal wavenumber ",
                     "wavenumber"
                     )
             elif btype == "high":
                 fnew.add_constant(
-                    "kmin", 
+                    "kmin",
                     nk,
                     "High-pass filter zonal wavenumber ",
                     "wavenumber"
                     )
             elif btype == "band":
                 fnew.add_constant(
-                    "kmin", 
+                    "kmin",
                     nk[0],
                     "Band-pass filter low zonal wavenumber ",
                     "wavenumber"
                     )
                 fnew.add_constant(
-                    "kmax", 
+                    "kmax",
                     nk[1],
                     "Band-pass filter high zonal wavenumber ",
                     "wavenumber"
@@ -1692,7 +1692,7 @@ def main():
                     COEFF, PSD = zonal_decomposition(varNcf[:] - TREND)
                     # Step 3: Recompose the variable out of the coeffs
                     VAR_filtered = zonal_construct(
-                        COEFF, 
+                        COEFF,
                         varNcf[:].shape,
                         btype = btype,
                         low_highcut = low_highcut
@@ -1704,10 +1704,10 @@ def main():
                         var_out = VAR_filtered + TREND
 
                     fnew.log_variable(
-                        ivar, 
-                        var_out, 
+                        ivar,
+                        var_out,
                         varNcf.dimensions,
-                        longname_txt, 
+                        longname_txt,
                         units_txt
                         )
                 else:
@@ -1802,16 +1802,16 @@ def main():
                         var_unit = f"% of diurnal mean"
 
                     amp, phas = diurn_extract(
-                        varIN.swapaxes(0, 1), 
+                        varIN.swapaxes(0, 1),
                         N,
-                        target_tod, 
+                        target_tod,
                         lon
                         )
                     if args.reconstruct:
                         VARN = reconstruct_diurn(
-                            amp, 
-                            phas, 
-                            target_tod, 
+                            amp,
+                            phas,
+                            target_tod,
                             lon,
                             sumList=[]
                             )
@@ -1829,14 +1829,14 @@ def main():
                         new_dim = list(varNcf.dimensions)
                         new_dim[1] = f"time_of_day_{N}"
                         fnew.log_variable(
-                            f"{ivar}_amp", 
+                            f"{ivar}_amp",
                             amp.swapaxes(0,1),
                             new_dim,
                             f"tidal amplitude for {longname_txt}",
                             var_unit
                             )
                         fnew.log_variable(
-                            f"{ivar}_phas", 
+                            f"{ivar}_phas",
                             phas.swapaxes(0,1),
                             new_dim,
                             f"tidal phase for {longname_txt}",
@@ -1867,10 +1867,10 @@ def main():
                             # fnew.log_variable(ivar, bareo_new, new_dim,
                             # longname_txt, units_txt)
                             fnew.log_variable(
-                                ivar, 
-                                areo_new, 
+                                ivar,
+                                areo_new,
                                 new_dim,
-                                longname_txt, 
+                                longname_txt,
                                 var_unit
                                 )
             fnew.close()
@@ -1926,10 +1926,10 @@ def main():
                     print(f"{Cyan}Regridding: {ivar}...{Nclr}")
                     var_OUT = regrid_Ncfile(varNcf, f_in, fNcdf_t)
                     fnew.log_variable(
-                        ivar, 
-                        var_OUT, 
+                        ivar,
+                        var_OUT,
                         varNcf.dimensions,
-                        longname_txt, 
+                        longname_txt,
                         units_txt
                         )
             fnew.close()
@@ -1963,10 +1963,10 @@ def main():
 
             # Add a new dimension for the longitude, size = 1
             fnew.add_dim_with_content(
-                "lon", 
+                "lon",
                 [lon_in.mean()],
                 longname_txt = "longitude",
-                units_txt = "degrees_E", 
+                units_txt = "degrees_E",
                 cart_txt = "X"
                 )
 
@@ -1985,10 +1985,10 @@ def main():
                             varNcf[:], axis = -1
                             )[..., np.newaxis]
                         fnew.log_variable(
-                            ivar, 
-                            var_out, 
+                            ivar,
+                            var_out,
                             varNcf.dimensions,
-                            longname_txt, 
+                            longname_txt,
                             units_txt
                             )
                 else:
@@ -2055,20 +2055,20 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
                 var = histfile.variables["longitude"]
                 npvar = var[:]
                 newf.add_dim_with_content(
-                    "lon", 
-                    npvar, 
+                    "lon",
+                    npvar,
                     "longitude",
-                    getattr(var, "units"), 
+                    getattr(var, "units"),
                     "X"
                     )
             elif dname == "nlat":
                 var = histfile.variables["latitude"]
                 npvar = var[:]
                 newf.add_dim_with_content(
-                    "lat", 
-                    npvar, 
+                    "lat",
+                    npvar,
                     "latitude",
-                    getattr(var, "units"), 
+                    getattr(var, "units"),
                     "Y"
                     )
 
@@ -2106,41 +2106,41 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
                     pfull[0] = 0.5*(phalf[0] + phalf[1])
                 else:
                     pfull[0] = (
-                        (phalf[1]-phalf[0]) 
+                        (phalf[1]-phalf[0])
                         / (np.log(phalf[1]) - np.log(phalf[0]))
                         )
                 # All other layers:
                 pfull[1:] = (
-                    (phalf[2:]-phalf[1:-1]) 
+                    (phalf[2:]-phalf[1:-1])
                     / (np.log(phalf[2:]) - np.log(phalf[1:-1]))
                     )
 
                 newf.add_dim_with_content(
-                    "pfull", 
+                    "pfull",
                     pfull,
-                    "ref full pressure level", 
+                    "ref full pressure level",
                     "Pa"
                     )
                 newf.add_dim_with_content(
-                    "phalf", 
+                    "phalf",
                     phalf,
-                    "ref half pressure level", 
+                    "ref half pressure level",
                     "Pa"
                     )
                 newf.log_axis1D(
-                    "pk", 
-                    pk, 
+                    "pk",
+                    pk,
                     ("phalf"),
                     longname_txt = ("pressure part of the hybrid coordinate"),
-                    units_txt = "Pa", 
+                    units_txt = "Pa",
                     cart_txt = ""
                     )
                 newf.log_axis1D(
-                    "bk", 
-                    bk, 
+                    "bk",
+                    bk,
                     ("phalf"),
                     longname_txt = ("sigma part of the hybrid coordinate"),
-                    units_txt = "Pa", 
+                    units_txt = "Pa",
                     cart_txt = ""
                     )
             else:
@@ -2276,16 +2276,16 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
                     time0[:] = time0[:]*step + ls2sol_1year(ls_start)
 
                 newf.log_axis1D(
-                    "areo", 
-                    varnew, 
+                    "areo",
+                    varnew,
                     dims,
                     longname_txt = "solar longitude",
                     units_txt = "degree",
                     cart_txt = "T"
                     )
                 newf.log_axis1D(
-                    "time", 
-                    time0, 
+                    "time",
+                    time0,
                     dims,
                     longname_txt = "sol number",
                     units_txt = "days since 0000-00-00 00:00:00",
@@ -2300,7 +2300,7 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
                 varnew = np.mean(
                     npvar.reshape(
                         -1, bin_period, vshape[1], vshape[2], vshape[3]
-                        ), 
+                        ),
                     axis = 1
                     )
             if avgtod:
@@ -2315,8 +2315,8 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
             if vname2 == "ps":
                 varnew *= 100.
             newf.log_variable(
-                vname2, 
-                varnew, 
+                vname2,
+                varnew,
                 newdims,
                 longname_txt2,
                 units_txt2
@@ -2327,7 +2327,7 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
                 varnew = np.mean(
                     npvar.reshape(
                         -1, bin_period, vshape[1], vshape[2], vshape[3], vshape[4]
-                        ), 
+                        ),
                     axis = 1
                     )
             if avgtod:
@@ -2339,8 +2339,8 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
                 vname, longname_txt, units_txt
                 )
             newf.log_variable(
-                vname2, 
-                varnew, 
+                vname2,
+                varnew,
                 newdims,
                 longname_txt2,
                 units_txt2
@@ -2356,9 +2356,9 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
                 # Every 1.5 hours, centered at half timestep
                 npvar = np.arange(0.75, 24, 1.5)
                 newf.log_variable(
-                    vname2, 
-                    npvar, 
-                    newdims, 
+                    vname2,
+                    npvar,
+                    newdims,
                     longname_txt2,
                     units_txt2
                     )
@@ -2481,7 +2481,7 @@ def ls2sol_1year(Ls_deg, offset=True, round10=True):
     :param round10: if True, round to the nearest 10 sols
     :type round10: bool
     :returns: ``Ds`` the sol number
-    
+
     ..note::
         For the moment, this is consistent with 0 <= Ls <= 359.99, but
         not for monotically increasing Ls.
