@@ -582,7 +582,7 @@ class TestMarsFiles(unittest.TestCase):
             # Should not have other variables that might be in the original file
             # This check depends on what's in your test files, adjust as needed
             all_vars = set(nc.variables.keys())
-            expected_vars = {'ps', 'time', 'lat', 'lon'}
+            expected_vars = {'ps_N1', 'ps_N2', 'time', 'lat', 'lon'}
             # Add any dimension variables
             for dim in nc.dimensions:
                 expected_vars.add(dim)
