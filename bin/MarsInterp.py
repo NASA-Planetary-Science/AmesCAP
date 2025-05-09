@@ -43,6 +43,8 @@ import re           # Regular expressions
 import matplotlib
 import numpy as np
 from netCDF4 import Dataset
+import functools    # For function decorators
+import traceback    # For printing stack traces
 
 # Force matplotlib NOT to load Xwindows backend
 matplotlib.use("Agg")
@@ -57,9 +59,6 @@ from amescap.Script_utils import (
     read_variable_dict_amescap_profile
 )
 from amescap.Ncdf_wrapper import Ncdf
-
-import functools
-import traceback
 
 def debug_wrapper(func):
     """
