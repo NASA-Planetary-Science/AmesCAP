@@ -11,7 +11,7 @@ authors:
     orcid: 0000-0002-2980-7743
     equal-contrib: true  
     affiliation: 1  
-    corresponding: true \# (This is how to denote the corresponding author)  
+    corresponding: true 
   - name: Courtney M. L. Batterson  
     orcid: 0000-0001-5894-095X  
     equal-contrib: true  
@@ -35,7 +35,7 @@ affiliations:
    index: 2  
  - name: Southwest Research Institute, United States  
    index: 3  
-date: 22 April 2025  
+date: 9 May 2025  
 bibliography: paper.bib
 
 ---
