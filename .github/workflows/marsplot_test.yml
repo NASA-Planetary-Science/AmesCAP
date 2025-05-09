@@ -82,7 +82,8 @@ jobs:
       # Run the integration tests with cleanup between tests
       - name: Run MarsPlot tests
         run: |
-          python -m unittest -v tests/test_marsplot.py
+          cd tests
+          python -m unittest -v test_marsplot.py
       # Clean up temporary files to avoid disk space issues - OS specific
       - name: Clean up temp files (Unix)
         if: runner.os != 'Windows' && always()

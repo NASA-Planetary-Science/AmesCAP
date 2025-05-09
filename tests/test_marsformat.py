@@ -14,46 +14,35 @@ import tempfile
 import subprocess
 import netCDF4 as nc
 import numpy as np
+from base_test import BaseTestCase
 
-class TestMarsFormat(unittest.TestCase):
+class TestMarsFormat(BaseTestCase):
     """Integration test suite for MarsFormat"""
+
+    PREFIX = "MarsFormat_test_"
+    FILESCRIPT = "create_gcm_files.py"
+    SHORTFILE = ""
+
+    # Verify files were created
+    expected_files = [
+    ]
     
     @classmethod
     def setUpClass(cls):
         """Set up the test environment"""
         # Create a temporary directory for test files
-        cls.test_dir = tempfile.mkdtemp(prefix='MarsFormat_test_')
-        
-        # Project root directory
-        cls.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        
+        super().setUpClass()
         # Define all GCM types to test
         cls.gcm_types = ['emars', 'openmars', 'pcm', 'marswrf']
     
     def setUp(self):
         """Create test netCDF files using create_gcm_files.py"""
-        # Change to test directory
-        os.chdir(self.test_dir)
-        
+        super().setUp
         # Define file paths for each GCM type
         self.test_files = {}
         for gcm_type in self.gcm_types:
             self.test_files[gcm_type] = os.path.join(self.test_dir, f"{gcm_type}_test.nc")
 
-        # Get path to create_gcm_files.py script
-        create_files_script = os.path.join(self.project_root, "tests", "create_gcm_files.py")
-        
-        # Execute the script to create test files
-        result = subprocess.run(
-            [sys.executable, create_files_script],
-            capture_output=True,
-            text=True,
-            cwd=self.test_dir
-        )
-        
-        # Print output for debugging
-        print(f"File creation output: {result.stdout}")
-        
         # Check files were created
         for gcm_type, test_file in self.test_files.items():
             if not os.path.exists(test_file):
@@ -109,14 +98,6 @@ class TestMarsFormat(unittest.TestCase):
         # Force garbage collection
         import gc
         gc.collect()
-    
-    @classmethod
-    def tearDownClass(cls):
-        """Clean up the test environment"""
-        try:
-            shutil.rmtree(cls.test_dir, ignore_errors=True)
-        except Exception:
-            print(f"Warning: Could not remove test directory {cls.test_dir}")
     
     def run_mars_format(self, args):
         """

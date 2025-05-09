@@ -14,6 +14,7 @@ import tempfile
 import glob
 import numpy as np
 from netCDF4 import Dataset
+from base_test import BaseTestCase
 import time
 
 # Check if pyshtools is available
@@ -23,7 +24,7 @@ try:
 except ImportError:
     HAVE_PYSHTOOLS = False
     
-class TestMarsFiles(unittest.TestCase):
+class TestMarsFiles(BaseTestCase):
     """Integration test suite for MarsFiles"""
 
     # Class attribute for storing modified files
@@ -302,7 +303,7 @@ class TestMarsFiles(unittest.TestCase):
 
     def test_time_shift(self):
         """Test time_shift operation on diurn file"""
-        result = self.run_mars_files(['01336.atmos_diurn_pstd.nc', '-t'])
+        result = self.run_mars_files(['01336.atmos_diurn_pstd.nc', '-t', '--debug'])
 
         # Check for successful execution
         self.assertEqual(result.returncode, 0, "Time shift command failed")
