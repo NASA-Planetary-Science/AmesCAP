@@ -14,6 +14,7 @@ import tempfile
 import glob
 import numpy as np
 from netCDF4 import Dataset
+import time
 
 # Check if pyshtools is available
 try:
@@ -39,8 +40,15 @@ class TestMarsFiles(unittest.TestCase):
         cls.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         print(f"Project root directory: {cls.project_root}")
 
+        # Start timing for test file creation
+        start_time = time.time()
+        
         # Run the script to create test netCDF files
         cls.create_test_files()
+        
+        # Report how long file creation took
+        elapsed = time.time() - start_time
+        print(f"Test file creation completed in {elapsed:.2f} seconds")
         
         # Dictionary to keep track of modified files
         cls.modified_files = {}
@@ -75,12 +83,15 @@ class TestMarsFiles(unittest.TestCase):
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd=cls.test_dir  # Run in the test directory to ensure files are created there
+                cwd=cls.test_dir,  # Run in the test directory to ensure files are created there
+                timeout=300  # Add a timeout to prevent hanging
             )
 
             if result.returncode != 0:
                 raise Exception(f"Failed to create test files: {result.stderr}")
 
+        except subprocess.TimeoutExpired:
+            raise Exception("Timeout creating test files - process took too long and was terminated")
         except Exception as e:
             raise Exception(f"Error running create_ames_gcm_files.py: {e}")
 
@@ -98,6 +109,9 @@ class TestMarsFiles(unittest.TestCase):
             filepath = os.path.join(cls.test_dir, filename)
             if not os.path.exists(filepath):
                 raise Exception(f"Test file {filename} was not created in {cls.test_dir}")
+            # Print file size to help with debugging
+            file_size = os.path.getsize(filepath) / (1024 * 1024)  # Size in MB
+            print(f"Created {filename}: {file_size:.2f} MB")
 
 
     def setUp(self):
@@ -107,6 +121,10 @@ class TestMarsFiles(unittest.TestCase):
         # Store the current test method name
         self.current_test = self.id().split('.')[-1]
         
+        # Print test start time for debugging
+        print(f"\nStarting test: {self.current_test} at {time.strftime('%H:%M:%S')}")
+        self.start_time = time.time()
+        
         # Initialize an empty list to track files created by this test
         self.__class__.test_created_files[self.current_test] = []
         
@@ -115,6 +133,10 @@ class TestMarsFiles(unittest.TestCase):
 
     def tearDown(self):
         """Clean up after each test"""
+        # Calculate and print test duration
+        elapsed = time.time() - self.start_time
+        print(f"Test {self.current_test} completed in {elapsed:.2f} seconds")
+        
         # Get files that exist after the test
         files_after_test = set(os.listdir(self.test_dir))
         
@@ -186,15 +208,19 @@ class TestMarsFiles(unittest.TestCase):
         # Get a snapshot of files before running the command
         files_before = set(os.listdir(self.test_dir))
 
-        # Run the command
+        # Run the command with a timeout
+        start_time = time.time()
         try:
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
                 cwd=self.test_dir,  # Run in the test directory
-                env=dict(os.environ, PWD=self.test_dir)  # Ensure current working directory is set
+                env=dict(os.environ, PWD=self.test_dir),  # Ensure current working directory is set
+                timeout=300  # Set a reasonable timeout (5 minutes) per subprocess
             )
+            elapsed = time.time() - start_time
+            print(f"Subprocess completed in {elapsed:.2f} seconds")
 
             # If command succeeded, find any new files that were created
             if result.returncode == 0:
@@ -213,6 +239,9 @@ class TestMarsFiles(unittest.TestCase):
                         self.modified_files[filename] = file_path
 
             return result
+        except subprocess.TimeoutExpired:
+            print(f"ERROR: Subprocess timed out after {time.time() - start_time:.2f} seconds")
+            self.fail("Subprocess timed out")
         except Exception as e:
             self.fail(f"Failed to run MarsFiles: {e}")
 
@@ -269,7 +298,7 @@ class TestMarsFiles(unittest.TestCase):
         for check in help_checks:
             self.assertIn(check, result.stdout, f"Help message missing '{check}'")
         
-        print("✓ Help message displayed successfully")
+        print("Help message displayed successfully")
 
     def test_time_shift(self):
         """Test time_shift operation on diurn file"""
@@ -285,7 +314,7 @@ class TestMarsFiles(unittest.TestCase):
         self.verify_netcdf_has_variable(output_file, 'time')
         self.verify_netcdf_has_variable(output_file, 'time_of_day_24')  # Default is 24 time of day bins
         
-        print("✓ Time shift operation succeeded")
+        print("Time shift operation succeeded")
 
     def test_time_shift_specific_times(self):
         """Test time_shift operation with specific local times"""
@@ -319,7 +348,7 @@ class TestMarsFiles(unittest.TestCase):
         finally:
             nc.close()
         
-        print("✓ Time shift with specific times succeeded")
+        print("Time shift with specific times succeeded")
 
     def test_bin_average(self):
         """Test bin_average operation on daily file"""
@@ -347,7 +376,7 @@ class TestMarsFiles(unittest.TestCase):
             nc_in.close()
             nc_out.close()
         
-        print("✓ Bin average operation succeeded")
+        print("Bin average operation succeeded")
 
     def test_bin_diurn(self):
         """Test bin_diurn operation on daily file"""
@@ -373,7 +402,7 @@ class TestMarsFiles(unittest.TestCase):
         finally:
             nc.close()
         
-        print("✓ Bin diurn operation succeeded")
+        print("Bin diurn operation succeeded")
 
     def test_split_file_by_areo(self):
         """Test split operation on average file by Ls (areo)"""
@@ -406,7 +435,7 @@ class TestMarsFiles(unittest.TestCase):
         ls_files = glob.glob(os.path.join(self.test_dir, '*_Ls*_*.nc'))
         self.assertTrue(len(ls_files) > 0, "No output files from split operation found")
         
-        print(f"✓ Split file by areo succeeded (Ls range: {ls_range[0]}-{ls_range[1]})")
+        print(f"Split file by areo succeeded (Ls range: {ls_range[0]}-{ls_range[1]})")
 
     def test_split_file_by_lat(self):
         """Test split operation on average file by latitude"""
@@ -436,7 +465,7 @@ class TestMarsFiles(unittest.TestCase):
             finally:
                 nc.close()
         
-        print("✓ Split file by latitude succeeded")
+        print("Split file by latitude succeeded")
         
     def test_split_file_by_lon(self):
         """Test split operation on average file by longitude"""
@@ -466,7 +495,7 @@ class TestMarsFiles(unittest.TestCase):
             finally:
                 nc.close()
         
-        print("✓ Split file by longitude succeeded")
+        print("Split file by longitude succeeded")
 
     def test_temporal_filters(self):
         """Test all temporal filtering operations"""
@@ -475,21 +504,21 @@ class TestMarsFiles(unittest.TestCase):
         self.assertEqual(result.returncode, 0, "High-pass temporal filter command failed")
         high_pass_file = self.check_file_exists('01336.atmos_daily_hpt.nc')
         self.verify_netcdf_has_variable(high_pass_file, 'temp')
-        print("✓ High-pass temporal filter succeeded")
+        print("High-pass temporal filter succeeded")
         
         # Low-pass filter
         result = self.run_mars_files(['01336.atmos_daily.nc', '-lpt', '0.75', '-incl', 'temp'])
         self.assertEqual(result.returncode, 0, "Low-pass temporal filter command failed")
         low_pass_file = self.check_file_exists('01336.atmos_daily_lpt.nc')
         self.verify_netcdf_has_variable(low_pass_file, 'temp')
-        print("✓ Low-pass temporal filter succeeded")
+        print("Low-pass temporal filter succeeded")
         
         # Band-pass filter
         result = self.run_mars_files(['01336.atmos_daily.nc', '-bpt', '0.75', '10', '-add_trend', '-incl', 'temp'])
         self.assertEqual(result.returncode, 0, "Band-pass temporal filter with trend command failed")
         band_pass_file = self.check_file_exists('01336.atmos_daily_bpt_trended.nc')
         self.verify_netcdf_has_variable(band_pass_file, 'temp')
-        print("✓ Band-pass temporal filter succeeded")
+        print("Band-pass temporal filter succeeded")
     
     def test_spatial_filters(self):
         """Test all spatial filtering operations"""
@@ -502,21 +531,21 @@ class TestMarsFiles(unittest.TestCase):
         self.assertEqual(result.returncode, 0, "High-pass spatial filter command failed")
         high_pass_file = self.check_file_exists('01336.atmos_daily_hps.nc')
         self.verify_netcdf_has_variable(high_pass_file, 'temp')
-        print("✓ High-pass spatial filter succeeded")
+        print("High-pass spatial filter succeeded")
         
         # Low-pass filter
         result = self.run_mars_files(['01336.atmos_daily.nc', '-lps', '20', '-incl', 'temp'])
         self.assertEqual(result.returncode, 0, "Low-pass spatial filter command failed")
         low_pass_file = self.check_file_exists('01336.atmos_daily_lps.nc')
         self.verify_netcdf_has_variable(low_pass_file, 'temp')
-        print("✓ Low-pass spatial filter succeeded")
+        print("Low-pass spatial filter succeeded")
         
         # Band-pass filter
         result = self.run_mars_files(['01336.atmos_daily.nc', '-bps', '10', '20', '-incl', 'temp'])
         self.assertEqual(result.returncode, 0, "Band-pass spatial filter command failed")
         band_pass_file = self.check_file_exists('01336.atmos_daily_bps.nc')
         self.verify_netcdf_has_variable(band_pass_file, 'temp')
-        print("✓ Band-pass spatial filter succeeded")
+        print("Band-pass spatial filter succeeded")
 
     def test_tide_decomposition(self):
         """Test tidal decomposition on diurn file"""
@@ -538,7 +567,7 @@ class TestMarsFiles(unittest.TestCase):
         self.verify_netcdf_has_variable(output_file, 'temp_amp')
         self.verify_netcdf_has_variable(output_file, 'temp_phas')
         
-        print("✓ Tide decomposition succeeded")
+        print("Tide decomposition succeeded")
 
     def test_tide_decomposition_with_normalize(self):
         """Test tidal decomposition with normalization"""
@@ -575,7 +604,7 @@ class TestMarsFiles(unittest.TestCase):
         finally:
             nc.close()
             
-        print("✓ Tide decomposition with normalization succeeded")
+        print("Tide decomposition with normalization succeeded")
 
     def test_tide_decomposition_with_reconstruct(self):
         """Test tidal decomposition with reconstruction"""
@@ -595,7 +624,7 @@ class TestMarsFiles(unittest.TestCase):
         self.verify_netcdf_has_variable(output_file, 'ps_N1')
         self.verify_netcdf_has_variable(output_file, 'ps_N2')
         
-        print("✓ Tide decomposition with reconstruction succeeded")
+        print("Tide decomposition with reconstruction succeeded")
 
         # Verify that only included variables (plus dimensions) are in the output
         nc = Dataset(output_file, 'r')
@@ -628,7 +657,7 @@ class TestMarsFiles(unittest.TestCase):
         finally:
             nc.close()
         
-        print("✓ Include argument succeeded")
+        print("Include argument succeeded")
             
     def test_regrid(self):
         """Test regridding operation"""
@@ -662,7 +691,7 @@ class TestMarsFiles(unittest.TestCase):
             nc_target.close()
             nc_output.close()
         
-        print("✓ Regrid operation succeeded")
+        print("Regrid operation succeeded")
 
     def test_zonal_average(self):
         """Test zonal averaging operation"""
@@ -681,7 +710,7 @@ class TestMarsFiles(unittest.TestCase):
         finally:
             nc.close()
         
-        print("✓ Zonal average operation succeeded")
+        print("Zonal average operation succeeded")
 
     def test_custom_extension(self):
         """Test using custom extension"""
@@ -693,7 +722,7 @@ class TestMarsFiles(unittest.TestCase):
         # Check that output file was created with custom extension
         output_file = self.check_file_exists('01336.atmos_average_zavg_custom.nc')
         
-        print("✓ Custom extension operation succeeded")
+        print("Custom extension operation succeeded")
 
     def test_zzz_output_cleanup_stats(self):
         """
@@ -720,7 +749,7 @@ class TestMarsFiles(unittest.TestCase):
         print("==================================\n")
         
         # Test passes if we reach this point
-        print("✓ Selective cleanup system is working")
+        print("Selective cleanup system is working")
         
         # This isn't really a test, but we'll assert True to make it pass
         self.assertTrue(True)
