@@ -18,16 +18,16 @@ authors:
     affiliation: 1  
   - name: Richard A. Urata  
     orcid: 0000-0001-8497-5718  
-	equal-contrib: true  
-	affiliation: 1  
+    equal-contrib: true  
+    affiliation: 1  
   - name: Victoria L. Hartwick  
-	orcid: 0000-0002-2082-8986  
-	equal-contrib: true  
-	affiliation: 3  
+    orcid: 0000-0002-2082-8986  
+    equal-contrib: true  
+    affiliation: 3  
   - name: Melinda A. Kahre  
-	orcid: 0000-0002-0935-5532
-	equal-contrib: true  
-	affiliation: 2  
+    orcid: 0000-0002-0935-5532
+    equal-contrib: true  
+    affiliation: 2  
 affiliations:  
  - name: Bay Area Environmental Research Institute, United States  
    index: 1  
