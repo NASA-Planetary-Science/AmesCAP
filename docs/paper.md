@@ -1,44 +1,44 @@
-\---  
+---  
 title: 'Community Analysis Pipeline: A Python package for processing Mars climate model data'  
 tags:  
-\- Python  
-\- astronomy  
-\- Mars global climate model  
-\- data processing  
-\- data visualization  
+  - Python  
+  - astronomy  
+  - Mars global climate model  
+  - data processing  
+  - data visualization  
 authors:  
-\- name: Alexandre M. Kling  
-orcid: [0000-0002-2980-7743](https://gcc02.safelinks.protection.outlook.com/?url=https%3A%2F%2Forcid.org%2F0000-0002-2980-7743&data=05%7C02%7Crichard.a.urata%40nasa.gov%7Cc31711d77a8a47f0fbb908dd19504d26%7C7005d45845be48ae8140d43da96dd17b%7C0%7C0%7C638694554855965962%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=uhZKPas%2FBkzrzOqXk0jN4ma1AV2BLC%2FjcBRpB0yt6WM%3D&reserved=0)  
-equal-contrib: true  
-affiliation: 1  
-corresponding: true \# (This is how to denote the corresponding author)  
-\- name: Courtney M. L. Batterson  
-orcid: 0000-0001-5894-095X  
-equal-contrib: true  
-affiliation: 1  
-\- name: Richard A. Urata  
-orcid: 0000-0001-8497-5718  
-equal-contrib: true  
-affiliation: 1  
-\- name: Victoria L. Hartwick  
-orcid: 0000-0002-2082-8986  
-equal-contrib: true  
-affiliation: 3  
-\- name: Melinda A. Kahre  
-orcid: [0000-0002-0935-5532](https://gcc02.safelinks.protection.outlook.com/?url=https%3A%2F%2Forcid.org%2F0000-0002-0935-5532%3Flang%3Den&data=05%7C02%7Crichard.a.urata%40nasa.gov%7Cc31711d77a8a47f0fbb908dd19504d26%7C7005d45845be48ae8140d43da96dd17b%7C0%7C0%7C638694554855923390%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=aWlf02RzNzLKLt19ZI3gabEWaZbXK2IEE%2Fyv8MVcBUA%3D&reserved=0)  
-equal-contrib: true  
-affiliation: 2  
+  - name: Alexandre M. Kling  
+    orcid: 0000-0002-2980-7743
+    equal-contrib: true  
+    affiliation: 1  
+    corresponding: true \# (This is how to denote the corresponding author)  
+  - name: Courtney M. L. Batterson  
+    orcid: 0000-0001-5894-095X  
+    equal-contrib: true  
+    affiliation: 1  
+  - name: Richard A. Urata  
+    orcid: 0000-0001-8497-5718  
+	equal-contrib: true  
+	affiliation: 1  
+  - name: Victoria L. Hartwick  
+	orcid: 0000-0002-2082-8986  
+	equal-contrib: true  
+	affiliation: 3  
+  - name: Melinda A. Kahre  
+	orcid: 0000-0002-0935-5532
+	equal-contrib: true  
+	affiliation: 2  
 affiliations:  
-\- name: Bay Area Environmental Research Institute, United States  
-index: 1  
-\- name: NASA Ames Research Center, United States  
-index: 2  
-\- name: Southwest Research Institute, United States  
-index: 3  
+ - name: Bay Area Environmental Research Institute, United States  
+   index: 1  
+ - name: NASA Ames Research Center, United States  
+   index: 2  
+ - name: Southwest Research Institute, United States  
+   index: 3  
 date: 22 April 2025  
 bibliography: paper.bib
 
-\---
+---
 
 # Summary
 
@@ -46,7 +46,7 @@ The Community Analysis Pipeline (CAP) is a Python package designed to streamline
 
 # Statement of need
 
-GCMs perform numerical simulations that describe the evolution of climate systems on planetary bodies. GCMs simulate physical processes within the atmosphere (and, if applicable, within the surface of the planet, ocean, and any interactions therein), calculate radiative transfer within those mediums, and use a computational fluid dynamics (CFD) solver (the “dynamical core”) to predict the transport of heat and momentum within the atmosphere. Typical GCM products include surface and atmospheric variables such as wind, temperature, and aerosol concentrations. While GCMs have been applied to planetary bodies in our Solar System (e.g. Earth, Venus, Pluto) and in other stellar systems (e.g. \[@Hartwick2023\]), CAP is currently compatible with Mars GCMs (MGCMs). Several MGCMs are actively in use and under development in the Mars community, including the NASA Ames MGCM (Legacy and FV3-based versions), NASA Goddard ROCKE-3D, the Laboratoire de Météorologie Dynamique (LMD) Mars Planetary Climate Model (PCM), the Open University OpenMars, NCAR MarsWRF, NCAR MarsCAM, GFDL Mars GCM, Harvard DRAMATIC Mars GCM, Max Planck Institute Mars GCM, and GEM-Mars. Of these, CAP is compatible with four models so far: the NASA Ames MGCM, PCM, OpenMars, and MarsWRF. 
+GCMs perform numerical simulations that describe the evolution of climate systems on planetary bodies. GCMs simulate physical processes within the atmosphere (and, if applicable, within the surface of the planet, ocean, and any interactions therein), calculate radiative transfer within those mediums, and use a computational fluid dynamics (CFD) solver (the “dynamical core”) to predict the transport of heat and momentum within the atmosphere. Typical GCM products include surface and atmospheric variables such as wind, temperature, and aerosol concentrations. While GCMs have been applied to planetary bodies in our Solar System (e.g. Earth, Venus, Pluto) and in other stellar systems (e.g. [@Hartwick:2023]), CAP is currently compatible with Mars GCMs (MGCMs). Several MGCMs are actively in use and under development in the Mars community, including the NASA Ames MGCM (Legacy and FV3-based versions), NASA Goddard ROCKE-3D, the Laboratoire de Météorologie Dynamique (LMD) Mars Planetary Climate Model (PCM), the Open University OpenMars, NCAR MarsWRF, NCAR MarsCAM, GFDL Mars GCM, Harvard DRAMATIC Mars GCM, Max Planck Institute Mars GCM, and GEM-Mars. Of these, CAP is compatible with four models so far: the NASA Ames MGCM, PCM, OpenMars, and MarsWRF. 
 
 MGCM output is complex in both size and structure. Analyzing the output requires GCM-specific domain knowledge. We identify the following major challenges for working with MGCM output:
 
@@ -56,9 +56,9 @@ MGCM output is complex in both size and structure. Analyzing the output requires
 
 CAP offers a streamlined workflow for processing and analyzing MGCM data products by providing a set of libraries and executables that facilitate file manipulation and data visualization from the command-line. This benefits existing modelers by automating both routine and sophisticated post-processing tasks. It also expands access to MGCM products by removing some of the technical roadblocks associated with processing these complex data products.
 
-CAP is the first software package to provide data visualization, file manipulation, variable derivation, and inter-model or model-observation comparison features in one software suite. Existing tools perform a subset of the functions that CAP offers, but none of them provide both complex data analysis tools and visualization, nor are they specifically designed for climate modeling. Some of the more popular tools include Panoply \[@Schmunk2024\], Ncview \[@Pierce2024\], Grid Analysis and Display System (GrADS \[@GMU\]), and Paraview \[@Kitware2023\]. Each tool offers simple solutions for visualizing NetCDF data and some provide minimal flexibility for user-defined computations. However, CAP is the only software package with an open-source Python framework for analyzing and plotting climate data and performing inter-model and model-observation comparisons.
+CAP is the first software package to provide data visualization, file manipulation, variable derivation, and inter-model or model-observation comparison features in one software suite. Existing tools perform a subset of the functions that CAP offers, but none of them provide both complex data analysis tools and visualization, nor are they specifically designed for climate modeling. Some of the more popular tools include Panoply [@Schmunk:2024], Ncview [@Pierce:2024], Grid Analysis and Display System (GrADS; @GMU), and Paraview [@Kitware:2023]. Each tool offers simple solutions for visualizing NetCDF data and some provide minimal flexibility for user-defined computations. However, CAP is the only software package with an open-source Python framework for analyzing and plotting climate data and performing inter-model and model-observation comparisons.
 
-CAP has been used in multiple research projects that have been published and/or presented at conferences worldwide (e.g., \[@Urata2025\], \[@Batterson2023\], \[@Hartwick2022a\], \[@Hartwick2022b\], \[@Steakley2023\], \[@Steakley2024\], \[@Kahre2022\], \[@Kahre2023\], \[@Nagata2025\], \[@Hartwick2024\]).
+CAP has been used in multiple research projects that have been published and/or presented at conferences worldwide (e.g., [@Urata:2025, @Batterson:2023, @Hartwick:2022a, @Hartwick:2022b, @Steakley:2023, @Steakley:2024, @Kahre:2022, @Kahre:2023, @Nagata:2025, @Hartwick:2024]).
 
 # Functionality
 
