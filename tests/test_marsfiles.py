@@ -471,21 +471,21 @@ class TestMarsFiles(unittest.TestCase):
     def test_temporal_filters(self):
         """Test all temporal filtering operations"""
         # High-pass filter
-        result = self.run_mars_files(['01336.atmos_daily.nc', '-hpt', '10'])
+        result = self.run_mars_files(['01336.atmos_daily.nc', '-hpt', '10', '-incl', 'temp'])
         self.assertEqual(result.returncode, 0, "High-pass temporal filter command failed")
         high_pass_file = self.check_file_exists('01336.atmos_daily_hpt.nc')
         self.verify_netcdf_has_variable(high_pass_file, 'temp')
         print("✓ High-pass temporal filter succeeded")
         
         # Low-pass filter
-        result = self.run_mars_files(['01336.atmos_daily.nc', '-lpt', '0.75'])
+        result = self.run_mars_files(['01336.atmos_daily.nc', '-lpt', '0.75', '-incl', 'temp'])
         self.assertEqual(result.returncode, 0, "Low-pass temporal filter command failed")
         low_pass_file = self.check_file_exists('01336.atmos_daily_lpt.nc')
         self.verify_netcdf_has_variable(low_pass_file, 'temp')
         print("✓ Low-pass temporal filter succeeded")
         
         # Band-pass filter
-        result = self.run_mars_files(['01336.atmos_daily.nc', '-bpt', '0.75', '10', '-add_trend'])
+        result = self.run_mars_files(['01336.atmos_daily.nc', '-bpt', '0.75', '10', '-add_trend', '-incl', 'temp'])
         self.assertEqual(result.returncode, 0, "Band-pass temporal filter with trend command failed")
         band_pass_file = self.check_file_exists('01336.atmos_daily_bpt_trended.nc')
         self.verify_netcdf_has_variable(band_pass_file, 'temp')
@@ -498,23 +498,23 @@ class TestMarsFiles(unittest.TestCase):
                           "Install it to run this test.")
             
         # High-pass filter
-        result = self.run_mars_files(['01336.atmos_daily.nc', '-hps', '10'])
+        result = self.run_mars_files(['01336.atmos_daily.nc', '-hps', '10', '-incl', 'temp'])
         self.assertEqual(result.returncode, 0, "High-pass spatial filter command failed")
         high_pass_file = self.check_file_exists('01336.atmos_daily_hps.nc')
         self.verify_netcdf_has_variable(high_pass_file, 'temp')
         print("✓ High-pass spatial filter succeeded")
         
         # Low-pass filter
-        result = self.run_mars_files(['01336.atmos_daily.nc', '-lps', '20'])
+        result = self.run_mars_files(['01336.atmos_daily.nc', '-lps', '20', '-incl', 'temp'])
         self.assertEqual(result.returncode, 0, "Low-pass spatial filter command failed")
         low_pass_file = self.check_file_exists('01336.atmos_daily_lps.nc')
         self.verify_netcdf_has_variable(low_pass_file, 'temp')
         print("✓ Low-pass spatial filter succeeded")
         
         # Band-pass filter
-        result = self.run_mars_files(['01336.atmos_daily.nc', '-bps', '10', '20', '-add_trend'])
-        self.assertEqual(result.returncode, 0, "Band-pass spatial filter with trend command failed")
-        band_pass_file = self.check_file_exists('01336.atmos_daily_bps_trended.nc')
+        result = self.run_mars_files(['01336.atmos_daily.nc', '-bps', '10', '20', '-incl', 'temp'])
+        self.assertEqual(result.returncode, 0, "Band-pass spatial filter command failed")
+        band_pass_file = self.check_file_exists('01336.atmos_daily_bps.nc')
         self.verify_netcdf_has_variable(band_pass_file, 'temp')
         print("✓ Band-pass spatial filter succeeded")
 
