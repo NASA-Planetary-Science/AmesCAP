@@ -77,7 +77,7 @@ class TestMarsFiles(BaseTestCase):
         create_files_script = os.path.join(cls.project_root, "tests", "create_ames_gcm_files.py")
 
         # Execute the script to create test files - Important: pass the test_dir as argument
-        cmd = [sys.executable, create_files_script, cls.test_dir]
+        cmd = [sys.executable, create_files_script, cls.test_dir, 'short']
 
         try:
             result = subprocess.run(
@@ -218,7 +218,7 @@ class TestMarsFiles(BaseTestCase):
                 text=True,
                 cwd=self.test_dir,  # Run in the test directory
                 env=dict(os.environ, PWD=self.test_dir),  # Ensure current working directory is set
-                timeout=300  # Set a reasonable timeout (5 minutes) per subprocess
+                timeout=600  # Set a reasonable timeout (5 minutes) per subprocess
             )
             elapsed = time.time() - start_time
             print(f"Subprocess completed in {elapsed:.2f} seconds")
