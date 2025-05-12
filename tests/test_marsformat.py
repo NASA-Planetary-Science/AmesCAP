@@ -44,11 +44,11 @@ class TestMarsFormat(BaseTestCase):
             self.test_files[gcm_type] = os.path.join(self.test_dir, f"{gcm_type}_test.nc")
 
         # Check files were created
-        for gcm_type, test_file in self.test_files.items():
-            if not os.path.exists(test_file):
-                print(f"Warning: Test file {test_file} was not created!")
-                if result.stderr:
-                    print(f"Error output: {result.stderr}")
+        # for gcm_type, test_file in self.test_files.items():
+        #     if not os.path.exists(test_file):
+        #         print(f"Warning: Test file {test_file} was not created!")
+        #         if result.stderr:
+        #             print(f"Error output: {result.stderr}")
                     
         # # Copy real data files
         # subprocess.run(['cp', os.path.expanduser('~/marsformat_data/emars_Ls240-270.nc'), 
