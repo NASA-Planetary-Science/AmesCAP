@@ -41,6 +41,10 @@ from netCDF4 import Dataset, MFDataset
 from warnings import filterwarnings
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
+import shutil       # For OS-friendly file operations
+import functools    # For function decorators
+import traceback    # For printing stack traces
+import platform
 
 # Force matplotlib NOT to load Xwindows backend
 matplotlib.use("Agg")
@@ -71,12 +75,6 @@ filterwarnings("ignore", category = DeprecationWarning)
 degr = u"\N{DEGREE SIGN}"
 global current_version
 current_version = 3.5
-
-import functools
-import traceback
-
-import platform
-import shutil
 
 def debug_wrapper(func):
     """

@@ -21,6 +21,9 @@ and optionally accepts:
     * ``[-lpt, --low_pass_temporal]``     Temporal filter: low-pass
     * ``[-bpt, --band_pass_temporal]``    Temporal filter: band-pass
     * ``[-trend, --add_trend]``           Return amplitudes only (use with temporal filters)
+    * ``[-hps, --high_pass_spatial]``     Spatial filter: high-pass
+    * ``[-lps, --low_pass_spatial]``      Spatial filter: low-pass
+    * ``[-bps, --band_pass_spatial]``     Spatial filter: band-pass
     * ``[-tide, --tide_decomp]``          Extract diurnal tide and its harmonics
     * ``[-recon, --reconstruct]``         Reconstruct the first N harmonics
     * ``[-norm, --normalize]``            Provide ``-tide`` result in % amplitude
@@ -31,14 +34,16 @@ and optionally accepts:
 
 Third-party Requirements:
 
-    * ``numpy``
-    * ``netCDF4``
     * ``sys``
     * ``argparse``
     * ``os``
-    * ``subprocess``
     * ``warnings``
-
+    * ``re``
+    * ``numpy``
+    * ``netCDF4``
+    * ``shutil``
+    * ``functools``
+    * ``traceback``
 """
 
 # Make print statements appear in color
@@ -48,15 +53,15 @@ from amescap.Script_utils import (
 
 # Load generic Python Modules
 import sys          # System commands
-import sys          # System commands
 import argparse     # Parse arguments
 import os           # Access operating system functions
-import subprocess   # Run command-line commands
 import warnings     # Suppress errors triggered by NaNs
 import re           # Regular expressions
 import numpy as np
 from netCDF4 import Dataset
-import tempfile     # Platform-independent temporary file creation
+import shutil       # For OS-friendly file operations
+import functools    # For function decorators
+import traceback    # For printing stack traces
 
 # Load amesCAP modules
 from amescap.Ncdf_wrapper import (Ncdf, Fort)
@@ -124,8 +129,6 @@ class ExtArgumentParser(argparse.ArgumentParser):
 
         return namespace
 
-import functools
-import traceback
 
 def debug_wrapper(func):
     """
@@ -330,11 +333,77 @@ parser.add_argument('-bpt', '--band_pass_temporal', action=ExtAction,
     )
 )
 
+# Decomposition in zonal harmonics, disabled for initial CAP release:
+parser.add_argument('-hps', '--high_pass_spatial', action=ExtAction,
+    ext_content='_hps',
+    parser=parser,
+    nargs='+', type=int,
+    help=(
+        f"{Red}"
+        f"REQUIRES SPECIAL INSTALL:\nSee 'Spectral Analysis "
+        f"Capabilities' in the installation instructions at \n"
+        f"https://amescap.readthedocs.io/en/latest/installation.html"
+        f"{Nclr}\n"
+        f"Spatial high-pass filtering: removes low-frequency noise. "
+        f"Only works with 'daily' files.\nRequires a cutoff frequency "
+        f"in Sols.\n"
+        f"{Yellow}Generates a new file ending in ``_hps.nc``\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 01336.atmos_daily.nc -hps 10 -add_trend\n"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument('-lps', '--low_pass_spatial', action=ExtAction,
+    ext_content='_lps',
+    parser=parser,
+    nargs='+', type=int,
+    help=(
+        f"{Red}"
+        f"REQUIRES SPECIAL INSTALL:\nSee 'Spectral Analysis "
+        f"Capabilities' in the installation instructions at \n"
+        f"https://amescap.readthedocs.io/en/latest/installation.html"
+        f"{Nclr}\n"
+        f"Spatial low-pass filtering: removes high-frequency noise "
+        f"(smoothing).\nOnly works with 'daily' files. Requires a "
+        f"cutoff frequency in Sols.\n"
+        f"{Yellow}Generates a new file ending in ``_lps.nc``\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 01336.atmos_daily.nc -lps 20 -add_trend\n"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument('-bps', '--band_pass_spatial', action=ExtAction,
+    ext_content='_bps',
+    parser=parser,
+    nargs='+', type=int,
+    help=(
+        f"{Red}"
+        f"REQUIRES SPECIAL INSTALL:\nSee 'Spectral Analysis "
+        f"Capabilities' in the installation instructions at \n"
+        f"https://amescap.readthedocs.io/en/latest/installation.html"
+        f"{Nclr}\n"
+        f"Spatial band-pass filtering: filters out frequencies "
+        f"specified by user.\nOnly works with 'daily' files. Requires a "
+        f"cutoff frequency in Sols.\nData detrended before filtering.\n"
+        f"{Yellow}Generates a new file ending in ``_bps.nc``\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 01336.atmos_daily.nc -bps 10 20 -add_trend\n"
+        f"{Nclr}\n\n"
+    )
+)
+
 parser.add_argument('-tide', '--tide_decomp', action=ExtAction,
     ext_content='_tide_decomp',
     parser=parser,
     nargs='+', type=int,
     help=(
+        f"{Red}"
+        f"REQUIRES SPECIAL INSTALL:\nSee 'Spectral Analysis "
+        f"Capabilities' in the installation instructions at \n"
+        f"https://amescap.readthedocs.io/en/latest/installation.html"
+        f"{Nclr}\n"
         f"Use fourier decomposition to break down the signal into N "
         f"harmonics.\nOnly works with 'diurn' files.\nReturns the phase "
         f"and amplitude of the variable.\n"
@@ -524,7 +593,8 @@ if args.reconstruct and not args.tide_decomp:
 all_args = [args.bin_files, args.concatenate, args.split, args.time_shift,
             args.bin_average, args.bin_diurn, args.high_pass_temporal,
             args.low_pass_temporal, args.band_pass_temporal,
-            args.tide_decomp, args.normalize,
+            args.high_pass_spatial, args.low_pass_spatial,
+            args.band_pass_spatial, args.tide_decomp, args.normalize,
             args.regrid_XY_to_match, args.zonal_average]
 
 if (all(v is None or v is False for v in all_args)
@@ -555,6 +625,9 @@ out_ext = (f"{args.time_shift_ext}"
             f"{args.low_pass_temporal_ext}"
             f"{args.band_pass_temporal_ext}"
             f"{args.add_trend_ext}"
+            f"{args.high_pass_spatial_ext}"
+            f"{args.low_pass_spatial_ext}"
+            f"{args.band_pass_spatial_ext}"
             f"{args.tide_decomp_ext}"
             f"{args.reconstruct_ext}"
             f"{args.normalize_ext}"
@@ -575,10 +648,8 @@ def concatenate_files(file_list, full_file_list):
 
     :param file_list: list of file names
     :type file_list: list
-
     :param full_file_list: list of file names and full paths
     :type full_file_list: list
-
     """
     print(f"{Yellow}Using internal method for concatenation{Nclr}")
 
@@ -587,10 +658,13 @@ def concatenate_files(file_list, full_file_list):
     num_files = len(full_file_list)
     if (file_list[0][5:] == ".fixed.nc" and num_files >= 2):
         for i in range(1, num_files):
+            # 1-N files ensures file number 0 is preserved
             try:
                 os.remove(full_file_list[i])
             except OSError as e:
-                print(f"{Yellow}Warning: Could not remove {full_file_list[i]}: {e}{Nclr}")
+                print(f"Warning: Could not remove {full_file_list[i]}: {e}")
+            exit()
+
         print(f"{Cyan}Cleaned all but {file_list[0]}{Nclr}")
         exit()
 
@@ -608,8 +682,8 @@ def concatenate_files(file_list, full_file_list):
         exclude_list = []
 
     # Create a temporary file ending in _tmp.nc to work in
-    file_base = os.path.splitext(full_file_list[0])[0]
-    tmp_file = f"{file_base}_tmp.nc"
+    base_name = os.path.splitext(full_file_list[0])[0]
+    tmp_file = os.path.normpath(f"{base_name}_tmp.nc")
     Log = Ncdf(tmp_file, "Merged file")
     Log.merge_files_from_list(full_file_list, exclude_var=exclude_list)
     Log.close()
@@ -619,8 +693,8 @@ def concatenate_files(file_list, full_file_list):
     # First, rename temporary file for the final merged file
     #   For Legacy netCDF files, rename using initial and end Ls
     #   For MGCM netCDF files, rename to the first file in the list
-    filename_base = os.path.basename(file_list[0])
-    if filename_base[:12] == "LegacyGCM_Ls":
+    base_name = os.path.basename(file_list[0])
+    if base_name.startswith("LegacyGCM_Ls"):
         ls_ini = file_list[0][12:15]
         ls_end = file_list[-1][18:21]
         merged_file = f"LegacyGCM_Ls{ls_ini}_Ls{ls_end}.nc"
@@ -633,17 +707,13 @@ def concatenate_files(file_list, full_file_list):
         try:
             os.remove(file)
         except OSError as e:
-            print(f"{Yellow}Warning: Could not remove {file}: {e}{Nclr}")
+            print(f"Warning: Could not remove {file}: {e}")
 
     try:
-        os.rename(tmp_file, merged_file)
-    except OSError as e:
-        print(f"{Red}Error: Could not rename {tmp_file} to {merged_file}: {e}{Nclr}")
-        # Fallback option using shutil for cross-device moves
-        import shutil
         shutil.move(tmp_file, merged_file)
-
-    print(f"{Cyan}{merged_file} was created from a merge{Nclr}")
+        print(f"{Cyan}{merged_file} was created from a merge{Nclr}")
+    except OSError as e:
+        print(f"Warning: Could not move {tmp_file} to {merged_file}: {e}")
 
     return
 
@@ -654,9 +724,7 @@ def split_files(file_list, split_dim):
 
     :param file_list: list of file names
     :type split_dim: dimension along which to perform extraction
-
     :returns: new file with sliced dimensions
-
     """
     if split_dim not in ['time','areo', 'lev', 'lat', 'lon']:
         print(f"{Red}Split dimension must be one of the following:"
@@ -672,23 +740,14 @@ def split_files(file_list, split_dim):
             )
         exit()
 
-    # Use os.path.join for platform-independent path handling
-    for file in file_list:
-        # Get the file name from the file object
-        if hasattr(file, 'name'):
-            input_file_name = file.name  # Get the name attribute of the file object
-        else:
-            input_file_name = file  # In case it's already a string
+    # Add path unless full path is provided
+    if not ("/" in file_list[0]):
+        input_file_name = os.path.normpath(os.path.join(data_dir, file_list[0]))
+    else:
+        input_file_name = file_list[0]
+    original_date = (input_file_name.split('.')[0]).split('/')[-1]
 
-    print(f"{Yellow}split input_file_name = {input_file_name}{Nclr}\n\n")
-
-    file_base = os.path.splitext(input_file_name)[0]
-    output_file_name = f"{file_base}{out_ext}.nc"
-    print(f"{Cyan}split output_file_name = {output_file_name}{Nclr}")
-
-    original_date = os.path.basename(os.path.splitext(input_file_name)[0])
-
-    fNcdf = Dataset(str(input_file_name), 'r', format='NETCDF4_CLASSIC')
+    fNcdf = Dataset(input_file_name, 'r', format='NETCDF4_CLASSIC')
     var_list = filter_vars(fNcdf, args.include)
 
     # Get file type (diurn, average, daily, etc.)
@@ -713,13 +772,13 @@ def split_files(file_list, split_dim):
     if f_type == 'diurn':
         if split_dim == 'areo':
             # size areo = (time, tod, scalar_axis)
-            reducing_dim = np.squeeze(fNcdf.variables[split_dim][:, 0, :])
+            reducing_dim = np.squeeze(fNcdf.variables['areo'][:, 0, :])
         else:
-            reducing_dim = np.squeeze(fNcdf.variables[split_dim][:])
+            reducing_dim = np.squeeze(fNcdf.variables[split_dim][:, 0])
     else:
         if split_dim == 'areo':
             # size areo = (time, scalar_axis)
-            reducing_dim = np.squeeze(fNcdf.variables[split_dim][:])
+            reducing_dim = np.squeeze(fNcdf.variables['areo'][:])
         else:
             reducing_dim = np.squeeze(fNcdf.variables[split_dim][:])
 
@@ -774,65 +833,95 @@ def split_files(file_list, split_dim):
         time_dim = (np.squeeze(fNcdf.variables['time'][:]))[indices]
         print(f"time_dim = {time_dim}")
 
-        # If time_dim is an array with multiple values, use the first one for naming
-        if hasattr(time_dim, '__len__') and len(time_dim) > 1:
-            time_value = time_dim[0]  # Use the first time value for the filename
-        else:
-            time_value = time_dim  # Use as is if it's a scalar
-
-    # For maintaining the 00000.atmos_average.nc format:
-    base_path = os.path.dirname(input_file_name)
-    file_name = os.path.basename(input_file_name)
-    # Split at the first dot to preserve the numeric prefix
-    file_date, file_base = file_name.split('.', 1)
+    fpath = os.path.dirname(input_file_name)
+    fname = os.path.basename(input_file_name)
     if split_dim == 'time':
         if len(np.atleast_1d(bounds)) < 2:
-            out_name = (f"{int(time_value):05d}.{file_base}_nearest_sol{int(bounds_in[0]):03d}.nc")
+            base_name = (f"{int(time_dim):05d}{fname[5:-3]}_nearest_sol"
+                         f"{int(bounds_in[0]):03d}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath,
+                                                              f"{base_name}.nc")))
         else:
-            out_name = (f"{int(time_value):05d}.{file_base}_sol{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
+            base_name = (f"{int(time_dim[0]):05d}{fname[5:-3]}_sol"
+                         f"{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath,
+                                                              f"{base_name}.nc")))
     elif split_dim =='areo':
         if len(np.atleast_1d(bounds)) < 2:
-            out_name = (f"{int(time_value):05d}.{file_base}_nearest_Ls{int(bounds_in[0]):03d}.nc")
+            base_name = (f"{int(time_dim):05d}{fname[5:-3]}_nearest_Ls"
+                         f"{int(bounds_in[0]):03d}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath,
+                                                              f"{base_name}.nc")))
         else:
-            out_name = (f"{int(time_value):05d}.{file_base}_Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
+            base_name = (f"{int(time_dim[0]):05d}{fname[5:-3]}_"
+                         f"Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath,
+                                                              f"{base_name}.nc")))
         split_dim = 'time'
     elif split_dim == 'lat':
-        new_bounds = [f"{abs(int(b))}S" if b < 0
-                      else f"{int(b)}N" for b in bounds]
+        new_bounds = [
+            f"{abs(int(b))}S" if b < 0
+            else f"{int(b)}N"
+            for b in bounds
+            ]
         if len(np.atleast_1d(bounds)) < 2:
-            out_name = (f"{original_date}.{file_base}_nearest_{split_dim}_{new_bounds[0]}.nc")
+            base_name = (f"{original_date}{fname[5:-3]}_nearest_{split_dim}_"
+                         f"{new_bounds[0]}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath,
+                                                              f"{base_name}.nc")))
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
-            out_name = (f"{original_date}.{file_base}_{split_dim}_{new_bounds[0]}_{new_bounds[1]}.nc")
+            base_name = (f"{original_date}{fname[5:-3]}_{split_dim}_"
+                         f"{new_bounds[0]}_{new_bounds[1]}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath,
+                                                              f"{base_name}.nc")))
     elif split_dim == interp_type:
         if interp_type == 'pfull':
-            new_bounds = [f"{abs(int(b*100))}Pa" if b < 1
-                          else f"{int(b)}{unt_txt} " for b in bounds]
+            new_bounds = [
+                f"{abs(int(b*100))}Pa" if b < 1
+                else f"{int(b)}{unt_txt} "
+                for b in bounds
+                ]
         elif interp_type == 'pstd':
-            new_bounds = [f"{abs(int(b*100))}hPa" if b < 1
-                          else f"{int(b)}{unt_txt}" for b in bounds]
+            new_bounds = [
+                f"{abs(int(b*100))}hPa" if b < 1
+                else f"{int(b)}{unt_txt}"
+                for b in bounds
+                ]
         else:
             new_bounds = [f"{int(b)}{unt_txt}" for b in bounds]
 
         if len(np.atleast_1d(bounds)) < 2:
             print(f"{Yellow}bounds = {bounds[0]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]}")
-            out_name = (f"{original_date}.{file_base}_{split_dim}_nearest_{new_bounds[0]}.nc")
+            base_name = (f"{original_date}{fname[5:-3]}_nearest_"
+                         f"{new_bounds[0]}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath,
+                                                              f"{base_name}.nc")))
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
-            out_name = (f"{original_date}.{file_base}_{split_dim}_{new_bounds[0]}_{new_bounds[1]}.nc")
+            base_name = (f"{original_date}{fname[5:-3]}_{new_bounds[0]}_"
+                         f"{new_bounds[1]}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath,
+                                                              f"{base_name}.nc")))
     else:
         if len(np.atleast_1d(bounds)) < 2:
-            out_name = (f"{original_date}.{file_base}_nearest_{split_dim}_{int(bounds[0]):03d}.nc")
+            base_name = (f"{original_date}{fname[5:-3]}_nearest_{split_dim}_"
+                         f"{int(bounds[0]):03d}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath,
+                                                              f"{base_name}.nc")))
         else:
-            out_name = (f"{original_date}.{file_base}_{split_dim}_{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
+            base_name = (f"{original_date}{fname[5:-3]}_{split_dim}_"
+                         f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
+            output_file_name = (os.path.normpath(os.path.join(fpath,
+                                                              f"{base_name}.nc")))
 
     # Append extension, if any:
-    output_file_name = os.path.join(base_path, out_name)
-    print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+    output_file_name = (f"{output_file_name[:-3]}{out_ext}.nc")
 
+    print(f"{Cyan}new filename = {output_file_name}")
     Log = Ncdf(output_file_name)
 
     Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim=[split_dim])
@@ -938,7 +1027,6 @@ def process_time_shift(file_list):
 
     :param file_list: list of file names
     :type file_list: list
-
     """
     if args.time_shift == 999:
         # Target local times requested by user
@@ -947,55 +1035,53 @@ def process_time_shift(file_list):
         target_list = np.fromstring(args.time_shift, dtype=float, sep=" ")
 
     for file in file_list:
-        # Get the file name from the file object
-        if hasattr(file, 'name'):
-            input_file_name = file.name  # Get the name attribute of the file object
+        # Add path unless full path is provided
+        if not ("/" in file):
+            input_file_name = os.path.normpath(os.path.join(data_dir, file))
         else:
-            input_file_name = file  # In case it's already a string
+            input_file_name = file
+        base_name = os.path.splitext(input_file_name)[0]
+        output_file_name = os.path.normpath(f"{base_name}{out_ext}.nc")
 
-        file_base = os.path.splitext(input_file_name)[0]
-        output_file_name = f"{file_base}{out_ext}.nc"
-        print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
-
-        input_file_diurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
+        fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
         # Define a netcdf object from the netcdf wrapper module
-        output_file = Ncdf(output_file_name)
+        fnew = Ncdf(output_file_name)
         # Copy some dimensions from the old file to the new file
-        output_file.copy_all_dims_from_Ncfile(input_file_diurn)
+        fnew.copy_all_dims_from_Ncfile(fdiurn)
 
         # Find the "time of day" variable name
-        tod_name_in = find_tod_in_diurn(input_file_diurn)
-        _, zaxis = FV3_file_type(input_file_diurn)
+        tod_name_in = find_tod_in_diurn(fdiurn)
+        _, zaxis = FV3_file_type(fdiurn)
 
         # Copy some variables from the old file to the new file
-        output_file.copy_Ncaxis_with_content(input_file_diurn.variables["lon"])
-        output_file.copy_Ncaxis_with_content(input_file_diurn.variables["lat"])
-        output_file.copy_Ncaxis_with_content(input_file_diurn.variables["time"])
+        fnew.copy_Ncaxis_with_content(fdiurn.variables["lon"])
+        fnew.copy_Ncaxis_with_content(fdiurn.variables["lat"])
+        fnew.copy_Ncaxis_with_content(fdiurn.variables["time"])
         try:
-            output_file.copy_Ncaxis_with_content(input_file_diurn.variables["scalar_axis"])
+            fnew.copy_Ncaxis_with_content(fdiurn.variables["scalar_axis"])
         except:
             print(f'{Red}Could not find scalar axis')
 
         # Only create a vertical axis if orig. file has 3D fields
-        if zaxis in input_file_diurn.dimensions.keys():
-            output_file.copy_Ncaxis_with_content(input_file_diurn.variables[zaxis])
+        if zaxis in fdiurn.dimensions.keys():
+            fnew.copy_Ncaxis_with_content(fdiurn.variables[zaxis])
 
         # Take care of TOD dimension in new file
-        tod_orig = np.array(input_file_diurn.variables[tod_name_in][:])
+        tod_orig = np.array(fdiurn.variables[tod_name_in])
 
         if target_list is None:
             # If user does not specify which TOD(s) to do, do all 24
             tod_name_out = tod_name_in
-            output_file.copy_Ncaxis_with_content(input_file_diurn.variables[tod_name_in])
+            fnew.copy_Ncaxis_with_content(fdiurn.variables[tod_name_in])
 
             # Only copy "areo" if it exists in the original file
-            if "areo" in input_file_diurn.variables.keys():
-                output_file.copy_Ncvar(input_file_diurn.variables["areo"])
+            if "areo" in fdiurn.variables.keys():
+                fnew.copy_Ncvar(fdiurn.variables["areo"])
         else:
             # If user requests specific local times, update the old
             # axis as necessary
             tod_name_out = f"time_of_day_{(len(target_list)):02}"
-            output_file.add_dim_with_content(
+            fnew.add_dim_with_content(
                 tod_name_out,
                 target_list,
                 longname_txt = "time of day",
@@ -1004,8 +1090,8 @@ def process_time_shift(file_list):
                 )
 
             # Create areo variable with the new size
-            areo_shape = input_file_diurn.variables["areo"].shape
-            areo_dims = input_file_diurn.variables["areo"].dimensions
+            areo_shape = fdiurn.variables["areo"].shape
+            areo_dims = fdiurn.variables["areo"].dimensions
 
             # Update shape with new time_of_day
             areo_shape = (areo_shape[0], len(target_list), areo_shape[2])
@@ -1017,26 +1103,26 @@ def process_time_shift(file_list):
                 # For new target_list, e.g [3,15]
                 # Get the closest "time_of_day" index
                 j = np.argmin(np.abs(target_list[i] - tod_orig))
-                areo_out[:, i, 0] = input_file_diurn.variables["areo"][:, j, 0]
+                areo_out[:, i, 0] = fdiurn.variables["areo"][:, j, 0]
 
-            output_file.add_dim_with_content(
+            fnew.add_dim_with_content(
                 dimension_name = "scalar_axis",
                 DATAin = [0],
                 longname_txt = "none",
                 units_txt = "none"
                 )
-            output_file.log_variable("areo", areo_out, areo_dims, "areo", "degrees")
+            fnew.log_variable("areo", areo_out, areo_dims, "areo", "degrees")
 
         # Read in 4D field(s) and do the time shift. Exclude vars
         # not listed after --include in var_list
-        lons = np.array(input_file_diurn.variables["lon"][:])
-        var_list = filter_vars(input_file_diurn, args.include)
+        lons = np.array(fdiurn.variables["lon"])
+        var_list = filter_vars(fdiurn, args.include)
 
         for var in var_list:
             print(f"{Cyan}Processing: {var}...{Nclr}")
-            value = input_file_diurn.variables[var][:]
-            dims = input_file_diurn.variables[var].dimensions
-            longname_txt, units_txt = get_longname_unit(input_file_diurn, var)
+            value = fdiurn.variables[var][:]
+            dims = fdiurn.variables[var].dimensions
+            longname_txt, units_txt = get_longname_unit(fdiurn, var)
 
             if (len(dims) >= 4):
                 y = dims.index("lat")
@@ -1048,13 +1134,13 @@ def process_time_shift(file_list):
                 # time, tod, lat, lon
                 var_val_tmp = np.transpose(value, (x, y, t, tod))
                 var_val_T = time_shift_calc(
-                    var_in = var_val_tmp,
-                    lon = lons,
-                    tod = tod_orig,
+                    var_val_tmp,
+                    lons,
+                    tod_orig,
                     target_times = target_list
                     )
                 var_out = np.transpose(var_val_T, (2, 3, 1, 0))
-                output_file.log_variable(
+                fnew.log_variable(
                     var,
                     var_out,
                     ["time", tod_name_out, "lat", "lon"],
@@ -1066,21 +1152,21 @@ def process_time_shift(file_list):
                 z = dims.index(zaxis)
                 var_val_tmp = np.transpose(value, (x, y, z, t, tod))
                 var_val_T = time_shift_calc(
-                    var_in = var_val_tmp,
-                    lon = lons,
-                    tod = tod_orig,
+                    var_val_tmp,
+                    lons,
+                    tod_orig,
                     target_times = target_list
                     )
                 var_out = np.transpose(var_val_T, (3, 4, 2, 1, 0))
-                output_file.log_variable(
+                fnew.log_variable(
                     var,
                     var_out,
                     ["time", tod_name_out, zaxis, "lat", "lon"],
                     longname_txt,
                     units_txt
                     )
-        output_file.close()
-        input_file_diurn.close()
+        fnew.close()
+        fdiurn.close()
     return
 
 # ------------------------------------------------------
@@ -1095,11 +1181,10 @@ def main():
     # Make a list of input files including the full path to the dir
     full_file_list = []
     for file in file_list:
-        if os.path.dirname(file) == "":
-            full_file_list = file
+        if not ("/" in file):
+            full_file_list.append(os.path.normpath(os.path.join(data_dir, file)))
         else:
-            full_file_list = os.path.join(data_dir, file)
-        print(f"{Yellow}full_file_list = {full_file_list}{Nclr}\n\n")
+            full_file_list.append(f"{file}")
 
     if args.bin_files and args.concatenate:
         print(
@@ -1121,9 +1206,24 @@ def main():
                     f"'daily', or 'diurn'{Nclr}"
                     )
 
+        # lsmin = None
+        # lsmax = None
+
         if full_file_list[0][-3:] == ".nc":
             print("Processing Legacy MGCM netCDF files")
             for f in full_file_list:
+                # file_name = os.path.basename(f)
+                # ls_l = file_name[-12:-9]
+                # ls_r = file_name[-6:-3]
+
+                # if lsmin is None:
+                #     lsmin = ls_l
+                # else:
+                #     lsmin = str(min(int(lsmin), int(ls_l))).zfill(3)
+                # if lsmax is None:
+                #     lsmax = ls_r
+                # else:
+                #     lsmax = str(max(int(lsmax), int(ls_r))).zfill(3)
                 make_FV3_files(f, args.bin_files, True)
         elif "fort.11" in full_file_list[0]:
             print("Processing fort.11 files")
@@ -1164,22 +1264,19 @@ def main():
         # Generate output file name
         bin_period = args.bin_average
         for file in file_list:
-            # Use os.path.join for platform-independent path handling
-            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}")
-            if os.path.dirname(file) == "":
-                input_file_name = file
+            # Add path unless full path is provided
+            if not ("/" in file):
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
             else:
-                input_file_name = os.path.join(data_dir, file)
-            print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
+                input_file_name = file
 
-            file_base = os.path.splitext(input_file_name)[0]
-            output_file_name = f"{file_base}{out_ext}.nc"
-            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+            output_file_name = (f"{input_file_name[:-3]}"
+                        f"{out_ext}.nc")
 
-            input_file_daily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
-            var_list = filter_vars(input_file_daily, args.include)
+            fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
+            var_list = filter_vars(fdaily, args.include)
 
-            time = input_file_daily.variables["time"][:]
+            time = fdaily.variables["time"][:]
 
             time_increment = time[1] - time[0]
             dt_per_day = int(np.round(1 / time_increment))
@@ -1202,14 +1299,14 @@ def main():
                     )
 
             # Define a netcdf object from the netcdf wrapper module
-            output_file = Ncdf(output_file_name)
+            fnew = Ncdf(output_file_name)
             # Copy all dimensions but time from the old file to the new file
-            output_file.copy_all_dims_from_Ncfile(input_file_daily, exclude_dim = ["time"])
+            fnew.copy_all_dims_from_Ncfile(fdaily, exclude_dim = ["time"])
 
             # Calculate and log the new time array
-            output_file.add_dimension("time", None)
+            fnew.add_dimension("time", None)
             time_out = daily_to_average(time[:], time_increment, bin_period)
-            output_file.log_axis1D(
+            fnew.log_axis1D(
                 "time",
                 time_out,
                 "time",
@@ -1220,7 +1317,7 @@ def main():
 
             # Loop over all variables in the file
             for ivar in var_list:
-                varNcf = input_file_daily.variables[ivar]
+                varNcf = fdaily.variables[ivar]
 
                 if "time" in varNcf.dimensions:
                     print(f"{Cyan}Processing: {ivar}{Nclr}")
@@ -1229,8 +1326,8 @@ def main():
                         time_increment,
                         bin_period
                         )
-                    longname_txt, units_txt = get_longname_unit(input_file_daily, ivar)
-                    output_file.log_variable(
+                    longname_txt, units_txt = get_longname_unit(fdaily, ivar)
+                    fnew.log_variable(
                         ivar,
                         var_out,
                         varNcf.dimensions,
@@ -1241,11 +1338,11 @@ def main():
                     if ivar in ["pfull", "lat", "lon", "phalf", "pk",
                                 "bk", "pstd", "zstd", "zagl"]:
                         print(f"{Cyan}Copying axis: {ivar}{Nclr}")
-                        output_file.copy_Ncaxis_with_content(input_file_daily.variables[ivar])
+                        fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
                     else:
                         print(f"{Cyan}Copying variable: {ivar}{Nclr}")
-                        output_file.copy_Ncvar(input_file_daily.variables[ivar])
-            output_file.close()
+                        fnew.copy_Ncvar(fdaily.variables[ivar])
+            fnew.close()
 
     # ------------------------------------------------------------------
     #               Bin a daily file as a diurn file
@@ -1259,36 +1356,33 @@ def main():
             bin_period = args.bin_average
 
         for file in file_list:
-            # Use os.path.join for platform-independent path handling
-            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}")
-            if os.path.dirname(file) == "":
-                input_file_name = file
+            # Add path unless full path is provided
+            if not ("/" in file):
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
             else:
-                input_file_name = os.path.join(data_dir, file)
-            print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
+                input_file_name = file
 
-            file_base = os.path.splitext(input_file_name)[0]
-            output_file_name = f"{file_base}{out_ext}.nc"
-            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+            output_file_name = (f"{input_file_name[:-3]}"
+                        f"{out_ext}.nc")
 
-            input_file_daily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
-            var_list = filter_vars(input_file_daily, args.include)
+            fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
+            var_list = filter_vars(fdaily, args.include)
 
-            time = input_file_daily.variables["time"][:]
+            time = fdaily.variables["time"][:]
 
             time_increment = time[1] - time[0]
             dt_per_day = int(np.round(1/time_increment))
 
             # Define a netcdf object from the netcdf wrapper module
-            output_file = Ncdf(output_file_name)
+            fnew = Ncdf(output_file_name)
             # Copy all dimensions but "time" from the old file to the
             # new file
-            output_file.copy_all_dims_from_Ncfile(input_file_daily, exclude_dim = ["time"])
+            fnew.copy_all_dims_from_Ncfile(fdaily, exclude_dim = ["time"])
 
             # If no binning is requested, copy time axis as-is
-            output_file.add_dimension("time", None)
+            fnew.add_dimension("time", None)
             time_out = daily_to_average(time[:], time_increment, bin_period)
-            output_file.add_dim_with_content(
+            fnew.add_dim_with_content(
                 "time",
                 time_out,
                 longname_txt = "sol number",
@@ -1301,7 +1395,7 @@ def main():
             time_tod = np.squeeze(daily_to_diurn(time[0:dt_per_day],
                                                  time[0:dt_per_day]))
             tod = np.mod(time_tod*24, 24)
-            output_file.add_dim_with_content(
+            fnew.add_dim_with_content(
                 tod_name,
                 tod,
                 longname_txt = "time of day",
@@ -1311,7 +1405,7 @@ def main():
 
             # Loop over all variables in the file
             for ivar in var_list:
-                varNcf = input_file_daily.variables[ivar]
+                varNcf = fdaily.variables[ivar]
 
                 if "time" in varNcf.dimensions and ivar != "time":
                     # If time is the dimension (not just an array)
@@ -1322,9 +1416,8 @@ def main():
                     if bin_period != 1:
                         # dt is 1 sol between two diurn timesteps
                         var_out = daily_to_average(var_out, 1., bin_period)
-                    
-                    longname_txt, units_txt = get_longname_unit(input_file_daily, ivar)
-                    output_file.log_variable(
+                    longname_txt, units_txt = get_longname_unit(fdaily, ivar)
+                    fnew.log_variable(
                         ivar,
                         var_out,
                         dims_out,
@@ -1335,11 +1428,11 @@ def main():
                     if ivar in ["pfull", "lat", "lon", "phalf", "pk",
                                 "bk", "pstd", "zstd", "zagl"]:
                         print(f"{Cyan}Copying axis: {ivar}{Nclr}")
-                        output_file.copy_Ncaxis_with_content(input_file_daily.variables[ivar])
+                        fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
                     elif ivar != "time":
                         print(f"{Cyan}Copying variable: {ivar}{Nclr}")
-                        output_file.copy_Ncvar(input_file_daily.variables[ivar])
-            output_file.close()
+                        fnew.copy_Ncvar(fdaily.variables[ivar])
+            fnew.close()
 
     # ------------------------------------------------------------------
     #                       Temporal Filtering
@@ -1371,21 +1464,17 @@ def main():
                 exit()
 
         for file in file_list:
-            # Use os.path.join for platform-independent path handling
-            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}")
-            if os.path.dirname(file) == "":
-                input_file_name = file
+            if not ("/" in file):
+                # Add path unless full path is provided
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
             else:
-                input_file_name = os.path.join(data_dir, file)
-            print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
+                input_file_name = file
 
-            file_base = os.path.splitext(input_file_name)[0]
-            output_file_name = f"{file_base}{out_ext}.nc"
-            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
-
-            input_file_daily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
-            var_list = filter_vars(input_file_daily, args.include)
-            time = input_file_daily.variables["time"][:]
+            base_name = os.path.splitext(input_file_name)[0]
+            output_file_name = os.path.normpath(f"{base_name}{out_ext}.nc")
+            fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
+            var_list = filter_vars(fdaily, args.include)
+            time = fdaily.variables["time"][:]
             dt = time[1] - time[0]
 
             # Check if the frequency domain is allowed
@@ -1397,33 +1486,33 @@ def main():
                 exit()
 
             # Define a netcdf object from the netcdf wrapper module
-            output_file = Ncdf(output_file_name)
+            fnew = Ncdf(output_file_name)
             # Copy all dimensions but time from the old file to the
             # new file
-            output_file.copy_all_dims_from_Ncfile(input_file_daily)
+            fnew.copy_all_dims_from_Ncfile(fdaily)
 
             if btype == "low":
-                output_file.add_constant(
+                fnew.add_constant(
                     "sol_max",
                     nsol,
                     "Low-pass filter cut-off period ",
                     "sol"
                     )
             elif btype == "high":
-                output_file.add_constant(
+                fnew.add_constant(
                     "sol_min",
                     nsol,
                     "High-pass filter cut-off period ",
                     "sol"
                     )
             elif btype == "band":
-                output_file.add_constant(
+                fnew.add_constant(
                     "sol_min",
                     nsol[0],
                     "High-pass filter low cut-off period ",
                     "sol"
                     )
-                output_file.add_constant(
+                fnew.add_constant(
                     "sol_max",
                     nsol[1],
                     "High-pass filter high cut-off period ",
@@ -1434,16 +1523,17 @@ def main():
                 print(f"{Red}***Error*** dt = 0, time dimension is not increasing")
                 exit()
 
-            frequency = 1 / (dt) # frequency in sol-1
+            fs = 1/(dt) # frequency in sol-1
             if btype == "band":
                 # Flip the sols so that the low frequency comes first
-                low_highcut = 1 / nsol[::-1]
+                low_highcut = 1/nsol[::-1]
             else:
-                low_highcut = 1. / nsol
+                low_highcut = 1./nsol
 
             # Loop over all variables in the file
             for ivar in var_list:
-                varNcf = input_file_daily.variables[ivar]
+                varNcf = fdaily.variables[ivar]
+
                 if ("time" in varNcf.dimensions and
                     ivar not in ["time", "areo"]):
                     print(f"{Cyan}Processing: {ivar}{Nclr}")
@@ -1451,13 +1541,13 @@ def main():
                         varNcf[:],
                         btype,
                         low_highcut,
-                        frequency,
+                        fs,
                         axis = 0,
                         order = 4,
                         add_trend = args.add_trend
                         )
-                    longname_txt, units_txt = get_longname_unit(input_file_daily, ivar)
-                    output_file.log_variable(
+                    longname_txt, units_txt = get_longname_unit(fdaily, ivar)
+                    fnew.log_variable(
                         ivar,
                         var_out,
                         varNcf.dimensions,
@@ -1468,11 +1558,167 @@ def main():
                     if ivar in ["pfull", "lat", "lon", "phalf", "pk",
                                 "bk", "pstd", "zstd", "zagl"]:
                         print(f"{Cyan}Copying axis: {ivar}{Nclr}")
-                        output_file.copy_Ncaxis_with_content(input_file_daily.variables[ivar])
+                        fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
                     else:
                         print(f"{Cyan}Copying variable: {ivar}{Nclr}")
-                        output_file.copy_Ncvar(input_file_daily.variables[ivar])
-            output_file.close()
+                        fnew.copy_Ncvar(fdaily.variables[ivar])
+            fnew.close()
+
+    # ------------------------------------------------------------------
+    #                      Zonal Decomposition Analysis
+    #                              Alex K.
+    # ------------------------------------------------------------------
+    elif (args.high_pass_spatial or
+          args.low_pass_spatial or
+          args.band_pass_spatial):
+        from amescap.Spectral_utils import (zonal_decomposition,
+                                            zonal_construct,
+                                            init_shtools)
+        # Load the module
+        init_shtools()
+        if args.high_pass_spatial:
+            btype = "high"
+            nk = np.asarray(args.high_pass_spatial).astype(int)
+            if len(np.atleast_1d(nk)) != 1:
+                print(f"{Red}***Error*** kmin accepts only one value")
+                exit()
+        if args.low_pass_spatial:
+            btype = "low"
+            nk = np.asarray(args.low_pass_spatial).astype(int)
+            if len(np.atleast_1d(nk)) != 1:
+                print(f"{Red}kmax accepts only one value")
+                exit()
+        if args.band_pass_spatial:
+            btype = "band"
+            nk = np.asarray(args.band_pass_spatial).astype(int)
+            if len(np.atleast_1d(nk)) != 2:
+                print(f"{Red}Requires two values: kmin kmax")
+                exit()
+
+        for file in file_list:
+            # Add path unless full path is provided
+            if not ("/" in file):
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
+            else:
+                input_file_name=file
+
+            output_file_name = (f"{input_file_name[:-3]}"
+                        f"{out_ext}.nc")
+
+            fname = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
+            # Get all variables
+            var_list = filter_vars(fname,args.include)
+            lon = fname.variables["lon"][:]
+            lat = fname.variables["lat"][:]
+            LON, LAT = np.meshgrid(lon,lat)
+
+            dlat = lat[1] - lat[0]
+            dx = 2*np.pi*3400
+
+            # Check if the frequency domain is allowed and display some
+            # information
+            if any(nn > len(lat)/2 for nn in nk):
+                print(
+                    f"{Red}***Warning***  maximum wavenumber cut-off cannot "
+                    f"be larger than the Nyquist criteria of nlat/2 = "
+                    f"{len(lat)/2} sol{Nclr}"
+                    )
+            elif btype == "low":
+                L_max = (1./nk) * dx
+                print(
+                    f"{Yellow}Low pass filter, allowing only wavelength > "
+                    f"{L_max} km{Nclr}"
+                    )
+            elif btype == "high":
+                L_min = (1./nk) * dx
+                print(
+                    f"{Yellow}High pass filter, allowing only wavelength < "
+                    f"{L_min} km{Nclr}"
+                    )
+            elif btype == "band":
+                L_min = (1. / nk[1]) * dx
+                L_max = 1. / max(nk[0], 1.e-20) * dx
+                if L_max > 1.e20:
+                    L_max = np.inf
+                print(
+                    f"{Yellow}Band pass filter, allowing only {L_min} km < "
+                    f"wavelength < {L_max} km{Nclr}"
+                    )
+
+            # Define a netcdf object from the netcdf wrapper module
+            fnew = Ncdf(output_file_name)
+            # Copy all dimensions but "time" from old -> new file
+            fnew.copy_all_dims_from_Ncfile(fname)
+
+            if btype == "low":
+                fnew.add_constant(
+                    "kmax",
+                    nk,
+                    "Low-pass filter zonal wavenumber ",
+                    "wavenumber"
+                    )
+            elif btype == "high":
+                fnew.add_constant(
+                    "kmin",
+                    nk,
+                    "High-pass filter zonal wavenumber ",
+                    "wavenumber"
+                    )
+            elif btype == "band":
+                fnew.add_constant(
+                    "kmin",
+                    nk[0],
+                    "Band-pass filter low zonal wavenumber ",
+                    "wavenumber"
+                    )
+                fnew.add_constant(
+                    "kmax",
+                    nk[1],
+                    "Band-pass filter high zonal wavenumber ",
+                    "wavenumber"
+                    )
+            low_highcut = nk
+
+            for ivar in var_list:
+                # Loop over all variables in the file
+                varNcf = fname.variables[ivar]
+                longname_txt, units_txt = get_longname_unit(fname, ivar)
+                if ("lat" in varNcf.dimensions and
+                    "lon" in varNcf.dimensions):
+                    print(f"{Cyan}Processing: {ivar}...{Nclr}")
+                    # Step 1: Detrend the data
+                    TREND = get_trend_2D(varNcf[:], LON, LAT,  "wmean")
+                    # Step 2: Calculate spherical harmonic coeffs
+                    COEFF, PSD = zonal_decomposition(varNcf[:] - TREND)
+                    # Step 3: Recompose the variable out of the coeffs
+                    VAR_filtered = zonal_construct(
+                        COEFF,
+                        varNcf[:].shape,
+                        btype = btype,
+                        low_highcut = low_highcut
+                        )
+                    #Step 4: Add the trend, if requested
+                    if args.add_trend:
+                        var_out = VAR_filtered
+                    else:
+                        var_out = VAR_filtered + TREND
+
+                    fnew.log_variable(
+                        ivar,
+                        var_out,
+                        varNcf.dimensions,
+                        longname_txt,
+                        units_txt
+                        )
+                else:
+                    if  ivar in ["pfull", "lat", "lon", "phalf", "pk", "bk",
+                                 "pstd", "zstd", "zagl", "time"]:
+                        print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
+                        fnew.copy_Ncaxis_with_content(fname.variables[ivar])
+                    else:
+                        print(f"{Cyan}Copying variable: {ivar}...{Nclr}")
+                        fnew.copy_Ncvar(fname.variables[ivar])
+            fnew.close()
 
     # ------------------------------------------------------------------
     #                           Tidal Analysis
@@ -1486,50 +1732,47 @@ def main():
             exit()
 
         for file in file_list:
-            # Use os.path.join for platform-independent path handling
-            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}")
-            if os.path.dirname(file) == "":
-                input_file_name = file
+            # Add path unless full path is provided
+            if not ("/" in file):
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
             else:
-                input_file_name = os.path.join(data_dir, file)
-            print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
+                input_file_name = file
 
-            file_base = os.path.splitext(input_file_name)[0]
-            output_file_name = f"{file_base}{out_ext}.nc"
-            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+            base_name = os.path.splitext(input_file_name)[0]
+            output_file_name = os.path.normpath(f"{base_name}{out_ext}.nc")
 
-            input_file_diurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
+            fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
 
-            var_list = filter_vars(input_file_diurn, args.include)
+            var_list = filter_vars(fdiurn, args.include)
 
             # Find time_of_day variable name
-            tod_name = find_tod_in_diurn(input_file_diurn)
+            tod_name = find_tod_in_diurn(fdiurn)
 
-            target_tod = input_file_diurn.variables[tod_name][:]
-            lon = input_file_diurn.variables["lon"][:]
-            areo = input_file_diurn.variables["areo"][:]
+            target_tod = fdiurn.variables[tod_name][:]
+            lon = fdiurn.variables["lon"][:]
+            areo = fdiurn.variables["areo"][:]
 
             # Define a netcdf object from the netcdf wrapper module
-            output_file = Ncdf(output_file_name)
+            fnew = Ncdf(output_file_name)
             # Copy all dims but time_of_day from the old file to the
             # new file
 
             # Harmonics to reconstruct the signal. We use the original
             # time_of_day array.
             if args.reconstruct:
-                output_file.copy_all_dims_from_Ncfile(input_file_diurn)
+                fnew.copy_all_dims_from_Ncfile(fdiurn)
                 # Copy time_of_day axis from initial files
-                output_file.copy_Ncaxis_with_content(input_file_diurn.variables[tod_name])
+                fnew.copy_Ncaxis_with_content(fdiurn.variables[tod_name])
 
             else:
-                output_file.copy_all_dims_from_Ncfile(
-                    input_file_diurn, exclude_dim = [tod_name]
+                fnew.copy_all_dims_from_Ncfile(
+                    fdiurn, exclude_dim = [tod_name]
                     )
                 # Create new dimension holding the harmonics. We reuse
                 # the time_of_day name to facilitate. Compatible with
                 # other routines, but keep in mind this is the harmonic
                 # number
-                output_file.add_dim_with_content(
+                fnew.add_dim_with_content(
                     dimension_name = f"time_of_day_{N}",
                     DATAin = np.arange(1, N+1),
                     longname_txt = "tidal harmonics",
@@ -1539,9 +1782,10 @@ def main():
 
             # Loop over all variables in the file
             for ivar in var_list:
-                varNcf = input_file_diurn.variables[ivar]
+                varNcf = fdiurn.variables[ivar]
                 varIN = varNcf[:]
-                longname_txt, units_txt = get_longname_unit(input_file_diurn, ivar)
+                longname_txt, units_txt = get_longname_unit(fdiurn, ivar)
+                var_unit = getattr(varNcf, "units", "")
 
                 if (tod_name in varNcf.dimensions and
                     ivar not in [tod_name, "areo"] and
@@ -1554,7 +1798,8 @@ def main():
                         # time_of_day dimension
                         norm = np.mean(varIN, axis = 1)[:, np.newaxis, ...]
                         varIN = 100*(varIN-norm)/norm
-                        units_txt = f"% of diurnal mean"
+                        #units_txt = f"% of diurnal mean"
+                        var_unit = f"% of diurnal mean"
 
                     amp, phas = diurn_extract(
                         varIN.swapaxes(0, 1),
@@ -1571,7 +1816,7 @@ def main():
                             sumList=[]
                             )
                         for nn in range(N):
-                            output_file.log_variable(
+                            fnew.log_variable(
                                 f"{ivar}_N{nn+1}",
                                 VARN[nn, ...].swapaxes(0, 1),
                                 varNcf.dimensions,
@@ -1583,14 +1828,14 @@ def main():
                         # Update the dimensions
                         new_dim = list(varNcf.dimensions)
                         new_dim[1] = f"time_of_day_{N}"
-                        output_file.log_variable(
+                        fnew.log_variable(
                             f"{ivar}_amp",
                             amp.swapaxes(0,1),
                             new_dim,
                             f"tidal amplitude for {longname_txt}",
-                            units_txt
+                            var_unit
                             )
-                        output_file.log_variable(
+                        fnew.log_variable(
                             f"{ivar}_phas",
                             phas.swapaxes(0,1),
                             new_dim,
@@ -1601,13 +1846,13 @@ def main():
                 elif  ivar in ["pfull", "lat", "lon", "phalf", "pk",
                                "bk", "pstd", "zstd", "zagl", "time"]:
                         print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
-                        output_file.copy_Ncaxis_with_content(input_file_diurn.variables[ivar])
+                        fnew.copy_Ncaxis_with_content(fdiurn.variables[ivar])
                 elif  ivar in ["areo"]:
                         if args.reconstruct:
                             # time_of_day is the same size as the
                             # original file
                             print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
-                            output_file.copy_Ncvar(input_file_diurn.variables["areo"])
+                            fnew.copy_Ncvar(fdiurn.variables["areo"])
                         else:
                             print(f"{Cyan}Processing: {ivar}...{Nclr}")
                             # Create areo variable reflecting the
@@ -1619,85 +1864,76 @@ def main():
                             # Update the dimensions
                             new_dim = list(varNcf.dimensions)
                             new_dim[1] = f"time_of_day_{N}"
-                            # output_file.log_variable(ivar, bareo_new, new_dim,
+                            # fnew.log_variable(ivar, bareo_new, new_dim,
                             # longname_txt, units_txt)
-                            output_file.log_variable(
+                            fnew.log_variable(
                                 ivar,
                                 areo_new,
                                 new_dim,
                                 longname_txt,
-                                units_txt
+                                var_unit
                                 )
-            output_file.close()
+            fnew.close()
 
     # ------------------------------------------------------------------
     #                           Regridding Routine
     #                                 Alex K.
     # ------------------------------------------------------------------
     elif args.regrid_XY_to_match:
-        target_file = args.regrid_XY_to_match[0]
-
-        if os.path.isabs(target_file):
-            # Use the path as-is if it's already an absolute path
-            target_file = os.path.normpath(target_file)
-        else:
-            # If it's a relative path, join with data_dir
-            target_file = os.path.normpath(os.path.join(data_dir, target_file))
-        print(f"{Yellow}target_file = {target_file}{Nclr}\n\n")
+        name_target = args.regrid_XY_to_match[0]
 
         # Add path unless full path is provided
-        target_file = Dataset(target_file, "r")
+        if not ("/" in name_target):
+            name_target = os.path.normpath(os.path.join(data_dir, name_target))
+        fNcdf_t = Dataset(name_target, "r")
 
         for file in file_list:
-            # Use os.path.join for platform-independent path handling
-            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}")
-            if os.path.dirname(file) == "":
-                input_file_name = file
+            # Add path unless full path is provided
+            if not ("/" in file):
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
             else:
-                input_file_name = os.path.join(data_dir, file)
-            print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
+                input_file_name = file
 
-            file_base = os.path.splitext(input_file_name)[0]
-            output_file_name = f"{file_base}{out_ext}.nc"
-            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+            base_name = os.path.splitext(input_file_name)[0]
+            output_file_name = os.path.normpath(f"{base_name}{out_ext}.nc")
 
-            input_file = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
+            f_in = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
 
-            var_list = filter_vars(input_file, args.include)  # Get all variables
+            var_list = filter_vars(f_in, args.include)  # Get all variables
 
             # Define a netcdf object from the netcdf wrapper module
-            output_file = Ncdf(output_file_name)
+            fnew = Ncdf(output_file_name)
 
             # Copy all dims from the target file to the new file
-            output_file.copy_all_dims_from_Ncfile(target_file)
+            fnew.copy_all_dims_from_Ncfile(fNcdf_t)
 
             # Loop over all variables in the file
             print(var_list)
             for ivar in var_list:
-                varNcf = input_file.variables[ivar]
-                longname_txt, units_txt = get_longname_unit(input_file, ivar)
+                varNcf = f_in.variables[ivar]
+                longname_txt, units_txt = get_longname_unit(f_in, ivar)
 
                 if  ivar in ["pfull", "lat", "lon", "phalf", "pk",
                              "bk", "pstd", "zstd", "zagl", "time", "areo"]:
-                        if ivar in target_file.variables.keys():
+                        if ivar in fNcdf_t.variables.keys():
                             print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
-                            output_file.copy_Ncaxis_with_content(
-                                target_file.variables[ivar]
+                            fnew.copy_Ncaxis_with_content(
+                                fNcdf_t.variables[ivar]
                                 )
                 elif varNcf.dimensions[-2:] == ("lat", "lon"):
                     # Ignore variables like time_bounds, scalar_axis
                     # or grid_xt_bnds...
                     print(f"{Cyan}Regridding: {ivar}...{Nclr}")
-                    var_OUT = regrid_Ncfile(varNcf, input_file, target_file)
-                    output_file.log_variable(
+                    var_OUT = regrid_Ncfile(varNcf, f_in, fNcdf_t)
+                    fnew.log_variable(
                         ivar,
                         var_OUT,
                         varNcf.dimensions,
                         longname_txt,
                         units_txt
                         )
-            output_file.close()
-            target_file.close()
+            fnew.close()
+            fNcdf_t.close()
 
     # ------------------------------------------------------------------
     #                           Zonal Averaging
@@ -1705,31 +1941,28 @@ def main():
     # ------------------------------------------------------------------
     elif args.zonal_average:
         for file in file_list:
-            # Use os.path.join for platform-independent path handling
-            print(f"\n\n{Yellow}dir = {os.path.dirname(file)}{Nclr}")
-            if os.path.dirname(file) == "":
-                input_file_name = file
+            if not ("/" in file):
+                # Add path unless full path is provided
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
             else:
-                input_file_name = os.path.join(data_dir, file)
-            print(f"{Yellow}input_file_name = {input_file_name}{Nclr}\n\n")
+                input_file_name = file
 
-            file_base = os.path.splitext(input_file_name)[0]
-            output_file_name = f"{file_base}{out_ext}.nc"
-            print(f"{Cyan}output_file_name = {output_file_name}{Nclr}")
+            base_name = os.path.splitext(input_file_name)[0]
+            output_file_name = os.path.normpath(f"{base_name}{out_ext}.nc")
 
-            input_file_daily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
-            var_list = filter_vars(input_file_daily, args.include) # Get all variables
+            fdaily = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
+            var_list = filter_vars(fdaily, args.include) # Get all variables
 
-            lon_in = input_file_daily.variables["lon"][:]
+            lon_in = fdaily.variables["lon"][:]
 
             # Define a netcdf object from the netcdf wrapper module
-            output_file = Ncdf(output_file_name)
+            fnew = Ncdf(output_file_name)
             # Copy all dimensions but time from the old file to the
             # new file
-            output_file.copy_all_dims_from_Ncfile(input_file_daily, exclude_dim = ["lon"])
+            fnew.copy_all_dims_from_Ncfile(fdaily, exclude_dim = ["lon"])
 
             # Add a new dimension for the longitude, size = 1
-            output_file.add_dim_with_content(
+            fnew.add_dim_with_content(
                 "lon",
                 [lon_in.mean()],
                 longname_txt = "longitude",
@@ -1739,8 +1972,8 @@ def main():
 
             # Loop over all variables in the file
             for ivar in var_list:
-                varNcf = input_file_daily.variables[ivar]
-                longname_txt,units_txt = get_longname_unit(input_file_daily,ivar)
+                varNcf = fdaily.variables[ivar]
+                longname_txt,units_txt = get_longname_unit(fdaily,ivar)
                 if ("lon" in varNcf.dimensions and
                     ivar not in ["lon", "grid_xt_bnds", "grid_yt_bnds"]):
                     print(f"{Cyan}Processing: {ivar}...{Nclr}")
@@ -1751,7 +1984,7 @@ def main():
                         var_out = np.nanmean(
                             varNcf[:], axis = -1
                             )[..., np.newaxis]
-                        output_file.log_variable(
+                        fnew.log_variable(
                             ivar,
                             var_out,
                             varNcf.dimensions,
@@ -1762,13 +1995,13 @@ def main():
                     if ivar in ["pfull", "lat", "phalf", "pk", "bk", "pstd",
                                 "zstd", "zagl"]:
                         print(f"{Cyan}Copying axis: {ivar}{Nclr}{Nclr}")
-                        output_file.copy_Ncaxis_with_content(input_file_daily.variables[ivar])
+                        fnew.copy_Ncaxis_with_content(fdaily.variables[ivar])
                     elif ivar in ["grid_xt_bnds", "grid_yt_bnds", "lon"]:
                         pass
                     else:
                         print(f"{Cyan}Copying variable: {ivar}{Nclr}")
-                        output_file.copy_Ncvar(input_file_daily.variables[ivar])
-            output_file.close()
+                        fnew.copy_Ncvar(fdaily.variables[ivar])
+            fnew.close()
     else:
         print(
             f"{Red}Error: no action requested: use ``MarsFiles *nc "
@@ -1786,18 +2019,14 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
 
     :param fpath: Full path to the Legacy netcdf files
     :type fpath: str
-
     :param typelistfv3: MGCM-like file type: ``average``, ``daily``,
         or ``diurn``
     :type typelistfv3: list
-
     :param renameFV3: Rename the files from Legacy_LsXXX_LsYYY.nc to
         ``XXXXX.atmos_average.nc`` following MGCM output conventions
     :type renameFV3: bool
-
     :return: The MGCM-like files: ``XXXXX.atmos_average.nc``,
         ``XXXXX.atmos_daily.nc``, ``XXXXX.atmos_diurn.nc``.
-
     """
     historyDir = os.getcwd()
     histfile = Dataset(fpath, "r", format="NETCDF4_CLASSIC")
@@ -1816,13 +2045,10 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
 
         :param newf: path to target file
         :type newf: str
-
         :param typefv3: identifies type of file: ``average``,
             ``daily``, or ``diurn``
         :type typefv3: str
-
         :return: netCDF file with minimum required variables
-
         """
         for dname in histdims:
             if dname == "nlon":
@@ -1870,6 +2096,10 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
                 for z in range(num):
                     bk[z + 1] = sgm[2*z + 2]
                 phalf[:] = pk[:] + pref*bk[:] # [Pa]
+
+                # DEPRECATED:
+                # pfull[:] = (phalf[1:]-phalf[:num])/(np.log(phalf[1:])
+                #             - np.log(phalf[:num]))
 
                 # First layer:
                 if pk[0] == 0 and bk[0] == 0:
@@ -1932,31 +2162,29 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
         # Daily snapshot of the output
         newfname_daily = f"{fdate}.atmos_daily.nc"
         newfpath_daily = os.path.join(historyDir, newfname_daily)
-        newinput_file_daily = Ncdf(newfpath_daily)
-        proccess_file(newinput_file_daily, "daily")
-        do_avg_vars(histfile, newinput_file_daily, False, False)
-        newinput_file_daily.close()
+        newfdaily = Ncdf(newfpath_daily)
+        proccess_file(newfdaily, "daily")
+        do_avg_vars(histfile, newfdaily, False, False)
+        newfdaily.close()
 
     if "diurn" in typelistfv3:
         # 5-sol average over "time" only
         newfname_diurn = f"{fdate}.atmos_diurn.nc"
         newfpath_diurn = os.path.join(historyDir, newfname_diurn)
-        newinput_file_diurn = Ncdf(newfpath_diurn)
-        proccess_file(newinput_file_diurn, "diurn")
-        do_avg_vars(histfile, newinput_file_diurn, True, False)
-        newinput_file_diurn.close()
+        newfdiurn = Ncdf(newfpath_diurn)
+        proccess_file(newfdiurn, "diurn")
+        do_avg_vars(histfile, newfdiurn, True, False)
+        newfdiurn.close()
 
     if "fixed" in typelistfv3:
         # Copy Legacy.fixed to current directory
-        source_file = os.path.join(sys.prefix, "mars_data", "Legacy.fixed.nc")
-        fixed_file_name = f"{fdate}.fixed.nc"
-        import shutil
+        source_file = os.path.normpath(os.path.join(sys.prefix, "mars_data", "Legacy.fixed.nc"))
+        dest_file = os.path.normpath(os.path.join(os.getcwd(), f"{fdate}.fixed.nc"))
         try:
-            shutil.copy2(source_file, fixed_file_name)
-            print(f"{Cyan}{os.path.join(os.getcwd(), fixed_file_name)} was copied locally{Nclr}")
+            shutil.copy2(source_file, dest_file)
+            print(f"Copied {source_file} to {dest_file}")
         except OSError as e:
-            print(f"{Red}Error copying {source_file} to {fixed_file_name}: {e}{Nclr}")
-        print(f"{os.getcwd()}/{fdate}.fixed.nc was copied locally")
+            print(f"Warning: Could not copy fixed file: {e}")
 
 def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
     """
@@ -1964,24 +2192,18 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
 
     :param histfile: file to perform time average on
     :type histfile: str
-
     :param newf: path to target file
     :type newf: str
-
     :param avgtime: whether ``histfile`` has averaged fields
         (e.g., ``atmos_average``)
     :type avgtime: bool
-
     :param avgtod: whether ``histfile`` has a diurnal time dimenion
         (e.g., ``atmos_diurn``)
     :type avgtod: bool
-
     :param bin_period: the time binning period if `histfile` has
         averaged fields (i.e., if ``avgtime==True``), defaults to 5
     :type bin_period: int, optional
-
     :return: a time-averaged file
-
     """
     histvars = histfile.variables.keys()
     for vname in histvars:
@@ -2149,15 +2371,11 @@ def change_vname_longname_unit(vname, longname_txt, units_txt):
 
     :param vname: variable name
     :type vname: str
-
     :param longname_txt: variable description
     :type longname_txt: str
-
     :param units_txt: variable units
     :type units_txt: str
-
     :return: variable name and corresponding description and unit
-
     """
     if vname == "psurf":
         vname = "ps"
@@ -2212,13 +2430,10 @@ def replace_dims(dims, todflag):
 
     :param dims: dimensions of the variable
     :type dims: str
-
     :param todflag: indicates whether there exists a ``time_of_day``
         dimension
     :type todflag: bool
-
     :return: new dimension names for the variable
-
     """
     newdims = dims
     if "nlat" in dims:
@@ -2243,66 +2458,60 @@ def replace_at_index(tuple_dims, idx, new_name):
     :param tuple_dims: the dimensions as tuples e.g. (``pfull``,
         ``nlat``, ``nlon``)
     :type tuple_dims: tuple
-
     :param idx: index indicating axis with the dimensions to update
         (e.g. ``idx = 1``  for ``nlat``)
     :type idx: int
-
     :param new_name: new dimension name (e.g. ``latitude``)
     :type new_name: str
-
     :return: updated dimensions
-
     """
     if new_name is None:
-        return tuple_dims[:idx] + tuple_dims[idx + 1:]
+        return tuple_dims[:idx] + tuple_dims[idx+1:]
     else:
-        return tuple_dims[:idx] + (new_name,) + tuple_dims[idx + 1:]
-    
+        return tuple_dims[:idx] + (new_name,) + tuple_dims[idx+1:]
 
-def ls2sol_1year(Ls_deg, offset=True):
+def ls2sol_1year(Ls_deg, offset=True, round10=True):
     """
     Returns a sol number from the solar longitude.
 
     :param Ls_deg: solar longitude [°]
     :type Ls_deg: float
-
     :param offset: if True, force year to start at Ls 0
     :type offset: bool
-
-    :returns: ``sol_number`` the sol number
+    :param round10: if True, round to the nearest 10 sols
+    :type round10: bool
+    :returns: ``Ds`` the sol number
 
     ..note::
         For the moment, this is consistent with 0 <= Ls <= 359.99, but
         not for monotically increasing Ls.
-
     """
-    Ls_perihelion = 250.99 # Ls at perihelion
-    time_perihelion = 485.35 # Time (in sols) at perihelion
-    num_sols_yearly = 668.6 # Number of sols in 1 MY
-    e = 0.093379 # From MGCM's modules.f90
+    Ls_perihelion = 250.99    # Ls at perihelion
+    tperi = 485.35  # Time (in sols) at perihelion
+    Ns = 668.6      # Number of sols in 1 MY
+    e = 0.093379    # From MGCM: modules.f90
     nu = (Ls_deg - Ls_perihelion)*np.pi/180
     if nu == np.pi:
         nu = nu + 1e-10  # Adding epsilon of 10^-10
     E = 2 * np.arctan(np.tan(nu/2) * np.sqrt((1-e)/(1+e)))
     M = E - e*np.sin(E)
-    sol_number = M/(2*np.pi)*num_sols_yearly + time_perihelion
+    Ds = M/(2*np.pi)*Ns + tperi
 
     if offset:
         # Offset correction:
-        if len(np.atleast_1d(sol_number)) == 1:
-            # sol_number is a float
-            sol_number -= num_sols_yearly
-            if sol_number < 0:
-                sol_number += num_sols_yearly
+        if len(np.atleast_1d(Ds)) == 1:
+            # Ds is a float
+            Ds -= Ns
+            if Ds < 0:
+                Ds += Ns
         else:
-            # sol_number is an array
-            sol_number -= num_sols_yearly
-            sol_number[sol_number < 0] = sol_number[sol_number < 0] + num_sols_yearly
+            # Ds is an array
+            Ds -= Ns
+            Ds[Ds < 0] = Ds[Ds < 0] + Ns
     if round:
         # -1 means round to the nearest 10
-        sol_number = np.round(sol_number, -1)
-    return sol_number
+        Ds = np.round(Ds, -1)
+    return Ds
 
 # ------------------------------------------------------
 #                  END OF PROGRAM

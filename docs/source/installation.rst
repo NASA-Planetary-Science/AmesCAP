@@ -13,6 +13,17 @@ Installing CAP is done on the command line via ``git clone``. Here, we provide i
 
 :ref:`NAS Installation <nas_install>`
 
+:ref:`Spectral Analysis Capabilities <spectral_analysis>`
+
+
+If you are specifically seeking to use CAP's spatial filtering utilities (low-, high-, and band-pass spatial filtering, or zonal decomposition), please follow the instructions for :ref:`Spectral Analysis Capabilities <spectral_analysis>` below, as these functions require the ``pyshtools`` library for spherical harmonic transforms and other spectral analysis functions.
+
+.. note::
+
+   The AmesCAP package is designed to be installed in a virtual environment. This allows you to manage dependencies and avoid conflicts with other Python packages. We recommend using either `pip` or `conda` for package management.
+
+   If you are using a conda environment, the installation process is straightforward and handles all dependencies automatically. If you are using pip, you will need to install some dependencies manually.
+
 .. _mac_install:
 
 Installation on MacOS
@@ -409,3 +420,66 @@ Troubleshooting Tips
 * **Profile File Not Found**: Double-check the installation paths. The actual path may vary depending on your specific installation.
 * **Python Version**: If you need a different Python version, check available modules with ``module avail python``.
 * **Shell Type**: If you're unsure which shell you're using, run ``echo $SHELL`` to determine your current shell type.
+
+
+.. _spectral_analysis:
+
+Spectral Analysis Capabilities
+-----------------------------
+
+CAP includes optional spectral analysis capabilities that require additional dependencies (spatial filtering utilities). These capabilities leverage the ``pyshtools`` library for spherical harmonic transforms and other spectral analysis functions. ``pyshtools`` is a powerful library for working with spherical harmonics and it is an optional dependencies because it can be complex to install. It requires several system-level dependencies, including `libfftw3 <http://www.fftw.org/>`_ and `liblapack <http://www.netlib.org/lapack/>`_ and BLAS libraries, plus Fortran and C compilers. These dependencies are not included in the standard Python installation and may require additional setup.
+
+If you are using a conda environment, these dependencies are automatically installed when you create the environment using the provided ``environment.yml`` file. If you are using pip, you will need to install these dependencies manually. 
+
+Installing with Spectral Analysis Support
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are two recommended ways to install CAP with spectral analysis support:
+
+**Method 1: Using conda (recommended)**
+
+The conda installation method is recommended as it handles all the complex dependencies automatically. You may need to modify these instructions for your specific system, but the following should work on most systems:
+
+.. code-block:: bash
+
+   # Clone the repository
+   git clone clone -b devel https://github.com/NASA-Planetary-Science/AmesCAP.git
+   cd AmesCAP
+   
+   # Create conda environment with all dependencies including pyshtools
+   conda env create -f environment.yml -n amescap
+   
+   # Activate the environment
+   conda activate amescap
+
+   # Install the package with spectral analysis support
+   pip install .[spectral]
+
+   # It is safe to remove the clone after install
+   cd .. # Move out of the AmesCAP repository
+   rm -rf AmesCAP # Remove the cloned repository
+
+   # Don't forget to copy the profile file to your home directory
+   cp /opt/anaconda3/envs/amescap/mars_templates/amescap_profile ~/.amescap_profile
+
+   # To deactivate the environment, run:
+   conda deactivate
+
+**Method 1: Using pip**
+
+The pip installation method is less recommended as it requires manual installation of the dependencies. If you choose this method, you will need to install the dependencies separately. The following command will install CAP with spectral analysis support:
+
+.. code-block:: bash
+
+   # Create your virtual environment with pip according to the instructions above. Make sure to follow the instructions for your operating system.
+
+   # Activate your virtual environment
+
+   # Install CAP with spectral analysis support
+   pip install "amescap[spectral] @ git+https://github.com/NASA-Planetary-Science/AmesCAP.git@pyshtools"
+
+   # Don't forget to copy the profile file to your home directory
+   cp amescap/mars_templates/amescap_profile ~/.amescap_profile
+   
+   # To deactivate the environment, run:
+   deactivate
