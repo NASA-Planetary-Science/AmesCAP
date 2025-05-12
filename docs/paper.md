@@ -1,64 +1,108 @@
----
-title: 'Community Analysis Pipeline: A Python package for processing Mars climate model data'
-tags:
-  - Python
-  - astronomy
-  - Mars global climate model
-  - data processessing
-  - data visualization
-authors:
-  - name: Alexandre M. Kling
-    orcid: 0000-0000-0000-0000
-    equal-contrib: true
-    affiliation: 1 
-    corresponding: true # (This is how to denote the corresponding author)
-  - name: Courtney M. Batterson
-    orcid: 0000-0000-0000-0000
-    equal-contrib: true 
-    affiliation: 1
-  - name: Richard A. Urata
-    orcid: 0000-0001-8497-5718
-    equal-contrib: true 
-    affiliation: 1
-  - name: Melinda A. Kahre
-    orcid: 0000-0000-0000-0000
-    equal-contrib: true 
-    affiliation: 2
-affiliations:
- - name: Bay Area Environmental Research Institute, United States
-   index: 1
- - name: NASA Ames Research Center, United States
-   index: 2
-date: 4 March 2025
+---  
+title: 'Community Analysis Pipeline: A Python package for processing Mars climate model data'  
+tags:  
+  - Python  
+  - astronomy  
+  - Mars global climate model  
+  - data processing  
+  - data visualization  
+authors:  
+  - name: Alexandre M. Kling  
+    orcid: 0000-0002-2980-7743
+    equal-contrib: true  
+    affiliation: 1  
+    corresponding: true 
+  - name: Courtney M. L. Batterson  
+    orcid: 0000-0001-5894-095X  
+    equal-contrib: true  
+    affiliation: 1  
+  - name: Richard A. Urata  
+    orcid: 0000-0001-8497-5718  
+    equal-contrib: true  
+    affiliation: 1  
+  - name: Victoria L. Hartwick  
+    orcid: 0000-0002-2082-8986  
+    equal-contrib: true  
+    affiliation: 3  
+  - name: Melinda A. Kahre  
+    orcid: 0000-0002-0935-5532
+    equal-contrib: true  
+    affiliation: 2  
+affiliations:  
+ - name: Bay Area Environmental Research Institute, United States  
+   index: 1  
+ - name: NASA Ames Research Center, United States  
+   index: 2  
+ - name: Southwest Research Institute, United States  
+   index: 3  
+date: 9 May 2025  
 bibliography: paper.bib
 
 ---
 
 # Summary
-The Community Analysis Pipeline (CAP) is a Python package designed to streamline and simplify the complex process of analyzing large datasets that are created by global climate models (GCMs). The package consists of a suite of tools that easily manipulate NetCDF climate data with the goal of producing desired figures for validation and comparison for scientists with any level of prior programming experience. CAP currently consists of six tools. *MarsPull* accesses and downloads publicly available Mars GCM data so independently created data is not required. *MarsFormat* converts a selection of Mars GCM output to be compatible with CAP functions. *MarsFiles* performs various file operations such as splitting and concatenation. *MarsVars* processes available data to derive secondary variables such as column integration, potential temperature, relative vorticity, etc. *MarsInterp* performs vertical interpolation on the output to convert the model native grid to a standard pressure or altitude grid. *MarsPlot* visualizes the output as standard 2-dimensional or 1-dimensional plots, with flexibility for different plot types, as well as averaging options.
 
+The Community Analysis Pipeline (CAP) is a Python package designed to streamline and simplify the complex process of analyzing large datasets created by global climate models (GCMs). CAP consists of a suite of tools that manipulate NetCDF files in order to produce secondary datasets and figures useful for science and engineering applications. CAP also facilitates inter-model and model-observation comparisons, and it is the first software of its kind to standardize these comparisons. The goal is to enable users with varying levels of programming experience to work with complex data products from a variety of GCMs and thereby lower the barrier to entry for planetary science research. 
 
 # Statement of need
-Global climate models perform computational simulations to describe the evolution of climate systems on planetary bodies.  GCMs  simulate physical processes within the atmosphere (and if applicable, within the surface of the planet, ocean and any interactions therein), calculate radiative transfer within those medium, and use a computational fluid dynamics solver (the “dynamical core”) to calculate the transport of heat and momentum within the atmosphere. Typical products of the GCM describe the evolutions of surface and atmosphere variables such as winds, temperature and aerosols. While they have been applied to many objects in our Solar System (e.g. Earth, Venus, Pluto) and in other stellar systems (e.g. [REF]), this tool specifically focuses on Mars Global Climate Models (MGCM).
-Mars Global Climate Model (MGCM) outputs can be complex to analyze both in terms of sizes, structures, and also require knowledge-based processing tools for certain applications. We identify the following major challenges for new users:
-* The outputs tend to be fairly complex in structure, with output fields of various meanings (e.g air vs surface temperature), units (e.g. Kelvin),  dimensions (e.g. 2-dimensional to 5-dimensional), sampling (e.g. temporally averaged) on various modeling grids.
-* Typical disk file sizes range between ~10 Gb-10Tb  for simulations describing the Martian climate over a full orbit around the Sun (depending on the choices of atmospheric fields being analyzed, time sampling, horizontal and vertical resolution of the run) which requires intentional handling of the files to prevent memory issues. This can be particularly challenging for users that do not readily have access to academic or entreprise clusters/supercomputer for their analysis.
-* Knowledge-based tools are required to adapt those files when a user requires secondary variables or specific data structures not immediately available through the native (raw) MGCM files. 
 
-The objective of CAP is to provide a streamlined workflow for processing and analyzing Mars Global Climate Model (MGCM) products. This benefits existing modelers by automating both routine and  more sophisticated post-processing tasks. It also allows to expand access to MGCM products to new users by removing some of the roadblocks traditionally associated with handling those complex products, such as interpreting large datasets, deriving secondary fields, and smoothly visualizing the data. CAP accomplishes this by providing a set of libraries and executables that facilitate the processing of the MGCM files from the command-line, as well as providing a visualization tool that can be used to generate scientific plots. 
+GCMs perform numerical simulations that describe the evolution of climate systems on planetary bodies. GCMs simulate physical processes within the atmosphere (and, if applicable, within the surface of the planet, ocean, and any interactions therein), calculate radiative transfer within those mediums, and use a computational fluid dynamics (CFD) solver (the “dynamical core”) to predict the transport of heat and momentum within the atmosphere. Typical GCM products include surface and atmospheric variables such as wind, temperature, and aerosol concentrations. While GCMs have been applied to planetary bodies in our Solar System (e.g. Earth, Venus, Pluto) and in other stellar systems (e.g. [@Hartwick:2023]), CAP is currently compatible with Mars GCMs (MGCMs). Several MGCMs are actively in use and under development in the Mars community, including the NASA Ames MGCM (Legacy and FV3-based versions), NASA Goddard ROCKE-3D, the Laboratoire de Météorologie Dynamique (LMD) Mars Planetary Climate Model (PCM), the Open University OpenMars, NCAR MarsWRF, NCAR MarsCAM, GFDL Mars GCM, Harvard DRAMATIC Mars GCM, Max Planck Institute Mars GCM, and GEM-Mars. Of these, CAP is compatible with four models so far: the NASA Ames MGCM, PCM, OpenMars, and MarsWRF. 
 
-Compared to the traditional “one-step” scripted programming approach that requires extended  modifications to execute any particular analysis, the executables and the visualization tool in CAP do not require extensive programming knowledge. This makes CAP accessible to users of many backgrounds and various skill levels. A feature of CAP is its extensive input/output (I/O) capabilities which allow executables to generate or update intermediary files at each processing step. This offers a high degree of flexibility regarding the choice and extent of the post-processing applied to the raw MGCM outputs. This enables users of various backgrounds to process MGCM products to the degree they need for their particular application from the command-line. In addition, users have the possibility either to directly import CAP libraries within their own-python based applications (without using the executables), or generate files for use in external applications in other programming languages. 
+MGCM output is complex in both size and structure. Analyzing the output requires GCM-specific domain knowledge. We identify the following major challenges for working with MGCM output:
 
-We conclude this summary of CAP by listing some of its design attributes: 
+\* Files tend to be fairly complex in structure, with output fields represented by multiple variables (e.g. air vs surface temperature), varying units (e.g. Kelvin), complex dimensional structures (e.g. 2–5 dimensions), and a variety of sampling frequencies (e.g. temporally averaged or instantaneous) on different horizontal and vertical grids.  
+\* File sizes typically range from \~10 Gb–10 Tb for simulations describing the Martian climate over a full orbit around the Sun (depending on the number of atmospheric fields being analyzed, time sampling, and the horizontal and vertical resolutions of the run). Large files require curated processing pipelines in order to manage memory storage. This can be particularly challenging for users that do not have access to academic or enterprise clusters or supercomputers for their analyses.  
+\* Domain-specific knowledge is required to derive secondary variables, manipulate complex data structures, and visualize results. Working with MGCM data is especially difficult for users unfamiliar with the fields commonly output by MGCMs or the mathematical methods used in climate science.
 
-* CAP is written in Python, an open-source programming language with extensive scientific libraries available.  
-* The files are written in the netCDF4 data format developed by UCAR/Unidata [@Unidata2024]. This format is widely used in the climate modeling community and is self-descriptive (meaning that a file contains metadata about its content in terms of variables names, units, etc.)
-* CAP uses a convention for output formatting inherited from the Geophysical Fluid Dynamics Laboratory (GFDL) Finite-Volume Cubed-Sphere Dynamical Core, referred here as "FV3 format" [@Zhao2018]. Specifically, outputs may be binned and averaged in time in various ways for analysis.
-* CAP offers multi-model support. At the time of the writing, actively supported models are the NASA Ames Legacy GCM [@Haberle2019], and the NASA Ames GCM [@Bertrand2020] are supported. CAP also offers compatibility with the openMars [@Holmes2020], MarsWRF [@Newman2019], PCM [REF], EMARS [REF] data products.
+CAP offers a streamlined workflow for processing and analyzing MGCM data products by providing a set of libraries and executables that facilitate file manipulation and data visualization from the command-line. This benefits existing modelers by automating both routine and sophisticated post-processing tasks. It also expands access to MGCM products by removing some of the technical roadblocks associated with processing these complex data products.
 
-#Optional functionality discussion
+CAP is the first software package to provide data visualization, file manipulation, variable derivation, and inter-model or model-observation comparison features in one software suite. Existing tools perform a subset of the functions that CAP offers, but none of them provide both complex data analysis tools and visualization, nor are they specifically designed for climate modeling. Some of the more popular tools include Panoply [@Schmunk:2024], Ncview [@Pierce:2024], Grid Analysis and Display System (GrADS; @GMU), and Paraview [@Kitware:2023]. Each tool offers simple solutions for visualizing NetCDF data and some provide minimal flexibility for user-defined computations. However, CAP is the only software package with an open-source Python framework for analyzing and plotting climate data and performing inter-model and model-observation comparisons.
 
+CAP has been used in multiple research projects that have been published and/or presented at conferences worldwide (e.g., [@Urata:2025, @Batterson:2023, @Hartwick:2022a, @Hartwick:2022b, @Steakley:2023, @Steakley:2024, @Kahre:2022, @Kahre:2023, @Nagata:2025, @Hartwick:2024]).
 
+# Functionality
+
+CAP consists of six command-line executables that can be used sequentially or individually to derive secondary data products, thus offering a high level of flexibility. A configuration text file is provided so that users can define the input file structure (e.g., variable names, longitudinal structure, and interpolation levels) and preferred plotting style (e.g., time axis units) for their analysis. The six executables in CAP are described below: 
+
+## MarsPull
+
+MarsPull is a data pipeline utility for downloading MGCM data products from the NAS Data Portal ([https://data.nas.nasa.gov/](https://data.nas.nasa.gov/)) . Recognizing that each member within the science and engineering community has their own requirements for hosting proprietary Mars climate datasets (e.g. institutional servers, Zenodo, GitHub, etc.), MarsPull is intended to be a mechanism for interfacing those datasets. MarsPull enables users to query data meeting a specific criteria, such as a date range (e.g., solar longitude), which allows users to parse repositories first and download only the necessary data, thus avoiding downloading entire repositories which can be large (\>\>15Gb). A typical application of MarsPull is:
+
+`> MarsPull directory_name -f MGCM_file1.nc MGCM_file2.nc` 
+
+## MarsFormat
+
+MarsFormat is a utility for converting non-NASA Ames MGCM products into NASA Ames-like MGCM products for compatibility with CAP. MarsFormat reorders dimensions, adds standardized coordinates that are expected by other executables for various computations (e.g., pressure interpolation), converts variable units to conform to the International System of Units (e.g., Pa for pressure), and reorganizes coordinate values as needed (e.g., reversing the vertical pressure array for plotting). Additional, model-specific operations are performed as necessary. For example, MarsWRF data requires un-staggering latitude-longitude grids and calculating absolute fields from perturbation fields. A typical application of MarsFormat is:
+
+`> MarsFormat MGCM_file.nc -gcm model_name`
+
+## MarsFiles
+
+MarsFiles provides several tools for file manipulation such as file size reduction, temporal and spatial filtering, and splitting or concatenating data along specified dimensions. Operations performed by MarsFiles are applied to entire NetCDF files producing new data structures with amended file names. A typical application of MarsFiles is:
+
+`> MarsFiles MGCM_file.nc -flags`
+
+## MarsVars
+
+MarsVars performs variable operations such as adding, removing, and editing variables and computing column integrations. It is standard practice within the modeling community to avoid outputting variables that can be derived outside of the MGCM in order to minimize file size. For example, atmospheric density (rho) is easily derived from temperature and pressure and therefore typically not included in output files. MarsVars derives rho from temperature and pressure and adds it to the file with a single command line argument. A typical application of MarsVars is:
+
+`> MarsVars MGCM_file.nc –add rho`
+
+## MarsInterp
+
+MarsInterp interpolates the vertical coordinate to a standard grid: pressure, altitude, or altitude above ground level. Vertical grids vary considerably from model to model. Most MGCMs use a pressure or hybrid pressure vertical coordinate (e.g. terrain-following, pure pressure levels, or sigma levels) in which the geometric heights and mid-layer pressures of the atmospheric layers vary in latitude and longitude. It is therefore necessary to interpolate to a standard vertical grid in order to do any rigorous spatial averaging or inter-model or observation-to-model comparisons. A typical application of MarsInterp is:
+
+`> MarsInterp MGCM_file.nc -t pstd`
+
+## MarsPlot
+
+MarsPlot is the plotting utility for CAP. It accepts a modifiable text template containing a list of plots to generate (Custom.in) as input and outputs graphics to PDF or PNG. It supports multiple types of 1-D or 2-D plots, color schemes, map projections, and can customize axes range, plot titles, or contour intervals. It also supports some simple math functions to derive secondary fields not supported by MarsVars. A typical application of MarsPlot is:
+
+`> MarsPlot Custom.in`
 
 # Acknowledgements
+
 This work is supported by the Planetary Science Division of the National Aeronautics and Space Administration as part of the Mars Climate Modeling Center funded by the Internal Scientist Funding Model.
+
+# References
+
