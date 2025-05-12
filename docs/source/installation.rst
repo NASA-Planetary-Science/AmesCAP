@@ -3,7 +3,7 @@
 Installation Instructions
 =========================
 
-*Last Updated: April 2025*
+*Last Updated: May 2025*
 
 Installing CAP is done on the command line via ``git clone``. Here, we provide instructions for installing on Windows using Cygwin or PowerShell and pip or conda, MacOS using pip or conda, and the NASA Advanced Supercomputing (NAS) system using pip.
 
