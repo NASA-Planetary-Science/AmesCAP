@@ -73,9 +73,11 @@ from amescap.Script_utils import (
     get_longname_unit, check_bounds
 )
 
+
 # ------------------------------------------------------
 #                  EXTENSION FUNCTION
 # ------------------------------------------------------
+
 class ExtAction(argparse.Action):
     def __init__(self, *args, ext_content=None, parser=None, **kwargs):
         self.parser = parser
@@ -135,6 +137,7 @@ def debug_wrapper(func):
     A decorator that wraps a function with error handling based on the
     --debug flag.
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         global debug
@@ -151,6 +154,7 @@ def debug_wrapper(func):
                       f"--debug for more information.{Nclr}")
             return 1  # Error exit code
     return wrapper
+
 
 # ------------------------------------------------------
 #                  ARGUMENT PARSER
@@ -609,6 +613,7 @@ if (all(v is None or v is False for v in all_args) and
                  f"argument{Nclr}")
     exit()
 
+
 # ------------------------------------------------------
 #                  EXTENSION FUNCTION
 # ------------------------------------------------------
@@ -639,9 +644,12 @@ if args.extension:
     # Append extension, if any:
     out_ext = (f"{out_ext}_{args.extension}")
 
+
 # ------------------------------------------------------
 #                  DEFINITIONS
 # ------------------------------------------------------
+
+
 def concatenate_files(file_list, full_file_list):
     """
     Concatenates sequential output files in chronological order.
@@ -651,6 +659,7 @@ def concatenate_files(file_list, full_file_list):
     :param full_file_list: list of file names and full paths
     :type full_file_list: list
     """
+
     print(f"{Yellow}Using internal method for concatenation{Nclr}")
 
     # For fixed files, deleting all but the first file has the same
@@ -717,6 +726,7 @@ def concatenate_files(file_list, full_file_list):
 
     return
 
+
 def split_files(file_list, split_dim):
     """
     Extracts variables in the file along the time dimension, unless
@@ -726,6 +736,7 @@ def split_files(file_list, split_dim):
     :type split_dim: dimension along which to perform extraction
     :returns: new file with sliced dimensions
     """
+
     if split_dim not in ['time','areo', 'lev', 'lat', 'lon']:
         print(f"{Red}Split dimension must be one of the following:"
               f"    time, areo, lev, lat, lon{Nclr}")
@@ -1016,6 +1027,7 @@ def split_files(file_list, split_dim):
     fNcdf.close()
     return
 
+
 # ------------------------------------------------------
 #            Time-Shifting Implementation
 #                   Victoria H.
@@ -1028,6 +1040,7 @@ def process_time_shift(file_list):
     :param file_list: list of file names
     :type file_list: list
     """
+
     if args.time_shift == 999:
         # Target local times requested by user
         target_list = None
@@ -1169,9 +1182,11 @@ def process_time_shift(file_list):
         fdiurn.close()
     return
 
+
 # ------------------------------------------------------
 #                  MAIN PROGRAM
 # ------------------------------------------------------
+
 @debug_wrapper
 def main():
     global data_dir
@@ -1192,6 +1207,7 @@ def main():
             f"ambiguity"
             )
         exit()
+
 
     # ------------------------------------------------------------------
     #               Conversion Legacy -> MGCM Format
@@ -1253,6 +1269,7 @@ def main():
     elif args.time_shift:
         # Time-shift files
         process_time_shift(file_list)
+
 
     # ------------------------------------------------------------------
     #               Bin a daily file as an average file
@@ -1344,6 +1361,7 @@ def main():
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
 
+
     # ------------------------------------------------------------------
     #               Bin a daily file as a diurn file
     #                               Alex K.
@@ -1433,6 +1451,7 @@ def main():
                         print(f"{Cyan}Copying variable: {ivar}{Nclr}")
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
+
 
     # ------------------------------------------------------------------
     #                       Temporal Filtering
@@ -1563,6 +1582,7 @@ def main():
                         print(f"{Cyan}Copying variable: {ivar}{Nclr}")
                         fnew.copy_Ncvar(fdaily.variables[ivar])
             fnew.close()
+
 
     # ------------------------------------------------------------------
     #                      Zonal Decomposition Analysis
@@ -1720,6 +1740,7 @@ def main():
                         fnew.copy_Ncvar(fname.variables[ivar])
             fnew.close()
 
+
     # ------------------------------------------------------------------
     #                           Tidal Analysis
     #                           Alex K. & R. J. Wilson
@@ -1875,6 +1896,7 @@ def main():
                                 )
             fnew.close()
 
+
     # ------------------------------------------------------------------
     #                           Regridding Routine
     #                                 Alex K.
@@ -1934,6 +1956,7 @@ def main():
                         )
             fnew.close()
             fNcdf_t.close()
+
 
     # ------------------------------------------------------------------
     #                           Zonal Averaging
@@ -2008,6 +2031,7 @@ def main():
             f"--bin_files --concatenate, --time_shift, --bin_average, "
             f"--bin_diurn etc ...``{Nclr}")
 
+
 # ----------------------------------------------------------------------
 #                  DEFINITIONS
 # ----------------------------------------------------------------------
@@ -2028,6 +2052,7 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
     :return: The MGCM-like files: ``XXXXX.atmos_average.nc``,
         ``XXXXX.atmos_daily.nc``, ``XXXXX.atmos_diurn.nc``.
     """
+
     historyDir = os.getcwd()
     histfile = Dataset(fpath, "r", format="NETCDF4_CLASSIC")
     histdims = histfile.dimensions.keys()
@@ -2035,6 +2060,7 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
     if renameFV3:
         # Convert the first Ls in file to a sol number
         fdate = f"{(ls2sol_1year(histfile.variables['ls'][0])):05}"
+
 
     def proccess_file(newf, typefv3):
         """
@@ -2050,6 +2076,7 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
         :type typefv3: str
         :return: netCDF file with minimum required variables
         """
+
         for dname in histdims:
             if dname == "nlon":
                 var = histfile.variables["longitude"]
@@ -2186,6 +2213,7 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
         except OSError as e:
             print(f"Warning: Could not copy fixed file: {e}")
 
+
 def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
     """
     Performs a time average over all fields in a file.
@@ -2205,6 +2233,7 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
     :type bin_period: int, optional
     :return: a time-averaged file
     """
+
     histvars = histfile.variables.keys()
     for vname in histvars:
         var = histfile.variables[vname]
@@ -2364,6 +2393,7 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
                     )
     return 0
 
+
 def change_vname_longname_unit(vname, longname_txt, units_txt):
     """
     Update variable ``name``, ``longname``, and ``units``. This is
@@ -2377,6 +2407,7 @@ def change_vname_longname_unit(vname, longname_txt, units_txt):
     :type units_txt: str
     :return: variable name and corresponding description and unit
     """
+
     if vname == "psurf":
         vname = "ps"
         longname_txt = "surface pressure"
@@ -2435,6 +2466,7 @@ def replace_dims(dims, todflag):
     :type todflag: bool
     :return: new dimension names for the variable
     """
+
     newdims = dims
     if "nlat" in dims:
         newdims = replace_at_index(newdims, newdims.index("nlat"), "lat")
@@ -2451,6 +2483,7 @@ def replace_dims(dims, todflag):
                 )
     return newdims
 
+
 def replace_at_index(tuple_dims, idx, new_name):
     """
     Updates variable dimensions.
@@ -2465,10 +2498,12 @@ def replace_at_index(tuple_dims, idx, new_name):
     :type new_name: str
     :return: updated dimensions
     """
+
     if new_name is None:
         return tuple_dims[:idx] + tuple_dims[idx+1:]
     else:
         return tuple_dims[:idx] + (new_name,) + tuple_dims[idx+1:]
+
 
 def ls2sol_1year(Ls_deg, offset=True, round10=True):
     """
@@ -2486,6 +2521,7 @@ def ls2sol_1year(Ls_deg, offset=True, round10=True):
         For the moment, this is consistent with 0 <= Ls <= 359.99, but
         not for monotically increasing Ls.
     """
+
     Ls_perihelion = 250.99    # Ls at perihelion
     tperi = 485.35  # Time (in sols) at perihelion
     Ns = 668.6      # Number of sols in 1 MY
@@ -2513,9 +2549,11 @@ def ls2sol_1year(Ls_deg, offset=True, round10=True):
         Ds = np.round(Ds, -1)
     return Ds
 
+
 # ------------------------------------------------------
 #                  END OF PROGRAM
 # ------------------------------------------------------
+
 if __name__ == "__main__":
     exit_code = main()
     sys.exit(exit_code)

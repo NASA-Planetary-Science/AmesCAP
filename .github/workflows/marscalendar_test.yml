@@ -20,7 +20,6 @@ on:
       - 'bin/MarsCalendar.py'
       - 'tests/test_marscalendar.py'
       - '.github/workflows/marscalendar_test.yml'
-
 jobs:
   test:
     # Run on multiple OS and Python versions for comprehensive testing
@@ -32,11 +31,13 @@ jobs:
     steps:
       # Checkout the repository
       - uses: actions/checkout@v3
+      
       # Set up the specified Python version
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
+      
       # Install dependencies
       - name: Install dependencies
         shell: bash
@@ -44,10 +45,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install numpy
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
       # Install the package in editable mode
       - name: Install package
         run: pip install -e .
-      # Run the tests
+      
+        # Run the tests
       - name: Run MarsCalendar tests
         run: |
           cd tests

@@ -24,7 +24,6 @@ Third-party Requirements:
 List of Functions:
 
     * download - Queries the requested file from the NAS Data Portal.
-
 """
 
 # make print statements appear in color
@@ -42,11 +41,13 @@ import functools    # For function decorators
 import traceback    # For printing stack traces
 import requests     # Download data from website
 
+
 def debug_wrapper(func):
     """
-    A decorator that wraps a function with error handling based on the 
+    A decorator that wraps a function with error handling based on the
     --debug flag.
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         global debug
@@ -63,6 +64,7 @@ def debug_wrapper(func):
                       f"--debug for more information.{Nclr}")
             return 1  # Error exit code
     return wrapper
+
 
 # ------------------------------------------------------
 #                  ARGUMENT PARSER
@@ -146,6 +148,7 @@ parser.add_argument('--debug', action='store_true',
 args = parser.parse_args()
 debug = args.debug
 
+
 # ------------------------------------------------------
 #                  DEFINITIONS
 # ------------------------------------------------------
@@ -168,24 +171,21 @@ Ls_end = np.array([
     310, 316, 321, 327, 333, 338, 344, 349, 354, 0
 ])
 
+
 def download(url, file_name):
     """
     Downloads a file from the NAS Data Portal (data.nas.nasa.gov).
-    
+
     :param url: The url to download from, e.g 'https://data.nas.nasa.\
         gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_\
             Ls000_Ls004.nc'
     :type url: str
-    
     :param file_name: The local file_name e.g  '/lou/la4/akling/Data/L\
         egacyGCM_Ls000_Ls004.nc'
     :type file_name: str
-
     :return: The requested file(s), downloaded and saved to the \
         current directory.
-
     :raises FileNotFoundError: A file-not-found error.
-
     """
 
     _, fname = os.path.split(file_name)
@@ -217,10 +217,12 @@ def download(url, file_name):
                 f.write(response.content)
             print(f"{fname} Done")
 
+
 def print_file_list(list_of_files):
     print("Available files:")
     for file in list_of_files:
         print(file)
+
 
 # ------------------------------------------------------
 #                  MAIN FUNCTION
@@ -232,7 +234,7 @@ def main():
     if not args.list_files and not args.directory_name:
         print("Error: You must specify either -list or a directory.")
         sys.exit(1)
-        
+
     if args.list_files:
         # Send an HTTP GET request to the URL and store the response.
         legacy_data = requests.get(
@@ -242,7 +244,7 @@ def main():
             'https://data.nas.nasa.gov/mcmcref/fv3betaout1/'
             )
 
-        # Access the text content of the response, which contains the 
+        # Access the text content of the response, which contains the
         # webpage's HTML.
         legacy_dir_text = legacy_data.text
         fv3_dir_text = fv3_data.text
@@ -253,7 +255,7 @@ def main():
             )
 
         legacy_urls = re.findall(
-            fr"{legacy_dir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+", 
+            fr"{legacy_dir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
             legacy_dir_text
             )
 
@@ -265,9 +267,9 @@ def main():
         legacy_data = requests.get(legacy_urls[0])
         legacy_dir_text = legacy_data.text
 
-        legacy_files_available = re.findall(r'download="(fort\.11_[0-9]+)"', 
+        legacy_files_available = re.findall(r'download="(fort\.11_[0-9]+)"',
                                             legacy_dir_text)
-        fv3_files_available = re.findall(r'href="[^"]*\/([^"\/]+\.nc)"', 
+        fv3_files_available = re.findall(r'href="[^"]*\/([^"\/]+\.nc)"',
                                          fv3_dir_text)
 
         print_file_list(legacy_files_available)
@@ -280,7 +282,7 @@ def main():
             ]:
             requested_url = (
                 "https://data.nas.nasa.gov/legacygcm/legacygcmdata/"
-                + portal_dir 
+                + portal_dir
                 + "/"
                 )
         elif portal_dir in ['FV3BETAOUT1']:
@@ -292,7 +294,7 @@ def main():
             prYellow("ERROR No file requested. Use [-ls --ls] or "
                      "[-f --filename] to specify a file to download.")
             sys.exit(1)  # Return a non-zero exit code
-            
+
         if args.ls:
             data_input = np.asarray(args.ls)
             if len(data_input) == 1:
@@ -313,9 +315,9 @@ def main():
                     i_end += 1
 
                 file_list = np.arange(i_start, i_end + 1)
-            
+
             prCyan(f"Saving {len(file_list)} file(s) to {save_dir}")
-            
+
             for ii in file_list:
                 if portal_dir == 'ACTIVECLDS_NCDF':
                     # Legacy .nc files
@@ -338,12 +340,12 @@ def main():
                 file_name = save_dir + f
                 print(f"Downloading {url}...")
                 download(url, file_name)
-                
+
     elif not args.list_files:
         # If no directory is provided and its not a -list request
         prYellow("ERROR: A directory must be specified unless using -list.")
         sys.exit(1)
-        
+
 # ------------------------------------------------------
 #                  END OF PROGRAM
 # ------------------------------------------------------

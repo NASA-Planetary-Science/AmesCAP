@@ -35,13 +35,16 @@ jobs:
       fail-fast: true
     runs-on: ${{ matrix.os }}
     steps:
+      # Checkout the repository
       - uses: actions/checkout@v3
 
+      # Set up the specified Python version
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
-
+          
+      # Cache pip dependencies
       - name: Cache pip dependencies
         uses: actions/cache@v3
         with:

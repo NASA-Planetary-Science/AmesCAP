@@ -11,7 +11,6 @@ Third-party Requirements:
     * ``netCDF4``
     * ``os``
     * ``datetime``
-    
 """
 
 # Load generic Python modules
@@ -56,9 +55,7 @@ class Ncdf(object):
 
     :param object: _description_
     :type object: _type_
-    
     :return: netCDF file
-    
     """
 
     def __init__(self, filename=None, description_txt="", action="w",
@@ -89,19 +86,24 @@ class Ncdf(object):
         self.var_dict = dict()
         # print(f"{filename} was created")
 
+
     def close(self):
         self.f_Ncdf.close()
         print(f"{self.filename} was created")
+
 
     def add_dimension(self, dimension_name, length):
         self.dim_dict[dimension_name] = (
             self.f_Ncdf.createDimension(dimension_name, length))
 
+
     def print_dimensions(self):
         print(self.dim_dict.items())
 
+
     def print_variables(self):
         print(self.var_dict.keys())
+
 
     def add_constant(self, variable_name, value, longname_txt="",
                      units_txt=""):
@@ -114,6 +116,7 @@ class Ncdf(object):
                            units_txt)
         self.var_dict[variable_name][:] = value
 
+
     # Private Definitions
     def _def_variable(self, variable_name, dim_array, longname_txt="",
                       units_txt=""):
@@ -124,6 +127,7 @@ class Ncdf(object):
         self.var_dict[variable_name].long_name = longname_txt
         self.var_dict[variable_name].dim_name = str(dim_array)
 
+
     def _def_axis1D(self, variable_name, dim_array, longname_txt="",
                     units_txt="", cart_txt=""):
         self.var_dict[variable_name] = self.f_Ncdf.createVariable(variable_name,
@@ -132,6 +136,7 @@ class Ncdf(object):
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name].long_name = longname_txt
         self.var_dict[variable_name].cartesian_axis = cart_txt
+
 
     def _test_var_dimensions(self, Ncvar):
         all_dim_OK = True
@@ -142,6 +147,7 @@ class Ncdf(object):
                 all_dim_OK = False
         return all_dim_OK
 
+
     def _is_cart_axis(self, Ncvar):
         """
         The cartesian axis attribute is replicated if ``cartesian_axis``
@@ -149,8 +155,8 @@ class Ncdf(object):
         exclude FV3 T-cell latitudes ``grid_xt_bnds`` and
         ``grid_yt_bnds``, which are of size ``(lon, bnds)`` &
         ``(lat, bnds)`` with dimension = 2.
-        
         """
+
         cart_axis = False
         tmp_cart = getattr(Ncvar, 'cartesian_axis', False)
         tmp_size = getattr(Ncvar, 'dimensions')
@@ -167,8 +173,8 @@ class Ncdf(object):
 
             Log.log_variable("sfcT", sfcT, ("time", "Nx"),
                              "soil temperature", "K")
-                             
         """
+
         if variable_name not in self.var_dict.keys():
             self._def_variable(variable_name, dim_array, longname_txt,
                                units_txt)
@@ -177,13 +183,13 @@ class Ncdf(object):
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name][:] = DATAin
 
+
     def log_axis1D(self, variable_name, DATAin, dim_name, longname_txt="",
                    units_txt="", cart_txt=""):
         """
         EX::
 
             Log.log_axis1D("areo", areo, "time", "degree", "T")
-            
         """
         if variable_name not in self.var_dict.keys():
             self._def_axis1D(variable_name, dim_name, longname_txt, units_txt,
@@ -192,6 +198,7 @@ class Ncdf(object):
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name].cartesian_axis = cart_txt
         self.var_dict[variable_name][:] = DATAin
+
 
     def add_dim_with_content(self, dimension_name, DATAin, longname_txt="",
                              units_txt="", cart_txt=''):
@@ -206,8 +213,8 @@ class Ncdf(object):
 
             Log.add_dim_with_content("lon", lon_array, "longitudes",
                                      "degree", "X")
-                                     
         """
+
         if dimension_name not in self.dim_dict.keys():
             self.add_dimension(dimension_name, len(DATAin))
 
@@ -228,18 +235,20 @@ class Ncdf(object):
     # When using ``f=MFDataset(fname,"r")``, ``f.variables[var]`` does
     # not have a ``name`` attribute but does have ``_name``
 
+
     def copy_Ncaxis_with_content(self, Ncdim_var):
         """
         Copy a netCDF DIMENSION variable (e.g.,
         ``Ncdim = f.variables["lon"]``). If the dimension does not exist
         yet, it will be created
-        
         """
+
         longname_txt = getattr(Ncdim_var, "long_name", Ncdim_var._name)
         units_txt = getattr(Ncdim_var, "units", "")
         cart_txt = getattr(Ncdim_var, "cartesian_axis", "")
         self.add_dim_with_content(Ncdim_var._name, Ncdim_var[:], longname_txt,
                                   units_txt, cart_txt)
+
 
     def copy_Ncvar(self, Ncvar, swap_array=None):
         """
@@ -247,8 +256,8 @@ class Ncdf(object):
         ``Ncvar = f.variables["ucomp"]``). All dimensions must already
         exist. If ``swap_array`` is provided, the original values are
         swapped with this array.
-        
         """
+
         if Ncvar._name not in self.var_dict.keys():
             dim_array = Ncvar.dimensions
             longname_txt = getattr(Ncvar, "long_name", Ncvar._name)
@@ -265,13 +274,14 @@ class Ncdf(object):
             print(f"***Warning***, '{Ncvar._name}' is already defined, "
                   f"skipping it")
 
+
     def copy_all_dims_from_Ncfile(self, Ncfile_in, exclude_dim=[],
                                   time_unlimited=True):
         """
         Copy all variables, dimensions, and attributes from another
         netCDF file
-        
         """
+
         # First include dimensions
         all_dims = Ncfile_in.dimensions.keys()
         for idim in all_dims:
@@ -281,6 +291,7 @@ class Ncdf(object):
                 else:
                     self.add_dimension(Ncfile_in.dimensions[idim]._name,
                                        Ncfile_in.dimensions[idim].size)
+
 
     def copy_all_vars_from_Ncfile(self, Ncfile_in, exclude_var=[]):
         # First include variables
@@ -295,16 +306,19 @@ class Ncdf(object):
                     else:
                         self.copy_Ncvar(Ncfile_in.variables[ivar])
 
+
     def merge_files_from_list(self, Ncfilename_list, exclude_var=[]):
         Mf_IN = MFDataset(Ncfilename_list, "r")
         self.copy_all_dims_from_Ncfile(Mf_IN)
         self.copy_all_vars_from_Ncfile(Mf_IN, exclude_var = exclude_var)
         Mf_IN.close()
 
+
 # ======================================================================
 #       Wrapper for creating netCDF-like objects from Legacy GCM
 #                         Fortran binary files
 # ======================================================================
+
 class Fort(object):
     """
     A class that generates an object from a fort.11 file. The new file
@@ -330,10 +344,8 @@ class Fort(object):
 
     :param object: _description_
     :type object: _type_
-    
     :return: _description_
     :rtype: _type_
-    
     """
 
     class Fort_var(np.ndarray):
@@ -353,14 +365,14 @@ class Fort(object):
 
         :param np.ndarray: _description_
         :type np.ndarray: _type_
-        
         :return: _description_
         :rtype: _type_
-        
         """
+
 
         def __new__(cls, input_vals, *args, **kwargs):
             return np.asarray(input_vals).view(cls)
+
 
         def __init__(self, input_vals, name_txt, long_name_txt, units_txt,
                      dimensions_tuple):
@@ -370,11 +382,13 @@ class Fort(object):
             self.dimensions = dimensions_tuple
     # End inner class
 
+
     def __init__(self, filename=None, description_txt=""):
         self.filename = filename
         self.path, self.name = os.path.split(filename)
         print(f"Reading {filename}...")
         self.f = FortranFile(filename)
+
         if len(self.name)==12:
             # Get output number (e.g. 11 for fort.11_0070)
             self.fort_type = filename[-7:-5]
@@ -407,12 +421,13 @@ class Fort(object):
             # -1 round to nearest 10
             self.fdate = ("%05i"%np.round(self.variables["time"][0], -1))
 
+
     # Public methods
     def write_to_fixed(self):
         """
         Create ``fixed`` file (all static variables)
-        
         """
+
         Log = Ncdf(f"{self.path}/{self.fdate}.fixed.nc")
 
         # Define dimensions
@@ -440,11 +455,12 @@ class Fort(object):
                                  units_txt = fort_var.units)
         Log.close()
 
+
     def write_to_daily(self):
         """
         Create daily file (continuous time series)
-        
         """
+
         Log = Ncdf(f"{self.path}/{self.fdate}.atmos_daily.nc")
 
         # Define dimensions
@@ -496,11 +512,12 @@ class Fort(object):
                                  units_txt = fort_var.units)
         Log.close()
 
+
     def write_to_average(self, day_average=5):
         """
         Create average file (e.g., N-day averages [N=5 usually])
-        
         """
+
         Log = Ncdf(f"{self.path}/{self.fdate}.atmos_average.nc")
 
         # Define dimensions
@@ -512,7 +529,7 @@ class Fort(object):
             if ivar in ["pfull", "phalf", "zgrid"]:
                 cart_ax = "Z"
             fort_var = self.variables[ivar]
-            Log.add_dim_with_content(dimension_name = ivar, 
+            Log.add_dim_with_content(dimension_name = ivar,
                                      DATAin = fort_var,
                                      longname_txt = fort_var.long_name,
                                      units_txt = fort_var.units,
@@ -528,19 +545,19 @@ class Fort(object):
         time_in = self.variables["time"]
         time_out = daily_to_average(varIN = fort_var,
                                     dt_in = (time_in[1]-time_in[0]),
-                                    nday = day_average, 
+                                    nday = day_average,
                                     trim = True)
-        Log.log_axis1D(variable_name = "time", 
+        Log.log_axis1D(variable_name = "time",
                        DATAin = time_out,
-                       dim_name = "time", 
+                       dim_name = "time",
                        longname_txt = time_in.long_name,
-                       units_txt = time_in.units, 
+                       units_txt = time_in.units,
                        cart_txt = "T")
 
         # Log static variables
         for ivar in ["pk", "bk"]:
             fort_var = self.variables[ivar]
-            Log.log_variable(variable_name = ivar, 
+            Log.log_variable(variable_name = ivar,
                              DATAin = fort_var,
                              dim_array = fort_var.dimensions,
                              longname_txt = fort_var.long_name,
@@ -552,21 +569,22 @@ class Fort(object):
                 fort_var = self.variables[ivar]
                 var_out = daily_to_average(varIN = fort_var,
                                            dt_in = (time_in[1]-time_in[0]),
-                                           nday = day_average, 
+                                           nday = day_average,
                                            trim = True)
-                Log.log_variable(variable_name = ivar, 
+                Log.log_variable(variable_name = ivar,
                                  DATAin = var_out,
                                  dim_array = fort_var.dimensions,
                                  longname_txt = fort_var.long_name,
                                  units_txt = fort_var.units)
         Log.close()
 
+
     def write_to_diurn(self, day_average=5):
         """
         Create diurn file (variables organized by time of day & binned
         (typically 5-day bins)
-        
         """
+
         Log = Ncdf(f"{self.path}/{self.fdate}.atmos_diurn.nc")
 
         # Define dimensions
@@ -578,7 +596,7 @@ class Fort(object):
             if ivar in ["pfull" , "phalf", "zgrid"]:
                 cart_ax="Z"
             fort_var=self.variables[ivar]
-            Log.add_dim_with_content(dimension_name = ivar, 
+            Log.add_dim_with_content(dimension_name = ivar,
                                      DATAin = fort_var,
                                      longname_txt = fort_var.long_name,
                                      units_txt = fort_var.units,
@@ -640,10 +658,12 @@ class Fort(object):
                                      fort_var.long_name, fort_var.units)
         Log.close()
 
+
     # Public method
     def close(self):
         self.f.close()
         print(f"{self.filename} was closed")
+
 
     # Private methods
     def _read_Fort11_header(self):
@@ -662,8 +682,8 @@ class Fort(object):
 
         These are saved as attributes (e.g., uses ``f.LAYERS`` to
         access the number of layers).
-        
         """
+
         Rec = self.f.read_record("f4", "(1, 5)i4", "S7")
         self.RUNNUM = Rec[0][0]
         self.JM = Rec[1][0, 0]
@@ -690,8 +710,8 @@ class Fort(object):
 
         These are saved as attributes (e.g., uses ``f.rgas`` to access
         the gas constant for the simulation.
-        
         """
+
         Rec = self.f.read_record(f"(1, {self.LM})f4",
                                  f"(1, {self.JM})f4",
                                  "f4", "f4", "f4", "f4", "f4", "f4", "f4",
@@ -713,10 +733,10 @@ class Fort(object):
         self.vinc = Rec[12][0]
         self.sdepth = np.array(Rec[13][0, :])
         self.alicen = Rec[14][0]
-
         self.alices = Rec[15][0]
         self.egoco2n = Rec[16][0]
         self.egoco2s = Rec[17][0]
+
 
     def _read_Fort11_static(self):
         """
@@ -730,8 +750,8 @@ class Fort(object):
 
         These are saved as variables (e.g., uses
         ``f.variables["zsurf"]`` to access the topography.
-        
         """
+
         Rec = self.f.read_record(f"({self.IM},{self.JM})f4",
                                  f"({self.IM},{self.JM})f4",
                                  f"({self.NL},{self.IM},{self.JM})f4",
@@ -751,14 +771,15 @@ class Fort(object):
                                                   "npcflag", "Polar ice flag",
                                                   "none", ("lat", "lon"))
 
+
     def _create_dims(self):
         """
         Create dimension axis from ``IM``, ``JM`` after reading the
         header. Also compute a vertical grid structure that includes
         sigma values at the layer boundaries AND midpoints for the
         radiation code. Total size is ``2*LM+2``
-        
         """
+
         JM = self.JM # JM = 36
         IM = self.IM # IM = 60
         LM = self.LM
@@ -791,12 +812,13 @@ class Fort(object):
         # starting with the 2nd
         self.zgrid = self.sdepth[1::2] # TODO check
 
+
     def _ra_1D(self, new_array, name_txt):
         """
         ``_ra`` stands for "Return array": Append single timesteps
         along the first (``time``) dimensions
-        
         """
+
         if type(new_array) != np.ndarray:
             new_array = np.array([new_array])
 
@@ -810,6 +832,7 @@ class Fort(object):
             # Get values from existing array and append to it. Note
             # that ``np.concatenate((x,y))`` takes a tuple as argument.
             return np.append(self.variables[name_txt], new_array)
+
 
     def _log_var(self,name_txt, long_name, unit_txt, dimensions, Rec=None,
                  scaling=None):
@@ -852,6 +875,7 @@ class Fort(object):
         self.variables[name_txt] = self.Fort_var(Rec, name_txt, long_name,
                                                  unit_txt, dimensions)
 
+
     def _read_Fort11_dynamic(self):
         """
         Read variables from ``fort.11`` files that change with each
@@ -882,8 +906,8 @@ class Fort(object):
                 write(11) surfalb
                 write(11) dheat
                 write(11) geot
-                
         """
+
         # Typically ``nsteps = 16 x 10 = 160``
         nsteps = self.nperday * self.nsolfile
         append = False
@@ -904,33 +928,42 @@ class Fort(object):
                 self._ra_1D(Rec[0]/24, "time"), "time",
                 "elapsed time from the start of the run",
                 "days since 0000-00-00 00:00:00", ("time"))
+
             self.variables["areo"] = self.Fort_var(
                 self._ra_1D(Rec[1].reshape([1, 1]), "areo"), "areo",
                 "solar longitude", "degree", ("time", "scalar_axis"))
             # TODO "areo" monotically increasing?
+
             self.variables["rdist"] = self.Fort_var(
                 self._ra_1D(Rec[2], "rdist"), "rdist",
                 "square of the Sun-Mars distance", "(AU)**2", ("time"))
+
             self.variables["tofday"]=self.Fort_var(
                 self._ra_1D(Rec[3], "tofday"), "npcflag", "time of day",
                 "hours since 0000-00-00 00:00:00", ("time"))
             # TODO "tofday" edge or center?
+
             self.variables["psf"] =  self.Fort_var(
                 self._ra_1D(Rec[4]*100, "psf"), "psf",
                 "Initial global surface pressure", "Pa", ("time"))
+
             self.variables["ptrop"] = self.Fort_var(
                 self._ra_1D(Rec[5], "ptrop"), "ptrop",
                 "pressure at the tropopause", "Pa", ("time"))
+
             self.variables["tautot"]=self.Fort_var(
                 self._ra_1D(Rec[6], "tautot"), "tautot",
                 "Input (global) dust optical depth at the reference pressure",
                 "none", ("time"))
+
             self.variables["rptau"] = self.Fort_var(
                 self._ra_1D(Rec[7]*100, "rptau"), "rptau",
                 "reference pressure for dust optical depth", "Pa", ("time"))
+
             self.variables["sind"] = self.Fort_var(
                 self._ra_1D(Rec[8], "sind"), "sind",
                 "sine of the sub-solar latitude", "none", ("time"))
+
             self.variables["gasp"] = self.Fort_var(
                 self._ra_1D(Rec[9]*100, "gasp"), "gasp",
                 "global average surface pressure", "Pa", ("time"))
@@ -942,31 +975,42 @@ class Fort(object):
             self.variables["nc3"] = self.Fort_var(
                 self._ra_1D(Rec[0], "nc3"), "nc3",
                 "full COMP3 is done every nc3 time steps.", "None", ("time"))
+
             self.variables["ncycle"] = self.Fort_var(
                 self._ra_1D(Rec[1], "ncycle"), "ncycle", "ncycle", "none",
                 ("time"))
 
             self._log_var("ps", "surface pressure", "Pa",
                           ("time", "lat", "lon"), scaling = 100)
+
             self._log_var("temp", "temperature", "K",
                           ("time", "pfull", "lat", "lon"))
+
             self._log_var("ucomp", "zonal wind", "m/sec",
                           ("time", "pfull", "lat", "lon"))
+
             self._log_var("vcomp", "meridional wind", "m/s",
                           ("time", "pfull", "lat", "lon"))
+
             self._log_var("ts", "surface temperature", "K",
                           ("time", "lat", "lon"))
+
             self._log_var("snow", "surface amount of CO2 ice on the ground",
                           "kg/m2", ("time", "lat", "lon"))
+
             self._log_var("stressx", "zonal component of surface stress",
                           "kg/m2", ("time", "lat", "lon"))
+
             self._log_var("stressy", "merdional component of surface stress",
                           "kg/m2", ("time", "lat", "lon"))
+
             self._log_var("tstrat", "stratosphere temperature", "K",
                           ("time", "lat", "lon"))
+
             self._log_var("tausurf",
                           "visible dust optical depth at the surface.", "none",
                           ("time", "lat", "lon"))
+
             self._log_var("ssun", "solar energy absorbed by the atmosphere",
                           "W/m2", ("time", "lat", "lon"))
 
@@ -979,16 +1023,21 @@ class Fort(object):
             self._log_var("dst_mass", "dust aerosol mass mixing ratio",
                           "kg/kg", ("time", "pfull", "lat", "lon"),
                           Rec = Rec[..., 0])
+
             self._log_var("dst_num", "dust aerosol number", "number/kg",
                           ("time", "pfull", "lat", "lon"), Rec = Rec[..., 1])
+
             self._log_var("ice_mass", "water ice aerosol mass mixing ratio",
                           "kg/kg", ("time", "pfull", "lat", "lon"),
                           Rec = Rec[..., 2])
+
             self._log_var("ice_num", "water ice  aerosol number", "number/kg",
                           ("time", "pfull", "lat", "lon"), Rec = Rec[..., 3])
+
             self._log_var("cor_mass",
                           "dust core mass mixing ratio for water ice", "kg/kg",
                           ("time", "pfull", "lat", "lon"), Rec = Rec[..., 4])
+
             self._log_var("vap_mass", "water vapor mass mixing ratio", "kg/kg",
                           ("time", "pfull", "lat", "lon"), Rec = Rec[..., 5])
 
@@ -1000,25 +1049,31 @@ class Fort(object):
 
             self._log_var("dst_mass_sfc", "dust aerosol mass on the surface",
                           "kg/m2", ("time", "lat", "lon"), Rec = Rec[..., 0])
+
             self._log_var("dst_num_sfc", "dust aerosol number on the surface",
                           "number/m2", ("time", "lat", "lon"),
                           Rec = Rec[..., 1])
+
             self._log_var("ice_mass_sfc",
                           "water ice aerosol mass on the surface", "kg/m2",
                           ("time", "lat", "lon"), Rec = Rec[..., 2])
+
             self._log_var("ice_num_sfc",
                           "water ice  aerosol number on the surface",
                           "number/m2", ("time", "lat", "lon"),
                           Rec = Rec[..., 3])
+
             self._log_var("cor_mass_sfc",
                           "dust core mass for water ice on the surface",
                           "kg/m2", ("time", "lat", "lon"), Rec = Rec[..., 4])
+
             self._log_var("vap_mass_sfc", "water vapor mass on the surface",
                           "kg/m2", ("time", "lat", "lon"), Rec = Rec[..., 5])
 
             # write(11) stemp
             Rec = self.f.read_reals("f4").reshape(self.JM, self.IM, self.NL,
                                                   order = "F")
+
             self._log_var("soil_temp", "sub-surface soil temperature", "K",
                           ("time", "zgrid", "lat", "lon"), Rec = Rec)
 
@@ -1035,11 +1090,14 @@ class Fort(object):
             self._log_var("fuptopv",
                           "upward visible flux at the top of the atmosphere",
                           "W/m2", ("time", "lat", "lon"), Rec = Rec[0].T)
+
             self._log_var("fdntopv",
                           "downward visible flux at the top of the atmosphere",
                           "W/m2", ("time", "lat", "lon"), Rec = Rec[1].T)
+
             self._log_var("fupsurfv", "upward visible flux at the surface",
                           "W/m2", ("time", "lat", "lon"), Rec = Rec[2].T)
+
             self._log_var("fdnsurfv", "downward visible flux at the surface",
                           "W/m2", ("time", "lat", "lon"), Rec = Rec[3].T)
 
@@ -1056,9 +1114,11 @@ class Fort(object):
             self._log_var("fuptopir",
                           "upward IR flux at the top of the atmosphere",
                           "W/m2", ("time", "lat", "lon"), Rec = Rec[0].T)
+
             self._log_var("fupsurfir",
                           "upward IR flux at the surface", "W/m2",
                           ("time", "lat", "lon"), Rec = Rec[1].T)
+
             self._log_var("fdnsurfir",
                           "downward IR flux at the surface", "W/m2",
                           ("time", "lat", "lon"), Rec = Rec[2].T)
@@ -1072,14 +1132,16 @@ class Fort(object):
             # write(11) geot
             self._log_var("dheat", "diabatic heating rate", "K/sol",
                           ("time", "pfull", "lat", "lon"))
+
             self._log_var("geot", "geopotential", "m2/s2",
                           ("time", "pfull", "lat", "lon"))
+
 
     def _add_axis_as_variables(self):
         """
         Add dimensions to the file as variables
-        
         """
+
         self.variables["lat"] = self.Fort_var(self.lat, "lat", "latitude",
                                               "degrees_N", ("lat"))
         self.variables["lon"] = self.Fort_var(self.lon, "lon", "longitude",
@@ -1123,7 +1185,7 @@ class Fort(object):
         self.variables["zgrid"] = self.Fort_var(
             self.zgrid, "zgrid", "depth at the mid-point of each soil layer",
             "m", ("zgrid"))
-        
+
 
     def _linInterpLs(self, Ls, stride=16):
         """
@@ -1131,18 +1193,17 @@ class Fort(object):
 
         :param Ls: input solar longitude
         :type Ls: float
-        
         :param stride: default stride
         :type stride: int
-
         :return Ls_out: solar longitude (Ls) [float]
 
-        ..NOTE:: In the Legacy GCM fortran binaries, the solar
-        longitude is only updated once per day, implying that 16
-        successive timesteps would have the same ls value. This routine
-        linearly interpolates the Ls between those successive values.
-        
+        ..note::
+            In the Legacy GCM fortran binaries, the solar
+            longitude is only updated once per day, implying that 16
+            successive timesteps would have the same ls value. This routine
+            linearly interpolates the Ls between those successive values.
         """
+
         Ls = np.array(Ls)
         Ls_out = np.zeros_like(Ls)
         Lsdi = Ls[::stride]

@@ -17,7 +17,10 @@ Third-party Requirements:
 
     * ``numpy``
     * ``argparse``
-
+    * ``functools``
+    * ``traceback``
+    * ``sys``
+    * ``amescap``
 """
 
 # Make print statements appear in color
@@ -35,11 +38,13 @@ import traceback    # For printing stack traces
 # Load amesCAP modules
 from amescap.FV3_utils import (sol2ls, ls2sol)
 
+
 def debug_wrapper(func):
     """
-    A decorator that wraps a function with error handling based on the 
+    A decorator that wraps a function with error handling based on the
     --debug flag.
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         global debug
@@ -56,6 +61,7 @@ def debug_wrapper(func):
                       f"--debug for more information.{Nclr}")
             return 1  # Error exit code
     return wrapper
+
 
 # ======================================================================
 #                           ARGUMENT PARSER
@@ -142,9 +148,11 @@ if args.sol is None and args.ls is None:
                  f"help.{Nclr}")
     exit()
 
+
 # ======================================================================
 #                               DEFINITIONS
 # ======================================================================
+
 
 def parse_array(len_input):
     """
@@ -156,17 +164,15 @@ def parse_array(len_input):
 
     :param len_input: The input Ls or sol to convert. Can either be
         one number (e.g., 300) or start stop step (e.g., 300 310 2).
-    :type len_input: float
-
+    :type len_input: float or list of floats
     :raises: Error if neither ``[-ls --ls]`` or ``[-sol --sol]`` are
         provided.
-
     :return: ``input_as_arr`` An array formatted for input into
         ``ls2sol`` or ``sol2ls``. If ``len_input = 300``, then
         ``input_as_arr=[300]``. If ``len_input = 300 310 2``, then
         ``input_as_arr = [300, 302, 304, 306, 308]``.\n
-
     """
+
     if len(len_input) == 1:
         input_as_arr = len_input
 
@@ -183,9 +189,11 @@ def parse_array(len_input):
         exit()
     return(input_as_arr)
 
+
 # ======================================================================
 #                           MAIN PROGRAM
 # ======================================================================
+
 
 @debug_wrapper
 def main():
@@ -229,9 +237,11 @@ def main():
 
     print("\n")
 
+
 # ======================================================================
 #                           END OF PROGRAM
 # ======================================================================
+
 
 if __name__ == "__main__":
     exit_code = main()
