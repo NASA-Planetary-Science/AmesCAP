@@ -260,6 +260,7 @@ def main():
             fr"{legacy_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
             legacy_dir_text
             )
+        print(f"legacy_urls: {legacy_urls}")
         
         # NOTE: The FV3-based MGCM data only has one directory and it is
         #       not listed in the FV3BETAOUT1 directory. The URL is 
