@@ -271,7 +271,7 @@ def main():
         #     fr"{fv3_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
         #     fv3_dir_text
         #     )
-        fv3_urls = ["https://data\.nas\.nasa\.gov/legacygcm/fv3betaout1data/"]
+        fv3_urls = ["https://data.nas.nasa.gov/legacygcm/fv3betaout1data/"]
 
         print(f"\nAvailable directories:")
         print(f"---------------------")
@@ -294,7 +294,7 @@ def main():
                 # FV3-based MGCM
                 print(f"\nAvailable files from the FV3-based MGCM's FV3BETAOUT1 directory:")
                 print(f"-------------------------------------------------")
-                fv3_dir_url = fv3_subdir_search + r'\/'
+                fv3_dir_url = fv3_home + r'\/'
                 fv3_file_text = (requests.get(fv3_dir_url)).text
                 print_file_list(re.findall(r'href="[^"]*\/([^"\/]+\.nc)"',
                                             fv3_file_text))
@@ -308,7 +308,7 @@ def main():
                 print(f"\nAvailable files from the Legacy MGCM's {portal_dir} "
                       f"directory:")
                 print(f"-------------------------------------------------")
-                legacy_dir_url = legacy_subdir_search + portal_dir + r'\/'
+                legacy_dir_url = legacy_home + portal_dir + r'\/'
                 print(f"Legacy MGCM {portal_dir} URL: {legacy_dir_url}")
                 legacy_file_text = (requests.get(legacy_dir_url)).text
                 print(f"{legacy_file_text}")
