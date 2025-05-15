@@ -234,7 +234,7 @@ def main():
         print("Error: You must specify either -list or a directory.")
         sys.exit(1)
 
-    if args.list_files and not args.directory_name:
+    if args.list_files:
         # Send an HTTP GET request to the URL and store the response.
         legacy_home = requests.get(
             'https://data.nas.nasa.gov/mcmcref/legacygcm/'
