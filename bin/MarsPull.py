@@ -297,7 +297,7 @@ def main():
                 print(f"\nFV3-based MGCM FV3BETAOUT1 directory selected.")
                 print(f"Available files:")
                 print(f"---------------")
-                fv3_dir_url = fv3_data_url + r'/'
+                fv3_dir_url = fv3_data_url
                 fv3_data = requests.get(fv3_dir_url)
                 fv3_file_text = fv3_data.text
                 fv3_files_available = (
