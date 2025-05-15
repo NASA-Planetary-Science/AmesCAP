@@ -261,8 +261,12 @@ def main():
             legacy_dir_text
             )
 
+        # fv3_urls = re.findall(
+        #     fr"{fv3_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
+        #     fv3_dir_text
+        #     )
         fv3_urls = re.findall(
-            fr"{fv3_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
+            fr"{fv3_home}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
             fv3_dir_text
             )
 
@@ -270,11 +274,11 @@ def main():
         print(f"---------------------")
         for url in legacy_urls:
             legacy_dir_option = url.split('legacygcmdata/')[1]
-            print(f"(Legacy MGCM) {legacy_dir_option} {Cyan}({url}){Nclr}")
+            print(f"(Legacy MGCM) {legacy_dir_option:<14} {Cyan}({url}){Nclr}")
         
         for url in fv3_urls:
             fv3_dir_option = url.split('fv3betaout1data/')[1]
-            print(f"(FV3-based MGCM) {fv3_dir_option} {Cyan}({url}){Nclr}")
+            print(f"(FV3-based MGCM) {fv3_dir_option:<14} {Cyan}({url}){Nclr}")
 
         if args.directory_name:
             # If a directory is provided, list the files in that directory
