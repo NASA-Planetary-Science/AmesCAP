@@ -266,7 +266,7 @@ def main():
         #     fv3_dir_text
         #     )
         fv3_urls = re.findall(
-            fr"{fv3_home}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
+            fr"https://data\.nas\.nasa\.gov/mcmcref/fv3betaout1/[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
             fv3_dir_text
             )
 
@@ -280,6 +280,8 @@ def main():
             fv3_dir_option = url.split('fv3betaout1data/')[1]
             print(f"(FV3-based MGCM) {fv3_dir_option:<14} {Cyan}({url}){Nclr}")
 
+        print("")
+        
         if args.directory_name:
             # If a directory is provided, list the files in that directory
             portal_dir=args.directory_name
