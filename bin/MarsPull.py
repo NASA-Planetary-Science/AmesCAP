@@ -300,8 +300,10 @@ def main():
                 fv3_dir_url = fv3_data_url + r'/'
                 fv3_data = requests.get(fv3_dir_url)
                 fv3_file_text = fv3_data.text
-                print_file_list(re.findall(r'href="[^"]*\/([^"\/]+\.nc)"',
-                                            fv3_file_text))
+                fv3_files_available = (
+                    re.findall(r'href="[^"]*\/([^"\/]+\.nc)"', fv3_file_text)
+                    )
+                print_file_list(fv3_files_available)
                 print(f"\n{Cyan}({fv3_dir_url}){Nclr}")
             
             elif portal_dir in [
@@ -318,8 +320,10 @@ def main():
                 legacy_data = requests.get(legacy_dir_url)
                 legacy_file_text = legacy_data.text
                 print(f"{legacy_file_text}")
-                print_file_list(re.findall(r'download="(fort\.11_[0-9]+)"',
-                                                legacy_file_text))
+                legacy_files_available = (
+                    re.findall(r'download="(fort\.11_[0-9]+)"', legacy_file_text)
+                )
+                print_file_list(legacy_files_available)
                 print(f"\n{Cyan}({legacy_dir_url}){Nclr}")
 
     if args.directory_name and not args.list_files:
