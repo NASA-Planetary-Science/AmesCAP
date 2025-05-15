@@ -234,19 +234,21 @@ def main():
         print("Error: You must specify either -list or a directory.")
         sys.exit(1)
 
+    base_dir = 'https://data.nas.nasa.gov'
+    legacy_home_url = f'{base_dir}/mcmcref/legacygcm/'
+    legacy_data_url = f'{base_dir}/legacygcm/legacygcmdata/'
+    fv3_home_url = f'{base_dir}/mcmcref/fv3betaout1/'
+    fv3_data_url = f'{base_dir}/legacygcm/fv3betaout1data/'
+    
     if args.list_files:
         # Send an HTTP GET request to the URL and store the response.
-        legacy_home = requests.get(
-            'https://data.nas.nasa.gov/mcmcref/legacygcm/'
-            )
-        fv3_home = requests.get(
-            'https://data.nas.nasa.gov/mcmcref/fv3betaout1/'
-            )
+        legacy_home_html = requests.get(f'{legacy_home_url}')
+        fv3_home_html = requests.get(f'{fv3_home_url}')
 
         # Access the text content of the response, which contains the
         # webpage's HTML.
-        legacy_dir_text = legacy_home.text
-        fv3_dir_text = fv3_home.text
+        legacy_dir_text = legacy_home_html.text
+        fv3_dir_text = fv3_home_html.text
                 
         # Search for the URLs beginning with the below string
         legacy_subdir_search = (
@@ -271,7 +273,7 @@ def main():
         #     fr"{fv3_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
         #     fv3_dir_text
         #     )
-        fv3_urls = ["https://data.nas.nasa.gov/legacygcm/fv3betaout1data/"]
+        fv3_urls = [f"{fv3_data_url}"]
 
         print(f"\nAvailable directories:")
         print(f"---------------------")
@@ -283,7 +285,7 @@ def main():
         # for url in fv3_urls:
         #     fv3_dir_option = url.split('fv3betaout1data/')[1]
         #     print(f"(FV3-based MGCM) {fv3_dir_option:<20} {Cyan}({url}){Nclr}")
-        print(f"(FV3-based MGCM) {'FV3BETAOUT1':<17} {Cyan}(https://data.nas.nasa.gov/mcmcref/fv3betaout1/){Nclr}")
+        print(f"(FV3-based MGCM) {'FV3BETAOUT1':<17} {Cyan}({fv3_home_url}){Nclr}")
 
         print("")
         
@@ -294,7 +296,7 @@ def main():
                 # FV3-based MGCM
                 print(f"\nAvailable files from the FV3-based MGCM's FV3BETAOUT1 directory:")
                 print(f"-------------------------------------------------")
-                fv3_dir_url = fv3_home + r'\/'
+                fv3_dir_url = fv3_data_url + r'\/'
                 fv3_file_text = (requests.get(fv3_dir_url)).text
                 print_file_list(re.findall(r'href="[^"]*\/([^"\/]+\.nc)"',
                                             fv3_file_text))
@@ -308,7 +310,7 @@ def main():
                 print(f"\nAvailable files from the Legacy MGCM's {portal_dir} "
                       f"directory:")
                 print(f"-------------------------------------------------")
-                legacy_dir_url = legacy_home + portal_dir + r'\/'
+                legacy_dir_url = legacy_data_url + portal_dir + r'\/'
                 print(f"Legacy MGCM {portal_dir} URL: {legacy_dir_url}")
                 legacy_file_text = (requests.get(legacy_dir_url)).text
                 print(f"{legacy_file_text}")
@@ -321,15 +323,9 @@ def main():
         if portal_dir in [
             'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS', 'ACTIVECLDS_NCDF'
             ]:
-            requested_url = (
-                "https://data.nas.nasa.gov/legacygcm/legacygcmdata/"
-                + portal_dir
-                + "/"
-                )
+            requested_url = (f"{legacy_data_url}" + portal_dir + "/")
         elif portal_dir in ['FV3BETAOUT1']:
-            requested_url = (
-                "https://data.nas.nasa.gov/legacygcm/fv3betaout1data/"
-                )
+            requested_url = (f"{fv3_data_url}")
 
         if not (args.ls or args.filename):
             prYellow("ERROR No file requested. Use [-ls --ls] or "
