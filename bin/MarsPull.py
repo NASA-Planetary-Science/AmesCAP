@@ -297,7 +297,7 @@ def main():
                 print(f'\nFV3-based MGCM FV3BETAOUT1 directory selected.')
                 print(f'Available files:')
                 print(f'---------------')
-                fv3_dir_url = f'{fv3_data_url}'
+                fv3_dir_url = f'{fv3_home_url}'
                 fv3_data = requests.get(fv3_dir_url)
                 fv3_file_text = fv3_data.text
                 print(f'fv3_file_text: {fv3_file_text}')
@@ -364,6 +364,11 @@ def main():
                 
                 print_file_list(legacy_files_available)
                 print(f'\n{Cyan}({legacy_dir_url}){Nclr}')
+            
+            else:
+                print(f'Error: Directory {portal_dir} does not exist.')
+                sys.exit(1)
+            sys.exit(0)
 
     if args.directory_name and not args.list_files:
         portal_dir = args.directory_name
