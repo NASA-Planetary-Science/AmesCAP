@@ -282,7 +282,7 @@ def main():
         # for url in fv3_urls:
         #     fv3_dir_option = url.split('fv3betaout1data/')[1]
         #     print(f"(FV3-based MGCM) {fv3_dir_option:<20} {Cyan}({url}){Nclr}")
-        print(f"(FV3-based MGCM) {'FV3BETAOUT1':<20} {Cyan}(https://data.nas.nasa.gov/mcmcref/fv3betaout1/){Nclr}")
+        print(f"(FV3-based MGCM) {'FV3BETAOUT1':<17} {Cyan}(https://data.nas.nasa.gov/mcmcref/fv3betaout1/){Nclr}")
 
         print("")
         
@@ -308,7 +308,9 @@ def main():
                       f"directory:")
                 print(f"-------------------------------------------------")
                 legacy_dir_url = legacy_subdir_search + portal_dir + r'\/'
+                print(f"Legacy MGCM {portal_dir} URL: {legacy_dir_url}")
                 legacy_file_text = (requests.get(legacy_dir_url)).text
+                print(f"{legacy_file_text}")
                 print_file_list(re.findall(r'download="(fort\.11_[0-9]+)"',
                                                 legacy_file_text))
                 print(f"\n{Cyan}({legacy_dir_url}){Nclr}")
