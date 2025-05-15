@@ -276,13 +276,13 @@ def main():
         print(f"---------------------")
         for url in legacy_urls:
             legacy_dir_option = url.split('legacygcmdata/')[1]
-            print(f"(Legacy MGCM) {legacy_dir_option:<14} {Cyan}({url}){Nclr}")
+            print(f"(Legacy MGCM) {legacy_dir_option:<20} {Cyan}({url}){Nclr}")
         
         # NOTE: See above comment for the FV3-based MGCM data note
         # for url in fv3_urls:
         #     fv3_dir_option = url.split('fv3betaout1data/')[1]
-        #     print(f"(FV3-based MGCM) {fv3_dir_option:<14} {Cyan}({url}){Nclr}")
-        print(f"(FV3-based MGCM) {'FV3BETAOUT1':<14} {Cyan}(https://data.nas.nasa.gov/mcmcref/fv3betaout1/){Nclr}")
+        #     print(f"(FV3-based MGCM) {fv3_dir_option:<20} {Cyan}({url}){Nclr}")
+        print(f"(FV3-based MGCM) {'FV3BETAOUT1':<20} {Cyan}(https://data.nas.nasa.gov/mcmcref/fv3betaout1/){Nclr}")
 
         print("")
         
