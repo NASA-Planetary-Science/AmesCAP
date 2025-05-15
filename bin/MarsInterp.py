@@ -26,7 +26,11 @@ Third-party Requirements:
     * ``os``
     * ``time``
     * ``matplotlib``
-
+    * ``re``
+    * ``functools``
+    * ``traceback``
+    * ``sys``
+    * ``amescap``
 """
 
 # Make print statements appear in color
@@ -60,11 +64,13 @@ from amescap.Script_utils import (
 )
 from amescap.Ncdf_wrapper import Ncdf
 
+
 def debug_wrapper(func):
     """
-    A decorator that wraps a function with error handling based on the 
+    A decorator that wraps a function with error handling based on the
     --debug flag.
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         global debug
@@ -81,6 +87,7 @@ def debug_wrapper(func):
                       f"--debug for more information.{Nclr}")
             return 1  # Error exit code
     return wrapper
+
 
 # ======================================================================
 #                           ARGUMENT PARSER
@@ -184,6 +191,7 @@ if args.input_file:
             parser.error(f"{Red}{file.name} is not a netCDF file{Nclr}")
             exit()
 
+
 # ======================================================================
 #                           DEFINITIONS
 # ======================================================================
@@ -207,6 +215,7 @@ filepath = os.getcwd()
 # ======================================================================
 #                               MAIN PROGRAM
 # ======================================================================
+
 
 @debug_wrapper
 def main():
@@ -307,6 +316,7 @@ def main():
                        f"{args.extension}.nc")
         else:
             newname = (f"{filepath}/{ifile[:-3]}_{interp_type}.nc")
+
 
         # ==============================================================
         #                       Interpolation
@@ -453,18 +463,11 @@ def main():
                         else:
                             fnew.copy_Ncvar(fNcdf.variables[ivar])
 
-
-
-
-
-
-
-
-
         print("\r ", end="")
         fNcdf.close()
         fnew.close()
         print(f"Completed in {(time.time() - start_time):3f} sec")
+
 
 # ======================================================================
 #                           END OF PROGRAM

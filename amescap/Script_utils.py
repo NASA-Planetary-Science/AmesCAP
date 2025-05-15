@@ -13,7 +13,9 @@ Third-party Requirements:
     * ``re``
     * ``os``
     * ``subprocess``
-    
+    * ``sys``
+    * ``math``
+    * ``matplotlib.colors``
 """
 
 # Load generic Python modules
@@ -23,6 +25,7 @@ import subprocess   # Run command-line commands
 import numpy as np
 from netCDF4 import Dataset, MFDataset
 import re
+from matplotlib.colors import ListedColormap, hex2color
 
 # ======================================================================
 #                           DEFINITIONS
@@ -47,18 +50,19 @@ def prYellow(skk): print("\033[93m{}\033[00m".format(skk))
 def prPurple(skk): print("\033[95m{}\033[00m".format(skk))
 def prLightPurple(skk): print("\033[94m{}\033[00m".format(skk))
 
+
 def MY_func(Ls_cont):
     """
     Returns the Mars Year
 
     :param Ls_cont: solar longitude (continuous)
     :type Ls_cont: array
-
     :return: the Mars year
     :rtype: int
-    
     """
+
     return (Ls_cont)//(360.) + 1
+
 
 def find_tod_in_diurn(fNcdf):
     """
@@ -68,16 +72,14 @@ def find_tod_in_diurn(fNcdf):
 
     :param fNcdf: a netCDF file
     :type fNcdf: netCDF file object
-
     :return: the name of the time of day dimension
     :rtype: str
-    
     """
+
     regex = re.compile("time_of_day.")
     varset = fNcdf.variables.keys()
     # Extract the 1st element of the list
     return [string for string in varset if re.match(regex, string)][0]
-
 
 
 def print_fileContent(fileNcdf):
@@ -87,10 +89,9 @@ def print_fileContent(fileNcdf):
 
     :param fileNcdf: full path to the netCDF file
     :type fileNcdf: str
-
     :return: None
-    
     """
+
     if not os.path.isfile(fileNcdf.name):
         print(f"{fileNcdf.name} not found")
     else:
@@ -99,10 +100,10 @@ def print_fileContent(fileNcdf):
         print(list(f.dimensions.keys()))
         print(str(f.dimensions))
         print("===================== CONTENT =====================")
-        # Get all variables
-        all_var = f.variables.keys()
-        # Initialize empty list
-        all_dims = list()
+
+        all_var = f.variables.keys() # Get all variables
+        all_dims = list() # Initialize empty list
+
         for ivar in all_var:
             # Get all the variable dimensions
             all_dims.append(f.variables[ivar].dimensions)
@@ -110,6 +111,7 @@ def print_fileContent(fileNcdf):
         # Filter duplicates. An object of type set() is an unordered
         # collection of distinct objects
         all_dims = set(all_dims)
+
         # Sort dimensions by length (e.g., (lat) will come before
         # (lat, lon))
         all_dims = sorted(all_dims, key = len)
@@ -126,7 +128,7 @@ def print_fileContent(fileNcdf):
                         f"{Cyan}{txt_shape}, {Yellow}{txt_long_name}  "
                         f"[{txt_units}]{Nclr}"
                         )
-                    
+
         try:
             # Skipped if the netCDF file does not contain time
             t_ini = f.variables["time"][0]
@@ -138,12 +140,12 @@ def print_fileContent(fileNcdf):
             print(f"\nLs ranging from {(np.mod(Ls_ini, 360.)):.2f} to "
                   f"{(np.mod(Ls_end, 360.)):.2f}: {(t_end-t_ini):.2f} days"
                   f"               (MY {MY_ini:02})   (MY {MY_end:02})")
-        
         except:
             pass
-        
+
         f.close()
         print("=====================================================")
+
 
 def print_varContent(fileNcdf, list_varfull, print_stat=False):
     """
@@ -152,28 +154,26 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
 
     :param fileNcdf: full path to a netcdf file
     :type fileNcdf: str
-    
     :param list_varfull: list of variable names and optional slices
         (e.g., ``["lon", "ps[:, 10, 20]"]``)
     :type list_varfull: list
-    
     :param print_stat: If True, print min, mean, and max. If False,
         print values. Defaults to False
     :type print_stat: bool, optional
-
     :return: None
-    
     """
+
     if not os.path.isfile(fileNcdf.name):
         print(f"{fileNcdf.name} not found")
     else:
         if print_stat:
-            print(f"{Cyan}____________________________________________________"
-                  f"______________________\n"
-                  f"           VAR            |      MIN      |      MEAN     "
-                  f"|      MAX      |\n"
-                  f"__________________________|_______________|_______________"
-                  f"|_______________|{Nclr}")
+            print(
+                f"{Cyan}"
+                f"__________________________________________________________________________\n"
+                f"           VAR            |      MIN      |      MEAN     |      MAX      |\n"
+                f"__________________________|_______________|_______________|_______________|"
+                f"{Nclr}")
+
         for varfull in list_varfull:
             try:
                 slice = "[:]"
@@ -182,6 +182,7 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                     slice = f"[{slice}"
                 else:
                     varname = varfull.strip()
+
                 cmd_txt = f"f.variables['{varname}']{slice}"
                 f = Dataset(fileNcdf.name, "r")
                 var = eval(cmd_txt)
@@ -192,12 +193,14 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                     Max = np.nanmax(var)
                     print(f"{Cyan}{varfull:>26s}|{Min:>15g}|{Mean:>15g}|"
                           f"{Max:>15g}|{Nclr}")
+
                     if varname == "areo":
                         # If variable is areo then print modulo
                         print(f"{Cyan}{varfull:>17s}(mod 360)|"
                               f"({(np.nanmin(var%360)):>13g})|"
                               f"({(np.nanmean(var%360)):>13g})|"
                               f"({(np.nanmax(var%360)):>13g})|{Nclr}")
+
                 else:
                     if varname != "areo":
                         print(f"{Cyan}{varfull}= {Nclr}")
@@ -211,8 +214,7 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                             else:
                                 print(ii, ii%360)
 
-                    print(f"{Cyan}____________________________________________"
-                          f"__________________________{Nclr}")
+                    print(f"{Cyan}______________________________________________________________________{Nclr}")
             except:
                 if print_stat:
                     print(
@@ -222,65 +224,69 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                     print(f"{Red}{varfull}")
         if print_stat:
             # Last line for the table
-            print(f"{Cyan}__________________________|_______________|_________"
-                  f"______|_______________|{Nclr}")
+            print(f"{Cyan}__________________________|_______________|_______________|_______________|{Nclr}")
         f.close()
+
 
 def give_permission(filename):
     """
     Sets group file permissions for the NAS system
-    
     """
+
     try:
         # catch error and standard output
-        subprocess.check_call(["setfacl -v"],
-                              shell = True,
-                              stdout = open(os.devnull, "w"),
-                              stderr = open(os.devnull, "w"))
+        subprocess.check_call(
+            ["setfacl -v"],
+            shell=True,
+            stdout=open(os.devnull, "w"),
+            stderr=open(os.devnull, "w")
+            )
         cmd_txt = f"setfacl -R -m g:s0846:r {filename}"
-        subprocess.call(cmd_txt, shell = True)
+        subprocess.call(cmd_txt, shell=True)
     except subprocess.CalledProcessError:
         pass
+
 
 def check_file_tape(fileNcdf):
     """
     Checks whether a file exists on the disk. If on a NAS system,
     also checks if the file needs to be migrated from tape.
-    
+
     :param fileNcdf: full path to a netcdf file or a file object with a name attribute
     :type fileNcdf: str or file object
     """
+
     # Get the filename, whether passed as string or as file object
     filename = fileNcdf if isinstance(fileNcdf, str) else fileNcdf.name
-    
+
     # If filename is not a netCDF file, exit program
     if not re.search(".nc", filename):
         print(f"{Red}{filename} is not a netCDF file{Nclr}")
         exit()
-    
+
     # First check if the file exists at all
     if not os.path.isfile(filename):
         print(f"{Red}File {filename} does not exist{Nclr}")
         exit()
-    
+
     # Check if we're on a NAS system by looking for specific environment variables
     # or filesystem paths that are unique to NAS
     is_nas = False
-    
+
     # Method 1: Check for NAS-specific environment variables
     nas_env_vars = ['PBS_JOBID', 'SGE_ROOT', 'NOBACKUP', 'NASA_ROOT']
     for var in nas_env_vars:
         if var in os.environ:
             is_nas = True
             break
-    
+
     # Method 2: Check for NAS-specific directories
     nas_paths = ['/nobackup', '/nobackupp', '/u/scicon']
     for path in nas_paths:
         if os.path.exists(path):
             is_nas = True
             break
-    
+
     # Only perform NAS-specific operations if we're on a NAS system
     if is_nas:
         try:
@@ -288,25 +294,25 @@ def check_file_tape(fileNcdf):
             subprocess.check_call(["dmls"], shell=True,
                                   stdout=open(os.devnull, "w"),
                                   stderr=open(os.devnull, "w"))
-            
+
             # Get the last columns of the ls command (filename and status)
             cmd_txt = f"dmls -l {filename}| awk '{{print $8,$9}}'"
-            
+
             # Get identifier from dmls -l command
             dmls_out = subprocess.check_output(cmd_txt, shell=True).decode("utf-8")
-            
+
             if dmls_out[1:4] not in ["DUL", "REG", "MIG"]:
                 # If file is OFFLINE, UNMIGRATING etc...
-                print(f"{Yellow}*** Warning ***\n{dmls_out[6:-1]} "
-                      f"is not loaded on disk (Status: {dmls_out[0:5]}). "
-                      f"Please migrate it to disk with:\n"
-                      f"``dmget {dmls_out[6:-1]}``\n then try again."
-                      f"\n{Nclr}")
+                print(f"{Yellow}*** Warning ***\n{dmls_out[6:-1]} is not "
+                      f"loaded on disk (Status: {dmls_out[0:5]}). Please "
+                      f"migrate it to disk with: ``dmget {dmls_out[6:-1]}``\n"
+                      f" then try again.\n{Nclr}")
                 exit()
         except (subprocess.CalledProcessError, FileNotFoundError, IndexError):
             # If there's any issue with the dmls command, log it but continue
             if "--debug" in sys.argv:
-                print(f"{Yellow}Warning: Could not check tape status for {filename}{Nclr}")
+                print(f"{Yellow}Warning: Could not check tape status for "
+                      f"{filename}{Nclr}")
             pass
     # Otherwise, we're not on a NAS system, so just continue
 
@@ -317,22 +323,22 @@ def get_Ncdf_path(fNcdf):
 
     .. note::
         ``Dataset`` and multi-file dataset (``MFDataset``) have
-        different attributes for the path, hence the need for this 
+        different attributes for the path, hence the need for this
         function.
 
     :param fNcdf: Dataset or MFDataset object
     :type fNcdf: netCDF file object
-    
     :return: string list for the Dataset (MFDataset)
     :rtype: str(list)
-    
     """
+
     # Only MFDataset has the_files attribute
     fname_out = getattr(fNcdf, "_files", False)
     # Regular Dataset
     if not fname_out:
         fname_out = getattr(fNcdf, "filepath")()
     return fname_out
+
 
 def extract_path_basename(filename):
     """
@@ -341,14 +347,13 @@ def extract_path_basename(filename):
 
     :param filename: name of the netCDF file (may include full path)
     :type filename: str
-
     :return: full file path & name of file
 
     .. note::
         This routine does not confirm that the file exists.
         It operates on the provided input string.
-        
     """
+
     # Get the filename without the path
     if ("/" in filename or
         "\\" in filename):
@@ -362,6 +367,7 @@ def extract_path_basename(filename):
         filepath = os.path.expanduser(filepath)
     return filepath, basename
 
+
 def FV3_file_type(fNcdf):
     """
     Return the type of the netCDF file (i.e., ``fixed``, ``diurn``,
@@ -370,12 +376,11 @@ def FV3_file_type(fNcdf):
 
     :param fNcdf: an open Netcdf file
     :type fNcdf: Netcdf file object
-
     :return: The Ls array type (string, ``fixed``, ``continuous``, or
         ``diurn``) and the netCDF file type (string ``fixed``,
         ``diurn``, ``average``, or ``daily``)
-        
     """
+
     # Get the full path from the file
     fullpath = get_Ncdf_path(fNcdf)
 
@@ -416,6 +421,7 @@ def FV3_file_type(fNcdf):
 
     return f_type, interp_type
 
+
 def alt_FV3path(fullpaths, alt, test_exist=True):
     """
     Returns the original or fixed file given an interpolated daily,
@@ -424,21 +430,17 @@ def alt_FV3path(fullpaths, alt, test_exist=True):
     :param fullpaths: full path to a file or a list of full paths to
         more than one file
     :type fullpaths: str
-    
     :param alt: type of file to return (i.e., original or fixed)
     :type alt: str
-    
     :param test_exist: Whether file exists on the disk, defaults to True
     :type test_exist: bool, optional
-
     :raises ValueError: _description_
-
     :return: path to original or fixed file
         (e.g., "/u/path/00010.atmos_average.nc" or
         "/u/path/00010.fixed.nc")
     :rtype: str
-    
     """
+
     out_list = []
     one_element = False
 
@@ -467,9 +469,10 @@ def alt_FV3path(fullpaths, alt, test_exist=True):
             new_full_path = f"{path}/{file_raw}"
         if alt == "fixed":
             new_full_path = f"{path}/{DDDDD}.fixed.nc"
-        if (test_exist and not os.path.exists(new_full_path)):
-            raise ValueError(f"In alt_FV3path(), {new_full_path} does not "
-                             f"exist")
+        if test_exist and not os.path.exists(new_full_path):
+            raise ValueError(
+                f"In alt_FV3path(), {new_full_path} does not exist"
+                )
 
         out_list.append(new_full_path)
 
@@ -477,6 +480,7 @@ def alt_FV3path(fullpaths, alt, test_exist=True):
         out_list = out_list[0]
 
     return out_list
+
 
 def smart_reader(fNcdf, var_list, suppress_warning=False):
     """
@@ -486,16 +490,13 @@ def smart_reader(fNcdf, var_list, suppress_warning=False):
 
     :param fNcdf: an open netCDF file
     :type fNcdf: netCDF file object
-    
     :param var_list: a variable or list of variables (e.g., ``areo`` or
         [``pk``, ``bk``, ``areo``])
     :type var_list: _type_
-    
     :param suppress_warning: suppress debug statement. Useful if a
         variable is not expected to be in the file anyway. Defaults to
         False
     :type suppress_warning: bool, optional
-
     :return: variable content (single or values to unpack)
     :rtype: list
 
@@ -517,8 +518,8 @@ def smart_reader(fNcdf, var_list, suppress_warning=False):
 
     .. note::
         Only the variable content is returned, not attributes
-    
     """
+
     # This out_list is for the variable
     out_list = []
     one_element = False
@@ -540,7 +541,8 @@ def smart_reader(fNcdf, var_list, suppress_warning=False):
             # Try to read in the original file
             out_list.append(fNcdf.variables[ivar][:])
         else:
-            full_path_try = alt_FV3path(Ncdf_path, alt = "raw",
+            full_path_try = alt_FV3path(Ncdf_path,
+                                        alt = "raw",
                                         test_exist = True)
 
             if file_is_MF:
@@ -582,6 +584,7 @@ def smart_reader(fNcdf, var_list, suppress_warning=False):
         out_list = out_list[0]
     return out_list
 
+
 def regrid_Ncfile(VAR_Ncdf, file_Nc_in, file_Nc_target):
     """
     Regrid a netCDF variable from one file structure to another.
@@ -591,28 +594,25 @@ def regrid_Ncfile(VAR_Ncdf, file_Nc_in, file_Nc_target):
     :param VAR_Ncdf: a netCDF variable object to regrid
         (e.g., ``f_in.variable["temp"]``)
     :type VAR_Ncdf: netCDF file variable
-    
     :param file_Nc_in: an open netCDF file to source for the variable
         (e.g., ``f_in = Dataset("filename", "r")``)
     :type file_Nc_in: netCDF file object
-    
     :param file_Nc_target: an open netCDF file with the desired file
         structure (e.g., ``f_out = Dataset("filename", "r")``)
     :type file_Nc_target: netCDF file object
-
     :return: the values of the variable interpolated to the target file
         grid.
     :rtype: array
 
     .. note::
         While the KDTree interpolation can handle a 3D dataset
-        (lon/lat/lev instead of just 2D lon/lat), the grid points in 
-        the vertical are just a few (10--100s) meters in the PBL vs a 
-        few (10-100s) kilometers in the horizontal. This results in 
-        excessive weighting in the vertical, which is why the vertical 
+        (lon/lat/lev instead of just 2D lon/lat), the grid points in
+        the vertical are just a few (10--100s) meters in the PBL vs a
+        few (10-100s) kilometers in the horizontal. This results in
+        excessive weighting in the vertical, which is why the vertical
         dimension is handled separately.
-    
     """
+
     from amescap.FV3_utils import interp_KDTree, axis_interp
     ftype_in, zaxis_in = FV3_file_type(file_Nc_in)
     ftype_t, zaxis_t = FV3_file_type(file_Nc_target)
@@ -647,20 +647,31 @@ def regrid_Ncfile(VAR_Ncdf, file_Nc_in, file_Nc_target):
     # Get array elements
     var_OUT = VAR_Ncdf[:]
 
-
     if not (np.array_equal(lat_in,lat_t) and np.array_equal(lon_in,lon_t)):
         # STEP 1: lat/lon interpolation are always performed unless
         # target lon and lat are identical
         if len(np.atleast_1d(lon_in)) == 1:
             # Special case if input len(lon)=1 (slice or zonal avg),
             # only interpolate on the latitude axis
-            var_OUT = axis_interp(var_OUT, lat_in, lat_t, axis = -2,
-                                  reverse_input = False, type_int = "lin")
+            var_OUT = axis_interp(
+                var_OUT,
+                lat_in,
+                lat_t,
+                axis = -2,
+                reverse_input = False,
+                type_int = "lin"
+                )
         elif len(np.atleast_1d(lat_in)) == 1:
             # Special case if input len(lat)=1 (slice or medidional avg),
             # only interpolate on the longitude axis
-            var_OUT = axis_interp(var_OUT, lon_in, lon_t, axis = -1,
-                                  reverse_input = False, type_int = "lin")
+            var_OUT = axis_interp(
+                var_OUT,
+                lon_in,
+                lon_t,
+                axis = -1,
+                reverse_input = False,
+                type_int = "lin"
+                )
         else:
             # Bi-directional interpolation
             var_OUT = interp_KDTree(var_OUT, lat_in, lon_in, lat_t, lon_t)
@@ -683,16 +694,26 @@ def regrid_Ncfile(VAR_Ncdf, file_Nc_in, file_Nc_target):
             intType = "lin"
         elif zaxis_in == "pstd":
             intType = "log"
-        var_OUT = axis_interp(var_OUT, lev_in,lev_t, pos_axis,
-                              reverse_input = reverse_input,
-                              type_int = intType)
+        var_OUT = axis_interp(
+            var_OUT,
+            lev_in,
+            lev_t,
+            pos_axis,
+            reverse_input = reverse_input,
+            type_int = intType
+            )
 
     if "time" in VAR_Ncdf.dimensions:
         # STEP 3: Linear interpolation in Ls
         pos_axis = 0
-        var_OUT = axis_interp(var_OUT, np.squeeze(areo_in)%360,
-                              np.squeeze(areo_t)%360, pos_axis,
-                              reverse_input = False, type_int = "lin")
+        var_OUT = axis_interp(
+            var_OUT,
+            np.squeeze(areo_in)%360,
+            np.squeeze(areo_t)%360,
+            pos_axis,
+            reverse_input = False,
+            type_int = "lin"
+            )
 
     if ftype_in == "diurn":
         # STEP 4: Linear interpolation in time of day
@@ -704,10 +725,16 @@ def regrid_Ncfile(VAR_Ncdf, file_Nc_in, file_Nc_target):
         tod_name_t = find_tod_in_diurn(file_Nc_target)
         tod_in = file_Nc_in.variables[tod_name_in][:]
         tod_t = file_Nc_target.variables[tod_name_t][:]
-        var_OUT = axis_interp(var_OUT, tod_in, tod_t, pos_axis,
-                              reverse_input = False,
-                              type_int = "lin")
+        var_OUT = axis_interp(
+            var_OUT,
+            tod_in,
+            tod_t,
+            pos_axis,
+            reverse_input = False,
+            type_int = "lin"
+            )
     return var_OUT
+
 
 def progress(k, Nmax):
     """
@@ -715,14 +742,14 @@ def progress(k, Nmax):
 
     :param k: current iteration of the outer loop
     :type k: int
-    
     :param Nmax: max iteration of the outer loop
     :type Nmax: int
-    
     """
+
     # For rounding to the 2nd digit
     from math import ceil
     progress = float(k)/Nmax
+
     # Modify barLength to change length of progress bar
     barLength = 10
     status = ""
@@ -743,6 +770,7 @@ def progress(k, Nmax):
     sys.stdout.write(text)
     sys.stdout.flush()
 
+
 def section_content_amescap_profile(section_ID):
     """
     Executes first code section in ``~/.amescap_profile`` to read in
@@ -751,10 +779,9 @@ def section_content_amescap_profile(section_ID):
     :param section_ID: the section to load (e.g., Pressure definitions
         for pstd)
     :type section_ID: str
-
     :return: the relevant line with Python syntax
-    
     """
+
     import os
     import numpy as np
     input_file = os.environ["HOME"]+"/.amescap_profile"
@@ -786,10 +813,12 @@ def section_content_amescap_profile(section_ID):
               f"{Cyan}    ``cp AmesCAP/mars_templates/amescap_profile  "
               f"~/.amescap_profile``")
         exit()
+
     except Exception as exception:
         # Return the error
         print(f"{Red}Error")
         print(exception)
+
 
 def filter_vars(fNcdf, include_list=None, giveExclude=False):
     """
@@ -800,18 +829,15 @@ def filter_vars(fNcdf, include_list=None, giveExclude=False):
     :param fNcdf: an open netCDF object for a diurn, daily, or average
         file
     :type fNcdf: netCDF file object
-    
     :param include_list:list of variables to include (e.g., [``ucomp``,
         ``vcomp``], defaults to None
     :type include_list: list or None, optional
-    
     :param giveExclude: if True, returns variables to be excluded from
         the file, defaults to False
     :type giveExclude: bool, optional
-    
     :return: list of variable names to include in the processed file
-    
     """
+
     var_list = fNcdf.variables.keys()
     if include_list is None:
         # If no list is provided, return all variables:
@@ -844,6 +870,7 @@ def filter_vars(fNcdf, include_list=None, giveExclude=False):
         out_list = exclude_list
     return out_list
 
+
 def find_fixedfile(filename):
     """
     Finds the relevant fixed file for a given average, daily, or diurn
@@ -852,7 +879,6 @@ def find_fixedfile(filename):
 
     :param filename: an average, daily, or diurn netCDF file
     :type filename: str
-    
     :return: full path to the correspnding fixed file
     :rtype: str
 
@@ -865,9 +891,10 @@ def find_fixedfile(filename):
             atmos_average.tileX_plevs.nc            -> fixed.tileX.nc
             atmos_average.tileX_plevs_custom.nc     -> fixed.tileX.nc
             atmos_average_custom.tileX_plevs.nc     -> fixed.tileX.nc
-            
     """
+
     filepath, fname = extract_path_basename(filename)
+
     if "tile" in fname:
         # Try the tile or standard version of the fixed files
         name_fixed = f"{filepath}/fixed.tile{fname.split('tile')[1][0]}.nc"
@@ -879,6 +906,7 @@ def find_fixedfile(filename):
         name_fixed = "FixedFileNotFound"
     return name_fixed
 
+
 def get_longname_unit(fNcdf, varname):
     """
     Returns the longname and unit attributes of a variable in a netCDF
@@ -887,30 +915,28 @@ def get_longname_unit(fNcdf, varname):
 
     :param fNcdf: an open netCDF file
     :type fNcdf: netCDF file object
-    
     :param varname: variable to extract attribute from
     :type varname: str
-
     :return: longname and unit attributes
     :rtype: str
 
     .. note::
         Some functions in MarsVars edit the units
-        (e.g., [kg] -> [kg/m]), therefore the empty string is 4 
-        characters in length ("    " instead of "") to allow for 
+        (e.g., [kg] -> [kg/m]), therefore the empty string is 4
+        characters in length ("    " instead of "") to allow for
         editing by ``editing units_txt[:-2]``, for example.
-    
     """
+
     return (getattr(fNcdf.variables[varname], "long_name", "    "),
             getattr(fNcdf.variables[varname], "units", "    "))
+
 
 def wbr_cmap():
     """
     Returns a color map that goes from
     white -> blue -> green -> yellow -> red
-    
     """
-    from matplotlib.colors import ListedColormap
+
     tmp_cmap = np.zeros((254, 4))
     tmp_cmap[:, 3] = 1.
     tmp_cmap[:, 0:3] = np.array([
@@ -980,13 +1006,13 @@ def wbr_cmap():
         [150, 22, 26], [146, 21, 25]])/255.
     return ListedColormap(tmp_cmap)
 
+
 def rjw_cmap():
     """
     Returns John Wilson's preferred color map
     (red -> jade -> wisteria)
-    
     """
-    from matplotlib.colors import ListedColormap
+
     tmp_cmap = np.zeros((55, 4))
     tmp_cmap[:, 3] = 1.
     tmp_cmap[:, 0:3] = np.array([
@@ -1006,13 +1032,13 @@ def rjw_cmap():
         [255,  20,  11], [255,   0,   0], [237,  17,   0]])/255.
     return ListedColormap(tmp_cmap)
 
+
 def hot_cold_cmap():
     """
     Returns Dark blue > light blue>white>yellow>red colormap
     Based on Matlab's bipolar colormap
-    
     """
-    from matplotlib.colors import ListedColormap
+
     tmp_cmap = np.zeros((128,4))
     tmp_cmap [:,3]=1. #set alpha
     tmp_cmap[:,0:3]=np.array([
@@ -1051,14 +1077,14 @@ def hot_cold_cmap():
 
     return ListedColormap(tmp_cmap)
 
+
 def dkass_dust_cmap():
     """
     Returns a color map useful for dust cross-sections.
     (yellow -> orange -> red -> purple)
     Provided by Courtney Batterson.
-    
     """
-    from matplotlib.colors import ListedColormap, hex2color
+
     tmp_cmap = np.zeros((256, 4))
     tmp_cmap[:, 3] = 1.
     dkass_cmap = [
@@ -1109,14 +1135,14 @@ def dkass_dust_cmap():
     tmp_cmap[:, 0:3] = RGB_T
     return ListedColormap(tmp_cmap)
 
+
 def dkass_temp_cmap():
     """
     Returns a color map that highlights the 200K temperatures.
     (black -> purple -> blue -> green -> yellow -> orange -> red)
     Provided by Courtney Batterson.
-    
     """
-    from matplotlib.colors import ListedColormap, hex2color
+
     tmp_cmap = np.zeros((256, 4))
     tmp_cmap[:, 3] = 1.
     dkass_cmap = [
@@ -1167,6 +1193,7 @@ def dkass_temp_cmap():
     tmp_cmap[:, 0:3] = RGB_T
     return ListedColormap(tmp_cmap)
 
+
 def pretty_print_to_fv_eta(var, varname, nperline=6):
     """
     Print the ``ak`` or ``bk`` coefficients for copying to
@@ -1174,16 +1201,13 @@ def pretty_print_to_fv_eta(var, varname, nperline=6):
 
     :param var: ak or bk data
     :type var: array
-    
     :param varname: the variable name ("a" or "b")
     :type varname: str
-    
     :param nperline: the number of elements per line, defaults to 6
     :type nperline: int, optional
-
     :return: a print statement for copying into ``fv_eta.f90``
-    
     """
+
     NLAY = len(var) - 1
     ni = 0
     # Print the piece of code to copy/paste in ``fv_eta.f90``
@@ -1231,23 +1255,21 @@ def replace_dims(Ncvar_dim, vert_dim_name=None):
     :param Ncvar_dim: netCDF variable dimensions
         (e.g., ``f_Ncdf.variables["temp"].dimensions``)
     :type Ncvar_dim: str
-    
     :param vert_dim_name: the vertical dimension if it is ambiguous
         (``pstd``, ``zstd``, or ``zagl``). Defaults to None
     :type vert_dim_name: str, optional
-    
     :return: updated dimensions
     :rtype: str
-    
     """
+
     # Set input dictionary options recognizable as MGCM variables
     lat_dic = ["lat", "lats", "latitudes", "latitude"]
     lon_dic = ["lon", "lon", "longitude", "longitudes"]
     lev_dic = ["pressure", "altitude"]
-    areo_dic = ["ls"]
 
     # Set the desired output names
     dims_out = list(Ncvar_dim).copy()
+
     for ii, idim in enumerate(Ncvar_dim):
         # Rename axes
         if idim in lat_dic: dims_out[ii] = "lat"
@@ -1262,6 +1284,7 @@ def replace_dims(Ncvar_dim, vert_dim_name=None):
                 dims_out[ii] = vert_dim_name
     return tuple(dims_out)
 
+
 def ak_bk_loader(fNcdf):
     """
     Return ``ak`` and ``bk`` arrays from the current netCDF file. If
@@ -1270,19 +1293,18 @@ def ak_bk_loader(fNcdf):
 
     :param fNcdf: an open netCDF file
     :type fNcdf: a netCDF file object
-
     :return: the ``ak`` and ``bk`` arrays
 
     .. note::
         This routine will look for both ``ak`` and ``bk``. There
-        are cases when it is convenient to load the ``ak``, ``bk`` once 
-        when the files are first opened in ``MarsVars``, but the ``ak`` 
-        and ``bk`` arrays may not be necessary for in the calculation 
-        as is the case for ``MarsVars XXXXX.atmos_average_psd.nc 
-        --add msf``, which operates on a pressure interpolated 
+        are cases when it is convenient to load the ``ak``, ``bk`` once
+        when the files are first opened in ``MarsVars``, but the ``ak``
+        and ``bk`` arrays may not be necessary for in the calculation
+        as is the case for ``MarsVars XXXXX.atmos_average_psd.nc
+        --add msf``, which operates on a pressure interpolated
         (``_pstd.nc``) file.
-    
     """
+
     # First try to read ak and bk in the current netCDF file:
     allvars = fNcdf.variables.keys()
 
@@ -1298,9 +1320,8 @@ def ak_bk_loader(fNcdf):
         else:
             ak = np.array(fNcdf.variables["pk"])
         bk = np.array(fNcdf.variables["bk"])
-        
-
     else:
+
         try:
             filepath, fname = extract_path_basename(fullpath_name)
             if not 'average' in os.listdir(filepath):
@@ -1308,7 +1329,7 @@ def ak_bk_loader(fNcdf):
                 name_average = "FixedFileNotFound"
             else:
                 name_average = list(filter(lambda s: 'average' in s, os.listdir()))[0]
-        
+
             f_average = Dataset(name_average, "r", format = "NETCDF4_CLASSIC")
             allvars = f_average.variables.keys()
 
@@ -1319,6 +1340,7 @@ def ak_bk_loader(fNcdf):
                 ak = np.array(f_average.variables["pk"])
             bk = np.array(f_average.variables["bk"])
             f_average.close()
+
         except:
             try:
                 name_fixed = find_fixedfile(fullpath_name)
@@ -1333,139 +1355,155 @@ def ak_bk_loader(fNcdf):
                     ak = np.array(f_fixed.variables["pk"])
                 bk = np.array(f_fixed.variables["bk"])
                 f_fixed.close()
-                
+
             except:
                 print(f"{Red}Fixed file does not exist in {filepath}. "
                     f"Make sure the fixed file you are referencing "
                     f"matches the FV3 filetype (e.g., ``fixed.tileX.nc`` "
                     f"for operations on tile X)")
                 exit()
+
     return ak, bk
+
 
 def read_variable_dict_amescap_profile(f_Ncdf=None):
     """
-    Inspect a Netcdf file and return the name of the variables and 
+    Inspect a Netcdf file and return the name of the variables and
     dimensions based on the content of ~/.amescap_profile.
-    
+
     Calling this function allows to remove hard-coded calls in CAP.
-    For example, to f.variables['ucomp'] is replaced by 
+    For example, to f.variables['ucomp'] is replaced by
     f.variables["ucomp"], with "ucomp" taking the values of'ucomp', 'U'
-    
+
     :param f_Ncdf: An opened Netcdf file object
     :type f_Ncdf: File object
-    
-    :return: Model, a dictionary with the dimensions and variables, 
+    :return: Model, a dictionary with the dimensions and variables,
         e.g. "ucomp"='U' or "dim_lat"='latitudes'
 
     .. note::
-        The defaut names for variables are defined in () 
+        The defaut names for variables are defined in ()
         parenthesis in ~/.amescap_profile::
-        
+
         'X direction wind        [m/s]                   (ucomp)>'
 
-    The defaut names for dimensions are defined in {} parenthesis in 
+    The defaut names for dimensions are defined in {} parenthesis in
     ~/.amescap_profile::
-        
+
         Ncdf Y latitude dimension    [integer]          {lat}>lats
 
-    The dimensions (lon, lat, pfull, pstd) are loaded in the dictionary 
+    The dimensions (lon, lat, pfull, pstd) are loaded in the dictionary
     as "dim_lon", "dim_lat"
-    
     """
 
     if f_Ncdf is not None:
-        var_list_Ncdf=list(f_Ncdf.variables.keys())
-        dim_list_Ncdf=list(f_Ncdf.dimensions.keys())
+        var_list_Ncdf = list(f_Ncdf.variables.keys())
+        dim_list_Ncdf = list(f_Ncdf.dimensions.keys())
     else:
-        var_list_Ncdf=[]
-        dim_list_Ncdf=[]
+        var_list_Ncdf = []
+        dim_list_Ncdf = []
 
-    all_lines=section_content_amescap_profile('Variable dictionary')
-    lines=all_lines.split('\n')
-    #Remove empty lines:
+    all_lines = section_content_amescap_profile('Variable dictionary')
+    lines = all_lines.split('\n')
+    # Remove empty lines:
     while("" in lines):lines.remove("")
 
-    #Initialize model
+    # Initialize model
     class model(object):
         pass
-    MOD=model()
+    MOD = model()
 
-    #Read through all lines in the Variable dictionary section of amesgcm_profile:
+    # Read through all lines in the Variable dictionary section of amesgcm_profile:
     for il in lines:
-        var_list=[]
-        #e.g. 'X direction wind [m/s]                          (ucomp)>U,u'
+        var_list = []
+        # e.g. 'X direction wind [m/s] (ucomp)>U,u'
         left,right=il.split('>') #Split on either side of '>'
 
-        #If using {var}, current entry is a dimension. If using (var), it is a variable
+        # If using {var}, current entry is a dimension. If using (var), it is a variable
         if '{' in left:
-            sep1='{';sep2='}';type_input='dimension'
+            sep1 = '{';sep2='}';type_input='dimension'
         elif '(' in left:
-            sep1='(';sep2=')';type_input='variable'
+            sep1 = '(';sep2=')';type_input='variable'
 
         # First get 'ucomp' from  'X direction wind [m/s]      (ucomp)
-        _,tmp=FV3_var=left.split(sep1)
-        FV3_var=tmp.replace(sep2,'').strip() #THIS IS THE FV3 NAME OF THE CURRENT VARIABLE
-        #Then, get the list of variable on the righ-hand side, e.g.  'U,u'
-        all_vars=right.split(',')
-        for ii in all_vars:
-            var_list.append(ii.strip())  #var_list IS A LIST OF POTENTIAL CORRESPONDING VARIABLES
-        #Set the attribute to the dictionary
-        #If the list is empty, e.g just [''], use the default FV3 variable presents in () or {}
-        if len(var_list)==1 and var_list[0]=='':var_list[0]=FV3_var #var_list IS A LIST OF POTENTIAL CORRESPONDING VARIABLES
-        found_list=[]
+        _,tmp = FV3_var = left.split(sep1)
+        FV3_var = tmp.replace(sep2,'').strip() # FV3 NAME OF CURRENT VAR
 
-        #Place the input in the appropriate varialbe () or dimension {} dictionary
-        #print('var_list>>>',var_list)
-        if type_input=='variable':
+        # Get the list of vars on the right-hand side, e.g., 'U,u'
+        all_vars = right.split(',')
+        for ii in all_vars:
+            var_list.append(ii.strip())
+            # var_list = list of potential corresponding variables
+
+        # Set the attribute to the dictionary
+        # If the list is empty, e.g just [''], use the default FV3
+        # variable presents in () or {}
+        if len(var_list) == 1 and var_list[0] == '':
+            var_list[0] = FV3_var
+            # var_list = list of potential corresponding variables
+
+        found_list = []
+
+        # Place the input in the appropriate variable () or dimension
+        # {} dictionary
+        if type_input == 'variable':
             for ivar in var_list:
                 if ivar in var_list_Ncdf:found_list.append(ivar)
 
-            if len(found_list)==0:
+            if len(found_list) == 0:
                 setattr(MOD,FV3_var,FV3_var)
-            elif  len(found_list)==1:
-                setattr(MOD,FV3_var,found_list[0])
+            elif  len(found_list) == 1:
+                setattr(MOD,FV3_var, found_list[0])
             else:
-                setattr(MOD,FV3_var,found_list[0])
-                prYellow("***Warning*** more than one possible variable '%s' found in file: %s"%(FV3_var,found_list))
-        if type_input=='dimension':
+                setattr(MOD,FV3_var, found_list[0])
+                prYellow(
+                    f"***Warning*** more than one possible variable "
+                    f"'{FV3_var}' found in file: {found_list}"
+                    )
+
+        if type_input == 'dimension':
             for ivar in var_list:
                 if ivar in dim_list_Ncdf:found_list.append(ivar)
-            if len(found_list)==0:
-                setattr(MOD,'dim_'+FV3_var,FV3_var)
-            elif  len(found_list)==1:
-                setattr(MOD,'dim_'+FV3_var,found_list[0])
+            if len(found_list) == 0:
+                setattr(MOD, f"dim_{FV3_var}", FV3_var)
+            elif  len(found_list) == 1:
+                setattr(MOD, f"dim_{FV3_var}", found_list[0])
             else:
-                setattr(MOD,'dim_'+FV3_var,found_list[0])
-                prYellow("***Warning*** more than one possible dimension '%s' found in file: %s"%(FV3_var,found_list))
-
+                setattr(MOD, f"dim_{FV3_var}", found_list[0])
+                prYellow(
+                    f"***Warning*** more than one possible dimension "
+                    f"'{FV3_var}' found in file: {found_list}"
+                    )
     return MOD
+
 
 def reset_FV3_names(MOD):
     """
-    This function reset the model dictionary to the native FV3's 
+    This function reset the model dictionary to the native FV3's
     variables, e.g.::
-        
+
         model.dim_lat = 'latitude' > model.dim_lat = 'lat'
         model.ucomp   = 'U'        > model.ucomp = 'ucomp'
 
     :param MOD: Generated with read_variable_dict_amescap_profile()
     :type MOD: class object
-    
-    :return: same object with updated names for the dimensions and 
+    :return: same object with updated names for the dimensions and
     variables
-    
     """
-    atts_list=dir(MOD) #Get all attributes
-    vars_list=[k for k in atts_list if '__' not in k] #do not touch all the __init__ etc..
+
+    atts_list = dir(MOD) # Get all attributes
+    vars_list = [k for k in atts_list if '__' not in k] # do not touch all the __init__ etc..
 
     for ivar in vars_list:
-        name=ivar #get the native name, e.g ucomp
+        # Get the native name, e.g., ucomp
+        name = ivar
         if 'dim_' in ivar:
-            name=ivar[4:] #if attribute is dim_lat, just get the 'lat' part
-        setattr(MOD,ivar,name) #reset the original names
+            # If attribute is dim_lat, just get the 'lat' part
+            name = ivar[4:]
+        setattr(MOD,ivar,name) # Reset the original names
     return MOD
 
-def except_message(debug,exception,varname,ifile,pre="",ext=""):
+
+def except_message(debug, exception, varname, ifile, pre="", ext=""):
     """
     This function prints an error message in the case of an exception.
     It also contains a special error in the case of an already existing
@@ -1473,77 +1511,74 @@ def except_message(debug,exception,varname,ifile,pre="",ext=""):
 
     :param debug: Flag for debug mode
     :type debug: logical
-
     :param exception: Exception from try statement
     :type exception: class object
-
     :param varname: Name of variable causing exception
     :type varname: string
-
     :param ifile: Name of input file
     :type ifile: string
-
     :param pre: Prefix to new variable
     :type pre: string
-
     :param ext: Extension to new variable
     :type ext: string
-
     """
+
     if debug:
         raise
-    if str(exception)[0:35] == (
-        "NetCDF: String match to name in use"):
-        print(f"{Yellow}***Error*** Variable already "
-              f"exists in file.\nDelete the existing "
-              f"variable with "
-              f"``MarsVars {ifile} -rm "
+
+    if str(exception)[0:35] == ("NetCDF: String match to name in use"):
+        print(f"{Yellow}***Error*** Variable already exists in file.\n"
+              f"Delete the existing variable with ``MarsVars {ifile} -rm "
               f"{pre}{varname}{ext}``{Nclr}")
     else:
         print(f"{Red}***Error*** {str(exception)}")
+
 
 def check_bounds(values, min_val, max_val, dx):
     """
     Check if all values in an array are within specified bounds.
     Exits program if any value is out of bounds.
-    
+
     Parameters:
-    values : array-like
-        Single value or array of values to check
-    min_val : float
-        Minimum allowed value
-    max_val : float
-        Maximum allowed value
-        
-    Returns:
-    values : array or float
-        The validated value(s)
+    :param values: Single value or array of values to check
+    :type  values: array-like
+    :param min_val: Minimum allowed value
+    :type  min_val: float
+    :param max_val: Maximum allowed value
+    :type  max_val: float
+    :return values: The validated value(s)
+    :rtype: array or float
     """
+
     try:
         # Handle both single values and arrays
         is_scalar = np.isscalar(values)
         values_array = np.array([values]) if is_scalar else np.array(values)
-        
+
         # Check for non-numeric values
         if not np.issubdtype(values_array.dtype, np.number):
             print(f"Error: Input contains non-numeric values")
             sys.exit(1)
-        
+
         # Find any out-of-bounds values
-        mask_invalid = (values_array < (min_val-dx)) | (values_array > (max_val+dx))
-        
+        mask_invalid = (
+            values_array < (min_val-dx)) | (values_array > (max_val+dx)
+                                            )
+
         if np.any(mask_invalid):
             # Get the invalid values
             invalid_values = values_array[mask_invalid]
             invalid_indices = np.where(mask_invalid)[0]
-            
-            print(f"Error: Values out of allowed range [{min_val}, {max_val}]")
-            print(f"Invalid values at indices {invalid_indices}: {invalid_values}")
+
+            print(
+                f"Error: Values out of allowed range [{min_val}, {max_val}]\n"
+                f"Invalid values at indices {invalid_indices}: {invalid_values}"
+                )
             exit()
-        
+
         # Return original format (scalar or array)
         return values if is_scalar else values_array
-        
+
     except Exception as e:
         print(f"Error: {str(e)}")
         exit()

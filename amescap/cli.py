@@ -6,7 +6,7 @@ import time
 from amescap.Script_utils import Yellow, Nclr, Green, Cyan
 
 def get_install_info():
-    # Get the location and timestamp of cli 
+    # Get the location and timestamp of cli
     cli_path = os.path.abspath(__file__)
     install_time = time.ctime(os.path.getctime(cli_path))
     return f"""
@@ -31,7 +31,7 @@ The Community Analysis Pipeline (CAP) is a Python-based command-line tool that p
 
 {Cyan}How do I use CAP?
 -----------------{Nclr}
-Below is a list of the executables in CAP. Use this list to find the executable that performs the operation you desire. 
+Below is a list of the executables in CAP. Use this list to find the executable that performs the operation you desire.
 To see the arguments for each executable, use:
 {Green}<command> -h
  Example: MarsVars -h{Nclr}
@@ -73,7 +73,7 @@ CAP is developed and maintained by the **Mars Climate Modeling Center (MCMC) at 
         formatter_class=CustomHelpFormatter,
         add_help=False  # This prevents the default help message
     )
-    
+
     parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                        help=argparse.SUPPRESS)
     parser.add_argument('command', nargs='?', default='help',
@@ -85,7 +85,7 @@ CAP is developed and maintained by the **Mars Climate Modeling Center (MCMC) at 
     if args.command in ['version', 'info']:
         print(get_install_info())
         return 0
-    
+
     # Print help for all cases
     parser.print_help()
     return 0
