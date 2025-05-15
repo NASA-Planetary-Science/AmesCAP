@@ -262,7 +262,6 @@ def main():
             fr"{legacy_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
             legacy_dir_text
             )
-        print(f'legacy_urls: {legacy_urls}')
         
         # NOTE: The FV3-based MGCM data only has one directory and it is
         #       not listed in the FV3BETAOUT1 directory. The URL is 
@@ -297,7 +296,7 @@ def main():
                 print(f'\nFV3-based MGCM FV3BETAOUT1 directory selected.')
                 print(f'Available files:')
                 print(f'---------------')
-                fv3_dir_url = f'{fv3_data_url}'
+                fv3_dir_url = f'{fv3_home_url}'
                 fv3_data = requests.get(fv3_dir_url)
                 fv3_file_text = fv3_data.text
                 
