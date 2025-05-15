@@ -297,7 +297,7 @@ def main():
                 print(f'\nFV3-based MGCM FV3BETAOUT1 directory selected.')
                 print(f'Available files:')
                 print(f'---------------')
-                fv3_dir_url = f'{fv3_home_url}'
+                fv3_dir_url = f'{fv3_data_url}'
                 fv3_data = requests.get(fv3_dir_url)
                 fv3_file_text = fv3_data.text
                 
@@ -305,29 +305,45 @@ def main():
                 # ending with the .nc pattern
                 fv3_files_available = []
                 
-                # First try with a more specific pattern for .nc files
-                nc_files = re.findall(r'href="[^"]*\/([^"\/]+\.nc)"', fv3_file_text)
-                if nc_files:
-                    fv3_files_available = nc_files
+                # Try multiple patterns to find .nc files
+                download_files = re.findall(r'download="([^"]+\.nc)"', fv3_file_text)
+                if download_files:
+                    fv3_files_available = download_files
                 else:
-                    # Try a simpler pattern
-                    nc_files = re.findall(r'<a[^>]*href="[^"]*"[^>]*>([^<]+\.nc)</a>', fv3_file_text)
-                    if nc_files:
-                        fv3_files_available = nc_files
-                    # If still no files found, try an even more general pattern
-                    if not fv3_files_available:
-                        nc_files = re.findall(r'href="[^"]*"[^>]*>([^<]*\.nc)', fv3_file_text)
-                        fv3_files_available = nc_files
+                    # Look for href attributes with .nc files
+                    href_files = re.findall(r'href="[^"]*\/([^"\/]+\.nc)"', fv3_file_text)
+                    if href_files:
+                        fv3_files_available = href_files
+                    else:
+                        # Look for links with .nc text
+                        link_files = re.findall(r'<a[^>]*>([^<]+\.nc)</a>', fv3_file_text)
+                        if link_files:
+                            fv3_files_available = link_files
                 
-                # If no files found with regex, log this for debugging
-                if not fv3_files_available:
-                    print(f"No .nc files found in directory. Consider using BeautifulSoup for more reliable parsing.")
-                    # If debug mode is enabled, print a sample of the HTML to help diagnose the issue
+                # Filter out any potential HTML or Javascript that might match the pattern
+                fv3_files_available = [f for f in fv3_files_available if (
+                    not f.startswith('<') and 
+                    not f.startswith('function') and 
+                    not f.startswith('var') and
+                    '.nc' in f
+                )]
+                
+                # Sort the files
+                fv3_files_available.sort()
+                
+                # Print the files
+                if fv3_files_available:
+                    print_file_list(fv3_files_available)
+                else:
+                    print("No .nc files found. Run with --debug for more information.")
                     if debug:
-                        print("Sample of HTML response:")
-                        print(fv3_file_text[:500])  # Print first 500 characters
+                        # Try a different approach for debugging
+                        table_rows = re.findall(r'<tr>.*?</tr>', fv3_file_text, re.DOTALL)
+                        for row in table_rows:
+                            if '.nc' in row:
+                                print(f"Debug - Found row with .nc: {row}")
                 
-                print_file_list(fv3_files_available)
+                # The download URL differs from the listing URL
                 print(f'\n{Cyan}({fv3_dir_url}){Nclr}')
             
             elif portal_dir in [
