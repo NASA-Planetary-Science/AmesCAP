@@ -273,7 +273,7 @@ def main():
         #     fr"{fv3_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
         #     fv3_dir_text
         #     )
-        fv3_urls = [f"{fv3_data_url}"]
+        fv3_urls = [f'{fv3_data_url}']
 
         print(f'\nAvailable directories:')
         print(f'---------------------')
@@ -284,8 +284,8 @@ def main():
         # NOTE: See above comment for the FV3-based MGCM data note
         # for url in fv3_urls:
         #     fv3_dir_option = url.split('fv3betaout1data/')[1]
-        #     print(f"(FV3-based MGCM) {fv3_dir_option:<20} {Cyan}({url}){Nclr}")
-        print(f'(FV3-based MGCM) {'FV3BETAOUT1':<17} {Cyan}({fv3_home_url}){Nclr}')
+        #     print(f'(FV3-based MGCM) {fv3_dir_option:<20} {Cyan}({url}){Nclr}')
+        print(f'(FV3-based MGCM) {"FV3BETAOUT1":<17} {Cyan}({fv3_home_url}){Nclr}')
 
         print('')
         
@@ -364,7 +364,7 @@ def main():
                 print(f'\n{Cyan}({legacy_dir_url}){Nclr}')
 
     if args.directory_name and not args.list_files:
-        portal_dir=args.directory_name
+        portal_dir = args.directory_name
         if portal_dir in [
             'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS', 'ACTIVECLDS_NCDF'
             ]:
