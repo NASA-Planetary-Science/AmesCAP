@@ -260,7 +260,12 @@ def main():
             fr"{legacy_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
             legacy_dir_text
             )
-
+        
+        # NOTE: The FV3-based MGCM data only has one directory and it is
+        #       not listed in the FV3BETAOUT1 directory. The URL is 
+        #       hardcoded below. The regex below is commented out, but 
+        #       left in place in case the FV3BETAOUT1 directory is 
+        #       updated with subdirectories in the future.
         # fv3_urls = re.findall(
         #     fr"{fv3_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
         #     fv3_dir_text
@@ -273,9 +278,11 @@ def main():
             legacy_dir_option = url.split('legacygcmdata/')[1]
             print(f"(Legacy MGCM) {legacy_dir_option:<14} {Cyan}({url}){Nclr}")
         
-        for url in fv3_urls:
-            fv3_dir_option = url.split('fv3betaout1data/')[1]
-            print(f"(FV3-based MGCM) {fv3_dir_option:<14} {Cyan}({url}){Nclr}")
+        # NOTE: See above comment for the FV3-based MGCM data note
+        # for url in fv3_urls:
+        #     fv3_dir_option = url.split('fv3betaout1data/')[1]
+        #     print(f"(FV3-based MGCM) {fv3_dir_option:<14} {Cyan}({url}){Nclr}")
+        print(f"(FV3-based MGCM) {'FV3BETAOUT1':<14} {Cyan}({fv3_urls}){Nclr}")
 
         print("")
         
@@ -286,7 +293,7 @@ def main():
                 # FV3-based MGCM
                 print(f"\nAvailable files from the FV3-based MGCM's FV3BETAOUT1 directory:")
                 print(f"-------------------------------------------------")
-                fv3_dir_url = fv3_subdir_search + portal_dir + r'\/'
+                fv3_dir_url = fv3_subdir_search + r'\/'
                 fv3_file_text = (requests.get(fv3_dir_url)).text
                 print_file_list(re.findall(r'href="[^"]*\/([^"\/]+\.nc)"',
                                             fv3_file_text))
