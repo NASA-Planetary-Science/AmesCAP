@@ -265,10 +265,7 @@ def main():
         #     fr"{fv3_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
         #     fv3_dir_text
         #     )
-        fv3_urls = re.findall(
-            fr"https://data\.nas\.nasa\.gov/mcmcref/fv3betaout1/[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
-            fv3_dir_text
-            )
+        fv3_urls = ["https://data\.nas\.nasa\.gov/legacygcm/fv3betaout1data/"]
 
         print(f"\nAvailable directories:")
         print(f"---------------------")
