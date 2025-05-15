@@ -219,7 +219,6 @@ def download(url, file_name):
 
 
 def print_file_list(list_of_files):
-    print(f"\nAvailable files:")
     for file in list_of_files:
         print(file)
 
@@ -235,7 +234,7 @@ def main():
         print("Error: You must specify either -list or a directory.")
         sys.exit(1)
 
-    if args.list_files:
+    if args.list_files and not args.directory_name:
         # Send an HTTP GET request to the URL and store the response.
         legacy_home = requests.get(
             'https://data.nas.nasa.gov/mcmcref/legacygcm/'
@@ -248,7 +247,7 @@ def main():
         # webpage's HTML.
         legacy_dir_text = legacy_home.text
         fv3_file_text = fv3_home.text
-
+                
         # Search for the URLs beginning with the below string
         legacy_subdir_search = (
             "https://data\.nas\.nasa\.gov/legacygcm/legacygcmdata/"
@@ -262,24 +261,36 @@ def main():
         print(f"\nAvailable directories:")
         print(f"---------------------")
         for url in legacy_urls:
-            dir_option = url.split('legacygcmdata/')[1]
-            print(f"{dir_option} (Legacy MGCM)")
-        print(f"FV3BETAOUT1 (FV3-based MGCM)")
+            legacy_dir_option = url.split('legacygcmdata/')[1]
+            print(f"(Legacy MGCM) {legacy_dir_option} {Cyan}({url}){Nclr}")
+        print(f"(FV3-based MGCM) FV3BETAOUT1 {Cyan}({fv3_home}){Nclr}")
 
-        legacy_file_text = (requests.get(legacy_urls[0])).text # ACTIVECLDS
+        if args.directory_name:
+            # If a directory is provided, list the files in that directory
+            portal_dir=args.directory_name
+            if portal_dir == 'FV3BETAOUT1':
+                # FV3-based MGCM
+                print(f"\nAvailable files from the FV3-based MGCM's FV3BETAOUT1 directory:")
+                print(f"-------------------------------------------------")
+                print_file_list(re.findall(r'href="[^"]*\/([^"\/]+\.nc)"',
+                                            fv3_file_text))
+                print(f"\n{Cyan}({fv3_home}){Nclr}")
+            
+            elif portal_dir in [
+                'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
+                'ACTIVECLDS_NCDF'
+                ]:
+                # Legacy MGCM
+                print(f"\nAvailable files from the Legacy MGCM's {portal_dir} "
+                      f"directory:")
+                print(f"-------------------------------------------------")
+                legacy_dir_url = legacy_subdir_search + portal_dir + r'\/'
+                legacy_file_text = (requests.get(legacy_dir_url)).text
+                print_file_list(re.findall(r'download="(fort\.11_[0-9]+)"',
+                                                legacy_file_text))
+                print(f"\n{Cyan}({legacy_dir_url}){Nclr}")
 
-        legacy_files_available = re.findall(r'download="(fort\.11_[0-9]+)"',
-                                            legacy_file_text)
-        fv3_files_available = re.findall(r'href="[^"]*\/([^"\/]+\.nc)"',
-                                         fv3_file_text)
-        
-        print(f"\nAvailable files from the Legacy MGCM's {legacy_urls[0]} directory:")
-        print_file_list(legacy_files_available)
-        
-        print(f"\nAvailable files from the FV3-based MGCM:")
-        print_file_list(fv3_files_available)
-
-    if args.directory_name:
+    if args.directory_name and not args.list_files:
         portal_dir=args.directory_name
         if portal_dir in [
             'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS', 'ACTIVECLDS_NCDF'
