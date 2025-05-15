@@ -237,45 +237,46 @@ def main():
 
     if args.list_files:
         # Send an HTTP GET request to the URL and store the response.
-        legacy_data = requests.get(
+        legacy_home = requests.get(
             'https://data.nas.nasa.gov/mcmcref/legacygcm/'
             )
-        fv3_data = requests.get(
+        fv3_home = requests.get(
             'https://data.nas.nasa.gov/mcmcref/fv3betaout1/'
             )
 
         # Access the text content of the response, which contains the
         # webpage's HTML.
-        legacy_dir_text = legacy_data.text
-        fv3_dir_text = fv3_data.text
+        legacy_dir_text = legacy_home.text
+        fv3_file_text = fv3_home.text
 
         # Search for the URLs beginning with the below string
-        legacy_dir_search = (
+        legacy_subdir_search = (
             "https://data\.nas\.nasa\.gov/legacygcm/legacygcmdata/"
             )
 
         legacy_urls = re.findall(
-            fr"{legacy_dir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
+            fr"{legacy_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
             legacy_dir_text
             )
 
         print(f"\nAvailable directories:")
+        print(f"---------------------")
         for url in legacy_urls:
             dir_option = url.split('legacygcmdata/')[1]
-            print(dir_option)
+            print(f"{dir_option} (Legacy MGCM)")
+        print(f"FV3BETAOUT1 (FV3-based MGCM)")
 
-        legacy_data = requests.get(legacy_urls[0])
-        legacy_dir_text = legacy_data.text
+        legacy_file_text = (requests.get(legacy_urls[0])).text # ACTIVECLDS
 
         legacy_files_available = re.findall(r'download="(fort\.11_[0-9]+)"',
-                                            legacy_dir_text)
+                                            legacy_file_text)
         fv3_files_available = re.findall(r'href="[^"]*\/([^"\/]+\.nc)"',
-                                         fv3_dir_text)
+                                         fv3_file_text)
         
-        print(f"\nAvailable files in {legacy_urls[0]}:")
+        print(f"\nAvailable files from the Legacy MGCM's {legacy_urls[0]} directory:")
         print_file_list(legacy_files_available)
         
-        print(f"\nAvailable files in {legacy_urls[1]}:")
+        print(f"\nAvailable files from the FV3-based MGCM:")
         print_file_list(fv3_files_available)
 
     if args.directory_name:
