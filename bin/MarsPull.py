@@ -246,7 +246,7 @@ def main():
         # Access the text content of the response, which contains the
         # webpage's HTML.
         legacy_dir_text = legacy_home.text
-        fv3_file_text = fv3_home.text
+        fv3_dir_text = fv3_home.text
                 
         # Search for the URLs beginning with the below string
         legacy_subdir_search = (
@@ -258,12 +258,19 @@ def main():
             legacy_dir_text
             )
 
+        fv3_urls = re.findall(
+            r"https://data\.nas\.nasa\.gov/legacygcm/fv3betaout1data/"
+            r"[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
+            fv3_dir_text
+            )
+
         print(f"\nAvailable directories:")
         print(f"---------------------")
         for url in legacy_urls:
             legacy_dir_option = url.split('legacygcmdata/')[1]
             print(f"(Legacy MGCM) {legacy_dir_option} {Cyan}({url}){Nclr}")
-        print(f"(FV3-based MGCM) FV3BETAOUT1 {Cyan}({fv3_home}){Nclr}")
+        print(f"(FV3-based MGCM) FV3BETAOUT1 {Cyan}({fv3_urls}){Nclr}")
+        print(f"{fv3_urls}")
 
         if args.directory_name:
             # If a directory is provided, list the files in that directory
@@ -273,8 +280,8 @@ def main():
                 print(f"\nAvailable files from the FV3-based MGCM's FV3BETAOUT1 directory:")
                 print(f"-------------------------------------------------")
                 print_file_list(re.findall(r'href="[^"]*\/([^"\/]+\.nc)"',
-                                            fv3_file_text))
-                print(f"\n{Cyan}({fv3_home}){Nclr}")
+                                            fv3_dir_text))
+                print(f"\n{Cyan}({fv3_urls}){Nclr}")
             
             elif portal_dir in [
                 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
