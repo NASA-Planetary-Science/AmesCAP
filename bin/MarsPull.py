@@ -312,6 +312,8 @@ def main():
                 print(f"-------------------------------------------------")
                 legacy_dir_url = legacy_data_url + portal_dir + r'\/'
                 print(f"Legacy MGCM {portal_dir} URL: {legacy_dir_url}")
+                legacy_dir_url = legacy_urls[0]
+                print(f"Legacy MGCM legacy_urls[0] {legacy_urls[0]}")
                 legacy_file_text = (requests.get(legacy_dir_url)).text
                 print(f"{legacy_file_text}")
                 print_file_list(re.findall(r'download="(fort\.11_[0-9]+)"',
