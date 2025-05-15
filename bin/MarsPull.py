@@ -294,10 +294,12 @@ def main():
             portal_dir=args.directory_name
             if portal_dir == 'FV3BETAOUT1':
                 # FV3-based MGCM
-                print(f"\nAvailable files from the FV3-based MGCM's FV3BETAOUT1 directory:")
-                print(f"-------------------------------------------------")
-                fv3_dir_url = fv3_data_url + r'\/'
-                fv3_file_text = (requests.get(fv3_dir_url)).text
+                print(f"\nFV3-based MGCM FV3BETAOUT1 directory selected.")
+                print(f"Available files:")
+                print(f"---------------")
+                fv3_dir_url = fv3_data_url + r'/'
+                fv3_data = requests.get(fv3_dir_url)
+                fv3_file_text = fv3_data.text
                 print_file_list(re.findall(r'href="[^"]*\/([^"\/]+\.nc)"',
                                             fv3_file_text))
                 print(f"\n{Cyan}({fv3_dir_url}){Nclr}")
@@ -307,14 +309,14 @@ def main():
                 'ACTIVECLDS_NCDF'
                 ]:
                 # Legacy MGCM
-                print(f"\nAvailable files from the Legacy MGCM's {portal_dir} "
-                      f"directory:")
-                print(f"-------------------------------------------------")
-                legacy_dir_url = legacy_data_url + portal_dir + r'\/'
+                print(f"\nLegacy MGCM {portal_dir} directory selected.")
+                print(f"Available files:")
+                print(f"---------------")
+                legacy_dir_url = legacy_data_url + portal_dir + r'/'
                 print(f"Legacy MGCM {portal_dir} URL: {legacy_dir_url}")
-                legacy_dir_url = legacy_urls[0]
-                print(f"Legacy MGCM legacy_urls[0] {legacy_urls[0]}")
-                legacy_file_text = (requests.get(legacy_dir_url)).text
+                print(f"Legacy MGCM legacy_urls[0]: {legacy_urls[0]}")
+                legacy_data = requests.get(legacy_dir_url)
+                legacy_file_text = legacy_data.text
                 print(f"{legacy_file_text}")
                 print_file_list(re.findall(r'download="(fort\.11_[0-9]+)"',
                                                 legacy_file_text))
