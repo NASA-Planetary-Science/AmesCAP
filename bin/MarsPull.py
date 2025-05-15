@@ -219,7 +219,7 @@ def download(url, file_name):
 
 
 def print_file_list(list_of_files):
-    print("Available files:")
+    print(f"\nAvailable files:")
     for file in list_of_files:
         print(file)
 
@@ -259,7 +259,7 @@ def main():
             legacy_dir_text
             )
 
-        print("Available directories:")
+        print(f"\nAvailable directories:")
         for url in legacy_urls:
             dir_option = url.split('legacygcmdata/')[1]
             print(dir_option)
@@ -271,8 +271,11 @@ def main():
                                             legacy_dir_text)
         fv3_files_available = re.findall(r'href="[^"]*\/([^"\/]+\.nc)"',
                                          fv3_dir_text)
-
+        
+        print(f"\nAvailable files in {legacy_urls[0]}:")
         print_file_list(legacy_files_available)
+        
+        print(f"\nAvailable files in {legacy_urls[1]}:")
         print_file_list(fv3_files_available)
 
     if args.directory_name:
