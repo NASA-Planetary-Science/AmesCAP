@@ -56,12 +56,12 @@ def debug_wrapper(func):
         except Exception as e:
             if debug:
                 # In debug mode, show the full traceback
-                print(f"{Red}ERROR in {func.__name__}: {str(e)}{Nclr}")
+                print(f'{Red}ERROR in {func.__name__}: {str(e)}{Nclr}')
                 traceback.print_exc()
             else:
                 # In normal mode, show a clean error message
-                print(f"{Red}ERROR in {func.__name__}: {str(e)}\nUse "
-                      f"--debug for more information.{Nclr}")
+                print(f'{Red}ERROR in {func.__name__}: {str(e)}\nUse '
+                      f'--debug for more information.{Nclr}')
             return 1  # Error exit code
     return wrapper
 
@@ -231,7 +231,7 @@ def print_file_list(list_of_files):
 def main():
     # validation
     if not args.list_files and not args.directory_name:
-        print("Error: You must specify either -list or a directory.")
+        print('Error: You must specify either -list or a directory.')
         sys.exit(1)
 
     base_dir = 'https://data.nas.nasa.gov'
@@ -252,17 +252,17 @@ def main():
                 
         # Search for the URLs beginning with the below string
         legacy_subdir_search = (
-            "https://data\.nas\.nasa\.gov/legacygcm/legacygcmdata/"
+            'https://data\.nas\.nasa\.gov/legacygcm/legacygcmdata/'
             )
         fv3_subdir_search = (
-            "https://data\.nas\.nasa\.gov/legacygcm/fv3betaout1data/"
+            'https://data\.nas\.nasa\.gov/legacygcm/fv3betaout1data/'
             )
 
         legacy_urls = re.findall(
             fr"{legacy_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
             legacy_dir_text
             )
-        print(f"legacy_urls: {legacy_urls}")
+        print(f'legacy_urls: {legacy_urls}')
         
         # NOTE: The FV3-based MGCM data only has one directory and it is
         #       not listed in the FV3BETAOUT1 directory. The URL is 
@@ -275,69 +275,106 @@ def main():
         #     )
         fv3_urls = [f"{fv3_data_url}"]
 
-        print(f"\nAvailable directories:")
-        print(f"---------------------")
+        print(f'\nAvailable directories:')
+        print(f'---------------------')
         for url in legacy_urls:
             legacy_dir_option = url.split('legacygcmdata/')[1]
-            print(f"(Legacy MGCM) {legacy_dir_option:<20} {Cyan}({url}){Nclr}")
+            print(f'(Legacy MGCM) {legacy_dir_option:<20} {Cyan}({url}){Nclr}')
         
         # NOTE: See above comment for the FV3-based MGCM data note
         # for url in fv3_urls:
         #     fv3_dir_option = url.split('fv3betaout1data/')[1]
         #     print(f"(FV3-based MGCM) {fv3_dir_option:<20} {Cyan}({url}){Nclr}")
-        print(f"(FV3-based MGCM) {'FV3BETAOUT1':<17} {Cyan}({fv3_home_url}){Nclr}")
+        print(f'(FV3-based MGCM) {'FV3BETAOUT1':<17} {Cyan}({fv3_home_url}){Nclr}')
 
-        print("")
+        print('')
         
         if args.directory_name:
             # If a directory is provided, list the files in that directory
-            portal_dir=args.directory_name
+            portal_dir = args.directory_name
             if portal_dir == 'FV3BETAOUT1':
                 # FV3-based MGCM
-                print(f"\nFV3-based MGCM FV3BETAOUT1 directory selected.")
-                print(f"Available files:")
-                print(f"---------------")
-                fv3_dir_url = fv3_data_url
+                print(f'\nFV3-based MGCM FV3BETAOUT1 directory selected.')
+                print(f'Available files:')
+                print(f'---------------')
+                fv3_dir_url = f'{fv3_data_url}'
                 fv3_data = requests.get(fv3_dir_url)
                 fv3_file_text = fv3_data.text
-                fv3_files_available = (
-                    re.findall(r'href="[^"]*\/([^"\/]+\.nc)"', fv3_file_text)
-                    )
+                
+                # This looks for download attributes or href links 
+                # ending with the .nc pattern
+                fv3_files_available = []
+                
+                # First try with a more specific pattern for .nc files
+                nc_files = re.findall(r'href="[^"]*\/([^"\/]+\.nc)"', fv3_file_text)
+                if nc_files:
+                    fv3_files_available = nc_files
+                else:
+                    # Try a simpler pattern
+                    nc_files = re.findall(r'<a[^>]*href="[^"]*"[^>]*>([^<]+\.nc)</a>', fv3_file_text)
+                    if nc_files:
+                        fv3_files_available = nc_files
+                    # If still no files found, try an even more general pattern
+                    if not fv3_files_available:
+                        nc_files = re.findall(r'href="[^"]*"[^>]*>([^<]*\.nc)', fv3_file_text)
+                        fv3_files_available = nc_files
+                
+                # If no files found with regex, log this for debugging
+                if not fv3_files_available:
+                    print(f"No .nc files found in directory. Consider using BeautifulSoup for more reliable parsing.")
+                    # If debug mode is enabled, print a sample of the HTML to help diagnose the issue
+                    if debug:
+                        print("Sample of HTML response:")
+                        print(fv3_file_text[:500])  # Print first 500 characters
+                
                 print_file_list(fv3_files_available)
-                print(f"\n{Cyan}({fv3_dir_url}){Nclr}")
+                print(f'\n{Cyan}({fv3_dir_url}){Nclr}')
             
             elif portal_dir in [
                 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
                 'ACTIVECLDS_NCDF'
                 ]:
                 # Legacy MGCM
-                print(f"\nLegacy MGCM {portal_dir} directory selected.")
-                print(f"Available files:")
-                print(f"---------------")
-                legacy_dir_url = legacy_data_url + portal_dir + r'/'
-                print(f"Legacy MGCM {portal_dir} URL: {legacy_dir_url}")
-                print(f"Legacy MGCM legacy_urls[0]: {legacy_urls[0]}")
+                print(f'\nLegacy MGCM {portal_dir} directory selected.')
+                print(f'Available files:')
+                print(f'---------------')
+                legacy_dir_url = (f'{legacy_data_url}' + portal_dir + r'/')
                 legacy_data = requests.get(legacy_dir_url)
                 legacy_file_text = legacy_data.text
-                print(f"{legacy_file_text}")
-                legacy_files_available = (
-                    re.findall(r'download="(fort\.11_[0-9]+)"', legacy_file_text)
-                )
+                
+                # This looks for download attributes or href links 
+                # ending with the fort.11_ pattern
+                legacy_files_available = []
+                
+                # First try to find download attributes which are more reliable
+                download_files = re.findall(r'download="(fort\.11_[0-9]+)"', legacy_file_text)
+                if download_files:
+                    legacy_files_available = download_files
+                else:
+                    # Fallback to looking for href links with fort.11_ pattern
+                    href_files = re.findall(r'href="[^"]*\/?(fort\.11_[0-9]+)"', legacy_file_text)
+                    if href_files:
+                        legacy_files_available = href_files
+                    # If still empty, try another pattern to match links
+                    if not legacy_files_available:
+                        href_files = re.findall(r'<a href="[^"]*"[^>]*>(fort\.11_[0-9]+)</a>', legacy_file_text)
+                        legacy_files_available = href_files
+                
                 print_file_list(legacy_files_available)
-                print(f"\n{Cyan}({legacy_dir_url}){Nclr}")
+                print(f'\n{Cyan}({legacy_dir_url}){Nclr}')
 
     if args.directory_name and not args.list_files:
         portal_dir=args.directory_name
         if portal_dir in [
             'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS', 'ACTIVECLDS_NCDF'
             ]:
-            requested_url = (f"{legacy_data_url}" + portal_dir + "/")
+            requested_url = (f'{legacy_data_url}' + portal_dir + '/')
         elif portal_dir in ['FV3BETAOUT1']:
-            requested_url = (f"{fv3_data_url}")
+            requested_url = (f'{fv3_data_url}')
 
         if not (args.ls or args.filename):
-            prYellow("ERROR No file requested. Use [-ls --ls] or "
-                     "[-f --filename] to specify a file to download.")
+            prYellow('ERROR No file requested. Use [-ls --ls] or '
+                     '[-f --filename] to specify a file to download.')
             sys.exit(1)  # Return a non-zero exit code
 
         if args.ls:
@@ -367,15 +404,15 @@ def main():
                 if portal_dir == 'ACTIVECLDS_NCDF':
                     # Legacy .nc files
                     file_name = (
-                        f"LegacyGCM_Ls{Ls_ini[ii]:03d}_Ls{Ls_end[ii]:03d}.nc"
+                        f'LegacyGCM_Ls{Ls_ini[ii]:03d}_Ls{Ls_end[ii]:03d}.nc'
                         )
                 else:
                     # fort.11 files
-                    file_name = f"fort.11_{670+ii:04d}"
+                    file_name = f'fort.11_{670+ii:04d}'
 
                 url = requested_url + file_name
                 file_name = save_dir + file_name
-                print(f"Downloading {url}...")
+                print(f'Downloading {url}...')
                 download(url, file_name)
 
         elif args.filename:
@@ -383,18 +420,18 @@ def main():
             for f in requested_files:
                 url = requested_url + f
                 file_name = save_dir + f
-                print(f"Downloading {url}...")
+                print(f'Downloading {url}...')
                 download(url, file_name)
 
     elif not args.list_files:
         # If no directory is provided and its not a -list request
-        prYellow("ERROR: A directory must be specified unless using -list.")
+        prYellow('ERROR: A directory must be specified unless using -list.')
         sys.exit(1)
 
 # ------------------------------------------------------
 #                  END OF PROGRAM
 # ------------------------------------------------------
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     exit_code = main()
     sys.exit(exit_code)
