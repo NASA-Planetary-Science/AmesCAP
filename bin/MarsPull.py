@@ -282,7 +282,7 @@ def main():
         # for url in fv3_urls:
         #     fv3_dir_option = url.split('fv3betaout1data/')[1]
         #     print(f"(FV3-based MGCM) {fv3_dir_option:<14} {Cyan}({url}){Nclr}")
-        print(f"(FV3-based MGCM) {'FV3BETAOUT1':<14} {Cyan}({fv3_urls}){Nclr}")
+        print(f"(FV3-based MGCM) {'FV3BETAOUT1':<14} {Cyan}({fv3_home}){Nclr}")
 
         print("")
         
