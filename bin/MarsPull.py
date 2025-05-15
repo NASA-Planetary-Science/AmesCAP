@@ -252,6 +252,9 @@ def main():
         legacy_subdir_search = (
             "https://data\.nas\.nasa\.gov/legacygcm/legacygcmdata/"
             )
+        fv3_subdir_search = (
+            "https://data\.nas\.nasa\.gov/legacygcm/fv3betaout1data/"
+            )
 
         legacy_urls = re.findall(
             fr"{legacy_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
@@ -259,8 +262,7 @@ def main():
             )
 
         fv3_urls = re.findall(
-            r"https://data\.nas\.nasa\.gov/legacygcm/fv3betaout1data/"
-            r"[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
+            fr"{fv3_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
             fv3_dir_text
             )
 
@@ -269,8 +271,10 @@ def main():
         for url in legacy_urls:
             legacy_dir_option = url.split('legacygcmdata/')[1]
             print(f"(Legacy MGCM) {legacy_dir_option} {Cyan}({url}){Nclr}")
-        print(f"(FV3-based MGCM) FV3BETAOUT1 {Cyan}({fv3_urls}){Nclr}")
-        print(f"{fv3_urls}")
+        
+        for url in fv3_urls:
+            fv3_dir_option = url.split('fv3betaout1data/')[1]
+            print(f"(FV3-based MGCM) {fv3_dir_option} {Cyan}({url}){Nclr}")
 
         if args.directory_name:
             # If a directory is provided, list the files in that directory
@@ -279,9 +283,11 @@ def main():
                 # FV3-based MGCM
                 print(f"\nAvailable files from the FV3-based MGCM's FV3BETAOUT1 directory:")
                 print(f"-------------------------------------------------")
+                fv3_dir_url = fv3_subdir_search + portal_dir + r'\/'
+                fv3_file_text = (requests.get(fv3_dir_url)).text
                 print_file_list(re.findall(r'href="[^"]*\/([^"\/]+\.nc)"',
-                                            fv3_dir_text))
-                print(f"\n{Cyan}({fv3_urls}){Nclr}")
+                                            fv3_file_text))
+                print(f"\n{Cyan}({fv3_dir_url}){Nclr}")
             
             elif portal_dir in [
                 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
