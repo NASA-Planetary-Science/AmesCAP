@@ -300,7 +300,6 @@ def main():
                 fv3_dir_url = f'{fv3_home_url}'
                 fv3_data = requests.get(fv3_dir_url)
                 fv3_file_text = fv3_data.text
-                print(f'fv3_file_text: {fv3_file_text}')
                 
                 # This looks for download attributes or href links 
                 # ending with the .nc pattern
@@ -342,7 +341,6 @@ def main():
                 legacy_dir_url = (f'{legacy_data_url}' + portal_dir + r'/')
                 legacy_data = requests.get(legacy_dir_url)
                 legacy_file_text = legacy_data.text
-                print(f'legacy_file_text: {legacy_file_text}')
                 
                 # This looks for download attributes or href links 
                 # ending with the fort.11_ pattern
