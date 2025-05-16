@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-The MarsPull executable is for querying data from the Mars Climate \
-Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on \
+The MarsPull executable is for querying data from the Mars Climate 
+Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on 
 the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
 The executable requires 2 arguments:
@@ -73,11 +73,11 @@ def debug_wrapper(func):
 parser = argparse.ArgumentParser(
     prog=('MarsPull'),
     description=(
-        f"{Yellow}Uility for downloading NASA Ames Mars Global Climate "
-        f"Model output files from the NAS Data Portal at:\n"
-        f"{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}"
-        f"Requires ``-f`` or ``-ls``."
-        f"{Nclr}\n\n"
+        f'{Yellow}Uility for downloading NASA Ames Mars Global Climate '
+        f'Model output files from the NAS Data Portal at:\n'
+        f'{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}'
+        f'Requires ``-f`` or ``-ls``.'
+        f'{Nclr}\n\n'
     ),
     formatter_class=argparse.RawTextHelpFormatter
 )
@@ -87,50 +87,50 @@ parser.add_argument('directory_name', type=str, nargs='?',
         'FV3BETAOUT1', 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
         'ACTIVECLDS_NCDF'],
     help=(
-        f"Selects the simulation directory from the "
-        f"NAS data portal ("
-        f"{Cyan}https://data.nas.nasa.gov/mcmcref/){Nclr}\n"
-        f"Current directory options are:\n{Yellow}FV3BETAOUT1, ACTIVECLDS, "
-        f"ACTIVECLDS, INERTCLDS, NEWBASE_ACTIVECLDS, ACTIVECLDS_NCDF\n"
-        f"{Red}MUST be used with either ``-f`` or ``-ls``\n"
-        f"{Green}Example:\n"
-        f"> MarsPull INERTCLDS -f fort.11_0690\n"
-        f"{Blue}OR{Green}\n"
-        f"> MarsPull INERTCLDS -ls 90\n"
-        f"{Nclr}\n\n"
+        f'Selects the simulation directory from the '
+        f'NAS data portal ('
+        f'{Cyan}https://data.nas.nasa.gov/mcmcref/){Nclr}\n'
+        f'Current directory options are:\n{Yellow}FV3BETAOUT1, ACTIVECLDS, '
+        f'ACTIVECLDS, INERTCLDS, NEWBASE_ACTIVECLDS, ACTIVECLDS_NCDF\n'
+        f'{Red}MUST be used with either ``-f`` or ``-ls``\n'
+        f'{Green}Example:\n'
+        f'> MarsPull INERTCLDS -f fort.11_0690\n'
+        f'{Blue}OR{Green}\n'
+        f'> MarsPull INERTCLDS -ls 90\n'
+        f'{Nclr}\n\n'
     )
 )
 
 parser.add_argument('-list', '--list_files', action='store_true',
     help=(
-        f"Return a list of the directories and files available for download "
-        f"from {Cyan}https://data.nas.nasa.gov/mcmcref/{Nclr}\n"
-        f"{Green}Example:\n"
-        f"> MarsPull -list {Blue}# lists all directories{Green}\n"
-        f"> MarsPull -list ACTIVECLDS {Blue}# lists files under ACTIVECLDS "
-        f"{Nclr}\n\n"
+        f'Return a list of the directories and files available for download '
+        f'from {Cyan}https://data.nas.nasa.gov/mcmcref/{Nclr}\n'
+        f'{Green}Example:\n'
+        f'> MarsPull -list {Blue}# lists all directories{Green}\n'
+        f'> MarsPull -list ACTIVECLDS {Blue}# lists files under ACTIVECLDS '
+        f'{Nclr}\n\n'
     )
 )
 
 parser.add_argument('-f', '--filename', nargs='+', type=str,
     help=(
-        f"The name(s) of the file(s) to download.\n"
-        f"{Green}Example:\n"
-        f"> MarsPull INERTCLDS -f fort.11_0690"
-        f"{Nclr}\n\n"
+        f'The name(s) of the file(s) to download.\n'
+        f'{Green}Example:\n'
+        f'> MarsPull INERTCLDS -f fort.11_0690'
+        f'{Nclr}\n\n'
     )
 )
 
 parser.add_argument('-ls', '--ls', nargs='+', type=float,
     help=(
-        f"Selects the file(s) to download based on a range of solar "
-        f"longitudes (Ls).\n"
-        f"This only works on data in the {Yellow}ACTIVECLDS{Nclr} and "
-        f"{Yellow}INERTCLDS{Nclr} folders.\n"
-        f"{Green}Example:\n"
-        f"> MarsPull INERTCLDS -ls 90\n"
-        f"> MarsPull INERTCLDS -ls 90 180"
-        f"{Nclr}\n\n"
+        f'Selects the file(s) to download based on a range of solar '
+        f'longitudes (Ls).\n'
+        f'This only works on data in the {Yellow}ACTIVECLDS{Nclr} and '
+        f'{Yellow}INERTCLDS{Nclr} folders.\n'
+        f'{Green}Example:\n'
+        f'> MarsPull INERTCLDS -ls 90\n'
+        f'> MarsPull INERTCLDS -ls 90 180'
+        f'{Nclr}\n\n'
     )
 )
 
@@ -138,11 +138,11 @@ parser.add_argument('-ls', '--ls', nargs='+', type=float,
 
 parser.add_argument('--debug', action='store_true',
     help=(
-        f"Use with any other argument to pass all Python errors and\n"
-        f"status messages to the screen when running CAP.\n"
-        f"{Green}Example:\n"
-        f"> MarsPull INERTCLDS -ls 90 --debug"
-        f"{Nclr}\n\n"
+        f'Use with any other argument to pass all Python errors and\n'
+        f'status messages to the screen when running CAP.\n'
+        f'{Green}Example:\n'
+        f'> MarsPull INERTCLDS -ls 90 --debug'
+        f'{Nclr}\n\n'
     )
  )
 
@@ -153,7 +153,7 @@ debug = args.debug
 # ------------------------------------------------------
 #                  DEFINITIONS
 # ------------------------------------------------------
-save_dir = (f"{os.getcwd()}/")
+save_dir = (f'{os.getcwd()}/')
 
 # available files by Ls:
 Ls_ini = np.array([
@@ -177,14 +177,14 @@ def download(url, file_name):
     """
     Downloads a file from the NAS Data Portal (data.nas.nasa.gov).
 
-    :param url: The url to download from, e.g 'https://data.nas.nasa.\
-        gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_\
+    :param url: The url to download from, e.g 'https://data.nas.nasa.
+        gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_
             Ls000_Ls004.nc'
     :type url: str
-    :param file_name: The local file_name e.g  '/lou/la4/akling/Data/L\
+    :param file_name: The local file_name e.g  '/lou/la4/akling/Data/L
         egacyGCM_Ls000_Ls004.nc'
     :type file_name: str
-    :return: The requested file(s), downloaded and saved to the \
+    :return: The requested file(s), downloaded and saved to the 
         current directory.
     :raises FileNotFoundError: A file-not-found error.
     """
@@ -209,7 +209,10 @@ def download(url, file_name):
                     downloaded += len(data)
                     f.write(data)
                     status = int(50*downloaded/total)
-                    sys.stdout.write(f"\rProgress: [{'#'*status}{'.'*(50 - status)}] {status}%")
+                    sys.stdout.write(
+                        f'\rProgress: '
+                        f'[{"#"*status}{"."*(50 - status)}] {status}%'
+                        )
                     sys.stdout.flush()
             sys.stdout.write('\n\n')
         else:
@@ -261,7 +264,7 @@ def main():
             )
 
         legacy_urls = re.findall(
-            fr"{legacy_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
+            fr'{legacy_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&"()*+,;=]+',
             legacy_dir_text
             )
         
@@ -271,7 +274,7 @@ def main():
         #       left in place in case the FV3BETAOUT1 directory is 
         #       updated with subdirectories in the future.
         # fv3_urls = re.findall(
-        #     fr"{fv3_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&'()*+,;=]+",
+        #     fr'{fv3_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&"()*+,;=]+',
         #     fv3_dir_text
         #     )
         fv3_urls = [f'{fv3_data_url}']
@@ -281,13 +284,16 @@ def main():
         for url in legacy_urls:
             print('Searching...')
             legacy_dir_option = url.split('legacygcmdata/')[1]
-            print(f'{"(Legacy MGCM)":<17} {legacy_dir_option:<20} {Cyan}{url}{Nclr}')
+            print(f'{"(Legacy MGCM)":<17} {legacy_dir_option:<20} '
+                  f'{Cyan}{url}{Nclr}')
         
         # NOTE: See above comment for the FV3-based MGCM data note
         # for url in fv3_urls:
         #     fv3_dir_option = url.split('fv3betaout1data/')[1]
-        #     print(f'{"(FV3-based MGCM)":<17} {fv3_dir_option:<17} {Cyan}{url}{Nclr}')
-        print(f'{"(FV3-based MGCM)":<17} {"FV3BETAOUT1":<20} {Cyan}{fv3_home_url}{Nclr}')
+        #     print(f'{"(FV3-based MGCM)":<17} {fv3_dir_option:<17} '
+        #           f'{Cyan}{url}{Nclr}')
+        print(f'{"(FV3-based MGCM)":<17} {"FV3BETAOUT1":<20} '
+              f'{Cyan}{fv3_home_url}{Nclr}')
         print(f'---------------------\n')
         
         if args.directory_name:
@@ -308,21 +314,31 @@ def main():
                 print('Searching...')
                 
                 # Try multiple patterns to find .nc files
-                download_files = re.findall(r'download="([^"]+\.nc)"', fv3_file_text)
+                download_files = re.findall(
+                    r'download="([^"]+\.nc)"', 
+                    fv3_file_text
+                    )
                 if download_files:
                     fv3_files_available = download_files
                 else:
                     # Look for href attributes with .nc files
-                    href_files = re.findall(r'href="[^"]*\/([^"\/]+\.nc)"', fv3_file_text)
+                    href_files = re.findall(
+                        r'href="[^"]*\/([^"\/]+\.nc)"', 
+                        fv3_file_text
+                        )
                     if href_files:
                         fv3_files_available = href_files
                     else:
                         # Look for links with .nc text
-                        link_files = re.findall(r'<a[^>]*>([^<]+\.nc)</a>', fv3_file_text)
+                        link_files = re.findall(
+                            r'<a[^>]*>([^<]+\.nc)</a>', 
+                            fv3_file_text
+                            )
                         if link_files:
                             fv3_files_available = link_files
                 
-                # Filter out any potential HTML or Javascript that might match the pattern
+                # Filter out any potential HTML or Javascript that might 
+                # match the pattern
                 fv3_files_available = [f for f in fv3_files_available if (
                     not f.startswith('<') and 
                     not f.startswith('function') and 
@@ -337,13 +353,17 @@ def main():
                 if fv3_files_available:
                     print_file_list(fv3_files_available)
                 else:
-                    print("No .nc files found. Run with --debug for more information.")
+                    print('No .nc files found. Run with --debug for more info')
                     if debug:
                         # Try a different approach for debugging
-                        table_rows = re.findall(r'<tr>.*?</tr>', fv3_file_text, re.DOTALL)
+                        table_rows = re.findall(
+                            r'<tr>.*?</tr>', 
+                            fv3_file_text, 
+                            re.DOTALL
+                            )
                         for row in table_rows:
                             if '.nc' in row:
-                                print(f"Debug - Found row with .nc: {row}")
+                                print(f'Debug - Found row with .nc: {row}')
                 
                 print(f'---------------')
                 # The download URL differs from the listing URL
@@ -372,17 +392,26 @@ def main():
                 legacy_files_available = []
                 
                 # First try to find download attributes which are more reliable
-                download_files = re.findall(r'download="(fort\.11_[0-9]+)"', legacy_file_text)
+                download_files = re.findall(
+                    r'download="(fort\.11_[0-9]+)"', 
+                    legacy_file_text
+                    )
                 if download_files:
                     legacy_files_available = download_files
                 else:
                     # Fallback to looking for href links with fort.11_ pattern
-                    href_files = re.findall(r'href="[^"]*\/?(fort\.11_[0-9]+)"', legacy_file_text)
+                    href_files = re.findall(
+                        r'href="[^"]*\/?(fort\.11_[0-9]+)"', 
+                        legacy_file_text
+                        )
                     if href_files:
                         legacy_files_available = href_files
                     # If still empty, try another pattern to match links
                     if not legacy_files_available:
-                        href_files = re.findall(r'<a href="[^"]*"[^>]*>(fort\.11_[0-9]+)</a>', legacy_file_text)
+                        href_files = re.findall(
+                            r'<a href="[^"]*"[^>]*>(fort\.11_[0-9]+)</a>', 
+                            legacy_file_text
+                            )
                         legacy_files_available = href_files
                 
                 print_file_list(legacy_files_available)
@@ -462,8 +491,9 @@ def main():
 
                 url = requested_url + file_name
                 file_name = save_dir + file_name
-                print(f'\nDownloading {url}...')
-                print(f"{Cyan}Saving {len(file_list)} file(s) to {save_dir}")
+                print(f'\nDownloading {Cyan}{url}{Nclr}...')
+                print(f'Saving {Cyan}{len(file_list)}{Nclr} file(s) to '
+                      f'{Cyan}{save_dir}{Nclr}')
                 download(url, file_name)
 
         elif args.filename:
