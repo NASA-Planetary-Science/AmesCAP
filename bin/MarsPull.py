@@ -103,10 +103,11 @@ parser.add_argument('directory_name', type=str, nargs='?',
 
 parser.add_argument('-list', '--list_files', action='store_true',
     help=(
-        f"Return a list of all the files available for download from "
-        f"{Cyan}https://data.nas.nasa.gov/mcmcref/{Nclr}\n"
+        f"Return a list of the directories and files available for download "
+        f"from {Cyan}https://data.nas.nasa.gov/mcmcref/{Nclr}\n"
         f"{Green}Example:\n"
-        f"> MarsPull -list"
+        f"> MarsPull -list {Blue}# lists all directories\n"
+        f"> MarsPull -list ACTIVECLDS {Blue}# lists files under ACTIVECLDS "
         f"{Nclr}\n\n"
     )
 )
@@ -192,8 +193,15 @@ def download(url, file_name):
     response = requests.get(url, stream=True)
     total = response.headers.get('content-length')
 
+    portal_dir = args.directory_name
+    if portal_dir == 'FV3BETAOUT1' and args.ls:
+        print(f'{Red}ERROR: The FV3BETAOUT1 directory does not support '
+              f'[-ls --ls] queries. Please query by file name '
+              f'[-f --filename]{Nclr}')
+        
     if response.status_code == 404:
-        print(f'Error during download, error code is: {response.status_code}')
+        print(f'{Red}Error during download, error code is: '
+              f'{response.status_code}{Nclr}')
     else:
         if total is not None:
             # If file size is known, return progress bar
@@ -212,10 +220,10 @@ def download(url, file_name):
             sys.stdout.write('\n')
         else:
             # If file size is unknown, skip progress bar
-            print(f"Downloading {fname}...")
+            print(f'Downloading {fname}...')
             with open(file_name, 'wb')as f:
                 f.write(response.content)
-            print(f"{fname} Done")
+            print(f'{fname} Done')
 
 
 def print_file_list(list_of_files):
@@ -345,10 +353,11 @@ def main():
                 # The download URL differs from the listing URL
                 print(f'(from {Cyan}({fv3_dir_url}){Nclr})\n')
                 
-                print(f'You can download files using the -f or -ls options '
-                      f'with the directory name, e.g.\n'
+                print(f'{Yellow}You can download files using the -f '
+                      f' options with the directory name, e.g.\n'
                       f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc\n'
-                      f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc 03340.atmos_average.nc\n')
+                      f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc '
+                      f'03340.atmos_average.nc{Nclr}\n')
             
             elif portal_dir in [
                 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
@@ -383,12 +392,12 @@ def main():
                 print_file_list(legacy_files_available)
                 print(f'(from {Cyan}({legacy_dir_url}){Nclr})\n')
                 
-                print(f'You can download these files using the -f or -ls options '
-                      f'with the directory name, e.g.\n'
+                print(f'{Yellow}You can download these files using the '
+                      f'-f or -ls options  with the directory name, e.g.\n'
                       f'> MarsPull ACTIVECLDS -f fort.11_0690\n'
                       f'> MarsPull ACTIVECLDS -f fort.11_0700 fort.11_0701 \n'
                       f'> MarsPull ACTIVECLDS -ls 90\n'
-                      f'> MarsPull ACTIVECLDS -ls 90 180\n')
+                      f'> MarsPull ACTIVECLDS -ls 90 180{Nclr}\n')
             
             else:
                 print(f'Error: Directory {portal_dir} does not exist.')
@@ -397,9 +406,9 @@ def main():
         
         else:
             # If no directory is provided, exit with an error
-            print(f'You can list the files in a directory by using the '
-                  f'-list option with a directory name, e.g.\n'
-                  f'> MarsPull -list ACTIVECLDS')
+            print(f'{Yellow}You can list the files in a directory by using '
+                  f'the -list option with a directory name, e.g.\n'
+                  f'> MarsPull -list ACTIVECLDS{Nclr}\n')
 
     if args.directory_name and not args.list_files:
         portal_dir = args.directory_name
