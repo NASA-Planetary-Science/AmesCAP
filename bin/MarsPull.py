@@ -209,9 +209,9 @@ def download(url, file_name):
                     downloaded += len(data)
                     f.write(data)
                     status = int(50*downloaded/total)
-                    sys.stdout.write(f"\r[{'#'*status}{'.'*(50 - status)}]")
+                    sys.stdout.write(f"Progress: \r[{'#'*status}{'.'*(50 - status)}] {status}%")
                     sys.stdout.flush()
-            sys.stdout.write('\n')
+            sys.stdout.write('\n\n')
         else:
             # If file size is unknown, skip progress bar
             print(f'Downloading {fname}...')
@@ -348,7 +348,7 @@ def main():
                 print(f'{Cyan}({fv3_dir_url}){Nclr}\n')
                 
                 print(f'{Yellow}You can download files using the -f '
-                      f' options with the directory name, e.g.\n'
+                      f'option with the directory name, e.g.\n'
                       f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc\n'
                       f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc '
                       f'03340.atmos_average.nc{Nclr}\n')
@@ -422,8 +422,9 @@ def main():
         
         if portal_dir == 'FV3BETAOUT1' and args.ls:
             print(f'{Red}ERROR: The FV3BETAOUT1 directory does not support '
-                f'[-ls --ls] queries. Please query by file name '
-                f'[-f --filename]{Nclr}')
+                f'[-ls --ls] queries. Please query by file name(s) '
+                f'[-f --filename], e.g.\n'
+                f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc{Nclr}')
             sys.exit(1)  # Return a non-zero exit code
             
         if args.ls:
@@ -461,7 +462,7 @@ def main():
 
                 url = requested_url + file_name
                 file_name = save_dir + file_name
-                print(f'Downloading {url}...')
+                print(f'\nDownloading {url}...')
                 download(url, file_name)
 
         elif args.filename:
@@ -469,7 +470,7 @@ def main():
             for f in requested_files:
                 url = requested_url + f
                 file_name = save_dir + f
-                print(f'Downloading {url}...')
+                print(f'\nDownloading {url}...')
                 download(url, file_name)
 
     elif not args.list_files:
