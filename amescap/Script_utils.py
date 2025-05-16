@@ -42,15 +42,6 @@ Red = "\033[91m"
 Green = "\033[92m"
 Purple = "\033[95m"
 
-# Old definitions for colored text, delete after all autodocs are merged
-def prRed(skk): print("\033[91m{}\033[00m".format(skk))
-def prGreen(skk): print("\033[92m{}\033[00m".format(skk))
-def prCyan(skk): print("\033[96m{}\033[00m".format(skk))
-def prYellow(skk): print("\033[93m{}\033[00m".format(skk))
-def prPurple(skk): print("\033[95m{}\033[00m".format(skk))
-def prLightPurple(skk): print("\033[94m{}\033[00m".format(skk))
-
-
 def MY_func(Ls_cont):
     """
     Returns the Mars Year
@@ -1455,10 +1446,8 @@ def read_variable_dict_amescap_profile(f_Ncdf=None):
                 setattr(MOD,FV3_var, found_list[0])
             else:
                 setattr(MOD,FV3_var, found_list[0])
-                prYellow(
-                    f"***Warning*** more than one possible variable "
-                    f"'{FV3_var}' found in file: {found_list}"
-                    )
+                print(f'{Yellow}***Warning*** more than one possible '
+                      f'variable "{FV3_var}" found in file: {found_list}')
 
         if type_input == 'dimension':
             for ivar in var_list:
@@ -1469,10 +1458,8 @@ def read_variable_dict_amescap_profile(f_Ncdf=None):
                 setattr(MOD, f"dim_{FV3_var}", found_list[0])
             else:
                 setattr(MOD, f"dim_{FV3_var}", found_list[0])
-                prYellow(
-                    f"***Warning*** more than one possible dimension "
-                    f"'{FV3_var}' found in file: {found_list}"
-                    )
+                print(f'{Yellow}***Warning*** more than one possible '
+                      f'dimension "{FV3_var}" found in file: {found_list}')
     return MOD
 
 

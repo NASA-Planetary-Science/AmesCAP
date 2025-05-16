@@ -28,7 +28,7 @@ List of Functions:
 
 # make print statements appear in color
 from amescap.Script_utils import (
-    prYellow, prCyan, Green, Yellow, Nclr, Cyan, Blue, Red
+    Green, Yellow, Nclr, Cyan, Blue, Red
 )
 
 # Load generic Python modules
@@ -417,8 +417,8 @@ def main():
             requested_url = (f'{fv3_data_url}')
 
         if not (args.ls or args.filename):
-            prYellow('ERROR No file requested. Use [-ls --ls] or '
-                     '[-f --filename] to specify a file to download.')
+            print(f'{Yellow}ERROR No file requested. Use [-ls --ls] or '
+                  f'[-f --filename] to specify a file to download.{Nclr}')
             sys.exit(1)  # Return a non-zero exit code
         portal_dir = args.directory_name
         
@@ -449,9 +449,7 @@ def main():
                     i_end += 1
 
                 file_list = np.arange(i_start, i_end + 1)
-
-            prCyan(f"Saving {len(file_list)} file(s) to {save_dir}")
-
+                
             for ii in file_list:
                 if portal_dir == 'ACTIVECLDS_NCDF':
                     # Legacy .nc files
@@ -465,6 +463,7 @@ def main():
                 url = requested_url + file_name
                 file_name = save_dir + file_name
                 print(f'\nDownloading {url}...')
+                print(f"{Cyan}Saving {len(file_list)} file(s) to {save_dir}")
                 download(url, file_name)
 
         elif args.filename:
@@ -477,7 +476,8 @@ def main():
 
     elif not args.list_files:
         # If no directory is provided and its not a -list request
-        prYellow('ERROR: A directory must be specified unless using -list.')
+        print(f'{Yellow}ERROR: A directory must be specified unless using '
+              f'-list.{Nclr}')
         sys.exit(1)
 
 # ------------------------------------------------------
