@@ -209,7 +209,7 @@ def download(url, file_name):
                     downloaded += len(data)
                     f.write(data)
                     status = int(50*downloaded/total)
-                    sys.stdout.write(f"Progress: \r[{'#'*status}{'.'*(50 - status)}] {status}%")
+                    sys.stdout.write(f"\rProgress: [{'#'*status}{'.'*(50 - status)}] {status}%")
                     sys.stdout.flush()
             sys.stdout.write('\n\n')
         else:
@@ -279,6 +279,7 @@ def main():
         print(f'\nAvailable directories:')
         print(f'---------------------')
         for url in legacy_urls:
+            print('Searching...')
             legacy_dir_option = url.split('legacygcmdata/')[1]
             print(f'{"(Legacy MGCM)":<17} {legacy_dir_option:<20} {Cyan}{url}{Nclr}')
         
@@ -304,6 +305,7 @@ def main():
                 # This looks for download attributes or href links 
                 # ending with the .nc pattern
                 fv3_files_available = []
+                print('Searching...')
                 
                 # Try multiple patterns to find .nc files
                 download_files = re.findall(r'download="([^"]+\.nc)"', fv3_file_text)
