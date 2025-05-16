@@ -106,7 +106,7 @@ parser.add_argument('-list', '--list_files', action='store_true',
         f"Return a list of the directories and files available for download "
         f"from {Cyan}https://data.nas.nasa.gov/mcmcref/{Nclr}\n"
         f"{Green}Example:\n"
-        f"> MarsPull -list {Blue}# lists all directories\n"
+        f"> MarsPull -list {Blue}# lists all directories{Green}\n"
         f"> MarsPull -list ACTIVECLDS {Blue}# lists files under ACTIVECLDS "
         f"{Nclr}\n\n"
     )
@@ -192,12 +192,6 @@ def download(url, file_name):
     _, fname = os.path.split(file_name)
     response = requests.get(url, stream=True)
     total = response.headers.get('content-length')
-
-    portal_dir = args.directory_name
-    if portal_dir == 'FV3BETAOUT1' and args.ls:
-        print(f'{Red}ERROR: The FV3BETAOUT1 directory does not support '
-              f'[-ls --ls] queries. Please query by file name '
-              f'[-f --filename]{Nclr}')
         
     if response.status_code == 404:
         print(f'{Red}Error during download, error code is: '
@@ -292,16 +286,15 @@ def main():
         # for url in fv3_urls:
         #     fv3_dir_option = url.split('fv3betaout1data/')[1]
         #     print(f'{"(FV3-based MGCM)":<17} {fv3_dir_option:<17} {Cyan}{url}{Nclr}')
-        print(f'{"(FV3-based MGCM)":<17} {"FV3BETAOUT1":<17} {Cyan}{fv3_home_url}{Nclr}')
-
-        print('')
+        print(f'{"(FV3-based MGCM)":<17} {"FV3BETAOUT1":<20} {Cyan}{fv3_home_url}{Nclr}')
+        print(f'---------------------\n')
         
         if args.directory_name:
             # If a directory is provided, list the files in that directory
             portal_dir = args.directory_name
             if portal_dir == 'FV3BETAOUT1':
                 # FV3-based MGCM
-                print(f'\nFV3-based MGCM {Yellow}FV3BETAOUT1{Nclr} directory selected.')
+                print(f'\n{Green}Selected: (FV3-based MGCM) FV3BETAOUT1{Nclr}')
                 print(f'\nAvailable files:')
                 print(f'---------------')
                 fv3_dir_url = f'{fv3_home_url}'
@@ -350,8 +343,9 @@ def main():
                             if '.nc' in row:
                                 print(f"Debug - Found row with .nc: {row}")
                 
+                print(f'---------------')
                 # The download URL differs from the listing URL
-                print(f'(from {Cyan}({fv3_dir_url}){Nclr})\n')
+                print(f'{Cyan}({fv3_dir_url}){Nclr}\n')
                 
                 print(f'{Yellow}You can download files using the -f '
                       f' options with the directory name, e.g.\n'
@@ -364,7 +358,7 @@ def main():
                 'ACTIVECLDS_NCDF'
                 ]:
                 # Legacy MGCM
-                print(f'\nLegacy MGCM {Yellow}{portal_dir}{Nclr} directory selected.')
+                print(f'\n{Green}Selected: (Legacy MGCM) {portal_dir}{Nclr}')
                 print(f'\nAvailable files:')
                 print(f'---------------')
                 legacy_dir_url = (f'{legacy_data_url}' + portal_dir + r'/')
@@ -390,10 +384,11 @@ def main():
                         legacy_files_available = href_files
                 
                 print_file_list(legacy_files_available)
-                print(f'(from {Cyan}({legacy_dir_url}){Nclr})\n')
+                print(f'---------------')
+                print(f'{Cyan}({legacy_dir_url}){Nclr}\n')
                 
                 print(f'{Yellow}You can download these files using the '
-                      f'-f or -ls options  with the directory name, e.g.\n'
+                      f'-f or -ls options with the directory name, e.g.\n'
                       f'> MarsPull ACTIVECLDS -f fort.11_0690\n'
                       f'> MarsPull ACTIVECLDS -f fort.11_0700 fort.11_0701 \n'
                       f'> MarsPull ACTIVECLDS -ls 90\n'
@@ -423,7 +418,14 @@ def main():
             prYellow('ERROR No file requested. Use [-ls --ls] or '
                      '[-f --filename] to specify a file to download.')
             sys.exit(1)  # Return a non-zero exit code
-
+        portal_dir = args.directory_name
+        
+        if portal_dir == 'FV3BETAOUT1' and args.ls:
+            print(f'{Red}ERROR: The FV3BETAOUT1 directory does not support '
+                f'[-ls --ls] queries. Please query by file name '
+                f'[-f --filename]{Nclr}')
+            sys.exit(1)  # Return a non-zero exit code
+            
         if args.ls:
             data_input = np.asarray(args.ls)
             if len(data_input) == 1:
