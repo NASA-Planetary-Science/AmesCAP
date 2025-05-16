@@ -278,13 +278,13 @@ def main():
         print(f'---------------------')
         for url in legacy_urls:
             legacy_dir_option = url.split('legacygcmdata/')[1]
-            print(f'(Legacy MGCM) {legacy_dir_option:<20} {Cyan}({url}){Nclr}')
+            print(f'{"(Legacy MGCM)":<17} {legacy_dir_option:<20} {Cyan}{url}{Nclr}')
         
         # NOTE: See above comment for the FV3-based MGCM data note
         # for url in fv3_urls:
         #     fv3_dir_option = url.split('fv3betaout1data/')[1]
-        #     print(f'(FV3-based MGCM) {fv3_dir_option:<20} {Cyan}({url}){Nclr}')
-        print(f'(FV3-based MGCM) {"FV3BETAOUT1":<17} {Cyan}({fv3_home_url}){Nclr}')
+        #     print(f'{"(FV3-based MGCM)":<17} {fv3_dir_option:<17} {Cyan}{url}{Nclr}')
+        print(f'{"(FV3-based MGCM)":<17} {"FV3BETAOUT1":<17} {Cyan}{fv3_home_url}{Nclr}')
 
         print('')
         
@@ -293,8 +293,8 @@ def main():
             portal_dir = args.directory_name
             if portal_dir == 'FV3BETAOUT1':
                 # FV3-based MGCM
-                print(f'\nFV3-based MGCM FV3BETAOUT1 directory selected.')
-                print(f'Available files:')
+                print(f'\nFV3-based MGCM {Yellow}FV3BETAOUT1{Nclr} directory selected.')
+                print(f'\nAvailable files:')
                 print(f'---------------')
                 fv3_dir_url = f'{fv3_home_url}'
                 fv3_data = requests.get(fv3_dir_url)
@@ -343,15 +343,15 @@ def main():
                                 print(f"Debug - Found row with .nc: {row}")
                 
                 # The download URL differs from the listing URL
-                print(f'\n{Cyan}({fv3_dir_url}){Nclr}')
+                print(f'(from {Cyan}({fv3_dir_url}){Nclr})\n')
             
             elif portal_dir in [
                 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
                 'ACTIVECLDS_NCDF'
                 ]:
                 # Legacy MGCM
-                print(f'\nLegacy MGCM {portal_dir} directory selected.')
-                print(f'Available files:')
+                print(f'\nLegacy MGCM {Yellow}{portal_dir}{Nclr} directory selected.')
+                print(f'\nAvailable files:')
                 print(f'---------------')
                 legacy_dir_url = (f'{legacy_data_url}' + portal_dir + r'/')
                 legacy_data = requests.get(legacy_dir_url)
@@ -376,7 +376,7 @@ def main():
                         legacy_files_available = href_files
                 
                 print_file_list(legacy_files_available)
-                print(f'\n{Cyan}({legacy_dir_url}){Nclr}')
+                print(f'(from {Cyan}({legacy_dir_url}){Nclr})\n')
             
             else:
                 print(f'Error: Directory {portal_dir} does not exist.')
