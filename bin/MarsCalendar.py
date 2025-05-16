@@ -5,13 +5,13 @@ and returns the corresponding sol or Ls, respectively.
 
 The executable requires 1 of the following arguments:
 
-    * ``[-sol --sol]``          The sol to convert to Ls, OR
-    * ``[-ls --ls]``            The Ls to convert to sol
+    * ``[-sol --sol]``      The sol to convert to Ls, OR
+    * ``[-ls --ls]``        The Ls to convert to sol
 
 and optionally accepts:
 
-    * ``[-my --marsyear]``      The Mars Year of the simulation to compute sol or Ls from, AND/OR
-    * ``[-c --continuous]``     Returns Ls in continuous form
+    * ``[-my --marsyear]``  The Mars Year of the simulation to compute sol or Ls from, AND/OR
+    * ``[-c --continuous]`` Returns Ls in continuous form
 
 Third-party Requirements:
 
@@ -21,12 +21,6 @@ Third-party Requirements:
     * ``traceback``
     * ``sys``
     * ``amescap``
-
-List of Functions:
-
-    * debug_wrapper - A decorator that wraps a function with error handling
-    * parse_array - Formats the input array for conversion.
-    * main - Main function for MarsCalendar command-line tool.
 """
 
 # Make print statements appear in color

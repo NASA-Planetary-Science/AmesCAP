@@ -29,13 +29,6 @@ Third-party requirements:
     * ``traceback``
     * ``xarray``
     * ``amescap``
-
-List of Functions:
-
-    * debug_wrapper - A decorator that wraps a function with error handling
-    * get_time_dimension_name - Find the time dimension name in the dataset
-    * main - The main function that processes the input files and converts
-             them to MGCM-like format
 """
 
 # Make print statements appear in color

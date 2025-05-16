@@ -30,11 +30,6 @@ Third-party Requirements:
     * ``traceback``
     * ``sys``
     * ``amescap``
-
-List of Functions:
-
-    * debug_wrapper - A decorator that wraps a function with error handling
-    * main - The main function that performs the interpolation
 """
 
 # Make print statements appear in color

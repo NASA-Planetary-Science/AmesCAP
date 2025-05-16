@@ -20,19 +20,6 @@ Third-party Requirements:
     * ``functools``
     * ``traceback``
     * ``requests``
-
-List of Functions:
-
-    * debug_wrapper - A decorator that wraps a function with error handling
-    * download - Downloads a file from the NAS Data Portal (data.nas.nasa.gov).
-    * print_file_list - Prints a list of files.
-    * main - The main function that handles the command-line arguments
-        and coordinates the download process.
-        It checks for the presence of the required arguments, validates
-        the input, and calls the appropriate functions to download the
-        requested files. It also handles the logic for listing available
-        directories and files, as well as downloading files based on
-        specified solar longitudes (Ls) or file names.
 """
 
 # make print statements appear in color

@@ -16,50 +16,6 @@ Third-party Requirements:
     * ``sys``
     * ``math``
     * ``matplotlib.colors``
-
-List of Functions:
-
-    * MY_func - Returns the Mars Year.
-    * find_tod_in_diurn - Returns the variable for the local time axis 
-        in diurn files.
-    * print_fileContent - Prints the contents of a netCDF file to the 
-        screen.
-    * print_varContent - Print variable contents from a variable in a 
-        netCDF file.
-    * give_permission - Sets group file permissions for the NAS system
-    * check_file_tape - Checks whether a file exists on the disk.
-    * get_Ncdf_path - Returns the full path for a netCDF file object.
-    * extract_path_basename - Returns the path and basename of a file.
-    * FV3_file_type - Return the type of the netCDF file.
-    * alt_FV3path - Returns the original or fixed file for a given path.
-    * smart_reader - Reads a variable from a netCDF file.
-    * regrid_Ncfile - Regrid a netCDF variable from one file structure 
-        to another.
-    * progress - Displays a progress bar to monitor heavy calculations.
-    * section_content_amescap_profile- Executes first code section in 
-        ``~/.amescap_profile``.
-    * filter_vars - Filters the variable names in a netCDF file for 
-        processing.
-    * find_fixedfile - Finds the relevant fixed file for an average, 
-        daily, or diurn file.
-    * get_longname_unit - Returns the longname and unit of a variable.
-    * wbr_cmap - Returns a color map (From R. John Wilson).
-    * rjw_cmap - Returns a color map (From R. John Wilson).
-    * hot_cold_cmap - Returns a color map (From Alex Kling, based on 
-        bipolar cmap).
-    * dkass_dust_cmap - Color map (From Courtney Batterson).
-    * dkass_temp_cmap - Color map (From Courtney Batterson).
-    * pretty_print_to_fv_eta - Print the ``ak`` or ``bk`` coefficients 
-        for copying to ``fv_eta.f90``.
-    * replace_dims - Replaces the dimensions of a variable in a netCDF 
-        file.
-    * ak_bk_loader - Loads the ak and bk variables from a netCDF file.
-    * read_variable_dict_amescap_profile - Reads a variable dictionary 
-        from the ``amescap_profile`` file.
-    * reset_FV3_names - Resets the FV3 variable names in a netCDF file.
-    * except_message - Prints an error message if a variable is not 
-        found.
-    * check_bounds - Checks the bounds of a variable in a netCDF file.
 """
 
 # Load generic Python modules

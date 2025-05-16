@@ -20,11 +20,6 @@ Third-party Requirements:
     * ``subprocess``
     * ``matplotlib``
     * ``pypdf``
-
-List of Functions:
-
-    * debug_wrapper - A decorator that wraps a function with error handling
-    * main - The main function that orchestrates the plotting process
 """
 
 # Make print statements appear in color

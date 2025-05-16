@@ -41,44 +41,6 @@ Third-party Requirements:
     * ``io``
     * ``locale``
     * ``amescap``
-
-List of Functions:
-
-    * debug_wrapper - A decorator that wraps a function with error handling
-    * add_help - Create a help string for the add_variable argument.
-    * ensure_file_closed - Try to ensure a file is not being accessed by the system.
-    * safe_remove_file - Safely remove a file with retries for Windows file locking issues
-    * safe_move_file - Safely move a file with retries for Windows file locking issues.
-    * safe_print - Print text safely, handling encoding issues on Windows.
-    * patched_print_message - Patched version of _print_message that handles Unicode encoding errors.
-    * force_close_netcdf_files - Aggressively try to ensure netCDF files are closed on Windows systems.
-    * safe_copy_replace - Windows-specific approach to copy file contents and replace destination.
-    * compute_p_3D - Compute the 3D pressure at layer midpoints.
-    * compute_rho - Compute density.
-    * compute_xzTau - Compute the dust or ice extinction rate.
-    * compute_mmr - Compute the dust or ice mixing ratio.
-    * compute_Vg_sed - Calculate the sedimentation rate of the dust.
-    * compute_w_net - Computes the net vertical wind.
-    * compute_theta - Compute the potential temperature.
-    * compute_w - Compute the vertical wind using the omega equation.
-    * compute_zfull - Calculate the altitude of the layer midpoints above ground level.
-    * compute_zhalf - Calculate the altitude of the layer interfaces above ground level.
-    * compute_DZ_full_pstd - Calculate layer thickness.
-    * compute_N - Calculate the Brunt Vaisala freqency.
-    * compute_Tco2 - Calculate the frost point of CO2.
-    * compute_scorer - Calculate the Scorer wavelength.
-    * compute_DP_3D - Calculate the thickness of a layer in pressure units.
-    * compute_DZ_3D - Calculate the thickness of a layer in altitude units.
-    * compute_Ep - Calculate wave potential energy.
-    * compute_Ek - Calculate wave kinetic energy
-    * compute_MF - Calculate zonal or meridional momentum fluxes.
-    * compute_WMFF - Calculate the zonal or meridional wave-mean flow forcing.
-    * check_dependencies - Check for variable dependencies in a file, add missing dependencies.
-    * check_variable_exists - Check if a variable exists in a file.
-    * get_existing_var_name - Get the actual variable name that exists in the file.
-    * process_add_variables - Process a list of variables to add.
-    * add_with_dependencies - Helper function to add variable and dependencies to the add list.
-    * main - Main function for variable manipulations in NetCDF files.
 """
 
 # Make print statements appear in color

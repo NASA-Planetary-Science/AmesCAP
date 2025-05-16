@@ -44,26 +44,6 @@ Third-party Requirements:
     * ``shutil``
     * ``functools``
     * ``traceback``
-
-List of Functions:
-
-    * debug_wrapper - A decorator that wraps a function with error
-        handling.
-    * split_files - Extracts variables in the file along the specified
-        dimension.
-    * process_time_shift - Converts diurn files to local time.
-    * main - Main entry point for MarsFiles data processing utility.
-    * make_FV3_files - Make MGCM-like ``average``, ``daily``, and
-        ``diurn`` files.
-    * proccess_file - Process the new file.
-    * do_avg_vars - Performs a time average over all fields in a file.
-    * change_vname_longname_unit - Update variable ``name``,
-        ``longname``, and ``units``. This is
-    * replace_dims - Replaces dimensions with MGCM-like names. Removes
-        ``time_of_day``.
-    * replace_at_index - Replaces the dimension at the given index with
-        a new name.
-    * ls2sol_1year - Returns a sol number from the solar longitude.
 """
 
 # Make print statements appear in color
