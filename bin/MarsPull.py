@@ -344,6 +344,11 @@ def main():
                 
                 # The download URL differs from the listing URL
                 print(f'(from {Cyan}({fv3_dir_url}){Nclr})\n')
+                
+                print(f'You can download files using the -f or -ls options '
+                      f'with the directory name, e.g.\n'
+                      f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc\n'
+                      f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc 03340.atmos_average.nc\n')
             
             elif portal_dir in [
                 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
@@ -377,11 +382,24 @@ def main():
                 
                 print_file_list(legacy_files_available)
                 print(f'(from {Cyan}({legacy_dir_url}){Nclr})\n')
+                
+                print(f'You can download these files using the -f or -ls options '
+                      f'with the directory name, e.g.\n'
+                      f'> MarsPull ACTIVECLDS -f fort.11_0690\n'
+                      f'> MarsPull ACTIVECLDS -f fort.11_0700 fort.11_0701 \n'
+                      f'> MarsPull ACTIVECLDS -ls 90\n'
+                      f'> MarsPull ACTIVECLDS -ls 90 180\n')
             
             else:
                 print(f'Error: Directory {portal_dir} does not exist.')
                 sys.exit(1)
             sys.exit(0)
+        
+        else:
+            # If no directory is provided, exit with an error
+            print(f'You can list the files in a directory by using the '
+                  f'-list option with a directory name, e.g.\n'
+                  f'> MarsPull -list ACTIVECLDS')
 
     if args.directory_name and not args.list_files:
         portal_dir = args.directory_name
