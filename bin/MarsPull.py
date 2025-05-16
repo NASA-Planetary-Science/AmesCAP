@@ -279,10 +279,9 @@ def main():
         #     )
         fv3_urls = [f'{fv3_data_url}']
 
-        print(f'\nAvailable directories:')
-        print(f'---------------------')
+        print(f'\nSearching for available directories...')
+        print(f'--------------------------------------')
         for url in legacy_urls:
-            print('Searching...')
             legacy_dir_option = url.split('legacygcmdata/')[1]
             print(f'{"(Legacy MGCM)":<17} {legacy_dir_option:<20} '
                   f'{Cyan}{url}{Nclr}')
@@ -302,8 +301,8 @@ def main():
             if portal_dir == 'FV3BETAOUT1':
                 # FV3-based MGCM
                 print(f'\n{Green}Selected: (FV3-based MGCM) FV3BETAOUT1{Nclr}')
-                print(f'\nAvailable files:')
-                print(f'---------------')
+                print(f'\nSearching for available files...')
+                print(f'--------------------------------')
                 fv3_dir_url = f'{fv3_home_url}'
                 fv3_data = requests.get(fv3_dir_url)
                 fv3_file_text = fv3_data.text
@@ -311,7 +310,6 @@ def main():
                 # This looks for download attributes or href links 
                 # ending with the .nc pattern
                 fv3_files_available = []
-                print('Searching...')
                 
                 # Try multiple patterns to find .nc files
                 download_files = re.findall(
