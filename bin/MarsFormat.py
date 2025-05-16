@@ -32,7 +32,10 @@ Third-party requirements:
 
 List of Functions:
 
-    * download - Queries the requested file from the NAS Data Portal.
+    * debug_wrapper - A decorator that wraps a function with error handling
+    * get_time_dimension_name - Find the time dimension name in the dataset
+    * main - The main function that processes the input files and converts
+             them to MGCM-like format
 """
 
 # Make print statements appear in color
@@ -62,8 +65,38 @@ xr.set_options(keep_attrs=True)
 
 def debug_wrapper(func):
     """
-    A decorator that wraps a function with error handling based on the
-    --debug flag.
+    A decorator that wraps a function with error handling
+    based on the --debug flag.
+    If the --debug flag is set, it prints the full traceback
+    of any exception that occurs. Otherwise, it prints a
+    simplified error message.
+
+    :param func: The function to wrap.
+    :type   func: function
+    :return: The wrapped function.
+    :rtype:  function
+    :raises Exception: If an error occurs during the function call.
+    :raises TypeError: If the function is not callable.
+    :raises ValueError: If the function is not found.
+    :raises NameError: If the function is not defined.
+    :raises AttributeError: If the function does not have the
+        specified attribute.
+    :raises ImportError: If the function cannot be imported.
+    :raises RuntimeError: If the function cannot be run.
+    :raises KeyError: If the function does not have the
+        specified key.
+    :raises IndexError: If the function does not have the
+        specified index.
+    :raises IOError: If the function cannot be opened.
+    :raises OSError: If the function cannot be accessed.
+    :raises EOFError: If the function cannot be read.
+    :raises MemoryError: If the function cannot be allocated.
+    :raises OverflowError: If the function cannot be overflowed.
+    :raises ZeroDivisionError: If the function cannot be divided by zero.
+    :raises StopIteration: If the function cannot be stopped.
+    :raises KeyboardInterrupt: If the function cannot be interrupted.
+    :raises SystemExit: If the function cannot be exited.
+    :raises AssertionError: If the function cannot be asserted.
     """
 
     @functools.wraps(func)
@@ -183,14 +216,21 @@ ref_press = 725 # TODO hard-coded reference pressure
 def get_time_dimension_name(DS, model):
     """
     Find the time dimension name in the dataset.
+
     Updates the model object with the correct dimension name.
 
     :param DS: The xarray Dataset
-    :type DS: xarray.Dataset
+    :type  DS: xarray.Dataset
     :param model: Model object with dimension information
-    :type model: object
+    :type  model: object
     :return: The actual time dimension name found
-    :rtype: str
+    :rtype:  str
+    :raises KeyError: If no time dimension is found
+    :raises ValueError: If the model object is not defined
+    :raises TypeError: If the dataset is not an xarray Dataset
+    :raises AttributeError: If the model object does not have the
+        specified attribute
+    :raises ImportError: If the xarray module cannot be imported
     """
 
     # First try the expected dimension name
@@ -212,6 +252,57 @@ def get_time_dimension_name(DS, model):
 
 @debug_wrapper
 def main():
+    """
+    Main processing function for MarsFormat.
+
+    This function processes NetCDF files from various Mars General
+    Circulation Models (GCMs)
+    including MarsWRF, OpenMars, PCM, and EMARS, and reformats them for
+    use in the AmesCAP
+    framework.
+
+    It performs the following operations:
+        - Validates the selected GCM type and input files.
+        - Loads NetCDF files and reads model-specific variable and
+        dimension mappings.
+        - Applies model-specific post-processing, including:
+            - Unstaggering variables (for MarsWRF and EMARS).
+            - Creating and orienting pressure coordinates (pfull, phalf,
+            ak, bk).
+            - Standardizing variable and dimension names.
+            - Converting longitude ranges to 0-360 degrees east.
+            - Adding scalar axes where required.
+            - Handling vertical dimension orientation, especially for
+            PCM files.
+        - Optionally performs time binning:
+            - Daily, average (over N sols), or diurnal binning.
+            - Ensures correct time units and bin sizes.
+            - Preserves or corrects vertical orientation after binning.
+        - Writes processed datasets to new NetCDF files with appropriate
+        naming conventions.
+
+    Args:
+        None. Uses global `args` for configuration and file selection.
+
+    Raises:
+        KeyError: If required dimensions or variables are missing in
+        the input files.
+        ValueError: If dimension swapping fails for PCM files.
+        SystemExit: If no valid GCM type is specified.
+
+    Outputs:
+        Writes processed NetCDF files to disk, with suffixes indicating
+        the type of processing
+        (e.g., _daily, _average, _diurn, _nat).
+
+    Note:
+        This function assumes the presence of several helper functions
+        and global variables,
+        such as `read_variable_dict_amescap_profile`,
+        `get_time_dimension_name`,  `reset_FV3_names`, and color
+        constants for printing.
+        """
+
     ext = '' # Initialize empty extension
 
     if args.gcm_name not in ['marswrf', 'openmars', 'pcm', 'emars']:

@@ -17,7 +17,6 @@ and optionally accepts:
     * ``[-ext --extension]``    Custom extension for the new file
     * ``[-print --print_grid]`` Print the vertical grid to the screen
 
-
 Third-party Requirements:
 
     * ``numpy``
@@ -31,6 +30,11 @@ Third-party Requirements:
     * ``traceback``
     * ``sys``
     * ``amescap``
+
+List of Functions:
+
+    * debug_wrapper - A decorator that wraps a function with error handling
+    * main - The main function that performs the interpolation
 """
 
 # Make print statements appear in color
@@ -67,8 +71,38 @@ from amescap.Ncdf_wrapper import Ncdf
 
 def debug_wrapper(func):
     """
-    A decorator that wraps a function with error handling based on the
-    --debug flag.
+    A decorator that wraps a function with error handling
+    based on the --debug flag.
+    If the --debug flag is set, it prints the full traceback
+    of any exception that occurs. Otherwise, it prints a
+    simplified error message.
+
+    :param func: The function to wrap.
+    :type  func: function
+    :return: The wrapped function.
+    :rtype:  function
+    :raises Exception: If an error occurs during the function call.
+    :raises TypeError: If the function is not callable.
+    :raises ValueError: If the function is not found.
+    :raises NameError: If the function is not defined.
+    :raises AttributeError: If the function does not have the
+        specified attribute.
+    :raises ImportError: If the function cannot be imported.
+    :raises RuntimeError: If the function cannot be run.
+    :raises KeyError: If the function does not have the
+        specified key.
+    :raises IndexError: If the function does not have the
+        specified index.
+    :raises IOError: If the function cannot be opened.
+    :raises OSError: If the function cannot be accessed.
+    :raises EOFError: If the function cannot be read.
+    :raises MemoryError: If the function cannot be allocated.
+    :raises OverflowError: If the function cannot be overflowed.
+    :raises ZeroDivisionError: If the function cannot be divided by zero.
+    :raises StopIteration: If the function cannot be stopped.
+    :raises KeyboardInterrupt: If the function cannot be interrupted.
+    :raises SystemExit: If the function cannot be exited.
+    :raises AssertionError: If the function cannot be asserted.
     """
 
     @functools.wraps(func)
@@ -219,8 +253,55 @@ filepath = os.getcwd()
 
 @debug_wrapper
 def main():
+    """
+    Main function for performing vertical interpolation on Mars
+    atmospheric model NetCDF files.
+
+    This function processes one or more input NetCDF files,
+    interpolating variables from their native vertical coordinate
+    (e.g., model pressure levels) to a user-specified standard vertical
+    grid (pressure, altitude, or altitude above ground level).
+    The interpolation type and grid can be customized via command-line
+    arguments.
+
+    Workflow:
+        1. Parses command-line arguments for input files, interpolation
+        type, custom vertical grid, and other options.
+        2. Loads standard vertical grid definitions (pressure, altitude,
+        or altitude above ground level) or uses a custom grid.
+        3. Optionally prints the vertical grid and exits if requested.
+        4. For each input file:
+            - Checks file existence.
+            - Loads necessary variables (e.g., pk, bk, ps, temperature).
+            - Computes the 3D vertical coordinate field for
+              interpolation.
+            - Creates a new NetCDF output file with updated vertical
+              dimension.
+            - Interpolates selected variables to the new vertical grid.
+            - Copies or interpolates other variables as appropriate.
+        5. Handles both regular and diurnal-cycle files, as well as
+        FV3-tiled and lat/lon grids.
+
+    Command-line arguments (via `args`):
+        - input_file: List of input NetCDF files to process.
+        - interp_type: Type of vertical interpolation ('pstd', 'zstd',
+          or 'zagl').
+        - vertical_grid: Custom vertical grid definition (optional).
+        - print_grid: If True, prints the vertical grid and exits.
+        - extension: Optional string to append to output filenames.
+        - include: List of variable names to include in interpolation.
+        - debug: Enable debug output.
+
+    Notes:
+        - Requires several helper functions and classes (e.g.,
+          section_content_amescap_profile, find_fixedfile, Dataset,
+          Ncdf, vinterp).
+        - Handles both FV3-tiled and regular lat/lon NetCDF files.
+        - Exits with an error message if required files or variables are
+          missing.
+    """
+
     start_time   = time.time()
-    debug        = args.debug
     # Load all of the netcdf files
     file_list    = file_list = [f.name for f in args.input_file]
     interp_type  = args.interp_type  # e.g. pstd

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-The MarsPull executable is for querying data from the Mars Climate 
-Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on 
+The MarsPull executable is for querying data from the Mars Climate
+Modeling Center (MCMC) Mars Global Climate Model (MGCM) repository on
 the NASA NAS Data Portal at data.nas.nasa.gov/mcmc.
 
 The executable requires 2 arguments:
@@ -23,7 +23,16 @@ Third-party Requirements:
 
 List of Functions:
 
-    * download - Queries the requested file from the NAS Data Portal.
+    * debug_wrapper - A decorator that wraps a function with error handling
+    * download - Downloads a file from the NAS Data Portal (data.nas.nasa.gov).
+    * print_file_list - Prints a list of files.
+    * main - The main function that handles the command-line arguments
+        and coordinates the download process.
+        It checks for the presence of the required arguments, validates
+        the input, and calls the appropriate functions to download the
+        requested files. It also handles the logic for listing available
+        directories and files, as well as downloading files based on
+        specified solar longitudes (Ls) or file names.
 """
 
 # make print statements appear in color
@@ -44,8 +53,38 @@ import requests     # Download data from website
 
 def debug_wrapper(func):
     """
-    A decorator that wraps a function with error handling based on the
-    --debug flag.
+    A decorator that wraps a function with error handling
+    based on the --debug flag.
+    If the --debug flag is set, it prints the full traceback
+    of any exception that occurs. Otherwise, it prints a
+    simplified error message.
+
+    :param func: The function to wrap.
+    :type  func: function
+    :return: The wrapped function.
+    :rtype:  function
+    :raises Exception: If an error occurs during the function call.
+    :raises TypeError: If the function is not callable.
+    :raises ValueError: If the function is not found.
+    :raises NameError: If the function is not defined.
+    :raises AttributeError: If the function does not have the
+        specified attribute.
+    :raises ImportError: If the function cannot be imported.
+    :raises RuntimeError: If the function cannot be run.
+    :raises KeyError: If the function does not have the
+        specified key.
+    :raises IndexError: If the function does not have the
+        specified index.
+    :raises IOError: If the function cannot be opened.
+    :raises OSError: If the function cannot be accessed.
+    :raises EOFError: If the function cannot be read.
+    :raises MemoryError: If the function cannot be allocated.
+    :raises OverflowError: If the function cannot be overflowed.
+    :raises ZeroDivisionError: If the function cannot be divided by zero.
+    :raises StopIteration: If the function cannot be stopped.
+    :raises KeyboardInterrupt: If the function cannot be interrupted.
+    :raises SystemExit: If the function cannot be exited.
+    :raises AssertionError: If the function cannot be asserted.
     """
 
     @functools.wraps(func)
@@ -176,23 +215,50 @@ Ls_end = np.array([
 def download(url, file_name):
     """
     Downloads a file from the NAS Data Portal (data.nas.nasa.gov).
+    The function takes a URL and a file name as input, and downloads the
+    file from the URL, saving it to the specified file name. It also
+    provides a progress bar to show the download progress if the file
+    size is known. If the file size is unknown, it simply downloads the
+    file without showing a progress bar.
+    The function handles errors during the download process and prints
+    appropriate messages to the console.
 
-    :param url: The url to download from, e.g 'https://data.nas.nasa.
-        gov/legacygcm/download_data.php?file=/legacygcmdata/LegacyGCM_
-            Ls000_Ls004.nc'
-    :type url: str
-    :param file_name: The local file_name e.g  '/lou/la4/akling/Data/L
-        egacyGCM_Ls000_Ls004.nc'
-    :type file_name: str
-    :return: The requested file(s), downloaded and saved to the 
-        current directory.
+    :param url: The url to download from, e.g.,
+        'https://data.nas.nasa.gov/legacygcm/fv3betaout1data/03340.fixed.nc'
+    :type  url: str
+    :param file_name: The local file_name e.g.,
+        '/lou/la4/akling/Data/LegacyGCM_Ls000_Ls004.nc'
+    :type  file_name: str
+    :return: The requested file(s), downloaded and saved to the current
+        directory.
+    :rtype:  None
     :raises FileNotFoundError: A file-not-found error.
+    :raises PermissionError: A permission error.
+    :raises OSError: An operating system error.
+    :raises ValueError: A value error.
+    :raises TypeError: A type error.
+    :raises requests.exceptions.RequestException: A request error.
+    :raises requests.exceptions.HTTPError: An HTTP error.
+    :raises requests.exceptions.ConnectionError: A connection error.
+    :raises requests.exceptions.Timeout: A timeout error.
+    :raises requests.exceptions.TooManyRedirects: A too many redirects
+        error.
+    :raises requests.exceptions.URLRequired: A URL required error.
+    :raises requests.exceptions.InvalidURL: An invalid URL error.
+    :raises requests.exceptions.InvalidSchema: An invalid schema error.
+    :raises requests.exceptions.MissingSchema: A missing schema error.
+    :raises requests.exceptions.InvalidHeader: An invalid header error.
+    :raises requests.exceptions.InvalidProxyURL: An invalid proxy URL
+        error.
+    :raises requests.exceptions.InvalidRequest: An invalid request error.
+    :raises requests.exceptions.InvalidResponse: An invalid response
+        error.
     """
 
     _, fname = os.path.split(file_name)
     response = requests.get(url, stream=True)
     total = response.headers.get('content-length')
-        
+
     if response.status_code == 404:
         print(f'{Red}Error during download, error code is: '
               f'{response.status_code}{Nclr}')
@@ -224,6 +290,20 @@ def download(url, file_name):
 
 
 def print_file_list(list_of_files):
+    """
+    Prints a list of files.
+
+    :param list_of_files: The list of files to print.
+    :type  list_of_files: list
+    :return: None
+    :rtype:  None
+    :raises TypeError: If list_of_files is not a list.
+    :raises ValueError: If list_of_files is empty.
+    :raises IndexError: If list_of_files is out of range.
+    :raises KeyError: If list_of_files is not found.
+    :raises OSError: If list_of_files is not accessible.
+    :raises IOError: If list_of_files is not open.
+    """
     for file in list_of_files:
         print(file)
 
@@ -234,7 +314,23 @@ def print_file_list(list_of_files):
 
 @debug_wrapper
 def main():
-    # validation
+    """
+    The main function that handles the command-line arguments
+
+    Handles the command-line arguments and coordinates the download
+    process. It checks for the presence of the required arguments,
+    validates the input, and calls the appropriate functions to download
+    the requested files. It also handles the logic for listing available
+    directories and files, as well as downloading files based on
+    specified solar longitudes (Ls) or file names.
+
+    :return: 0 if successful, 1 if an error occurred.
+    :rtype:  int
+    :raises SystemExit: If an error occurs during the execution of the
+        program, the program will exit with a non-zero status code.
+    """
+    global debug
+
     if not args.list_files and not args.directory_name:
         print('Error: You must specify either -list or a directory.')
         sys.exit(1)
@@ -244,7 +340,7 @@ def main():
     legacy_data_url = f'{base_dir}/legacygcm/legacygcmdata/'
     fv3_home_url = f'{base_dir}/mcmcref/fv3betaout1/'
     fv3_data_url = f'{base_dir}/legacygcm/fv3betaout1data/'
-    
+
     if args.list_files:
         # Send an HTTP GET request to the URL and store the response.
         legacy_home_html = requests.get(f'{legacy_home_url}')
@@ -254,7 +350,7 @@ def main():
         # webpage's HTML.
         legacy_dir_text = legacy_home_html.text
         fv3_dir_text = fv3_home_html.text
-                
+
         # Search for the URLs beginning with the below string
         legacy_subdir_search = (
             'https://data\.nas\.nasa\.gov/legacygcm/legacygcmdata/'
@@ -267,11 +363,11 @@ def main():
             fr'{legacy_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&"()*+,;=]+',
             legacy_dir_text
             )
-        
+
         # NOTE: The FV3-based MGCM data only has one directory and it is
-        #       not listed in the FV3BETAOUT1 directory. The URL is 
-        #       hardcoded below. The regex below is commented out, but 
-        #       left in place in case the FV3BETAOUT1 directory is 
+        #       not listed in the FV3BETAOUT1 directory. The URL is
+        #       hardcoded below. The regex below is commented out, but
+        #       left in place in case the FV3BETAOUT1 directory is
         #       updated with subdirectories in the future.
         # fv3_urls = re.findall(
         #     fr'{fv3_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&"()*+,;=]+',
@@ -285,7 +381,7 @@ def main():
             legacy_dir_option = url.split('legacygcmdata/')[1]
             print(f'{"(Legacy MGCM)":<17} {legacy_dir_option:<20} '
                   f'{Cyan}{url}{Nclr}')
-        
+
         # NOTE: See above comment for the FV3-based MGCM data note
         # for url in fv3_urls:
         #     fv3_dir_option = url.split('fv3betaout1data/')[1]
@@ -294,7 +390,7 @@ def main():
         print(f'{"(FV3-based MGCM)":<17} {"FV3BETAOUT1":<20} '
               f'{Cyan}{fv3_home_url}{Nclr}')
         print(f'---------------------\n')
-        
+
         if args.directory_name:
             # If a directory is provided, list the files in that directory
             portal_dir = args.directory_name
@@ -306,14 +402,14 @@ def main():
                 fv3_dir_url = f'{fv3_home_url}'
                 fv3_data = requests.get(fv3_dir_url)
                 fv3_file_text = fv3_data.text
-                
-                # This looks for download attributes or href links 
+
+                # This looks for download attributes or href links
                 # ending with the .nc pattern
                 fv3_files_available = []
-                
+
                 # Try multiple patterns to find .nc files
                 download_files = re.findall(
-                    r'download="([^"]+\.nc)"', 
+                    r'download="([^"]+\.nc)"',
                     fv3_file_text
                     )
                 if download_files:
@@ -321,7 +417,7 @@ def main():
                 else:
                     # Look for href attributes with .nc files
                     href_files = re.findall(
-                        r'href="[^"]*\/([^"\/]+\.nc)"', 
+                        r'href="[^"]*\/([^"\/]+\.nc)"',
                         fv3_file_text
                         )
                     if href_files:
@@ -329,24 +425,24 @@ def main():
                     else:
                         # Look for links with .nc text
                         link_files = re.findall(
-                            r'<a[^>]*>([^<]+\.nc)</a>', 
+                            r'<a[^>]*>([^<]+\.nc)</a>',
                             fv3_file_text
                             )
                         if link_files:
                             fv3_files_available = link_files
-                
-                # Filter out any potential HTML or Javascript that might 
+
+                # Filter out any potential HTML or Javascript that might
                 # match the pattern
                 fv3_files_available = [f for f in fv3_files_available if (
-                    not f.startswith('<') and 
-                    not f.startswith('function') and 
+                    not f.startswith('<') and
+                    not f.startswith('function') and
                     not f.startswith('var') and
                     '.nc' in f
                 )]
-                
+
                 # Sort the files
                 fv3_files_available.sort()
-                
+
                 # Print the files
                 if fv3_files_available:
                     print_file_list(fv3_files_available)
@@ -355,24 +451,24 @@ def main():
                     if debug:
                         # Try a different approach for debugging
                         table_rows = re.findall(
-                            r'<tr>.*?</tr>', 
-                            fv3_file_text, 
+                            r'<tr>.*?</tr>',
+                            fv3_file_text,
                             re.DOTALL
                             )
                         for row in table_rows:
                             if '.nc' in row:
                                 print(f'Debug - Found row with .nc: {row}')
-                
+
                 print(f'---------------')
                 # The download URL differs from the listing URL
                 print(f'{Cyan}({fv3_dir_url}){Nclr}\n')
-                
+
                 print(f'{Yellow}You can download files using the -f '
                       f'option with the directory name, e.g.\n'
                       f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc\n'
                       f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc '
                       f'03340.atmos_average.nc{Nclr}\n')
-            
+
             elif portal_dir in [
                 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
                 'ACTIVECLDS_NCDF'
@@ -384,14 +480,14 @@ def main():
                 legacy_dir_url = (f'{legacy_data_url}' + portal_dir + r'/')
                 legacy_data = requests.get(legacy_dir_url)
                 legacy_file_text = legacy_data.text
-                
-                # This looks for download attributes or href links 
+
+                # This looks for download attributes or href links
                 # ending with the fort.11_ pattern
                 legacy_files_available = []
-                
+
                 # First try to find download attributes which are more reliable
                 download_files = re.findall(
-                    r'download="(fort\.11_[0-9]+)"', 
+                    r'download="(fort\.11_[0-9]+)"',
                     legacy_file_text
                     )
                 if download_files:
@@ -399,7 +495,7 @@ def main():
                 else:
                     # Fallback to looking for href links with fort.11_ pattern
                     href_files = re.findall(
-                        r'href="[^"]*\/?(fort\.11_[0-9]+)"', 
+                        r'href="[^"]*\/?(fort\.11_[0-9]+)"',
                         legacy_file_text
                         )
                     if href_files:
@@ -407,27 +503,27 @@ def main():
                     # If still empty, try another pattern to match links
                     if not legacy_files_available:
                         href_files = re.findall(
-                            r'<a href="[^"]*"[^>]*>(fort\.11_[0-9]+)</a>', 
+                            r'<a href="[^"]*"[^>]*>(fort\.11_[0-9]+)</a>',
                             legacy_file_text
                             )
                         legacy_files_available = href_files
-                
+
                 print_file_list(legacy_files_available)
                 print(f'---------------')
                 print(f'{Cyan}({legacy_dir_url}){Nclr}\n')
-                
+
                 print(f'{Yellow}You can download these files using the '
                       f'-f or -ls options with the directory name, e.g.\n'
                       f'> MarsPull ACTIVECLDS -f fort.11_0690\n'
                       f'> MarsPull ACTIVECLDS -f fort.11_0700 fort.11_0701 \n'
                       f'> MarsPull ACTIVECLDS -ls 90\n'
                       f'> MarsPull ACTIVECLDS -ls 90 180{Nclr}\n')
-            
+
             else:
                 print(f'Error: Directory {portal_dir} does not exist.')
                 sys.exit(1)
             sys.exit(0)
-        
+
         else:
             # If no directory is provided, exit with an error
             print(f'{Yellow}You can list the files in a directory by using '
@@ -448,14 +544,14 @@ def main():
                   f'[-f --filename] to specify a file to download.{Nclr}')
             sys.exit(1)  # Return a non-zero exit code
         portal_dir = args.directory_name
-        
+
         if portal_dir == 'FV3BETAOUT1' and args.ls:
             print(f'{Red}ERROR: The FV3BETAOUT1 directory does not support '
                 f'[-ls --ls] queries. Please query by file name(s) '
                 f'[-f --filename], e.g.\n'
                 f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc{Nclr}')
             sys.exit(1)  # Return a non-zero exit code
-            
+
         if args.ls:
             data_input = np.asarray(args.ls)
             if len(data_input) == 1:
@@ -476,7 +572,7 @@ def main():
                     i_end += 1
 
                 file_list = np.arange(i_start, i_end + 1)
-                
+
             for ii in file_list:
                 if portal_dir == 'ACTIVECLDS_NCDF':
                     # Legacy .nc files
