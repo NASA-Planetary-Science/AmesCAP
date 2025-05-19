@@ -53,25 +53,10 @@ def debug_wrapper(func):
     :raises Exception: If an error occurs during the function call.
     :raises TypeError: If the function is not callable.
     :raises ValueError: If the function is not found.
-    :raises NameError: If the function is not defined.
     :raises AttributeError: If the function does not have the
         specified attribute.
-    :raises ImportError: If the function cannot be imported.
-    :raises RuntimeError: If the function cannot be run.
-    :raises KeyError: If the function does not have the
-        specified key.
     :raises IndexError: If the function does not have the
         specified index.
-    :raises IOError: If the function cannot be opened.
-    :raises OSError: If the function cannot be accessed.
-    :raises EOFError: If the function cannot be read.
-    :raises MemoryError: If the function cannot be allocated.
-    :raises OverflowError: If the function cannot be overflowed.
-    :raises ZeroDivisionError: If the function cannot be divided by zero.
-    :raises StopIteration: If the function cannot be stopped.
-    :raises KeyboardInterrupt: If the function cannot be interrupted.
-    :raises SystemExit: If the function cannot be exited.
-    :raises AssertionError: If the function cannot be asserted.
     """
 
     @functools.wraps(func)
@@ -319,7 +304,7 @@ def main():
     global debug
 
     if not args.list_files and not args.directory_name:
-        print('Error: You must specify either -list or a directory.')
+        print(f'{Red}ERROR: You must specify either -list or a directory.{Nclr}')
         sys.exit(1)
 
     base_dir = 'https://data.nas.nasa.gov'
@@ -362,30 +347,39 @@ def main():
         #     )
         fv3_urls = [f'{fv3_data_url}']
 
-        print(f'\nSearching for available directories...')
-        print(f'--------------------------------------')
-        for url in legacy_urls:
-            legacy_dir_option = url.split('legacygcmdata/')[1]
-            print(f'{"(Legacy MGCM)":<17} {legacy_dir_option:<20} '
-                  f'{Cyan}{url}{Nclr}')
+        print(f'\nSearching for available directories...\n')
+        if legacy_urls != []:
+            for url in legacy_urls:
+                legacy_dir_option = url.split('legacygcmdata/')[1]
+                print(f'{"(Legacy MGCM)":<17} {legacy_dir_option:<20} '
+                    f'{Cyan}{url}{Nclr}')
 
-        # NOTE: See above comment for the FV3-based MGCM data note
-        # for url in fv3_urls:
-        #     fv3_dir_option = url.split('fv3betaout1data/')[1]
-        #     print(f'{"(FV3-based MGCM)":<17} {fv3_dir_option:<17} '
-        #           f'{Cyan}{url}{Nclr}')
-        print(f'{"(FV3-based MGCM)":<17} {"FV3BETAOUT1":<20} '
-              f'{Cyan}{fv3_home_url}{Nclr}')
-        print(f'---------------------\n')
-
+            # NOTE: See above comment for the FV3-based MGCM data note
+            # for url in fv3_urls:
+            #     fv3_dir_option = url.split('fv3betaout1data/')[1]
+            #     print(f'{"(FV3-based MGCM)":<17} {fv3_dir_option:<17} '
+            #           f'{Cyan}{url}{Nclr}')
+            print(f'{"(FV3-based MGCM)":<17} {"FV3BETAOUT1":<20} '
+                f'{Cyan}{fv3_home_url}{Nclr}')
+            
+            print(f'{Yellow}\nYou can list the files in a directory by using '
+                  f'the -list option with a directory name, e.g.\n'
+                  f'> MarsPull -list ACTIVECLDS{Nclr}\n')
+        
+        else:
+            print(f'{Red}No directories were found. This may be because the '
+                  f'file system is unavailable or unresponsive.\nCheck the '
+                  f'URL below to confirm. Otherwise, run with --debug for '
+                  f'more info.\n\n{Nclr}Check URL: '
+                  f'{Cyan}https://data.nas.nasa.gov/mcmcref{Nclr}\n')
+            
         if args.directory_name:
             # If a directory is provided, list the files in that directory
             portal_dir = args.directory_name
             if portal_dir == 'FV3BETAOUT1':
                 # FV3-based MGCM
                 print(f'\n{Green}Selected: (FV3-based MGCM) FV3BETAOUT1{Nclr}')
-                print(f'\nSearching for available files...')
-                print(f'--------------------------------')
+                print(f'\nSearching for available files...\n')
                 fv3_dir_url = f'{fv3_home_url}'
                 fv3_data = requests.get(fv3_dir_url)
                 fv3_file_text = fv3_data.text
@@ -434,7 +428,10 @@ def main():
                 if fv3_files_available:
                     print_file_list(fv3_files_available)
                 else:
-                    print('No .nc files found. Run with --debug for more info')
+                    print(f'{Red}No .nc files found. This may be because the '
+                          f'file system is unavailable or unresponsive.\n'
+                          f'Check the URL below to confirm. Otherwise, run '
+                          f'with --debug for more info.{Nclr}')
                     if debug:
                         # Try a different approach for debugging
                         table_rows = re.findall(
@@ -446,15 +443,15 @@ def main():
                             if '.nc' in row:
                                 print(f'Debug - Found row with .nc: {row}')
 
-                print(f'---------------')
                 # The download URL differs from the listing URL
                 print(f'{Cyan}({fv3_dir_url}){Nclr}\n')
 
-                print(f'{Yellow}You can download files using the -f '
-                      f'option with the directory name, e.g.\n'
-                      f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc\n'
-                      f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc '
-                      f'03340.atmos_average.nc{Nclr}\n')
+                if fv3_files_available:
+                    print(f'{Yellow}\nYou can download files using the -f '
+                        f'option with the directory name, e.g.\n'
+                        f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc\n'
+                        f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc '
+                        f'03340.atmos_average.nc{Nclr}\n')
 
             elif portal_dir in [
                 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
@@ -462,8 +459,7 @@ def main():
                 ]:
                 # Legacy MGCM
                 print(f'\n{Green}Selected: (Legacy MGCM) {portal_dir}{Nclr}')
-                print(f'\nAvailable files:')
-                print(f'---------------')
+                print(f'\nSearching for available files...\n')
                 legacy_dir_url = (f'{legacy_data_url}' + portal_dir + r'/')
                 legacy_data = requests.get(legacy_dir_url)
                 legacy_file_text = legacy_data.text
@@ -495,27 +491,29 @@ def main():
                             )
                         legacy_files_available = href_files
 
-                print_file_list(legacy_files_available)
-                print(f'---------------')
+                # Print the files
+                if legacy_files_available:
+                    print_file_list(legacy_files_available)
+                else:
+                    print(f'{Red}No fort.11 files found. This may be because '
+                          f'the file system is unavailable or unresponsive.\n'
+                          f'Check the URL below to confirm. Otherwise, run '
+                          f'with --debug for more info.{Nclr}')
+                    
                 print(f'{Cyan}({legacy_dir_url}){Nclr}\n')
 
-                print(f'{Yellow}You can download these files using the '
-                      f'-f or -ls options with the directory name, e.g.\n'
-                      f'> MarsPull ACTIVECLDS -f fort.11_0690\n'
-                      f'> MarsPull ACTIVECLDS -f fort.11_0700 fort.11_0701 \n'
-                      f'> MarsPull ACTIVECLDS -ls 90\n'
-                      f'> MarsPull ACTIVECLDS -ls 90 180{Nclr}\n')
+                if legacy_files_available:
+                    print(f'{Yellow}\nYou can download these files using the '
+                        f'-f or -ls options with the directory name, e.g.\n'
+                        f'> MarsPull ACTIVECLDS -f fort.11_0690\n'
+                        f'> MarsPull ACTIVECLDS -f fort.11_0700 fort.11_0701 \n'
+                        f'> MarsPull ACTIVECLDS -ls 90\n'
+                        f'> MarsPull ACTIVECLDS -ls 90 180{Nclr}\n')
 
             else:
-                print(f'Error: Directory {portal_dir} does not exist.')
+                print(f'{Red}ERROR: Directory {portal_dir} does not exist.{Nclr}')
                 sys.exit(1)
             sys.exit(0)
-
-        else:
-            # If no directory is provided, exit with an error
-            print(f'{Yellow}You can list the files in a directory by using '
-                  f'the -list option with a directory name, e.g.\n'
-                  f'> MarsPull -list ACTIVECLDS{Nclr}\n')
 
     if args.directory_name and not args.list_files:
         portal_dir = args.directory_name
@@ -527,7 +525,7 @@ def main():
             requested_url = (f'{fv3_data_url}')
 
         if not (args.ls or args.filename):
-            print(f'{Yellow}ERROR No file requested. Use [-ls --ls] or '
+            print(f'{Red}ERROR No file requested. Use [-ls --ls] or '
                   f'[-f --filename] to specify a file to download.{Nclr}')
             sys.exit(1)  # Return a non-zero exit code
         portal_dir = args.directory_name
@@ -587,7 +585,7 @@ def main():
 
     elif not args.list_files:
         # If no directory is provided and its not a -list request
-        print(f'{Yellow}ERROR: A directory must be specified unless using '
+        print(f'{Red}ERROR: A directory must be specified unless using '
               f'-list.{Nclr}')
         sys.exit(1)
 
