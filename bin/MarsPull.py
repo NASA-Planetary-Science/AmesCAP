@@ -362,8 +362,7 @@ def main():
         #     )
         fv3_urls = [f'{fv3_data_url}']
 
-        print(f'\nSearching for available directories...')
-        print(f'--------------------------------------')
+        print(f'\nSearching for available directories...\n')
         for url in legacy_urls:
             legacy_dir_option = url.split('legacygcmdata/')[1]
             print(f'{"(Legacy MGCM)":<17} {legacy_dir_option:<20} '
@@ -376,7 +375,7 @@ def main():
         #           f'{Cyan}{url}{Nclr}')
         print(f'{"(FV3-based MGCM)":<17} {"FV3BETAOUT1":<20} '
               f'{Cyan}{fv3_home_url}{Nclr}')
-        print(f'---------------------\n')
+        print(f'--------------------------------------\n')
 
         if args.directory_name:
             # If a directory is provided, list the files in that directory
@@ -384,8 +383,7 @@ def main():
             if portal_dir == 'FV3BETAOUT1':
                 # FV3-based MGCM
                 print(f'\n{Green}Selected: (FV3-based MGCM) FV3BETAOUT1{Nclr}')
-                print(f'\nSearching for available files...')
-                print(f'--------------------------------')
+                print(f'\nSearching for available files...\n')
                 fv3_dir_url = f'{fv3_home_url}'
                 fv3_data = requests.get(fv3_dir_url)
                 fv3_file_text = fv3_data.text
@@ -446,7 +444,7 @@ def main():
                             if '.nc' in row:
                                 print(f'Debug - Found row with .nc: {row}')
 
-                print(f'---------------')
+                print(f'--------------------------------')
                 # The download URL differs from the listing URL
                 print(f'{Cyan}({fv3_dir_url}){Nclr}\n')
 
