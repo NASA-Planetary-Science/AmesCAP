@@ -4,9 +4,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 on:
-  # Trigger the workflow on push to devel branch
+  # Trigger the workflow on push to main branch
   push:
-    branches: [ devel ]
+    branches: [ main ]
     paths:
       - 'bin/MarsInterp.py'
       - 'tests/test_marsinterp.py'
@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
   # Trigger on pull requests that modify relevant files
   pull_request:
-    branches: [ devel ]
+    branches: [ main ]
     paths:
       - 'bin/MarsInterp.py'
       - 'tests/test_marsinterp.py'
