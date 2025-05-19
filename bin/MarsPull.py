@@ -53,25 +53,10 @@ def debug_wrapper(func):
     :raises Exception: If an error occurs during the function call.
     :raises TypeError: If the function is not callable.
     :raises ValueError: If the function is not found.
-    :raises NameError: If the function is not defined.
     :raises AttributeError: If the function does not have the
         specified attribute.
-    :raises ImportError: If the function cannot be imported.
-    :raises RuntimeError: If the function cannot be run.
-    :raises KeyError: If the function does not have the
-        specified key.
     :raises IndexError: If the function does not have the
         specified index.
-    :raises IOError: If the function cannot be opened.
-    :raises OSError: If the function cannot be accessed.
-    :raises EOFError: If the function cannot be read.
-    :raises MemoryError: If the function cannot be allocated.
-    :raises OverflowError: If the function cannot be overflowed.
-    :raises ZeroDivisionError: If the function cannot be divided by zero.
-    :raises StopIteration: If the function cannot be stopped.
-    :raises KeyboardInterrupt: If the function cannot be interrupted.
-    :raises SystemExit: If the function cannot be exited.
-    :raises AssertionError: If the function cannot be asserted.
     """
 
     @functools.wraps(func)
@@ -319,7 +304,7 @@ def main():
     global debug
 
     if not args.list_files and not args.directory_name:
-        print('Error: You must specify either -list or a directory.')
+        print(f'{Red}ERROR: You must specify either -list or a directory.{Nclr}')
         sys.exit(1)
 
     base_dir = 'https://data.nas.nasa.gov'
@@ -382,9 +367,10 @@ def main():
                   f'> MarsPull -list ACTIVECLDS{Nclr}\n')
         
         else:
-            print('No directories were found. This may be because the file '
-                  'system is unavailable or unresponsive. Check the URL below '
-                  'to confirm. Otherwise, run with --debug for more info\n'
+            print(f'{Red}No directories were found. This may be because the '
+                  f'file system is unavailable or unresponsive. Check the URL '
+                  f'below to confirm. Otherwise, run with --debug for more '
+                  f'info.\n\n{Nclr}Check URL: '
                   f'{Cyan}https://data.nas.nasa.gov/mcmcref{Nclr}\n')
             
         if args.directory_name:
@@ -442,10 +428,10 @@ def main():
                 if fv3_files_available:
                     print_file_list(fv3_files_available)
                 else:
-                    print('No .nc files found. This may be because the file '
-                          'system is unavailable or unresponsive. Check the '
-                          'URL below to confirm. Otherwise, run with --debug '
-                          'for more info')
+                    print(f'{Red}No .nc files found. This may be because the '
+                          f'file system is unavailable or unresponsive. Check '
+                          f'the URL below to confirm. Otherwise, run with '
+                          f'--debug for more info.{Nclr}')
                     if debug:
                         # Try a different approach for debugging
                         table_rows = re.findall(
@@ -509,10 +495,10 @@ def main():
                 if legacy_files_available:
                     print_file_list(legacy_files_available)
                 else:
-                    print('No fort.11 files found. This may be because the file '
-                          'system is unavailable or unresponsive. Check the '
-                          'URL below to confirm. Otherwise, run with --debug '
-                          'for more info')
+                    print(f'{Red}No fort.11 files found. This may be because '
+                          f'the file system is unavailable or unresponsive. '
+                          f'Check the URL below to confirm. Otherwise, run '
+                          f'with --debug for more info.{Nclr}')
                     
                 print(f'{Cyan}({legacy_dir_url}){Nclr}\n')
 
@@ -525,7 +511,7 @@ def main():
                         f'> MarsPull ACTIVECLDS -ls 90 180{Nclr}\n')
 
             else:
-                print(f'Error: Directory {portal_dir} does not exist.')
+                print(f'{Red}ERROR: Directory {portal_dir} does not exist.{Nclr}')
                 sys.exit(1)
             sys.exit(0)
 
@@ -539,7 +525,7 @@ def main():
             requested_url = (f'{fv3_data_url}')
 
         if not (args.ls or args.filename):
-            print(f'{Yellow}ERROR No file requested. Use [-ls --ls] or '
+            print(f'{Red}ERROR No file requested. Use [-ls --ls] or '
                   f'[-f --filename] to specify a file to download.{Nclr}')
             sys.exit(1)  # Return a non-zero exit code
         portal_dir = args.directory_name
@@ -599,7 +585,7 @@ def main():
 
     elif not args.list_files:
         # If no directory is provided and its not a -list request
-        print(f'{Yellow}ERROR: A directory must be specified unless using '
+        print(f'{Red}ERROR: A directory must be specified unless using '
               f'-list.{Nclr}')
         sys.exit(1)
 
