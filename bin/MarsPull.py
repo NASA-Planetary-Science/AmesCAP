@@ -375,7 +375,6 @@ def main():
         #           f'{Cyan}{url}{Nclr}')
         print(f'{"(FV3-based MGCM)":<17} {"FV3BETAOUT1":<20} '
               f'{Cyan}{fv3_home_url}{Nclr}')
-        print(f'--------------------------------------\n')
 
         if args.directory_name:
             # If a directory is provided, list the files in that directory
@@ -432,7 +431,10 @@ def main():
                 if fv3_files_available:
                     print_file_list(fv3_files_available)
                 else:
-                    print('No .nc files found. Run with --debug for more info')
+                    print('No .nc files found. This may be because the file '
+                          'system is unavailable or unresponsive. Check the '
+                          'URL below to confirm. Otherwise, run with --debug '
+                          'for more info')
                     if debug:
                         # Try a different approach for debugging
                         table_rows = re.findall(
@@ -444,15 +446,15 @@ def main():
                             if '.nc' in row:
                                 print(f'Debug - Found row with .nc: {row}')
 
-                print(f'--------------------------------')
                 # The download URL differs from the listing URL
                 print(f'{Cyan}({fv3_dir_url}){Nclr}\n')
 
-                print(f'{Yellow}You can download files using the -f '
-                      f'option with the directory name, e.g.\n'
-                      f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc\n'
-                      f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc '
-                      f'03340.atmos_average.nc{Nclr}\n')
+                if fv3_files_available:
+                    print(f'{Yellow}You can download files using the -f '
+                        f'option with the directory name, e.g.\n'
+                        f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc\n'
+                        f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc '
+                        f'03340.atmos_average.nc{Nclr}\n')
 
             elif portal_dir in [
                 'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
@@ -460,8 +462,7 @@ def main():
                 ]:
                 # Legacy MGCM
                 print(f'\n{Green}Selected: (Legacy MGCM) {portal_dir}{Nclr}')
-                print(f'\nAvailable files:')
-                print(f'---------------')
+                print(f'\nSearching for available files...\n')
                 legacy_dir_url = (f'{legacy_data_url}' + portal_dir + r'/')
                 legacy_data = requests.get(legacy_dir_url)
                 legacy_file_text = legacy_data.text
@@ -493,16 +494,24 @@ def main():
                             )
                         legacy_files_available = href_files
 
-                print_file_list(legacy_files_available)
-                print(f'---------------')
+                # Print the files
+                if legacy_files_available:
+                    print_file_list(legacy_files_available)
+                else:
+                    print('No fort.11 files found. This may be because the file '
+                          'system is unavailable or unresponsive. Check the '
+                          'URL below to confirm. Otherwise, run with --debug '
+                          'for more info')
+                    
                 print(f'{Cyan}({legacy_dir_url}){Nclr}\n')
 
-                print(f'{Yellow}You can download these files using the '
-                      f'-f or -ls options with the directory name, e.g.\n'
-                      f'> MarsPull ACTIVECLDS -f fort.11_0690\n'
-                      f'> MarsPull ACTIVECLDS -f fort.11_0700 fort.11_0701 \n'
-                      f'> MarsPull ACTIVECLDS -ls 90\n'
-                      f'> MarsPull ACTIVECLDS -ls 90 180{Nclr}\n')
+                if legacy_files_available:
+                    print(f'{Yellow}You can download these files using the '
+                        f'-f or -ls options with the directory name, e.g.\n'
+                        f'> MarsPull ACTIVECLDS -f fort.11_0690\n'
+                        f'> MarsPull ACTIVECLDS -f fort.11_0700 fort.11_0701 \n'
+                        f'> MarsPull ACTIVECLDS -ls 90\n'
+                        f'> MarsPull ACTIVECLDS -ls 90 180{Nclr}\n')
 
             else:
                 print(f'Error: Directory {portal_dir} does not exist.')
