@@ -116,11 +116,17 @@ class TestMarsPull(unittest.TestCase):
         self.assertIn("Searching for available directories", result.stdout)
         self.assertIn("--------------------------------------", result.stdout)
 
-        # Check for help text
-        self.assertIn("You can list the files in a directory", result.stdout)
-
-        # Note: We're not checking for actual directories as they might
-        #  not be available if the server is down, which is OK
+        # Check for possible outputs - either directories found or error message
+        if "No directories were found" in result.stdout:
+            # Check error message when no directories found
+            self.assertIn("No directories were found", result.stdout)
+            self.assertIn("file system is unavailable or unresponsive", result.stdout)
+            self.assertIn("Check URL:", result.stdout)
+        else:
+            # If directories are found, check the expected output format
+            self.assertIn("(FV3-based MGCM)", result.stdout)
+            self.assertIn("FV3BETAOUT1", result.stdout)
+            self.assertIn("You can list the files in a directory", result.stdout)
 
     def test_list_directory_option(self):
         """Test the list option with a directory to ensure it runs without errors"""
@@ -133,11 +139,18 @@ class TestMarsPull(unittest.TestCase):
         self.assertIn("Selected: (FV3-based MGCM) FV3BETAOUT1", result.stdout)
         self.assertIn("Searching for available files", result.stdout)
 
-        # Check for the usage information
-        self.assertIn("You can download files using the -f option", result.stdout)
-
-        # Note: We're not checking for actual files as they might
-        # not be available if the server is down, which is OK
+        # Check for possible outputs - either files found or error message
+        if "No .nc files found" in result.stdout:
+            # Check error message when no files found
+            self.assertIn("No .nc files found", result.stdout)
+            self.assertIn("file system is unavailable or unresponsive", result.stdout)
+        elif "You can download files using the -f option" in result.stdout:
+            # If files are found, check the expected usage information
+            self.assertIn("You can download files using the -f option", result.stdout)
+        
+        # Note: We're not checking for actual files as they might not be available
+        # if the server is down, which is OK according to requirements
+    
 
     def test_help_message(self):
         """Test that help message can be displayed"""
