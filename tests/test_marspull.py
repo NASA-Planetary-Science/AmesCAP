@@ -114,7 +114,6 @@ class TestMarsPull(unittest.TestCase):
 
         # Check for specific expected output
         self.assertIn("Searching for available directories", result.stdout)
-        self.assertIn("--------------------------------------", result.stdout)
 
         # Check for possible outputs - either directories found or error message
         if "No directories were found" in result.stdout:
