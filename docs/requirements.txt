@@ -21,7 +21,7 @@ scipy==1.11.4
 pypdf==5.4.0
 
 # Dependencies required by other packages
-certifi==2023.11.17
+certifi==2024.7.4
 cftime==1.6.3
 charset-normalizer==3.3.2
 contourpy==1.2.0
