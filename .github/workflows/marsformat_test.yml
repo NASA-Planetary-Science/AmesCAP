@@ -1,0 +1,108 @@
+name: MarsFormat Test Workflow
+# Cancel any in-progress job or previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+on:
+  # Trigger the workflow on push to devel branch
+  push:
+    branches: [ devel ]
+    paths:
+      - 'bin/MarsFormat.py'
+      - 'tests/test_marsformat.py'
+      - '.github/workflows/marsformat_test.yml'
+  # Allow manual triggering of the workflow
+  workflow_dispatch:
+  # Trigger on pull requests that modify MarsFormat or tests
+  pull_request:
+    branches: [ devel ]
+    paths:
+      - 'bin/MarsFormat.py'
+      - 'tests/test_marsformat.py'
+      - '.github/workflows/marsformat_test.yml'
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.9', '3.10', '3.11']
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Checkout the repository
+      - uses: actions/checkout@v3
+      
+      # Set up the specified Python version
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+          # Install dependencies
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy netCDF4 xarray
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
+          # Install the package in editable mode
+      - name: Install package
+        run: pip install -e .
+      
+        # Set HOME for Windows since it might be used by the script
+      - name: Set HOME environment variable for Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          echo "HOME=$env:USERPROFILE" >> $env:GITHUB_ENV
+      
+      # Set up AmesCAP configuration - handle platform differences
+      - name: Set up AmesCAP configuration
+        shell: bash
+        run: |
+          mkdir -p $HOME/.amescap
+          cp mars_templates/amescap_profile $HOME/.amescap_profile
+      
+      # Print out environment info
+      - name: Show environment info
+        run: |
+          python -c "import os, sys, numpy, netCDF4, xarray; print(f'Python: {sys.version}, NumPy: {numpy.__version__}, NetCDF4: {netCDF4.__version__}, xarray: {xarray.__version__}')"
+          echo "Working directory: $(pwd)"
+          echo "Home directory: $HOME"
+          echo "Environment variables: $(env)"
+      
+      # Free up disk space
+      - name: Free up disk space
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+      
+      # Create temporary directory for tests
+      - name: Create temporary test directory
+        shell: bash
+        run: |
+          mkdir -p $HOME/marsformat_tests
+          echo "TMPDIR=$HOME/marsformat_tests" >> $GITHUB_ENV
+      
+      # Run the integration tests with cleanup between tests
+      - name: Run MarsFormat tests
+        run: |
+          cd tests
+          python -m unittest -v test_marsformat.py
+      
+      # Clean up temporary files to avoid disk space issues - OS specific
+      - name: Clean up temp files (Unix)
+        if: runner.os != 'Windows' && always()
+        shell: bash
+        run: |
+          rm -rf $HOME/marsformat_tests || true
+      
+      # Clean up temporary files (Windows)
+      - name: Clean up temp files (Windows)
+        if: runner.os == 'Windows' && always() 
+        shell: pwsh
+        run: |
+          Remove-Item -Path "$env:USERPROFILE\marsformat_tests" -Recurse -Force -ErrorAction SilentlyContinue
