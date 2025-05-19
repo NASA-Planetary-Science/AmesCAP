@@ -8,13 +8,13 @@ import xarray as xr
 import os
 #---Use in-script function for now---
 from amesgcm.FV3_utils import layers_mid_point_to_boundary
-from amesgcm.Script_utils import prCyan
+from amesgcm.Script_utils import Cyan
 #---
 
 # Routine to Transform Model Input (variable names, dimension names, array order)
 # to expected configuration CAP
 
-parser = argparse.ArgumentParser(description="""\033[93m openMars2FV3.py  Used to convert openMars output to FV3 format  \n \033[00m""",
+parser = argparse.ArgumentParser(description="""\033[93m openMars2FV3  Used to convert openMars output to FV3 format  \n \033[00m""",
                                 formatter_class=argparse.RawTextHelpFormatter)
 
 
@@ -95,19 +95,19 @@ def main():
         # change longitude from -180-179 to 0-360
         #==================================================================
         if min(DS.lon)<0:
-        	tmp = np.array(DS.lon)
-        	tmp = np.where(tmp<0,tmp+360,tmp)
-        	DS=DS.assign_coords({'lon':('lon',tmp,DS.lon.attrs)})
-        	DS = DS.sortby("lon")
+            tmp = np.array(DS.lon)
+            tmp = np.where(tmp<0,tmp+360,tmp)
+            DS=DS.assign_coords({'lon':('lon',tmp,DS.lon.attrs)})
+            DS = DS.sortby("lon")
 
         #==================================================================
         # add scalar axis to areo [time, scalar_axis])
         #==================================================================
         # first check if dimensions are correct and don't need to be modified
         if 'scalar_axis' not in inpt_dimlist:		# first see if scalar axis is a dimension
-        	scalar_axis = DS.assign_coords(scalar_axis=1)
+            scalar_axis = DS.assign_coords(scalar_axis=1)
         if DS.areo.dims != ('time',scalar_axis):
-        	DS['areo'] = DS.areo.expand_dims('scalar_axis', axis=1)
+            DS['areo'] = DS.areo.expand_dims('scalar_axis', axis=1)
 
 
         #==================================================================
@@ -118,15 +118,15 @@ def main():
         new_dimlist = list(DS.coords)
         attrs_list = list(DS.attrs)
         if 'long_name' not in attrs_list:
-        	for i in new_varlist:
-        		DS[i].attrs['long_name'] = DS[i].attrs['FIELDNAM']
-        	for i in new_dimlist:
-        		DS[i].attrs['long_name'] = DS[i].attrs['FIELDNAM']
+            for i in new_varlist:
+                DS[i].attrs['long_name'] = DS[i].attrs['FIELDNAM']
+            for i in new_dimlist:
+                DS[i].attrs['long_name'] = DS[i].attrs['FIELDNAM']
         if 'units' not in attrs_list:
-        	for i in new_varlist:
-        		DS[i].attrs['units'] = DS[i].attrs['UNITS']
-        	for i in new_dimlist:
-        		DS[i].attrs['units'] = DS[i].attrs['UNITS']
+            for i in new_varlist:
+                DS[i].attrs['units'] = DS[i].attrs['UNITS']
+            for i in new_dimlist:
+                DS[i].attrs['units'] = DS[i].attrs['UNITS']
 
 
         #==================================================================
@@ -147,7 +147,7 @@ def main():
         # Output Processed Data to New NC File
         #==================================================================
         DS.to_netcdf(fullnameOUT)
-        prCyan(fullnameOUT + ' was created')
+        print(f"{Cyan}{fullnameOUT} was created")
         #==================================================================
         # Add Dummy Fixed File if Necessary
         #==================================================================

@@ -1,0 +1,122 @@
+name: MarsFiles Test Workflow
+# Cancel any in-progress job or previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+on:
+  # Trigger the workflow on push to devel branch
+  push:
+    branches: [ devel ]
+    paths:
+      - 'bin/MarsFiles.py'
+      - 'tests/test_marsfiles.py'
+      - '.github/workflows/marsfiles_test.yml'
+      - 'amescap/FV3_utils.py'
+  # Allow manual triggering of the workflow
+  workflow_dispatch:
+  # Trigger on pull requests that modify relevant files
+  pull_request:
+    branches: [ devel ]
+    paths:
+      - 'bin/MarsFiles.py'
+      - 'tests/test_marsfiles.py'
+      - '.github/workflows/marsfiles_test.yml'
+      - 'amescap/FV3_utils.py'
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.9', '3.10', '3.11']
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Checkout the repository
+      - uses: actions/checkout@v3
+
+      # Set up the specified Python version
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      # Cache pip dependencies
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # Install dependencies
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy netCDF4 xarray scipy matplotlib
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # Install pyshtools for spatial analysis capabilities
+      - name: Install pyshtools and spectral dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfftw3-dev
+          pip install pyshtools
+      
+      # Install pyshtools for spatial analysis capabilities (macos)
+      - name: Install pyshtools and spectral dependencies (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          pip install pyshtools
+
+      # Install pyshtools for spatial analysis capabilities (Windows)
+      - name: Install pyshtools and spectral dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          pip install pyshtools
+
+      # Install the package with spectral extension
+      - name: Install package with spectral capabilities
+        run: |
+          pip install -e .
+      
+      # Create a test profile if needed
+      - name: Create amescap profile
+        shell: bash
+        run: |
+          mkdir -p $HOME
+          mkdir -p mars_templates
+          echo "# AmesCAP profile" > mars_templates/amescap_profile
+          echo "export PYTHONPATH=$PYTHONPATH:$(pwd)" >> mars_templates/amescap_profile
+          cp mars_templates/amescap_profile $HOME/.amescap_profile
+          echo "Created profile at $HOME/.amescap_profile"
+
+      # Create a patch for the test file to fix Windows path issues
+      - name: Create test_marsfiles.py path fix for Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $content = Get-Content tests/test_marsfiles.py -Raw
+          # Fix path handling for Windows
+          $content = $content -replace "os\.path\.join\(self\.test_dir, file\)", "os.path.normpath(os.path.join(self.test_dir, file))"
+          Set-Content tests/test_marsfiles.py -Value $content
+          
+      # Run the tests
+      - name: Run MarsFiles tests
+        timeout-minutes: 25
+        run: |
+          cd tests
+          python -m unittest test_marsfiles
+
+      # Report file paths if things fail on Windows
+      - name: Debug Windows paths
+        if: runner.os == 'Windows' && failure()
+        shell: pwsh
+        run: |
+          Write-Host "Current directory: $(Get-Location)"
+          Write-Host "Test directory contents: $(Get-ChildItem -Path tests)"
