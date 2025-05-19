@@ -363,6 +363,7 @@ def main():
         fv3_urls = [f'{fv3_data_url}']
 
         print(f'\nSearching for available directories...\n')
+        print(legacy_urls)
         for url in legacy_urls:
             legacy_dir_option = url.split('legacygcmdata/')[1]
             print(f'{"(Legacy MGCM)":<17} {legacy_dir_option:<20} '
@@ -450,7 +451,7 @@ def main():
                 print(f'{Cyan}({fv3_dir_url}){Nclr}\n')
 
                 if fv3_files_available:
-                    print(f'{Yellow}You can download files using the -f '
+                    print(f'{Yellow}\nYou can download files using the -f '
                         f'option with the directory name, e.g.\n'
                         f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc\n'
                         f'> MarsPull FV3BETAOUT1 -f 03340.fixed.nc '
@@ -506,7 +507,7 @@ def main():
                 print(f'{Cyan}({legacy_dir_url}){Nclr}\n')
 
                 if legacy_files_available:
-                    print(f'{Yellow}You can download these files using the '
+                    print(f'{Yellow}\nYou can download these files using the '
                         f'-f or -ls options with the directory name, e.g.\n'
                         f'> MarsPull ACTIVECLDS -f fort.11_0690\n'
                         f'> MarsPull ACTIVECLDS -f fort.11_0700 fort.11_0701 \n'
@@ -519,8 +520,8 @@ def main():
             sys.exit(0)
 
         else:
-            # If no directory is provided, exit with an error
-            print(f'{Yellow}You can list the files in a directory by using '
+            # If no directory is provided, list available directories
+            print(f'{Yellow}\nYou can list the files in a directory by using '
                   f'the -list option with a directory name, e.g.\n'
                   f'> MarsPull -list ACTIVECLDS{Nclr}\n')
 
