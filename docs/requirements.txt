@@ -16,7 +16,7 @@ sphinx-autoapi==3.0.0
 matplotlib==3.8.2
 netcdf4==1.6.5
 numpy==1.26.2
-requests==2.31.0
+requests==2.32.2
 scipy==1.11.4
 pypdf==5.4.0
 
