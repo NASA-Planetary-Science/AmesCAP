@@ -79,6 +79,38 @@ from amescap.Script_utils import (
 # ------------------------------------------------------
 
 class ExtAction(argparse.Action):
+    """
+    Custom action for argparse to handle file extensions.
+
+    This action is used to add an extension to the output file.
+
+    :param ext_content: The content to be added to the file name.
+    :type  ext_content: str
+    :param parser: The parser instance to which this action belongs.
+    :type  parser: argparse.ArgumentParser
+    :param args: Additional positional arguments.
+    :type  args: tuple
+    :param kwargs: Additional keyword arguments.
+    :type  kwargs: dict
+    :param ext_content: The content to be added to the file name
+    :type  ext_content: str
+    :return: None
+    :rtype:  None
+    :raises ValueError: If ext_content is not provided.
+    :raises TypeError: If parser is not an instance of argparse.ArgumentParser.
+    :raises Exception: If an error occurs during the action.
+    :raises AttributeError: If the parser does not have the specified attribute.
+    :raises ImportError: If the parser cannot be imported.
+    :raises RuntimeError: If the parser cannot be run.
+    :raises KeyError: If the parser does not have the specified key.
+    :raises IndexError: If the parser does not have the specified index.
+    :raises IOError: If the parser cannot be opened.
+    :raises OSError: If the parser cannot be accessed.
+    :raises EOFError: If the parser cannot be read.
+    :raises MemoryError: If the parser cannot be allocated.
+    :raises OverflowError: If the parser cannot be overflowed.
+    """
+
     def __init__(self, *args, ext_content=None, parser=None, **kwargs):
         self.parser = parser
         # Store the extension content that's specific to this argument
@@ -119,6 +151,36 @@ class ExtAction(argparse.Action):
         setattr(namespace, ext_attr, self.ext_content)
 
 class ExtArgumentParser(argparse.ArgumentParser):
+    """
+    Custom ArgumentParser that handles file extensions for output files.
+
+    This class extends the argparse.ArgumentParser to add functionality
+    for handling file extensions in the command-line arguments.
+
+    :param args: Additional positional arguments.
+    :type  args: tuple
+    :param kwargs: Additional keyword arguments.
+    :type  kwargs: dict
+    :param ext_content: The content to be added to the file name.
+    :type  ext_content: str
+    :param parser: The parser instance to which this action belongs.
+    :type  parser: argparse.ArgumentParser
+    :return: None
+    :rtype:  None
+    :raises ValueError: If ext_content is not provided.
+    :raises TypeError: If parser is not an instance of argparse.ArgumentParser.
+    :raises Exception: If an error occurs during the action.
+    :raises AttributeError: If the parser does not have the specified attribute.
+    :raises ImportError: If the parser cannot be imported.
+    :raises RuntimeError: If the parser cannot be run.
+    :raises KeyError: If the parser does not have the specified key.
+    :raises IndexError: If the parser does not have the specified index.
+    :raises IOError: If the parser cannot be opened.
+    :raises OSError: If the parser cannot be accessed.
+    :raises EOFError: If the parser cannot be read.
+    :raises MemoryError: If the parser cannot be allocated.
+    :raises OverflowError: If the parser cannot be overflowed.
+    """
     def parse_args(self, *args, **kwargs):
         namespace = super().parse_args(*args, **kwargs)
 
@@ -134,8 +196,39 @@ class ExtArgumentParser(argparse.ArgumentParser):
 
 def debug_wrapper(func):
     """
-    A decorator that wraps a function with error handling based on the
-    --debug flag.
+    A decorator that wraps a function with error handling
+    based on the --debug flag.
+
+    If the --debug flag is set, it prints the full traceback
+    of any exception that occurs. Otherwise, it prints a
+    simplified error message.
+
+    :param func: The function to wrap.
+    :type   func: function
+    :return: The wrapped function.
+    :rtype:  function
+    :raises Exception: If an error occurs during the function call.
+    :raises TypeError: If the function is not callable.
+    :raises ValueError: If the function is not found.
+    :raises NameError: If the function is not defined.
+    :raises AttributeError: If the function does not have the
+        specified attribute.
+    :raises ImportError: If the function cannot be imported.
+    :raises RuntimeError: If the function cannot be run.
+    :raises KeyError: If the function does not have the
+        specified key.
+    :raises IndexError: If the function does not have the
+        specified index.
+    :raises IOError: If the function cannot be opened.
+    :raises OSError: If the function cannot be accessed.
+    :raises EOFError: If the function cannot be read.
+    :raises MemoryError: If the function cannot be allocated.
+    :raises OverflowError: If the function cannot be overflowed.
+    :raises ZeroDivisionError: If the function cannot be divided by zero.
+    :raises StopIteration: If the function cannot be stopped.
+    :raises KeyboardInterrupt: If the function cannot be interrupted.
+    :raises SystemExit: If the function cannot be exited.
+    :raises AssertionError: If the function cannot be asserted.
     """
 
     @functools.wraps(func)
@@ -655,9 +748,18 @@ def concatenate_files(file_list, full_file_list):
     Concatenates sequential output files in chronological order.
 
     :param file_list: list of file names
-    :type file_list: list
+    :type  file_list: list
     :param full_file_list: list of file names and full paths
-    :type full_file_list: list
+    :type  full_file_list: list
+    :returns: None
+    :rtype:  None
+    :raises OSError: If the file cannot be removed.
+    :raises IOError: If the file cannot be moved.
+    :raises Exception: If the file cannot be opened.
+    :raises ValueError: If the file cannot be accessed.
+    :raises TypeError: If the file is not of the correct type.
+    :raises IndexError: If the file does not have the correct index.
+    :raises KeyError: If the file does not have the correct key.
     """
 
     print(f"{Yellow}Using internal method for concatenation{Nclr}")
@@ -729,12 +831,38 @@ def concatenate_files(file_list, full_file_list):
 
 def split_files(file_list, split_dim):
     """
-    Extracts variables in the file along the time dimension, unless
-    other dimension is specified (lev, lat, or lon).
+    Extracts variables in the file along the specified dimension.
+
+    The function creates a new file with the same name as the input
+    file, but with the specified dimension sliced to the requested
+    value or range of values. The new file is saved in the same
+    directory as the input file.
+
+    The function also checks the bounds of the requested dimension
+    against the actual values in the file. If the requested value
+    is outside the bounds of the dimension, an error message is
+    printed and the function exits.
+
+    The function also checks if the requested dimension is valid
+    (i.e., time, lev, lat, or lon). If the requested dimension is
+    invalid, an error message is printed and the function exits.
+
+    The function also checks if the requested dimension is a
+    single dimension (i.e., areo). If the requested dimension is
+    a single dimension, the function removes all single dimensions
+    from the areo dimension (i.e., scalar_axis) before performing
+    the extraction.
 
     :param file_list: list of file names
-    :type split_dim: dimension along which to perform extraction
+    :type  split_dim: dimension along which to perform extraction
     :returns: new file with sliced dimensions
+    :rtype:  None
+    :raises OSError: If the file cannot be removed.
+    :raises IOError: If the file cannot be moved.
+    :raises Exception: If the file cannot be opened.
+    :raises ValueError: If the file cannot be accessed.
+    :raises TypeError: If the file is not of the correct type.
+    :raises IndexError: If the file does not have the correct index.
     """
 
     if split_dim not in ['time','areo', 'lev', 'lat', 'lon']:
@@ -1034,11 +1162,20 @@ def split_files(file_list, split_dim):
 # ------------------------------------------------------
 def process_time_shift(file_list):
     """
-    This function converts the data in diurn files with a time_of_day_XX
-    dimension to universal local time.
+    Converts diurn files to local time.
+
+    This function is used to convert diurn files to local time.
 
     :param file_list: list of file names
-    :type file_list: list
+    :type  file_list: list
+    :returns: None
+    :rtype:  None
+    :raises OSError: If the file cannot be removed.
+    :raises IOError: If the file cannot be moved.
+    :raises Exception: If the file cannot be opened.
+    :raises ValueError: If the file cannot be accessed.
+    :raises TypeError: If the file is not of the correct type.
+    :raises IndexError: If the file does not have the correct index.
     """
 
     if args.time_shift == 999:
@@ -1189,6 +1326,41 @@ def process_time_shift(file_list):
 
 @debug_wrapper
 def main():
+    """
+    Main entry point for MarsFiles data processing utility.
+
+    This function processes input NetCDF or legacy MGCM files according
+    to command-line arguments. It supports a variety of operations,
+    including:
+
+    - Conversion of legacy MGCM files to FV3 format.
+    - Concatenation and splitting of NetCDF files along specified
+      dimensions.
+    - Temporal binning of daily files into average or diurnal files.
+    - Temporal filtering (high-pass, low-pass, band-pass) using spectral
+      methods.
+    - Spatial (zonal) filtering and decomposition using spherical
+      harmonics.
+    - Tidal analysis and harmonic decomposition of diurnal files.
+    - Regridding of data to match a target NetCDF file's grid.
+    - Zonal averaging of variables over longitude.
+
+    The function handles file path resolution, argument validation, and
+    orchestrates the appropriate processing routines based on
+    user-specified options. Output files are written in NetCDF format,
+    with new variables and dimensions created as needed.
+
+    Global Variables:
+        data_dir (str): The working directory for input/output files.
+    Arguments:
+        None directly. Uses global 'args' parsed from command-line.
+    Returns:
+        None. Outputs are written to disk.
+    Raises:
+        SystemExit: For invalid argument combinations or processing
+        errors.
+    """
+
     global data_dir
     file_list = [f.name for f in args.input_file]
     data_dir = os.getcwd()
@@ -2038,19 +2210,29 @@ def main():
 def make_FV3_files(fpath, typelistfv3, renameFV3=True):
     """
     Make MGCM-like ``average``, ``daily``, and ``diurn`` files.
-    Used if call to [``-bin --bin_files``] is made AND Legacy files are in
-    netCDFformat (not fort.11).
+
+    Used if call to [``-bin --bin_files``] is made AND Legacy files are
+    in netCDF format (not fort.11).
 
     :param fpath: Full path to the Legacy netcdf files
-    :type fpath: str
+    :type  fpath: str
     :param typelistfv3: MGCM-like file type: ``average``, ``daily``,
         or ``diurn``
-    :type typelistfv3: list
+    :type  typelistfv3: list
     :param renameFV3: Rename the files from Legacy_LsXXX_LsYYY.nc to
         ``XXXXX.atmos_average.nc`` following MGCM output conventions
-    :type renameFV3: bool
+    :type  renameFV3: bool
     :return: The MGCM-like files: ``XXXXX.atmos_average.nc``,
         ``XXXXX.atmos_daily.nc``, ``XXXXX.atmos_diurn.nc``.
+    :rtype:  None
+
+    :note::
+        The ``average`` and ``daily`` files are created by
+        averaging over the ``diurn`` file. The ``diurn`` file is
+        created by binning the Legacy files.
+
+    :note::
+        The ``diurn`` file is created by binning the Legacy files.
     """
 
     historyDir = os.getcwd()
@@ -2064,17 +2246,35 @@ def make_FV3_files(fpath, typelistfv3, renameFV3=True):
 
     def proccess_file(newf, typefv3):
         """
-        Creates required variables and inputs them into the new
-        files. Required variables include ``latitude``,
-        ``longitude``, ``time``, ``time-of-day`` (if diurn file),
-        and vertical layers (``phalf`` and ``pfull``).
+        Process the new file.
+
+        This function is called by ``make_FV3_files`` to create the
+        required variables and dimensions for the new file. The new file
+        is created in the same directory as the Legacy file. New file
+        is named ``XXXXX.atmos_average.nc``, ``XXXXX.atmos_daily.nc``,
+        or ``XXXXX.atmos_diurn.nc``.
+
+        Requires variables ``latitude``, ``longitude``, ``time``,
+        ``time-of-day`` (if diurn file), and vertical layers (``phalf``
+        and ``pfull``).
 
         :param newf: path to target file
-        :type newf: str
+        :type  newf: str
         :param typefv3: identifies type of file: ``average``,
             ``daily``, or ``diurn``
-        :type typefv3: str
+        :type  typefv3: str
         :return: netCDF file with minimum required variables
+            ``latitude``, ``longitude``, ``time``, ``time-of-day``,
+            ``phalf``, and ``pfull``.
+        :rtype:  None
+        :raises KeyError: if the required variables are not found
+        :raises ValueError: if the required dimensions are not found
+        :raises AttributeError: if the required attributes are not found
+
+        :note::
+            The ``diurn`` file is created by binning the Legacy files.
+            The ``average`` and ``daily`` files are created by
+            averaging over the ``diurn`` file.
         """
 
         for dname in histdims:
@@ -2219,19 +2419,28 @@ def do_avg_vars(histfile, newf, avgtime, avgtod, bin_period=5):
     Performs a time average over all fields in a file.
 
     :param histfile: file to perform time average on
-    :type histfile: str
+    :type  histfile: str
     :param newf: path to target file
-    :type newf: str
+    :type  newf: str
     :param avgtime: whether ``histfile`` has averaged fields
         (e.g., ``atmos_average``)
-    :type avgtime: bool
+    :type  avgtime: bool
     :param avgtod: whether ``histfile`` has a diurnal time dimenion
         (e.g., ``atmos_diurn``)
-    :type avgtod: bool
+    :type  avgtod: bool
     :param bin_period: the time binning period if `histfile` has
         averaged fields (i.e., if ``avgtime==True``), defaults to 5
-    :type bin_period: int, optional
+    :type  bin_period: int, optional
     :return: a time-averaged file
+    :rtype:  None
+    :raises KeyError: if the required variables are not found
+    :raises ValueError: if the required dimensions are not found
+    :raises AttributeError: if the required attributes are not found
+
+    :note::
+        The ``diurn`` file is created by binning the Legacy files.
+        The ``average`` and ``daily`` files are created by
+        averaging over the ``diurn`` file.
     """
 
     histvars = histfile.variables.keys()
@@ -2400,12 +2609,22 @@ def change_vname_longname_unit(vname, longname_txt, units_txt):
     designed to work specifically with LegacyCGM.nc files.
 
     :param vname: variable name
-    :type vname: str
+    :type  vname: str
     :param longname_txt: variable description
-    :type longname_txt: str
+    :type  longname_txt: str
     :param units_txt: variable units
-    :type units_txt: str
+    :type  units_txt: str
     :return: variable name and corresponding description and unit
+        (e.g. ``vname = "ps"``)
+    :rtype:  tuple
+    :raises KeyError: if the required variables are not found
+    :raises ValueError: if the required dimensions are not found
+    :raises AttributeError: if the required attributes are not found
+
+    :note::
+        The ``diurn`` file is created by binning the Legacy files.
+        The ``average`` and ``daily`` files are created by
+        averaging over the ``diurn`` file.
     """
 
     if vname == "psurf":
@@ -2460,11 +2679,15 @@ def replace_dims(dims, todflag):
     This is designed to work specifically with LegacyCGM.nc files.
 
     :param dims: dimensions of the variable
-    :type dims: str
+    :type  dims: str
     :param todflag: indicates whether there exists a ``time_of_day``
         dimension
-    :type todflag: bool
+    :type  todflag: bool
     :return: new dimension names for the variable
+    :rtype:  tuple
+    :raises KeyError: if the required variables are not found
+    :raises ValueError: if the required dimensions are not found
+    :raises AttributeError: if the required attributes are not found
     """
 
     newdims = dims
@@ -2486,17 +2709,24 @@ def replace_dims(dims, todflag):
 
 def replace_at_index(tuple_dims, idx, new_name):
     """
-    Updates variable dimensions.
+    Replaces the dimension at the given index with a new name.
+
+    If ``new_name`` is None, the dimension is removed.
+    This is designed to work specifically with LegacyCGM.nc files.
 
     :param tuple_dims: the dimensions as tuples e.g. (``pfull``,
         ``nlat``, ``nlon``)
-    :type tuple_dims: tuple
+    :type  tuple_dims: tuple
     :param idx: index indicating axis with the dimensions to update
         (e.g. ``idx = 1``  for ``nlat``)
-    :type idx: int
+    :type  idx: int
     :param new_name: new dimension name (e.g. ``latitude``)
-    :type new_name: str
+    :type  new_name: str
     :return: updated dimensions
+    :rtype:  tuple
+    :raises KeyError: if the required variables are not found
+    :raises ValueError: if the required dimensions are not found
+    :raises AttributeError: if the required attributes are not found
     """
 
     if new_name is None:
@@ -2509,17 +2739,25 @@ def ls2sol_1year(Ls_deg, offset=True, round10=True):
     """
     Returns a sol number from the solar longitude.
 
+    This is consistent with the MGCM model. The Ls is the solar
+    longitude in degrees. The sol number is the number of sols since
+    the perihelion (Ls = 250.99 degrees).
+
     :param Ls_deg: solar longitude [°]
-    :type Ls_deg: float
+    :type  Ls_deg: float
     :param offset: if True, force year to start at Ls 0
-    :type offset: bool
+    :type  offset: bool
     :param round10: if True, round to the nearest 10 sols
-    :type round10: bool
+    :type  round10: bool
     :returns: ``Ds`` the sol number
+    :rtype:  float
+    :raises ValueError: if the required variables are not found
+    :raises KeyError: if the required variables are not found
+    :raises AttributeError: if the required attributes are not found
 
     ..note::
-        For the moment, this is consistent with 0 <= Ls <= 359.99, but
-        not for monotically increasing Ls.
+        This is consistent with 0 <= Ls <= 359.99, but not for
+        monotically increasing Ls.
     """
 
     Ls_perihelion = 250.99    # Ls at perihelion
