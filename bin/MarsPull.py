@@ -368,9 +368,9 @@ def main():
         
         else:
             print(f'{Red}No directories were found. This may be because the '
-                  f'file system is unavailable or unresponsive. Check the URL '
-                  f'below to confirm. Otherwise, run with --debug for more '
-                  f'info.\n\n{Nclr}Check URL: '
+                  f'file system is unavailable or unresponsive.\nCheck the '
+                  f'URL below to confirm. Otherwise, run with --debug for '
+                  f'more info.\n\n{Nclr}Check URL: '
                   f'{Cyan}https://data.nas.nasa.gov/mcmcref{Nclr}\n')
             
         if args.directory_name:
@@ -429,9 +429,9 @@ def main():
                     print_file_list(fv3_files_available)
                 else:
                     print(f'{Red}No .nc files found. This may be because the '
-                          f'file system is unavailable or unresponsive. Check '
-                          f'the URL below to confirm. Otherwise, run with '
-                          f'--debug for more info.{Nclr}')
+                          f'file system is unavailable or unresponsive.\n'
+                          f'Check the URL below to confirm. Otherwise, run '
+                          f'with --debug for more info.{Nclr}')
                     if debug:
                         # Try a different approach for debugging
                         table_rows = re.findall(
@@ -496,7 +496,7 @@ def main():
                     print_file_list(legacy_files_available)
                 else:
                     print(f'{Red}No fort.11 files found. This may be because '
-                          f'the file system is unavailable or unresponsive. '
+                          f'the file system is unavailable or unresponsive.\n'
                           f'Check the URL below to confirm. Otherwise, run '
                           f'with --debug for more info.{Nclr}')
                     
