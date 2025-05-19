@@ -6,7 +6,9 @@ concurrency:
 on:
   # Trigger the workflow on push to main branch
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - devel
     paths:
       - 'bin/MarsPlot.py'
       - 'tests/test_marsplot.py'
@@ -15,7 +17,9 @@ on:
   workflow_dispatch:
   # Trigger on pull requests that modify MarsPlot or tests
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+      - devel
     paths:
       - 'bin/MarsPlot.py'
       - 'tests/test_marsplot.py'
