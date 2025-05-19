@@ -363,20 +363,30 @@ def main():
         fv3_urls = [f'{fv3_data_url}']
 
         print(f'\nSearching for available directories...\n')
-        print(legacy_urls)
-        for url in legacy_urls:
-            legacy_dir_option = url.split('legacygcmdata/')[1]
-            print(f'{"(Legacy MGCM)":<17} {legacy_dir_option:<20} '
-                  f'{Cyan}{url}{Nclr}')
+        if legacy_urls != []:
+            for url in legacy_urls:
+                legacy_dir_option = url.split('legacygcmdata/')[1]
+                print(f'{"(Legacy MGCM)":<17} {legacy_dir_option:<20} '
+                    f'{Cyan}{url}{Nclr}')
 
-        # NOTE: See above comment for the FV3-based MGCM data note
-        # for url in fv3_urls:
-        #     fv3_dir_option = url.split('fv3betaout1data/')[1]
-        #     print(f'{"(FV3-based MGCM)":<17} {fv3_dir_option:<17} '
-        #           f'{Cyan}{url}{Nclr}')
-        print(f'{"(FV3-based MGCM)":<17} {"FV3BETAOUT1":<20} '
-              f'{Cyan}{fv3_home_url}{Nclr}')
-
+            # NOTE: See above comment for the FV3-based MGCM data note
+            # for url in fv3_urls:
+            #     fv3_dir_option = url.split('fv3betaout1data/')[1]
+            #     print(f'{"(FV3-based MGCM)":<17} {fv3_dir_option:<17} '
+            #           f'{Cyan}{url}{Nclr}')
+            print(f'{"(FV3-based MGCM)":<17} {"FV3BETAOUT1":<20} '
+                f'{Cyan}{fv3_home_url}{Nclr}')
+            
+            print(f'{Yellow}\nYou can list the files in a directory by using '
+                  f'the -list option with a directory name, e.g.\n'
+                  f'> MarsPull -list ACTIVECLDS{Nclr}\n')
+        
+        else:
+            print('No directories were found. This may be because the file '
+                  'system is unavailable or unresponsive. Check the URL below '
+                  'to confirm. Otherwise, run with --debug for more info\n'
+                  f'{Cyan}https://data.nas.nasa.gov/mcmcref{Nclr}\n')
+            
         if args.directory_name:
             # If a directory is provided, list the files in that directory
             portal_dir = args.directory_name
@@ -518,12 +528,6 @@ def main():
                 print(f'Error: Directory {portal_dir} does not exist.')
                 sys.exit(1)
             sys.exit(0)
-
-        else:
-            # If no directory is provided, list available directories
-            print(f'{Yellow}\nYou can list the files in a directory by using '
-                  f'the -list option with a directory name, e.g.\n'
-                  f'> MarsPull -list ACTIVECLDS{Nclr}\n')
 
     if args.directory_name and not args.list_files:
         portal_dir = args.directory_name
