@@ -19,7 +19,7 @@ Requirements:
 
 Recommended Installation
 ^^^^^^^^^^^^^^^^^^^^^^
-For reproducible analysis, we recommend installing CAP in a dedicated virtual environment. Please reference our :ref:`installation instructions <installation>` online. Briefly, a virtual environment looks like this::
+For reproducible analysis, we recommend installing CAP in a dedicated virtual environment. Please reference our `installation instructions <https://amescap.readthedocs.io/en/latest/installation.html>`_ online. Briefly, a virtual environment looks like this::
 
     # Create a new virtual environment with pip or conda:
     python3 -m venv amescap-env # with pip
