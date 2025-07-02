@@ -785,7 +785,7 @@ class Fort(object):
         LM = self.LM
         NL = self.NL
         self.lat = -90.0 + (180.0/JM)*np.arange(1, JM+1)
-        self.lon = -180. + (360./IM)*np.arange(1, IM+1)
+        self.lon = -180. + (360./IM)*np.arange(0, IM)
 
         # Compute sigma layer. Temporary arrays:
         sigK = np.zeros(2*LM + 3) # Layer midpoints + boundaries
