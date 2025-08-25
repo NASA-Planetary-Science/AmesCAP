@@ -349,7 +349,7 @@ If you have a **pre-existing** virtual environment holding CAP, we recommend you
 2. Create and activate a virtual environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Load the required Python module, then create and install a virtual environment:
+Load the required Python module, then create and activate a virtual environment:
 
 .. code-block:: bash
 
