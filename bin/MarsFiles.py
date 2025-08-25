@@ -283,7 +283,10 @@ parser.add_argument('-bin', '--bin_files', nargs='+', type=str,
     )
 )
 
-parser.add_argument('-c', '--concatenate', action='store_true',
+parser.add_argument('-c', '--concatenate', action=ExtAction,
+    ext_content='_concatenated',
+    parser=parser,
+    nargs=0,
     help=(
         f"Combine sequential files of the same type into one file.\n"
         f"Works on 'daily', 'diurn', and 'average' files.\n"
@@ -291,13 +294,6 @@ parser.add_argument('-c', '--concatenate', action='store_true',
         f"> ls\n"
         f"00334.atmos_average.nc 00668.atmos_average.nc\n"
         f"> MarsFiles *.atmos_average.nc -c\n"
-        f"{Blue}Overwrites 00334.atmos_average.nc with concatenated "
-        f"files:{Green}\n"
-        f"> ls\n"
-        f"   00334.atmos_average.nc\n"
-        f"{Yellow}To preserve original files, use [-ext --extension]:"
-        f"{Green}\n"
-        f"> MarsFiles *.atmos_average.nc -c -ext _concatenated\n"
         f"{Blue}Produces 00334.atmos_average_concatenated.nc and "
         f"preserves all other files:{Green}\n"
         f"> ls\n"
@@ -731,6 +727,7 @@ out_ext = (f"{args.time_shift_ext}"
             f"{args.normalize_ext}"
             f"{args.regrid_XY_to_match_ext}"
             f"{args.zonal_average_ext}"
+            f"{args.concatenate_ext}"
             )
 
 if args.extension:
@@ -810,15 +807,10 @@ def concatenate_files(file_list, full_file_list):
         ls_end = file_list[-1][18:21]
         merged_file = f"LegacyGCM_Ls{ls_ini}_Ls{ls_end}.nc"
     else:
-        merged_file = full_file_list[0]
+        output_file_name = full_file_list[0]
+        merged_file = (f"{output_file_name[:-3]}{out_ext}.nc")
 
-    # Delete the files that were concatenated.
     # Apply the new name created above
-    for file in full_file_list:
-        try:
-            os.remove(file)
-        except OSError as e:
-            print(f"Warning: Could not remove {file}: {e}")
 
     try:
         shutil.move(tmp_file, merged_file)
@@ -977,23 +969,23 @@ def split_files(file_list, split_dim):
     if split_dim == 'time':
         if len(np.atleast_1d(bounds)) < 2:
             base_name = (f"{int(time_dim):05d}{fname[5:-3]}_nearest_sol"
-                         f"{int(bounds_in[0]):03d}.nc")
+                         f"{int(bounds_in[0]):03d}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             base_name = (f"{int(time_dim[0]):05d}{fname[5:-3]}_sol"
-                         f"{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
+                         f"{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
     elif split_dim =='areo':
         if len(np.atleast_1d(bounds)) < 2:
             base_name = (f"{int(time_dim):05d}{fname[5:-3]}_nearest_Ls"
-                         f"{int(bounds_in[0]):03d}.nc")
+                         f"{int(bounds_in[0]):03d}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             base_name = (f"{int(time_dim[0]):05d}{fname[5:-3]}_"
-                         f"Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
+                         f"Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         split_dim = 'time'
@@ -1005,14 +997,14 @@ def split_files(file_list, split_dim):
             ]
         if len(np.atleast_1d(bounds)) < 2:
             base_name = (f"{original_date}{fname[5:-3]}_nearest_{split_dim}_"
-                         f"{new_bounds[0]}.nc")
+                         f"{new_bounds[0]}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
             base_name = (f"{original_date}{fname[5:-3]}_{split_dim}_"
-                         f"{new_bounds[0]}_{new_bounds[1]}.nc")
+                         f"{new_bounds[0]}_{new_bounds[1]}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
     elif split_dim == interp_type:
@@ -1035,25 +1027,25 @@ def split_files(file_list, split_dim):
             print(f"{Yellow}bounds = {bounds[0]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]}")
             base_name = (f"{original_date}{fname[5:-3]}_nearest_"
-                         f"{new_bounds[0]}.nc")
+                         f"{new_bounds[0]}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
             base_name = (f"{original_date}{fname[5:-3]}_{new_bounds[0]}_"
-                         f"{new_bounds[1]}.nc")
+                         f"{new_bounds[1]}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
     else:
         if len(np.atleast_1d(bounds)) < 2:
             base_name = (f"{original_date}{fname[5:-3]}_nearest_{split_dim}_"
-                         f"{int(bounds[0]):03d}.nc")
+                         f"{int(bounds[0]):03d}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             base_name = (f"{original_date}{fname[5:-3]}_{split_dim}_"
-                         f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
+                         f"{int(bounds[0]):03d}_{int(bounds[1]):03d}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
 
