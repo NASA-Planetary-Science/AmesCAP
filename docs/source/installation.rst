@@ -349,25 +349,18 @@ If you have a **pre-existing** virtual environment holding CAP, we recommend you
 2. Create and activate a virtual environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Load the required Python module, then create and activate a virtual environment:
+
 .. code-block:: bash
 
+   module load python3
    python3 -m venv amescap
    
    source amescap/bin/activate.csh # For CSH/TCSH
    # OR
    source amescap/bin/activate # For BASH
 
-3. Load necessary modules
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Within your activated virtual environment, load the required Python module:
-
-.. code-block:: bash
-
-   module purge
-   module load python3/3.9.12
-
-4. Install CAP from GitHub
+3. Install CAP from GitHub
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Install CAP from the `NASA Planetary Science GitHub <https://github.com/NASA-Planetary-Science/AmesCAP>`_ using ``pip``:
@@ -386,14 +379,14 @@ Install CAP from the `NASA Planetary Science GitHub <https://github.com/NASA-Pla
    
    This is useful if you want to test new features or bug fixes that are not yet in the main branch.
    
-5. Copy the profile file to your home directory
+4. Copy the profile file to your home directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
    cp amescap/mars_templates/amescap_profile ~/.amescap_profile
 
-6. Test your installation
+5. Test your installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 While your virtual environment is active, run:
@@ -404,7 +397,7 @@ While your virtual environment is active, run:
 
 This should display the help documentation for MarsPlot.
 
-7. Deactivate the virtual environment when finished
+6. Deactivate the virtual environment when finished
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
