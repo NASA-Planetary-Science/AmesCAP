@@ -470,7 +470,7 @@ class TestMarsVars(BaseTestCase):
             '01336.atmos_average.nc', 
             '-edit', 'ps', 
             '-rename', 'ps_mbar', 
-            '-longname', 'Surface Pressure in Millibars', 
+            '-longname', '\\"Surface Pressure in Millibars\\"', 
             '-unit', 'mbar', 
             '-multiply', '0.01'
         ])
