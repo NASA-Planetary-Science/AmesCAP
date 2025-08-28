@@ -1916,6 +1916,12 @@ def daily_to_diurn(varIN, time_in):
 
     iperday = int(np.round(1/dt_in))
     vshape_in = varIN.shape
+
+    # Add safety check for integer sols
+    if not(np.mod(vshape_in[0],iperday) == 0):
+        print("Error: File cannot be split evenly into sols")
+        return None
+
     vreshape = np.append([-1, iperday], vshape_in[1:]).astype(int)
     varOUT = varIN.reshape(vreshape)
 

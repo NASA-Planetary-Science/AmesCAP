@@ -42,6 +42,7 @@ MarsVars = "bin.MarsVars:main"
 MarsFiles = "bin.MarsFiles:main"
 MarsFormat = "bin.MarsFormat:main"
 MarsCalendar = "bin.MarsCalendar:main"
+MarsNest = "bin.MarsNest:main"
 
 [tool.setuptools]
 packages = ["amescap", "bin"]
