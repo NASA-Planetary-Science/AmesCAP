@@ -167,18 +167,16 @@ class Ncdf(object):
 
 
     def log_variable(self, variable_name, DATAin, dim_array, longname_txt="",
-                     units_txt=""):
+                     units_txt="",datatype="f4"):
         """
         EX::
 
             Log.log_variable("sfcT", sfcT, ("time", "Nx"),
                              "soil temperature", "K")
         """
-        print('3.1')
         if variable_name not in self.var_dict.keys():
             self._def_variable(variable_name, dim_array, longname_txt,
-                               units_txt)
-        print('3.3')
+                               units_txt,datatype)
         self.var_dict[variable_name].long_name = longname_txt
         self.var_dict[variable_name].dim_name = str(dim_array)
         self.var_dict[variable_name].units = units_txt
@@ -186,7 +184,7 @@ class Ncdf(object):
 
 
     def log_axis1D(self, variable_name, DATAin, dim_name, longname_txt="",
-                   units_txt="", cart_txt=""):
+                   units_txt="", cart_txt="",datatype="f4"):
         """
         EX::
 
@@ -194,7 +192,7 @@ class Ncdf(object):
         """
         if variable_name not in self.var_dict.keys():
             self._def_axis1D(variable_name, dim_name, longname_txt, units_txt,
-                             cart_txt)
+                             cart_txt,datatype)
         self.var_dict[variable_name].long_name = longname_txt
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name].cartesian_axis = cart_txt
