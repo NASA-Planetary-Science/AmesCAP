@@ -176,6 +176,8 @@ class Ncdf(object):
         """
 
         if variable_name not in self.var_dict.keys():
+            if self.var_dict[variable_name].dtype is None:
+                self.var_dict[variable_name].dtype = "f4"
             self._def_variable(variable_name, dim_array, longname_txt,
                                units_txt,self.var_dict[variable_name].dtype)
         self.var_dict[variable_name].long_name = longname_txt
@@ -192,6 +194,8 @@ class Ncdf(object):
             Log.log_axis1D("areo", areo, "time", "degree", "T")
         """
         if variable_name not in self.var_dict.keys():
+            if self.var_dict[variable_name].dtype is None:
+                self.var_dict[variable_name].dtype = "f4"
             self._def_axis1D(variable_name, dim_name, longname_txt, units_txt,
                              cart_txt,self.var_dict[variable_name].dtype)
         self.var_dict[variable_name].long_name = longname_txt

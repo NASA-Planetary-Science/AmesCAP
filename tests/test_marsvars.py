@@ -472,7 +472,7 @@ class TestMarsVars(BaseTestCase):
             '-rename', 'ps_mbar', 
             '-longname', 'Surface Pressure in Millibars', 
             '-unit', 'mbar', 
-            '-multiply', '0.01', '--debug'
+            '-multiply', '0.01'
         ])
 
         # Check for successful execution
