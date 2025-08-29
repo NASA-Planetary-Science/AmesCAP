@@ -2800,7 +2800,7 @@ def main():
                 lname_text = getattr(var_Ncdf, "long_name", "")
                 unit_text = getattr(var_Ncdf, "units", "")
                 cart_text = getattr(var_Ncdf, "cartesian_axis", "")
-
+                print('1')
                 if args.rename:
                     name_text = args.rename
                 if args.longname:
@@ -2809,19 +2809,23 @@ def main():
                     unit_text = args.unit
                 if args.multiply:
                     vals *= args.multiply
-
+                print('2')
                 if cart_text == "":
+                    print('3')
                     Log.log_variable(
                         name_text, vals, dim_out, lname_text, unit_text
                         )
                 else:
+                    print('4')
                     Log.log_axis1D(
                         name_text, vals, dim_out, lname_text, unit_text, cart_text
                         )
-
+                print('5')
                 # Close files to release handles
                 f_IN.close()
+                print('6')
                 Log.close()
+                print('7')
 
                 # Handle differently based on platform
                 if os.name == 'nt':
