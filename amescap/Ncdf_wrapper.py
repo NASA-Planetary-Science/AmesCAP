@@ -174,13 +174,15 @@ class Ncdf(object):
             Log.log_variable("sfcT", sfcT, ("time", "Nx"),
                              "soil temperature", "K")
         """
-
+        print('3.1')
         if variable_name not in self.var_dict.keys():
             dtype = self.var_dict[variable_name].dtype
+            print('3.2',dtype)
             if dtype is None or str(dtype) == '' or dtype == object:
                 self.var_dict[variable_name].dtype = "f4"
             self._def_variable(variable_name, dim_array, longname_txt,
                                units_txt,self.var_dict[variable_name].dtype)
+        print('3.3')
         self.var_dict[variable_name].long_name = longname_txt
         self.var_dict[variable_name].dim_name = str(dim_array)
         self.var_dict[variable_name].units = units_txt
