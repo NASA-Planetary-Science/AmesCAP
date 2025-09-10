@@ -322,7 +322,7 @@ def main():
         if custom_level:
             lev_in = eval(f"np.array({custom_level})", namespace)
         else:
-            lev_in = np.array(namespace['pstd_default'])
+            lev_in = eval("np.array(pstd_default)", namespace)
 
     # =========================== zstd ===========================
     elif interp_type == "zstd":
