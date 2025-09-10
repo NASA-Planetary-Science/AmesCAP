@@ -254,6 +254,18 @@ master_list = {
         ['Vg_sed', 'w'],
         ['pfull', 'pstd', 'zstd', 'zagl']
     ],
+    'dustref_per_pa': [
+        "Dust opacity per Pascal [dustref/delp]",
+        'op/Pa',
+        ['dustref', 'delp'],
+        ['pfull']
+    ],
+    'dustref_per_km': [
+        "Dust opacity per kilometer [dustref/delz]",
+        'op/km',
+        ['dustref', 'delz'],
+        ['pfull']
+    ],
     'wdir': [
         "Wind direction",
         'degree',
