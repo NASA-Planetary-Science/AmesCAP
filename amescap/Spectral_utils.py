@@ -207,21 +207,22 @@ def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
         # Return harmonics separately
         return varOUT
 
-def space_time(lon, timex, varIN, kmx, tmx):
+def extract_diurnal_harmonics(kmx, tmx, varIN, tod, lon):
     """
     Obtain west and east propagating waves. This is a Python
         implementation of John Wilson's ``space_time`` routine.
-        Alex Kling 2019.
+        Richard Urata 2025.
 
     :param lon: longitude [°] (0-360)
     :type lon: 1D array
-    :param timex: time [sol] (e.g., 1.5 days sampled every hour is
-        ``[0/24, 1/24, 2/24,.. 1,.. 1.5]``)
-    :type timex: 1D array
-    :param varIN: variable for the Fourier analysis. First axis must be
-        ``lon`` and last axis must be ``time`` (e.g.,
-        ``varIN[lon, time]``, ``varIN[lon, lat, time]``, or
-        ``varIN[lon, lev, lat, time]``)
+    :param tod: time_of_day [hour] (e.g., a 24 hour sol sampled every hour could be
+        ``[0.5, 1.5, 2.5, ..., 23.5]``)
+    :type tod: 1D array
+    :param varIN: variable for the Fourier analysis, expected to be scaled by zonal mean.
+        First axis must be
+        ``tod`` and last axis must be ``lon`` (e.g.,
+        ``varIN[tod, lon]``, ``varIN[tod, lat, lon]``, or
+        ``varIN[tod, lat, lon, lev]``)
     :type varIN: array
     :param kmx: the number of longitudinal wavenumbers to extract
         (max = ``nlon/2``)
@@ -236,7 +237,7 @@ def space_time(lon, timex, varIN, kmx, tmx):
 
     .. note::   1. ``ampe``, ``ampw``, ``phasee``, and ``phasew`` have
         dimensions ``[kmx, tmx]`` or ``[kmx, tmx, lat]`` or
-        ``[kmx, tmx, lev, lat]`` etc.\n
+        ``[kmx, tmx, lat, lev]`` etc.\n
         2. The x and y axes may be constructed as follows, which will
         display the eastern and western modes::
 
@@ -247,124 +248,75 @@ def space_time(lon, timex, varIN, kmx, tmx):
             phase = np.concatenate((phasew[:, ::-1], phasee), axis = 1)
     """
 
-    # Get input variable dimensions
-    dims = varIN.shape
-    lon_id = dims[0]
-    time_id = dims[-1]
+    # Ensure time is in days
+    if np.max(tod) > 1:
+        tod = tod / 24
 
-    # Additional dimensions stacked in the middle
-    dim_sup_id = dims[1:-1]
+    # Reshape varIN to (...,tod)
+    if varIN.ndim == 2:
+        varIN = np.transpose(varIN, (1, 0))
+        nlon, ntime = varIN.shape
+        nlat = 0.
+        nlev = 0.
+    if varIN.ndim == 3:
+        varIN = np.transpose(varIN, (2, 1, 0))
+        nlon, nlat, ntime = varIN.shape
+        nlev = 0.
+    if varIN.ndim == 4:
+        varIN = np.transpose(varIN, (3, 2, 1, 0))
+        nlon, nlat, nlev, ntime = varIN.shape
 
-    # jd = total number of dimensions in the middle (``varIN > 3D``)
-    jd = int(np.prod(dim_sup_id))
 
-    # Flatten the middle dimensions, if any
-    varIN = np.reshape(varIN, (lon_id, jd, time_id))
+    
+    # Parameters for diurnal tide (1 cycle per day)
+#    kmx = 3  # number of longitudinal harmonics
+#    tmx = 3  # number of diurnal harmonics
+    
+    # Convert longitude to radians
+    if np.max(lon) > 100:
+        lon_rad = np.deg2rad(lon)
+    else:
+        lon_rad = lon
+    
+    # Prepare arrays for results
+    ampe = np.zeros((kmx, tmx, nlat, nlev))
+    ampw = np.zeros((kmx, tmx, nlat, nlev))
+    phasee = np.zeros((kmx, tmx, nlat, nlev))
+    phasew = np.zeros((kmx, tmx, nlat, nlev))
 
-    # Initialize 4 empty arrays
-    ampw, ampe, phasew, phasee = (
-        [np.zeros((kmx, tmx, jd)) for _x in range(0, 4)]
-        )
+    # Constants
+    tpi = 2 * np.pi
+    rnorm = 2 / nlon
+    rnormt = 2 / ntime
 
-    #TODO not implemented yet:
-    # zamp, zphas = [np.zeros((jd, tmx)) for _x in range(0, 2)]
+    # Main calculation loop
+    for k in range(kmx):  # Changed to start from 0
+        cosx = np.cos((k + 1) * lon_rad) * rnorm  # Add 1 to k for the calculation
+        sinx = np.sin((k + 1) * lon_rad) * rnorm
+        
+        acoef = np.tensordot(varIN, cosx, axes=([0], [0]))
+        bcoef = np.tensordot(varIN, sinx, axes=([0], [0]))
 
-    tpi = 2*np.pi
-    # Normalize longitude array
-    argx = lon * 2*np.pi / 360
-    rnorm = 2. / len(argx)
-    # If timex = [0/24, 1/24, 2/24,.. 1] arg cycles for m [0, 2Pi]
-    arg = timex * 2*np.pi
-    # Nyquist cut off
-    rnormt =  2. / len(arg)
+        for n in range(tmx):  # Changed to start from 0
+            arg = (n + 1) * tpi * tod  # Add 1 to n for the calculation
+            cosray = rnormt * np.cos(arg)
+            sinray = rnormt * np.sin(arg)
 
-    for kk in range(0, kmx):
-        progress(kk, kmx)
-        cosx = np.cos(kk * argx) * rnorm
-        sinx = np.sin(kk * argx) * rnorm
+            cosA = np.dot(acoef, cosray)
+            sinA = np.dot(acoef, sinray)
+            cosB = np.dot(bcoef, cosray)
+            sinB = np.dot(bcoef, sinray)
 
-        # Inner product calculates the Fourier coefficients of the
-        # cosine and sine contributions of the spatial variation
-        acoef = np.dot(varIN.T, cosx)
-        bcoef = np.dot(varIN.T, sinx)
+            wr = 0.5 * (cosA - sinB)
+            wi = 0.5 * (-sinA - cosB)
+            er = 0.5 * (cosA + sinB)
+            ei = 0.5 * (sinA - cosB)
 
-        for nn in range(0, tmx):
-            # Get the cosine and sine series expansions of the temporal
-            # variations of the acoef and bcoef spatial terms
-            cosray = rnormt * np.cos(nn * arg)
-            sinray = rnormt * np.sin(nn * arg)
+            ampw[k, n, :] = np.sqrt(wr**2 + wi**2)
+            ampe[k, n, :] = np.sqrt(er**2 + ei**2)
+            phasew[k, n, :] = np.mod(-np.arctan2(wi, wr) + tpi, tpi) * 180 / np.pi
+            phasee[k, n, :] = np.mod(-np.arctan2(ei, er) + tpi, tpi) * 180 / np.pi
 
-            cosA = np.dot(acoef.T, cosray)
-            sinA = np.dot(acoef.T, sinray)
-            cosB = np.dot(bcoef.T, cosray)
-            sinB = np.dot(bcoef.T, sinray)
-
-            wr = 0.5*(cosA - sinB)
-            wi = 0.5*(-sinA - cosB)
-            er = 0.5*(cosA + sinB)
-            ei = 0.5*(sinA - cosB)
-
-            aw = np.sqrt(wr**2 + wi**2)
-            ae = np.sqrt(er**2 + ei**2)
-            pe = np.arctan2(ei, er) * 180/np.pi
-            pw = np.arctan2(wi, wr) * 180/np.pi
-
-            pe = np.mod(-np.arctan2(ei, er) + tpi, tpi) * 180/np.pi
-            pw = np.mod(-np.arctan2(wi, wr) + tpi, tpi) * 180/np.pi
-
-            ampw[kk, nn, :] = aw.T
-            ampe[kk, nn, :] = ae.T
-            phasew[kk, nn, :] = pw.T
-            phasee[kk, nn, :] = pe.T
-
-    ampw = np.reshape(ampw, (kmx, tmx) + dim_sup_id)
-    ampe = np.reshape(ampe, (kmx, tmx) + dim_sup_id)
-    phasew = np.reshape(phasew, (kmx, tmx) + dim_sup_id)
-    phasee = np.reshape(phasee, (kmx, tmx) + dim_sup_id)
-
-    # TODO implement zonal mean: zamp, zphas (standing wave k = 0,
-    # zonally  averaged) stamp, stphs (stationary component ktime = 0)
-
-    # # varIN = reshape(varIN, dims)
-    # # if nargout < 5:
-    # #     # only ampe, ampw, phasee, phasew are requested
-    # #     return
-
-    # #   Now calculate the axisymmetric tides  zamp,zphas
-
-    # zvarIN = np.mean(varIN, axis=0)
-    # zvarIN = np.reshape(zvarIN, (jd, time_id))
-
-    # arg = timex * 2*np.pi
-    # arg = np.reshape(arg, (len(arg), 1))
-    # rnorm = 2/time_id
-
-    # for nn in range(0, tmx):
-    #     cosray = rnorm * np.cos(nn*arg)
-    #     sinray = rnorm * np.sin(nn*arg)
-    #     cosser =  np.dot(zvarIN, cosray)
-    #     sinser =  np.dot(zvarIN, sinray)
-
-    #     zamp[:, nn] = np.sqrt(cosser[:]**2 + sinser[:]**2).T
-    #     zphas[:, nn] = np.mod(-np.arctan2(sinser, cosser)
-    #                           + tpi, tpi).T * 180/np.pi
-
-    # zamp = zamp.T
-    # zphas = zphas.T
-
-    # if len(dims) > 2:
-    #     zamp = np.reshape(zamp, (tmx,) + dim_sup_id)
-    #     zamp = np.reshape(zphas, (tmx,) + dim_sup_id)
-
-    # # if nargout < 7:
-    # #   return
-
-    # sxx = np.mean(varIN, ndims(varIN))
-    # [stamp, stphs] = amp_phase(sxx, lon, kmx)
-
-    # if len(dims) > 2:
-    #     stamp = reshape(stamp, [kmx dims(2:end-1)])
-    #     stphs = reshape(stphs, [kmx dims(2:end-1)])
     return ampe, ampw, phasee, phasew
 
 
