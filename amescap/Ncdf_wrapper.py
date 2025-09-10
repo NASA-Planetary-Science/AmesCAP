@@ -129,7 +129,7 @@ class Ncdf(object):
 
 
     def _def_axis1D(self, variable_name, dim_array, longname_txt="",
-                    units_txt="", cart_txt="",datatype="f4"):
+                    units_txt="", cart_txt="",datatype="f8"):
         self.var_dict[variable_name] = self.f_Ncdf.createVariable(variable_name,
                                                                  datatype,
                                                                  dim_array)
@@ -184,7 +184,7 @@ class Ncdf(object):
 
 
     def log_axis1D(self, variable_name, DATAin, dim_name, longname_txt="",
-                   units_txt="", cart_txt="",datatype="f4"):
+                   units_txt="", cart_txt=""):
         """
         EX::
 
@@ -192,7 +192,7 @@ class Ncdf(object):
         """
         if variable_name not in self.var_dict.keys():
             self._def_axis1D(variable_name, dim_name, longname_txt, units_txt,
-                             cart_txt,datatype)
+                             cart_txt)
         self.var_dict[variable_name].long_name = longname_txt
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name].cartesian_axis = cart_txt
@@ -223,7 +223,7 @@ class Ncdf(object):
 
         if dimension_name not in self.var_dict.keys():
             self._def_axis1D(dimension_name, dimension_name, longname_txt,
-                             units_txt, cart_txt,self.var_dict[dimension_name].dtype)
+                             units_txt, cart_txt)
         self.var_dict[dimension_name].long_name = longname_txt
         self.var_dict[dimension_name].units = units_txt
         self.var_dict[dimension_name].cartesian_axis = cart_txt
