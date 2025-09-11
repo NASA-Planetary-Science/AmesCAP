@@ -141,8 +141,8 @@ parser.add_argument('-t', '--interp_type', type=str, default='pstd',
         f"(zstd), or altitude above ground level (zagl).\nWorks on "
         f"'daily', 'average', and 'diurn' files.\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 01336.atmos_average.nc\n"
         f"> MarsInterp 01336.atmos_average.nc -t pstd\n"
+        f"> MarsInterp 01336.atmos_average.nc -t pstd -v pstd_default\n"
         f"{Nclr}\n\n"
     )
 )
@@ -300,7 +300,7 @@ def main():
     # Load all of the netcdf files
     file_list    = file_list = [f.name for f in args.input_file]
     interp_type  = args.interp_type  # e.g. pstd
-    custom_level = args.vertical_grid # e.g. p44
+    custom_level = args.vertical_grid # e.g. pstd_default
     grid_out     = args.print_grid
 
     # Create a namespace with numpy available
@@ -322,7 +322,7 @@ def main():
         if custom_level:
             lev_in = eval(f"np.array({custom_level})", namespace)
         else:
-            lev_in = np.array(namespace['pstd_default'])
+            lev_in = eval("np.array(pstd_default)", namespace)
 
     # =========================== zstd ===========================
     elif interp_type == "zstd":

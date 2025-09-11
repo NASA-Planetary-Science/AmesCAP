@@ -300,8 +300,6 @@ Open ``~/.amesgcm_profile`` with any text editor to see customizable grid defini
          1.0e-02, 5.0e-03, 3.0e-03, 5.0e-04, 3.0e-04, 1.0e-04, 5.0e-05,
          3.0e-05, 1.0e-05]
 
-    phalf_mb=[50]
-
 Use your custom grid with the ``[-v --vertical_grid]`` argument:
 
 .. code-block:: bash
