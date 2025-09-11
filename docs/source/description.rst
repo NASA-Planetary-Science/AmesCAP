@@ -143,6 +143,7 @@ Data Transformation Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Perform **tidal analysis** on diurnal composite files: ``[-tide --tide_decomp]``
+* Perform **propagating tideal analysis** on diurnal composite files: ``[-prop --prop_tides]``
 * Apply **temporal filters** to time-varying fields:
 
   * Low pass: ``[-lpt --low_pass_temporal]``

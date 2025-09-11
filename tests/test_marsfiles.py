@@ -659,7 +659,26 @@ class TestMarsFiles(BaseTestCase):
             nc.close()
         
         print("Include argument succeeded")
-            
+
+    def test_prop_tides(self):
+        """Test propagating tidal analysis on diurn file"""
+        
+        result = self.run_mars_files(['01336.atmos_diurn.nc', '-prop', '2', '2', '-incl', 'ps', 'temp'])
+
+        # Check for successful execution
+        self.assertEqual(result.returncode, 0, "Propagating tide analysis command failed")
+
+        # Check that output file was created
+        output_file = self.check_file_exists('01336.atmos_diurn_tide_prop_tides.nc')
+
+        # Verify that the output file has amplitude and phase variables
+        self.verify_netcdf_has_variable(output_file, 'ps_ampE')
+        self.verify_netcdf_has_variable(output_file, 'ps_phasE')
+        self.verify_netcdf_has_variable(output_file, 'temp_ampW')
+        self.verify_netcdf_has_variable(output_file, 'temp_phasW')
+        
+        print("Propagating tide analysis succeeded")  
+
     def test_regrid(self):
         """Test regridding operation"""
         result = self.run_mars_files([

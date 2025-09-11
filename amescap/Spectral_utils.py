@@ -39,7 +39,7 @@ except ImportError:
     PYSHTOOLS_AVAILABLE = False
     print(
         f"{Yellow}__________________\n"
-        f"Zonal decomposition relies on the pyshtools library, "
+        f"Tidal decomposition relies on the pyshtools library, "
         f"referenced at:\n\n"
         f"Mark A. Wieczorek and Matthias Meschede (2018). "
         f"SHTools - Tools for working with spherical harmonics,"
@@ -220,9 +220,9 @@ def extract_diurnal_harmonics(kmx, tmx, varIN, tod, lon):
     :type tod: 1D array
     :param varIN: variable for the Fourier analysis, expected to be scaled by zonal mean.
         First axis must be
-        ``tod`` and last axis must be ``lon`` (e.g.,
-        ``varIN[tod, lon]``, ``varIN[tod, lat, lon]``, or
-        ``varIN[tod, lat, lon, lev]``)
+        ``time`` and last axis must be ``lon`` (e.g.,
+        ``varIN[time, tod, lon]``, ``varIN[time, tod, lat, lon]``, or
+        ``varIN[time, tod, lat, lon, lev]``)
     :type varIN: array
     :param kmx: the number of longitudinal wavenumbers to extract
         (max = ``nlon/2``)
@@ -253,24 +253,18 @@ def extract_diurnal_harmonics(kmx, tmx, varIN, tod, lon):
         tod = tod / 24
 
     # Reshape varIN to (...,tod)
-    if varIN.ndim == 2:
-        varIN = np.transpose(varIN, (1, 0))
-        nlon, ntime = varIN.shape
-        nlat = 0.
-        nlev = 0.
     if varIN.ndim == 3:
-        varIN = np.transpose(varIN, (2, 1, 0))
-        nlon, nlat, ntime = varIN.shape
-        nlev = 0.
+        varIN = np.transpose(varIN, (0, 2, 1))
+        ntime, nlon, ntod = varIN.shape
+        output_shape = (ntime, kmx, tmx)
     if varIN.ndim == 4:
-        varIN = np.transpose(varIN, (3, 2, 1, 0))
-        nlon, nlat, nlev, ntime = varIN.shape
-
-
-    
-    # Parameters for diurnal tide (1 cycle per day)
-#    kmx = 3  # number of longitudinal harmonics
-#    tmx = 3  # number of diurnal harmonics
+        varIN = np.transpose(varIN, (0, 3, 2, 1))
+        ntime, nlon, nlat, ntod = varIN.shape
+        output_shape = (ntime, kmx, tmx, nlat)
+    if varIN.ndim == 5:
+        varIN = np.transpose(varIN, (0, 4, 3, 2, 1))
+        ntime, nlon, nlat, nlev, ntod = varIN.shape
+        output_shape = (ntime, kmx, tmx, nlat, nlev)
     
     # Convert longitude to radians
     if np.max(lon) > 100:
@@ -279,45 +273,46 @@ def extract_diurnal_harmonics(kmx, tmx, varIN, tod, lon):
         lon_rad = lon
     
     # Prepare arrays for results
-    ampe = np.zeros((kmx, tmx, nlat, nlev))
-    ampw = np.zeros((kmx, tmx, nlat, nlev))
-    phasee = np.zeros((kmx, tmx, nlat, nlev))
-    phasew = np.zeros((kmx, tmx, nlat, nlev))
+    ampe = np.zeros(output_shape)
+    ampw = np.zeros(output_shape)
+    phasee = np.zeros(output_shape)
+    phasew = np.zeros(output_shape)
 
     # Constants
     tpi = 2 * np.pi
     rnorm = 2 / nlon
-    rnormt = 2 / ntime
+    rnormt = 2 / ntod
 
     # Main calculation loop
-    for k in range(kmx):  # Changed to start from 0
-        cosx = np.cos((k + 1) * lon_rad) * rnorm  # Add 1 to k for the calculation
-        sinx = np.sin((k + 1) * lon_rad) * rnorm
-        
-        acoef = np.tensordot(varIN, cosx, axes=([0], [0]))
-        bcoef = np.tensordot(varIN, sinx, axes=([0], [0]))
+    for t in range(ntime):
+        for k in range(kmx):  # Changed to start from 0
+            cosx = np.cos((k + 1) * lon_rad) * rnorm  # Add 1 to k for the calculation
+            sinx = np.sin((k + 1) * lon_rad) * rnorm
+            
+            acoef = np.tensordot(varIN[t,...], cosx, axes=([0], [0]))
+            bcoef = np.tensordot(varIN[t,...], sinx, axes=([0], [0]))
 
-        for n in range(tmx):  # Changed to start from 0
-            arg = (n + 1) * tpi * tod  # Add 1 to n for the calculation
-            cosray = rnormt * np.cos(arg)
-            sinray = rnormt * np.sin(arg)
+            for n in range(tmx):  # Changed to start from 0
+                arg = (n + 1) * tpi * tod  # Add 1 to n for the calculation
+                cosray = rnormt * np.cos(arg)
+                sinray = rnormt * np.sin(arg)
 
-            cosA = np.dot(acoef, cosray)
-            sinA = np.dot(acoef, sinray)
-            cosB = np.dot(bcoef, cosray)
-            sinB = np.dot(bcoef, sinray)
+                cosA = np.dot(acoef, cosray)
+                sinA = np.dot(acoef, sinray)
+                cosB = np.dot(bcoef, cosray)
+                sinB = np.dot(bcoef, sinray)
 
-            wr = 0.5 * (cosA - sinB)
-            wi = 0.5 * (-sinA - cosB)
-            er = 0.5 * (cosA + sinB)
-            ei = 0.5 * (sinA - cosB)
+                wr = 0.5 * (cosA - sinB)
+                wi = 0.5 * (-sinA - cosB)
+                er = 0.5 * (cosA + sinB)
+                ei = 0.5 * (sinA - cosB)
 
-            ampw[k, n, :] = np.sqrt(wr**2 + wi**2)
-            ampe[k, n, :] = np.sqrt(er**2 + ei**2)
-            phasew[k, n, :] = np.mod(-np.arctan2(wi, wr) + tpi, tpi) * 180 / np.pi
-            phasee[k, n, :] = np.mod(-np.arctan2(ei, er) + tpi, tpi) * 180 / np.pi
+                ampw[t, k, n, ...] = np.sqrt(wr**2 + wi**2)
+                ampe[t, k, n, ...] = np.sqrt(er**2 + ei**2)
+                phasew[t, k, n, ...] = np.mod(-np.arctan2(wi, wr) + tpi, tpi) * 180 / np.pi
+                phasee[t, k, n, ...] = np.mod(-np.arctan2(ei, er) + tpi, tpi) * 180 / np.pi
 
-    return ampe, ampw, phasee, phasew
+    return np.squeeze(ampe), np.squeeze(ampw), np.squeeze(phasee), np.squeeze(phasew)
 
 
 def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
