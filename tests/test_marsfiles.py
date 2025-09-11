@@ -669,7 +669,7 @@ class TestMarsFiles(BaseTestCase):
         self.assertEqual(result.returncode, 0, "Propagating tide analysis command failed")
 
         # Check that output file was created
-        output_file = self.check_file_exists('01336.atmos_diurn_tide_prop_tides.nc')
+        output_file = self.check_file_exists('01336.atmos_diurn_prop_tides.nc')
 
         # Verify that the output file has amplitude and phase variables
         self.verify_netcdf_has_variable(output_file, 'ps_ampE')
