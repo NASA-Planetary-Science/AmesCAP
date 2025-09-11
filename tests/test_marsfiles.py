@@ -673,9 +673,9 @@ class TestMarsFiles(BaseTestCase):
 
         # Verify that the output file has amplitude and phase variables
         self.verify_netcdf_has_variable(output_file, 'ps_ampE')
-        self.verify_netcdf_has_variable(output_file, 'ps_phasE')
+        self.verify_netcdf_has_variable(output_file, 'ps_phaseE')
         self.verify_netcdf_has_variable(output_file, 'temp_ampW')
-        self.verify_netcdf_has_variable(output_file, 'temp_phasW')
+        self.verify_netcdf_has_variable(output_file, 'temp_phaseW')
         
         print("Propagating tide analysis succeeded")  
 
