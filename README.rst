@@ -3,6 +3,8 @@ Community Analysis Pipeline (CAP)
 
 Welcome to the Mars Climate Modeling Center (MCMC) **Community Analysis Pipeline (CAP)**.
 
+For instructions and documentation please see our `online documentation <https://amescap.readthedocs.io>`_.
+
 About
 -----
 **CAP** is a set of Python3 libraries and command-line executables that streamline downloading, processing, and plotting output from the NASA Ames Mars Global Climate Models:

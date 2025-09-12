@@ -2784,6 +2784,14 @@ def main():
 
             if interp_type == "pfull":
                 ak, bk = ak_bk_loader(f)
+            else:
+                print(f"{Red}column integration error: the file "
+                      f"{input_file} does not have the requisite variables "
+                      f"(ak and bk), please use a non-column integrated file "
+                      f"to use this function (e.g., atmos_average.nc and not "
+                      f"of atmos_average_pstd.nc).{Nclr}")
+                f.close()
+                continue
 
             # Use check_variable_exists instead of direct key lookup
             if not check_variable_exists(icol, f.variables.keys()):
