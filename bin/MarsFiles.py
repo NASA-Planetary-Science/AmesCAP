@@ -27,6 +27,7 @@ and optionally accepts:
     * ``[-tide, --tide_decomp]``          Extract diurnal tide and its harmonics
     * ``[-recon, --reconstruct]``         Reconstruct the first N harmonics
     * ``[-norm, --normalize]``            Provide ``-tide`` result in % amplitude
+    * ``[-prop, --prop_tides]``           Extract propagating tide harmonics
     * ``[-regrid, --regrid_XY_to_match]`` Regrid a target file to match a source file
     * ``[-zavg, --zonal_average]``        Zonally average all variables in a file
     * ``[-incl, --include]``              Only include specific variables in a calculation
@@ -532,6 +533,30 @@ parser.add_argument('-regrid', '--regrid_XY_to_match', action=ExtAction,
     )
 )
 
+parser.add_argument('-prop', '--prop_tides', action=ExtAction,
+    ext_content='_prop_tides',
+    parser=parser,
+    nargs=2, type=int,
+    help=(
+        f"{Yellow}This is separate from -tide and does not provide "
+        f"total amplitude and phase. It does not work with the options "
+        f"normalize and reconstruct.\n"
+        f"{Nclr}\n"
+        f"Use fourier decomposition to break down the signal into kmx longitudinal harmonics "
+        f"and tmx diurnal harmonics.\nOnly works with 'diurn' files.\nReturns the normalized phases "
+        f"and amplitudes (not percent) of the propagating tides for the variables.\n"
+        f"kmx = 1 wavenumber 1, kmx = 2 wavenumber 2, etc.\n"
+        f"tmx = 1 diurnal tide, tmx = 2 semi-diurnal, etc.\n"
+        f"Works on 'diurn' files only.\n"
+        f"{Yellow}Generates a new file ending in ``_prop_tides.nc``\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 01336.atmos_diurn.nc -prop 2 2 -incl ps temp\n"
+        f"{Blue}(extracts eastward and westward tide components of ps and\ntemp "
+        f"variables up to semi-dirunal wavenumber 2)"
+        f"{Nclr}\n\n"
+    )
+)
+
 parser.add_argument('-zavg', '--zonal_average', action=ExtAction,
     ext_content='_zavg',
     parser=parser,
@@ -688,7 +713,7 @@ all_args = [args.bin_files, args.concatenate, args.split, args.time_shift,
             args.low_pass_temporal, args.band_pass_temporal,
             args.high_pass_spatial, args.low_pass_spatial,
             args.band_pass_spatial, args.tide_decomp, args.normalize,
-            args.regrid_XY_to_match, args.zonal_average]
+            args.regrid_XY_to_match, args.zonal_average, args.prop_tides]
 
 if (all(v is None or v is False for v in all_args)
     and args.include is not None):
@@ -725,6 +750,7 @@ out_ext = (f"{args.time_shift_ext}"
             f"{args.tide_decomp_ext}"
             f"{args.reconstruct_ext}"
             f"{args.normalize_ext}"
+            f"{args.prop_tides_ext}"
             f"{args.regrid_XY_to_match_ext}"
             f"{args.zonal_average_ext}"
             f"{args.concatenate_ext}"
@@ -2060,6 +2086,144 @@ def main():
                                 )
             fnew.close()
 
+    # ------------------------------------------------------------------
+    #                           Propagating Tides
+    #                           Richard Urata & R. J. Wilson
+    # ------------------------------------------------------------------
+    elif args.prop_tides:
+        from amescap.Spectral_utils import extract_diurnal_harmonics
+        kmx = args.prop_tides[0]
+        tmx = args.prop_tides[1]
+        if len(args.prop_tides) != 2:
+            print(f"{Red}***Error*** prop_tides accepts only two values")
+            exit()
+
+        for file in file_list:
+            # Add path unless full path is provided
+            if not ("/" in file):
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
+            else:
+                input_file_name = file
+
+            base_name = os.path.splitext(input_file_name)[0]
+            output_file_name = os.path.normpath(f"{base_name}{out_ext}.nc")
+
+            fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
+
+            var_list = filter_vars(fdiurn, args.include)
+
+            # Find time_of_day variable name
+            tod_name = find_tod_in_diurn(fdiurn)
+
+            target_tod = fdiurn.variables[tod_name][:]
+            lon = fdiurn.variables["lon"][:]
+            areo = fdiurn.variables["areo"][:]
+            numt = areo.shape[0]
+
+            # Define a netcdf object from the netcdf wrapper module
+            fnew = Ncdf(output_file_name)
+            # Copy all dims but time_of_day from the old file to the
+            # new file
+
+            fnew.copy_all_dims_from_Ncfile(
+                fdiurn, exclude_dim = [tod_name]
+                )
+            # Create new dimension holding the harmonics. We reuse
+            # the time_of_day name to facilitate. Compatible with
+            # other routines, but keep in mind this is the harmonic
+            # number
+            fnew.add_dim_with_content(
+                dimension_name = f"diurnal_harmonics",
+                DATAin = np.arange(1, tmx+1),
+                longname_txt = "diurnal harmonics",
+                units_txt = "Diurnal harmonic number",
+                cart_txt = "tmx"
+            )
+            fnew.add_dim_with_content(
+                dimension_name = f"lon_harmonics",
+                DATAin = np.arange(1, kmx+1),
+                longname_txt = "longitudinal harmonics",
+                units_txt = "Longitudinal harmonic number",
+                cart_txt = "kmx"
+            )
+
+            # Loop over all variables in the file
+            for ivar in var_list:
+                varNcf = fdiurn.variables[ivar]
+                varIN = varNcf[:]
+                longname_txt, units_txt = get_longname_unit(fdiurn, ivar)
+                var_unit = getattr(varNcf, "units", "")
+
+                if (tod_name in varNcf.dimensions and
+                    ivar not in [tod_name, "areo"] and
+                    len(varNcf.shape) > 2):
+                    print(f"{Cyan}Processing: {ivar}{Nclr}")
+
+                    # Normalize the data by diurnal mean
+                    norm = np.mean(varIN, axis = 1)[:, np.newaxis, ...]
+                    varIN = varIN/norm
+                    ampe, ampw, phasee, phasew = extract_diurnal_harmonics(kmx, tmx, varIN, target_tod, lon)
+
+                    new_dim = list(varNcf.dimensions)
+                    index = new_dim.index(tod_name)
+                    new_dim[index:index+1] = [f"lon_harmonics", f"diurnal_harmonics"]
+                    new_dim.remove("lon")
+                    fnew.log_variable(
+                        f"{ivar}_ampE",
+                        ampe,
+                        new_dim,
+                        f"eastward tidal amplitude for {longname_txt}",
+                        var_unit
+                        )
+                    fnew.log_variable(
+                        f"{ivar}_phaseE",
+                        phasee,
+                        new_dim,
+                        f"eastward tidal phase for {longname_txt}",
+                        "hr"
+                        )
+                    fnew.log_variable(
+                        f"{ivar}_ampW",
+                        ampw,
+                        new_dim,
+                        f"westward tidal amplitude for {longname_txt}",
+                        var_unit
+                        )
+                    fnew.log_variable(
+                        f"{ivar}_phaseW",
+                        phasew,
+                        new_dim,
+                        f"westward tidal phase for {longname_txt}",
+                        "hr"
+                        )
+
+                elif  ivar in ["pfull", "lat", "lon", "phalf", "pk",
+                               "bk", "pstd", "zstd", "zagl", "time"]:
+                        print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
+                        fnew.copy_Ncaxis_with_content(fdiurn.variables[ivar])
+                elif  ivar in ["areo"]:
+                        print(f"{Cyan}Processing: {ivar}...{Nclr}")
+                        # Create areo variable reflecting the
+                        # new shape
+                        areo_new = np.zeros((areo.shape[0], kmx, tmx, 1))
+                        # Copy areo
+                        for xx in range(kmx):
+                            for yy in range(tmx):
+                                areo_new[:, xx, yy, :] = areo[:, 0, :]
+                        # Update the dimensions
+                        new_dim = list(varNcf.dimensions)
+                        index = new_dim.index(tod_name)
+                        new_dim[index:index+1] = [f"lon_harmonics", f"diurnal_harmonics"]
+                        # fnew.log_variable(ivar, bareo_new, new_dim,
+                        # longname_txt, units_txt)
+                        fnew.log_variable(
+                            ivar,
+                            areo_new,
+                            new_dim,
+                            longname_txt,
+                            var_unit
+                            )
+            fnew.close()
 
     # ------------------------------------------------------------------
     #                           Regridding Routine
