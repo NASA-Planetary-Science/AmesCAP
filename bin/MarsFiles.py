@@ -992,17 +992,17 @@ def split_files(file_list, split_dim):
     
     if split_dim in ('time', 'areo'):
         time_dim = (np.squeeze(fNcdf.variables['time'][:]))[indices]
-        print(f"time_dim = {time_dim}")
+        print(f"time_dim = {time_dim}\n")
         
         try:
             org_fixed_file = (os.path.normpath(os.path.join(fpath, f"{original_date}.fixed.nc")))
             new_fixed_file = (os.path.normpath(os.path.join(fpath, f"{int(time_dim[0]):05d}.fixed.nc")))
             shutil.copyfile(org_fixed_file, new_fixed_file)
-            print(f"File '{org_fixed_file}' copied to '{new_fixed_file}'.")
+            print(f"File {original_date}.fixed.nc copied to {int(time_dim[0]):05d}.fixed.nc.\n")
         except FileNotFoundError:
-            print(f"{Red}No compatible fixed file for {fname} was found in {fpath}{Nclr}")
+            print(f"{Red}No compatible fixed file for {fname} (e.g., {original_date}.fixed.nc) was found in {fpath}{Nclr}\n")
         except Exception as e:
-            print(f"{Red}An error occurred: {e}")
+            print(f"{Red}An error occurred: {e}\n")
             
     if split_dim == 'time':
         if len(np.atleast_1d(bounds)) < 2:
