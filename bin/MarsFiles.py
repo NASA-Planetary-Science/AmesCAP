@@ -63,6 +63,7 @@ from netCDF4 import Dataset
 import shutil       # For OS-friendly file operations
 import functools    # For function decorators
 import traceback    # For printing stack traces
+import shutil       # For copy/pasting fixed file after -split
 
 # Load amesCAP modules
 from amescap.Ncdf_wrapper import (Ncdf, Fort)
@@ -986,12 +987,23 @@ def split_files(file_list, split_dim):
                 )
             exit()
 
+    fpath = os.path.dirname(input_file_name)
+    fname = os.path.basename(input_file_name)
+    
     if split_dim in ('time', 'areo'):
         time_dim = (np.squeeze(fNcdf.variables['time'][:]))[indices]
         print(f"time_dim = {time_dim}")
-
-    fpath = os.path.dirname(input_file_name)
-    fname = os.path.basename(input_file_name)
+        
+        try:
+            org_fixed_file = (os.path.normpath(os.path.join(fpath, f"{original_date}.fixed.nc")))
+            new_fixed_file = (os.path.normpath(os.path.join(fpath, f"{int(time_dim[0]):05d}.fixed.nc")))
+            shutil.copyfile(org_fixed_file, new_fixed_file)
+            print(f"File '{org_fixed_file}' copied to '{new_fixed_file}'.")
+        except FileNotFoundError:
+            print(f"{Red}No compatible fixed file for {fname} was found in {fpath}{Nclr}")
+        except Exception as e:
+            print(f"{Red}An error occurred: {e}")
+            
     if split_dim == 'time':
         if len(np.atleast_1d(bounds)) < 2:
             base_name = (f"{int(time_dim):05d}{fname[5:-3]}_nearest_sol"
