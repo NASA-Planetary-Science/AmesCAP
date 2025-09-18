@@ -928,7 +928,6 @@ def filter_vars(fNcdf, include_list=None, giveExclude=False):
         else:
             print(f"{Yellow}***Warning*** from filter_vars(): "
                   f"{ivar} not found in file.\n")
-            exit()
 
     baseline_var = []
     for ivar in  var_list:
