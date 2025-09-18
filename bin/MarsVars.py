@@ -311,7 +311,7 @@ master_list = {
     'msf': [
         "Mass stream function",
         '1.e8 kg/s',
-        ['vcomp'],
+        ['vcomp', 'temp'],
         ['pstd', 'zstd', 'zagl']
     ],
     'mx': [
