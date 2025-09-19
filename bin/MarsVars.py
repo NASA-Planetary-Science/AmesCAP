@@ -2275,17 +2275,14 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
             # The next several variables can ONLY be added to
             # pressure interpolated files.
             if var == "msf":
+                lat = f.variables["lat"][:]
+                vcomp = f.variables["vcomp"][:]
                 if f.variables["pstd"][0] < f.variables["pstd"][-1]:
                     print("Reversing pstd array for mass stream function calculation")
                     lev = lev[::-1]
-                    if f_type == "diurn":
-                        vcomp = f.variables["vcomp"][:, :, ::-1, :, :]
-                    else:
-                        vcomp = f.variables["vcomp"][:, ::-1, :, :]
                     
-                vcomp = f.variables["vcomp"][:]
-                lat = f.variables["lat"][:]
                 if f_type == "diurn":
+                    vcomp = vcomp[:, :, ::-1, :, :]
                     # [lev, lat, t, tod, lon]
                     # -> [t, tod, lev, lat, lon]
                     # [0 1 2 3 4] -> [2 3 0 1 4]
@@ -2294,6 +2291,7 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
                                       lev,
                                       type=interp_type).transpose([2, 3, 0, 1, 4])
                 else:
+                    vcomp = vcomp[:, ::-1, :, :]
                     OUT = mass_stream(vcomp.transpose([1, 2, 3, 0]),
                                       lat,
                                       lev,
