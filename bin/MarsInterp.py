@@ -536,10 +536,10 @@ def main():
                             fnew.copy_Ncaxis_with_content(fNcdf.variables[ivar])
                         else:
                             fnew.copy_Ncvar(fNcdf.variables[ivar])
+                            
         with Dataset(newname, 'r') as nc_file:
             # Print the global attributes of the NetCDF file
-            print("Global Attributes:")
-            print(f"  description: {getattr(nc_file, 'description')}")
+            print(f"\nGlobal File Attributes for {newname}:")
             for attr_name in nc_file.ncattrs():
                 print(f"  {attr_name}: {getattr(nc_file, attr_name)}")
             
