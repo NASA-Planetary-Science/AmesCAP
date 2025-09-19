@@ -499,8 +499,6 @@ def main():
 
                 long_name_txt = getattr(fNcdf.variables[ivar], "long_name", "")
                 units_txt = getattr(fNcdf.variables[ivar], "units", "")
-                # long_name_txt=fNcdf.variables[ivar].long_name
-                # units_txt=fNcdf.variables[ivar].units)
 
                 if not do_diurn:
                     if "tile" in ifile:
@@ -538,13 +536,17 @@ def main():
                             fnew.copy_Ncaxis_with_content(fNcdf.variables[ivar])
                         else:
                             fnew.copy_Ncvar(fNcdf.variables[ivar])
-
+        with Dataset(fnew, 'r') as nc_file:
+            # Print the global attributes of the NetCDF file
+            print("Global Attributes:")
+            for attr_name in nc_file.ncattrs():
+                print(f"  {attr_name}: {getattr(nc_file, attr_name)}")
+            
         print("\r ", end="")
         fNcdf.close()
         fnew.close()
         print(f"Completed in {(time.time() - start_time):3f} sec")
-
-
+                
 # ======================================================================
 #                           END OF PROGRAM
 # ======================================================================
