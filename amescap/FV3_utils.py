@@ -1278,7 +1278,7 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
     reverting = False
     if level[0] < level[-1]:
         reverting = True
-        print("Reversing pstd array for mass stream function calculation")
+        print("Reversing pstd array for mass stream function calculation...")
         level = level[::-1]
         v_avg = v_avg[::-1, ...]
                     
@@ -1343,7 +1343,7 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
         MSF = np.ma.array(MSF, mask = mask)
     
     if reverting:
-        print("Reversing pstd dimension of MSF array for compatibility")
+        print("Reversing pstd dimension of MSF array for compatibility...")
         MSF = MSF[::-1, ...]
         
     return MSF.reshape(shape_out)
