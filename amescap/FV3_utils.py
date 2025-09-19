@@ -1276,10 +1276,10 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
               n-1
     """
     reverting = False
-    if lev[0] < lev[-1]:
+    if level[0] < level[-1]:
         reverting = True
         print("Reversing pstd array for mass stream function calculation")
-        lev = lev[::-1]
+        level = level[::-1]
         v_avg = v_avg[::-1, ...]
                     
     g = 3.72 # m/s2
