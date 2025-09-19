@@ -2275,8 +2275,9 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
             # The next several variables can ONLY be added to
             # pressure interpolated files.
             if var == "msf":
-                print(f"  description: {getattr(f, 'description', 'No description found')}")
-                
+                if f.variables["pstd"][0] < f.variables["pstd"][-1]:
+                    print("Reversing pstd array for mass stream function calculation")
+                    
                 vcomp = f.variables["vcomp"][:]
                 lat = f.variables["lat"][:]
                 if f_type == "diurn":
