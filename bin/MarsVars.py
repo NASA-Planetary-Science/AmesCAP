@@ -2277,6 +2277,7 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
             if var == "msf":
                 if f.variables["pstd"][0] < f.variables["pstd"][-1]:
                     print("Reversing pstd array for mass stream function calculation")
+                    lev = lev[::-1]
                     
                 vcomp = f.variables["vcomp"][:]
                 lat = f.variables["lat"][:]
