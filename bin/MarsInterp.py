@@ -539,6 +539,7 @@ def main():
         with Dataset(newname, 'r') as nc_file:
             # Print the global attributes of the NetCDF file
             print("Global Attributes:")
+            print(f"  description: {getattr(nc_file, 'description')}")
             for attr_name in nc_file.ncattrs():
                 print(f"  {attr_name}: {getattr(nc_file, attr_name)}")
             
