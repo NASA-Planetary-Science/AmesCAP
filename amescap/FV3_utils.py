@@ -1219,133 +1219,14 @@ def areo_avg(VAR, areo, Ls_target, Ls_angle, symmetric=True):
     return VAR_avg.reshape(shape_out)
 
 
-# def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
-#                 factor=1.e-8):
-#     """
-#     Compute the mass stream function::
-
-#                                 P
-#                                 ⌠
-#         Ph i= (2 pi a) cos(lat)/g ⎮vz_tavg dp
-#                                 ⌡
-#                                 p_top
-
-#     :param v_avg: zonal wind [m/s] with ``lev`` dimension FIRST and
-#         ``lat`` dimension SECOND (e.g., ``[pstd, lat]``,
-#         ``[pstd, lat, lon]`` or ``[pstd, lat, lon, time]``)
-#     :type  v_avg: ND array
-#     :param lat: latitudes [°]
-#     :type  lat: 1D array
-#     :param level: interpolated layers [Pa] or [m]
-#     :type  level: 1D array
-#     :param type: interpolation type (``pstd``, ``zstd`` or ``zagl``)
-#     :type  type: str
-#     :param psfc: reference surface pressure [Pa]
-#     :type  psfc: float
-#     :param H: reference scale height [m] when pressures are used
-#     :type  H: float
-#     :param factor: normalize the mass stream function by a factor, use
-#         ``factor = 1`` for [kg/s]
-#     :type  factor: int
-#     :return: ``MSF`` the meridional mass stream function (in
-#         ``factor * [kg/s]``)
-
-#     .. note::
-#         This routine allows the time and zonal averages to be
-#         computed before OR after the MSF calculation.
-
-#     .. note::
-#         The expressions for MSF use log(pressure) Z coordinates,
-#         which integrate better numerically.
-
-#         With ``p = p_sfc exp(-Z/H)`` and ``Z = H log(p_sfc/p)``
-#         then ``dp = -p_sfc/H exp(-Z/H) dZ`` and we have::
-
-#                                             Z_top
-#                                             ⌠
-#             Phi = +(2pi a)cos(lat)psfc/(gH) ⎮v_rmv exp(-Z/H)dZ
-#                                             ⌡
-#                                             Z
-#         With ``p = p_sfc exp(-Z/H)``
-
-#         The integral is calculated using trapezoidal rule::
-
-#                 n
-#                 ⌠
-#             .g. ⌡ f(z)dz = (Zn-Zn-1){f(Zn) + f(Zn-1)}/2
-#               n-1
-#     """
-
-#     g = 3.72 # m/s2
-#     a = 3400*1000 # m
-#     nlev = len(level)
-#     shape_out = v_avg.shape
-
-#     # If size is ``[pstd, lat]``, convert to ``[pstd, lat, 1]`` for
-#     # generality
-#     if len(shape_out) == 2:
-#         v_avg = v_avg.reshape(nlev, len(lat), 1)
-
-#     # Flatten array
-#     v_avg = v_avg.reshape((nlev, len(lat), np.prod(v_avg.shape[2:])))
-#     MSF = np.zeros_like(v_avg)
-
-#     # Sum variable, same dimensions as ``v_avg`` but for first dimension
-#     I = np.zeros(v_avg.shape[2:])
-
-#     # Replace NaN with 0 for downward integration
-#     isNan = False
-#     if np.isnan(v_avg).any():
-#         isNan = True
-#         mask = np.isnan(v_avg)
-#         v_avg[mask] = 0.
-
-#     isMasked = False
-#     if np.ma.is_masked(v_avg):
-#         # Missing data may be masked instead of set to NaN
-#         isMasked = True
-#         mask0 = np.ma.getmaskarray(v_avg)
-#         # Make a standalone copy of the mask array
-#         mask = mask0.copy()
-#         # Set masked elements to ``0.`` Note that this effectively
-#         # unmasks the array as ``0.`` is a valid entry.
-#         v_avg[mask0] = 0.
-
-#     if type == "pstd":
-#         Z = H * np.log(psfc/level)
-#     else:
-#         # Copy ``zagl`` or ``zstd`` instead of using a pseudo height
-#         Z = level.copy()
-
-#     for k0 in range(nlev-2, 0, -1):
-#         I[:] = 0.
-#         for k in range(nlev-2, k0, -1):
-#             zn = Z[k]
-#             znp1 = Z[k+1]
-#             fn = v_avg[k, :, ...] * np.exp(-zn/H)
-#             fnp1 = v_avg[k+1, :, ...] * np.exp(-znp1/H)
-#             I = I + 0.5 * (znp1-zn) * (fnp1+fn)
-#         MSF[k0, :, ...] = (2 * np.pi * a * psfc
-#                            / (g*H)
-#                            * np.cos(np.pi/180*lat).reshape([len(lat), 1])
-#                            * I * factor)
-
-#     # Put NaNs back to where they initially were
-#     if isNan:
-#         MSF[mask] = np.nan
-#     if isMasked:
-#         MSF = np.ma.array(MSF, mask = mask)
-#     return MSF.reshape(shape_out)
-
-import numpy as np
-
-def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000., factor=1.e-8):
+def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
+                factor=1.e-8):
     """
     Compute the mass stream function::
 
                                 P
                                 ⌠
-        Phi = (2 pi a) cos(lat)/g ⎮v_z_tavg dp
+        Ph i= (2 pi a) cos(lat)/g ⎮vz_tavg dp
                                 ⌡
                                 p_top
 
@@ -1394,84 +1275,68 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000., factor=1.e-8)
             .g. ⌡ f(z)dz = (Zn-Zn-1){f(Zn) + f(Zn-1)}/2
               n-1
     """
-    # Constants
-    g = 3.72  # m/s2
-    a = 3400 * 1000  # m
-    
-    # Convert inputs to numpy arrays and ensure proper types
-    v_avg = np.asarray(v_avg, dtype=np.float64)
-    lat = np.asarray(lat, dtype=np.float64)
-    level = np.asarray(level, dtype=np.float64)
-    
-    # Check level ordering and reverse if necessary
-    if level[0] < level[-1]:
-        level = level[::-1]
-        v_avg = v_avg[::-1, ...]
-    
+
+    g = 3.72 # m/s2
+    a = 3400*1000 # m
     nlev = len(level)
     shape_out = v_avg.shape
-    
-    # Ensure minimum 3D shape for generality
+
+    # If size is ``[pstd, lat]``, convert to ``[pstd, lat, 1]`` for
+    # generality
     if len(shape_out) == 2:
         v_avg = v_avg.reshape(nlev, len(lat), 1)
-    
-    # Flatten for efficient computation
-    v_avg = v_avg.reshape((nlev, len(lat), -1))
-    
-    # Handle missing data efficiently
-    original_mask = None
-    if np.ma.is_masked(v_avg):
-        original_mask = np.ma.getmaskarray(v_avg).copy()
-        v_avg = np.ma.filled(v_avg, 0.0)
-    elif np.isnan(v_avg).any():
-        original_mask = np.isnan(v_avg)
-        v_avg = np.where(original_mask, 0.0, v_avg)
-    
-    # Pre-compute height coordinate
-    if type == "pstd":
-        Z = H * np.log(psfc / level)
-    else:
-        Z = level.copy()
-    
-    # Pre-compute exponential terms for efficiency
-    exp_terms = np.exp(-Z / H)
-    
-    # Pre-compute constants
-    cos_lat = np.cos(np.deg2rad(lat))
-    msf_constant = (2 * np.pi * a * psfc * factor) / (g * H)
-    
-    # Initialize output
+
+    # Flatten array
+    v_avg = v_avg.reshape((nlev, len(lat), np.prod(v_avg.shape[2:])))
     MSF = np.zeros_like(v_avg)
-    
-    # Vectorized integration using cumulative trapezoidal rule
-    # Pre-compute weighted velocity terms
-    v_weighted = v_avg * exp_terms[:, np.newaxis, np.newaxis]
-    
-    # Compute differences for trapezoidal rule
-    dZ = np.diff(Z)
-    
-    # Vectorized cumulative integration from top down
-    for k0 in range(nlev - 2, 0, -1):
-        # Trapezoidal integration from k0+1 to nlev-1
-        integrand = 0.5 * (v_weighted[k0+1:, :, :] + v_weighted[k0+2:, :, :])
-        dZ_segment = dZ[k0+1:]
-        
-        # Sum over vertical levels
-        integral = np.sum(integrand * dZ_segment[:, np.newaxis, np.newaxis], axis=0)
-        
-        # Apply constants and cosine weighting
-        MSF[k0, :, :] = (msf_constant * 
-                        cos_lat[:, np.newaxis] * 
-                        integral)
-    
-    # Restore original missing data
-    if original_mask is not None:
-        if np.ma.is_masked(v_avg):
-            MSF = np.ma.array(MSF, mask=original_mask)
-        else:
-            MSF = np.where(original_mask, np.nan, MSF)
-    
+
+    # Sum variable, same dimensions as ``v_avg`` but for first dimension
+    I = np.zeros(v_avg.shape[2:])
+
+    # Replace NaN with 0 for downward integration
+    isNan = False
+    if np.isnan(v_avg).any():
+        isNan = True
+        mask = np.isnan(v_avg)
+        v_avg[mask] = 0.
+
+    isMasked = False
+    if np.ma.is_masked(v_avg):
+        # Missing data may be masked instead of set to NaN
+        isMasked = True
+        mask0 = np.ma.getmaskarray(v_avg)
+        # Make a standalone copy of the mask array
+        mask = mask0.copy()
+        # Set masked elements to ``0.`` Note that this effectively
+        # unmasks the array as ``0.`` is a valid entry.
+        v_avg[mask0] = 0.
+
+    if type == "pstd":
+        Z = H * np.log(psfc/level)
+    else:
+        # Copy ``zagl`` or ``zstd`` instead of using a pseudo height
+        Z = level.copy()
+
+    for k0 in range(nlev-2, 0, -1):
+        I[:] = 0.
+        for k in range(nlev-2, k0, -1):
+            zn = Z[k]
+            znp1 = Z[k+1]
+            fn = v_avg[k, :, ...] * np.exp(-zn/H)
+            fnp1 = v_avg[k+1, :, ...] * np.exp(-znp1/H)
+            I = I + 0.5 * (znp1-zn) * (fnp1+fn)
+        MSF[k0, :, ...] = (2 * np.pi * a * psfc
+                           / (g*H)
+                           * np.cos(np.pi/180*lat).reshape([len(lat), 1])
+                           * I * factor)
+
+    # Put NaNs back to where they initially were
+    if isNan:
+        MSF[mask] = np.nan
+    if isMasked:
+        MSF = np.ma.array(MSF, mask = mask)
     return MSF.reshape(shape_out)
+
 
 def vw_from_MSF(msf, lat, lev, ztype="pstd", norm=True, psfc=700, H=8000.):
     """
