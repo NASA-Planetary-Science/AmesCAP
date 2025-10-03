@@ -31,27 +31,39 @@ except Exception as exception:
 #                           DEFINITIONS
 # ======================================================================
 
-# Try to import pyshtools with proper error handling
-try:
-    import pyshtools
-    PYSHTOOLS_AVAILABLE = True
-except ImportError:
-    PYSHTOOLS_AVAILABLE = False
-    print(
-        f"{Yellow}__________________\n"
-        f"Tidal decomposition relies on the pyshtools library, "
-        f"referenced at:\n\n"
-        f"Mark A. Wieczorek and Matthias Meschede (2018). "
-        f"SHTools - Tools for working with spherical harmonics,"
-        f"Geochemistry, Geophysics, Geosystems, 2574-2592, "
-        f"doi:10.1029/2018GC007529\n\nPlease consult pyshtools  "
-        f"documentation at:\n"
-        f" {Cyan}https://pypi.org/project/pyshtools\n"
-        f"{Yellow}And installation instructions for CAP with pyshtools:\n"
-        f" {Cyan}https://amescap.readthedocs.io/en/latest/installation."
-        f"html#_spectral_analysis{Yellow}\n"
-        f"__________________{Nclr}\n\n"
-    )
+def import_pyshtools():
+    """
+    Attempt to import pyshtools and set the global variable
+    PYSHTOOLS_AVAILABLE accordingly.
+    Check if pyshtools is available and return its availability status
+
+    :return: True if pyshtools is available, False otherwise
+    :rtype: bool
+    """
+
+    global PYSHTOOLS_AVAILABLE
+    # Try to import pyshtools with proper error handling
+    try:
+        import pyshtools
+        PYSHTOOLS_AVAILABLE = True
+    except ImportError:
+        PYSHTOOLS_AVAILABLE = False
+        print(
+            f"{Yellow}__________________\n"
+            f"Tidal decomposition relies on the pyshtools library, "
+            f"referenced at:\n\n"
+            f"Mark A. Wieczorek and Matthias Meschede (2018). "
+            f"SHTools - Tools for working with spherical harmonics,"
+            f"Geochemistry, Geophysics, Geosystems, 2574-2592, "
+            f"doi:10.1029/2018GC007529\n\nPlease consult pyshtools  "
+            f"documentation at:\n"
+            f" {Cyan}https://pypi.org/project/pyshtools\n"
+            f"{Yellow}And installation instructions for CAP with pyshtools:\n"
+            f" {Cyan}https://amescap.readthedocs.io/en/latest/installation."
+            f"html#_spectral_analysis{Yellow}\n"
+            f"__________________{Nclr}\n\n"
+        )
+    return PYSHTOOLS_AVAILABLE
 
 
 def diurn_extract(VAR, N, tod, lon):
@@ -74,7 +86,8 @@ def diurn_extract(VAR, N, tod, lon):
         (e.g., size ``[Nh, time, lat, lon]``)
     :rtype: ND arrays
     """
-
+    import_pyshtools()
+    
     dimsIN = VAR.shape
     nsteps = len(tod)
     period = 24
@@ -140,6 +153,7 @@ def diurn_extract(VAR, N, tod, lon):
     # Return the phase and amplitude
     return amp.reshape(dimsOUT), phas.reshape(dimsOUT)
 
+
 def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
     """
     Reconstructs a field wave based on its diurnal harmonics
@@ -162,7 +176,8 @@ def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
         aggregated (i.e., size = ``[tod, time, lat, lon]``)
     :rtype: _type_
     """
-
+    import_pyshtools()
+    
     dimsIN = amp.shape
     N = dimsIN[0]
     dimsSUM = np.append([len(tod)], dimsIN[1:])
@@ -206,6 +221,7 @@ def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
     else:
         # Return harmonics separately
         return varOUT
+
 
 def extract_diurnal_harmonics(kmx, tmx, varIN, tod, lon):
     """
@@ -344,6 +360,7 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
     .. note:: ``Wn=[low, high]`` are expressed as a function of the
         Nyquist frequency
     """
+    import_pyshtools()
 
     # Create the filter
     low_highcut = np.array(low_highcut)
@@ -381,6 +398,7 @@ def zonal_decomposition(VAR):
     .. note:: Output size is (``[...,lat/2, lat/2]``) as lat is the
         smallest dimension. This matches the Nyquist frequency.
     """
+    import_pyshtools()
 
     if not PYSHTOOLS_AVAILABLE:
         raise ImportError(
@@ -440,6 +458,7 @@ def zonal_construct(COEFFS_flat, VAR_shape, btype=None, low_highcut=None):
         print("(kmin,kmax) = ({kmin}, {kmax})
               -> dx min = {L_min} km, dx max = {L_max} km")
     """
+    import_pyshtools()
 
     if not PYSHTOOLS_AVAILABLE:
         raise ImportError(
@@ -472,12 +491,3 @@ def zonal_construct(COEFFS_flat, VAR_shape, btype=None, low_highcut=None):
     return  VAR.reshape(VAR_shape)
 
 
-def init_shtools():
-    """
-    Check if pyshtools is available and return its availability status
-
-    :return: True if pyshtools is available, False otherwise
-    :rtype: bool
-    """
-
-    return PYSHTOOLS_AVAILABLE

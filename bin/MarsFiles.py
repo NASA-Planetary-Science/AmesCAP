@@ -1795,9 +1795,9 @@ def main():
           args.band_pass_spatial):
         from amescap.Spectral_utils import (zonal_decomposition,
                                             zonal_construct,
-                                            init_shtools)
+                                            import_pyshtools)
         # Load the module
-        init_shtools()
+        import_pyshtools()
         if args.high_pass_spatial:
             btype = "high"
             nk = np.asarray(args.high_pass_spatial).astype(int)
