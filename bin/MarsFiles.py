@@ -444,7 +444,7 @@ parser.add_argument('-hps', '--high_pass_spatial', action=ExtAction,
         f"in Sols.\n"
         f"{Yellow}Generates a new file ending in ``_hps.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_daily.nc -hps 10 -add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -hps 10\n"
         f"{Nclr}\n\n"
     )
 )
@@ -464,7 +464,7 @@ parser.add_argument('-lps', '--low_pass_spatial', action=ExtAction,
         f"cutoff frequency in Sols.\n"
         f"{Yellow}Generates a new file ending in ``_lps.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_daily.nc -lps 20 -add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -lps 20\n"
         f"{Nclr}\n\n"
     )
 )
@@ -484,7 +484,7 @@ parser.add_argument('-bps', '--band_pass_spatial', action=ExtAction,
         f"cutoff frequency in Sols.\nData detrended before filtering.\n"
         f"{Yellow}Generates a new file ending in ``_bps.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_daily.nc -bps 10 20 -add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -bps 10 20\n"
         f"{Nclr}\n\n"
     )
 )
@@ -539,21 +539,25 @@ parser.add_argument('-prop', '--prop_tides', action=ExtAction,
     parser=parser,
     nargs=2, type=int,
     help=(
-        f"{Yellow}This is separate from -tide and does not provide "
-        f"total amplitude and phase. It does not work with the options "
-        f"normalize and reconstruct.\n"
+        f"{Yellow}This function is separate distinct from [-tide "
+        f"--tide_decomp] and therefore does not return total amplitude \n"
+        f"and phase nor does it work with [-norm --normalize] or [-recon "
+        f"--reconstruct].\n"
+        f"For 'diurn' files only.\n"
         f"{Nclr}\n"
-        f"Use fourier decomposition to break down the signal into kmx longitudinal harmonics "
-        f"and tmx diurnal harmonics.\nOnly works with 'diurn' files.\nReturns the normalized phases "
-        f"and amplitudes (not percent) of the propagating tides for the variables.\n"
-        f"kmx = 1 wavenumber 1, kmx = 2 wavenumber 2, etc.\n"
-        f"tmx = 1 diurnal tide, tmx = 2 semi-diurnal, etc.\n"
-        f"Works on 'diurn' files only.\n"
-        f"{Yellow}Generates a new file ending in ``_prop_tides.nc``\n"
+        f"Use fourier decomposition to break down a variable into `kmx` "
+        f"longitudinal (spatial) harmonics and `tmx` \n"
+        f"diurnal (time) harmonics. This returns the normalized phases and "
+        f"amplitudes (not percent) of the \n"
+        f"propagating tides for a variable.\n"
+        f"{Yellow}Generates a new file ending in ``_prop_tides.nc``{Nclr}\n"
+        f"`kmx = 1` for wavenumber 1, `kmx = 2` for wavenumber 2, etc.\n"
+        f"`tmx = 1` for diurnal tide, `tmx = 2` for semi-diurnal tide, etc.\n"
         f"{Green}Example:\n"
+        f"> MarsFiles 01336.atmos_diurn.nc -prop kmx tmx -incl ps temp\n"
         f"> MarsFiles 01336.atmos_diurn.nc -prop 2 2 -incl ps temp\n"
-        f"{Blue}(extracts eastward and westward tide components of ps and\ntemp "
-        f"variables up to semi-dirunal wavenumber 2)"
+        f"{Blue}(extracts the eastward and westward tide components of ps and"
+        f"temp up to semi-diurnal wavenumber 2)"
         f"{Nclr}\n\n"
     )
 )
@@ -1795,9 +1799,9 @@ def main():
           args.band_pass_spatial):
         from amescap.Spectral_utils import (zonal_decomposition,
                                             zonal_construct,
-                                            init_shtools)
+                                            import_pyshtools)
         # Load the module
-        init_shtools()
+        import_pyshtools()
         if args.high_pass_spatial:
             btype = "high"
             nk = np.asarray(args.high_pass_spatial).astype(int)
