@@ -45,6 +45,7 @@ def import_pyshtools():
     # Try to import pyshtools with proper error handling
     try:
         import pyshtools
+        global pyshtools
         PYSHTOOLS_AVAILABLE = True
     except ImportError:
         PYSHTOOLS_AVAILABLE = False

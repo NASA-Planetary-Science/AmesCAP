@@ -444,7 +444,7 @@ parser.add_argument('-hps', '--high_pass_spatial', action=ExtAction,
         f"in Sols.\n"
         f"{Yellow}Generates a new file ending in ``_hps.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_daily.nc -hps 10 -add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -hps 10\n"
         f"{Nclr}\n\n"
     )
 )
@@ -464,7 +464,7 @@ parser.add_argument('-lps', '--low_pass_spatial', action=ExtAction,
         f"cutoff frequency in Sols.\n"
         f"{Yellow}Generates a new file ending in ``_lps.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_daily.nc -lps 20 -add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -lps 20\n"
         f"{Nclr}\n\n"
     )
 )
@@ -484,7 +484,7 @@ parser.add_argument('-bps', '--band_pass_spatial', action=ExtAction,
         f"cutoff frequency in Sols.\nData detrended before filtering.\n"
         f"{Yellow}Generates a new file ending in ``_bps.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_daily.nc -bps 10 20 -add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -bps 10 20\n"
         f"{Nclr}\n\n"
     )
 )
