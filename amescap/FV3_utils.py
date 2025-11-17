@@ -1275,7 +1275,13 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
             .g. ⌡ f(z)dz = (Zn-Zn-1){f(Zn) + f(Zn-1)}/2
               n-1
     """
-
+    reverting = False
+    if level[0] < level[-1]:
+        reverting = True
+        print("Reversing pstd array for mass stream function calculation...")
+        level = level[::-1]
+        v_avg = v_avg[::-1, ...]
+                    
     g = 3.72 # m/s2
     a = 3400*1000 # m
     nlev = len(level)
@@ -1335,6 +1341,11 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
         MSF[mask] = np.nan
     if isMasked:
         MSF = np.ma.array(MSF, mask = mask)
+    
+    if reverting:
+        print("Reversing pstd dimension of MSF array for compatibility...")
+        MSF = MSF[::-1, ...]
+        
     return MSF.reshape(shape_out)
 
 
@@ -1916,6 +1927,12 @@ def daily_to_diurn(varIN, time_in):
 
     iperday = int(np.round(1/dt_in))
     vshape_in = varIN.shape
+
+    # Add safety check for integer sols
+    if not(np.mod(vshape_in[0],iperday) == 0):
+        print("Error: File cannot be split evenly into sols")
+        return None
+
     vreshape = np.append([-1, iperday], vshape_in[1:]).astype(int)
     varOUT = varIN.reshape(vreshape)
 

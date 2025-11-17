@@ -31,27 +31,40 @@ except Exception as exception:
 #                           DEFINITIONS
 # ======================================================================
 
-# Try to import pyshtools with proper error handling
-try:
-    import pyshtools
-    PYSHTOOLS_AVAILABLE = True
-except ImportError:
-    PYSHTOOLS_AVAILABLE = False
-    print(
-        f"{Yellow}__________________\n"
-        f"Zonal decomposition relies on the pyshtools library, "
-        f"referenced at:\n\n"
-        f"Mark A. Wieczorek and Matthias Meschede (2018). "
-        f"SHTools - Tools for working with spherical harmonics,"
-        f"Geochemistry, Geophysics, Geosystems, 2574-2592, "
-        f"doi:10.1029/2018GC007529\n\nPlease consult pyshtools  "
-        f"documentation at:\n"
-        f" {Cyan}https://pypi.org/project/pyshtools\n"
-        f"{Yellow}And installation instructions for CAP with pyshtools:\n"
-        f" {Cyan}https://amescap.readthedocs.io/en/latest/installation."
-        f"html#_spectral_analysis{Yellow}\n"
-        f"__________________{Nclr}\n\n"
-    )
+def import_pyshtools():
+    """
+    Attempt to import pyshtools and set the global variable
+    PYSHTOOLS_AVAILABLE accordingly.
+    Check if pyshtools is available and return its availability status
+
+    :return: True if pyshtools is available, False otherwise
+    :rtype: bool
+    """
+
+    global PYSHTOOLS_AVAILABLE
+    # Try to import pyshtools with proper error handling
+    try:
+        import pyshtools
+        global pyshtools
+        PYSHTOOLS_AVAILABLE = True
+    except ImportError:
+        PYSHTOOLS_AVAILABLE = False
+        print(
+            f"{Yellow}__________________\n"
+            f"Tidal decomposition relies on the pyshtools library, "
+            f"referenced at:\n"
+            f"{Cyan}Mark A. Wieczorek and Matthias Meschede (2018). "
+            f"SHTools - Tools for working with spherical harmonics, "
+            f"Geochemistry, Geophysics, Geosystems, 2574-2592, "
+            f"doi:10.1029/2018GC007529\n\n"
+            f"Please consult pyshtools documentation at:\n"
+            f"{Cyan}https://pypi.org/project/pyshtools\n\n"
+            f"{Yellow}And installation instructions for CAP with pyshtools:\n"
+            f"{Cyan}https://amescap.readthedocs.io/en/latest/installation."
+            f"html#_spectral_analysis{Yellow}\n"
+            f"__________________{Nclr}\n\n"
+        )
+    return PYSHTOOLS_AVAILABLE
 
 
 def diurn_extract(VAR, N, tod, lon):
@@ -74,7 +87,8 @@ def diurn_extract(VAR, N, tod, lon):
         (e.g., size ``[Nh, time, lat, lon]``)
     :rtype: ND arrays
     """
-
+    import_pyshtools()
+    
     dimsIN = VAR.shape
     nsteps = len(tod)
     period = 24
@@ -140,6 +154,7 @@ def diurn_extract(VAR, N, tod, lon):
     # Return the phase and amplitude
     return amp.reshape(dimsOUT), phas.reshape(dimsOUT)
 
+
 def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
     """
     Reconstructs a field wave based on its diurnal harmonics
@@ -162,7 +177,8 @@ def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
         aggregated (i.e., size = ``[tod, time, lat, lon]``)
     :rtype: _type_
     """
-
+    import_pyshtools()
+    
     dimsIN = amp.shape
     N = dimsIN[0]
     dimsSUM = np.append([len(tod)], dimsIN[1:])
@@ -207,21 +223,23 @@ def reconstruct_diurn(amp, phas, tod, lon, sumList=[]):
         # Return harmonics separately
         return varOUT
 
-def space_time(lon, timex, varIN, kmx, tmx):
+
+def extract_diurnal_harmonics(kmx, tmx, varIN, tod, lon):
     """
     Obtain west and east propagating waves. This is a Python
         implementation of John Wilson's ``space_time`` routine.
-        Alex Kling 2019.
+        Richard Urata 2025.
 
     :param lon: longitude [°] (0-360)
     :type lon: 1D array
-    :param timex: time [sol] (e.g., 1.5 days sampled every hour is
-        ``[0/24, 1/24, 2/24,.. 1,.. 1.5]``)
-    :type timex: 1D array
-    :param varIN: variable for the Fourier analysis. First axis must be
-        ``lon`` and last axis must be ``time`` (e.g.,
-        ``varIN[lon, time]``, ``varIN[lon, lat, time]``, or
-        ``varIN[lon, lev, lat, time]``)
+    :param tod: time_of_day [hour] (e.g., a 24 hour sol sampled every hour could be
+        ``[0.5, 1.5, 2.5, ..., 23.5]``)
+    :type tod: 1D array
+    :param varIN: variable for the Fourier analysis, expected to be scaled by zonal mean.
+        First axis must be
+        ``time`` and last axis must be ``lon`` (e.g.,
+        ``varIN[time, tod, lon]``, ``varIN[time, tod, lat, lon]``, or
+        ``varIN[time, tod, lat, lon, lev]``)
     :type varIN: array
     :param kmx: the number of longitudinal wavenumbers to extract
         (max = ``nlon/2``)
@@ -236,7 +254,7 @@ def space_time(lon, timex, varIN, kmx, tmx):
 
     .. note::   1. ``ampe``, ``ampw``, ``phasee``, and ``phasew`` have
         dimensions ``[kmx, tmx]`` or ``[kmx, tmx, lat]`` or
-        ``[kmx, tmx, lev, lat]`` etc.\n
+        ``[kmx, tmx, lat, lev]`` etc.\n
         2. The x and y axes may be constructed as follows, which will
         display the eastern and western modes::
 
@@ -247,125 +265,71 @@ def space_time(lon, timex, varIN, kmx, tmx):
             phase = np.concatenate((phasew[:, ::-1], phasee), axis = 1)
     """
 
-    # Get input variable dimensions
-    dims = varIN.shape
-    lon_id = dims[0]
-    time_id = dims[-1]
+    # Ensure time is in days
+    if np.max(tod) > 1:
+        tod = tod / 24
 
-    # Additional dimensions stacked in the middle
-    dim_sup_id = dims[1:-1]
+    # Reshape varIN to (...,tod)
+    if varIN.ndim == 3:
+        varIN = np.transpose(varIN, (0, 2, 1))
+        ntime, nlon, ntod = varIN.shape
+        output_shape = (ntime, kmx, tmx)
+    if varIN.ndim == 4:
+        varIN = np.transpose(varIN, (0, 3, 2, 1))
+        ntime, nlon, nlat, ntod = varIN.shape
+        output_shape = (ntime, kmx, tmx, nlat)
+    if varIN.ndim == 5:
+        varIN = np.transpose(varIN, (0, 4, 3, 2, 1))
+        ntime, nlon, nlat, nlev, ntod = varIN.shape
+        output_shape = (ntime, kmx, tmx, nlat, nlev)
+    
+    # Convert longitude to radians
+    if np.max(lon) > 100:
+        lon_rad = np.deg2rad(lon)
+    else:
+        lon_rad = lon
+    
+    # Prepare arrays for results
+    ampe = np.zeros(output_shape)
+    ampw = np.zeros(output_shape)
+    phasee = np.zeros(output_shape)
+    phasew = np.zeros(output_shape)
 
-    # jd = total number of dimensions in the middle (``varIN > 3D``)
-    jd = int(np.prod(dim_sup_id))
+    # Constants
+    tpi = 2 * np.pi
+    rnorm = 2 / nlon
+    rnormt = 2 / ntod
 
-    # Flatten the middle dimensions, if any
-    varIN = np.reshape(varIN, (lon_id, jd, time_id))
+    # Main calculation loop
+    for t in range(ntime):
+        for k in range(kmx):  # Changed to start from 0
+            cosx = np.cos((k + 1) * lon_rad) * rnorm  # Add 1 to k for the calculation
+            sinx = np.sin((k + 1) * lon_rad) * rnorm
+            
+            acoef = np.tensordot(varIN[t,...], cosx, axes=([0], [0]))
+            bcoef = np.tensordot(varIN[t,...], sinx, axes=([0], [0]))
 
-    # Initialize 4 empty arrays
-    ampw, ampe, phasew, phasee = (
-        [np.zeros((kmx, tmx, jd)) for _x in range(0, 4)]
-        )
+            for n in range(tmx):  # Changed to start from 0
+                arg = (n + 1) * tpi * tod  # Add 1 to n for the calculation
+                cosray = rnormt * np.cos(arg)
+                sinray = rnormt * np.sin(arg)
 
-    #TODO not implemented yet:
-    # zamp, zphas = [np.zeros((jd, tmx)) for _x in range(0, 2)]
+                cosA = np.dot(acoef, cosray)
+                sinA = np.dot(acoef, sinray)
+                cosB = np.dot(bcoef, cosray)
+                sinB = np.dot(bcoef, sinray)
 
-    tpi = 2*np.pi
-    # Normalize longitude array
-    argx = lon * 2*np.pi / 360
-    rnorm = 2. / len(argx)
-    # If timex = [0/24, 1/24, 2/24,.. 1] arg cycles for m [0, 2Pi]
-    arg = timex * 2*np.pi
-    # Nyquist cut off
-    rnormt =  2. / len(arg)
+                wr = 0.5 * (cosA - sinB)
+                wi = 0.5 * (-sinA - cosB)
+                er = 0.5 * (cosA + sinB)
+                ei = 0.5 * (sinA - cosB)
 
-    for kk in range(0, kmx):
-        progress(kk, kmx)
-        cosx = np.cos(kk * argx) * rnorm
-        sinx = np.sin(kk * argx) * rnorm
+                ampw[t, k, n, ...] = np.sqrt(wr**2 + wi**2)
+                ampe[t, k, n, ...] = np.sqrt(er**2 + ei**2)
+                phasew[t, k, n, ...] = np.mod(-np.arctan2(wi, wr) + tpi, tpi) * 180 / np.pi
+                phasee[t, k, n, ...] = np.mod(-np.arctan2(ei, er) + tpi, tpi) * 180 / np.pi
 
-        # Inner product calculates the Fourier coefficients of the
-        # cosine and sine contributions of the spatial variation
-        acoef = np.dot(varIN.T, cosx)
-        bcoef = np.dot(varIN.T, sinx)
-
-        for nn in range(0, tmx):
-            # Get the cosine and sine series expansions of the temporal
-            # variations of the acoef and bcoef spatial terms
-            cosray = rnormt * np.cos(nn * arg)
-            sinray = rnormt * np.sin(nn * arg)
-
-            cosA = np.dot(acoef.T, cosray)
-            sinA = np.dot(acoef.T, sinray)
-            cosB = np.dot(bcoef.T, cosray)
-            sinB = np.dot(bcoef.T, sinray)
-
-            wr = 0.5*(cosA - sinB)
-            wi = 0.5*(-sinA - cosB)
-            er = 0.5*(cosA + sinB)
-            ei = 0.5*(sinA - cosB)
-
-            aw = np.sqrt(wr**2 + wi**2)
-            ae = np.sqrt(er**2 + ei**2)
-            pe = np.arctan2(ei, er) * 180/np.pi
-            pw = np.arctan2(wi, wr) * 180/np.pi
-
-            pe = np.mod(-np.arctan2(ei, er) + tpi, tpi) * 180/np.pi
-            pw = np.mod(-np.arctan2(wi, wr) + tpi, tpi) * 180/np.pi
-
-            ampw[kk, nn, :] = aw.T
-            ampe[kk, nn, :] = ae.T
-            phasew[kk, nn, :] = pw.T
-            phasee[kk, nn, :] = pe.T
-
-    ampw = np.reshape(ampw, (kmx, tmx) + dim_sup_id)
-    ampe = np.reshape(ampe, (kmx, tmx) + dim_sup_id)
-    phasew = np.reshape(phasew, (kmx, tmx) + dim_sup_id)
-    phasee = np.reshape(phasee, (kmx, tmx) + dim_sup_id)
-
-    # TODO implement zonal mean: zamp, zphas (standing wave k = 0,
-    # zonally  averaged) stamp, stphs (stationary component ktime = 0)
-
-    # # varIN = reshape(varIN, dims)
-    # # if nargout < 5:
-    # #     # only ampe, ampw, phasee, phasew are requested
-    # #     return
-
-    # #   Now calculate the axisymmetric tides  zamp,zphas
-
-    # zvarIN = np.mean(varIN, axis=0)
-    # zvarIN = np.reshape(zvarIN, (jd, time_id))
-
-    # arg = timex * 2*np.pi
-    # arg = np.reshape(arg, (len(arg), 1))
-    # rnorm = 2/time_id
-
-    # for nn in range(0, tmx):
-    #     cosray = rnorm * np.cos(nn*arg)
-    #     sinray = rnorm * np.sin(nn*arg)
-    #     cosser =  np.dot(zvarIN, cosray)
-    #     sinser =  np.dot(zvarIN, sinray)
-
-    #     zamp[:, nn] = np.sqrt(cosser[:]**2 + sinser[:]**2).T
-    #     zphas[:, nn] = np.mod(-np.arctan2(sinser, cosser)
-    #                           + tpi, tpi).T * 180/np.pi
-
-    # zamp = zamp.T
-    # zphas = zphas.T
-
-    # if len(dims) > 2:
-    #     zamp = np.reshape(zamp, (tmx,) + dim_sup_id)
-    #     zamp = np.reshape(zphas, (tmx,) + dim_sup_id)
-
-    # # if nargout < 7:
-    # #   return
-
-    # sxx = np.mean(varIN, ndims(varIN))
-    # [stamp, stphs] = amp_phase(sxx, lon, kmx)
-
-    # if len(dims) > 2:
-    #     stamp = reshape(stamp, [kmx dims(2:end-1)])
-    #     stphs = reshape(stphs, [kmx dims(2:end-1)])
-    return ampe, ampw, phasee, phasew
+    return np.squeeze(ampe), np.squeeze(ampw), np.squeeze(phasee), np.squeeze(phasew)
 
 
 def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
@@ -397,6 +361,7 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
     .. note:: ``Wn=[low, high]`` are expressed as a function of the
         Nyquist frequency
     """
+    import_pyshtools()
 
     # Create the filter
     low_highcut = np.array(low_highcut)
@@ -434,6 +399,7 @@ def zonal_decomposition(VAR):
     .. note:: Output size is (``[...,lat/2, lat/2]``) as lat is the
         smallest dimension. This matches the Nyquist frequency.
     """
+    import_pyshtools()
 
     if not PYSHTOOLS_AVAILABLE:
         raise ImportError(
@@ -493,6 +459,7 @@ def zonal_construct(COEFFS_flat, VAR_shape, btype=None, low_highcut=None):
         print("(kmin,kmax) = ({kmin}, {kmax})
               -> dx min = {L_min} km, dx max = {L_max} km")
     """
+    import_pyshtools()
 
     if not PYSHTOOLS_AVAILABLE:
         raise ImportError(
@@ -525,12 +492,3 @@ def zonal_construct(COEFFS_flat, VAR_shape, btype=None, low_highcut=None):
     return  VAR.reshape(VAR_shape)
 
 
-def init_shtools():
-    """
-    Check if pyshtools is available and return its availability status
-
-    :return: True if pyshtools is available, False otherwise
-    :rtype: bool
-    """
-
-    return PYSHTOOLS_AVAILABLE

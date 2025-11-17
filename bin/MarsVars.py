@@ -254,6 +254,18 @@ master_list = {
         ['Vg_sed', 'w'],
         ['pfull', 'pstd', 'zstd', 'zagl']
     ],
+    'dustref_per_pa': [
+        "Dust opacity per Pascal [dustref/delp]",
+        'op/Pa',
+        ['dustref', 'delp'],
+        ['pfull']
+    ],
+    'dustref_per_km': [
+        "Dust opacity per kilometer [dustref/delz]",
+        'op/km',
+        ['dustref', 'delz'],
+        ['pfull']
+    ],
     'wdir': [
         "Wind direction",
         'degree',
@@ -299,7 +311,7 @@ master_list = {
     'msf': [
         "Mass stream function",
         '1.e8 kg/s',
-        ['vcomp'],
+        ['vcomp', 'temp'],
         ['pstd', 'zstd', 'zagl']
     ],
     'mx': [
@@ -1173,6 +1185,59 @@ def compute_w_net(Vg, wvar):
     return w_net
 
 
+
+# =====================================================================
+def compute_dustref_per_pa(dustref, delp):
+    """
+    Computes visible dust opacity per Pascal from dustref and delp. 
+    dustref is visible dust opacity per level (model layer).
+
+    opacity per Pa = opacity per layer / layer thickness in Pa::
+
+        dustref_per_pa = dustref/delp
+
+    [Courtney Batterson, 2025]
+
+    :param dustref: Visible dust opacity [op/model layer]
+    :type  dustref: array [time, lev, lat, lon]
+    :param delp: Layer thickness [Pa]
+    :type  delp: array [time, lev, lat, lon]
+    :return: `dustref_per_pa` Visible dust opacity [op/Pa]
+    :rtype:  array [time, lev, lat, lon]
+    :raises ValueError: If the input dimensions are not compatible
+    :raises TypeError: If the input types are not compatible
+    :raises Exception: If any other error occurs
+    """
+
+    dustref_per_pa = dustref/delp
+    return dustref_per_pa
+
+# =====================================================================
+def compute_dustref_per_z(dustref, delz):
+    """
+    Computes visible dust opacity per kilometer from dustref and delz. 
+    dustref is visible dust opacity per level (model layer).
+
+    opacity per km = opacity per layer / layer thickness in m * 1000::
+
+        dustref_per_z = dustref/delz*1000
+
+    [Courtney Batterson, 2025]
+
+    :param dustref: Visible dust opacity [op/model layer]
+    :type  dustref: array [time, lev, lat, lon]
+    :param delz: Layer thickness [m]
+    :type  delz: array [time, lev, lat, lon]
+    :return: `dustref_per_z` Visible dust opacity [op/km]
+    :rtype:  array [time, lev, lat, lon]
+    :raises ValueError: If the input dimensions are not compatible
+    :raises TypeError: If the input types are not compatible
+    :raises Exception: If any other error occurs
+    """
+
+    dustref_per_z = dustref/delz*1000
+    return dustref_per_z
+
 # =====================================================================
 def compute_theta(p_3D, ps, T, f_type):
     """
@@ -1906,9 +1971,9 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
                       f"file:{Nclr}")
                 for var, actual_var in already_in_file:
                     if var == actual_var:
-                        print(f"{Yellow}  - {var}{Nclr}")
+                        print(f"{Yellow} - {var}{Nclr}")
                     else:
-                        print(f"{Yellow}  - {var} (as '{actual_var}'){Nclr}")
+                        print(f"{Yellow} - {var} (as '{actual_var}'){Nclr}")
             return
 
 
@@ -2101,6 +2166,16 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
                 wvar = f.variables["w"][:]
                 OUT = compute_w_net(Vg, wvar)
 
+            if var == "dustref_per_pa":
+                dustref = f.variables["dustref"][:]
+                delp = f.variables["delp"][:]
+                OUT = compute_dustref_per_pa(dustref, delp)
+            
+            if var == "dustref_per_z":
+                dustref = f.variables["dustref"][:]
+                delz = f.variables["delz"][:]
+                OUT = compute_dustref_per_z(dustref, delz)
+            
             if var == "pfull3D":
                 OUT = p_3D
 
@@ -2709,6 +2784,14 @@ def main():
 
             if interp_type == "pfull":
                 ak, bk = ak_bk_loader(f)
+            else:
+                print(f"{Red}column integration error: the file "
+                      f"{input_file} does not have the requisite variables "
+                      f"(ak and bk), please use a non-column integrated file "
+                      f"to use this function (e.g., atmos_average.nc and not "
+                      f"of atmos_average_pstd.nc).{Nclr}")
+                f.close()
+                continue
 
             # Use check_variable_exists instead of direct key lookup
             if not check_variable_exists(icol, f.variables.keys()):
@@ -2800,7 +2883,8 @@ def main():
                 lname_text = getattr(var_Ncdf, "long_name", "")
                 unit_text = getattr(var_Ncdf, "units", "")
                 cart_text = getattr(var_Ncdf, "cartesian_axis", "")
-
+                datatype=var_Ncdf.dtype
+                
                 if args.rename:
                     name_text = args.rename
                 if args.longname:
@@ -2809,16 +2893,16 @@ def main():
                     unit_text = args.unit
                 if args.multiply:
                     vals *= args.multiply
-
+                
                 if cart_text == "":
                     Log.log_variable(
-                        name_text, vals, dim_out, lname_text, unit_text
+                        name_text, vals, dim_out, lname_text, unit_text, datatype
                         )
                 else:
                     Log.log_axis1D(
-                        name_text, vals, dim_out, lname_text, unit_text, cart_text
+                        name_text, vals, dim_out, lname_text, unit_text, cart_text, datatype
                         )
-
+                
                 # Close files to release handles
                 f_IN.close()
                 Log.close()

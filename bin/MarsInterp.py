@@ -141,8 +141,8 @@ parser.add_argument('-t', '--interp_type', type=str, default='pstd',
         f"(zstd), or altitude above ground level (zagl).\nWorks on "
         f"'daily', 'average', and 'diurn' files.\n"
         f"{Green}Example:\n"
-        f"> MarsInterp 01336.atmos_average.nc\n"
         f"> MarsInterp 01336.atmos_average.nc -t pstd\n"
+        f"> MarsInterp 01336.atmos_average.nc -t pstd -v pstd_default\n"
         f"{Nclr}\n\n"
     )
 )
@@ -300,7 +300,7 @@ def main():
     # Load all of the netcdf files
     file_list    = file_list = [f.name for f in args.input_file]
     interp_type  = args.interp_type  # e.g. pstd
-    custom_level = args.vertical_grid # e.g. p44
+    custom_level = args.vertical_grid # e.g. pstd_default
     grid_out     = args.print_grid
 
     # Create a namespace with numpy available
@@ -322,7 +322,7 @@ def main():
         if custom_level:
             lev_in = eval(f"np.array({custom_level})", namespace)
         else:
-            lev_in = np.array(namespace['pstd_default'])
+            lev_in = eval("np.array(pstd_default)", namespace)
 
     # =========================== zstd ===========================
     elif interp_type == "zstd":
@@ -499,8 +499,6 @@ def main():
 
                 long_name_txt = getattr(fNcdf.variables[ivar], "long_name", "")
                 units_txt = getattr(fNcdf.variables[ivar], "units", "")
-                # long_name_txt=fNcdf.variables[ivar].long_name
-                # units_txt=fNcdf.variables[ivar].units)
 
                 if not do_diurn:
                     if "tile" in ifile:
@@ -538,13 +536,18 @@ def main():
                             fnew.copy_Ncaxis_with_content(fNcdf.variables[ivar])
                         else:
                             fnew.copy_Ncvar(fNcdf.variables[ivar])
-
+                            
+        with Dataset(newname, 'r') as nc_file:
+            # Print the global attributes of the NetCDF file
+            print(f"\nGlobal File Attributes for {newname}:")
+            for attr_name in nc_file.ncattrs():
+                print(f"  {attr_name}: {getattr(nc_file, attr_name)}")
+            
         print("\r ", end="")
         fNcdf.close()
         fnew.close()
         print(f"Completed in {(time.time() - start_time):3f} sec")
-
-
+                
 # ======================================================================
 #                           END OF PROGRAM
 # ======================================================================

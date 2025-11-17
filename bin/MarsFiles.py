@@ -27,6 +27,7 @@ and optionally accepts:
     * ``[-tide, --tide_decomp]``          Extract diurnal tide and its harmonics
     * ``[-recon, --reconstruct]``         Reconstruct the first N harmonics
     * ``[-norm, --normalize]``            Provide ``-tide`` result in % amplitude
+    * ``[-prop, --prop_tides]``           Extract propagating tide harmonics
     * ``[-regrid, --regrid_XY_to_match]`` Regrid a target file to match a source file
     * ``[-zavg, --zonal_average]``        Zonally average all variables in a file
     * ``[-incl, --include]``              Only include specific variables in a calculation
@@ -62,6 +63,7 @@ from netCDF4 import Dataset
 import shutil       # For OS-friendly file operations
 import functools    # For function decorators
 import traceback    # For printing stack traces
+import shutil       # For copy/pasting fixed file after -split
 
 # Load amesCAP modules
 from amescap.Ncdf_wrapper import (Ncdf, Fort)
@@ -283,7 +285,10 @@ parser.add_argument('-bin', '--bin_files', nargs='+', type=str,
     )
 )
 
-parser.add_argument('-c', '--concatenate', action='store_true',
+parser.add_argument('-c', '--concatenate', action=ExtAction,
+    ext_content='_concatenated',
+    parser=parser,
+    nargs=0,
     help=(
         f"Combine sequential files of the same type into one file.\n"
         f"Works on 'daily', 'diurn', and 'average' files.\n"
@@ -291,13 +296,6 @@ parser.add_argument('-c', '--concatenate', action='store_true',
         f"> ls\n"
         f"00334.atmos_average.nc 00668.atmos_average.nc\n"
         f"> MarsFiles *.atmos_average.nc -c\n"
-        f"{Blue}Overwrites 00334.atmos_average.nc with concatenated "
-        f"files:{Green}\n"
-        f"> ls\n"
-        f"   00334.atmos_average.nc\n"
-        f"{Yellow}To preserve original files, use [-ext --extension]:"
-        f"{Green}\n"
-        f"> MarsFiles *.atmos_average.nc -c -ext _concatenated\n"
         f"{Blue}Produces 00334.atmos_average_concatenated.nc and "
         f"preserves all other files:{Green}\n"
         f"> ls\n"
@@ -446,7 +444,7 @@ parser.add_argument('-hps', '--high_pass_spatial', action=ExtAction,
         f"in Sols.\n"
         f"{Yellow}Generates a new file ending in ``_hps.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_daily.nc -hps 10 -add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -hps 10\n"
         f"{Nclr}\n\n"
     )
 )
@@ -466,7 +464,7 @@ parser.add_argument('-lps', '--low_pass_spatial', action=ExtAction,
         f"cutoff frequency in Sols.\n"
         f"{Yellow}Generates a new file ending in ``_lps.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_daily.nc -lps 20 -add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -lps 20\n"
         f"{Nclr}\n\n"
     )
 )
@@ -486,7 +484,7 @@ parser.add_argument('-bps', '--band_pass_spatial', action=ExtAction,
         f"cutoff frequency in Sols.\nData detrended before filtering.\n"
         f"{Yellow}Generates a new file ending in ``_bps.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_daily.nc -bps 10 20 -add_trend\n"
+        f"> MarsFiles 01336.atmos_daily.nc -bps 10 20\n"
         f"{Nclr}\n\n"
     )
 )
@@ -532,6 +530,34 @@ parser.add_argument('-regrid', '--regrid_XY_to_match', action=ExtAction,
         f"{Yellow}NOTE: regridded file name does not matter:\n"
         f"{Green}> MarsFiles sim1/01336.atmos_average_pstd.nc -regrid "
         f"sim2/01336.atmos_average_pstd.nc"
+        f"{Nclr}\n\n"
+    )
+)
+
+parser.add_argument('-prop', '--prop_tides', action=ExtAction,
+    ext_content='_prop_tides',
+    parser=parser,
+    nargs=2, type=int,
+    help=(
+        f"{Yellow}This function is separate distinct from [-tide "
+        f"--tide_decomp] and therefore does not return total amplitude \n"
+        f"and phase nor does it work with [-norm --normalize] or [-recon "
+        f"--reconstruct].\n"
+        f"For 'diurn' files only.\n"
+        f"{Nclr}\n"
+        f"Use fourier decomposition to break down a variable into `kmx` "
+        f"longitudinal (spatial) harmonics and `tmx` \n"
+        f"diurnal (time) harmonics. This returns the normalized phases and "
+        f"amplitudes (not percent) of the \n"
+        f"propagating tides for a variable.\n"
+        f"{Yellow}Generates a new file ending in ``_prop_tides.nc``{Nclr}\n"
+        f"`kmx = 1` for wavenumber 1, `kmx = 2` for wavenumber 2, etc.\n"
+        f"`tmx = 1` for diurnal tide, `tmx = 2` for semi-diurnal tide, etc.\n"
+        f"{Green}Example:\n"
+        f"> MarsFiles 01336.atmos_diurn.nc -prop kmx tmx -incl ps temp\n"
+        f"> MarsFiles 01336.atmos_diurn.nc -prop 2 2 -incl ps temp\n"
+        f"{Blue}(extracts the eastward and westward tide components of ps and"
+        f"temp up to semi-diurnal wavenumber 2)"
         f"{Nclr}\n\n"
     )
 )
@@ -692,7 +718,7 @@ all_args = [args.bin_files, args.concatenate, args.split, args.time_shift,
             args.low_pass_temporal, args.band_pass_temporal,
             args.high_pass_spatial, args.low_pass_spatial,
             args.band_pass_spatial, args.tide_decomp, args.normalize,
-            args.regrid_XY_to_match, args.zonal_average]
+            args.regrid_XY_to_match, args.zonal_average, args.prop_tides]
 
 if (all(v is None or v is False for v in all_args)
     and args.include is not None):
@@ -729,8 +755,10 @@ out_ext = (f"{args.time_shift_ext}"
             f"{args.tide_decomp_ext}"
             f"{args.reconstruct_ext}"
             f"{args.normalize_ext}"
+            f"{args.prop_tides_ext}"
             f"{args.regrid_XY_to_match_ext}"
             f"{args.zonal_average_ext}"
+            f"{args.concatenate_ext}"
             )
 
 if args.extension:
@@ -810,15 +838,10 @@ def concatenate_files(file_list, full_file_list):
         ls_end = file_list[-1][18:21]
         merged_file = f"LegacyGCM_Ls{ls_ini}_Ls{ls_end}.nc"
     else:
-        merged_file = full_file_list[0]
+        output_file_name = full_file_list[0]
+        merged_file = (f"{output_file_name[:-3]}{out_ext}.nc")
 
-    # Delete the files that were concatenated.
     # Apply the new name created above
-    for file in full_file_list:
-        try:
-            os.remove(file)
-        except OSError as e:
-            print(f"Warning: Could not remove {file}: {e}")
 
     try:
         shutil.move(tmp_file, merged_file)
@@ -968,32 +991,43 @@ def split_files(file_list, split_dim):
                 )
             exit()
 
-    if split_dim in ('time', 'areo'):
-        time_dim = (np.squeeze(fNcdf.variables['time'][:]))[indices]
-        print(f"time_dim = {time_dim}")
-
     fpath = os.path.dirname(input_file_name)
     fname = os.path.basename(input_file_name)
+    
+    if split_dim in ('time', 'areo'):
+        time_dim = (np.squeeze(fNcdf.variables['time'][:]))[indices]
+        print(f"time_dim = {time_dim}\n")
+        
+        try:
+            org_fixed_file = (os.path.normpath(os.path.join(fpath, f"{original_date}.fixed.nc")))
+            new_fixed_file = (os.path.normpath(os.path.join(fpath, f"{int(time_dim[0]):05d}.fixed.nc")))
+            shutil.copyfile(org_fixed_file, new_fixed_file)
+            print(f"File {original_date}.fixed.nc copied to {int(time_dim[0]):05d}.fixed.nc.\n")
+        except FileNotFoundError:
+            print(f"{Red}No compatible fixed file for {fname} (e.g., {original_date}.fixed.nc) was found in {fpath}{Nclr}\n")
+        except Exception as e:
+            print(f"{Red}An error occurred: {e}\n")
+            
     if split_dim == 'time':
         if len(np.atleast_1d(bounds)) < 2:
             base_name = (f"{int(time_dim):05d}{fname[5:-3]}_nearest_sol"
-                         f"{int(bounds_in[0]):03d}.nc")
+                         f"{int(bounds_in[0]):03d}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             base_name = (f"{int(time_dim[0]):05d}{fname[5:-3]}_sol"
-                         f"{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}.nc")
+                         f"{int(bounds_in[0]):05d}_{int(bounds_in[1]):05d}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
     elif split_dim =='areo':
         if len(np.atleast_1d(bounds)) < 2:
             base_name = (f"{int(time_dim):05d}{fname[5:-3]}_nearest_Ls"
-                         f"{int(bounds_in[0]):03d}.nc")
+                         f"{int(bounds_in[0]):03d}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             base_name = (f"{int(time_dim[0]):05d}{fname[5:-3]}_"
-                         f"Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}.nc")
+                         f"Ls{int(bounds_in[0]):03d}_{int(bounds_in[1]):03d}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         split_dim = 'time'
@@ -1005,14 +1039,14 @@ def split_files(file_list, split_dim):
             ]
         if len(np.atleast_1d(bounds)) < 2:
             base_name = (f"{original_date}{fname[5:-3]}_nearest_{split_dim}_"
-                         f"{new_bounds[0]}.nc")
+                         f"{new_bounds[0]}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
             base_name = (f"{original_date}{fname[5:-3]}_{split_dim}_"
-                         f"{new_bounds[0]}_{new_bounds[1]}.nc")
+                         f"{new_bounds[0]}_{new_bounds[1]}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
     elif split_dim == interp_type:
@@ -1035,25 +1069,25 @@ def split_files(file_list, split_dim):
             print(f"{Yellow}bounds = {bounds[0]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]}")
             base_name = (f"{original_date}{fname[5:-3]}_nearest_"
-                         f"{new_bounds[0]}.nc")
+                         f"{new_bounds[0]}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             print(f"{Yellow}bounds = {bounds[0]} {bounds[1]}")
             print(f"{Yellow}new_bounds = {new_bounds[0]} {new_bounds[1]}")
             base_name = (f"{original_date}{fname[5:-3]}_{new_bounds[0]}_"
-                         f"{new_bounds[1]}.nc")
+                         f"{new_bounds[1]}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
     else:
         if len(np.atleast_1d(bounds)) < 2:
             base_name = (f"{original_date}{fname[5:-3]}_nearest_{split_dim}_"
-                         f"{int(bounds[0]):03d}.nc")
+                         f"{int(bounds[0]):03d}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
         else:
             base_name = (f"{original_date}{fname[5:-3]}_{split_dim}_"
-                         f"{int(bounds[0]):03d}_{int(bounds[1]):03d}.nc")
+                         f"{int(bounds[0]):03d}_{int(bounds[1]):03d}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
 
@@ -1765,9 +1799,9 @@ def main():
           args.band_pass_spatial):
         from amescap.Spectral_utils import (zonal_decomposition,
                                             zonal_construct,
-                                            init_shtools)
+                                            import_pyshtools)
         # Load the module
-        init_shtools()
+        import_pyshtools()
         if args.high_pass_spatial:
             btype = "high"
             nk = np.asarray(args.high_pass_spatial).astype(int)
@@ -2068,6 +2102,144 @@ def main():
                                 )
             fnew.close()
 
+    # ------------------------------------------------------------------
+    #                           Propagating Tides
+    #                           Richard Urata & R. J. Wilson
+    # ------------------------------------------------------------------
+    elif args.prop_tides:
+        from amescap.Spectral_utils import extract_diurnal_harmonics
+        kmx = args.prop_tides[0]
+        tmx = args.prop_tides[1]
+        if len(args.prop_tides) != 2:
+            print(f"{Red}***Error*** prop_tides accepts only two values")
+            exit()
+
+        for file in file_list:
+            # Add path unless full path is provided
+            if not ("/" in file):
+                input_file_name = os.path.normpath(os.path.join(data_dir, file))
+            else:
+                input_file_name = file
+
+            base_name = os.path.splitext(input_file_name)[0]
+            output_file_name = os.path.normpath(f"{base_name}{out_ext}.nc")
+
+            fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
+
+            var_list = filter_vars(fdiurn, args.include)
+
+            # Find time_of_day variable name
+            tod_name = find_tod_in_diurn(fdiurn)
+
+            target_tod = fdiurn.variables[tod_name][:]
+            lon = fdiurn.variables["lon"][:]
+            areo = fdiurn.variables["areo"][:]
+            numt = areo.shape[0]
+
+            # Define a netcdf object from the netcdf wrapper module
+            fnew = Ncdf(output_file_name)
+            # Copy all dims but time_of_day from the old file to the
+            # new file
+
+            fnew.copy_all_dims_from_Ncfile(
+                fdiurn, exclude_dim = [tod_name]
+                )
+            # Create new dimension holding the harmonics. We reuse
+            # the time_of_day name to facilitate. Compatible with
+            # other routines, but keep in mind this is the harmonic
+            # number
+            fnew.add_dim_with_content(
+                dimension_name = f"diurnal_harmonics",
+                DATAin = np.arange(1, tmx+1),
+                longname_txt = "diurnal harmonics",
+                units_txt = "Diurnal harmonic number",
+                cart_txt = "tmx"
+            )
+            fnew.add_dim_with_content(
+                dimension_name = f"lon_harmonics",
+                DATAin = np.arange(1, kmx+1),
+                longname_txt = "longitudinal harmonics",
+                units_txt = "Longitudinal harmonic number",
+                cart_txt = "kmx"
+            )
+
+            # Loop over all variables in the file
+            for ivar in var_list:
+                varNcf = fdiurn.variables[ivar]
+                varIN = varNcf[:]
+                longname_txt, units_txt = get_longname_unit(fdiurn, ivar)
+                var_unit = getattr(varNcf, "units", "")
+
+                if (tod_name in varNcf.dimensions and
+                    ivar not in [tod_name, "areo"] and
+                    len(varNcf.shape) > 2):
+                    print(f"{Cyan}Processing: {ivar}{Nclr}")
+
+                    # Normalize the data by diurnal mean
+                    norm = np.mean(varIN, axis = 1)[:, np.newaxis, ...]
+                    varIN = varIN/norm
+                    ampe, ampw, phasee, phasew = extract_diurnal_harmonics(kmx, tmx, varIN, target_tod, lon)
+
+                    new_dim = list(varNcf.dimensions)
+                    index = new_dim.index(tod_name)
+                    new_dim[index:index+1] = [f"lon_harmonics", f"diurnal_harmonics"]
+                    new_dim.remove("lon")
+                    fnew.log_variable(
+                        f"{ivar}_ampE",
+                        ampe,
+                        new_dim,
+                        f"eastward tidal amplitude for {longname_txt}",
+                        var_unit
+                        )
+                    fnew.log_variable(
+                        f"{ivar}_phaseE",
+                        phasee,
+                        new_dim,
+                        f"eastward tidal phase for {longname_txt}",
+                        "hr"
+                        )
+                    fnew.log_variable(
+                        f"{ivar}_ampW",
+                        ampw,
+                        new_dim,
+                        f"westward tidal amplitude for {longname_txt}",
+                        var_unit
+                        )
+                    fnew.log_variable(
+                        f"{ivar}_phaseW",
+                        phasew,
+                        new_dim,
+                        f"westward tidal phase for {longname_txt}",
+                        "hr"
+                        )
+
+                elif  ivar in ["pfull", "lat", "lon", "phalf", "pk",
+                               "bk", "pstd", "zstd", "zagl", "time"]:
+                        print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
+                        fnew.copy_Ncaxis_with_content(fdiurn.variables[ivar])
+                elif  ivar in ["areo"]:
+                        print(f"{Cyan}Processing: {ivar}...{Nclr}")
+                        # Create areo variable reflecting the
+                        # new shape
+                        areo_new = np.zeros((areo.shape[0], kmx, tmx, 1))
+                        # Copy areo
+                        for xx in range(kmx):
+                            for yy in range(tmx):
+                                areo_new[:, xx, yy, :] = areo[:, 0, :]
+                        # Update the dimensions
+                        new_dim = list(varNcf.dimensions)
+                        index = new_dim.index(tod_name)
+                        new_dim[index:index+1] = [f"lon_harmonics", f"diurnal_harmonics"]
+                        # fnew.log_variable(ivar, bareo_new, new_dim,
+                        # longname_txt, units_txt)
+                        fnew.log_variable(
+                            ivar,
+                            areo_new,
+                            new_dim,
+                            longname_txt,
+                            var_unit
+                            )
+            fnew.close()
 
     # ------------------------------------------------------------------
     #                           Regridding Routine

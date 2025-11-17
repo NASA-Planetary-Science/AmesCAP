@@ -119,9 +119,9 @@ class Ncdf(object):
 
     # Private Definitions
     def _def_variable(self, variable_name, dim_array, longname_txt="",
-                      units_txt=""):
+                      units_txt="",datatype="f4"):
         self.var_dict[variable_name] = self.f_Ncdf.createVariable(variable_name,
-                                                                  "f4",
+                                                                  datatype,
                                                                   dim_array)
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name].long_name = longname_txt
@@ -129,9 +129,9 @@ class Ncdf(object):
 
 
     def _def_axis1D(self, variable_name, dim_array, longname_txt="",
-                    units_txt="", cart_txt=""):
+                    units_txt="", cart_txt="",datatype="f8"):
         self.var_dict[variable_name] = self.f_Ncdf.createVariable(variable_name,
-                                                                 "f4",
+                                                                 datatype,
                                                                  dim_array)
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name].long_name = longname_txt
@@ -167,17 +167,16 @@ class Ncdf(object):
 
 
     def log_variable(self, variable_name, DATAin, dim_array, longname_txt="",
-                     units_txt=""):
+                     units_txt="",datatype="f4"):
         """
         EX::
 
             Log.log_variable("sfcT", sfcT, ("time", "Nx"),
                              "soil temperature", "K")
         """
-
         if variable_name not in self.var_dict.keys():
             self._def_variable(variable_name, dim_array, longname_txt,
-                               units_txt)
+                               units_txt,datatype)
         self.var_dict[variable_name].long_name = longname_txt
         self.var_dict[variable_name].dim_name = str(dim_array)
         self.var_dict[variable_name].units = units_txt
@@ -263,7 +262,7 @@ class Ncdf(object):
             longname_txt = getattr(Ncvar, "long_name", Ncvar._name)
             units_txt = getattr(Ncvar, "units", "")
             self._def_variable(Ncvar._name, Ncvar.dimensions, longname_txt,
-                               units_txt)
+                               units_txt,Ncvar.dtype)
             if np.any(swap_array):
                 self.log_variable(Ncvar._name, swap_array[:], Ncvar.dimensions,
                                   longname_txt, units_txt)

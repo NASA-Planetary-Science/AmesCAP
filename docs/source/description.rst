@@ -143,6 +143,7 @@ Data Transformation Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Perform **tidal analysis** on diurnal composite files: ``[-tide --tide_decomp]``
+* Perform **propagating tideal analysis** on diurnal composite files: ``[-prop --prop_tides]``
 * Apply **temporal filters** to time-varying fields:
 
   * Low pass: ``[-lpt --low_pass_temporal]``
@@ -298,8 +299,6 @@ Open ``~/.amesgcm_profile`` with any text editor to see customizable grid defini
          1.0e+00, 5.0e-01, 3.0e-01, 2.0e-01, 1.0e-01, 5.0e-02, 3.0e-02,
          1.0e-02, 5.0e-03, 3.0e-03, 5.0e-04, 3.0e-04, 1.0e-04, 5.0e-05,
          3.0e-05, 1.0e-05]
-
-    phalf_mb=[50]
 
 Use your custom grid with the ``[-v --vertical_grid]`` argument:
 
