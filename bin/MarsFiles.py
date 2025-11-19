@@ -2173,6 +2173,7 @@ def main():
 
                     # Normalize the data by diurnal mean
                     norm = np.mean(varIN, axis = 1)[:, np.newaxis, ...]
+                    varIN = varIN.filled(0)
                     varIN = varIN/norm
                     ampe, ampw, phasee, phasew = extract_diurnal_harmonics(kmx, tmx, varIN, target_tod, lon)
 
