@@ -2126,7 +2126,7 @@ def main():
 
             fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
 
-            var_list = filter_vars(fdiurn, args.include)
+            var_list = filter_vars(fdiurn, args.include + " ps")
 
             # Find time_of_day variable name
             tod_name = find_tod_in_diurn(fdiurn)
@@ -2215,7 +2215,7 @@ def main():
                         "hr"
                         )
 
-                elif  ivar in ["pfull", "lat", "lon", "phalf", "pk", "ps",
+                elif  ivar in ["pfull", "lat", "lon", "phalf", "pk", 
                                "bk", "pstd", "zstd", "zagl", "time"]:
                         print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
                         fnew.copy_Ncaxis_with_content(fdiurn.variables[ivar])
