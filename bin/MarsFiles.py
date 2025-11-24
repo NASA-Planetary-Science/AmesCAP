@@ -499,16 +499,16 @@ parser.add_argument('-tide', '--tide_decomp', action=ExtAction,
         f"Capabilities' in the installation instructions at \n"
         f"https://amescap.readthedocs.io/en/latest/installation.html"
         f"{Nclr}\n"
-        f"Use fourier decomposition to break down the signal into N "
-        f"harmonics.\nOnly works with 'diurn' files.\nReturns the phase "
-        f"and amplitude of the variable.\n"
+        f"Use fourier decomposition to break down a variable into N "
+        f"harmonics to isolate the diurnal (N=1), semi-diurnal (N=2), etc. phase and "
+        f"amplitude of a surface or 3D field.\nOnly works with 'diurn' files.\nReturns the phase"
+        f"and amplitude in separate variables.\n"
         f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
         f"Works on 'diurn' files only.\n"
         f"{Yellow}Generates a new file ending in ``_tide_decomp.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_diurn.nc -tide 2 -incl ps temp\n"
-        f"{Blue}(extracts semi-diurnal tide component of ps and\ntemp "
-        f"variables; 2 harmonics)"
+        f"> MarsFiles 01336.atmos_diurn.nc -tide 2 -incl ps\n"
+        f"{Blue}(extracts semi-diurnal tide component of ps; 2 harmonics)"
         f"{Nclr}\n\n"
     )
 )
@@ -598,8 +598,8 @@ parser.add_argument('-norm', '--normalize', action=ExtAction,
     parser=parser,
     nargs=0,
     help=(
-        f"For use with ``-tide``: Returns the result in percent "
-        f"amplitude.\n"
+        f"For use with ``-tide``: Returns the amplitude as a % daily mean "
+        f"rather than an absolute value.\n"
         f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
         f"Works on 'diurn' files only.\n"
         f"{Yellow}Generates a new file ending in ``_norm.nc``\n"
