@@ -279,9 +279,9 @@ def extract_diurnal_harmonics(kmx, tmx, varIN, tod, lon):
         ntime, nlon, nlat, ntod = varIN.shape
         output_shape = (ntime, kmx, tmx, nlat)
     if varIN.ndim == 5:
-        varIN = np.transpose(varIN, (0, 4, 3, 2, 1))
-        ntime, nlon, nlat, nlev, ntod = varIN.shape
-        output_shape = (ntime, kmx, tmx, nlat, nlev)
+        varIN = np.transpose(varIN, (0, 4, 2, 3, 1))
+        ntime, nlon, nlev, nlat, ntod = varIN.shape
+        output_shape = (ntime, kmx, tmx, nlev, nlat)
     
     # Convert longitude to radians
     if np.max(lon) > 100:
