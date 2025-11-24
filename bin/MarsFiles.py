@@ -26,7 +26,7 @@ and optionally accepts:
     * ``[-bps, --band_pass_spatial]``     Spatial filter: band-pass
     * ``[-tide, --tide_decomp]``          Extract diurnal tide and its harmonics
     * ``[-recon, --reconstruct]``         Reconstruct the first N harmonics
-    * ``[-norm, --normalize]``            Provide ``-tide`` result in % amplitude
+    * ``[-norm, --normalize]``            Provide ``-tide`` result in percent amplitude
     * ``[-prop, --prop_tides]``           Extract propagating tide harmonics
     * ``[-regrid, --regrid_XY_to_match]`` Regrid a target file to match a source file
     * ``[-zavg, --zonal_average]``        Zonally average all variables in a file
@@ -598,7 +598,7 @@ parser.add_argument('-norm', '--normalize', action=ExtAction,
     parser=parser,
     nargs=0,
     help=(
-        f"For use with ``-tide``: Returns the amplitude as a % daily mean "
+        f"For use with ``-tide``: Returns the amplitude as a percent daily mean "
         f"rather than an absolute value.\n"
         f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
         f"Works on 'diurn' files only.\n"
