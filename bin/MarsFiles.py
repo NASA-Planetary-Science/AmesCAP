@@ -2126,7 +2126,7 @@ def main():
 
             fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
 
-            var_list = filter_vars(fdiurn, args.include + " ps")
+            var_list = filter_vars(fdiurn, args.include + "[ ps]")
 
             # Find time_of_day variable name
             tod_name = find_tod_in_diurn(fdiurn)
@@ -2134,7 +2134,6 @@ def main():
             target_tod = fdiurn.variables[tod_name][:]
             lon = fdiurn.variables["lon"][:]
             areo = fdiurn.variables["areo"][:]
-            ps = fdiurn.variables["ps"][:,:,:,:]
             numt = areo.shape[0]
 
             # Define a netcdf object from the netcdf wrapper module
