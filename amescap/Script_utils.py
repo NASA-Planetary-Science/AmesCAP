@@ -929,11 +929,6 @@ def filter_vars(fNcdf, include_list=None, giveExclude=False):
             print(f"{Yellow}***Warning*** from filter_vars(): "
                   f"{ivar} not found in file.\n")
 
-    if "ps" not in input_list_filtered:
-        # Always include surface pressure
-        if "ps" in var_list:
-            input_list_filtered.append("ps")
-            
     baseline_var = []
     for ivar in  var_list:
         # Compute baseline variables, i.e. all dimensions, axis etc...

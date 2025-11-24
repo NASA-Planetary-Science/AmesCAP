@@ -2134,6 +2134,7 @@ def main():
             target_tod = fdiurn.variables[tod_name][:]
             lon = fdiurn.variables["lon"][:]
             areo = fdiurn.variables["areo"][:]
+            ps = fdiurn.variables["ps"][:,:,:,:]
             numt = areo.shape[0]
 
             # Define a netcdf object from the netcdf wrapper module
@@ -2214,10 +2215,11 @@ def main():
                         "hr"
                         )
 
-                elif  ivar in ["pfull", "lat", "lon", "phalf", "pk",
+                elif  ivar in ["pfull", "lat", "lon", "phalf", "pk", "ps",
                                "bk", "pstd", "zstd", "zagl", "time"]:
                         print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
                         fnew.copy_Ncaxis_with_content(fdiurn.variables[ivar])
+                        
                 elif  ivar in ["areo"]:
                         print(f"{Cyan}Processing: {ivar}...{Nclr}")
                         # Create areo variable reflecting the
