@@ -249,6 +249,12 @@ class Ncdf(object):
         cart_txt = getattr(Ncdim_var, "cartesian_axis", "")
         self.add_dim_with_content(Ncdim_var._name, Ncdim_var[:], longname_txt,
                                   units_txt, cart_txt)
+        
+        # Copy any additional attributes from the original variable
+        for attr_name in Ncdim_var.ncattrs():
+            if attr_name not in ['long_name', 'units', 'cartesian_axis']:
+                setattr(self.var_dict[Ncdim_var._name], attr_name, 
+                        getattr(Ncdim_var, attr_name))
 
 
     def copy_Ncvar(self, Ncvar, swap_array=None):
