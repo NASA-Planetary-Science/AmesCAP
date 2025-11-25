@@ -125,7 +125,6 @@ class Ncdf(object):
                                                                   dim_array)
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name].long_name = longname_txt
-        self.var_dict[variable_name].dim_name = str(dim_array)
 
 
     def _def_axis1D(self, variable_name, dim_array, longname_txt="",
@@ -178,7 +177,6 @@ class Ncdf(object):
             self._def_variable(variable_name, dim_array, longname_txt,
                                units_txt,datatype)
         self.var_dict[variable_name].long_name = longname_txt
-        self.var_dict[variable_name].dim_name = str(dim_array)
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name][:] = DATAin
 
@@ -229,12 +227,9 @@ class Ncdf(object):
         self.var_dict[dimension_name].cartesian_axis = cart_txt
         self.var_dict[dimension_name][:] = DATAin
         
-        if dimension_name == 'pfull':
+        # Add standard attributes for vertical pressure coordinates
+        if dimension_name in ['pfull', 'phalf']:
             self.var_dict[dimension_name].positive = "down"
-        
-        # Remove dim_name if present (it shouldn't be there)
-        if 'dim_name' in self.var_dict[dimension_name].attrs:
-            del self.var_dict[dimension_name].attrs['dim_name']
 
     # .. note:: The attribute ``name``  was replaced by ``_name`` for
     # compatibility with MFDataset:
@@ -270,15 +265,20 @@ class Ncdf(object):
             units_txt = getattr(Ncvar, "units", "")
             self._def_variable(Ncvar._name, Ncvar.dimensions, longname_txt,
                                units_txt,Ncvar.dtype)
+            
+            # Copy ALL attributes from the original variable
+            for attr_name in Ncvar.ncattrs():
+                setattr(self.var_dict[Ncvar._name], attr_name, 
+                        getattr(Ncvar, attr_name))
+            
+            # Set the data
             if np.any(swap_array):
-                self.log_variable(Ncvar._name, swap_array[:], Ncvar.dimensions,
-                                  longname_txt, units_txt)
+                self.var_dict[Ncvar._name][:] = swap_array[:]
             else:
-                self.log_variable(Ncvar._name, Ncvar[:], Ncvar.dimensions,
-                                  longname_txt, units_txt)
+                self.var_dict[Ncvar._name][:] = Ncvar[:]
         else:
             print(f"***Warning***, '{Ncvar._name}' is already defined, "
-                  f"skipping it")
+                f"skipping it")
 
 
     def copy_all_dims_from_Ncfile(self, Ncfile_in, exclude_dim=[],
