@@ -119,19 +119,21 @@ class Ncdf(object):
 
     # Private Definitions
     def _def_variable(self, variable_name, dim_array, longname_txt="",
-                      units_txt="",datatype="f4"):
+                      units_txt="",datatype="f4", fill_value=None):
         self.var_dict[variable_name] = self.f_Ncdf.createVariable(variable_name,
                                                                   datatype,
-                                                                  dim_array)
+                                                                  dim_array,
+                                                                  fill_value=fill_value)
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name].long_name = longname_txt
 
 
     def _def_axis1D(self, variable_name, dim_array, longname_txt="",
-                    units_txt="", cart_txt="",datatype="f8"):
+                    units_txt="", cart_txt="",datatype="f8", fill_value=None):
         self.var_dict[variable_name] = self.f_Ncdf.createVariable(variable_name,
                                                                  datatype,
-                                                                 dim_array)
+                                                                 dim_array,
+                                                                 fill_value=fill_value)
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name].long_name = longname_txt
         self.var_dict[variable_name].cartesian_axis = cart_txt
@@ -247,12 +249,30 @@ class Ncdf(object):
         longname_txt = getattr(Ncdim_var, "long_name", Ncdim_var._name)
         units_txt = getattr(Ncdim_var, "units", "")
         cart_txt = getattr(Ncdim_var, "cartesian_axis", "")
-        self.add_dim_with_content(Ncdim_var._name, Ncdim_var[:], longname_txt,
-                                  units_txt, cart_txt)
         
-        # Copy any additional attributes from the original variable
+        # Get _FillValue if it exists
+        fill_value = getattr(Ncdim_var, "_FillValue", None)
+
+        # Add dimension with content
+        if Ncdim_var._name not in self.dim_dict.keys():
+            self.add_dimension(Ncdim_var._name, len(Ncdim_var))
+        
+        if Ncdim_var._name not in self.var_dict.keys():
+            self._def_axis1D(Ncdim_var._name, Ncdim_var._name, longname_txt,
+                            units_txt, cart_txt, fill_value=fill_value)
+        
+        self.var_dict[Ncdim_var._name].long_name = longname_txt
+        self.var_dict[Ncdim_var._name].units = units_txt
+        self.var_dict[Ncdim_var._name].cartesian_axis = cart_txt
+        self.var_dict[Ncdim_var._name][:] = Ncdim_var[:]
+
+        # Add standard attributes for vertical pressure coordinates
+        if Ncdim_var._name in ['pfull', 'phalf', 'plev', 'level']:
+            self.var_dict[Ncdim_var._name].positive = "down"
+        
+        # Copy any additional attributes (except _FillValue and the ones we already set)
         for attr_name in Ncdim_var.ncattrs():
-            if attr_name not in ['long_name', 'units', 'cartesian_axis']:
+            if attr_name not in ['long_name', 'units', 'cartesian_axis', '_FillValue', 'positive']:
                 setattr(self.var_dict[Ncdim_var._name], attr_name, 
                         getattr(Ncdim_var, attr_name))
 
@@ -269,13 +289,18 @@ class Ncdf(object):
             dim_array = Ncvar.dimensions
             longname_txt = getattr(Ncvar, "long_name", Ncvar._name)
             units_txt = getattr(Ncvar, "units", "")
-            self._def_variable(Ncvar._name, Ncvar.dimensions, longname_txt,
-                               units_txt,Ncvar.dtype)
             
-            # Copy ALL attributes from the original variable
+            # Get _FillValue if it exists (must be set at creation time)
+            fill_value = getattr(Ncvar, "_FillValue", None)
+            
+            self._def_variable(Ncvar._name, Ncvar.dimensions, longname_txt,
+                            units_txt, Ncvar.dtype, fill_value=fill_value)
+            
+            # Copy ALL OTHER attributes (except _FillValue which was already set)
             for attr_name in Ncvar.ncattrs():
-                setattr(self.var_dict[Ncvar._name], attr_name, 
-                        getattr(Ncvar, attr_name))
+                if attr_name != "_FillValue":
+                    setattr(self.var_dict[Ncvar._name], attr_name, 
+                            getattr(Ncvar, attr_name))
             
             # Set the data
             if np.any(swap_array):
