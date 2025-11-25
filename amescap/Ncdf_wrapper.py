@@ -228,6 +228,13 @@ class Ncdf(object):
         self.var_dict[dimension_name].units = units_txt
         self.var_dict[dimension_name].cartesian_axis = cart_txt
         self.var_dict[dimension_name][:] = DATAin
+        
+        if dimension_name == 'pfull':
+            self.var_dict[dimension_name].positive = "down"
+        
+        # Remove dim_name if present (it shouldn't be there)
+        if 'dim_name' in self.var_dict[dimension_name].attrs:
+            del self.var_dict[dimension_name].attrs['dim_name']
 
     # .. note:: The attribute ``name``  was replaced by ``_name`` for
     # compatibility with MFDataset:
