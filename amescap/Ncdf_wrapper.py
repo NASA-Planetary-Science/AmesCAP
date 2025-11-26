@@ -302,16 +302,55 @@ class Ncdf(object):
                     setattr(self.var_dict[Ncvar._name], attr_name, 
                             getattr(Ncvar, attr_name))
             
-            # Set the data
+            # Set the data - use chunked copying for memory efficiency
             if swap_array is not None:
-                self.var_dict[Ncvar._name][:] = swap_array[:]
+                self.var_dict[Ncvar._name][:] = swap_array
             else:
-                self.var_dict[Ncvar._name][:] = Ncvar[:]
+                # For large variables, copy in chunks along the first dimension
+                self._copy_data_chunked(Ncvar, self.var_dict[Ncvar._name])
         else:
             print(f"***Warning***, '{Ncvar._name}' is already defined, "
                 f"skipping it")
 
-
+    def _copy_data_chunked(self, src_var, dst_var, chunk_size=100):
+        """
+        Copy data from source to destination variable in chunks to avoid
+        memory issues with large files.
+        
+        :param src_var: source netCDF variable
+        :param dst_var: destination netCDF variable
+        :param chunk_size: number of records to copy at once along first dimension
+        """
+        shape = src_var.shape
+        
+        if len(shape) == 0:
+            # Scalar variable
+            dst_var[:] = src_var[:]
+        elif len(shape) == 1:
+            # 1D variable - copy in chunks
+            for i in range(0, shape[0], chunk_size):
+                end_i = min(i + chunk_size, shape[0])
+                dst_var[i:end_i] = src_var[i:end_i]
+        elif len(shape) == 2:
+            # 2D variable - copy in chunks along first dimension
+            for i in range(0, shape[0], chunk_size):
+                end_i = min(i + chunk_size, shape[0])
+                dst_var[i:end_i, :] = src_var[i:end_i, :]
+        elif len(shape) == 3:
+            # 3D variable - copy in chunks along first dimension
+            for i in range(0, shape[0], chunk_size):
+                end_i = min(i + chunk_size, shape[0])
+                dst_var[i:end_i, :, :] = src_var[i:end_i, :, :]
+        elif len(shape) == 4:
+            # 4D variable - copy in chunks along first dimension
+            for i in range(0, shape[0], chunk_size):
+                end_i = min(i + chunk_size, shape[0])
+                dst_var[i:end_i, :, :, :] = src_var[i:end_i, :, :, :]
+        else:
+            # For higher dimensions, fall back to full copy
+            # (or extend the logic above)
+            dst_var[:] = src_var[:]
+        
     def copy_all_dims_from_Ncfile(self, Ncfile_in, exclude_dim=[],
                                   time_unlimited=True):
         """
