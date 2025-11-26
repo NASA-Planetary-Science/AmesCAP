@@ -312,7 +312,7 @@ class Ncdf(object):
             print(f"***Warning***, '{Ncvar._name}' is already defined, "
                 f"skipping it")
 
-    def _copy_data_chunked(self, src_var, dst_var, chunk_size=100):
+    def _copy_data_chunked(self, src_var, dst_var, chunk_size=50):
         """
         Copy data from source to destination variable in chunks to avoid
         memory issues with large files.
@@ -353,6 +353,7 @@ class Ncdf(object):
                 dst_var[i:end_i, :, :, :, :] = src_var[i:end_i, :, :, :, :]
         else:
             # For higher dimensions (there shouldn't be any), fall back to full copy
+            print("***Warning***, variable has more than 5 dimensions, copying all at once")
             dst_var[:] = src_var[:]
         
     def copy_all_dims_from_Ncfile(self, Ncfile_in, exclude_dim=[],
