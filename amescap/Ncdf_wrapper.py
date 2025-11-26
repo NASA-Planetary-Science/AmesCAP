@@ -346,9 +346,13 @@ class Ncdf(object):
             for i in range(0, shape[0], chunk_size):
                 end_i = min(i + chunk_size, shape[0])
                 dst_var[i:end_i, :, :, :] = src_var[i:end_i, :, :, :]
+        elif len(shape) == 5:
+            # 4D variable - copy in chunks along first dimension
+            for i in range(0, shape[0], chunk_size):
+                end_i = min(i + chunk_size, shape[0])
+                dst_var[i:end_i, :, :, :, :] = src_var[i:end_i, :, :, :, :]
         else:
-            # For higher dimensions, fall back to full copy
-            # (or extend the logic above)
+            # For higher dimensions (there shouldn't be any), fall back to full copy
             dst_var[:] = src_var[:]
         
     def copy_all_dims_from_Ncfile(self, Ncfile_in, exclude_dim=[],
