@@ -303,7 +303,7 @@ class Ncdf(object):
                             getattr(Ncvar, attr_name))
             
             # Set the data
-            if np.any(swap_array):
+            if swap_array is not None:
                 self.var_dict[Ncvar._name][:] = swap_array[:]
             else:
                 self.var_dict[Ncvar._name][:] = Ncvar[:]
