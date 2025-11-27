@@ -264,7 +264,9 @@ class Ncdf(object):
         self.var_dict[Ncdim_var._name].long_name = longname_txt
         self.var_dict[Ncdim_var._name].units = units_txt
         self.var_dict[Ncdim_var._name].cartesian_axis = cart_txt
-        self.var_dict[Ncdim_var._name][:] = Ncdim_var[:]
+        
+        # Use chunked copying instead of loading all at once
+        self._copy_data_chunked(Ncdim_var, self.var_dict[Ncdim_var._name])
 
         # Add standard attributes for vertical pressure coordinates
         if Ncdim_var._name in ['pfull', 'phalf', 'plev', 'level']:
