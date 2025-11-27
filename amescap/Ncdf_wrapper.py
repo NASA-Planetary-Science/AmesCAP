@@ -324,6 +324,7 @@ class Ncdf(object):
         :param chunk_size: number of records to copy at once along first dimension
         """
         shape = src_var.shape
+        print(f"Copying variable '{src_var._name}' of shape {shape} in chunks...")
         
         if len(shape) == 0:
             # Scalar variable
