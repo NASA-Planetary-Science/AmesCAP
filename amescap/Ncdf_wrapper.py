@@ -314,7 +314,7 @@ class Ncdf(object):
             print(f"***Warning***, '{Ncvar._name}' is already defined, "
                 f"skipping it")
 
-    def _copy_data_chunked(self, src_var, dst_var, chunk_size=50):
+    def _copy_data_chunked(self, src_var, dst_var, chunk_size=100):
         """
         Copy data from source to destination variable in chunks to avoid
         memory issues with large files.
@@ -349,7 +349,7 @@ class Ncdf(object):
                 end_i = min(i + chunk_size, shape[0])
                 dst_var[i:end_i, :, :, :] = src_var[i:end_i, :, :, :]
         elif len(shape) == 5:
-            # 4D variable - copy in chunks along first dimension
+            print("5D variable - copy in chunks along first dimension")
             for i in range(0, shape[0], chunk_size):
                 end_i = min(i + chunk_size, shape[0])
                 dst_var[i:end_i, :, :, :, :] = src_var[i:end_i, :, :, :, :]
