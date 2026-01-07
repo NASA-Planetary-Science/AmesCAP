@@ -203,7 +203,7 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                 if print_stat:
                     Min = np.nanmin(var)
                     Mean = np.nanmean(var)
-                    print(f"{lat}")
+                    print(f"{lat.shape}, {var.shape}")
                     weight = area_weights_deg(var.shape, LAT[:, 0])
                     Wmean = np.mean(var*weight)
                     Max = np.nanmax(var)
