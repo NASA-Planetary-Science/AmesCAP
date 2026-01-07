@@ -192,20 +192,16 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
 
                 varname = f"f.variables['{cmd_txt}']{slice}"
                 latname = f"f.variables['lat']{slice}"
-                lonname = f"f.variables['lon']{slice}"
                 f = Dataset(fileNcdf.name, "r")
                 var = eval(varname)
                 lat = eval(latname)
-                lon = eval(lonname)
 
-                LON, LAT = np.meshgrid(lon, lat)
 
                 if print_stat:
                     Min = np.nanmin(var)
                     Mean = np.nanmean(var)
-                    print(f"{lat.shape}, {var.shape}")
-                    weight = area_weights_deg(var.shape, LAT[:, 0])
-                    Wmean = np.mean(var*weight)
+                    weight = area_weights_deg(var.shape, lat)
+                    Wmean = np.average(var, weights=weight, axis=-2)
                     Max = np.nanmax(var)
                     print(f"{Cyan}{varfull:>26s}|{Min:>15g}|{Mean:>15g}|"
                           f"{Max:>15g}|{'':>26s}|{'':>15g}|{Wmean:>15g}|"
