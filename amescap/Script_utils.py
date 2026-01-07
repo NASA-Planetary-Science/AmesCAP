@@ -27,6 +27,8 @@ from netCDF4 import Dataset, MFDataset
 import re
 from matplotlib.colors import ListedColormap, hex2color
 
+from amescap.FV3_utils import area_weights_deg
+
 # ======================================================================
 #                           DEFINITIONS
 # ======================================================================
@@ -183,23 +185,28 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
             try:
                 slice = "[:]"
                 if "[" in varfull:
-                    varname, slice = varfull.strip().split("[")
+                    cmd_txt, slice = varfull.strip().split("[")
                     slice = f"[{slice}"
                 else:
-                    varname = varfull.strip()
+                    cmd_txt = varfull.strip()
 
-                cmd_txt = f"f.variables['{varname}']{slice}"
+                varname = f"f.variables['{cmd_txt}']{slice}"
+                latname = f"f.variables['lat']{slice}"
                 f = Dataset(fileNcdf.name, "r")
-                var = eval(cmd_txt)
+                var = eval(varname)
+                lat = eval(latname)
 
                 if print_stat:
                     Min = np.nanmin(var)
                     Mean = np.nanmean(var)
+                    weight = area_weights_deg(var.shape, lat)
+                    Wmean = np.mean(var*weight)
                     Max = np.nanmax(var)
                     print(f"{Cyan}{varfull:>26s}|{Min:>15g}|{Mean:>15g}|"
-                          f"{Max:>15g}|{Nclr}")
+                          f"{Max:>15g}|{'':>26s}|{'':>15g}|{Wmean:>15g}|"
+                          f"{'':>15g}|{Nclr}")
 
-                    if varname == "areo":
+                    if cmd_txt == "areo":
                         # If variable is areo then print modulo
                         print(f"{Cyan}{varfull:>17s}(mod 360)|"
                               f"({(np.nanmin(var%360)):>13g})|"
@@ -207,7 +214,7 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                               f"({(np.nanmax(var%360)):>13g})|{Nclr}")
 
                 else:
-                    if varname != "areo":
+                    if cmd_txt != "areo":
                         print(f"{Cyan}{varfull}= {Nclr}")
                         print(f"{Cyan}{var}{Nclr}")
                     else:
