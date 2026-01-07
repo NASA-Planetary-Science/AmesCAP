@@ -191,21 +191,23 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                     cmd_txt = varfull.strip()
 
                 varname = f"f.variables['{cmd_txt}']{slice}"
-                latname = f"f.variables['lat']{slice}"
                 f = Dataset(fileNcdf.name, "r")
                 var = eval(varname)
-                lat = eval(latname)
+                
+                # Get the full latitude array (not sliced)
+                lat = f.variables['lat'][:]
 
 
                 if print_stat:
                     Min = np.nanmin(var)
                     Mean = np.nanmean(var)
                     weight = area_weights_deg(var.shape, lat)
-                    Wmean = np.average(var, weights=weight, axis=-2)
+                    Wmean = np.nanmean(var * weight)
                     Max = np.nanmax(var)
                     print(f"{Cyan}{varfull:>26s}|{Min:>15g}|{Mean:>15g}|"
-                          f"{Max:>15g}|{'':>26s}|{'':>15g}|{Wmean:>15g}|"
-                          f"{'':>15g}|{Nclr}")
+                          f"{Max:>15g}|{Nclr}")
+                    print(f"{Cyan}{'Area-weighted mean':>26s}|{'':>15s}|{Wmean:>15g}|"
+                          f"{'':>15s}|{Nclr}")
 
                     if cmd_txt == "areo":
                         # If variable is areo then print modulo

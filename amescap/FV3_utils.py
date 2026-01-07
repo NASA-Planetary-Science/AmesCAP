@@ -988,12 +988,90 @@ def sfc_area_deg(lon1, lon2, lat1, lat2, R=3390000.):
             * np.abs(np.sin(lat1) - np.sin(lat2)))
 
 
+
+
+
+
+
+def sfc_area_deg(lon1, lon2, lat1, lat2, R=3390000.):
+    """
+    Return the surface between two sets of latitudes/longitudes::
+
+        S = int[R^2 dlon cos(lat) dlat]     _____lat2
+                                            \    \
+                                             \____\lat1
+                                             lon1    lon2
+    :param lon1: longitude from set 1 [°]
+    :type  lon1: float
+    :param lon2: longitude from set 2 [°]
+    :type  lon2: float
+    :param lat1: latitude from set 1 [°]
+    :type  lat1: float
+    :param lat2: longitude from set 2 [°]
+    :type  lat2: float
+    :param R: planetary radius [m]
+    :type  R: int
+
+    .. note::
+    qLon and Lat define the corners of the area not the grid cell center.
+    """
+
+    lat1 *= np.pi/180
+    lat2 *= np.pi/180
+    lon1 *= np.pi/180
+    lon2 *= np.pi/180
+    return ((R**2)
+            * np.abs(lon1 - lon2)
+            * np.abs(np.sin(lat1) - np.sin(lat2)))
+
+
+
+def area_meridional_cells_deg(lat_c, dlon, dlat, normalize=False, R=3390000.):
+    """
+    Return area of invidual cells for a meridional band of thickness
+    ``dlon`` where ``S = int[R^2 dlon cos(lat) dlat]`` with
+    ``sin(a)-sin(b) = 2 cos((a+b)/2)sin((a+b)/2)``
+    so ``S = 2 R^2 dlon 2cos(lat)sin(dlat/2)``::
+
+            _________lat + dlat/2
+            \    lat \               ^
+            \lon +   \              | dlat
+            \________\lat - dlat/2 v
+        lon - dlon/2   lon + dlon/2
+                <------>
+                dlon
+
+    :param lat_c: latitude of cell center [°]
+    :type  lat_c: float
+    :param dlon: cell angular width [°]
+    :type  dlon: float
+    :param dlat: cell angular height [°]
+    :type  dlat: float
+    :param R: planetary radius [m]
+    :type  R: float
+    :param normalize: if True, the sum of the output elements = 1
+    :type  normalize: bool
+    :return: ``S`` areas of the cells, same size as ``lat_c`` in [m2]
+        or normalized by the total area
+    """
+
+    # Initialize
+    area_tot = 1.
+    # Compute total area in a longitude band extending from
+    # ``lat[0] - dlat/2`` to ``lat_c[-1] + dlat/2``
+    if normalize:
+        area_tot = sfc_area_deg(-dlon/2, dlon/2, (lat_c[0] - dlat/2),
+                                (lat_c[-1] + dlat/2), R)
+    # Now convert to radians
+    lat_c = lat_c*np.pi/180
+    dlon *= np.pi/180
+    dlat *= np.pi/180
+    return (2. * R**2 * dlon * np.cos(lat_c) * np.sin(dlat/2.) / area_tot)
+
+
 def area_weights_deg(var_shape, lat_c, axis = -2):
     """
-    Returns weights scaled so that np.mean(var*W) gives an area-weighted 
-    average. This works because grid cells near the poles have smaller 
-    areas than those at the equator, so they should contribute less to 
-    a global average.
+    Return weights for averaging the variable.
 
     Expected dimensions are:
 
@@ -1008,11 +1086,12 @@ def area_weights_deg(var_shape, lat_c, axis = -2):
     may be truncated on either end (e.g., ``lat = [-20 ..., 0... 50]``)
     but must be continuous.
 
-    :param var_shape: the shape/dimensions of your data array
+    :param var_shape: variable shape
     :type  var_shape: tuple
-    :param lat_c: latitude cell centers in degrees [°]
+    :param lat_c: latitude of cell centers [°]
     :type  lat_c: float
-    :param axis: which dimension contains latitude, default: 2nd-to-last
+    :param axis: position of the latitude axis for 2D and higher
+        dimensional arrays. The default is the SECOND TO LAST dimension
     :type  axis: int
     :return: ``W`` weights for the variable ready for standard
         averaging as ``np.mean(var*W)`` [condensed form] or
@@ -1042,84 +1121,172 @@ def area_weights_deg(var_shape, lat_c, axis = -2):
         ``np.average(var, weights=W, axis = X)`` to average over a
         specific axis.
     """
-    # Check if either the lat array or var shape is essentially
-    # scalar (single value)
-    # np.atleast_1d() ensures the input is treated as at least a 1D 
-    # array for checking its length
+
     if (len(np.atleast_1d(lat_c)) == 1 or
         len(np.atleast_1d(var_shape)) == 1):
-        # If either is scalar, returns an array of 1s matching the var 
-        # shape (no weighting needed since there's nothing to weight across)
+        # If variable or lat is a scalar, do nothing
         return np.ones(var_shape)
     else:
-        # Calculates lat spacing by taking the difference between the 
-        # first two latitude points. Assumes uniform grid spacing
+        # Then lat has at least 2 elements
         dlat = lat_c[1]-lat_c[0]
-        
-        # Calculate cell areas 
-        # Use dlon = 1 (arbitrary lon spacing and planet 
-        # radius because normalization makes the absolute values 
-        # irrelevant), then normalize
-        dlon = 1.
-        
-        # Compute total area for normalization
-        area_tot = sfc_area_deg(-dlon/2, dlon/2, (lat_c[0] - dlat/2),
-                                (lat_c[-1] + dlat/2), R)
-        
-        # Compute total surface area for normalization
-        # (inlined from sfc_area_deg)
-        lon1_deg = -dlon/2
-        lon2_deg = dlon/2
-        lat1_deg = lat_c[0] - dlat/2
-        lat2_deg = lat_c[-1] + dlat/2
-        
-        # Convert to radians for area calculation
-        lat1_rad = lat1_deg * np.pi/180
-        lat2_rad = lat2_deg * np.pi/180
-        lon1_rad = lon1_deg * np.pi/180
-        lon2_rad = lon2_deg * np.pi/180
-        
-        R = 33900000.  # Mars radius in meters
-        area_tot = ((R**2) 
-                    * np.abs(lon1_rad - lon2_rad) 
-                    * np.abs(np.sin(lat1_rad) - np.sin(lat2_rad)))
-        
-        # Convert to radians
-        lat_c_rad = lat_c * np.pi/180
-        dlon_rad = dlon * np.pi/180
-        dlat_rad = dlat * np.pi/180
-        
-        # Calculate normalized areas using R = 1 (arbitrary lon spacing 
-        # and planet radius because normalization makes the absolute 
-        # values irrelevant). Areas sum to 1
-        R = 1.
-        A = (2. * R**2 * dlon_rad * np.cos(lat_c_rad) * 
-             np.sin(dlat_rad/2.) / area_tot)
+        # Calculate cell areas. Since it is normalized, we can use
+        # ``dlon = 1`` and ``R = 1`` without changing the result. Note
+        # that ``sum(A) = (A1 + A2 + ... An) = 1``
+        A = area_meridional_cells_deg(lat_c, 1, dlat, normalize = True, R = 1)
 
-        # Check if var is 1D (just lat values)
         if len(var_shape) == 1:
-            # For 1D case: multiply normalized areas by the number of 
-            # lat points. Creates weights where sum(W) = len(lat_c), 
-            # allowing np.mean(var*W) to give the area-weighted average
+            # Variable is a 1D array of size = [lat]. Easiest case
+            # since ``(w1 + w2 + ...wn) = sum(A) = 1`` and
+            # ``N = len(lat)``
             W = A * len(lat_c)
         else:
-            # For multidimensional data: create a list of 1s with 
-            # length matching the number of dims in the var 
-            # (e.g., [1, 1, 1, 1] for 4D data).
+            # Generate the appropriate shape for the area ``A``,
+            # e.g., [time, lev, lat, lon] > [1, 1, lat, 1]
+            # In this case,`` N = time * lev * lat * lon`` and
+            # ``(w1 + w2 + ...wn) = time * lev * lon * sum(A)``,
+            # therefore ``N / (w1 + w2 + ...wn) = lat``
             reshape_shape = [1 for i in range(0, len(var_shape))]
-            # Set the lat dim to the actual number of lat points 
-            # (e.g., [1, 1, lat, 1] for 4D data where lat = third dim)
             reshape_shape[axis] = len(lat_c)
-            # Reshape the 1D area array to match the var's 
-            # dimensionality (broadcasting-ready shape), then multiply 
-            # by the number of lat points. Allows the weights to 
-            # broadcast correctly across all other dims.
             W = A.reshape(reshape_shape)*len(lat_c)
-        
-        # Expand the weights to full var shape by multiplying with an 
-        # array of 1s. Creates the final weight array that can be 
-        # directly multiplied with other data for area-weighted avg.
         return W*np.ones(var_shape)
+
+
+
+
+
+
+# def area_weights_deg(var_shape, lat_c, axis = -2):
+#     """
+#     Returns weights scaled so that np.mean(var*W) gives an area-weighted 
+#     average. This works because grid cells near the poles have smaller 
+#     areas than those at the equator, so they should contribute less to 
+#     a global average.
+
+#     Expected dimensions are:
+
+#     [lat] ``axis`` not needed
+#     [lat, lon] ``axis = -2`` or ``axis = 0``
+#     [time, lat, lon] ``axis = -2`` or ``axis = 1``
+#     [time, lev, lat, lon] ``axis = -2`` or ``axis = 2``
+#     [time, time_of_day_24, lat, lon] ``axis = -2`` or ``axis = 2``
+#     [time, time_of_day_24, lev, lat, lon] ``axis = -2`` or ``axis = 3``
+
+#     Because ``dlat`` is computed as ``lat_c[1]-lat_c[0]``, ``lat_c``
+#     may be truncated on either end (e.g., ``lat = [-20 ..., 0... 50]``)
+#     but must be continuous.
+
+#     :param var_shape: the shape/dimensions of your data array
+#     :type  var_shape: tuple
+#     :param lat_c: latitude cell centers in degrees [°]
+#     :type  lat_c: float
+#     :param axis: which dimension contains latitude, default: 2nd-to-last
+#     :type  axis: int
+#     :return: ``W`` weights for the variable ready for standard
+#         averaging as ``np.mean(var*W)`` [condensed form] or
+#         ``np.average(var, weights=W)`` [expanded form]
+
+#     .. note::
+#         Given a variable var:
+
+#         ``var = [v1, v2, ...vn]``
+
+#         The regular average is
+
+#         ``AVG = (v1 + v2 + ... vn) / N``
+
+#         and the weighted average is
+
+#         ``AVG_W = (v1*w1 + v2*w2 + ... vn*wn) / (w1 + w2 + ...wn)``
+
+#         This function returns
+
+#         ``W = [w1, w2, ... , wn]*N / (w1 + w2 + ...wn)``
+
+#         Therfore taking a regular average of (``var*W``) with
+#         ``np.mean(var*W)`` or ``np.average(var, weights=W)``
+
+#         returns the weighted average of the variable. Use
+#         ``np.average(var, weights=W, axis = X)`` to average over a
+#         specific axis.
+#     """
+#     # Check if either the lat array or var shape is essentially
+#     # scalar (single value)
+#     # np.atleast_1d() ensures the input is treated as at least a 1D 
+#     # array for checking its length
+#     if (len(np.atleast_1d(lat_c)) == 1 or
+#         len(np.atleast_1d(var_shape)) == 1):
+#         # If either is scalar, returns an array of 1s matching the var 
+#         # shape (no weighting needed since there's nothing to weight across)
+#         return np.ones(var_shape)
+#     else:
+#         # Calculates lat spacing by taking the difference between the 
+#         # first two latitude points. Assumes uniform grid spacing
+#         dlat = lat_c[1]-lat_c[0]
+        
+#         # Calculate cell areas 
+#         # Use dlon = 1 (arbitrary lon spacing and planet 
+#         # radius because normalization makes the absolute values 
+#         # irrelevant), then normalize
+#         dlon = 1.
+        
+#         # Compute total area for normalization
+#         area_tot = sfc_area_deg(-dlon/2, dlon/2, (lat_c[0] - dlat/2),
+#                                 (lat_c[-1] + dlat/2), R)
+        
+#         # Compute total surface area for normalization
+#         # (inlined from sfc_area_deg)
+#         lon1_deg = -dlon/2
+#         lon2_deg = dlon/2
+#         lat1_deg = lat_c[0] - dlat/2
+#         lat2_deg = lat_c[-1] + dlat/2
+        
+#         # Convert to radians for area calculation
+#         lat1_rad = lat1_deg * np.pi/180
+#         lat2_rad = lat2_deg * np.pi/180
+#         lon1_rad = lon1_deg * np.pi/180
+#         lon2_rad = lon2_deg * np.pi/180
+        
+#         R = 33900000.  # Mars radius in meters
+#         area_tot = ((R**2) 
+#                     * np.abs(lon1_rad - lon2_rad) 
+#                     * np.abs(np.sin(lat1_rad) - np.sin(lat2_rad)))
+        
+#         # Convert to radians
+#         lat_c_rad = lat_c * np.pi/180
+#         dlon_rad = dlon * np.pi/180
+#         dlat_rad = dlat * np.pi/180
+        
+#         # Calculate normalized areas using R = 1 (arbitrary lon spacing 
+#         # and planet radius because normalization makes the absolute 
+#         # values irrelevant). Areas sum to 1
+#         R = 1.
+#         A = (2. * R**2 * dlon_rad * np.cos(lat_c_rad) * 
+#              np.sin(dlat_rad/2.) / area_tot)
+
+#         # Check if var is 1D (just lat values)
+#         if len(var_shape) == 1:
+#             # For 1D case: multiply normalized areas by the number of 
+#             # lat points. Creates weights where sum(W) = len(lat_c), 
+#             # allowing np.mean(var*W) to give the area-weighted average
+#             W = A * len(lat_c)
+#         else:
+#             # For multidimensional data: create a list of 1s with 
+#             # length matching the number of dims in the var 
+#             # (e.g., [1, 1, 1, 1] for 4D data).
+#             reshape_shape = [1 for i in range(0, len(var_shape))]
+#             # Set the lat dim to the actual number of lat points 
+#             # (e.g., [1, 1, lat, 1] for 4D data where lat = third dim)
+#             reshape_shape[axis] = len(lat_c)
+#             # Reshape the 1D area array to match the var's 
+#             # dimensionality (broadcasting-ready shape), then multiply 
+#             # by the number of lat points. Allows the weights to 
+#             # broadcast correctly across all other dims.
+#             W = A.reshape(reshape_shape)*len(lat_c)
+        
+#         # Expand the weights to full var shape by multiplying with an 
+#         # array of 1s. Creates the final weight array that can be 
+#         # directly multiplied with other data for area-weighted avg.
+#         return W*np.ones(var_shape)
 
 
 def areo_avg(VAR, areo, Ls_target, Ls_angle, symmetric=True):
