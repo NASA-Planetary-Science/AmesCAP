@@ -206,7 +206,7 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                     Max = np.nanmax(var)
                     print(f"{Cyan}{varfull:>26s}|{Min:>15g}|{Mean:>15g}|"
                           f"{Max:>15g}|{Nclr}")
-                    print(f"{Cyan}{'Area-weighted mean':>26s}|{'':>15s}|{Wmean:>15g}|"
+                    print(f"{Cyan}{'Global area-weighted mean {varfull:>26s}':>26s}|{'':>15s}|{Wmean:>15g}|"
                           f"{'':>15s}|{Nclr}")
 
                     if cmd_txt == "areo":

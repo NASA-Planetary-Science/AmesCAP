@@ -1229,10 +1229,6 @@ def area_weights_deg(var_shape, lat_c, axis = -2):
         # irrelevant), then normalize
         dlon = 1.
         
-        # Compute total area for normalization
-        area_tot = sfc_area_deg(-dlon/2, dlon/2, (lat_c[0] - dlat/2),
-                                (lat_c[-1] + dlat/2), R)
-        
         # Compute total surface area for normalization
         # (inlined from sfc_area_deg)
         lon1_deg = -dlon/2
@@ -1246,7 +1242,7 @@ def area_weights_deg(var_shape, lat_c, axis = -2):
         lon1_rad = lon1_deg * np.pi/180
         lon2_rad = lon2_deg * np.pi/180
         
-        R = 33900000.  # Mars radius in meters
+        R = 3390000.  # Mars radius in meters
         area_tot = ((R**2) 
                     * np.abs(lon1_rad - lon2_rad) 
                     * np.abs(np.sin(lat1_rad) - np.sin(lat2_rad)))
