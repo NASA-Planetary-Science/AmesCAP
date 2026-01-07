@@ -206,8 +206,9 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                     Max = np.nanmax(var)
                     print(f"{Cyan}{varfull:>26s}|{Min:>15g}|{Mean:>15g}|"
                           f"{Max:>15g}|{Nclr}")
+                    print(f"{Cyan}______________________________________________________________________{Nclr}")
                     print(f"{Cyan}Global area-weighted mean "
-                          f"{varfull:>26s}: {Wmean}{Nclr}")
+                          f"{varfull}: {Wmean:>15g}{Nclr}")
 
                     if cmd_txt == "areo":
                         # If variable is areo then print modulo
