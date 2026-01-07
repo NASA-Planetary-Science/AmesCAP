@@ -196,9 +196,14 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                 var = eval(varname)
                 lat = eval(latname)
 
+                # lat = fname.variables["lat"][:]
+                # LON, LAT = np.meshgrid(lon,lat)
+                # LAT[:, 0]
+
                 if print_stat:
                     Min = np.nanmin(var)
                     Mean = np.nanmean(var)
+                    print(f"{lat}")
                     weight = area_weights_deg(var.shape, lat)
                     Wmean = np.mean(var*weight)
                     Max = np.nanmax(var)
