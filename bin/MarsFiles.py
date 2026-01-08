@@ -1752,8 +1752,12 @@ def main():
             if btype == "band":
                 # Flip the sols so that the low frequency comes first
                 low_highcut = 1/nsol[::-1]
+                # Ensure it's a proper array/list for butter function
+                low_highcut = [float(low_highcut[0]), float(low_highcut[1])]
             else:
-                low_highcut = 1./nsol
+                # Extract scalar value for single cutoff
+                low_highcut_val = nsol.item() if hasattr(nsol, 'item') else nsol
+                low_highcut = float(1./low_highcut_val)
 
             # Loop over all variables in the file
             for ivar in var_list:
