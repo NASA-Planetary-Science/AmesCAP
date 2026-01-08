@@ -814,8 +814,18 @@ def main():
         # Reorder dimensions
         print(f"{Cyan} Transposing variable dimensions to match order "
               f"expected in CAP")
-        DS = DS.transpose(model.dim_time, model.dim_pfull, model.dim_lat,
-                          model.dim_lon, ...)
+        # Build list of dimension order, but only include dimensions that exist in the dataset
+        transpose_dims = []
+        for dim in [model.dim_time, model.dim_pfull, model.dim_lat, model.dim_lon]:
+            if dim in DS.dims:
+                transpose_dims.append(dim)
+        
+        # Add any remaining dimensions with '...'
+        transpose_dims.append('...')
+
+        # Only transpose if we have more than one dimension
+        if len(transpose_dims) > 1:
+            DS = DS.transpose(*transpose_dims)
 
         # Change longitude from -180-179 to 0-360
         if min(DS[model.dim_lon]) < 0:
