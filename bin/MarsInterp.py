@@ -430,11 +430,14 @@ def main():
             if interp_type == "pstd":
                 # Permute by default dimension, e.g., lev is first
                 L_3D_P = fms_press_calc(ps, ak, bk, lev_type = "full")
+                L_3D_Ph = fms_press_calc(ps, ak, bk, lev_type = "half")
 
             elif interp_type == 'zagl':
                 temp = fNcdf.variables["temp"][:]
                 L_3D_P = fms_Z_calc(ps, ak, bk, temp.transpose(
                     permut), topo=0., lev_type='full')
+                L_3D_Ph = fms_Z_calc(ps, ak, bk, temp.transpose(
+                    permut), topo=0., lev_type='half')
 
             elif interp_type == 'zstd':
                 temp = fNcdf.variables["temp"][:]
@@ -446,6 +449,8 @@ def main():
 
                 L_3D_P = fms_Z_calc(ps, ak, bk, temp.transpose(permut),
                                     topo = zflat, lev_type = "full")
+                L_3D_Ph = fms_Z_calc(ps, ak, bk, temp.transpose(permut),
+                                    topo = zflat, lev_type = "half")
 
         fnew = Ncdf(newname, "Pressure interpolation using MarsInterp")
 
@@ -455,7 +460,7 @@ def main():
         # Get the variables
         var_list = filter_vars(fNcdf, args.include)
 
-        fnew.copy_all_dims_from_Ncfile(fNcdf, exclude_dim=["pfull"])
+        fnew.copy_all_dims_from_Ncfile(fNcdf, exclude_dim=["pfull","phalf"])
         # Add new vertical dimension
         fnew.add_dim_with_content(interp_type, lev_in, longname_txt, units_txt)
 
@@ -480,10 +485,18 @@ def main():
                 fNcdf.variables[ivar].dimensions == ("time", tod_name, "pfull",
                                                      "lat", "lon") or
                 fNcdf.variables[ivar].dimensions == ("time", "pfull",
+                                                     "grid_yt", "grid_xt") or
+                fNcdf.variables[ivar].dimensions == ("time", "phalf", "lat",
+                                                     "lon") or
+                fNcdf.variables[ivar].dimensions == ("time", tod_name, "phalf",
+                                                     "lat", "lon") or
+                fNcdf.variables[ivar].dimensions == ("time", "phalf",
                                                      "grid_yt", "grid_xt")):
                 if compute_indices:
                     print(f"{Cyan}Computing indices ...{Nclr}")
                     index = find_n(L_3D_P, lev_in,
+                                   reverse_input = need_to_reverse)
+                    indexh = find_n(L_3D_Ph, lev_in,
                                    reverse_input = need_to_reverse)
                     compute_indices = False
 
@@ -491,11 +504,18 @@ def main():
                 varIN = fNcdf.variables[ivar][:]
                 # This with the loop suppresses "divide by zero" errors
                 with np.errstate(divide = "ignore", invalid = "ignore"):
-                    varOUT = vinterp(varIN.transpose(permut), L_3D_P, lev_in,
+                    if 'pfull' in fNcdf.variables[ivar].dimensions:
+                        varOUT = vinterp(varIN.transpose(permut), L_3D_P, lev_in,
                                      type_int = interp_technic,
                                      reverse_input = need_to_reverse,
                                      masktop = True,
                                      index = index).transpose(permut)
+                    elif 'phalf' in fNcdf.variables[ivar].dimensions:
+                        varOUT = vinterp(varIN.transpose(permut), L_3D_Ph, lev_in,
+                                     type_int = interp_technic,
+                                     reverse_input = need_to_reverse,
+                                     masktop = True,
+                                     index = indexh).transpose(permut)
 
                 long_name_txt = getattr(fNcdf.variables[ivar], "long_name", "")
                 units_txt = getattr(fNcdf.variables[ivar], "units", "")
@@ -530,7 +550,7 @@ def main():
 
                     dim_list=fNcdf.dimensions.keys()
 
-                    if 'pfull' not in fNcdf.variables[ivar].dimensions:
+                    if 'pfull' not in fNcdf.variables[ivar].dimensions or 'phalf' not in fNcdf.variables[ivar].dimensions:
                         print(f"{Cyan}Copying over: {ivar}...")
                         if ivar in dim_list:
                             fnew.copy_Ncaxis_with_content(fNcdf.variables[ivar])
