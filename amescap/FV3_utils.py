@@ -956,39 +956,6 @@ def cart_to_azimut_TR(u, v, mode="from"):
             np.sqrt(u**2 + v**2))
 
 
-def sfc_area_deg(lon1, lon2, lat1, lat2, R=3390000.):
-    """
-    Return the surface between two sets of latitudes/longitudes::
-
-        S = int[R^2 dlon cos(lat) dlat]     _____lat2
-                                            \    \
-                                             \____\lat1
-                                             lon1    lon2
-    :param lon1: longitude from set 1 [°]
-    :type  lon1: float
-    :param lon2: longitude from set 2 [°]
-    :type  lon2: float
-    :param lat1: latitude from set 1 [°]
-    :type  lat1: float
-    :param lat2: longitude from set 2 [°]
-    :type  lat2: float
-    :param R: planetary radius [m]
-    :type  R: int
-
-    .. note::
-    qLon and Lat define the corners of the area not the grid cell center.
-    """
-
-    lat1 *= np.pi/180
-    lat2 *= np.pi/180
-    lon1 *= np.pi/180
-    lon2 *= np.pi/180
-    return ((R**2)
-            * np.abs(lon1 - lon2)
-            * np.abs(np.sin(lat1) - np.sin(lat2)))
-
-
-
 def area_weights_deg(var_shape, lat_c, axis = -2):
     """
     Returns weights scaled so that np.mean(var*W) gives an area-weighted 
@@ -1065,7 +1032,6 @@ def area_weights_deg(var_shape, lat_c, axis = -2):
         dlon = 1.
         
         # Compute total surface area for normalization
-        # (inlined from sfc_area_deg)
         lon1_deg = -dlon/2
         lon2_deg = dlon/2
         lat1_deg = lat_c[0] - dlat/2
