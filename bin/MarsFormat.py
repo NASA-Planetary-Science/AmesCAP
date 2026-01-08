@@ -802,30 +802,11 @@ def main():
             print(f"{Cyan}Using PCM-specific vertical orientation handling")
             # Skip automatic flipping - we've already handled it in PCM processing
         else:
-            # # Standard vertical processing for other models
-            # if DS[model.pfull].values[0] != DS[model.pfull].values.min():
-            #     DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
-            #     # Flip phalf, ak, bk:
-            #     DS = DS.isel(**{model.dim_phalf: slice(None, None, -1)})
-            #     print(f"{Red}NOTE: all variables flipped along vertical dimension. "
-            #         f"Top of the atmosphere is now index = 0")
-            
-            # Standard vertical processing for all models
+            # Standard vertical processing for other models
             if DS[model.pfull].values[0] != DS[model.pfull].values.min():
-                # Collect flipped variables to avoid in-place modification issues
-                flipped_vars = {}
-                for var_name in list(DS.data_vars.keys()):
-                    if model.dim_pfull in DS[var_name].dims:
-                        flipped_vars[var_name] = DS[var_name].isel(**{model.dim_pfull: slice(None, None, -1)})
-                
-                # Apply all flips at once
-                for var_name, flipped_var in flipped_vars.items():
-                    DS[var_name] = flipped_var
-                
-                # Flip the coordinate dimensions
                 DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
+                # Flip phalf, ak, bk:
                 DS = DS.isel(**{model.dim_phalf: slice(None, None, -1)})
-                
                 print(f"{Red}NOTE: all variables flipped along vertical dimension. "
                     f"Top of the atmosphere is now index = 0")
 
