@@ -814,8 +814,11 @@ def main():
         # Reorder dimensions
         print(f"{Cyan} Transposing variable dimensions to match order "
               f"expected in CAP")
-        DS = DS.transpose(model.dim_time, model.dim_pfull, model.dim_lat,
-                          model.dim_lon, ..., missing_dims='ignore')
+        # Skip transpose for OpenMars as it causes dimension conflicts
+        # with variables that don't all have the same dimensions
+        if model_type != 'openmars':
+            DS = DS.transpose(model.dim_time, model.dim_pfull, model.dim_lat,
+                            model.dim_lon, ...)
 
         # Change longitude from -180-179 to 0-360
         if min(DS[model.dim_lon]) < 0:
