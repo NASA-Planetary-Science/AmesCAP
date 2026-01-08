@@ -485,7 +485,7 @@ def main():
                 fNcdf.variables[ivar].dimensions == ("time", tod_name, "pfull",
                                                      "lat", "lon") or
                 fNcdf.variables[ivar].dimensions == ("time", "pfull",
-                                                     "grid_yt", "grid_xt"),
+                                                     "grid_yt", "grid_xt") or
                 fNcdf.variables[ivar].dimensions == ("time", "phalf", "lat",
                                                      "lon") or
                 fNcdf.variables[ivar].dimensions == ("time", tod_name, "phalf",
@@ -496,7 +496,7 @@ def main():
                     print(f"{Cyan}Computing indices ...{Nclr}")
                     index = find_n(L_3D_P, lev_in,
                                    reverse_input = need_to_reverse)
-                    indexh = find_n(L_3D_P, lev_in,
+                    indexh = find_n(L_3D_Ph, lev_in,
                                    reverse_input = need_to_reverse)
                     compute_indices = False
 
