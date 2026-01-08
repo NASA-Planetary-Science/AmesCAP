@@ -574,12 +574,16 @@ def main():
             lat = DS[model.dim_lat] # Replace DS.lat
             lon = DS[model.dim_lon]
 
-            DS = DS.assign(pfull = DS[model.dim_pfull]*ref_press)
+            # Create pfull as a coordinate variable with values (will become the new dimension)
+            pfull_values = DS[model.dim_pfull] * ref_press
+            DS = DS.assign_coords(pfull=('lev', pfull_values.values))
 
-            DS['pfull'].attrs['long_name'] = (
-                '(ADDED POST-PROCESSING) reference pressure'
-                )
-            DS['pfull'].attrs['units'] = ('Pa')
+            # Now rename the 'lev' dimension to 'pfull' throughout the dataset
+            DS = DS.rename_dims({'lev': 'pfull'})
+            DS = DS.rename({'lev': 'pfull'})  # Also rename the coordinate variable
+            
+            DS['pfull'].attrs['long_name'] = '(ADDED POST-PROCESSING) reference pressure'
+            DS['pfull'].attrs['units'] = 'Pa'
 
             # add ak,bk as variables
             # add p_half dimensions as vertical grid coordinate
@@ -589,8 +593,8 @@ def main():
             # needs (sigma[0] = 0, sigma[-1] = 1).
             # Then reorganize in the original openMars format with
             # (sigma[0] = 1, sigma[-1] = 0)
-            bk = layers_mid_point_to_boundary(DS[model.dim_pfull][::-1], 1.)[::-1]
-            ak = np.zeros(len(DS[model.dim_pfull]) + 1)
+            bk = layers_mid_point_to_boundary(DS['pfull'][::-1] / ref_press, 1.)[::-1]
+            ak = np.zeros(len(DS['pfull']) + 1)
 
             DS[model.phalf] = (ak + ref_press*bk)
             DS.phalf.attrs['long_name'] = (
@@ -599,22 +603,20 @@ def main():
             DS.phalf.attrs['description'] = (
                 '(ADDED POST-PROCESSING) pressure at layer interfaces'
                 )
-            DS.phalf.attrs['units'] = ('Pa')
+            DS.phalf.attrs['units'] = 'Pa'
 
-            DS = DS.assign(bk=(model.dim_phalf,
-                               np.array(bk)))
-            DS = DS.assign(ak=(model.dim_phalf,
-                               np.zeros(len(DS[model.dim_pfull]) + 1)))
+            DS = DS.assign(bk=(model.dim_phalf, np.array(bk)))
+            DS = DS.assign(ak=(model.dim_phalf, np.zeros(len(DS['pfull']) + 1)))
 
             # Update Variable Description & Longname
             DS['ak'].attrs['long_name'] = (
                 '(ADDED POST-PROCESSING) pressure part of the hybrid coordinate'
                 )
-            DS['ak'].attrs['units'] = ('Pa')
+            DS['ak'].attrs['units'] = 'Pa'
             DS['bk'].attrs['long_name'] = (
                 '(ADDED POST-PROCESSING) vertical coordinate sigma value'
                 )
-            DS['bk'].attrs['units'] = ('None')
+            DS['bk'].attrs['units'] = 'None'
 
         # --------------------------------------------------------------
         #                     Emars Processing
@@ -814,18 +816,8 @@ def main():
         # Reorder dimensions
         print(f"{Cyan} Transposing variable dimensions to match order "
               f"expected in CAP")
-        # Build list of dimension order, but only include dimensions that exist in the dataset
-        transpose_dims = []
-        for dim in [model.dim_time, model.dim_pfull, model.dim_lat, model.dim_lon]:
-            if dim in DS.dims:
-                transpose_dims.append(dim)
-        
-        # Add any remaining dimensions with ...
-        transpose_dims.append(...)
-
-        # Only transpose if we have more than one dimension
-        if len(transpose_dims) > 1:
-            DS = DS.transpose(*transpose_dims)
+        DS = DS.transpose(model.dim_time, model.dim_pfull, model.dim_lat,
+                          model.dim_lon, ...)
 
         # Change longitude from -180-179 to 0-360
         if min(DS[model.dim_lon]) < 0:
