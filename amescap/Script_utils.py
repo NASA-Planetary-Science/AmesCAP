@@ -251,33 +251,6 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
         f.close()
 
 
-def give_permission(filename):
-    """
-    Sets group file permissions for the NAS system
-
-    :param filename: full path to the netCDF file
-    :type  filename: str
-
-    :return: None
-
-    :raises subprocess.CalledProcessError: if the setfacl command fails
-    :raises FileNotFoundError: if the file is not found
-    """
-
-    try:
-        # catch error and standard output
-        subprocess.check_call(
-            ["setfacl -v"],
-            shell=True,
-            stdout=open(os.devnull, "w"),
-            stderr=open(os.devnull, "w")
-            )
-        cmd_txt = f"setfacl -R -m g:s0846:r {filename}"
-        subprocess.call(cmd_txt, shell=True)
-    except subprocess.CalledProcessError:
-        pass
-
-
 def check_file_tape(fileNcdf):
     """
     Checks whether a file exists on the disk.

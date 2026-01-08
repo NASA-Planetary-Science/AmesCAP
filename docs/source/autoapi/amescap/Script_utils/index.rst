@@ -48,7 +48,6 @@ Functions
    amescap.Script_utils.find_tod_in_diurn
    amescap.Script_utils.get_Ncdf_path
    amescap.Script_utils.get_longname_unit
-   amescap.Script_utils.give_permission
    amescap.Script_utils.hot_cold_cmap
    amescap.Script_utils.pretty_print_to_fv_eta
    amescap.Script_utils.print_fileContent
@@ -389,19 +388,6 @@ Attributes
        (e.g., [kg] -> [kg/m]), therefore the empty string is 4
        characters in length ("    " instead of "") to allow for
        editing by ``editing units_txt[:-2]``, for example.
-
-
-.. py:function:: give_permission(filename)
-
-   Sets group file permissions for the NAS system
-
-   :param filename: full path to the netCDF file
-   :type  filename: str
-
-   :return: None
-
-   :raises subprocess.CalledProcessError: if the setfacl command fails
-   :raises FileNotFoundError: if the file is not found
 
 
 .. py:function:: hot_cold_cmap()

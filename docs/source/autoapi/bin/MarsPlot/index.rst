@@ -71,7 +71,6 @@ Functions
    bin.MarsPlot.get_overwrite_dim_2D
    bin.MarsPlot.get_time_index
    bin.MarsPlot.get_tod_index
-   bin.MarsPlot.give_permission
    bin.MarsPlot.main
    bin.MarsPlot.make_template
    bin.MarsPlot.mean_func
@@ -1458,16 +1457,6 @@ Attributes
    .. note::
        The keyword ``all`` is passed as ``-99999`` by the ``rT()``
        function
-
-
-.. py:function:: give_permission(filename)
-
-   Sets group permissions for files created on NAS.
-
-   :param filename: name of the file
-   :type  filename: str
-   :raises ValueError: If the input filename is not a valid type
-       for file name.
 
 
 .. py:function:: main()
