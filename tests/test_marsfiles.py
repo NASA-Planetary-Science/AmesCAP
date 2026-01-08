@@ -502,6 +502,14 @@ class TestMarsFiles(BaseTestCase):
         """Test all temporal filtering operations"""
         # High-pass filter
         result = self.run_mars_files(['01336.atmos_daily.nc', '-hpt', '10', '-incl', 'temp'])
+        
+        # TEMPORARY DEBUG OUTPUT
+        if result.returncode != 0:
+            print("\n=== HIGH-PASS TEMPORAL FILTER FAILED ===")
+            print("STDOUT:", result.stdout)
+            print("STDERR:", result.stderr)
+            print("========================================\n")
+        
         self.assertEqual(result.returncode, 0, "High-pass temporal filter command failed")
         high_pass_file = self.check_file_exists('01336.atmos_daily_hpt.nc')
         self.verify_netcdf_has_variable(high_pass_file, 'temp')
@@ -529,6 +537,14 @@ class TestMarsFiles(BaseTestCase):
             
         # High-pass filter
         result = self.run_mars_files(['01336.atmos_daily.nc', '-hps', '10', '-incl', 'temp'])
+        
+        # TEMPORARY DEBUG OUTPUT
+        if result.returncode != 0:
+            print("\n=== HIGH-PASS SPATIAL FILTER FAILED ===")
+            print("STDOUT:", result.stdout)
+            print("STDERR:", result.stderr)
+            print("=======================================\n")
+        
         self.assertEqual(result.returncode, 0, "High-pass spatial filter command failed")
         high_pass_file = self.check_file_exists('01336.atmos_daily_hps.nc')
         self.verify_netcdf_has_variable(high_pass_file, 'temp')
