@@ -814,21 +814,24 @@ def main():
         # Reorder dimensions
         print(f"{Cyan} Transposing variable dimensions to match order "
               f"expected in CAP")
-        # Don't use blanket transpose - it fails for variables without all dimensions
-        # Instead, transpose each variable individually based on its actual dimensions
+        # Reorder dimensions - transpose each variable individually
+        print(f"{Cyan} Transposing variable dimensions to match order "
+            f"expected in CAP")
+
+        # Define the desired dimension order
+        dim_order = [model.dim_time, model.dim_pfull, model.dim_lat, model.dim_lon]
+
+        # Transpose each data variable individually based on its actual dimensions
         for var in DS.data_vars:
-            var_dims = DS[var].dims
-            # Build the desired order from the dimensions this variable actually has
-            desired_order = []
-            for dim in [model.dim_time, model.dim_pfull, model.dim_lat, model.dim_lon]:
-                if dim in var_dims:
-                    desired_order.append(dim)
-            # Add any remaining dimensions not in our standard list
-            for dim in var_dims:
-                if dim not in desired_order:
-                    desired_order.append(dim)
-            # Only transpose if the order actually needs changing
-            if list(var_dims) != desired_order:
+            var_dims = list(DS[var].dims)
+            # Build desired order using only dimensions this variable actually has
+            desired_order = [d for d in dim_order if d in var_dims]
+            # Add any dimensions not in our standard list
+            for d in var_dims:
+                if d not in desired_order:
+                    desired_order.append(d)
+            # Only transpose if order needs changing
+            if var_dims != desired_order:
                 DS[var] = DS[var].transpose(*desired_order)
         # DS = DS.transpose(model.dim_time, model.dim_pfull, model.dim_lat,
         #                   model.dim_lon, ...)
