@@ -258,8 +258,31 @@ class Ncdf(object):
             self.add_dimension(Ncdim_var._name, len(Ncdim_var))
         
         if Ncdim_var._name not in self.var_dict.keys():
-            self._def_axis1D(Ncdim_var._name, Ncdim_var._name, longname_txt,
+            # Check if this is actually a 1D variable or multi-dimensional
+            if len(Ncdim_var.shape) == 1:
+                self._def_axis1D(Ncdim_var._name, Ncdim_var._name, longname_txt,
                             units_txt, cart_txt, fill_value=fill_value)
+                
+            else:
+                # For multi-dimensional coordinate variables (like areo 
+                # with shape (time, scalar_axis))
+                # we need to create them with the proper dimensions
+                self.log_variable(Ncdim_var._name, 
+                                Ncdim_var[:],  # Get the data
+                                Ncdim_var.dimensions,  # Use original dimensions
+                                longname_txt,
+                                units_txt)
+                # Set cartesian_axis if it exists
+                if cart_txt:
+                    self.var_dict[Ncdim_var._name].cartesian_axis = cart_txt
+                # Return early since log_variable already copied the data
+                if Ncdim_var._name in ['pfull', 'phalf', 'plev', 'level']:
+                    self.var_dict[Ncdim_var._name].positive = "down"
+                for attr_name in Ncdim_var.ncattrs():
+                    if attr_name not in ['long_name', 'units', 'cartesian_axis', '_FillValue', 'positive']:
+                        setattr(self.var_dict[Ncdim_var._name], attr_name, 
+                                getattr(Ncdim_var, attr_name))
+            return
         
         self.var_dict[Ncdim_var._name].long_name = longname_txt
         self.var_dict[Ncdim_var._name].units = units_txt
