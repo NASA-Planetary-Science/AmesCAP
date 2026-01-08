@@ -585,6 +585,9 @@ def main():
             if 'lev' in DS.coords:
                 DS = DS.drop_vars('lev')
             
+            # **ADD THIS LINE:**
+            model.dim_pfull = 'pfull'  # Update model to use new dimension name
+            
             DS['pfull'].attrs['long_name'] = '(ADDED POST-PROCESSING) reference pressure'
             DS['pfull'].attrs['units'] = 'Pa'
 
