@@ -810,10 +810,7 @@ def main():
                 DS = DS.isel(**{model.dim_phalf: slice(None, None, -1)})
                 print(f"{Red}NOTE: all variables flipped along vertical dimension. "
                     f"Top of the atmosphere is now index = 0")
-
-        # Reorder dimensions
-        print(f"{Cyan} Transposing variable dimensions to match order "
-              f"expected in CAP")
+                
         # Reorder dimensions - transpose each variable individually
         print(f"{Cyan} Transposing variable dimensions to match order "
             f"expected in CAP")
@@ -821,20 +818,28 @@ def main():
         # Define the desired dimension order
         dim_order = [model.dim_time, model.dim_pfull, model.dim_lat, model.dim_lon]
 
+        # Collect all transposed variables before modifying dataset
+        transposed_vars = {}
+
         # Transpose each data variable individually based on its actual dimensions
-        for var in DS.data_vars:
-            var_dims = list(DS[var].dims)
+        for var_name in list(DS.data_vars.keys()):  # Use list() to avoid iteration issues
+            var = DS[var_name]
+            var_dims = list(var.dims)
+            
             # Build desired order using only dimensions this variable actually has
             desired_order = [d for d in dim_order if d in var_dims]
             # Add any dimensions not in our standard list
             for d in var_dims:
                 if d not in desired_order:
                     desired_order.append(d)
+            
             # Only transpose if order needs changing
             if var_dims != desired_order:
-                DS[var] = DS[var].transpose(*desired_order)
-        # DS = DS.transpose(model.dim_time, model.dim_pfull, model.dim_lat,
-        #                   model.dim_lon, ...)
+                transposed_vars[var_name] = var.transpose(*desired_order)
+
+        # Apply all transpositions at once
+        for var_name, transposed_var in transposed_vars.items():
+            DS[var_name] = transposed_var
 
         # Change longitude from -180-179 to 0-360
         if min(DS[model.dim_lon]) < 0:
