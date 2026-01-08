@@ -578,9 +578,12 @@ def main():
             pfull_values = DS[model.dim_pfull] * ref_press
             DS = DS.assign_coords(pfull=('lev', pfull_values.values))
 
-            # Now rename the 'lev' dimension to 'pfull' throughout the dataset
-            DS = DS.rename_dims({'lev': 'pfull'})
-            DS = DS.rename({'lev': 'pfull'})  # Also rename the coordinate variable
+            # Now swap the 'lev' dimension with 'pfull' coordinate throughout the dataset
+            DS = DS.swap_dims({'lev': 'pfull'})
+            
+            # Drop the old 'lev' coordinate if it still exists
+            if 'lev' in DS.coords:
+                DS = DS.drop_vars('lev')
             
             DS['pfull'].attrs['long_name'] = '(ADDED POST-PROCESSING) reference pressure'
             DS['pfull'].attrs['units'] = 'Pa'
