@@ -20,6 +20,10 @@ on:
       - 'bin/MarsCalendar.py'
       - 'tests/test_marscalendar.py'
       - '.github/workflows/marscalendar_test.yml'
+      # - 'AmesCAP/amescap/Script_utils.py'
+      # - 'AmesCAP/amescap/Ncdf_wrapper.py'
+      # - 'AmesCAP/amescap/FV3_utils.py'
+      # - 'AmesCAP/amescap/Spectral_utils.py'
 jobs:
   test:
     # Run on multiple OS and Python versions for comprehensive testing

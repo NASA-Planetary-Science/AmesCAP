@@ -820,8 +820,8 @@ def main():
             if dim in DS.dims:
                 transpose_dims.append(dim)
         
-        # Add any remaining dimensions with '...'
-        transpose_dims.append('...')
+        # Add any remaining dimensions with ...
+        transpose_dims.append(...)
 
         # Only transpose if we have more than one dimension
         if len(transpose_dims) > 1:
