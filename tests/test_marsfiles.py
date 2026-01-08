@@ -686,6 +686,13 @@ class TestMarsFiles(BaseTestCase):
             '-regrid',
             '01336.atmos_average_pstd_c48.nc'
         ])
+        
+        # TEMPORARY DEBUG OUTPUT
+        if result.returncode != 0:
+            print("\n=== REGRID COMMAND FAILED ===")
+            print("STDOUT:", result.stdout)
+            print("STDERR:", result.stderr)
+            print("============================\n")
 
         # Check for successful execution
         self.assertEqual(result.returncode, 0, "Regrid command failed")
