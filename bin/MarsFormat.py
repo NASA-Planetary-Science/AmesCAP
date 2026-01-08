@@ -821,8 +821,18 @@ def main():
         if min(DS[model.dim_lon]) < 0:
             tmp = np.array(DS[model.dim_lon])
             tmp = np.where(tmp<0, tmp + 360, tmp)
-            DS[model.dim_lon] = tmp
+            
+            # Create a new DataArray with the updated values and original attributes
+            new_lon = xr.DataArray(
+                tmp,
+                dims=[model.dim_lon],
+                attrs=DS[model.dim_lon].attrs.copy()
+            )
+            
+            # Update the coordinate properly using assign_coords
+            DS = DS.assign_coords({model.dim_lon: new_lon})
             DS = DS.sortby(model.dim_lon)
+    
             DS[model.lon].attrs['long_name'] = (
                 '(MODIFIED POST-PROCESSING) longitude'
                 )
