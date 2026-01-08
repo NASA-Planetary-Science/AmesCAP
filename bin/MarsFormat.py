@@ -615,6 +615,24 @@ def main():
                 '(ADDED POST-PROCESSING) vertical coordinate sigma value'
                 )
             DS['bk'].attrs['units'] = ('None')
+            
+            # Handle vertical flipping for OpenMars
+            if DS[model.pfull].values[0] != DS[model.pfull].values.min():
+                # Flip only variables that actually have the lev dimension
+                for var_name in list(DS.data_vars.keys()):
+                    if model.dim_pfull in DS[var_name].dims:
+                        DS[var_name] = DS[var_name].isel(**{model.dim_pfull: slice(None, None, -1)})
+                # Also flip the coordinate itself
+                DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
+                # Flip phalf dimension if it exists
+                if model.dim_phalf in DS.dims:
+                    for var_name in list(DS.data_vars.keys()):
+                        if model.dim_phalf in DS[var_name].dims:
+                            DS[var_name] = DS[var_name].isel(**{model.dim_phalf: slice(None, None, -1)})
+                    DS = DS.isel(**{model.dim_phalf: slice(None, None, -1)})
+                DS.attrs['vertical_dimension_flipped'] = True
+                print(f"{Red}NOTE: all variables flipped along vertical dimension. "
+                    f"Top of the atmosphere is now index = 0")
 
         # --------------------------------------------------------------
         #                     Emars Processing
@@ -765,7 +783,6 @@ def main():
                 )
             DS['pfull'].attrs['units'] = 'Pa'
 
-            # Replace the PCM phalf creation section with:
             if 'ap' in DS and 'bp' in DS:
                 # Calculate phalf values from ap and bp
                 phalf_values = (DS.ap.values + DS.bp.values*ref_press)
@@ -802,6 +819,9 @@ def main():
         if model_type == 'pcm' and 'vertical_dimension_flipped' in DS.attrs:
             print(f"{Cyan}Using PCM-specific vertical orientation handling")
             # Skip automatic flipping - we've already handled it in PCM processing
+        elif model_type == 'openmars' and 'vertical_dimension_flipped' in DS.attrs:
+            print(f"{Cyan}Using OpenMars-specific vertical orientation handling")
+            # Skip automatic flipping - we've already handled it in OpenMars processing
         else:
             # Standard vertical processing for other models
             if DS[model.pfull].values[0] != DS[model.pfull].values.min():
