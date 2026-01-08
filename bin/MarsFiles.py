@@ -1719,27 +1719,27 @@ def main():
             if btype == "low":
                 fnew.add_constant(
                     "sol_max",
-                    nsol,
+                    float(nsol.item()) if hasattr(nsol, 'item') else float(nsol),
                     "Low-pass filter cut-off period ",
                     "sol"
                     )
             elif btype == "high":
                 fnew.add_constant(
                     "sol_min",
-                    nsol,
+                    float(nsol.item()) if hasattr(nsol, 'item') else float(nsol),
                     "High-pass filter cut-off period ",
                     "sol"
                     )
             elif btype == "band":
                 fnew.add_constant(
                     "sol_min",
-                    nsol[0],
+                    float(nsol[0]),
                     "High-pass filter low cut-off period ",
                     "sol"
                     )
                 fnew.add_constant(
                     "sol_max",
-                    nsol[1],
+                    float(nsol[1]),
                     "High-pass filter high cut-off period ",
                     "sol"
                     )
@@ -1879,27 +1879,27 @@ def main():
             if btype == "low":
                 fnew.add_constant(
                     "kmax",
-                    nk,
+                    float(nk.item()) if hasattr(nk, 'item') else float(nk),
                     "Low-pass filter zonal wavenumber ",
                     "wavenumber"
                     )
             elif btype == "high":
                 fnew.add_constant(
                     "kmin",
-                    nk,
+                    float(nk.item()) if hasattr(nk, 'item') else float(nk),
                     "High-pass filter zonal wavenumber ",
                     "wavenumber"
                     )
             elif btype == "band":
                 fnew.add_constant(
                     "kmin",
-                    nk[0],
+                    float(nk[0]),
                     "Band-pass filter low zonal wavenumber ",
                     "wavenumber"
                     )
                 fnew.add_constant(
                     "kmax",
-                    nk[1],
+                    float(nk[1]),
                     "Band-pass filter high zonal wavenumber ",
                     "wavenumber"
                     )
