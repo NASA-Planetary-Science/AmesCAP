@@ -818,17 +818,19 @@ def main():
                           model.dim_lon, ...)
 
         # Change longitude from -180-179 to 0-360
-        if min(DS[model.dim_lon]) < 0:
-            tmp = np.array(DS[model.dim_lon])
+        # After rename_vars, we should use the standardized coordinate name 'lon', not model.dim_lon
+        lon_coord_name = 'lon' if not args.retain_names else model.lon
+        if lon_coord_name in DS.coords and min(DS[lon_coord_name]) < 0:
+            tmp = np.array(DS[lon_coord_name])
             tmp = np.where(tmp<0, tmp + 360, tmp)
-            DS[model.dim_lon] = tmp
-            DS = DS.sortby(model.dim_lon)
-            DS[model.lon].attrs['long_name'] = (
+            DS = DS.assign_coords({lon_coord_name: tmp})
+            DS = DS.sortby(lon_coord_name)
+            DS[lon_coord_name].attrs['long_name'] = (
                 '(MODIFIED POST-PROCESSING) longitude'
                 )
-            DS[model.lon].attrs['units'] = ('degrees_E')
+            DS[lon_coord_name].attrs['units'] = ('degrees_E')
             print(f"{Red} NOTE: Longitude changed to 0-360E and all variables "
-                  f"appropriately reindexed")
+                f"appropriately reindexed{Nclr}")
 
         # Add scalar axis to areo [time, scalar_axis])
         inpt_dimlist = DS.dims
