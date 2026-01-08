@@ -1707,7 +1707,8 @@ def get_trend_2D(VAR, LON, LAT, type_trend="wmean"):
     # dimensions
 
     # Flatten array (``[10, 36, lat, lon]`` -> ``[360, lat, lon]``)
-    nflatten = int(np.prod(var_shape[:-2]))
+    prod_result = np.prod(var_shape[:-2])
+    nflatten = int(prod_result.item()) if hasattr(prod_result, 'item') else int(prod_result)
     reshape_flat = np.append(nflatten, var_shape[-2:])
     VAR = VAR.reshape(reshape_flat)
 
