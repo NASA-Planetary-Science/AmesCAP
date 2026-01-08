@@ -477,11 +477,19 @@ def zonal_construct(COEFFS_flat, VAR_shape, btype=None, low_highcut=None):
     VAR = np.zeros((nflatten, VAR_shape[-2], VAR_shape[-1]))
 
     if btype == "low":
-        kmax= int(low_highcut)
+        # Handle numpy arrays properly
+        kmax_val = low_highcut.item() if hasattr(low_highcut, 'item') else low_highcut
+        kmax = int(kmax_val)
     if btype == "high":
-        kmin= int(low_highcut)
+        # Handle numpy arrays properly
+        kmin_val = low_highcut.item() if hasattr(low_highcut, 'item') else low_highcut
+        kmin = int(kmin_val)
     if btype == "band":
-        kmin, kmax= int(low_highcut[0]), int(low_highcut[1])
+        # Handle numpy arrays properly
+        kmin_val = low_highcut[0].item() if hasattr(low_highcut[0], 'item') else low_highcut[0]
+        kmax_val = low_highcut[1].item() if hasattr(low_highcut[1], 'item') else low_highcut[1]
+        kmin = int(kmin_val)
+        kmax = int(kmax_val)
 
     for ii in range(0, nflatten):
         # Filtering
