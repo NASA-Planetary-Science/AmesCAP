@@ -7,8 +7,10 @@ with variables that exactly match the specifications in real files.
 
 import numpy as np
 from netCDF4 import Dataset
-import os
-import datetime
+
+# ----------------------------------------------------------------------
+#                      EMARS Dummy File
+# ----------------------------------------------------------------------
 
 def create_emars_test():
     """Create emars_test.nc with the exact variables and structure as real EMARS files."""
@@ -475,6 +477,10 @@ def create_emars_test():
     nc_file.close()
     print("Created emars_test.nc")
 
+# ----------------------------------------------------------------------
+#                      OpenMARS Dummy File
+# ----------------------------------------------------------------------
+
 def create_openmars_test():
     """Create openmars_test.nc with the exact variables and structure as real OpenMARS files."""
     nc_file = Dataset('openmars_test.nc', 'w', format='NETCDF4')
@@ -531,6 +537,10 @@ def create_openmars_test():
     
     nc_file.close()
     print("Created openmars_test.nc")
+
+# ----------------------------------------------------------------------
+#                      PCM Dummy File
+# ----------------------------------------------------------------------
 
 def create_pcm_test():
     """Create pcm_test.nc with the exact variables and structure as real PCM files."""
@@ -774,6 +784,10 @@ def create_pcm_test():
     
     nc_file.close()
     print("Created pcm_test.nc")
+
+# ----------------------------------------------------------------------
+#                      MarsWRF Dummy File
+# ----------------------------------------------------------------------
 
 def create_marswrf_test():
     """Create marswrf_test.nc with the exact variables and structure as real MarsWRF files."""

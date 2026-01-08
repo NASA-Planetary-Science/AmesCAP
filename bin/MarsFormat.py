@@ -819,6 +819,8 @@ def main():
         if model_type != 'openmars':
             DS = DS.transpose(model.dim_time, model.dim_pfull, model.dim_lat,
                             model.dim_lon, ...)
+        else:
+            print(f"{Yellow}Skipping transpose for OpenMars to avoid dimension conflicts{Nclr}")
 
         # Change longitude from -180-179 to 0-360
         if min(DS[model.dim_lon]) < 0:
