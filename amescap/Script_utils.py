@@ -201,9 +201,15 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                 if print_stat:
                     Min = np.nanmin(var)
                     Mean = np.nanmean(var)
-                    weight = area_weights_deg(var.shape, lat)
-                    Wmean = np.nanmean(var * weight) # print at end
                     Max = np.nanmax(var)
+                    
+                    try:
+                        weight = area_weights_deg(var.shape, lat)
+                        Wmean = np.nanmean(var * weight) # print at end
+                        include_wmean = True
+                    except:
+                        include_wmean = False
+                    
                     print(f"{Cyan}{varfull:>26s}|{Min:>15g}|{Mean:>15g}|"
                           f"{Max:>15g}|{Nclr}")
 
@@ -235,10 +241,11 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                         )
                 else:
                     print(f"{Red}{varfull}")
-        if print_stat:
-            # Last line for the table
-            print(f"{Cyan}__________________________|_______________|__"
+        print(f"{Cyan}__________________________|_______________|__"
                   f"_____________|_______________|")
+        
+        if include_wmean:
+            # Last line for the table
             print(f"          Global area-weighted mean {varfull}: "
                   f"{Wmean:.3f}{Nclr}\n")
         f.close()
