@@ -574,22 +574,12 @@ def main():
             lat = DS[model.dim_lat] # Replace DS.lat
             lon = DS[model.dim_lon]
 
-            # Create pfull as a coordinate variable with values (will become the new dimension)
-            pfull_values = DS[model.dim_pfull] * ref_press
-            DS = DS.assign_coords(pfull=('lev', pfull_values.values))
+            DS = DS.assign(pfull = DS[model.dim_pfull]*ref_press)
 
-            # Now swap the 'lev' dimension with 'pfull' coordinate throughout the dataset
-            DS = DS.swap_dims({'lev': 'pfull'})
-            
-            # Drop the old 'lev' coordinate if it still exists
-            if 'lev' in DS.coords:
-                DS = DS.drop_vars('lev')
-            
-            # **ADD THIS LINE:**
-            model.dim_pfull = 'pfull'  # Update model to use new dimension name
-            
-            DS['pfull'].attrs['long_name'] = '(ADDED POST-PROCESSING) reference pressure'
-            DS['pfull'].attrs['units'] = 'Pa'
+            DS['pfull'].attrs['long_name'] = (
+                '(ADDED POST-PROCESSING) reference pressure'
+                )
+            DS['pfull'].attrs['units'] = ('Pa')
 
             # add ak,bk as variables
             # add p_half dimensions as vertical grid coordinate
@@ -599,8 +589,8 @@ def main():
             # needs (sigma[0] = 0, sigma[-1] = 1).
             # Then reorganize in the original openMars format with
             # (sigma[0] = 1, sigma[-1] = 0)
-            bk = layers_mid_point_to_boundary(DS['pfull'][::-1] / ref_press, 1.)[::-1]
-            ak = np.zeros(len(DS['pfull']) + 1)
+            bk = layers_mid_point_to_boundary(DS[model.dim_pfull][::-1], 1.)[::-1]
+            ak = np.zeros(len(DS[model.dim_pfull]) + 1)
 
             DS[model.phalf] = (ak + ref_press*bk)
             DS.phalf.attrs['long_name'] = (
@@ -609,20 +599,22 @@ def main():
             DS.phalf.attrs['description'] = (
                 '(ADDED POST-PROCESSING) pressure at layer interfaces'
                 )
-            DS.phalf.attrs['units'] = 'Pa'
+            DS.phalf.attrs['units'] = ('Pa')
 
-            DS = DS.assign(bk=(model.dim_phalf, np.array(bk)))
-            DS = DS.assign(ak=(model.dim_phalf, np.zeros(len(DS['pfull']) + 1)))
+            DS = DS.assign(bk=(model.dim_phalf,
+                               np.array(bk)))
+            DS = DS.assign(ak=(model.dim_phalf,
+                               np.zeros(len(DS[model.dim_pfull]) + 1)))
 
             # Update Variable Description & Longname
             DS['ak'].attrs['long_name'] = (
                 '(ADDED POST-PROCESSING) pressure part of the hybrid coordinate'
                 )
-            DS['ak'].attrs['units'] = 'Pa'
+            DS['ak'].attrs['units'] = ('Pa')
             DS['bk'].attrs['long_name'] = (
                 '(ADDED POST-PROCESSING) vertical coordinate sigma value'
                 )
-            DS['bk'].attrs['units'] = 'None'
+            DS['bk'].attrs['units'] = ('None')
 
         # --------------------------------------------------------------
         #                     Emars Processing
@@ -829,18 +821,8 @@ def main():
         if min(DS[model.dim_lon]) < 0:
             tmp = np.array(DS[model.dim_lon])
             tmp = np.where(tmp<0, tmp + 360, tmp)
-            
-            # Create a new DataArray with the updated values and original attributes
-            new_lon = xr.DataArray(
-                tmp,
-                dims=[model.dim_lon],
-                attrs=DS[model.dim_lon].attrs.copy()
-            )
-            
-            # Update the coordinate properly using assign_coords
-            DS = DS.assign_coords({model.dim_lon: new_lon})
+            DS[model.dim_lon] = tmp
             DS = DS.sortby(model.dim_lon)
-    
             DS[model.lon].attrs['long_name'] = (
                 '(MODIFIED POST-PROCESSING) longitude'
                 )
