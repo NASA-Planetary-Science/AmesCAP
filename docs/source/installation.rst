@@ -470,6 +470,8 @@ The pip installation method is less recommended as it requires manual installati
 
    # Install CAP with spectral analysis support
    pip install "amescap[spectral] @ git+https://github.com/NASA-Planetary-Science/AmesCAP.git"
+   # OR for a specific branch, e.g., the devel branch
+   pip install "amescap[spectral] @ git+https://github.com/NASA-Planetary-Science/AmesCAP.git@devel"
 
    # Don't forget to copy the profile file to your home directory
    cp amescap/mars_templates/amescap_profile ~/.amescap_profile

@@ -16,7 +16,6 @@
        * ``netCDF4``
        * ``os``
        * ``datetime``
-       
 
 
 
@@ -62,10 +61,8 @@ Classes
 
    :param object: _description_
    :type object: _type_
-
    :return: _description_
    :rtype: _type_
-
 
    .. py:class:: Fort_var(input_vals, name_txt, long_name_txt, units_txt, dimensions_tuple)
 
@@ -87,10 +84,8 @@ Classes
 
       :param np.ndarray: _description_
       :type np.ndarray: _type_
-
       :return: _description_
       :rtype: _type_
-
 
       .. py:method:: __abs__()
 
@@ -433,11 +428,9 @@ Classes
       Create average file (e.g., N-day averages [N=5 usually])
 
 
-
    .. py:method:: write_to_daily()
 
       Create daily file (continuous time series)
-
 
 
    .. py:method:: write_to_diurn(day_average=5)
@@ -446,11 +439,9 @@ Classes
       (typically 5-day bins)
 
 
-
    .. py:method:: write_to_fixed()
 
       Create ``fixed`` file (all static variables)
-
 
 
 
@@ -487,9 +478,7 @@ Classes
 
    :param object: _description_
    :type object: _type_
-
    :return: netCDF file
-
 
    .. py:method:: add_constant(variable_name, value, longname_txt='', units_txt='')
 
@@ -506,7 +495,6 @@ Classes
 
           Log.add_dim_with_content("lon", lon_array, "longitudes",
                                    "degree", "X")
-                                   
 
 
    .. py:method:: add_dimension(dimension_name, length)
@@ -522,7 +510,6 @@ Classes
       yet, it will be created
 
 
-
    .. py:method:: copy_Ncvar(Ncvar, swap_array=None)
 
       Copy a netCDF variable from another file (e.g.,
@@ -531,12 +518,10 @@ Classes
       swapped with this array.
 
 
-
    .. py:method:: copy_all_dims_from_Ncfile(Ncfile_in, exclude_dim=[], time_unlimited=True)
 
       Copy all variables, dimensions, and attributes from another
       netCDF file
-
 
 
    .. py:method:: copy_all_vars_from_Ncfile(Ncfile_in, exclude_var=[])
@@ -547,16 +532,14 @@ Classes
       EX::
 
           Log.log_axis1D("areo", areo, "time", "degree", "T")
-          
 
 
-   .. py:method:: log_variable(variable_name, DATAin, dim_array, longname_txt='', units_txt='')
+   .. py:method:: log_variable(variable_name, DATAin, dim_array, longname_txt='', units_txt='', datatype='f4')
 
       EX::
 
           Log.log_variable("sfcT", sfcT, ("time", "Nx"),
                            "soil temperature", "K")
-                           
 
 
    .. py:method:: merge_files_from_list(Ncfilename_list, exclude_var=[])
