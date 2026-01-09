@@ -765,6 +765,7 @@ def main():
                 )
             DS['pfull'].attrs['units'] = 'Pa'
 
+            # Replace the PCM phalf creation section with:
             if 'ap' in DS and 'bp' in DS:
                 # Calculate phalf values from ap and bp
                 phalf_values = (DS.ap.values + DS.bp.values*ref_press)
@@ -813,13 +814,8 @@ def main():
         # Reorder dimensions
         print(f"{Cyan} Transposing variable dimensions to match order "
               f"expected in CAP")
-        # Skip transpose for OpenMars as it causes dimension conflicts
-        # with variables that don't all have the same dimensions
-        if model_type != 'openmars':
-            DS = DS.transpose(model.dim_time, model.dim_pfull, model.dim_lat,
-                            model.dim_lon, ...)
-        else:
-            print(f"{Yellow}Skipping transpose for OpenMars to avoid dimension conflicts{Nclr}")
+        DS = DS.transpose(model.dim_time, model.dim_pfull, model.dim_lat,
+                          model.dim_lon, ...)
 
         # Change longitude from -180-179 to 0-360
         if min(DS[model.dim_lon]) < 0:
