@@ -589,32 +589,46 @@ def main():
             # needs (sigma[0] = 0, sigma[-1] = 1).
             # Then reorganize in the original openMars format with
             # (sigma[0] = 1, sigma[-1] = 0)
-            bk = layers_mid_point_to_boundary(DS[model.dim_pfull][::-1], 1.)[::-1]
-            ak = np.zeros(len(DS[model.dim_pfull]) + 1)
-
-            DS[model.phalf] = (ak + ref_press*bk)
-            DS.phalf.attrs['long_name'] = (
-                '(ADDED POST-PROCESSING) pressure at layer interfaces'
-                )
-            DS.phalf.attrs['description'] = (
-                '(ADDED POST-PROCESSING) pressure at layer interfaces'
-                )
-            DS.phalf.attrs['units'] = ('Pa')
-
-            DS = DS.assign(bk=(model.dim_phalf,
-                               np.array(bk)))
-            DS = DS.assign(ak=(model.dim_phalf,
-                               np.zeros(len(DS[model.dim_pfull]) + 1)))
-
-            # Update Variable Description & Longname
-            DS['ak'].attrs['long_name'] = (
-                '(ADDED POST-PROCESSING) pressure part of the hybrid coordinate'
-                )
-            DS['ak'].attrs['units'] = ('Pa')
-            DS['bk'].attrs['long_name'] = (
-                '(ADDED POST-PROCESSING) vertical coordinate sigma value'
-                )
-            DS['bk'].attrs['units'] = ('None')
+            bk_vals = layers_mid_point_to_boundary(DS[model.dim_pfull][::-1], 1.)[::-1]
+            ak_vals = np.zeros(len(DS[model.dim_pfull]) + 1)
+            phalf_vals = (ak_vals + ref_press*bk_vals)
+            
+            # Create phalf dimension/coordinate explicitly first
+            # This ensures the dimension exists before we assign variables to it
+            n_phalf = len(phalf_vals)
+            DS = DS.assign_coords({model.dim_phalf: np.arange(n_phalf)})
+            
+            # Now create phalf, ak, bk variables with the phalf dimension
+            DS[model.phalf] = xr.DataArray(
+                phalf_vals, 
+                dims=[model.dim_phalf],
+                attrs={
+                    'long_name': '(ADDED POST-PROCESSING) pressure at layer interfaces',
+                    'description': '(ADDED POST-PROCESSING) pressure at layer interfaces',
+                    'units': 'Pa'
+                }
+            )
+            
+            DS['ak'] = xr.DataArray(
+                ak_vals,
+                dims=[model.dim_phalf],
+                attrs={
+                    'long_name': '(ADDED POST-PROCESSING) pressure part of the hybrid coordinate',
+                    'units': 'Pa'
+                }
+            )
+            
+            DS['bk'] = xr.DataArray(
+                bk_vals,
+                dims=[model.dim_phalf],
+                attrs={
+                    'long_name': '(ADDED POST-PROCESSING) vertical coordinate sigma value',
+                    'units': 'None'
+                }
+            )
+            
+            # Update phalf coordinate to use actual pressure values instead of indices
+            DS = DS.assign_coords({model.dim_phalf: phalf_vals})
 
         # --------------------------------------------------------------
         #                     Emars Processing
@@ -804,24 +818,38 @@ def main():
             # Skip automatic flipping - we've already handled it in PCM processing
         else:
             # Standard vertical processing for other models
-            if DS[model.pfull].values[0] != DS[model.pfull].values.min():
-                DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
-                # Flip phalf, ak, bk:
-                DS = DS.isel(**{model.dim_phalf: slice(None, None, -1)})
-                print(f"{Red}NOTE: all variables flipped along vertical dimension. "
-                    f"Top of the atmosphere is now index = 0")
+            # Check if pfull exists and needs flipping
+            if model.pfull in DS and DS[model.pfull].values[0] != DS[model.pfull].values.min():
+                # Only flip if the dimension exists
+                if model.dim_pfull in DS.dims:
+                    DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
+                    print(f"{Red}NOTE: all variables flipped along vertical dimension. "
+                        f"Top of the atmosphere is now index = 0")
+                
+                # Flip phalf, ak, bk only if phalf dimension exists
+                if model.dim_phalf in DS.dims:
+                    DS = DS.isel(**{model.dim_phalf: slice(None, None, -1)})
 
         # Reorder dimensions
         print(f"{Cyan} Transposing variable dimensions to match order "
               f"expected in CAP")
-        DS = DS.transpose(model.dim_time, model.dim_pfull, model.dim_lat,
-                          model.dim_lon, ...)
+        # Build list of dimensions to transpose, only including those that exist
+        # This handles cases where some models might have different dimension structures
+        dims_to_transpose = []
+        for dim in [model.dim_time, model.dim_pfull, model.dim_lat, model.dim_lon]:
+            if dim in DS.dims:
+                dims_to_transpose.append(dim)
+        
+        # Use ellipsis to handle any additional dimensions
+        if dims_to_transpose:
+            DS = DS.transpose(*dims_to_transpose, ...)
 
         # Change longitude from -180-179 to 0-360
         if min(DS[model.dim_lon]) < 0:
             tmp = np.array(DS[model.dim_lon])
             tmp = np.where(tmp<0, tmp + 360, tmp)
-            DS[model.dim_lon] = tmp
+            # Use assign_coords for robust coordinate update across xarray versions
+            DS = DS.assign_coords({model.dim_lon: tmp})
             DS = DS.sortby(model.dim_lon)
             DS[model.lon].attrs['long_name'] = (
                 '(MODIFIED POST-PROCESSING) longitude'
@@ -1090,7 +1118,8 @@ def main():
             # replace the time dimension with the time dimension from DS_average
             time_DS = DS[model.dim_time]
             time_avg_DS = time_DS.coarsen(**{model.dim_time:combinedN},boundary='trim').mean()
-            DS_diurn[model.dim_time] = time_avg_DS[model.dim_time]
+            # Use assign_coords for robust coordinate update
+            DS_diurn = DS_diurn.assign_coords({model.dim_time: time_avg_DS[model.dim_time].values})
 
             # Update the time coordinate attribute
             DS_diurn[model.dim_time].attrs['long_name'] = (
