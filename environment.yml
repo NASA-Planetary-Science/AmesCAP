@@ -8,7 +8,7 @@ dependencies:
   - numpy>=1.26.2
   - matplotlib>=3.8.2
   - scipy>=1.11.4
-  - xarray>=2024.1.0,<=2025.9.0
+  - xarray>=2024.1.0
   - pandas>=2.0.3
   - pyodbc>=4.0.39
   - pyshtools
