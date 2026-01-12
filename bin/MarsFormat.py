@@ -811,11 +811,11 @@ def main():
                 # Flip vertical dimensions using explicit index arrays
                 # # This approach is more robust across xarray versions than slice(None, None, -1)
                 # # which can cause dimension tracking issues in xarray >= 2025.12.0
-                n_pfull = DS.dims[model.dim_pfull]
+                n_pfull = DS.sizes[model.dim_pfull]
                 DS = DS.isel(**{model.dim_pfull: list(range(n_pfull - 1, -1, -1))})
                 # Flip phalf, ak, bk:
                 # DS = DS.isel(**{model.dim_phalf: slice(None, None, -1)})
-                n_phalf = DS.dims[model.dim_phalf]
+                n_phalf = DS.sizes[model.dim_phalf]
                 DS = DS.isel(**{model.dim_phalf: list(range(n_phalf - 1, -1, -1))})
                 print(f"{Red}NOTE: all variables flipped along vertical dimension. "
                       f"Top of the atmosphere is now index = 0")
