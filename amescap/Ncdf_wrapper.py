@@ -440,7 +440,7 @@ class Fort(object):
 
     Create a Fort object using the following::
 
-        f=Fort('/Users/akling/test/fort.11/fort.11_0684')
+        f=Fort('/Users/file/test/fort.11/fort.11_0684')
 
     Public methods can be used to generate FV3-like netCDF files::
 
