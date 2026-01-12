@@ -1108,12 +1108,45 @@ def main():
                 f'time averaged over {nday} sols'
                 )
 
+
+
+
+
             # Safe phalf check for PCM files
+            # if model_type == 'pcm' and DS_diurn is not None and 'phalf' in DS_diurn:
+            #     try:
+            #         phalf_vals = DS_diurn['phalf'].values
+            #         # Check if we have at least 2 elements
+            #         if len(phalf_vals) > 1:
+            #             # Extract actual values and convert to regular Python floats
+            #             first_val = float(phalf_vals[0])
+            #             last_val = float(phalf_vals[-1])
+            #             if first_val > last_val:
+            #                 print(f"{Yellow}Warning: phalf orientation incorrect in diurn file, fixing...")
+            #                 DS_diurn['phalf'] = (DS_diurn['phalf'].dims, phalf_vals[::-1])
+            #     except Exception as e:
+            #         print(f"{Yellow}Note: Could not check phalf orientation: {str(e)}")
+
+
+
+            # Safe phalf check for PCM files
+            # During diurn processing, phalf can gain extra dimensions from 
+            # groupby().mean() operations (similar issue to ak/bk above).
+            # We need to restore phalf from the original DS if it has wrong dimensions.
             if model_type == 'pcm' and DS_diurn is not None and 'phalf' in DS_diurn:
                 try:
+                    phalf_dims = DS_diurn['phalf'].dims
+                    # Check if phalf has acquired extra dimensions (should only have 1)
+                    if len(phalf_dims) > 1:
+                        print(f"DEBUG: phalf has extra dimensions {phalf_dims}, restoring from original DS")
+                        # Restore phalf from original dataset
+                        if 'phalf' in DS:
+                            DS_diurn['phalf'] = DS['phalf'].copy()
+                    
+                    # Now check orientation using the corrected phalf
                     phalf_vals = DS_diurn['phalf'].values
-                    # Check if we have at least 2 elements
-                    if len(phalf_vals) > 1:
+                    # Ensure we have a 1D array before checking orientation
+                    if phalf_vals.ndim == 1 and len(phalf_vals) > 1:
                         # Extract actual values and convert to regular Python floats
                         first_val = float(phalf_vals[0])
                         last_val = float(phalf_vals[-1])
@@ -1122,6 +1155,11 @@ def main():
                             DS_diurn['phalf'] = (DS_diurn['phalf'].dims, phalf_vals[::-1])
                 except Exception as e:
                     print(f"{Yellow}Note: Could not check phalf orientation: {str(e)}")
+
+
+
+
+
 
             # Create New File, set time dimension as unlimitted
             fullnameOUT = f'{fullnameIN[:-3]}{ext}.nc'
