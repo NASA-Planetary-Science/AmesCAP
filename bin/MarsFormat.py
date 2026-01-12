@@ -807,14 +807,13 @@ def main():
         else:
             # Standard vertical processing for other models
             if DS[model.pfull].values[0] != DS[model.pfull].values.min():
-                # DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
                 # Flip vertical dimensions using explicit index arrays
-                # # This approach is more robust across xarray versions than slice(None, None, -1)
-                # # which can cause dimension tracking issues in xarray >= 2025.12.0
+                # This approach is more robust across xarray versions 
+                # than slice(None, None, -1) which can cause dimension 
+                # tracking issues in xarray >= 2025.12.0
                 n_pfull = DS.sizes[model.dim_pfull]
                 DS = DS.isel(**{model.dim_pfull: list(range(n_pfull - 1, -1, -1))})
-                # Flip phalf, ak, bk:
-                # DS = DS.isel(**{model.dim_phalf: slice(None, None, -1)})
+                # Flip phalf:
                 n_phalf = DS.sizes[model.dim_phalf]
                 DS = DS.isel(**{model.dim_phalf: list(range(n_phalf - 1, -1, -1))})
                 print(f"{Red}NOTE: all variables flipped along vertical dimension. "
@@ -830,9 +829,9 @@ def main():
         if min(DS[model.dim_lon]) < 0:
             tmp = np.array(DS[model.dim_lon])
             tmp = np.where(tmp<0, tmp + 360, tmp)
-            # DS[model.dim_lon] = tmp
-            # Use assign_coords for robust coordinate update across xarray versions
-            # Direct assignment (DS[model.dim_lon] = tmp) can fail in xarray >= 2025.12.0
+            # Use assign_coords for robust coordinate update across 
+            # xarray versions. Direct assignment 
+            # (DS[model.dim_lon] = tmp) can fail in xarray >= 2025.12.0
             DS = DS.assign_coords({model.dim_lon: tmp})
             DS = DS.sortby(model.dim_lon)
             DS[model.lon].attrs['long_name'] = (
