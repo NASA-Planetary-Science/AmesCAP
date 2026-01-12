@@ -1107,28 +1107,7 @@ def main():
             DS_diurn[model.dim_time].attrs['long_name'] = (
                 f'time averaged over {nday} sols'
                 )
-
-
-
-
-
-            # Safe phalf check for PCM files
-            # if model_type == 'pcm' and DS_diurn is not None and 'phalf' in DS_diurn:
-            #     try:
-            #         phalf_vals = DS_diurn['phalf'].values
-            #         # Check if we have at least 2 elements
-            #         if len(phalf_vals) > 1:
-            #             # Extract actual values and convert to regular Python floats
-            #             first_val = float(phalf_vals[0])
-            #             last_val = float(phalf_vals[-1])
-            #             if first_val > last_val:
-            #                 print(f"{Yellow}Warning: phalf orientation incorrect in diurn file, fixing...")
-            #                 DS_diurn['phalf'] = (DS_diurn['phalf'].dims, phalf_vals[::-1])
-            #     except Exception as e:
-            #         print(f"{Yellow}Note: Could not check phalf orientation: {str(e)}")
-
-
-
+            
             # Safe phalf check for PCM files
             # During diurn processing, phalf can gain extra dimensions from 
             # groupby().mean() operations (similar issue to ak/bk above).
@@ -1155,11 +1134,6 @@ def main():
                             DS_diurn['phalf'] = (DS_diurn['phalf'].dims, phalf_vals[::-1])
                 except Exception as e:
                     print(f"{Yellow}Note: Could not check phalf orientation: {str(e)}")
-
-
-
-
-
 
             # Create New File, set time dimension as unlimitted
             fullnameOUT = f'{fullnameIN[:-3]}{ext}.nc'
