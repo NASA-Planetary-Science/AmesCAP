@@ -199,7 +199,7 @@ def download(url, file_name):
         'https://data.nas.nasa.gov/legacygcm/fv3betaout1data/03340.fixed.nc'
     :type  url: str
     :param file_name: The local file_name e.g.,
-        '/lou/la4/akling/Data/LegacyGCM_Ls000_Ls004.nc'
+        '/files/Data/LegacyGCM_Ls000_Ls004.nc'
     :type  file_name: str
     :return: The requested file(s), downloaded and saved to the current
         directory.

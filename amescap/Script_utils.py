@@ -554,7 +554,7 @@ def smart_reader(fNcdf, var_list, suppress_warning=False):
 
         from netCDF4 import Dataset
 
-        fNcdf = Dataset("/u/akling/FV3/00668.atmos_average_pstd.nc", "r")
+        fNcdf = Dataset("/u/path/to/FV3/00668.atmos_average_pstd.nc", "r")
 
         # Approach using var = fNcdf.variables["var"][:]
         ucomp = fNcdf.variables["ucomp"][:]
