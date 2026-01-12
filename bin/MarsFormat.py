@@ -634,7 +634,9 @@ def main():
             DS[model.time].attrs['units'] = 'days since 0000-00-00 00:00:00'
 
             print(f"{Cyan}Converting reference pressure to [Pa]")
-            DS[model.pfull] = DS[model.pfull].values*100
+            # DS[model.pfull] = DS[model.pfull].values*100
+            new_pfull_vals = DS[model.pfull].values * 100
+            DS = DS.assign_coords({model.pfull: new_pfull_vals})
             DS[model.pfull].attrs['units'] = 'Pa'
 
             # dims_list process finds dims of the variable and replaces
