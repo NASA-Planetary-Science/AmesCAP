@@ -634,7 +634,9 @@ def main():
             DS[model.time].attrs['units'] = 'days since 0000-00-00 00:00:00'
 
             print(f"{Cyan}Converting reference pressure to [Pa]")
-            DS[model.pfull] = DS[model.pfull].values*100
+            # DS[model.pfull] = DS[model.pfull].values*100
+            new_pfull_vals = DS[model.pfull].values * 100
+            DS = DS.assign_coords({model.pfull: new_pfull_vals})
             DS[model.pfull].attrs['units'] = 'Pa'
 
             # dims_list process finds dims of the variable and replaces
@@ -805,12 +807,18 @@ def main():
         else:
             # Standard vertical processing for other models
             if DS[model.pfull].values[0] != DS[model.pfull].values.min():
-                DS = DS.isel(**{model.dim_pfull: slice(None, None, -1)})
-                # Flip phalf, ak, bk:
-                DS = DS.isel(**{model.dim_phalf: slice(None, None, -1)})
+                # Flip vertical dimensions using explicit index arrays
+                # This approach is more robust across xarray versions 
+                # than slice(None, None, -1) which can cause dimension 
+                # tracking issues in xarray >= 2025.12.0
+                n_pfull = DS.sizes[model.dim_pfull]
+                DS = DS.isel(**{model.dim_pfull: list(range(n_pfull - 1, -1, -1))})
+                # Flip phalf:
+                n_phalf = DS.sizes[model.dim_phalf]
+                DS = DS.isel(**{model.dim_phalf: list(range(n_phalf - 1, -1, -1))})
                 print(f"{Red}NOTE: all variables flipped along vertical dimension. "
-                    f"Top of the atmosphere is now index = 0")
-
+                      f"Top of the atmosphere is now index = 0")
+                 
         # Reorder dimensions
         print(f"{Cyan} Transposing variable dimensions to match order "
               f"expected in CAP")
@@ -821,7 +829,10 @@ def main():
         if min(DS[model.dim_lon]) < 0:
             tmp = np.array(DS[model.dim_lon])
             tmp = np.where(tmp<0, tmp + 360, tmp)
-            DS[model.dim_lon] = tmp
+            # Use assign_coords for robust coordinate update across 
+            # xarray versions. Direct assignment 
+            # (DS[model.dim_lon] = tmp) can fail in xarray >= 2025.12.0
+            DS = DS.assign_coords({model.dim_lon: tmp})
             DS = DS.sortby(model.dim_lon)
             DS[model.lon].attrs['long_name'] = (
                 '(MODIFIED POST-PROCESSING) longitude'
@@ -1096,13 +1107,25 @@ def main():
             DS_diurn[model.dim_time].attrs['long_name'] = (
                 f'time averaged over {nday} sols'
                 )
-
+            
             # Safe phalf check for PCM files
+            # During diurn processing, phalf can gain extra dimensions from 
+            # groupby().mean() operations (similar issue to ak/bk above).
+            # We need to restore phalf from the original DS if it has wrong dimensions.
             if model_type == 'pcm' and DS_diurn is not None and 'phalf' in DS_diurn:
                 try:
+                    phalf_dims = DS_diurn['phalf'].dims
+                    # Check if phalf has acquired extra dimensions (should only have 1)
+                    if len(phalf_dims) > 1:
+                        print(f"DEBUG: phalf has extra dimensions {phalf_dims}, restoring from original DS")
+                        # Restore phalf from original dataset
+                        if 'phalf' in DS:
+                            DS_diurn['phalf'] = DS['phalf'].copy()
+                    
+                    # Now check orientation using the corrected phalf
                     phalf_vals = DS_diurn['phalf'].values
-                    # Check if we have at least 2 elements
-                    if len(phalf_vals) > 1:
+                    # Ensure we have a 1D array before checking orientation
+                    if phalf_vals.ndim == 1 and len(phalf_vals) > 1:
                         # Extract actual values and convert to regular Python floats
                         first_val = float(phalf_vals[0])
                         last_val = float(phalf_vals[-1])

@@ -625,7 +625,7 @@ Attributes
 
        from netCDF4 import Dataset
 
-       fNcdf = Dataset("/u/akling/FV3/00668.atmos_average_pstd.nc", "r")
+       fNcdf = Dataset("/u/username/FV3/00668.atmos_average_pstd.nc", "r")
 
        # Approach using var = fNcdf.variables["var"][:]
        ucomp = fNcdf.variables["ucomp"][:]

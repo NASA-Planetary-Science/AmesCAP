@@ -285,7 +285,7 @@ def is_child(poly_path_child,poly_path_parent):
 nskip=2 #skip a couple points in the topography file to speed-up plotting
 thick_line=0.5 #line thickness for individual cells
 
-#TODO development  map_dir='/Users/akling/Data/Mars_topo/mars_topo_mola_16.nc'
+#TODO development  map_dir='/Users/file/Data/Mars_topo/mars_topo_mola_16.nc'
 map_dir='/nobackup/rurata/FMS_MARS_data/mars_topo.nc'
 
 f=Dataset(map_dir,'r')
