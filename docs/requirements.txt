@@ -1,5 +1,5 @@
 # Core dependencies
-xarray==2023.5.0
+xarray>=2024.1.0
 pyodbc==4.0.39
 setuptools==78.1.1
 pandas==2.0.3

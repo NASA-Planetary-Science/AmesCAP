@@ -600,7 +600,6 @@ def main():
 
                 with open(output_pdf, "wb") as f:
                     writer.write(f)
-                give_permission(output_pdf)
                 print(f"{output_pdfq} was generated")
             except subprocess.CalledProcessError:
                 # If gs command fails again, prompt user to try
@@ -1811,31 +1810,7 @@ def make_template():
             customFileIN.write(" \n")
     customFileIN.close()
 
-    # NAS system only: set group permissions & print confirmation
-    give_permission(newname)
     print(f"{newname} was created")
-
-
-def give_permission(filename):
-    """
-    Sets group permissions for files created on NAS.
-
-    :param filename: name of the file
-    :type  filename: str
-    :raises ValueError: If the input filename is not a valid type
-        for file name.
-    """
-
-    # NAS system only: set group permissions to file
-    try:
-        # Catch error and standard output
-        subprocess.check_call(["setfacl -v"], shell = True,
-                              stdout = open(os.devnull, "w"),
-                              stderr = open(os.devnull, "w"))
-        cmd_txt = f"setfacl -R -m g:s0846:r {filename}"
-        subprocess.call(cmd_txt, shell = True)
-    except subprocess.CalledProcessError:
-        pass
 
 
 def namelist_parser(Custom_file):

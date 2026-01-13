@@ -26,7 +26,7 @@ and optionally accepts:
     * ``[-bps, --band_pass_spatial]``     Spatial filter: band-pass
     * ``[-tide, --tide_decomp]``          Extract diurnal tide and its harmonics
     * ``[-recon, --reconstruct]``         Reconstruct the first N harmonics
-    * ``[-norm, --normalize]``            Provide ``-tide`` result in % amplitude
+    * ``[-norm, --normalize]``            Provide ``-tide`` result in percent amplitude
     * ``[-prop, --prop_tides]``           Extract propagating tide harmonics
     * ``[-regrid, --regrid_XY_to_match]`` Regrid a target file to match a source file
     * ``[-zavg, --zonal_average]``        Zonally average all variables in a file
@@ -499,16 +499,16 @@ parser.add_argument('-tide', '--tide_decomp', action=ExtAction,
         f"Capabilities' in the installation instructions at \n"
         f"https://amescap.readthedocs.io/en/latest/installation.html"
         f"{Nclr}\n"
-        f"Use fourier decomposition to break down the signal into N "
-        f"harmonics.\nOnly works with 'diurn' files.\nReturns the phase "
-        f"and amplitude of the variable.\n"
+        f"Use fourier decomposition to break down a variable into N "
+        f"harmonics to isolate the diurnal (N=1), semi-diurnal (N=2), etc. phase and "
+        f"amplitude of a surface or 3D field.\nOnly works with 'diurn' files.\nReturns the phase"
+        f"and amplitude in separate variables.\n"
         f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
         f"Works on 'diurn' files only.\n"
         f"{Yellow}Generates a new file ending in ``_tide_decomp.nc``\n"
         f"{Green}Example:\n"
-        f"> MarsFiles 01336.atmos_diurn.nc -tide 2 -incl ps temp\n"
-        f"{Blue}(extracts semi-diurnal tide component of ps and\ntemp "
-        f"variables; 2 harmonics)"
+        f"> MarsFiles 01336.atmos_diurn.nc -tide 2 -incl ps\n"
+        f"{Blue}(extracts semi-diurnal tide component of ps; 2 harmonics)"
         f"{Nclr}\n\n"
     )
 )
@@ -598,8 +598,8 @@ parser.add_argument('-norm', '--normalize', action=ExtAction,
     parser=parser,
     nargs=0,
     help=(
-        f"For use with ``-tide``: Returns the result in percent "
-        f"amplitude.\n"
+        f"For use with ``-tide``: Returns the amplitude as a percent daily mean "
+        f"rather than an absolute value.\n"
         f"N = 1 diurnal tide, N = 2 semi-diurnal, etc.\n"
         f"Works on 'diurn' files only.\n"
         f"{Yellow}Generates a new file ending in ``_norm.nc``\n"
@@ -1719,27 +1719,27 @@ def main():
             if btype == "low":
                 fnew.add_constant(
                     "sol_max",
-                    nsol,
+                    float(nsol.item()) if hasattr(nsol, 'item') else float(nsol),
                     "Low-pass filter cut-off period ",
                     "sol"
                     )
             elif btype == "high":
                 fnew.add_constant(
                     "sol_min",
-                    nsol,
+                    float(nsol.item()) if hasattr(nsol, 'item') else float(nsol),
                     "High-pass filter cut-off period ",
                     "sol"
                     )
             elif btype == "band":
                 fnew.add_constant(
                     "sol_min",
-                    nsol[0],
+                    float(nsol[0]),
                     "High-pass filter low cut-off period ",
                     "sol"
                     )
                 fnew.add_constant(
                     "sol_max",
-                    nsol[1],
+                    float(nsol[1]),
                     "High-pass filter high cut-off period ",
                     "sol"
                     )
@@ -1752,8 +1752,12 @@ def main():
             if btype == "band":
                 # Flip the sols so that the low frequency comes first
                 low_highcut = 1/nsol[::-1]
+                # Ensure it's a proper array/list for butter function
+                low_highcut = [float(low_highcut[0]), float(low_highcut[1])]
             else:
-                low_highcut = 1./nsol
+                # Extract scalar value for single cutoff
+                low_highcut_val = nsol.item() if hasattr(nsol, 'item') else nsol
+                low_highcut = float(1./low_highcut_val)
 
             # Loop over all variables in the file
             for ivar in var_list:
@@ -1879,27 +1883,27 @@ def main():
             if btype == "low":
                 fnew.add_constant(
                     "kmax",
-                    nk,
+                    float(nk.item()) if hasattr(nk, 'item') else float(nk),
                     "Low-pass filter zonal wavenumber ",
                     "wavenumber"
                     )
             elif btype == "high":
                 fnew.add_constant(
                     "kmin",
-                    nk,
+                    float(nk.item()) if hasattr(nk, 'item') else float(nk),
                     "High-pass filter zonal wavenumber ",
                     "wavenumber"
                     )
             elif btype == "band":
                 fnew.add_constant(
                     "kmin",
-                    nk[0],
+                    float(nk[0]),
                     "Band-pass filter low zonal wavenumber ",
                     "wavenumber"
                     )
                 fnew.add_constant(
                     "kmax",
-                    nk[1],
+                    float(nk[1]),
                     "Band-pass filter high zonal wavenumber ",
                     "wavenumber"
                     )
@@ -1970,7 +1974,7 @@ def main():
 
             fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
 
-            var_list = filter_vars(fdiurn, args.include)
+            var_list = filter_vars(fdiurn, args.include + ["ps"])
 
             # Find time_of_day variable name
             tod_name = find_tod_in_diurn(fdiurn)
@@ -2126,7 +2130,7 @@ def main():
 
             fdiurn = Dataset(input_file_name, "r", format="NETCDF4_CLASSIC")
 
-            var_list = filter_vars(fdiurn, args.include)
+            var_list = filter_vars(fdiurn, args.include + ["ps"])
 
             # Find time_of_day variable name
             tod_name = find_tod_in_diurn(fdiurn)
@@ -2214,10 +2218,11 @@ def main():
                         "hr"
                         )
 
-                elif  ivar in ["pfull", "lat", "lon", "phalf", "pk",
+                elif  ivar in ["pfull", "lat", "lon", "phalf", "pk", 
                                "bk", "pstd", "zstd", "zagl", "time"]:
                         print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
                         fnew.copy_Ncaxis_with_content(fdiurn.variables[ivar])
+                        
                 elif  ivar in ["areo"]:
                         print(f"{Cyan}Processing: {ivar}...{Nclr}")
                         # Create areo variable reflecting the

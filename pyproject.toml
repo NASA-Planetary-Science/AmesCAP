@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = {file = "LICENSE"}
 authors = [
-    {name = "Mars Climate Modeling Center", email = "alexandre.m.kling@nasa.gov"}
+    {name = "Mars Climate Modeling Center", email = "richard.a.urata@nasa.gov"}
 ]
 urls = {Homepage = "https://github.com/NASA-Planetary-Science/AmesCAP"}
 dependencies = [
@@ -19,7 +19,7 @@ dependencies = [
     "numpy>=1.26.2",
     "matplotlib>=3.8.2",
     "scipy>=1.11.4",
-    "xarray>=2023.5.0",
+    "xarray>=2024.1.0",
     "pandas>=2.0.3",
     "pyodbc>=4.0.39",
     "pypdf==6.4.0",

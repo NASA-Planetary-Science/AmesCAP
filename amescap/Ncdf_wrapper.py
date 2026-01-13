@@ -119,20 +119,21 @@ class Ncdf(object):
 
     # Private Definitions
     def _def_variable(self, variable_name, dim_array, longname_txt="",
-                      units_txt="",datatype="f4"):
+                      units_txt="",datatype="f4", fill_value=None):
         self.var_dict[variable_name] = self.f_Ncdf.createVariable(variable_name,
                                                                   datatype,
-                                                                  dim_array)
+                                                                  dim_array,
+                                                                  fill_value=fill_value)
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name].long_name = longname_txt
-        self.var_dict[variable_name].dim_name = str(dim_array)
 
 
     def _def_axis1D(self, variable_name, dim_array, longname_txt="",
-                    units_txt="", cart_txt="",datatype="f8"):
+                    units_txt="", cart_txt="",datatype="f8", fill_value=None):
         self.var_dict[variable_name] = self.f_Ncdf.createVariable(variable_name,
                                                                  datatype,
-                                                                 dim_array)
+                                                                 dim_array,
+                                                                 fill_value=fill_value)
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name].long_name = longname_txt
         self.var_dict[variable_name].cartesian_axis = cart_txt
@@ -178,7 +179,6 @@ class Ncdf(object):
             self._def_variable(variable_name, dim_array, longname_txt,
                                units_txt,datatype)
         self.var_dict[variable_name].long_name = longname_txt
-        self.var_dict[variable_name].dim_name = str(dim_array)
         self.var_dict[variable_name].units = units_txt
         self.var_dict[variable_name][:] = DATAin
 
@@ -228,6 +228,10 @@ class Ncdf(object):
         self.var_dict[dimension_name].units = units_txt
         self.var_dict[dimension_name].cartesian_axis = cart_txt
         self.var_dict[dimension_name][:] = DATAin
+        
+        # Add standard attributes for vertical pressure coordinates
+        if dimension_name in ['pfull', 'phalf']:
+            self.var_dict[dimension_name].positive = "down"
 
     # .. note:: The attribute ``name``  was replaced by ``_name`` for
     # compatibility with MFDataset:
@@ -245,8 +249,57 @@ class Ncdf(object):
         longname_txt = getattr(Ncdim_var, "long_name", Ncdim_var._name)
         units_txt = getattr(Ncdim_var, "units", "")
         cart_txt = getattr(Ncdim_var, "cartesian_axis", "")
-        self.add_dim_with_content(Ncdim_var._name, Ncdim_var[:], longname_txt,
-                                  units_txt, cart_txt)
+        
+        # Get _FillValue if it exists
+        fill_value = getattr(Ncdim_var, "_FillValue", None)
+
+        # Add dimension with content
+        if Ncdim_var._name not in self.dim_dict.keys():
+            self.add_dimension(Ncdim_var._name, len(Ncdim_var))
+        
+        if Ncdim_var._name not in self.var_dict.keys():
+            # Check if this is actually a 1D variable or multi-dimensional
+            if len(Ncdim_var.shape) == 1:
+                self._def_axis1D(Ncdim_var._name, Ncdim_var._name, longname_txt,
+                            units_txt, cart_txt, fill_value=fill_value)
+                
+            else:
+                # For multi-dimensional coordinate variables (like areo 
+                # with shape (time, scalar_axis))
+                # we need to create them with the proper dimensions
+                self.log_variable(Ncdim_var._name, 
+                                Ncdim_var[:],  # Get the data
+                                Ncdim_var.dimensions,  # Use original dimensions
+                                longname_txt,
+                                units_txt)
+                # Set cartesian_axis if it exists
+                if cart_txt:
+                    self.var_dict[Ncdim_var._name].cartesian_axis = cart_txt
+                # Return early since log_variable already copied the data
+                if Ncdim_var._name in ['pfull', 'phalf', 'plev', 'level']:
+                    self.var_dict[Ncdim_var._name].positive = "down"
+                for attr_name in Ncdim_var.ncattrs():
+                    if attr_name not in ['long_name', 'units', 'cartesian_axis', '_FillValue', 'positive']:
+                        setattr(self.var_dict[Ncdim_var._name], attr_name, 
+                                getattr(Ncdim_var, attr_name))
+            return
+        
+        self.var_dict[Ncdim_var._name].long_name = longname_txt
+        self.var_dict[Ncdim_var._name].units = units_txt
+        self.var_dict[Ncdim_var._name].cartesian_axis = cart_txt
+        
+        # Use chunked copying instead of loading all at once
+        self._copy_data_chunked(Ncdim_var, self.var_dict[Ncdim_var._name])
+
+        # Add standard attributes for vertical pressure coordinates
+        if Ncdim_var._name in ['pfull', 'phalf', 'plev', 'level']:
+            self.var_dict[Ncdim_var._name].positive = "down"
+        
+        # Copy any additional attributes (except _FillValue and the ones we already set)
+        for attr_name in Ncdim_var.ncattrs():
+            if attr_name not in ['long_name', 'units', 'cartesian_axis', '_FillValue', 'positive']:
+                setattr(self.var_dict[Ncdim_var._name], attr_name, 
+                        getattr(Ncdim_var, attr_name))
 
 
     def copy_Ncvar(self, Ncvar, swap_array=None):
@@ -261,19 +314,74 @@ class Ncdf(object):
             dim_array = Ncvar.dimensions
             longname_txt = getattr(Ncvar, "long_name", Ncvar._name)
             units_txt = getattr(Ncvar, "units", "")
+            
+            # Get _FillValue if it exists (must be set at creation time)
+            fill_value = getattr(Ncvar, "_FillValue", None)
+            
             self._def_variable(Ncvar._name, Ncvar.dimensions, longname_txt,
-                               units_txt,Ncvar.dtype)
-            if np.any(swap_array):
-                self.log_variable(Ncvar._name, swap_array[:], Ncvar.dimensions,
-                                  longname_txt, units_txt)
+                            units_txt, Ncvar.dtype, fill_value=fill_value)
+            
+            # Copy ALL OTHER attributes (except _FillValue which was already set)
+            for attr_name in Ncvar.ncattrs():
+                if attr_name != "_FillValue":
+                    setattr(self.var_dict[Ncvar._name], attr_name, 
+                            getattr(Ncvar, attr_name))
+            
+            # Set the data - use chunked copying for memory efficiency
+            if swap_array is not None:
+                self.var_dict[Ncvar._name][:] = swap_array
             else:
-                self.log_variable(Ncvar._name, Ncvar[:], Ncvar.dimensions,
-                                  longname_txt, units_txt)
+                # For large variables, copy in chunks along the first dimension
+                self._copy_data_chunked(Ncvar, self.var_dict[Ncvar._name])
         else:
             print(f"***Warning***, '{Ncvar._name}' is already defined, "
-                  f"skipping it")
+                f"skipping it")
 
-
+    def _copy_data_chunked(self, src_var, dst_var, chunk_size=100):
+        """
+        Copy data from source to destination variable in chunks to avoid
+        memory issues with large files.
+        
+        :param src_var: source netCDF variable
+        :param dst_var: destination netCDF variable
+        :param chunk_size: number of records to copy at once along first dimension
+        """
+        shape = src_var.shape
+        print(f"Copying variable '{src_var._name}' of shape {shape} in chunks...")
+        
+        if len(shape) == 0:
+            # Scalar variable
+            dst_var[:] = src_var[:]
+        elif len(shape) == 1:
+            # 1D variable - copy in chunks
+            for i in range(0, shape[0], chunk_size):
+                end_i = min(i + chunk_size, shape[0])
+                dst_var[i:end_i] = src_var[i:end_i]
+        elif len(shape) == 2:
+            # 2D variable - copy in chunks along first dimension
+            for i in range(0, shape[0], chunk_size):
+                end_i = min(i + chunk_size, shape[0])
+                dst_var[i:end_i, :] = src_var[i:end_i, :]
+        elif len(shape) == 3:
+            # 3D variable - copy in chunks along first dimension
+            for i in range(0, shape[0], chunk_size):
+                end_i = min(i + chunk_size, shape[0])
+                dst_var[i:end_i, :, :] = src_var[i:end_i, :, :]
+        elif len(shape) == 4:
+            # 4D variable - copy in chunks along first dimension
+            for i in range(0, shape[0], chunk_size):
+                end_i = min(i + chunk_size, shape[0])
+                dst_var[i:end_i, :, :, :] = src_var[i:end_i, :, :, :]
+        elif len(shape) == 5:
+            print("5D variable - copy in chunks along first dimension")
+            for i in range(0, shape[0], chunk_size):
+                end_i = min(i + chunk_size, shape[0])
+                dst_var[i:end_i, :, :, :, :] = src_var[i:end_i, :, :, :, :]
+        else:
+            # For higher dimensions (there shouldn't be any), fall back to full copy
+            print("***Warning***, variable has more than 5 dimensions, copying all at once")
+            dst_var[:] = src_var[:]
+        
     def copy_all_dims_from_Ncfile(self, Ncfile_in, exclude_dim=[],
                                   time_unlimited=True):
         """
@@ -332,7 +440,7 @@ class Fort(object):
 
     Create a Fort object using the following::
 
-        f=Fort('/Users/akling/test/fort.11/fort.11_0684')
+        f=Fort('/Users/file/test/fort.11/fort.11_0684')
 
     Public methods can be used to generate FV3-like netCDF files::
 

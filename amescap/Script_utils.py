@@ -27,6 +27,8 @@ from netCDF4 import Dataset, MFDataset
 import re
 from matplotlib.colors import ListedColormap, hex2color
 
+from amescap.FV3_utils import area_weights_deg
+
 # ======================================================================
 #                           DEFINITIONS
 # ======================================================================
@@ -183,23 +185,37 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
             try:
                 slice = "[:]"
                 if "[" in varfull:
-                    varname, slice = varfull.strip().split("[")
+                    cmd_txt, slice = varfull.strip().split("[")
                     slice = f"[{slice}"
                 else:
-                    varname = varfull.strip()
+                    cmd_txt = varfull.strip()
 
-                cmd_txt = f"f.variables['{varname}']{slice}"
+                varname = f"f.variables['{cmd_txt}']{slice}"
                 f = Dataset(fileNcdf.name, "r")
-                var = eval(cmd_txt)
+                var = eval(varname)
+                
+                # Get the full latitude array (not sliced)
+                lat = f.variables['lat'][:]
+
 
                 if print_stat:
                     Min = np.nanmin(var)
                     Mean = np.nanmean(var)
                     Max = np.nanmax(var)
+                    
+                    try:
+                        weight = area_weights_deg(var.shape, lat)
+                        Wmean = np.nanmean(var * weight) # print at end
+                        last_wmean = Wmean  # Store it
+                        last_varfull = varfull  # Store variable name
+                    except:
+                        # For non-spatial variables or if weighting fails, use regular mean
+                        Wmean = Mean
+                    
                     print(f"{Cyan}{varfull:>26s}|{Min:>15g}|{Mean:>15g}|"
                           f"{Max:>15g}|{Nclr}")
 
-                    if varname == "areo":
+                    if cmd_txt == "areo":
                         # If variable is areo then print modulo
                         print(f"{Cyan}{varfull:>17s}(mod 360)|"
                               f"({(np.nanmin(var%360)):>13g})|"
@@ -207,7 +223,7 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                               f"({(np.nanmax(var%360)):>13g})|{Nclr}")
 
                 else:
-                    if varname != "areo":
+                    if cmd_txt != "areo":
                         print(f"{Cyan}{varfull}= {Nclr}")
                         print(f"{Cyan}{var}{Nclr}")
                     else:
@@ -227,37 +243,16 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                         )
                 else:
                     print(f"{Red}{varfull}")
+        
         if print_stat:
             # Last line for the table
-            print(f"{Cyan}__________________________|_______________|_______________|_______________|{Nclr}")
+            print(f"{Cyan}__________________________|_______________|__"
+                  f"_____________|_______________|")
+            # Only print weighted mean if we successfully calculated one
+            if last_wmean is not None:
+                print(f"          Global area-weighted mean {last_varfull}: "
+                      f"{last_wmean:.3f}{Nclr}\n")
         f.close()
-
-
-def give_permission(filename):
-    """
-    Sets group file permissions for the NAS system
-
-    :param filename: full path to the netCDF file
-    :type  filename: str
-
-    :return: None
-
-    :raises subprocess.CalledProcessError: if the setfacl command fails
-    :raises FileNotFoundError: if the file is not found
-    """
-
-    try:
-        # catch error and standard output
-        subprocess.check_call(
-            ["setfacl -v"],
-            shell=True,
-            stdout=open(os.devnull, "w"),
-            stderr=open(os.devnull, "w")
-            )
-        cmd_txt = f"setfacl -R -m g:s0846:r {filename}"
-        subprocess.call(cmd_txt, shell=True)
-    except subprocess.CalledProcessError:
-        pass
 
 
 def check_file_tape(fileNcdf):
@@ -559,7 +554,7 @@ def smart_reader(fNcdf, var_list, suppress_warning=False):
 
         from netCDF4 import Dataset
 
-        fNcdf = Dataset("/u/akling/FV3/00668.atmos_average_pstd.nc", "r")
+        fNcdf = Dataset("/u/path/to/FV3/00668.atmos_average_pstd.nc", "r")
 
         # Approach using var = fNcdf.variables["var"][:]
         ucomp = fNcdf.variables["ucomp"][:]

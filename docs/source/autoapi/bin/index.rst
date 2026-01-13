@@ -14,6 +14,7 @@ Submodules
    MarsFiles/index.rst
    MarsFormat/index.rst
    MarsInterp/index.rst
+   MarsNest/index.rst
    MarsPlot/index.rst
    MarsPull/index.rst
    MarsVars/index.rst
