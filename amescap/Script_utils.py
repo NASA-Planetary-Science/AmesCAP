@@ -209,8 +209,8 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                         last_wmean = Wmean  # Store it
                         last_varfull = varfull  # Store variable name
                     except:
-                        # For non-spatial variables or if weighting fails, use regular mean
-                        last_wmean = Mean
+                        # If weighting fails, don't print
+                        Wmean = None
                     
                     print(f"{Cyan}{varfull:>26s}|{Min:>15g}|{Mean:>15g}|"
                           f"{Max:>15g}|{Nclr}")
