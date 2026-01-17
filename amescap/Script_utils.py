@@ -206,8 +206,8 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                     try:
                         weight = area_weights_deg(var.shape, lat)
                         Wmean = np.nanmean(var * weight) # print at end
-                        last_wmean = Wmean  # Store it
-                        last_varfull = varfull  # Store variable name
+                        # last_wmean = Wmean  # Store it
+                        # last_varfull = varfull  # Store variable name
                     except:
                         # If weighting fails, don't print
                         Wmean = None
@@ -249,9 +249,9 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
             print(f"{Cyan}__________________________|_______________|__"
                   f"_____________|_______________|")
             # Only print weighted mean if we successfully calculated one
-            if last_wmean is not None:
-                print(f"          Global area-weighted mean {last_varfull}: "
-                      f"{last_wmean:.3f}{Nclr}\n")
+            if Wmean is not None:
+                print(f"          Global area-weighted mean {varfull}: "
+                      f"{Wmean:.3f}{Nclr}\n")
         f.close()
 
 

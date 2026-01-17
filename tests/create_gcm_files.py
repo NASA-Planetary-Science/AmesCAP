@@ -437,6 +437,9 @@ def create_emars_test():
                     7.31135861e+00, 7.46358670e+00, 7.57229980e+00, 7.64819446e+00,
                     7.70000000e+00]
 
+    earth_day_var[:] = earth_day
+    earth_hour_var[:] = earth_hour
+    earth_minute_var[:] = earth_minute
     earth_month_var[:] = earth_month_values
     earth_second_var[:] = earth_second_values
     emars_sol_var[:] = emars_sol_values
