@@ -282,7 +282,7 @@ class Ncdf(object):
                     if attr_name not in ['long_name', 'units', 'cartesian_axis', '_FillValue', 'positive']:
                         setattr(self.var_dict[Ncdim_var._name], attr_name, 
                                 getattr(Ncdim_var, attr_name))
-                return
+            return
         
         self.var_dict[Ncdim_var._name].long_name = longname_txt
         self.var_dict[Ncdim_var._name].units = units_txt
