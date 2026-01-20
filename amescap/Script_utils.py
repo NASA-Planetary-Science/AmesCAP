@@ -182,6 +182,7 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                 f"{Nclr}")
 
         for varfull in list_varfull:
+            Wmean = None  # Initialize before try block
             try:
                 slice = "[:]"
                 if "[" in varfull:
