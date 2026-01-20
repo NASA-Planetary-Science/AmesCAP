@@ -194,24 +194,31 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                 varname = f"f.variables['{cmd_txt}']{slice}"
                 f = Dataset(fileNcdf.name, "r")
                 var = eval(varname)
-                
+
                 # Get the full latitude array (not sliced)
-                lat = f.variables['lat'][:]
+                # Try common latitude variable names
+                lat = None
+                for lat_name in ['lat', 'latitude', 'latu', 'latv']:
+                    if lat_name in f.variables:
+                        lat = f.variables[lat_name][:]
+                        break
 
 
                 if print_stat:
                     Min = np.nanmin(var)
                     Mean = np.nanmean(var)
                     Max = np.nanmax(var)
-                    
-                    try:
-                        weight = area_weights_deg(var.shape, lat)
-                        Wmean = np.nanmean(var * weight) # print at end
-                        # last_wmean = Wmean  # Store it
-                        # last_varfull = varfull  # Store variable name
-                    except:
-                        # If weighting fails, don't print
-                        Wmean = None
+
+                    # Only attempt weighted mean if latitude was found
+                    if lat is not None:
+                        try:
+                            weight = area_weights_deg(var.shape, lat)
+                            Wmean = np.nanmean(var * weight) # print at end
+                            # last_wmean = Wmean  # Store it
+                            # last_varfull = varfull  # Store variable name
+                        except:
+                            # If weighting fails, don't print
+                            Wmean = None
                     
                     print(f"{Cyan}{varfull:>26s}|{Min:>15g}|{Mean:>15g}|"
                           f"{Max:>15g}|{Nclr}")
