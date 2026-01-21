@@ -182,6 +182,7 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                 f"{Nclr}")
 
         for varfull in list_varfull:
+            Wmean = None  # Initialize before try block
             try:
                 slice = "[:]"
                 if "[" in varfull:
@@ -193,24 +194,31 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                 varname = f"f.variables['{cmd_txt}']{slice}"
                 f = Dataset(fileNcdf.name, "r")
                 var = eval(varname)
-                
+
                 # Get the full latitude array (not sliced)
-                lat = f.variables['lat'][:]
+                # Try common latitude variable names
+                lat = None
+                for lat_name in ['lat', 'latitude', 'latu', 'latv']:
+                    if lat_name in f.variables:
+                        lat = f.variables[lat_name][:]
+                        break
 
 
                 if print_stat:
                     Min = np.nanmin(var)
                     Mean = np.nanmean(var)
                     Max = np.nanmax(var)
-                    
-                    try:
-                        weight = area_weights_deg(var.shape, lat)
-                        Wmean = np.nanmean(var * weight) # print at end
-                        last_wmean = Wmean  # Store it
-                        last_varfull = varfull  # Store variable name
-                    except:
-                        # For non-spatial variables or if weighting fails, use regular mean
-                        Wmean = Mean
+
+                    # Only attempt weighted mean if latitude was found
+                    if lat is not None:
+                        try:
+                            weight = area_weights_deg(var.shape, lat)
+                            Wmean = np.nanmean(var * weight) # print at end
+                            # last_wmean = Wmean  # Store it
+                            # last_varfull = varfull  # Store variable name
+                        except:
+                            # If weighting fails, don't print
+                            Wmean = None
                     
                     print(f"{Cyan}{varfull:>26s}|{Min:>15g}|{Mean:>15g}|"
                           f"{Max:>15g}|{Nclr}")
@@ -249,9 +257,9 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
             print(f"{Cyan}__________________________|_______________|__"
                   f"_____________|_______________|")
             # Only print weighted mean if we successfully calculated one
-            if last_wmean is not None:
-                print(f"          Global area-weighted mean {last_varfull}: "
-                      f"{last_wmean:.3f}{Nclr}\n")
+            if Wmean is not None:
+                print(f"          Global area-weighted mean {varfull}: "
+                      f"{Wmean:.3f}{Nclr}\n")
         f.close()
 
 
