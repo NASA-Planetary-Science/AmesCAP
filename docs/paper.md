@@ -7,7 +7,6 @@ tags:
   - data processing
   - data visualization
 authors:
-    corresponding: true
   - name: Courtney M. L. Batterson
     orcid: 0000-0001-5894-095X
     equal-contrib: true
@@ -16,6 +15,7 @@ authors:
     orcid: 0000-0001-8497-5718
     equal-contrib: true
     affiliation: 1
+    corresponding: true
   - name: Victoria L. Hartwick
     orcid: 0000-0002-2082-8986
     equal-contrib: true
