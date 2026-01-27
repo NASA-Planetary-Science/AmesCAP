@@ -18,7 +18,7 @@ netcdf4==1.6.5
 numpy==1.26.2
 requests==2.32.4
 scipy==1.11.4
-pypdf==6.6.0
+pypdf==6.6.2
 
 # Dependencies required by other packages
 certifi==2024.7.4
