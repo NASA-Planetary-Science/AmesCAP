@@ -341,8 +341,8 @@ def main():
 
             x, y = grid_lon,grid_lat
             #Filter projection singularities
-            x[x>0.9*1e+30]=np.NaN
-            y[y>0.9*1e+30]=np.NaN
+            x[x>0.9*1e+30]=np.nan
+            y[y>0.9*1e+30]=np.nan
             _,basename = extract_path_basename(name) #Extract path and basename at two objects
             #Plot the grid only for the mother
             if 'nest' not in basename:
@@ -392,8 +392,8 @@ def main():
             NWc,_= get_corners(poly_parent)
             x, y = grid_lon,grid_lat
             #Filter projection singularities
-            x[x>0.9*1e+30]=np.NaN
-            y[y>0.9*1e+30]=np.NaN
+            x[x>0.9*1e+30]=np.nan
+            y[y>0.9*1e+30]=np.nan
 
             tileN=find_tile_number(name)
 
@@ -416,8 +416,8 @@ def main():
                     f.close()
                     x, y = grid_lon,grid_lat
                     #Filter projection singularities
-                    x[x>0.9*1e+30]=np.NaN
-                    y[y>0.9*1e+30]=np.NaN
+                    x[x>0.9*1e+30]=np.nan
+                    y[y>0.9*1e+30]=np.nan
                     plt.plot(x[0,:],  y[0,:],  'r',lw=3 )#S
                     plt.plot(x[:,-1], y[:,-1], 'r',lw=3 )#E
                     plt.plot(x[-1,:], y[-1,:], 'r',lw=3 )#N

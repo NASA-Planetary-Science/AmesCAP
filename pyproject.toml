@@ -22,7 +22,7 @@ dependencies = [
     "xarray>=2024.1.0",
     "pandas>=2.0.3",
     "pyodbc>=4.0.39",
-    "pypdf==6.4.0",
+    "pypdf==6.6.0",
 ]
 
 [project.optional-dependencies]
