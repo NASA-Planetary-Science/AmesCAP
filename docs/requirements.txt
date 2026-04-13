@@ -16,9 +16,9 @@ sphinx-autoapi==3.0.0
 matplotlib==3.8.2
 netcdf4==1.6.5
 numpy==1.26.2
-requests==2.32.4
+requests==2.33.0
 scipy==1.11.4
-pypdf==6.6.0
+pypdf==6.10.0
 
 # Dependencies required by other packages
 certifi==2024.7.4
@@ -31,7 +31,7 @@ idna==3.7
 importlib-resources==6.1.1
 kiwisolver==1.4.5
 packaging==23.2
-pillow==10.3.0
+pillow==12.1.1
 pyparsing==3.1.1
 python-dateutil==2.8.2
 six==1.16.0
