@@ -45,6 +45,11 @@ add_sol_to_time_axis = False
 lon_coordinate = 360
 # True includes NaNs in slices (like np.mean), False ignores NaNs (like np.nanmean)
 show_NaN_in_slice = False
+# Units for vertical coordinates. Defaults are [Pa] and [m]
+# Doesn't affect interpolation units
+# Additional types can be added to the dictionary in MarsPlot.py
+pres_unit_pref = "Pa"   # options: Pa, hPa, mbar
+alt_unit_pref = "km"    # options: m, km
 
 <<<<<<<<<<<<<<| Pressure definitions for pstd |>>>>>>>>>>>>>
 
