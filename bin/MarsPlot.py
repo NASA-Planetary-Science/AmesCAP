@@ -54,7 +54,7 @@ from numpy import (abs, sqrt, log, exp, min, max, mean)
 
 from matplotlib.ticker import (
     LogFormatter, NullFormatter, LogFormatterSciNotation,
-    MultipleLocator
+    MultipleLocator, FuncFormatter
 )
 
 # Load amesCAP modules
@@ -76,6 +76,16 @@ degr = u"\N{DEGREE SIGN}"
 global current_version
 current_version = 3.5
 
+PRESSURE_CONVERSIONS = {
+    "Pa":   {"scale": 1.0,    "label": "Pressure [Pa]"},
+    "hPa":  {"scale": 1e-2,   "label": "Pressure [hPa]"},
+    "mbar": {"scale": 1e-2,   "label": "Pressure [mbar]"},
+}
+
+ALTITUDE_CONVERSIONS = {
+    "m":  {"scale": 1.0,    "label": "Altitude [m]"},
+    "km": {"scale": 1e-3,   "label": "Altitude [km]"},
+}
 
 def debug_wrapper(func):
     """
@@ -641,6 +651,18 @@ lon_coord_type = eval("np.array(lon_coordinate)", namespace)
 # Alt. TRUE = include NaNs (use np.mean)
 include_NaNs = eval("np.array(show_NaN_in_slice)", namespace)
 
+# Define the default Z unit to plot
+pres_unit_pref = "Pa"
+alt_unit_pref = "m"
+
+try:
+    pres_unit_pref = eval("pres_unit_pref", namespace)
+except NameError:
+    pass
+try:
+    alt_unit_pref = eval("alt_unit_pref", namespace)
+except NameError:
+    pass
 
 def mean_func(arr, axis):
     """
@@ -3610,18 +3632,29 @@ class Fig_2D_lat_lev(Fig_2D):
                 var_info += f" (& {var_info2})"
 
             if self.vert_unit == "Pa":
+                conv = PRESSURE_CONVERSIONS.get(pres_unit_pref, PRESSURE_CONVERSIONS["Pa"])
+
                 ax.set_yscale("log")
                 ax.invert_yaxis()
-                ax.yaxis.set_major_formatter(CustomTicker())
+                ax.yaxis.set_major_formatter(
+                    FuncFormatter(lambda val, _: CustomTicker()(val * conv["scale"]))
+                )
                 ax.yaxis.set_minor_formatter(NullFormatter())
-                ylabel_txt = "Pressure [Pa]"
+                ylabel_txt = conv["label"]
             else:
-                ylabel_txt = "Altitude [m]"
+                conv = ALTITUDE_CONVERSIONS.get(alt_unit_pref, ALTITUDE_CONVERSIONS["m"])
+
+                # Rescale altitude tick labels
+                ax.yaxis.set_major_formatter(
+                    FuncFormatter(lambda val, _: f"{val * conv['scale']:.0f}")
+                )
+                ylabel_txt = conv["label"]
 
             if self.Xlim:
                 plt.xlim(self.Xlim)
             if self.Ylim:
-                plt.ylim(self.Ylim)
+                Ylim_native = [y / conv["scale"] for y in self.Ylim]
+                plt.ylim(Ylim_native)
 
             super(Fig_2D_lat_lev, self).make_title(var_info, "Latitude",
                                                    ylabel_txt)
@@ -3725,18 +3758,29 @@ class Fig_2D_lon_lev(Fig_2D):
                 var_info += f" (& {var_info2})"
 
             if self.vert_unit == "Pa":
+                conv = PRESSURE_CONVERSIONS.get(pres_unit_pref, PRESSURE_CONVERSIONS["Pa"])
+
                 ax.set_yscale("log")
                 ax.invert_yaxis()
-                ax.yaxis.set_major_formatter(CustomTicker())
+                ax.yaxis.set_major_formatter(
+                    FuncFormatter(lambda val, _: CustomTicker()(val * conv["scale"]))
+                )
                 ax.yaxis.set_minor_formatter(NullFormatter())
-                ylabel_txt = "Pressure [Pa]"
+                ylabel_txt = conv["label"]
             else:
-                ylabel_txt = "Altitude [m]"
+                conv = ALTITUDE_CONVERSIONS.get(alt_unit_pref, ALTITUDE_CONVERSIONS["m"])
+
+                # Rescale altitude tick labels
+                ax.yaxis.set_major_formatter(
+                    FuncFormatter(lambda val, _: f"{val * conv['scale']:.0f}")
+                )
+                ylabel_txt = conv["label"]
 
             if self.Xlim:
                 plt.xlim(self.Xlim)
             if self.Ylim:
-                plt.ylim(self.Ylim)
+                Ylim_native = [y / conv["scale"] for y in self.Ylim]
+                plt.ylim(Ylim_native)
 
             super(Fig_2D_lon_lev, self).make_title(
                 var_info, "Longitude", ylabel_txt)
@@ -3864,8 +3908,6 @@ class Fig_2D_time_lev(Fig_2D):
                 idmin = np.argmin(abs(SolDay - self.Xlim[0]))
                 idmax = np.argmin(abs(SolDay - self.Xlim[1]))
                 plt.xlim([LsDay[idmin], LsDay[idmax]])
-            if self.Ylim:
-                plt.ylim(self.Ylim)
 
             Ls_ticks = [item for item in ax.get_xticks()]
             labels = [item for item in ax.get_xticklabels()]
@@ -3891,13 +3933,27 @@ class Fig_2D_time_lev(Fig_2D):
                        rotation = 0)
 
             if self.vert_unit == "Pa":
+                conv = PRESSURE_CONVERSIONS.get(pres_unit_pref, PRESSURE_CONVERSIONS["Pa"])
+
                 ax.set_yscale("log")
                 ax.invert_yaxis()
-                ax.yaxis.set_major_formatter(CustomTicker())
+                ax.yaxis.set_major_formatter(
+                    FuncFormatter(lambda val, _: CustomTicker()(val * conv["scale"]))
+                )
                 ax.yaxis.set_minor_formatter(NullFormatter())
-                ylabel_txt = "Pressure [Pa]"
+                ylabel_txt = conv["label"]
             else:
-                ylabel_txt = "Altitude [m]"
+                conv = ALTITUDE_CONVERSIONS.get(alt_unit_pref, ALTITUDE_CONVERSIONS["m"])
+
+                # Rescale altitude tick labels
+                ax.yaxis.set_major_formatter(
+                    FuncFormatter(lambda val, _: f"{val * conv['scale']:.0f}")
+                )
+                ylabel_txt = conv["label"]
+
+            if self.Ylim:
+                Ylim_native = [y / conv["scale"] for y in self.Ylim]
+                plt.ylim(Ylim_native)
 
             super(Fig_2D_time_lev, self).make_title(
                 var_info, "L$_s$", ylabel_txt)
@@ -4895,19 +4951,30 @@ class Fig_1D(object):
                                                      - self.nPan*label_factor))
 
                 if self.vert_unit == "Pa":
+                    conv = PRESSURE_CONVERSIONS.get(pres_unit_pref, PRESSURE_CONVERSIONS["Pa"])
+
                     ax.set_yscale("log")
                     ax.invert_yaxis()
-                    ax.yaxis.set_major_formatter(CustomTicker())
+                    ax.yaxis.set_major_formatter(
+                        FuncFormatter(lambda val, _: CustomTicker()(val * conv["scale"]))
+                    )
                     ax.yaxis.set_minor_formatter(NullFormatter())
-                    ylabel_txt = "Pressure [Pa]"
+                    ylabel_txt = conv["label"]
                 else:
-                    ylabel_txt = "Altitude [m]"
+                    conv = ALTITUDE_CONVERSIONS.get(alt_unit_pref, ALTITUDE_CONVERSIONS["m"])
+
+                    # Rescale altitude tick labels
+                    ax.yaxis.set_major_formatter(
+                        FuncFormatter(lambda val, _: f"{val * conv['scale']:.0f}")
+                    )
+                    ylabel_txt = conv["label"]
 
                 plt.ylabel(ylabel_txt,
                            fontsize = (label_size - self.nPan*label_factor))
 
                 if self.Dlim:
-                    plt.ylim(self.Dlim)
+                    Ylim_native = [y / conv["scale"] for y in self.Dlim]
+                    plt.ylim(Ylim_native)
                 if self.Vlim:
                     plt.xlim(self.Vlim)
 
