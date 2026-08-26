@@ -351,10 +351,29 @@ def main():
             zsurf = f_fixed.variables["zsurf"][:]
             f_fixed.close()
         except FileNotFoundError:
-            print(f"{Red}***Error*** Topography (zsurf) is required for "
-                  f"interpolation to zstd, but the file {name_fixed} "
-                  f"cannot be not found{Nclr}")
-            exit()
+            # No fixed file: fall back to zsurf carried in the input
+            # file itself (MarsFormat writes it for converted models).
+            # A time-dependent zsurf is reduced to its first frame.
+            zsurf = None
+            first = file_list[0]
+            if not os.path.isabs(first):
+                first = os.path.join(filepath, first)
+            try:
+                with Dataset(first, 'r') as f_in:
+                    if "zsurf" in f_in.variables:
+                        zsurf = f_in.variables["zsurf"][:]
+                        if zsurf.ndim == 3:
+                            zsurf = zsurf[0]
+                        print(f"{Yellow}No fixed file {name_fixed}: using "
+                              f"zsurf from {first}{Nclr}")
+            except OSError:
+                pass
+            if zsurf is None:
+                print(f"{Red}***Error*** Topography (zsurf) is required for "
+                      f"interpolation to zstd, but the file {name_fixed} "
+                      f"cannot be found and the input file carries no "
+                      f"zsurf{Nclr}")
+                exit()
 
     # =========================== zagl ===========================
     elif interp_type == "zagl":

@@ -794,12 +794,55 @@ def main():
                     'USTAGGERED IN POST-PROCESSING'
                     )
 
-            # Layer-centre height above the local surface [m]
-            if zagl_lvl is not None:
+            # Layer-centre height above the local surface [m] (CAP zfull)
+            #   1. Z_PHY (layer-centre geopotential height above the
+            #      areoid, the model's own value) minus HGT, or minus a
+            #      hydrostatic surface estimate from the bottom layer
+            #      when HGT is absent (reduced files; ~2 m rms)
+            #   2. PH, PHB, HGT: interface geopotential averaged to
+            #      layer centres, minus terrain (older files)
+            zfull3D = None
+            zsrc = None
+            if 'Z_PHY' in DS:
+                zphy = DS['Z_PHY'].transpose(model.dim_time, model.dim_pfull,
+                                             model.dim_lat, model.dim_lon)
+                if 'HGT' in DS:
+                    zs = DS['HGT'].transpose(model.dim_time, model.dim_lat,
+                                             model.dim_lon).values
+                    zsrc = 'Z_PHY - HGT'
+                elif all(v in DS for v in ('P_PHY', 'T_PHY', 'PSFC')):
+                    pp = DS['P_PHY'].transpose(model.dim_time, model.dim_pfull,
+                                               model.dim_lat, model.dim_lon).values
+                    tt = DS['T_PHY'].transpose(model.dim_time, model.dim_pfull,
+                                               model.dim_lat, model.dim_lon).values
+                    ps = DS['PSFC'].transpose(model.dim_time, model.dim_lat,
+                                              model.dim_lon).values
+                    kb = int(np.argmax(np.nanmean(pp, axis=(0, 2, 3))))
+                    Rd = float(DS.attrs.get('R_D', 191.8))
+                    g = float(DS.attrs.get('G', 3.727))
+                    with np.errstate(divide='ignore', invalid='ignore'):
+                        zs = (zphy.values[:, kb] - Rd*tt[:, kb]/g
+                              * np.log(ps/pp[:, kb]))
+                    zsrc = ('Z_PHY - hydrostatic surface estimate from '
+                            'the bottom layer (no HGT)')
+                    target = getattr(model, 'zsurf')
+                    if target not in DS:
+                        DS[target] = ((model.dim_time, model.dim_lat,
+                                       model.dim_lon), zs)
+                        DS[target].attrs['description'] = (
+                            '(ADDED POST-PROCESSING) surface height, '
+                            'hydrostatic estimate from the bottom layer')
+                        DS[target].attrs['long_name'] = DS[target].attrs['description']
+                        DS[target].attrs['units'] = 'm'
+                if zsrc is not None:
+                    zfull3D = zphy.values - zs[:, None, :, :]
+            if zfull3D is None and zagl_lvl is not None:
                 zagl_lvl = zagl_lvl.transpose(model.dim_time,
                                               'bottom_top_stag', ...)
                 zfull3D = 0.5*(zagl_lvl.isel(bottom_top_stag=slice(None, -1)).values
                                + zagl_lvl.isel(bottom_top_stag=slice(1, None)).values)
+                zsrc = 'PH, PHB, HGT'
+            if zfull3D is not None:
                 DS = DS.assign(zfull=((model.dim_time, model.dim_pfull,
                                        model.dim_lat, model.dim_lon),
                                       zfull3D))
@@ -808,27 +851,37 @@ def main():
                 DS['zfull'].attrs['long_name'] = (
                     '(ADDED POST-PROCESSING) height above local surface')
                 DS['zfull'].attrs['units'] = 'm'
+                print(f"{Cyan}zfull from {zsrc}{Nclr}")
+            else:
+                print(f"{Yellow}No height information (PH/PHB/HGT or "
+                      f"Z_PHY): zfull not written{Nclr}")
 
             if 'Times' in DS:
                 print(f"{Red} Dropping 'Times' variable with non-numerical values")
                 DS = DS.drop_vars("Times")
 
-            # Reduced files keep only the physics-grid winds U_PHY/V_PHY
-            # /W_PHY (already on mass points). Alias them to U/V/W so
-            # the profile mapping to ucomp/vcomp/w applies.
+            # Winds: U, V, W sit on the Arakawa-C staggered locations
+            # (W on layer interfaces). The physics-grid U_PHY, V_PHY,
+            # W_PHY are the model's own values averaged to mass-point
+            # layer centres, so they are preferred whenever present;
+            # the 2-point destaggering above is the fallback for older
+            # files that only carry U, V, W.
             # The target name is whatever the profile lookup settled on
-            # (e.g. 'U' when present in the file, else the CAP name
-            # 'ucomp'), so the later renaming step needs no change.
+            # ('U' when present in the file, else the CAP name 'ucomp'),
+            # so the later renaming step needs no change.
             for cap, phy in (('ucomp', 'U_PHY'), ('vcomp', 'V_PHY'),
                              ('w', 'W_PHY')):
                 target = getattr(model, cap)
-                if target not in DS and phy in DS:
+                if phy in DS:
                     DS[target] = DS[phy]
                     DS[target].attrs['description'] = (
-                        f'(ALIASED FROM {phy} POST-PROCESSING) '
+                        f'(FROM {phy} POST-PROCESSING) '
                         + DS[phy].attrs.get('description', ''))
                     DS[target].attrs['long_name'] = DS[target].attrs['description']
                     print(f"{Cyan}{target} taken from {phy}{Nclr}")
+                elif target in DS:
+                    print(f"{Cyan}{target} from destaggered {target} "
+                          f"(no {phy}){Nclr}")
 
             # Equation of time: recent planetWRF writes LTST, the true
             # local solar time of the model sun. Its departure from the
