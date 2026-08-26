@@ -2152,7 +2152,7 @@ def polar_warming(T, lat, outside_range=np.nan):
                            axis = 0))
 
 
-def time_shift_calc(var_in, lon, tod, target_times=None):
+def time_shift_calc(var_in, lon, tod, target_times=None, eot_offset=0.):
     """
     Conversion to uniform local time.
 
@@ -2169,6 +2169,11 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
     :type  tod: 1D array
     :param target_times: local time(s) [hr] to shift to (e.g., ``"3. 15."``)
     :type  target_times: float (optional)
+    :param eot_offset: equation-of-time correction [hr] added to the
+        longitude shift, so that the output axis is TRUE local solar
+        time rather than mean local time: LTST = UT + lon/15 +
+        eot_offset. One scalar per call (i.e. per sol). Default 0.
+    :type  eot_offset: float (optional)
     :return: the array shifted to uniform local time
 
     .. note::
@@ -2258,9 +2263,8 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
 
     # Calculate interpolation indices
     # Convert east longitude to equivalent hours
-    lon_shift = 24.0 * lon / 360.
-    kk = np.where(lon_shift < 0)
-    lon_shift[kk] = lon_shift[kk] + 24.
+    lon_shift = 24.0 * np.asarray(lon, dtype=float) / 360. + float(eot_offset)
+    lon_shift = np.mod(lon_shift, 24.)
 
     fraction = np.zeros((n_lon, n_tod_out))
     lower_indices = np.zeros((n_lon, n_tod_out))

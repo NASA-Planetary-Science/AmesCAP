@@ -830,6 +830,36 @@ def main():
                     DS[target].attrs['long_name'] = DS[target].attrs['description']
                     print(f"{Cyan}{target} taken from {phy}{Nclr}")
 
+            # Equation of time: recent planetWRF writes LTST, the true
+            # local solar time of the model sun. Its departure from the
+            # mean local time UT + lon/15 is one scalar per frame
+            # (it drifts through the year by tens of minutes on Mars).
+            # Save it so MarsFiles -t can shift to true solar time.
+            if 'LTST' in DS:
+                sols = np.asarray(DS[model.time].values, dtype=float)
+                ut_hr = np.mod(sols, 1.)*24.
+                lon_hr = np.asarray(DS[model.dim_lon].values, dtype=float)/15.
+                ltst = DS['LTST'].transpose(model.dim_time, model.dim_lat,
+                                            model.dim_lon).values
+                naive = ut_hr[:, None, None] + lon_hr[None, None, :]
+                diff = np.mod(ltst - naive + 12., 24.) - 12.
+                eot = np.nanmedian(diff.reshape(diff.shape[0], -1), axis=1)
+                # Restart frames carry LTST = 0: mark and fill from
+                # the nearest valid frame.
+                bad = (np.nanmax(np.abs(ltst).reshape(ltst.shape[0], -1),
+                                 axis=1) == 0)
+                if bad.any() and (~bad).any():
+                    idx = np.arange(len(eot))
+                    eot[bad] = np.interp(idx[bad], idx[~bad], eot[~bad])
+                DS = DS.assign(eot_offset=((model.dim_time,), eot))
+                DS['eot_offset'].attrs['description'] = (
+                    '(ADDED POST-PROCESSING) equation of time: true local '
+                    'solar time minus mean local time (UT + lon/15), from LTST')
+                DS['eot_offset'].attrs['long_name'] = DS['eot_offset'].attrs['description']
+                DS['eot_offset'].attrs['units'] = 'hr'
+                print(f"{Cyan}eot_offset from LTST: {eot.min()*60:+.2f} to "
+                      f"{eot.max()*60:+.2f} min{Nclr}")
+
             # Prune variables CAP cannot carry: anything on a dimension
             # other than time/pfull/phalf/lat/lon (soil layers, dust
             # bins, radiation layers, leftover staggered grids), and
