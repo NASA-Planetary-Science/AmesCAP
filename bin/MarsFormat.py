@@ -839,9 +839,11 @@ def main():
                        model.dim_lat, model.dim_lon}
             keep_meta = {'ak', 'bk', 'pfull', 'phalf'}
             drop = []
-            for v in list(DS.data_vars):
+            # Include coordinates: xarray promotes XLAT_U, XLONG_V, ...
+            # to coords via the 'coordinates' attribute of U, V.
+            for v in list(DS.variables):
                 dims = set(DS[v].dims)
-                if v in keep_meta:
+                if v in keep_meta or v in DS.dims:
                     continue
                 if not dims <= allowed:
                     drop.append(v)

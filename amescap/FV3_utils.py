@@ -2271,14 +2271,23 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
     # lon_shift: The offset in Mars-hours due to Martian longitude
     # The result dtt (delta time transform) tells us which time indices
     # in the original Mars data to interpolate between
+    # For output local time LT_n at east longitude lon, the universal
+    # time of the sample is UT = LT_n - lon_shift. The input samples are
+    # labelled tod[k] = tod[0] + k*dt_in (instantaneous samples, or the
+    # centres of averaging bins), so the fractional index into the
+    # input is (UT - tod[0]) / dt_in. dtt below is (UT - tod[0]) in
+    # hours, wrapped into [0, 24).
+    #
+    # Note: an earlier form added a spurious +dt_in here (one full
+    # bin) and omitted -tod[0] in the target_times branch; on 3-hourly
+    # data that shifted every field by 3 h.
     for n in range(n_tod_out):
-        # dtt = n*dt_out - lon_shift - target_times[0] + dt_in
         if target_times is None:
-            dtt = n*dt_out - lon_shift - tod[0] + dt_in
+            # Output axis is the input axis: LT_n = tod[0] + n*dt_out
+            dtt = n*dt_out - lon_shift
         else:
-            # For specifying target local times
-            # ``time_out - xfshif - tod[0] + hrs/stpe`` in input
-            dtt = target_times[n] - lon_shift
+            # Explicit target local times
+            dtt = target_times[n] - lon_shift - tod[0]
 
         # Ensure that local time is bounded by [0, 24] hours
         kk = np.where(dtt < 0.)
