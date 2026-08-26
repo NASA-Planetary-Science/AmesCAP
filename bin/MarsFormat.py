@@ -428,15 +428,70 @@ def main():
                 0.5*(zagl_lvl[:, :-1, :, :] + zagl_lvl[:, 1:, :, :])
                 )
 
-            # Derive atmospheric temperature [K]
-            # ----------------------------------
-            gamma = DS.CP / (DS.CP - DS.R_D)
-            pfull3D = DS.P_TOP + DS.PB[0,:]
-            temp = (DS.T + DS.T0) * (pfull3D / DS.P0)**((gamma-1.) / gamma)
+            # Derive full 3D pressure [Pa] and temperature [K]
+            # ------------------------------------------------
+            # WRF writes T as the PERTURBATION potential temperature
+            # (theta = T + T0) and P as the PERTURBATION pressure
+            # (p = P + PB, where PB is the base-state pressure, which
+            # already includes P_TOP). Real temperature follows from
+            # the Exner function evaluated with the full pressure:
+            #     temp = (T + T0) * ((P + PB) / P0) ** (R_D / CP)
+            # The previous form, (P_TOP + PB[0]), double-counted P_TOP
+            # and dropped the perturbation pressure, giving errors of
+            # several K (up to ~50 K near topography).
+            #
+            # Newer planetWRF files also carry the physics-grid
+            # diagnostics T_PHY and P_PHY (temperature and pressure on
+            # mass levels). When present and filled they are used
+            # directly. They are zero on the first frame of a file
+            # written straight after a restart, so fall back to the
+            # reconstruction for any frame where P_PHY is not positive.
+            kappa = DS.R_D / DS.CP
+            have_phy = ('T_PHY' in DS) and ('P_PHY' in DS)
+            if 'P' in DS and 'PB' in DS:
+                pfull3D_rec = DS.P + DS.PB
+            else:
+                pfull3D_rec = None
+            if 'T' in DS and pfull3D_rec is not None:
+                temp_rec = (DS.T + DS.T0) * (pfull3D_rec / DS.P0)**kappa
+            else:
+                temp_rec = None
+
+            if have_phy:
+                phy_ok = (DS.P_PHY > 0).all(dim=[d for d in DS.P_PHY.dims
+                                                  if d != model.dim_time])
+                if temp_rec is not None:
+                    temp = DS.T_PHY.where(phy_ok, temp_rec)
+                    pfull3D = DS.P_PHY.where(phy_ok, pfull3D_rec)
+                    n_bad = int((~phy_ok).sum())
+                    if n_bad:
+                        print(f"{Yellow}T_PHY/P_PHY unfilled on {n_bad} "
+                              f"frame(s); reconstructed from T, P, PB "
+                              f"there{Nclr}")
+                else:
+                    temp = DS.T_PHY
+                    pfull3D = DS.P_PHY
+                src = 'T_PHY, P_PHY'
+            elif temp_rec is not None:
+                temp = temp_rec
+                pfull3D = pfull3D_rec
+                src = '(T+T0)*((P+PB)/P0)**(R_D/CP)'
+            else:
+                raise KeyError("Cannot derive temperature: need T_PHY and "
+                               "P_PHY, or T, P and PB")
+            print(f"{Cyan}Temperature derived from {src}{Nclr}")
+
             DS = DS.assign(temp=temp)
+            DS['temp'].attrs = {}
             DS['temp'].attrs['description'] = ('(ADDED POST-PROCESSING) Temperature')
             DS['temp'].attrs['long_name'] = ('(ADDED POST-PROCESSING) Temperature')
             DS['temp'].attrs['units'] = 'K'
+
+            DS = DS.assign(pfull3D=pfull3D)
+            DS['pfull3D'].attrs = {}
+            DS['pfull3D'].attrs['description'] = ('(ADDED POST-PROCESSING) Pressure')
+            DS['pfull3D'].attrs['long_name'] = ('(ADDED POST-PROCESSING) Pressure')
+            DS['pfull3D'].attrs['units'] = 'Pa'
 
             # Unstagger U, V, W, Zfull onto Regular Grid
             # ------------------------------------------
