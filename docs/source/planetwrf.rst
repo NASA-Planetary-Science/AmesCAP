@@ -33,9 +33,12 @@ Notes on the flags:
 * Files from a restart have physics diagnostics equal to zero on their
   first frame; ``MarsFormat`` detects this and reconstructs that frame
   from the dynamics fields.
-* Large files are held in memory: expect roughly three times the input
-  size as peak memory for ``MarsFormat`` and ``MarsInterp``. Subset long
-  runs in time first (``ncks -d Time,...``) if needed.
+* ``MarsFormat`` streams large files in time chunks when ``dask`` is
+  installed (``pip install dask``, or the ``[large]`` extra); without it
+  the whole file is held in memory. ``MarsInterp`` interpolates in time
+  chunks (``-chunk N`` to set the size). A one-year, 7 GB planetWRF file
+  converts in about 20 s with a 2 GB peak and interpolates to ``pstd``
+  in about 80 s with a 5 GB peak.
 
 Where each quantity comes from
 ------------------------------
