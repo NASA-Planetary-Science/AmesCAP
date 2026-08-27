@@ -26,6 +26,7 @@ CAP is currently compatible with output from the MCMC’s `Legacy <https://githu
    Quick Start Guide <cli>
    CAP Description <description>
    Example Use Cases <examples>
+   planetWRF and MarsWRF <planetwrf>
    MarsPull <autoapi/bin/MarsPull/index>
    MarsFormat <autoapi/bin/MarsFormat/index>
    MarsFiles <autoapi/bin/MarsFiles/index>
