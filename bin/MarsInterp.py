@@ -527,7 +527,7 @@ def main():
         else:
             nlev_in = fNcdf.dimensions["pfull"].size
             per_frame = nlev_in*int(np.prod(ps.shape[1:]))
-            chunk = int(min(nt, max(1, 5e7 // max(per_frame, 1))))
+            chunk = int(min(nt, max(1, 2e7 // max(per_frame, 1))))
         nchunk = int(np.ceil(nt/chunk))
         if interp_vars:
             print(f"{Cyan}Interpolating {len(interp_vars)} variable(s) in "
