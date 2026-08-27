@@ -70,7 +70,8 @@ matplotlib.use("Agg")
 # Load amesCAP modules
 from amescap.FV3_utils import (
     fms_press_calc, fms_Z_calc, dvar_dh, cart_to_azimut_TR, mass_stream,
-    zonal_detrend, spherical_div, spherical_curl, frontogenesis
+    zonal_detrend, spherical_div, spherical_curl, frontogenesis,
+    cgrid_div, cgrid_curl
 )
 from amescap.Script_utils import (
     check_file_tape, FV3_file_type, filter_vars,
@@ -623,6 +624,9 @@ n0 = 1.37*1.e-5  # Sutherland's law [N-s/m^2]
 S0 = 222  # Sutherland's law [K]
 T0 = 273.15  # Sutherland's law [K]
 Cp = 735.0  # [J/K]
+R_planet = 3400.*1000.  # Planetary radius [m]
+kappa = None  # R/Cp used by compute_theta; None -> R/(M_co2*Cp)
+g0 = g  # scalar gravity for column/stream-function integrals
 Na = 6.022*1.e23  # Avogadro's number [per mol]
 Kb = R/Na  # Boltzmann constant [m^2*kg/s^2/K]
 amu = 1.66054*1.e-27  # Atomic mass Unit [kg/amu]
@@ -1238,6 +1242,48 @@ def compute_dustref_per_z(dustref, delz):
     dustref_per_z = dustref/delz*1000
     return dustref_per_z
 
+def set_planet_constants(f):
+    """
+    Set the module-level planet constants (rgas, Rd, Cp, g, g0,
+    R_planet, kappa) from the open netCDF file when it carries them,
+    else leave the Mars/Ames defaults.
+
+    Global attributes (written by planetWRF and carried through
+    MarsFormat): R_D, CP, G, RADIUS. 3D fields, when present, take
+    precedence: rgas3D, cp3D (composition-dependent) and g3D
+    (variable gravity), each [time, lev, lat, lon] like temp.
+    """
+    global rgas, Rd, Cp, g, g0, R_planet, kappa
+    src = []
+    attrs = {k: f.getncattr(k) for k in f.ncattrs()}
+    # Only trust the attribute set as a whole (the planetWRF/WRF
+    # signature), never a stray single name from another model
+    if not all(k in attrs for k in ('R_D', 'CP', 'G', 'RADIUS')):
+        attrs = {}
+    if 'R_D' in attrs:
+        rgas = Rd = float(attrs['R_D']); src.append('R_D')
+    if 'CP' in attrs:
+        Cp = float(attrs['CP']); src.append('CP')
+    if 'G' in attrs:
+        g = g0 = float(attrs['G']); src.append('G')
+    if 'RADIUS' in attrs:
+        R_planet = float(attrs['RADIUS']); src.append('RADIUS')
+    if 'R_D' in attrs and 'CP' in attrs:
+        kappa = float(attrs['R_D'])/float(attrs['CP'])
+    else:
+        kappa = None
+    if 'rgas3D' in f.variables and 'cp3D' in f.variables:
+        rgas = Rd = np.array(f.variables['rgas3D'][:])
+        Cp = np.array(f.variables['cp3D'][:])
+        kappa = rgas/Cp
+        src.append('rgas3D, cp3D')
+    if 'g3D' in f.variables:
+        g = np.array(f.variables['g3D'][:])
+        src.append('g3D')
+    if src:
+        print(f"{Cyan}Planet constants from file: {', '.join(src)}{Nclr}")
+
+
 # =====================================================================
 def compute_theta(p_3D, ps, T, f_type):
     """
@@ -1258,7 +1304,9 @@ def compute_theta(p_3D, ps, T, f_type):
     :raises Exception: If any other error occurs
     """
 
-    theta_exp = R / (M_co2*Cp)
+    # kappa = R/cp from the file (planetWRF attributes or 3D fields)
+    # when available; else the historical CO2 value R/(M_co2*Cp)
+    theta_exp = kappa if kappa is not None else R / (M_co2*Cp)
     # Broadcast dimensions
     if f_type == "diurn":
         # (time, tod, lat, lon) -> (time, tod, 1, lat, lon)
@@ -1307,6 +1355,14 @@ def compute_w(rho, omega):
 
 
 # =====================================================================
+def _like_T(x, T):
+    """Transpose a 3D/4D constant field like T (vertical axis first)
+    for fms_Z_calc; scalars pass through."""
+    if np.ndim(x) == 0:
+        return x
+    return np.asarray(x).transpose(lev_T)
+
+
 def compute_zfull(ps, ak, bk, T):
     """
     Calculate the altitude of the layer midpoints above ground level.
@@ -1327,7 +1383,8 @@ def compute_zfull(ps, ak, bk, T):
     """
 
     zfull = fms_Z_calc(
-        ps, ak, bk, T.transpose(lev_T), topo=0., lev_type="full"
+        ps, ak, bk, T.transpose(lev_T), topo=0., lev_type="full",
+        rgas=_like_T(Rd, T), g=_like_T(g, T)
         )
 
     # .. note:: lev_T swaps dims 0 & 1, ensuring level is the first
@@ -1358,7 +1415,8 @@ def compute_zhalf(ps, ak, bk, T):
     """
 
     zhalf = fms_Z_calc(
-        ps, ak, bk, T.transpose(lev_T), topo=0., lev_type="half"
+        ps, ak, bk, T.transpose(lev_T), topo=0., lev_type="half",
+        rgas=_like_T(Rd, T), g=_like_T(g, T)
         )
 
     # .. note:: lev_T swaps dims 0 & 1, ensuring level is the first
@@ -2071,6 +2129,7 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
                 continue
 
             print(f"Processing: {var}...")
+            set_planet_constants(f)
 
             # Define lev_T and lev_T_out for this file
             f_type, interp_type = FV3_file_type(f)
@@ -2249,20 +2308,34 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
                 ucomp = f.variables["ucomp"][:]
                 vcomp = f.variables["vcomp"][:]
 
-            if var == "div":
+            # C-grid winds (MarsFormat -stag for planetWRF) give the
+            # divergence and vorticity exactly as the model forms them
+            have_cgrid = ("u_stag" in f.variables and
+                          "v_stag" in f.variables and
+                          "lon_u" in f.variables and
+                          "lat_v" in f.variables)
+            if var in ["div", "curl"] and have_cgrid:
+                print(f"{Cyan}{var}: using the native C-grid winds "
+                      f"u_stag, v_stag{Nclr}")
+                u_stag = f.variables["u_stag"][:]
+                v_stag = f.variables["v_stag"][:]
+                lon_u = f.variables["lon_u"][:]
+                lat_v = f.variables["lat_v"][:]
+                func = cgrid_div if var == "div" else cgrid_curl
+                OUT = func(u_stag, v_stag, lon, lat, lon_u, lat_v,
+                           R=R_planet)
+            elif var == "div":
                 OUT = spherical_div(ucomp, vcomp, lon, lat,
-                                    R=3400*1000.,
+                                    R=R_planet,
                                     spacing="regular")
-
-            if var == "curl":
+            elif var == "curl":
                 OUT = spherical_curl(ucomp, vcomp, lon, lat,
-                                        R=3400*1000.,
+                                        R=R_planet,
                                         spacing="regular")
-
             if var == "fn":
                 theta = f.variables["theta"][:]
                 OUT = frontogenesis(ucomp, vcomp, theta, lon, lat,
-                                    R=3400*1000.,
+                                    R=R_planet,
                                     spacing="regular")
 
             # ==================================================
@@ -2284,12 +2357,14 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
                     OUT = mass_stream(vcomp.transpose([2, 3, 0, 1, 4]),
                                       lat,
                                       lev,
-                                      type=interp_type).transpose([2, 3, 0, 1, 4])
+                                      type=interp_type, g=g0,
+                                      a=R_planet).transpose([2, 3, 0, 1, 4])
                 else:
                     OUT = mass_stream(vcomp.transpose([1, 2, 3, 0]),
                                       lat,
                                       lev,
-                                      type=interp_type).transpose([3, 0, 1, 2])
+                                      type=interp_type, g=g0,
+                                      a=R_planet).transpose([3, 0, 1, 2])
                     # [t, lev, lat, lon]
                     # -> [lev, lat, lon, t]
                     # ->  [t, lev, lat, lon]

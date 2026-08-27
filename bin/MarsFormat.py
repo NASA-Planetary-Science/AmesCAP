@@ -984,6 +984,42 @@ def main():
                 print(f"{Cyan}eot_offset from LTST: {eot.min()*60:+.2f} to "
                       f"{eot.max()*60:+.2f} min{Nclr}")
 
+            # Composition-dependent gas constant and heat capacity
+            # (planetWRF with a variable mean molecular weight writes
+            # MW_AIR_3D [g/mol] and RCP_3D = R/cp). Written as rgas3D
+            # and cp3D [J/kg/K]; MarsVars uses them in place of the
+            # scalar R_D and CP when present.
+            if 'MW_AIR_3D' in DS and 'RCP_3D' in DS:
+                rgas3D = 8314.46/DS['MW_AIR_3D']
+                cp3D = rgas3D/DS['RCP_3D']
+                DS = DS.assign(rgas3D=rgas3D, cp3D=cp3D)
+                DS['rgas3D'].attrs = {'description': '(ADDED POST-PROCESSING) '
+                                      'specific gas constant, 8314.46/MW_AIR_3D',
+                                      'long_name': 'specific gas constant',
+                                      'units': 'J kg-1 K-1'}
+                DS['cp3D'].attrs = {'description': '(ADDED POST-PROCESSING) '
+                                    'specific heat at constant pressure, '
+                                    'rgas3D/RCP_3D',
+                                    'long_name': 'specific heat at constant pressure',
+                                    'units': 'J kg-1 K-1'}
+                print(f"{Cyan}rgas3D, cp3D from MW_AIR_3D and RCP_3D{Nclr}")
+
+            # Variable gravity (do_variable_gravity): planetWRF uses
+            # g(phi) = G*(1 - phi/(G*RADIUS))**2 with phi the
+            # geopotential above the areoid, i.e. phi = G*Z_PHY.
+            if (int(DS.attrs.get('DO_VARIABLE_GRAVITY', 0)) == 1
+                    and 'Z_PHY' in DS):
+                G0 = float(DS.attrs['G'])
+                Rp = float(DS.attrs['RADIUS'])
+                fac = np.maximum(1. - DS['Z_PHY']/Rp, 0.05)
+                DS = DS.assign(g3D=G0*fac*fac)
+                DS['g3D'].attrs = {'description': '(ADDED POST-PROCESSING) '
+                                   'gravity at layer centres, '
+                                   'G*(1 - Z_PHY/RADIUS)**2',
+                                   'long_name': 'gravitational acceleration',
+                                   'units': 'm s-2'}
+                print(f"{Cyan}g3D written (DO_VARIABLE_GRAVITY = 1){Nclr}")
+
             # Prune variables CAP cannot carry: anything on a dimension
             # other than time/pfull/phalf/lat/lon (soil layers, dust
             # bins, radiation layers, leftover staggered grids), and
