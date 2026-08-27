@@ -569,12 +569,20 @@ def main():
 
                     dim_list=fNcdf.dimensions.keys()
 
-                    if 'pfull' not in fNcdf.variables[ivar].dimensions or 'phalf' not in fNcdf.variables[ivar].dimensions:
+                    vdims = fNcdf.variables[ivar].dimensions
+                    if 'pfull' not in vdims and 'phalf' not in vdims:
                         print(f"{Cyan}Copying over: {ivar}...")
                         if ivar in dim_list:
                             fnew.copy_Ncaxis_with_content(fNcdf.variables[ivar])
                         else:
                             fnew.copy_Ncvar(fNcdf.variables[ivar])
+                    else:
+                        # On the model vertical grid but not on the
+                        # standard horizontal grid (e.g. staggered
+                        # u_stag/v_stag): cannot be carried over
+                        print(f"{Yellow}Skipping {ivar} {vdims}: on the "
+                              f"native vertical grid but not on the "
+                              f"lat/lon grid{Nclr}")
                             
         with Dataset(newname, 'r') as nc_file:
             # Print the global attributes of the NetCDF file

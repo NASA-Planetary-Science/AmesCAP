@@ -182,6 +182,22 @@ parser.add_argument('-rn', '--retain_names', action='store_true',
     )
 )
 
+parser.add_argument('-stag', '--keep_staggered', action='store_true',
+    default=False,
+    help=(
+        f"[marswrf only] Also keep the winds on their native Arakawa-C\n"
+        f"locations: u_stag(time, pfull, lat, lon_u),\n"
+        f"v_stag(time, pfull, lat_v, lon), w_half(time, phalf, lat, lon),\n"
+        f"with lon_u, lat_v axes and the interface pressure phalf3D\n"
+        f"(PF_PHY) and height zhalf (ZF_PHY). Mass-point ucomp, vcomp, w\n"
+        f"are written regardless. u_stag, v_stag are for your own\n"
+        f"scripts; CAP tools only plot the mass-point grid.\n"
+        f"{Green}Example:\n"
+        f"> MarsFormat wrfout_d01.nc -gcm marswrf -stag"
+        f"{Nclr}\n\n"
+    )
+)
+
 parser.add_argument('--debug', action='store_true',
     help=(
         f"Use with any other argument to pass all Python errors and\n"
@@ -682,6 +698,51 @@ def main():
             DS['pfull3D'].attrs['long_name'] = ('(ADDED POST-PROCESSING) Pressure')
             DS['pfull3D'].attrs['units'] = 'Pa'
 
+            # Optionally keep the native Arakawa-C winds before the
+            # destaggering below overwrites U, V, W in place.
+            #   u_stag: x-staggered, lon_u axis from XLONG_U
+            #   v_stag: y-staggered, lat_v axis from XLAT_V
+            #   w_half: on layer interfaces -> CAP's phalf dimension,
+            #           with phalf3D (PF_PHY) and zhalf (ZF_PHY)
+            if getattr(args, 'keep_staggered', False):
+                kept = []
+                if 'U' in DS and 'XLONG_U' in DS:
+                    lonu = np.asarray(DS['XLONG_U'][0, 0, :].values, dtype=float)
+                    DS = DS.assign_coords(west_east_stag=np.mod(lonu + 360., 360.))
+                    DS = DS.sortby('west_east_stag')
+                    DS['u_stag'] = DS['U'].rename({'west_east_stag': 'lon_u'})
+                    DS['u_stag'].attrs['description'] = (
+                        'x-wind on the native C-grid (x-staggered) location')
+                    DS['u_stag'].attrs['long_name'] = DS['u_stag'].attrs['description']
+                    DS = DS.assign_coords(lon_u=DS['west_east_stag'].values)
+                    DS['lon_u'].attrs = {'units': 'degrees_E',
+                                         'long_name': 'longitude of x-staggered points'}
+                    DS = DS.drop_vars('west_east_stag')
+                    kept.append('u_stag')
+                if 'V' in DS and 'XLAT_V' in DS:
+                    latv = np.asarray(DS['XLAT_V'][0, :, 0].values, dtype=float)
+                    DS['v_stag'] = DS['V'].rename({'south_north_stag': 'lat_v'})
+                    DS['v_stag'].attrs['description'] = (
+                        'y-wind on the native C-grid (y-staggered) location')
+                    DS['v_stag'].attrs['long_name'] = DS['v_stag'].attrs['description']
+                    DS = DS.assign_coords(lat_v=latv)
+                    DS['lat_v'].attrs = {'units': 'degrees_N',
+                                         'long_name': 'latitude of y-staggered points'}
+                    kept.append('v_stag')
+                for src, dst, desc, unit in (
+                        ('W', 'w_half', 'z-wind on layer interfaces', 'm s-1'),
+                        ('PF_PHY', 'phalf3D', 'pressure on layer interfaces', 'Pa'),
+                        ('ZF_PHY', 'zhalf', 'height above local surface on layer interfaces', 'm')):
+                    if src in DS and 'bottom_top_stag' in DS[src].dims:
+                        DS[dst] = DS[src].rename({'bottom_top_stag': model.dim_phalf})
+                        DS[dst].attrs = {'description': f'(KEPT POST-PROCESSING) {desc}',
+                                         'long_name': f'(KEPT POST-PROCESSING) {desc}',
+                                         'units': unit}
+                        kept.append(dst)
+                if kept:
+                    print(f"{Cyan}Keeping native staggered fields: "
+                          f"{', '.join(kept)}{Nclr}")
+
             # Unstagger U, V, W, Zfull onto Regular Grid
             # ------------------------------------------
             # For variables staggered x (lon)
@@ -842,6 +903,16 @@ def main():
                 zfull3D = 0.5*(zagl_lvl.isel(bottom_top_stag=slice(None, -1)).values
                                + zagl_lvl.isel(bottom_top_stag=slice(1, None)).values)
                 zsrc = 'PH, PHB, HGT'
+            if zfull3D is not None and 'zhalf' in DS:
+                # zhalf kept from ZF_PHY is above the areoid; make it
+                # above the local surface like zfull.
+                zs_da = xr.DataArray(zs if 'zs' in dir() else
+                                     DS['HGT'].transpose(model.dim_time,
+                                                         model.dim_lat,
+                                                         model.dim_lon).values,
+                                     dims=(model.dim_time, model.dim_lat,
+                                           model.dim_lon))
+                DS['zhalf'] = DS['zhalf'] - zs_da
             if zfull3D is not None:
                 DS = DS.assign(zfull=((model.dim_time, model.dim_pfull,
                                        model.dim_lat, model.dim_lon),
@@ -921,6 +992,9 @@ def main():
             allowed = {model.dim_time, model.dim_pfull, model.dim_phalf,
                        model.dim_lat, model.dim_lon}
             keep_meta = {'ak', 'bk', 'pfull', 'phalf'}
+            if getattr(args, 'keep_staggered', False):
+                allowed |= {'lon_u', 'lat_v'}
+                keep_meta |= {'lon_u', 'lat_v'}
             drop = []
             # Include coordinates: xarray promotes XLAT_U, XLONG_V, ...
             # to coords via the 'coordinates' attribute of U, V.
@@ -931,7 +1005,9 @@ def main():
                 if not dims <= allowed:
                     drop.append(v)
                 elif ((model.dim_pfull in dims or model.dim_phalf in dims)
-                      and model.dim_lat not in dims):
+                      and not (dims & {model.dim_lat, model.dim_lon,
+                                       'lat_v', 'lon_u'})):
+                    # vertical-only metadata (ZNU, C1H, ...)
                     drop.append(v)
             if drop:
                 print(f"{Yellow}Dropping {len(drop)} variable(s) on "
@@ -1206,6 +1282,15 @@ def main():
               f"expected in CAP")
         DS = DS.transpose(model.dim_time, model.dim_pfull, model.dim_lat,
                           model.dim_lon, ...)
+        # Native staggered fields kept by MarsFormat -stag (marswrf) use
+        # their own horizontal/vertical axes; order them explicitly
+        for v, order in (
+                ('v_stag', (model.dim_time, model.dim_pfull, 'lat_v', model.dim_lon)),
+                ('w_half', (model.dim_time, model.dim_phalf, model.dim_lat, model.dim_lon)),
+                ('phalf3D', (model.dim_time, model.dim_phalf, model.dim_lat, model.dim_lon)),
+                ('zhalf', (model.dim_time, model.dim_phalf, model.dim_lat, model.dim_lon))):
+            if v in DS:
+                DS[v] = DS[v].transpose(*order)
 
         # Change longitude from -180-179 to 0-360
         if min(DS[model.dim_lon]) < 0:
