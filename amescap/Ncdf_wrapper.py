@@ -183,6 +183,22 @@ class Ncdf(object):
         self.var_dict[variable_name][:] = DATAin
 
 
+    def log_variable_slice(self, variable_name, DATAin, dim_array,
+                           first_slice, longname_txt="", units_txt="",
+                           datatype="f4"):
+        """
+        Like ``log_variable`` but writes only ``DATAin`` into
+        ``first_slice`` along the FIRST dimension, defining the variable
+        on first use. Lets callers process large variables in chunks
+        along time without holding the full array.
+        """
+        if variable_name not in self.var_dict.keys():
+            self._def_variable(variable_name, dim_array, longname_txt,
+                               units_txt, datatype)
+            self.var_dict[variable_name].long_name = longname_txt
+            self.var_dict[variable_name].units = units_txt
+        self.var_dict[variable_name][first_slice, ...] = DATAin
+
     def log_axis1D(self, variable_name, DATAin, dim_name, longname_txt="",
                    units_txt="", cart_txt=""):
         """

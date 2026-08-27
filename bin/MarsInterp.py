@@ -201,6 +201,17 @@ parser.add_argument('-ext', '--extension', type=str, default=None,
     )
 )
 
+parser.add_argument('-chunk', '--chunk', type=int, default=None,
+    help=(
+        f"Number of time steps interpolated per chunk. Default: chosen\n"
+        f"automatically to keep memory near a few hundred MB per\n"
+        f"variable. Results do not depend on the chunk size.\n"
+        f"{Green}Example:\n"
+        f"> MarsInterp 01336.atmos_daily.nc -t pstd -chunk 50"
+        f"{Nclr}\n\n"
+    )
+)
+
 parser.add_argument('--debug', action='store_true',
     help=(
         f"Use with any other argument to pass all Python errors and\n"
@@ -443,33 +454,34 @@ def main():
             permut = [2, 1, 0, 3, 4]
             # [0 1 2 3 4] -> [2 1 0 3 4]
 
-        # Compute levels in the file, these are permutted arrays
-        # Suppress "divide by zero" error
-        with np.errstate(divide = "ignore", invalid = "ignore"):
-            if interp_type == "pstd":
-                # Permute by default dimension, e.g., lev is first
-                L_3D_P = fms_press_calc(ps, ak, bk, lev_type = "full")
-                L_3D_Ph = fms_press_calc(ps, ak, bk, lev_type = "half")
-
-            elif interp_type == 'zagl':
-                temp = fNcdf.variables["temp"][:]
-                L_3D_P = fms_Z_calc(ps, ak, bk, temp.transpose(
-                    permut), topo=0., lev_type='full')
-                L_3D_Ph = fms_Z_calc(ps, ak, bk, temp.transpose(
-                    permut), topo=0., lev_type='half')
-
-            elif interp_type == 'zstd':
-                temp = fNcdf.variables["temp"][:]
-                # Expand the 'zsurf' array to the 'time' dimension
-                zflat = np.repeat(zsurf[np.newaxis, :], ps.shape[0], axis=0)
-                if do_diurn:
-                    zflat = np.repeat(zflat[:, np.newaxis, :, :], ps.shape[1],
-                                      axis = 1)
-
-                L_3D_P = fms_Z_calc(ps, ak, bk, temp.transpose(permut),
-                                    topo = zflat, lev_type = "full")
-                L_3D_Ph = fms_Z_calc(ps, ak, bk, temp.transpose(permut),
-                                    topo = zflat, lev_type = "half")
+        def levels_for(sl):
+            """
+            3D level field (pressure or altitude) for the time slice
+            ``sl``, as permuted arrays with the vertical axis first.
+            Interpolation is column-local, so files are processed in
+            time chunks to bound memory.
+            """
+            ps_c = ps[sl]
+            # Suppress "divide by zero" error
+            with np.errstate(divide = "ignore", invalid = "ignore"):
+                if interp_type == "pstd":
+                    return (fms_press_calc(ps_c, ak, bk, lev_type = "full"),
+                            fms_press_calc(ps_c, ak, bk, lev_type = "half"))
+                temp_c = np.array(fNcdf.variables["temp"][sl])
+                if interp_type == "zagl":
+                    topo = 0.
+                else:
+                    # Expand the 'zsurf' array to the 'time' dimension
+                    zflat = np.repeat(zsurf[np.newaxis, :], ps_c.shape[0],
+                                      axis = 0)
+                    if do_diurn:
+                        zflat = np.repeat(zflat[:, np.newaxis, :, :],
+                                          ps_c.shape[1], axis = 1)
+                    topo = zflat
+                return (fms_Z_calc(ps_c, ak, bk, temp_c.transpose(permut),
+                                   topo = topo, lev_type = "full"),
+                        fms_Z_calc(ps_c, ak, bk, temp_c.transpose(permut),
+                                   topo = topo, lev_type = "half"))
 
         fnew = Ncdf(newname, "Pressure interpolation using MarsInterp")
 
@@ -496,40 +508,53 @@ def main():
         if do_diurn:
             fnew.copy_Ncaxis_with_content(fNcdf.variables[tod_name])
 
-        # Re-use the indices for each file, speeds up the calculation
-        compute_indices = True
-        for ivar in var_list:
-            if (fNcdf.variables[ivar].dimensions == ("time", "pfull", "lat",
-                                                     "lon") or
-                fNcdf.variables[ivar].dimensions == ("time", tod_name, "pfull",
-                                                     "lat", "lon") or
-                fNcdf.variables[ivar].dimensions == ("time", "pfull",
-                                                     "grid_yt", "grid_xt") or
-                fNcdf.variables[ivar].dimensions == ("time", "phalf", "lat",
-                                                     "lon") or
-                fNcdf.variables[ivar].dimensions == ("time", tod_name, "phalf",
-                                                     "lat", "lon") or
-                fNcdf.variables[ivar].dimensions == ("time", "phalf",
-                                                     "grid_yt", "grid_xt")):
-                if compute_indices:
-                    print(f"{Cyan}Computing indices ...{Nclr}")
-                    index = find_n(L_3D_P, lev_in,
-                                   reverse_input = need_to_reverse)
-                    indexh = find_n(L_3D_Ph, lev_in,
-                                   reverse_input = need_to_reverse)
-                    compute_indices = False
+        interp_dim_sets = [
+            ("time", "pfull", "lat", "lon"),
+            ("time", tod_name, "pfull", "lat", "lon"),
+            ("time", "pfull", "grid_yt", "grid_xt"),
+            ("time", "phalf", "lat", "lon"),
+            ("time", tod_name, "phalf", "lat", "lon"),
+            ("time", "phalf", "grid_yt", "grid_xt")]
+        interp_vars = [v for v in var_list
+                       if fNcdf.variables[v].dimensions in interp_dim_sets]
 
-                print(f"{Cyan}Interpolating: {ivar} ...{Nclr}")
-                varIN = fNcdf.variables[ivar][:]
+        # Time chunking: the interpolation is column-local, so process
+        # ``chunk`` time steps at a time and write each slice. Results
+        # are independent of the chunk size.
+        nt = ps.shape[0]
+        if args.chunk:
+            chunk = max(1, int(args.chunk))
+        else:
+            nlev_in = fNcdf.dimensions["pfull"].size
+            per_frame = nlev_in*int(np.prod(ps.shape[1:]))
+            chunk = int(min(nt, max(1, 5e7 // max(per_frame, 1))))
+        nchunk = int(np.ceil(nt/chunk))
+        if interp_vars:
+            print(f"{Cyan}Interpolating {len(interp_vars)} variable(s) in "
+                  f"{nchunk} time chunk(s) of up to {chunk} step(s){Nclr}")
+
+        for t0 in range(0, nt, chunk):
+            sl = slice(t0, min(nt, t0 + chunk))
+            if nchunk > 1:
+                print(f"{Cyan}Time steps {sl.start}-{sl.stop-1} of {nt}{Nclr}")
+            L_3D_P, L_3D_Ph = levels_for(sl)
+            index = find_n(L_3D_P, lev_in, reverse_input = need_to_reverse)
+            indexh = find_n(L_3D_Ph, lev_in, reverse_input = need_to_reverse)
+
+            for ivar in interp_vars:
+                vdims = fNcdf.variables[ivar].dimensions
+                if nchunk == 1:
+                    print(f"{Cyan}Interpolating: {ivar} ...{Nclr}")
+                varIN = fNcdf.variables[ivar][sl]
                 # This with the loop suppresses "divide by zero" errors
                 with np.errstate(divide = "ignore", invalid = "ignore"):
-                    if 'pfull' in fNcdf.variables[ivar].dimensions:
+                    if 'pfull' in vdims:
                         varOUT = vinterp(varIN.transpose(permut), L_3D_P, lev_in,
                                      type_int = interp_technic,
                                      reverse_input = need_to_reverse,
                                      masktop = True,
                                      index = index).transpose(permut)
-                    elif 'phalf' in fNcdf.variables[ivar].dimensions:
+                    else:
                         varOUT = vinterp(varIN.transpose(permut), L_3D_Ph, lev_in,
                                      type_int = interp_technic,
                                      reverse_input = need_to_reverse,
@@ -538,52 +563,43 @@ def main():
 
                 long_name_txt = getattr(fNcdf.variables[ivar], "long_name", "")
                 units_txt = getattr(fNcdf.variables[ivar], "units", "")
-
+                horiz = (("grid_yt", "grid_xt") if "tile" in ifile
+                         else ("lat", "lon"))
                 if not do_diurn:
-                    if "tile" in ifile:
-                        fnew.log_variable(ivar, varOUT, ("time", interp_type,
-                                                         "grid_yt", "grid_xt"),
-                                          long_name_txt, units_txt)
-                    else:
-                        fnew.log_variable(ivar, varOUT, ("time", interp_type,
-                                                         "lat", "lon"),
-                                          long_name_txt, units_txt)
+                    dims_out = ("time", interp_type) + horiz
                 else:
-                    if "tile" in ifile:
-                        fnew.log_variable(ivar, varOUT, ("time", tod_name,
-                                                         interp_type,
-                                                         "grid_yt", "grid_xt"),
-                                          long_name_txt, units_txt)
+                    dims_out = ("time", tod_name, interp_type) + horiz
+                fnew.log_variable_slice(ivar, varOUT, dims_out, sl,
+                                        long_name_txt, units_txt)
+
+        # Variables not interpolated: copy through (or skip)
+        for ivar in var_list:
+            if ivar in interp_vars:
+                continue
+
+            #TODO logic could be improved over here
+            if ivar not in ["time", "pfull", "lat",
+                            "lon", 'phalf', 'ak', 'pk', 'bk',
+                            "pstd", "zstd", "zagl",
+                            tod_name, 'grid_xt', 'grid_yt']:
+
+                dim_list=fNcdf.dimensions.keys()
+
+                vdims = fNcdf.variables[ivar].dimensions
+                if 'pfull' not in vdims and 'phalf' not in vdims:
+                    print(f"{Cyan}Copying over: {ivar}...")
+                    if ivar in dim_list:
+                        fnew.copy_Ncaxis_with_content(fNcdf.variables[ivar])
                     else:
-                        fnew.log_variable(ivar, varOUT, ("time", tod_name,
-                                                         interp_type, "lat",
-                                                         "lon"),
-                                          long_name_txt, units_txt)
-            else:
-
-                #TODO logic could be improved over here
-                if ivar not in ["time", "pfull", "lat",
-                                "lon", 'phalf', 'ak', 'pk', 'bk',
-                                "pstd", "zstd", "zagl",
-                                tod_name, 'grid_xt', 'grid_yt']:
-
-                    dim_list=fNcdf.dimensions.keys()
-
-                    vdims = fNcdf.variables[ivar].dimensions
-                    if 'pfull' not in vdims and 'phalf' not in vdims:
-                        print(f"{Cyan}Copying over: {ivar}...")
-                        if ivar in dim_list:
-                            fnew.copy_Ncaxis_with_content(fNcdf.variables[ivar])
-                        else:
-                            fnew.copy_Ncvar(fNcdf.variables[ivar])
-                    else:
-                        # On the model vertical grid but not on the
-                        # standard horizontal grid (e.g. staggered
-                        # u_stag/v_stag): cannot be carried over
-                        print(f"{Yellow}Skipping {ivar} {vdims}: on the "
-                              f"native vertical grid but not on the "
-                              f"lat/lon grid{Nclr}")
-                            
+                        fnew.copy_Ncvar(fNcdf.variables[ivar])
+                else:
+                    # On the model vertical grid but not on the
+                    # standard horizontal grid (e.g. staggered
+                    # u_stag/v_stag): cannot be carried over
+                    print(f"{Yellow}Skipping {ivar} {vdims}: on the "
+                          f"native vertical grid but not on the "
+                          f"lat/lon grid{Nclr}")
+                        
         with Dataset(newname, 'r') as nc_file:
             # Print the global attributes of the NetCDF file
             print(f"\nGlobal File Attributes for {newname}:")
