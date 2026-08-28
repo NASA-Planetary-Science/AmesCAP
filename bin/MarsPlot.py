@@ -54,7 +54,7 @@ from numpy import (abs, sqrt, log, exp, min, max, mean)
 
 from matplotlib.ticker import (
     LogFormatter, NullFormatter, LogFormatterSciNotation,
-    MultipleLocator, FuncFormatter
+    MultipleLocator, FuncFormatter, FormatStrFormatter
 )
 
 # Load amesCAP modules
@@ -1231,7 +1231,7 @@ def rT(typeIn="char"):
     return filter_input(txt, typeIn)
 
 
-def read_axis_options(axis_options_txt):
+def read_axis_options(axis_options_txt, return_extra=False):
     """
     Return axis customization options.
 
@@ -1251,9 +1251,18 @@ def read_axis_options(axis_options_txt):
     :rtype:  str
     :raises ValueError: If the input axis_options_txt is not a valid
         type for axis options.
+
+    Any further ``key = value`` fields after the positional ones are
+    returned as a dict when ``return_extra`` is True, e.g.
+    ``| nlev = 41 | cticks = 120,160,200 | cfmt = %.0f``.
     """
 
     list_txt = axis_options_txt.split(":")[1].split("|")
+    extra = {}
+    for field in list_txt[5:]:
+        if "=" in field:
+            k, v = field.split("=", 1)
+            extra[k.strip().lower()] = v.strip()
 
     # Xaxis: get bounds
     txt = list_txt[0].split("=")[1].replace("[", "").replace("]", "")
@@ -1292,6 +1301,8 @@ def read_axis_options(axis_options_txt):
             custom_line2 = None
         if custom_line3.strip() == "None":
             custom_line3 = None
+    if return_extra:
+        return Xaxis, Yaxis, custom_line1, custom_line2, custom_line3, extra
     return Xaxis, Yaxis, custom_line1, custom_line2, custom_line3
 
 
@@ -1793,6 +1804,10 @@ def make_template():
         customFileIN.write("#    ``cmap``  colormap    ``jet`` (winds), ``nipy_spectral`` (temperature), ``bwr`` (diff plot), etc. \n")
         customFileIN.write("#    ``scale`` gradient    ``lin`` (linear), ``log`` (logarithmic; Cmin, Cmax is typically expected. \n")
         customFileIN.write("#    ``line``  linestyle   ``-r`` (solid red), ``--g`` (dashed green), ``-ob`` (solid blue + markers). \n")
+        customFileIN.write("# Optional extra fields for 2D plots, appended after ``scale`` (and ``proj``): \n")
+        customFileIN.write("#    ``nlev``   number of filled contour levels when Cmin, Cmax is a pair (default 21), e.g. ``| nlev = 41`` \n")
+        customFileIN.write("#    ``cticks`` colorbar tick values, e.g. ``| cticks = 120,160,200,240`` \n")
+        customFileIN.write("#    ``cfmt``   colorbar tick label format, e.g. ``| cfmt = %.1f`` \n")
         customFileIN.write("#    ``proj``  projection  Cylindrical: ``cart`` (Cartesian), ``robin`` (Robinson), ``moll`` (Mollweide), \n")
         customFileIN.write("#                        Azithumal: ``Npole lat`` (North Pole), ``Spole lat`` (South Pole),\n")
         customFileIN.write("#                        ``ortho lon,lat`` (Orthographic). \n")
@@ -2420,7 +2435,9 @@ class Fig_2D(object):
          self.Ylim,
          self.axis_opt1,
          self.axis_opt2,
-         self.axis_opt3) = read_axis_options(customFileIN.readline()) # 8
+         self.axis_opt3,
+         self.axis_extra) = read_axis_options(customFileIN.readline(),
+                                              return_extra=True) # 8
 
         # Various sanity checks
         if self.range and len(np.atleast_1d(self.range)) == 1:
@@ -2767,6 +2784,17 @@ class Fig_2D(object):
         else:
             cbar = plt.colorbar(orientation = "horizontal", aspect = 30)
 
+        # Optional ``cticks`` (list) and ``cfmt`` (e.g. %.1f) from
+        # Axis Options
+        extra = getattr(self, "axis_extra", {})
+        if "cticks" in extra:
+            try:
+                cbar.set_ticks([float(x) for x in extra["cticks"].split(",")])
+            except ValueError:
+                print(f"{Yellow}Ignoring unreadable cticks in Axis Options{Nclr}")
+        if "cfmt" in extra:
+            cbar.ax.xaxis.set_major_formatter(FormatStrFormatter(extra["cfmt"]))
+
         # Shrink colorbar label as number of subplots increases
         cbar.ax.tick_params(labelsize=(label_size - self.nPan*label_factor))
 
@@ -2774,6 +2802,13 @@ class Fig_2D(object):
     def return_norm_levs(self):
         norm = None
         levs = None
+        # Optional ``nlev`` from Axis Options overrides the default
+        # number of filled contour levels
+        nlevs = levels
+        try:
+            nlevs = int(getattr(self, "axis_extra", {}).get("nlev", levels))
+        except ValueError:
+            print(f"{Yellow}Ignoring non-integer nlev in Axis Options{Nclr}")
         if self.axis_opt2 == "log":
             # Logarithmic colormap
             norm = LogNorm()
@@ -2785,7 +2820,7 @@ class Fig_2D(object):
             if self.axis_opt2 == "lin":
                 # If 2 numbers provided (e.g., Cmin,Cmax)
                 if len(self.range) == 2:
-                    levs = np.linspace(self.range[0], self.range[1], levels)
+                    levs = np.linspace(self.range[0], self.range[1], nlevs)
                 # If list provided, set intervals explicitly
                 else:
                     levs = self.range
@@ -2795,7 +2830,7 @@ class Fig_2D(object):
                     print(f"{Red}*** Error using log scale, bounds cannot be "
                           f"zero or negative{Nclr}")
                 levs = np.logspace(
-                    np.log10(self.range[0]), np.log10(self.range[1]), levels)
+                    np.log10(self.range[0]), np.log10(self.range[1]), nlevs)
         return norm, levs
 
 

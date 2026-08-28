@@ -351,10 +351,29 @@ def main():
             zsurf = f_fixed.variables["zsurf"][:]
             f_fixed.close()
         except FileNotFoundError:
-            print(f"{Red}***Error*** Topography (zsurf) is required for "
-                  f"interpolation to zstd, but the file {name_fixed} "
-                  f"cannot be not found{Nclr}")
-            exit()
+            # No fixed file: fall back to zsurf carried in the input
+            # file itself (MarsFormat writes it for converted models).
+            # A time-dependent zsurf is reduced to its first frame.
+            zsurf = None
+            first = file_list[0]
+            if not os.path.isabs(first):
+                first = os.path.join(filepath, first)
+            try:
+                with Dataset(first, 'r') as f_in:
+                    if "zsurf" in f_in.variables:
+                        zsurf = f_in.variables["zsurf"][:]
+                        if zsurf.ndim == 3:
+                            zsurf = zsurf[0]
+                        print(f"{Yellow}No fixed file {name_fixed}: using "
+                              f"zsurf from {first}{Nclr}")
+            except OSError:
+                pass
+            if zsurf is None:
+                print(f"{Red}***Error*** Topography (zsurf) is required for "
+                      f"interpolation to zstd, but the file {name_fixed} "
+                      f"cannot be found and the input file carries no "
+                      f"zsurf{Nclr}")
+                exit()
 
     # =========================== zagl ===========================
     elif interp_type == "zagl":
@@ -550,12 +569,20 @@ def main():
 
                     dim_list=fNcdf.dimensions.keys()
 
-                    if 'pfull' not in fNcdf.variables[ivar].dimensions or 'phalf' not in fNcdf.variables[ivar].dimensions:
+                    vdims = fNcdf.variables[ivar].dimensions
+                    if 'pfull' not in vdims and 'phalf' not in vdims:
                         print(f"{Cyan}Copying over: {ivar}...")
                         if ivar in dim_list:
                             fnew.copy_Ncaxis_with_content(fNcdf.variables[ivar])
                         else:
                             fnew.copy_Ncvar(fNcdf.variables[ivar])
+                    else:
+                        # On the model vertical grid but not on the
+                        # standard horizontal grid (e.g. staggered
+                        # u_stag/v_stag): cannot be carried over
+                        print(f"{Yellow}Skipping {ivar} {vdims}: on the "
+                              f"native vertical grid but not on the "
+                              f"lat/lon grid{Nclr}")
                             
         with Dataset(newname, 'r') as nc_file:
             # Print the global attributes of the NetCDF file

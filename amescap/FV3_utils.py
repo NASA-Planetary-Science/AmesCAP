@@ -112,7 +112,8 @@ def fms_press_calc(psfc, ak, bk, lev_type='full'):
                         "``press_lev()``: use 'full' or 'half' ")
 
 
-def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full"):
+def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full", rgas=191.,
+               g=3.72):
     """
     Returns the 3D altitude field [m] AGL (or above aeroid).
 
@@ -227,8 +228,8 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full"):
         / p_full[k])**(R/Cp)-1))
     """
 
-    g = 3.72 # acc. m/s2
-    r_co2 = 191.00 # kg/mol
+    # rgas and g: scalars, or arrays shaped like T (vertical axis
+    # first) for a composition-dependent gas constant / variable g
     Nk = len(ak)
 
     # Get the half and full pressure levels from ``fms_press_calc``
@@ -249,6 +250,10 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full"):
     PRESS_h = PRESS_h.reshape((Nk, len(psfc_flat)))
     PRESS_f = PRESS_f.reshape((Nk-1, len(psfc_flat)))
     T = T.reshape((Nk-1, len(psfc_flat)))
+    rgas = (np.asarray(rgas, dtype=float).reshape(T.shape)
+            if np.ndim(rgas) else np.full(T.shape, float(rgas)))
+    g = (np.asarray(g, dtype=float).reshape(T.shape)
+         if np.ndim(g) else np.full(T.shape, float(g)))
 
     logPPRESS_h = np.log(PRESS_h)
 
@@ -263,10 +268,10 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full"):
     # Isothermal within the layer, we have ``Z = Z0 + r*T0/g*ln(P0/P)``
     for k in range(Nk-2, -1, -1):
         Z_h[k, :] = (Z_h[k+1, :]
-                     + (r_co2*T[k, :]/g)
+                     + (rgas[k, :]*T[k, :]/g[k, :])
                      * (logPPRESS_h[k+1, :]-logPPRESS_h[k, :]))
         Z_f[k, :] = (Z_h[k+1, :]
-                     + (r_co2*T[k, :]/g)
+                     + (rgas[k, :]*T[k, :]/g[k, :])
                      * (1-PRESS_h[k, :]/PRESS_f[k, :]))
 
     # Return the arrays
@@ -1189,7 +1194,7 @@ def areo_avg(VAR, areo, Ls_target, Ls_angle, symmetric=True):
 
 
 def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
-                factor=1.e-8):
+                factor=1.e-8, g=3.72, a=3400*1000.):
     """
     Compute the mass stream function::
 
@@ -1251,8 +1256,6 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
         level = level[::-1]
         v_avg = v_avg[::-1, ...]
                     
-    g = 3.72 # m/s2
-    a = 3400*1000 # m
     nlev = len(level)
     shape_out = v_avg.shape
 
@@ -2152,7 +2155,7 @@ def polar_warming(T, lat, outside_range=np.nan):
                            axis = 0))
 
 
-def time_shift_calc(var_in, lon, tod, target_times=None):
+def time_shift_calc(var_in, lon, tod, target_times=None, eot_offset=0.):
     """
     Conversion to uniform local time.
 
@@ -2169,6 +2172,11 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
     :type  tod: 1D array
     :param target_times: local time(s) [hr] to shift to (e.g., ``"3. 15."``)
     :type  target_times: float (optional)
+    :param eot_offset: equation-of-time correction [hr] added to the
+        longitude shift, so that the output axis is TRUE local solar
+        time rather than mean local time: LTST = UT + lon/15 +
+        eot_offset. One scalar per call (i.e. per sol). Default 0.
+    :type  eot_offset: float (optional)
     :return: the array shifted to uniform local time
 
     .. note::
@@ -2258,9 +2266,8 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
 
     # Calculate interpolation indices
     # Convert east longitude to equivalent hours
-    lon_shift = 24.0 * lon / 360.
-    kk = np.where(lon_shift < 0)
-    lon_shift[kk] = lon_shift[kk] + 24.
+    lon_shift = 24.0 * np.asarray(lon, dtype=float) / 360. + float(eot_offset)
+    lon_shift = np.mod(lon_shift, 24.)
 
     fraction = np.zeros((n_lon, n_tod_out))
     lower_indices = np.zeros((n_lon, n_tod_out))
@@ -2271,14 +2278,23 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
     # lon_shift: The offset in Mars-hours due to Martian longitude
     # The result dtt (delta time transform) tells us which time indices
     # in the original Mars data to interpolate between
+    # For output local time LT_n at east longitude lon, the universal
+    # time of the sample is UT = LT_n - lon_shift. The input samples are
+    # labelled tod[k] = tod[0] + k*dt_in (instantaneous samples, or the
+    # centres of averaging bins), so the fractional index into the
+    # input is (UT - tod[0]) / dt_in. dtt below is (UT - tod[0]) in
+    # hours, wrapped into [0, 24).
+    #
+    # Note: an earlier form added a spurious +dt_in here (one full
+    # bin) and omitted -tod[0] in the target_times branch; on 3-hourly
+    # data that shifted every field by 3 h.
     for n in range(n_tod_out):
-        # dtt = n*dt_out - lon_shift - target_times[0] + dt_in
         if target_times is None:
-            dtt = n*dt_out - lon_shift - tod[0] + dt_in
+            # Output axis is the input axis: LT_n = tod[0] + n*dt_out
+            dtt = n*dt_out - lon_shift
         else:
-            # For specifying target local times
-            # ``time_out - xfshif - tod[0] + hrs/stpe`` in input
-            dtt = target_times[n] - lon_shift
+            # Explicit target local times
+            dtt = target_times[n] - lon_shift - tod[0]
 
         # Ensure that local time is bounded by [0, 24] hours
         kk = np.where(dtt < 0.)
@@ -2386,6 +2402,88 @@ def add_cyclic(data, lon):
     data_c[:, 0:-1] = data[:, :]
     data_c[:, -1] = data[:, 0]
     return data_c, np.append(lon, lon[-1] + dlon)
+
+
+def _cgrid_indices(lon, lat, lon_u, lat_v):
+    """
+    Index maps from the mass grid (lon, lat) to the C-grid staggered
+    axes: lon_u west/east of each lon, lat_v south/north of each lat,
+    by nearest neighbour with longitude wrap. Regular spacing assumed.
+    Returns (iw, ie, js, jn, dlon_rad, dlat_rad).
+    """
+    lon = np.asarray(lon, float); lat = np.asarray(lat, float)
+    lon_u = np.asarray(lon_u, float); lat_v = np.asarray(lat_v, float)
+    dx = lon[1] - lon[0]
+    dy = lat[1] - lat[0]
+    def near_lon(target):
+        d = np.abs((lon_u[None, :] - target[:, None] + 180.) % 360. - 180.)
+        return np.argmin(d, axis=1)
+    iw = near_lon(lon - dx/2.)
+    ie = near_lon(lon + dx/2.)
+    js = np.argmin(np.abs(lat_v[None, :] - (lat - dy/2.)[:, None]), axis=1)
+    jn = np.argmin(np.abs(lat_v[None, :] - (lat + dy/2.)[:, None]), axis=1)
+    return iw, ie, js, jn, np.deg2rad(dx), np.deg2rad(dy)
+
+
+def cgrid_div(u_stag, v_stag, lon, lat, lon_u, lat_v, R=3400*1000.):
+    """
+    Horizontal divergence on the Arakawa-C grid, formed as the model
+    does: u on the east/west cell faces, v on the north/south faces,
+    result at the mass point::
+
+        div = 1/(R cos lat) [ (u_e - u_w)/dlon
+                              + (v_n cos lat_n - v_s cos lat_s)/dlat ]
+
+    :param u_stag: x-staggered wind ``[..., lat, lon_u]``
+    :param v_stag: y-staggered wind ``[..., lat_v, lon]``
+    :param lon, lat: mass-point axes [deg]
+    :param lon_u, lat_v: staggered axes [deg]
+    :param R: planetary radius [m]
+    :return: divergence [s-1] at the mass points ``[..., lat, lon]``
+    """
+    iw, ie, js, jn, dlam, dphi = _cgrid_indices(lon, lat, lon_u, lat_v)
+    phi = np.deg2rad(np.asarray(lat, float))
+    phiv = np.deg2rad(np.asarray(lat_v, float))
+    du = u_stag[..., :, ie] - u_stag[..., :, iw]
+    dv = (v_stag[..., jn, :]*np.cos(phiv[jn])[:, None]
+          - v_stag[..., js, :]*np.cos(phiv[js])[:, None])
+    return (du/dlam + dv/dphi) / (R*np.cos(phi)[:, None])
+
+
+def cgrid_curl(u_stag, v_stag, lon, lat, lon_u, lat_v, R=3400*1000.):
+    """
+    Relative vorticity on the Arakawa-C grid: formed at the cell
+    corners (lat_v, lon_u) where it lives naturally, then averaged to
+    the mass points (corners on the poles are excluded)::
+
+        curl = 1/(R cos lat) [ dv/dlon - d(u cos lat)/dlat ]
+
+    Arguments as for ``cgrid_div``. Returns [s-1] at ``[..., lat, lon]``.
+    """
+    lon = np.asarray(lon, float); lat = np.asarray(lat, float)
+    lon_u = np.asarray(lon_u, float); lat_v = np.asarray(lat_v, float)
+    dx = lon[1] - lon[0]; dy = lat[1] - lat[0]
+    dlam = np.deg2rad(dx); dphi = np.deg2rad(dy)
+    def near(axis, target, wrap):
+        if wrap:
+            d = np.abs((axis[None, :] - target[:, None] + 180.) % 360. - 180.)
+        else:
+            d = np.abs(axis[None, :] - target[:, None])
+        return np.argmin(d, axis=1)
+    # mass points west/east of each lon_u; mass rows south/north of each lat_v
+    imw = near(lon, lon_u - dx/2., True); ime = near(lon, lon_u + dx/2., True)
+    jms = near(lat, lat_v - dy/2., False); jmn = near(lat, lat_v + dy/2., False)
+    phi = np.deg2rad(lat); phiv = np.deg2rad(lat_v)
+    dv = v_stag[..., :, ime] - v_stag[..., :, imw]                    # [.., lat_v, lon_u]
+    du = (u_stag[..., jmn, :]*np.cos(phi[jmn])[:, None]
+          - u_stag[..., jms, :]*np.cos(phi[jms])[:, None])             # [.., lat_v, lon_u]
+    with np.errstate(divide='ignore', invalid='ignore'):
+        zeta_c = (dv/dlam - du/dphi) / (R*np.cos(phiv)[:, None])
+    zeta_c = np.where(np.abs(np.cos(phiv))[:, None] < 1e-6, np.nan, zeta_c)
+    iw, ie, js, jn, _, _ = _cgrid_indices(lon, lat, lon_u, lat_v)
+    corners = np.stack([zeta_c[..., js, :][..., :, iw], zeta_c[..., js, :][..., :, ie],
+                        zeta_c[..., jn, :][..., :, iw], zeta_c[..., jn, :][..., :, ie]])
+    return np.nanmean(corners, axis=0)
 
 
 def spherical_div(U, V, lon_deg, lat_deg, R=3400*1000., spacing="varying"):
