@@ -403,6 +403,26 @@ def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
 
     n = np.zeros((N_OUT, Ndim), dtype = int)
 
+    # Fast path: X_IN monotonically increasing along its first axis
+    # (the normal case for pressure/altitude after reverse_input). The
+    # index of the largest X_IN <= X_OUT is then a counting operation,
+    # identical to the nearest-then-step-down search below, and avoids
+    # a Python loop over every column (millions of argmin calls on a
+    # full-year file). Non-monotonic input keeps the original search.
+    if (len(dimsIN) > 1 and NdimsIN == Ndim and N_IN > 1 and
+            np.all(X_IN[1:, :] >= X_IN[:-1, :])):
+        xo = X_OUT if len(dimsOUT) > 1 else X_OUT.reshape(N_OUT, 1)
+        chunk = max(1, int(2e8 // max(N_IN, 1)))
+        for j0 in range(0, Ndim, chunk):
+            j1 = min(Ndim, j0 + chunk)
+            xin = X_IN[:, j0:j1]
+            for i in range(N_OUT):
+                xo_i = xo[i, j0:j1] if xo.shape[1] > 1 else xo[i, 0]
+                n[i, j0:j1] = np.count_nonzero(xin <= xo_i, axis=0) - 1
+        if len(dimsOUT) == 1:
+            n = np.squeeze(n)
+        return n
+
     # Some redundancy below but this allows keeping the "if" statement
     # out of the larger loop over all of the array elements
     if len(dimsIN) == 1:
@@ -588,6 +608,13 @@ def vinterp(varIN, Lfull, Llev, type_int="log", reverse_input=False,
         Lfull = Lfull[::-1, :]
         varIN = varIN[::-1, :]
 
+    # Flatten ONCE outside the level loop. The previous code called
+    # .flatten() (a full copy) up to six times per output level, which
+    # dominated the run time on large files.
+    Lf = np.ascontiguousarray(Lfull).reshape(-1)
+    vf = np.ascontiguousarray(varIN).reshape(-1)
+    NfN = Nfull*Ndim
+
     for k in range(0, Nlev):
         # Find nearest layer to Llev[k]
         if np.any(index):
@@ -608,27 +635,25 @@ def vinterp(varIN, Lfull, Llev, type_int="log", reverse_input=False,
         # Initialize alpha (size = ``[Ndim]``)
         alpha = np.nan * Ndimall
         # Only calculate alpha where ``nindex < Nfull``
-        Ndo = Ndimall[nindexp1 < Nfull*Ndim]
+        Ndo = Ndimall[nindexp1 < NfN]
+        Ln = Lf[nindex[Ndo]]
+        Lp = Lf[nindexp1[Ndo]]
         if type_int == 'log':
-            alpha[Ndo] = (np.log(Llev[k] / Lfull.flatten()[nindexp1[Ndo]])
-                          / np.log(Lfull.flatten()[nindex[Ndo]]
-                                   / Lfull.flatten()[nindexp1[Ndo]]))
+            alpha[Ndo] = np.log(Llev[k] / Lp) / np.log(Ln / Lp)
         elif type_int == 'lin':
-            alpha[Ndo] = ((Llev[k] - Lfull.flatten()[nindexp1[Ndo]])
-                          / (Lfull.flatten()[nindex[Ndo]]
-                             - Lfull.flatten()[nindexp1[Ndo]]))
+            alpha[Ndo] = (Llev[k] - Lp) / (Ln - Lp)
 
         # Mask if ``Llev[k]`` < model top for the pressure interpolation
         if masktop:
-            alpha[Llev[k] < Lfull.flatten()[nindex]] = np.nan
+            alpha[Llev[k] < Lf[nindex]] = np.nan
 
         # Ensure ``n+1`` is never > ``Nfull`` by setting ``n+1 = Nfull``
         # if ever ``n+1 > Nfull``. This does not affect the calculation
         # as alpha is set to NaN for those values.
-        nindexp1[nindexp1 >= Nfull*Ndim] = nindex[nindexp1 >= Nfull*Ndim]
+        over = nindexp1 >= NfN
+        nindexp1[over] = nindex[over]
 
-        varOUT[k, :] = (varIN.flatten()[nindex] * alpha
-                        + (1-alpha) * varIN.flatten()[nindexp1])
+        varOUT[k, :] = vf[nindex] * alpha + (1-alpha) * vf[nindexp1]
     return np.reshape(varOUT, dimsOUT)
 
 

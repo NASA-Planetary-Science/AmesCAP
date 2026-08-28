@@ -499,13 +499,37 @@ def main():
         # Load model variables, dimensions
         fNcdf = Dataset(fullnameIN, 'r')
         model = read_variable_dict_amescap_profile(fNcdf)
+        # Time chunking for lazy (dask) processing: keep about 2e7
+        # elements of a 3D field per chunk so large files stream
+        # through instead of being loaded whole.
+        chunks = None
+        try:
+            import dask
+            # Single-threaded scheduler: netCDF4/HDF5 is not thread
+            # safe and the threaded scheduler deadlocks on some writes
+            # (seen with -ba binning). Chunking alone gives the memory
+            # benefit.
+            dask.config.set(scheduler='synchronous')
+            ntime = (fNcdf.dimensions[model.dim_time].size
+                     if model.dim_time in fNcdf.dimensions else 1)
+            per_frame = 1
+            for d in (model.dim_pfull, model.dim_lat, model.dim_lon):
+                if d in fNcdf.dimensions:
+                    per_frame *= fNcdf.dimensions[d].size
+            nchunk = int(min(max(ntime, 1), max(1, 2e7 // max(per_frame, 1))))
+            chunks = {model.dim_time: nchunk}
+            print(f"{Cyan}Lazy processing with dask, {nchunk} time "
+                  f"step(s) per chunk{Nclr}")
+        except ImportError:
+            print(f"{Yellow}dask not installed: the whole file is held in "
+                  f"memory (pip install dask to stream large files){Nclr}")
         fNcdf.close()
 
         print(f"{Cyan}Reading model attributes from ~.amescap_profile:")
         print(f"{Cyan}{vars(model)}") # Print attributes
 
         # Open dataset with xarray
-        DS = xr.open_dataset(fullnameIN, decode_times=False)
+        DS = xr.open_dataset(fullnameIN, decode_times=False, chunks=chunks)
 
         if model_type == 'marswrf':
             # Build the sol axis from the best clock in the file
@@ -588,11 +612,14 @@ def main():
                       f"P_TOP = {p_top:.3e} Pa{Nclr}")
             elif 'P_PHY' in DS and 'PSFC' in DS:
                 # Reduced file: recover eta by fitting P_PHY to PSFC
-                pp = DS.P_PHY.transpose(model.dim_time, model.dim_pfull,
-                                        ...).values
+                # A few frames are plenty for the fit (eta is fixed)
+                nfit = min(16, DS.sizes[model.dim_time])
+                sub = {model.dim_time: slice(0, nfit)}
+                pp = DS.P_PHY.isel(sub).transpose(model.dim_time,
+                                                  model.dim_pfull, ...).values
                 okt = (pp > 0).reshape(pp.shape[0], -1).all(axis=1)
                 pp = pp[okt]
-                ps = DS.PSFC.transpose(model.dim_time, ...).values[okt]
+                ps = DS.PSFC.isel(sub).transpose(model.dim_time, ...).values[okt]
                 eta_u, p_top = marswrf_fit_eta(pp, ps)
                 eta_w = marswrf_eta_mid_to_interfaces(eta_u)
                 print(f"{Yellow}No ZNU/ZNW/P_TOP in file: eta fitted "
@@ -862,61 +889,60 @@ def main():
             #      when HGT is absent (reduced files; ~2 m rms)
             #   2. PH, PHB, HGT: interface geopotential averaged to
             #      layer centres, minus terrain (older files)
+            # All of this stays lazy (xarray/dask) so large files are
+            # not loaded whole.
             zfull3D = None
             zsrc = None
+            zs = None
             if 'Z_PHY' in DS:
                 zphy = DS['Z_PHY'].transpose(model.dim_time, model.dim_pfull,
                                              model.dim_lat, model.dim_lon)
                 if 'HGT' in DS:
                     zs = DS['HGT'].transpose(model.dim_time, model.dim_lat,
-                                             model.dim_lon).values
+                                             model.dim_lon)
                     zsrc = 'Z_PHY - HGT'
                 elif all(v in DS for v in ('P_PHY', 'T_PHY', 'PSFC')):
-                    pp = DS['P_PHY'].transpose(model.dim_time, model.dim_pfull,
-                                               model.dim_lat, model.dim_lon).values
-                    tt = DS['T_PHY'].transpose(model.dim_time, model.dim_pfull,
-                                               model.dim_lat, model.dim_lon).values
-                    ps = DS['PSFC'].transpose(model.dim_time, model.dim_lat,
-                                              model.dim_lon).values
-                    kb = int(np.argmax(np.nanmean(pp, axis=(0, 2, 3))))
+                    # Bottom layer = largest reference pressure
+                    kb = int(np.argmax(np.asarray(DS['pfull'].values)))
+                    sel = {model.dim_pfull: kb}
+                    pb = DS['P_PHY'].isel(sel)
+                    tb = DS['T_PHY'].isel(sel)
+                    ps = DS['PSFC']
                     Rd = float(DS.attrs.get('R_D', 191.8))
                     g = float(DS.attrs.get('G', 3.727))
-                    with np.errstate(divide='ignore', invalid='ignore'):
-                        zs = (zphy.values[:, kb] - Rd*tt[:, kb]/g
-                              * np.log(ps/pp[:, kb]))
+                    zs = (zphy.isel(sel) - Rd*tb/g*np.log(ps/pb)).transpose(
+                        model.dim_time, model.dim_lat, model.dim_lon)
                     zsrc = ('Z_PHY - hydrostatic surface estimate from '
                             'the bottom layer (no HGT)')
                     target = getattr(model, 'zsurf')
                     if target not in DS:
-                        DS[target] = ((model.dim_time, model.dim_lat,
-                                       model.dim_lon), zs)
+                        DS[target] = zs
+                        DS[target].attrs = {}
                         DS[target].attrs['description'] = (
                             '(ADDED POST-PROCESSING) surface height, '
                             'hydrostatic estimate from the bottom layer')
                         DS[target].attrs['long_name'] = DS[target].attrs['description']
                         DS[target].attrs['units'] = 'm'
                 if zsrc is not None:
-                    zfull3D = zphy.values - zs[:, None, :, :]
+                    zfull3D = (zphy - zs).transpose(model.dim_time, model.dim_pfull,
+                                                    model.dim_lat, model.dim_lon)
             if zfull3D is None and zagl_lvl is not None:
                 zagl_lvl = zagl_lvl.transpose(model.dim_time,
                                               'bottom_top_stag', ...)
-                zfull3D = 0.5*(zagl_lvl.isel(bottom_top_stag=slice(None, -1)).values
-                               + zagl_lvl.isel(bottom_top_stag=slice(1, None)).values)
+                zfull3D = xr.DataArray(
+                    0.5*(zagl_lvl.isel(bottom_top_stag=slice(None, -1)).data
+                         + zagl_lvl.isel(bottom_top_stag=slice(1, None)).data),
+                    dims=(model.dim_time, model.dim_pfull, model.dim_lat,
+                          model.dim_lon))
+                zs = DS['HGT'].transpose(model.dim_time, model.dim_lat,
+                                         model.dim_lon)
                 zsrc = 'PH, PHB, HGT'
-            if zfull3D is not None and 'zhalf' in DS:
+            if zfull3D is not None and 'zhalf' in DS and zs is not None:
                 # zhalf kept from ZF_PHY is above the areoid; make it
                 # above the local surface like zfull.
-                zs_da = xr.DataArray(zs if 'zs' in dir() else
-                                     DS['HGT'].transpose(model.dim_time,
-                                                         model.dim_lat,
-                                                         model.dim_lon).values,
-                                     dims=(model.dim_time, model.dim_lat,
-                                           model.dim_lon))
-                DS['zhalf'] = DS['zhalf'] - zs_da
+                DS['zhalf'] = DS['zhalf'] - zs
             if zfull3D is not None:
-                DS = DS.assign(zfull=((model.dim_time, model.dim_pfull,
-                                       model.dim_lat, model.dim_lon),
-                                      zfull3D))
+                DS = DS.assign(zfull=zfull3D)
                 DS['zfull'].attrs['description'] = (
                     '(ADDED POST-PROCESSING) height above local surface')
                 DS['zfull'].attrs['long_name'] = (
