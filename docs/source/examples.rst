@@ -668,7 +668,7 @@ Create the **visible dust optical depth** plot first:
 - Set the title: ``Area-Weighted Global Mean Dust OD (norm.) [op]``
 - Edit the legend: ``Visible``
 
-The input to ``Main Variable`` is not so straightforward this time. We want to plot the *normalized* dust optical depth, which is dervied as follows:
+The input to ``Main Variable`` is not so straightforward this time. We want to plot the *normalized* dust optical depth, which is derived as follows:
 
 ``normalized_dust_OD = opacity / surface_pressure * reference_pressure``
 

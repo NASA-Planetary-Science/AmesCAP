@@ -107,7 +107,7 @@ Attributes
        lon_target: float, center longitude of subgrid (e.g =-136.)
        lat_target: float, center latitude of subgrid  (e.g =40.)
        window_lon: width of window in degree   (e.g =10.)
-       window_lat: heigth of window in degree  (e.g. =5.)
+       window_lat: height of window in degree  (e.g. =5.)
    Returns:
        lon_window: 1D array of truncated longitude (may not be increasing)
        lat_window: 1D array of truncated latitudes (may not be increasing)
