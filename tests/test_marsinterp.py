@@ -17,14 +17,14 @@ import glob
 import re
 import numpy as np
 from netCDF4 import Dataset
-from base_test import BaseTestCase
+from base_test import BaseTestCase, FIXTURE_SIZE
 
 class TestMarsInterp(BaseTestCase):
     """Integration test suite for MarsInterp"""
 
     PREFIX = "MarsInterp_test_"
     FILESCRIPT = "create_ames_gcm_files.py"
-    SHORTFILE = "short"
+    SHORTFILE = FIXTURE_SIZE
     
     # Verify files were created
     expected_files = [

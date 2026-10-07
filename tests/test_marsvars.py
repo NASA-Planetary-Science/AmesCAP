@@ -14,14 +14,14 @@ import tempfile
 import glob
 import numpy as np
 from netCDF4 import Dataset
-from base_test import BaseTestCase
+from base_test import BaseTestCase, FIXTURE_SIZE
 
 class TestMarsVars(BaseTestCase):
     """Integration test suite for MarsVars"""
 
     PREFIX = "MarsVars_test_"
     FILESCRIPT = "create_ames_gcm_files.py"
-    SHORTFILE = ""
+    SHORTFILE = FIXTURE_SIZE
 
     # Verify files were created
     expected_files = [
