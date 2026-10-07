@@ -16,7 +16,7 @@ Installation
 -----------
 Requirements:
 
-* Python 3.7 or later
+* Python 3.9 through 3.11
 * pip (Python package installer)
 
 Recommended Installation
@@ -26,7 +26,7 @@ For reproducible analysis, we recommend installing CAP in a dedicated virtual en
     # Create a new virtual environment with pip or conda:
     python3 -m venv amescap-env # with pip
     # OR
-    conda create -n amescap python=3.13 # with conda
+    conda create -n amescap python=3.11 # with conda
 
     # Activate the environment, which varies by OS, shell, and package manager:
     source amescap-env/bin/activate     # pip + Unix/MacOS (bash) OR Windows Cygwin
@@ -46,17 +46,11 @@ For reproducible analysis, we recommend installing CAP in a dedicated virtual en
 
     # For spectral analysis capabilities, please follow the installation instructions.
 
-    # Copy amescap_profile to your home directory, which varies by OS, shell, and package manager:
-    # pip + Unix/MacOS (bash, csh, tcsh, zsh) OR Windows Cygwin:
-    cp amescap/mars_templates/amescap_profile ~/.amescap_profile
-    # OR pip + Windows Powershell:
-    Copy-Item .\amescap\mars_templates\amescap_profile -Destination $HOME\.amescap_profile
-    # OR conda + Unix/MacOS (bash, csh, tcsh, zsh):
-    cp /opt/anaconda3/envs/amescap/mars_templates/amescap-profile ~/.amescap-profile
-    # OR conda + Windows Cygwin:
-    cp /cygdrive/c/Users/YourUsername/anaconda3/envs/amescap/mars_templates/amescap-profile ~/.amescap-profile
-    # OR conda + Windows Powershell:
-    Copy-Item $env:USERPROFILE\anaconda3\envs\amescap\mars_templates\amescap-profile -Destination $HOME\.amescap-profile
+    # Unix, macOS, or Cygwin, with pip or conda:
+    cp "$(python -c 'import sys; print(sys.prefix)')/mars_templates/amescap_profile" ~/.amescap_profile
+    # Windows PowerShell, with pip or conda:
+    $profileDir = python -c "import sys; print(sys.prefix)"
+    Copy-Item "$profileDir\mars_templates\amescap_profile" -Destination "$HOME\.amescap_profile"
 
 This ensures consistent package versions across different systems.
 
@@ -73,6 +67,7 @@ After installation, the following commands will be available:
 * ``MarsFiles`` - Manage data files
 * ``MarsFormat`` - Convert between model/reanalysis formats
 * ``MarsCalendar`` - Handle Mars calendar calculations
+* ``MarsNest`` - Map the layout of nested grids
 
 Documentation
 ------------
@@ -92,11 +87,11 @@ The tutorial directory contains:
 Data Sources
 -----------
 The tutorials use MGCM simulation outputs documented in `Haberle et al. 2019 <https://www.sciencedirect.com/science/article/pii/S0019103518305761>`_. 
-Data is available through the `MCMC Data Portal <https://data.nas.nasa.gov/mcmc/index.html>`_.
+Legacy files are available at `the NASA Ames Legacy GCM data directory <https://data.nas.nasa.gov/legacygcm/legacygcm/>`_, and FV3 files at `the FV3BETAOUT1 directory <https://data.nas.nasa.gov/legacygcm/fv3betaout1/fv3betaout1/>`_.
 
 Contributing
 -----------
-We welcome contributions! Please see our contributing guidelines for details.
+We welcome contributions! Please see our contributing guidelines (``CONTRIBUTING.rst``) for details. Instructions for running the test suite, including its time, memory, disk, and network requirements, are in ``tests/README.rst``.
 
 License
 -------
