@@ -7,7 +7,7 @@ name = "amescap"
 dynamic = ["version"]
 description = "Analysis pipeline for the NASA Ames MGCM"
 readme = "README.rst"
-requires-python = ">=3.9,<3.12"
+requires-python = ">=3.10"
 license = {file = "LICENSE"}
 authors = [
     {name = "Mars Climate Modeling Center", email = "richard.a.urata@nasa.gov"}

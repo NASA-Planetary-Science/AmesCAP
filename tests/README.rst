@@ -1,7 +1,7 @@
 Running the CAP Tests
 =====================
 
-Install CAP in a Python 3.9-3.11 environment from the repository root, then
+Install CAP in a Python 3.10 or newer environment from the repository root, then
 run the tests from the ``tests`` directory:
 
 .. code-block:: bash

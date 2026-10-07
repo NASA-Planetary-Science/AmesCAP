@@ -30,9 +30,10 @@ class TestMarsPull(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test environment"""
-        # Create a temporary directory in the user's home directory
-        cls.test_dir = os.path.join(os.path.expanduser('~'), 'MarsPull_test_downloads')
-        os.makedirs(cls.test_dir, exist_ok=True)
+        # Remember where we started so tearDownClass can leave the
+        # temporary directory before deleting it
+        cls.original_cwd = os.getcwd()
+        cls.test_dir = tempfile.mkdtemp(prefix='MarsPull_test_')
 
         # Project root directory
         cls.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -53,6 +54,7 @@ class TestMarsPull(unittest.TestCase):
     def tearDownClass(cls):
         """Clean up the test environment"""
         try:
+            os.chdir(cls.original_cwd)
             shutil.rmtree(cls.test_dir, ignore_errors=True)
         except Exception:
             print(f"Warning: Could not remove test directory {cls.test_dir}")

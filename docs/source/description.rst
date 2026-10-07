@@ -34,6 +34,10 @@ Table of Contents
   * `Accessing CAP Libraries for Custom Plots`_
   * `Debugging`_
 
+* `7. MarsFormat - Converting Output from Other Models`_
+* `8. MarsCalendar - Converting Between Sol and Solar Longitude`_
+* `9. MarsNest - Mapping Nested Grids`_
+
 ----
 
 CAP is a toolkit designed to simplify the post-processing of Mars Global Climate Model (MGCM) output. Written in Python, CAP works with existing Python libraries, allowing users to install and use it easily and free of charge. Without CAP, plotting MGCM output requires users to provide their own scripts for post-processing tasks such as interpolating the vertical grid, computing derived variables, converting between file types, and creating diagnostic plots.
@@ -51,7 +55,7 @@ Key CAP Features
 
 * **Python-based**: Built with an open-source programming language with extensive scientific libraries
 * **Virtual Environment**: Provides cross-platform support (MacOS, Linux, Windows), robust version control, and non-intrusive installation
-* **Modular Design**: Composed of both libraries (functions) and five executables for efficient command-line processing
+* **Modular Design**: Composed of shared libraries and eight command-line science tools
 * **netCDF4 Format**: Uses a self-descriptive data format widely employed in the climate modeling community
 * **FV3 Format Convention**: Follows formatting conventions from the GFDL Finite-Volume Cubed-Sphere Dynamical Core
 * **Multi-model Support**: Currently supports both NASA Ames Legacy GCM and NASA Ames GCM with the FV3 dynamical core, with planned expansion to other Global Climate Models
@@ -59,13 +63,17 @@ Key CAP Features
 CAP Components
 --------------
 
-CAP consists of five executables:
+CAP installs eight command-line science tools and the ``cap`` help/version command:
 
 1. **MarsPull** - Access MGCM output
 2. **MarsFiles** - Reduce the files
 3. **MarsVars** - Perform variable operations
 4. **MarsInterp** - Interpolate the vertical grid
 5. **MarsPlot** - Visualize the MGCM output
+6. **MarsFormat** - Convert output from EMARS, OpenMARS, PCM, and MarsWRF
+7. **MarsCalendar** - Convert between solar longitude and sol
+8. **MarsNest** - Map the layout of nested grids
+9. **cap** - Display general help and installation information
 
 Cheat Sheet
 -----------
@@ -85,17 +93,16 @@ Use the ``[-h --help]`` option with any executable to display documentation and 
 .. code-block:: bash
 
     (amesCAP)$ MarsPlot -h
-    > usage: MarsPlot [-h] [-i INSPECT_FILE] [-d DATE [DATE ...]] [--template]
-    >                   [-do DO] [-sy] [-o {pdf,eps,png}] [-vert] [-dir DIRECTORY]
-    >                   [--debug]
-    >                   [custom_file]
+    > MarsPlot -h
+    > MarsPlot -template
+    > MarsPlot Custom.in -ftype png -portrait
 
 ----
 
 1. MarsPull - Downloading Raw MGCM Output
 -----------------------------------------
 
-``MarsPull`` is a utility for accessing MGCM output files hosted on the `MCMC Data portal <https://data.nas.nasa.gov/legacygcm/data_legacygcm.php>`_. MGCM data is archived in 1.5-hour intervals (16x/day) and packaged in files containing 10 sols. The files are named fort.11_XXXX in the order they were produced, but ``MarsPull`` maps those files to specific solar longitudes (L\ :sub:`s`, in °).
+``MarsPull`` accesses MGCM output files hosted in the `NASA Ames Legacy GCM data directory <https://data.nas.nasa.gov/legacygcm/legacygcm/>`_ and the `FV3BETAOUT1 directory <https://data.nas.nasa.gov/legacygcm/fv3betaout1/fv3betaout1/>`_. Legacy MGCM data is archived in 1.5-hour intervals (16x/day) and packaged in files containing 10 sols. The files are named fort.11_XXXX in the order they were produced, but ``MarsPull`` maps those files to specific solar longitudes (L\ :sub:`s`, in degrees).
 
 This allows users to request a file at a specific L\ :sub:`s` or for a range of L\ :sub:`s` using the ``[-ls --ls]`` flag. ``MarsPull`` requires the name of the folder to parse files from, and folders can be listed using ``[-list --list_files]``. The ``[-f --filename]`` flag can be used to parse specific files within a particular directory.
 
@@ -134,7 +141,7 @@ Data Reduction Functions
 * Create **diurnal composites** of continuous time-series: ``[-bd --bin_diurn]``
 * Extract **specific seasons** from files: ``[-split --split]``
 * Combine **multiple** files into one: ``[-c --concatenate]``
-* Create **zonally-averaged** files: ``[-za --zonal_average]``
+* Create **zonally-averaged** files: ``[-zavg --zonal_average]``
 
 .. image:: ./images/binning_sketch.png
    :alt: Binning Sketch
@@ -150,7 +157,7 @@ Data Transformation Functions
   * High-pass: ``[-hpt --high_pass_temporal]``
   * Band-pass: ``[-bpt --band_pass_temporal]``
 
-* **Regrid** a file to a different spatio/temporal grid: ``[-regrid --regrid_xy_to_match]``
+* **Regrid** a file to a different spatio/temporal grid: ``[-regrid --regrid_XY_to_match]``
 * **Time-shift** diurnal composite files to uniform local time: ``[-t --time_shift]``
 
 For all operations, you can process selected variables within the file using ``[-incl --include]``.
@@ -278,15 +285,15 @@ Interpolation Types
 Using Custom Vertical Grids
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``MarsInterp`` uses default grids for each interpolation type, but you can specify custom layers by editing the hidden file ``.amesgcm_profile`` in your home directory.
+``MarsInterp`` uses default grids for each interpolation type, but you can specify custom layers by editing ``~/.amescap_profile``.
 
 For first-time use, copy the template:
 
 .. code-block:: bash
 
-    (amesCAP)$ cp ~/amesCAP/mars_templates/amesgcm_profile ~/.amesgcm_profile # Note the dot '.' !!!
+    (amesCAP)$ cp "$(python -c 'import sys; print(sys.prefix)')/mars_templates/amescap_profile" ~/.amescap_profile
 
-Open ``~/.amesgcm_profile`` with any text editor to see customizable grid definitions:
+Open ``~/.amescap_profile`` with any text editor to see customizable grid definitions:
 
 .. code-block:: none
 
@@ -320,6 +327,9 @@ The MarsPlot workflow involves three components:
 - **MarsPlot** in a terminal to inspect files and process the template
 - **Custom.in** template in a text editor
 - **Diagnostics.pdf** viewed in a PDF viewer
+
+.. warning::
+   Element-wise operations in ``Custom.in`` (expressions in square brackets ``[]``) and the settings in ``~/.amescap_profile`` are evaluated as Python code. Only run templates and profiles from people you trust, and review a shared ``Custom.in`` before passing it to ``MarsPlot``.
 
 .. image:: ./images/MarsPlot_graphics.png
    :alt: Figure 4. MarsPlot workflow
@@ -614,13 +624,13 @@ For simulations with multiple files of the same type:
     00000.fixed.nc          00100.fixed.nc         00200.fixed.nc         00300.fixed.nc
     00000.atmos_average.nc  00100.atmos_average.nc 00200.atmos_average.nc 00300.atmos_average.nc
 
-By default, MarsPlot uses the most recent files (e.g., ``00300.fixed.nc`` and ``00300.atmos_average.nc``). Instead of specifying dates in each ``Main Variable`` entry, use the ``-date`` argument:
+By default, MarsPlot uses the most recent files (e.g., ``00300.fixed.nc`` and ``00300.atmos_average.nc``). Instead of specifying dates in each ``Main Variable`` entry, use the ``-d`` argument:
 
 .. code-block:: bash
 
     MarsPlot Custom.in -d 200
 
-You can also specify a range of sols: ``MarsPlot Custom.in -d 100 300``
+The ``-d`` option accepts one sol identifier per run; it does not accept a range.
 
 For 1D plots spanning multiple years, use ``[-sy --stack_years]`` to overplot consecutive years instead of showing them sequentially.
 
@@ -660,7 +670,7 @@ By default, MarsPlot applies the free dimensions specified in the template to bo
     Level [Pa/m]   = 10
     2nd Variable   = atmos_average.var{ls=90,180;lev=50}
 
-Here, ``Main Variable`` uses L\ :sub:`s`=270° and pressure=10 Pa, while ``2nd Variable`` uses the average of L\ :sub:`s`=90-180° and pressure=50 Pa.
+Here, ``Main Variable`` uses L\ :sub:`s`\ =270° and pressure=10 Pa, while ``2nd Variable`` uses the average of L\ :sub:`s`\ =90-180° and pressure=50 Pa.
 
 .. note::
    Dimension keywords are ``ls``, ``lev``, ``lon``, ``lat``, and ``tod``. Accepted values are ``Value`` (closest), ``Valmin,Valmax`` (average between two values), and ``all`` (average over all values).
@@ -813,5 +823,88 @@ Debugging
 
 .. note::
    Errors raised with the ``--debug`` flag may reference MarsPlot's internal classes, so they may not always be self-explanatory.
+
+*Return to* `Table of Contents`_
+
+----
+
+7. MarsFormat - Converting Output from Other Models
+---------------------------------------------------
+
+``MarsFormat`` converts output from other Mars climate models into the MGCM-like format used by CAP, so the converted files can be processed with ``MarsFiles``, ``MarsVars``, ``MarsInterp``, and ``MarsPlot``. Supported models are selected with ``[-gcm --gcm_name]``:
+
+* ``emars`` - the Ensemble Mars Atmosphere Reanalysis System (EMARS)
+* ``openmars`` - the Open access to Mars Assimilated Remote Soundings (OpenMARS) reanalysis
+* ``pcm`` - the Mars Planetary Climate Model (PCM)
+* ``marswrf`` - MarsWRF
+
+Conversion renames dimensions and variables to the MGCM conventions (e.g., ``time``, ``pfull``, ``lat``, ``lon``, ``temp``, ``ucomp``), moves staggered winds to mass points (MarsWRF and EMARS), builds the pressure coordinates (``pfull``, ``phalf``, ``ak``, ``bk``) with a consistent top-to-bottom orientation, converts longitude to 0-360°E, and adds solar longitude (``areo``) if the file lacks it. Variables derived during conversion are labeled ``(ADDED POST-PROCESSING)`` in their description.
+
+.. code-block:: bash
+
+    (amesCAP)$ MarsFormat openmars_file.nc -gcm openmars
+    > openmars_file_daily.nc was created
+
+Instantaneous model output becomes a ``daily`` file. ``MarsFormat`` can also bin the data into MGCM-like ``average`` and ``diurn`` files:
+
+.. code-block:: bash
+
+    (amesCAP)$ MarsFormat openmars_file.nc -gcm openmars -ba       # 5-sol averages -> openmars_file_average.nc
+    (amesCAP)$ MarsFormat openmars_file.nc -gcm openmars -ba 10    # 10-sol averages
+    (amesCAP)$ MarsFormat openmars_file.nc -gcm openmars -bd       # 5-sol averages binned by hour -> openmars_file_diurn.nc
+    (amesCAP)$ MarsFormat openmars_file.nc -gcm openmars -bd -ba 10
+
+Use ``[-rn --retain_names]`` to keep the original variable and dimension names (output files are labeled ``_nat``). For MarsWRF, ``[-stag --keep_staggered]`` additionally keeps the winds on their native staggered grid for use in your own scripts.
+
+The mapping between each model's variable names and the MGCM names is defined in the ``Variable dictionary`` section of ``~/.amescap_profile`` and can be edited there.
+
+*Return to* `Table of Contents`_
+
+----
+
+8. MarsCalendar - Converting Between Sol and Solar Longitude
+------------------------------------------------------------
+
+``MarsCalendar`` converts between the sol number of a simulation and solar longitude (L\ :sub:`s`). It is useful for choosing files and time ranges, e.g., before using ``MarsFiles -split`` or ``MarsPull -ls``. Exactly one of ``[-ls --ls]`` or ``[-sol --sol]`` is required; both accept a single value or a ``start stop step`` range.
+
+.. code-block:: bash
+
+    (amesCAP)$ MarsCalendar -ls 180
+    >    Ls    |    Sol
+    > -----------------------
+    >  180.00  |  371.71
+
+    (amesCAP)$ MarsCalendar -sol 0 100 20
+    >     SOL  |    Ls
+    > -----------------------
+    >  0.00    |  0.00
+    >  20.00   |  10.16
+    >  40.00   |  20.02
+    >  60.00   |  29.61
+    >  80.00   |  39.00
+
+Use ``[-my --marsyear]`` to refer to a particular year of the simulation (``MY=0`` for sols 0-667, ``MY=1`` for sols 668-1335, etc.), and ``[-c --continuous]`` to report L\ :sub:`s` as a continuous value (e.g., 360-720 in the second year) instead of wrapping it to 0-360.
+
+*Return to* `Table of Contents`_
+
+----
+
+9. MarsNest - Mapping Nested Grids
+----------------------------------
+
+``MarsNest`` helps position and check nested grids in NASA Ames MGCM simulations. It reads the ``grid_spec`` files written by the model for the global cubed-sphere tiles and for any nests, and writes ``nest_layout.pdf``. The first page shows the global grid with each tile outlined and numbered; each following page zooms into one nest and outlines any nests contained within it (telescoping nests).
+
+``grid_spec`` files are written when the MGCM starts, so a run with 0 days is enough to check a nest configuration before launching a long simulation.
+
+.. code-block:: bash
+
+    (amesCAP)$ MarsNest path_to_history/
+    > path_to_history/nest_layout.pdf was created
+
+Without an argument, ``MarsNest`` uses the current directory. To draw the grids over Mars topography, pass a topography file with ``lon``, ``lat``, and ``topo`` variables using ``[-topo --topography]``, for example ``data/mars_topo_mola16.nc`` from the `NASA Ames MGCM repository <https://github.com/nasa/AmesGCM>`_. Without it, the grids are drawn over a blank map.
+
+.. code-block:: bash
+
+    (amesCAP)$ MarsNest path_to_history/ -topo AmesGCM/data/mars_topo_mola16.nc
 
 *Return to* `Table of Contents`_

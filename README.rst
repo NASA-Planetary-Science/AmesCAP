@@ -16,7 +16,7 @@ Installation
 -----------
 Requirements:
 
-* Python 3.9 through 3.11
+* Python 3.10 or newer (tested with 3.10-3.14)
 * pip (Python package installer)
 
 Recommended Installation
@@ -26,7 +26,7 @@ For reproducible analysis, we recommend installing CAP in a dedicated virtual en
     # Create a new virtual environment with pip or conda:
     python3 -m venv amescap-env # with pip
     # OR
-    conda create -n amescap python=3.11 # with conda
+    conda create -n amescap python=3.13 # with conda
 
     # Activate the environment, which varies by OS, shell, and package manager:
     source amescap-env/bin/activate     # pip + Unix/MacOS (bash) OR Windows Cygwin

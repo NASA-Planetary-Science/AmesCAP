@@ -41,6 +41,9 @@ class BaseTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test environment"""
+        # Remember where we started so tearDownClass can leave the
+        # temporary directory before deleting it
+        cls.original_cwd = os.getcwd()
         # Create a temporary directory for the tests
         cls.test_dir = tempfile.mkdtemp(prefix=cls.PREFIX)
         print(f"Created temporary test directory: {cls.test_dir}")
@@ -116,6 +119,7 @@ class BaseTestCase(unittest.TestCase):
         try:
             # List files in temp directory before deleting to debug
             print(f"Files in test directory before cleanup: {os.listdir(cls.test_dir)}")
+            os.chdir(cls.original_cwd)
             shutil.rmtree(cls.test_dir, ignore_errors=True)
             print(f"Removed test directory: {cls.test_dir}")
         except Exception as e:
