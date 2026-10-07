@@ -11,6 +11,10 @@ on:
       - 'bin/MarsFormat.py'
       - 'tests/test_marsformat.py'
       - '.github/workflows/marsformat_test.yml'
+      - 'amescap/**'
+      - 'pyproject.toml'
+      - 'tests/base_test.py'
+      - 'tests/create_gcm_files.py'
   # Allow manual triggering of the workflow
   workflow_dispatch:
   # Trigger on pull requests that modify MarsFormat or tests
@@ -20,6 +24,10 @@ on:
       - 'bin/MarsFormat.py'
       - 'tests/test_marsformat.py'
       - '.github/workflows/marsformat_test.yml'
+      - 'amescap/**'
+      - 'pyproject.toml'
+      - 'tests/base_test.py'
+      - 'tests/create_gcm_files.py'
 jobs:
   test:
     strategy:

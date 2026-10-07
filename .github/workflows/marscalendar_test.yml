@@ -11,6 +11,10 @@ on:
       - 'bin/MarsCalendar.py'
       - 'tests/test_marscalendar.py'
       - '.github/workflows/marscalendar_test.yml'
+      - 'amescap/**'
+      - 'pyproject.toml'
+      - 'tests/base_test.py'
+      - 'tests/create_ames_gcm_files.py'
   # Allow manual triggering of the workflow
   workflow_dispatch:
   # Trigger on pull requests that modify MarsCalendar or tests
@@ -20,6 +24,10 @@ on:
       - 'bin/MarsCalendar.py'
       - 'tests/test_marscalendar.py'
       - '.github/workflows/marscalendar_test.yml'
+      - 'amescap/**'
+      - 'pyproject.toml'
+      - 'tests/base_test.py'
+      - 'tests/create_ames_gcm_files.py'
       # - 'AmesCAP/amescap/Script_utils.py'
       # - 'AmesCAP/amescap/Ncdf_wrapper.py'
       # - 'AmesCAP/amescap/FV3_utils.py'

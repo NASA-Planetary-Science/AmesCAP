@@ -11,6 +11,8 @@ on:
       - 'bin/MarsPull.py'
       - 'tests/test_marspull.py'
       - '.github/workflows/marspull_test.yml'
+      - 'amescap/**'
+      - 'pyproject.toml'
   # Allow manual triggering of the workflow
   workflow_dispatch:
   # Trigger on pull requests that modify MarsFormat or tests
@@ -20,6 +22,8 @@ on:
       - 'bin/MarsPull.py'
       - 'tests/test_marspull.py'
       - '.github/workflows/marspull_test.yml'
+      - 'amescap/**'
+      - 'pyproject.toml'
 
 jobs:
   test:

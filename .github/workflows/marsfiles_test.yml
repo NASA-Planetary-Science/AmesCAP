@@ -11,7 +11,10 @@ on:
       - 'bin/MarsFiles.py'
       - 'tests/test_marsfiles.py'
       - '.github/workflows/marsfiles_test.yml'
-      - 'amescap/FV3_utils.py'
+      - 'amescap/**'
+      - 'pyproject.toml'
+      - 'tests/base_test.py'
+      - 'tests/create_ames_gcm_files.py'
   # Allow manual triggering of the workflow
   workflow_dispatch:
   # Trigger on pull requests that modify relevant files
@@ -21,7 +24,10 @@ on:
       - 'bin/MarsFiles.py'
       - 'tests/test_marsfiles.py'
       - '.github/workflows/marsfiles_test.yml'
-      - 'amescap/FV3_utils.py'
+      - 'amescap/**'
+      - 'pyproject.toml'
+      - 'tests/base_test.py'
+      - 'tests/create_ames_gcm_files.py'
 jobs:
   test:
     strategy:
