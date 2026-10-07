@@ -13,12 +13,17 @@ import glob
 import numpy as np
 from netCDF4 import Dataset
 
+# Compact fixtures are the default. Set AMESCAP_FULL_FIXTURES=1 to
+# generate the full-size files (about 9.7 GB for MarsFormat and 5.1 GB
+# for the AmesGCM files) and run the same tests against them.
+FIXTURE_SIZE = "" if os.environ.get("AMESCAP_FULL_FIXTURES") == "1" else "short"
+
 class BaseTestCase(unittest.TestCase):
     """Base class for integration tests with common setup methods"""
     
     PREFIX = "Default_test_"
     FILESCRIPT = "create_ames_gcm_files.py"
-    SHORTFILE = "short"
+    SHORTFILE = FIXTURE_SIZE
 
     # Verify files were created
     expected_files = [

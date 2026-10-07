@@ -5,8 +5,16 @@ This script generates emars_test.nc, openmars_test.nc, pcm_test.nc, and marswrf_
 with variables that exactly match the specifications in real files.
 """
 
+import sys
 import numpy as np
 from netCDF4 import Dataset
+
+# Number of time steps written for each model. The full sizes mirror
+# real output (about 9.7 GB in total); "short" mode keeps every
+# dimension except time, giving files small enough for routine testing.
+FULL_TIME_STEPS = {'emars': 1104, 'openmars': 360, 'pcm': 100, 'marswrf': 100}
+SHORT_TIME_STEPS = {'emars': 120, 'openmars': 60, 'pcm': 20, 'marswrf': 12}
+TIME_STEPS = dict(FULL_TIME_STEPS)
 
 # ----------------------------------------------------------------------
 #                      EMARS Dummy File
@@ -15,9 +23,10 @@ from netCDF4 import Dataset
 def create_emars_test():
     """Create emars_test.nc with the exact variables and structure as real EMARS files."""
     nc_file = Dataset('emars_test.nc', 'w', format='NETCDF4')
+    nt = TIME_STEPS['emars']
     
     # Define dimensions - using exact dimensions from real EMARS files (updated)
-    time_dim = nc_file.createDimension('time', 1104)
+    time_dim = nc_file.createDimension('time', nt)
     pfull_dim = nc_file.createDimension('pfull', 28)
     phalf_dim = nc_file.createDimension('phalf', 29)
     lat_dim = nc_file.createDimension('lat', 36)
@@ -396,22 +405,22 @@ def create_emars_test():
 
 
     # Generate all the arrays
-    earth_month_values = generate_earth_months(1104)
-    earth_second_values = generate_earth_seconds(1104)
-    emars_sol_values = generate_emars_sol(1104)
-    macda_sol_values = generate_macda_sol(1104)
-    mars_hour_values = generate_mars_hours(1104)
-    mars_soy_values = generate_mars_soy(1104)
+    earth_month_values = generate_earth_months(nt)
+    earth_second_values = generate_earth_seconds(nt)
+    emars_sol_values = generate_emars_sol(nt)
+    macda_sol_values = generate_macda_sol(nt)
+    mars_hour_values = generate_mars_hours(nt)
+    mars_soy_values = generate_mars_soy(nt)
 
     # Linear arrays:
-    time_values = np.linspace(0, 1.103e+03, 1104).tolist()
-    Ls_values = np.linspace(239.92, 269.82, 1104).tolist()
-    MY_values = np.full(1104, 28.0).tolist()
+    time_values = np.linspace(0, 1.103e+03, 1104)[:nt].tolist()
+    Ls_values = np.linspace(239.92, 269.82, 1104)[:nt].tolist()
+    MY_values = np.full(nt, 28.0).tolist()
     lat_values = np.linspace(-88.71428571, 88.71428571, 36).tolist()
     latu_values = np.linspace(-87.42857143, 87.42857143, 36).tolist()
     lon_values = np.linspace(3, 357, 60).tolist()
     lonv_values = np.linspace(0, 354, 60).tolist()
-    earth_year_values = np.full(1104, 2007.0).tolist()
+    earth_year_values = np.full(nt, 2007.0).tolist()
 
     # AK: non-linear sequence with 29 values
     ak_values = [2.0000000e-02, 5.7381272e-02, 1.9583981e-01, 5.9229583e-01, 1.5660228e+00,
@@ -447,9 +456,9 @@ def create_emars_test():
                     7.31135861e+00, 7.46358670e+00, 7.57229980e+00, 7.64819446e+00,
                     7.70000000e+00]
 
-    earth_day_var[:] = earth_day
-    earth_hour_var[:] = earth_hour
-    earth_minute_var[:] = earth_minute
+    earth_day_var[:] = earth_day[:nt]
+    earth_hour_var[:] = earth_hour[:nt]
+    earth_minute_var[:] = earth_minute[:nt]
     earth_month_var[:] = earth_month_values
     earth_second_var[:] = earth_second_values
     emars_sol_var[:] = emars_sol_values
@@ -497,9 +506,10 @@ def create_emars_test():
 def create_openmars_test():
     """Create openmars_test.nc with the exact variables and structure as real OpenMARS files."""
     nc_file = Dataset('openmars_test.nc', 'w', format='NETCDF4')
+    nt = TIME_STEPS['openmars']
     
     # Define dimensions - using exact dimensions from real OpenMARS files (updated)
-    time_dim = nc_file.createDimension('time', 360)
+    time_dim = nc_file.createDimension('time', nt)
     lat_dim = nc_file.createDimension('lat', 36)
     lon_dim = nc_file.createDimension('lon', 72)
     lev_dim = nc_file.createDimension('lev', 35)
@@ -528,9 +538,9 @@ def create_openmars_test():
     lon_values = np.linspace(-180., 175., 72).tolist()
     lat_values = np.linspace(87.49999, -87.49999, 36).tolist()
     lev_values = np.linspace(9.9949998e-01, 5.0824954e-05, 35).tolist()
-    time_values = np.linspace(3181.0833, 3211., 360).tolist()
-    Ls_values = np.linspace(264.93198, 284.14746, 360).tolist()
-    MY_values = np.linspace(28.0, 28.0, 360).tolist()
+    time_values = np.linspace(3181.0833, 3211., 360)[:nt].tolist()
+    Ls_values = np.linspace(264.93198, 284.14746, 360)[:nt].tolist()
+    MY_values = np.linspace(28.0, 28.0, 360)[:nt].tolist()
     
     lon_var[:] = lon_values
     lat_var[:] = lat_values
@@ -558,9 +568,10 @@ def create_openmars_test():
 def create_pcm_test():
     """Create pcm_test.nc with the exact variables and structure as real PCM files."""
     nc_file = Dataset('pcm_test.nc', 'w', format='NETCDF4')
+    nt = TIME_STEPS['pcm']
     
     # Define dimensions - using exact dimensions from real PCM files (updated)
-    time_dim = nc_file.createDimension('Time', 100)
+    time_dim = nc_file.createDimension('Time', nt)
     altitude_dim = nc_file.createDimension('altitude', 49)
     latitude_dim = nc_file.createDimension('latitude', 49)
     longitude_dim = nc_file.createDimension('longitude', 65)
@@ -614,8 +625,8 @@ def create_pcm_test():
     latitude_values = np.arange(90, -90.1, -3.75).tolist()
     longitude_values = np.arange(-180, 180.1, 5.625).tolist()
     ls_step = (280.42017 - 264.49323) / (100 - 1)
-    sols_values = np.linspace(1175.2489, 1199.9989, 100).tolist()
-    time_values = np.linspace(488.25, 513.00, 100).tolist()
+    sols_values = np.linspace(1175.2489, 1199.9989, 100)[:nt].tolist()
+    time_values = np.linspace(488.25, 513.00, 100)[:nt].tolist()
 
     # controle: 100 values with first 11 specified and the rest zero
     def generate_controle(length=100):
@@ -712,7 +723,7 @@ def create_pcm_test():
 
     latitude_var[:] = latitude_values
     longitude_var[:] = longitude_values
-    Ls_var[:] = ls_values
+    Ls_var[:] = ls_values[:nt]
     Sols_var[:] = sols_values
     Time_var[:] = time_values
     controle_var[:] = controle_values
@@ -805,9 +816,10 @@ def create_pcm_test():
 def create_marswrf_test():
     """Create marswrf_test.nc with the exact variables and structure as real MarsWRF files."""
     nc_file = Dataset('marswrf_test.nc', 'w', format='NETCDF4')
+    nt = TIME_STEPS['marswrf']
     
     # Define dimensions - using exact dimensions from real MarsWRF files (updated)
-    time_dim = nc_file.createDimension('Time', 100)
+    time_dim = nc_file.createDimension('Time', nt)
     date_str_len_dim = nc_file.createDimension('DateStrLen', 19)
     bottom_top_dim = nc_file.createDimension('bottom_top', 43)
     bottom_top_stag_dim = nc_file.createDimension('bottom_top_stag', 44)
@@ -828,7 +840,7 @@ def create_marswrf_test():
                           0.1625, 0.13749999, 0.11250001, 0.08750001, 0.0625, 0.03749999,
                           0.01249999])
     # Repeat the same values for all 100 timesteps
-    ZNU_var[:] = np.tile(znu_values, (100, 1))
+    ZNU_var[:] = np.tile(znu_values, (nt, 1))
     ZNU_var.description = "eta values on half (mass) levels"
 
     # Create and populate FNM variable (upper weight for vertical stretching)
@@ -841,7 +853,7 @@ def create_marswrf_test():
                           0.5000006, 0.4999994, 0.5000006, 0.5, 0.4999994, 0.5000006,
                           0.4999994, 0.5000006, 0.5, 0.4999994, 0.5000006, 0.4999994,
                           0.5000006])
-    FNM_var[:] = np.tile(fnm_values, (100, 1))
+    FNM_var[:] = np.tile(fnm_values, (nt, 1))
     FNM_var.description = "upper weight for vertical stretching"
 
     # Create and populate FNP variable (lower weight for vertical stretching)
@@ -853,7 +865,7 @@ def create_marswrf_test():
                           0.5, 0.5000006, 0.4999994, 0.5000006, 0.4999994, 0.5, 0.5000006,
                           0.4999994, 0.5000006, 0.4999994, 0.5, 0.5000006, 0.4999994, 0.5000006,
                           0.4999994])
-    FNP_var[:] = np.tile(fnp_values, (100, 1))
+    FNP_var[:] = np.tile(fnp_values, (nt, 1))
     FNP_var.description = "lower weight for vertical stretching"
 
     # Create and populate RDNW variable (inverse d(eta) values between full/w levels)
@@ -866,7 +878,7 @@ def create_marswrf_test():
                             -40.00004, -39.999943, -40.00004, -40.00004, -39.999943, -40.00004,
                             -39.999943, -40.00004, -40.00004, -39.999943, -40.00004, -39.999943,
                             -40.00004])
-    RDNW_var[:] = np.tile(rdnw_values, (100, 1))
+    RDNW_var[:] = np.tile(rdnw_values, (nt, 1))
     RDNW_var.description = "inverse d(eta) values between full (w) levels"
 
     # Create and populate RDN variable (inverse d(eta) values between half/mass levels)
@@ -879,7 +891,7 @@ def create_marswrf_test():
                           -39.999992, -39.999992, -39.999992, -40.00004, -39.999992, -39.999992,
                           -39.999992, -39.999992, -40.00004, -39.999992, -39.999992, -39.999992,
                           -39.999992])
-    RDN_var[:] = np.tile(rdn_values, (100, 1))
+    RDN_var[:] = np.tile(rdn_values, (nt, 1))
     RDN_var.description = "inverse d(eta) values between half (mass) levels"
 
     # Create and populate DNW variable (d(eta) values between full/w levels)
@@ -892,7 +904,7 @@ def create_marswrf_test():
                           -0.02499998, -0.02500004, -0.02499998, -0.02499998, -0.02500004, -0.02499998,
                           -0.02500004, -0.02499998, -0.02499998, -0.02500004, -0.02499998, -0.02500004,
                           -0.02499998])
-    DNW_var[:] = np.tile(dnw_values, (100, 1))
+    DNW_var[:] = np.tile(dnw_values, (nt, 1))
     DNW_var.description = "d(eta) values between full (w) levels"
 
     # Create and populate DN variable (d(eta) values between half/mass levels)
@@ -905,7 +917,7 @@ def create_marswrf_test():
                          -0.02500001, -0.02500001, -0.02500001, -0.02499998, -0.02500001, -0.02500001,
                          -0.02500001, -0.02500001, -0.02499998, -0.02500001, -0.02500001, -0.02500001,
                          -0.02500001])
-    DN_var[:] = np.tile(dn_values, (100, 1))
+    DN_var[:] = np.tile(dn_values, (nt, 1))
     DN_var.description = "d(eta) values between half (mass) levels"
 
     # Create and populate ZNW variable (eta values on full/w levels)
@@ -918,72 +930,72 @@ def create_marswrf_test():
                           0.325, 0.3, 0.27499998, 0.25, 0.22500002, 0.19999999,
                           0.17500001, 0.14999998, 0.125, 0.10000002, 0.07499999, 0.05000001,
                           0.02499998, 0.])
-    ZNW_var[:] = np.tile(znw_values, (100, 1))
+    ZNW_var[:] = np.tile(znw_values, (nt, 1))
     ZNW_var.description = "eta values on full (w) levels"
     
     # Generate data for the Time dimension variables
     
     # RDX and RDY: 100 constant values
     RDX_var = nc_file.createVariable('RDX', 'f4', ('Time',))
-    RDX_var[:] = np.full(100, 8.450905e-06)
+    RDX_var[:] = np.full(nt, 8.450905e-06)
     RDX_var.description = "INVERSE X GRID LENGTH"
     
     RDY_var = nc_file.createVariable('RDY', 'f4', ('Time',))
-    RDY_var[:] = np.full(100, 8.450905e-06)
+    RDY_var[:] = np.full(nt, 8.450905e-06)
     RDY_var.description = "INVERSE Y GRID LENGTH"
     
     # DTS, DTSEPS, RESM, ZETATOP, T00, P00, TLP, TISO: 100 zeros
     DTS_var = nc_file.createVariable('DTS', 'f4', ('Time',))
-    DTS_var[:] = np.zeros(100)
+    DTS_var[:] = np.zeros(nt)
     DTS_var.description = "SMALL TIMESTEP"
     
     DTSEPS_var = nc_file.createVariable('DTSEPS', 'f4', ('Time',))
-    DTSEPS_var[:] = np.zeros(100)
+    DTSEPS_var[:] = np.zeros(nt)
     DTSEPS_var.description = "TIME WEIGHT CONSTANT FOR SMALL STEPS"
     
     RESM_var = nc_file.createVariable('RESM', 'f4', ('Time',))
-    RESM_var[:] = np.zeros(100)
+    RESM_var[:] = np.zeros(nt)
     RESM_var.description = "TIME WEIGHT CONSTANT FOR SMALL STEPS"
     
     ZETATOP_var = nc_file.createVariable('ZETATOP', 'f4', ('Time',))
-    ZETATOP_var[:] = np.zeros(100)
+    ZETATOP_var[:] = np.zeros(nt)
     ZETATOP_var.description = "ZETA AT MODEL TOP"
     
     T00_var = nc_file.createVariable('T00', 'f4', ('Time',))
-    T00_var[:] = np.zeros(100)
+    T00_var[:] = np.zeros(nt)
     T00_var.description = "BASE STATE TEMPERATURE"
     T00_var.units = "K"
     
     P00_var = nc_file.createVariable('P00', 'f4', ('Time',))
-    P00_var[:] = np.zeros(100)
+    P00_var[:] = np.zeros(nt)
     P00_var.description = "BASE STATE PRESURE"
     P00_var.units = "Pa"
     
     TLP_var = nc_file.createVariable('TLP', 'f4', ('Time',))
-    TLP_var[:] = np.zeros(100)
+    TLP_var[:] = np.zeros(nt)
     TLP_var.description = "BASE STATE LAPSE RATE"
     
     TISO_var = nc_file.createVariable('TISO', 'f4', ('Time',))
-    TISO_var[:] = np.zeros(100)
+    TISO_var[:] = np.zeros(nt)
     TISO_var.description = "TEMP AT WHICH THE BASE T TURNS CONST"
     TISO_var.units = "K"
     
     # CF1, CF2, CF3: 100 constant values
     CF1_var = nc_file.createVariable('CF1', 'f4', ('Time',))
-    CF1_var[:] = np.full(100, 1.5555556)
+    CF1_var[:] = np.full(nt, 1.5555556)
     CF1_var.description = "2nd order extrapolation constant"
     
     CF2_var = nc_file.createVariable('CF2', 'f4', ('Time',))
-    CF2_var[:] = np.full(100, -0.6666667)
+    CF2_var[:] = np.full(nt, -0.6666667)
     CF2_var.description = "2nd order extrapolation constant"
     
     CF3_var = nc_file.createVariable('CF3', 'f4', ('Time',))
-    CF3_var[:] = np.full(100, 0.11111111)
+    CF3_var[:] = np.full(nt, 0.11111111)
     CF3_var.description = "2nd order extrapolation constant"
     
     # ITIMESTEP and XTIME: 100 values incremented by 14400
     ITIMESTEP_var = nc_file.createVariable('ITIMESTEP', 'f4', ('Time',))
-    ITIMESTEP_values = np.arange(961920, 961920 + 14400 * 100, 14400)
+    ITIMESTEP_values = np.arange(961920, 961920 + 14400 * nt, 14400)
     ITIMESTEP_values = [int(x) for x in ITIMESTEP_values]  # Convert to int
     ITIMESTEP_var[:] = ITIMESTEP_values
     
@@ -997,7 +1009,7 @@ def create_marswrf_test():
     julian_values = []
     current_value = 668
     
-    for i in range(100):
+    for i in range(nt):
         julian_values.append(current_value)
         
         if current_value == 659:
@@ -1029,7 +1041,7 @@ def create_marswrf_test():
                           52.672283, 57.197292, 61.702946, 66.194916, 70.678856, 75.16042,
                           79.64526, 84.13903, 88.647385, 93.175995, 97.730545, 102.31672,
                           106.940216, 111.606735, 116.32197, 121.09157, 125.92112, 130.81615,
-                          135.78203, 140.82396, 145.94687, 151.15538])
+                          135.78203, 140.82396, 145.94687, 151.15538])[:nt]
     L_S_var.units = "degrees"
     L_S_var.description = "Planetocentric solar Longitude"
     
@@ -1059,7 +1071,7 @@ def create_marswrf_test():
                               4.31995004e-01, 4.37187225e-01, 4.39516455e-01, 4.38928276e-01,
                               4.35383230e-01, 4.28858101e-01, 4.19346660e-01, 4.06860083e-01,
                               3.91426831e-01, 3.73092681e-01, 3.51920277e-01, 3.27988863e-01,
-                              3.01394105e-01, 2.72248387e-01, 2.40681618e-01, 2.06842363e-01])
+                              3.01394105e-01, 2.72248387e-01, 2.40681618e-01, 2.06842363e-01])[:nt]
     DECLIN_var.units = "radians"
     DECLIN_var.description = "SOLAR DECLINATION"
     
@@ -1079,7 +1091,7 @@ def create_marswrf_test():
                               501.87997, 498.81442, 496.3739, 494.55713, 493.36298, 492.7905, 492.83926,
                               493.5093, 494.80118, 496.7158, 499.25436, 502.41818, 506.20825, 510.6251,
                               515.66797, 521.3347, 527.62067, 534.51794, 542.01465, 550.0937, 558.7314,
-                              567.8965, 577.5482])
+                              567.8965, 577.5482])[:nt]
     SOLCON_var.units = "W m-2"
     SOLCON_var.description = "SOLAR CONSTANT"
     
@@ -1099,41 +1111,41 @@ def create_marswrf_test():
                                1.6507436, 1.6558082, 1.6598738, 1.6629198, 1.664931, 1.665898, 1.6658155,
                                1.6646842, 1.6625097, 1.6593025, 1.6550785, 1.6498592, 1.6436712, 1.636547,
                                1.6285251, 1.6196501, 1.6099732, 1.5995522, 1.5884517, 1.5767441, 1.5645088,
-                               1.5518329, 1.5388116])
+                               1.5518329, 1.5388116])[:nt]
     SUNBODY_var.description = "Sun-planet distance in AU"
         
     # P_FIT_M: 100 constant values
     P_FIT_M_var = nc_file.createVariable('P_FIT_M', 'f4', ('Time',))
-    P_FIT_M_var[:] = np.full(100, 1.1038098)
+    P_FIT_M_var[:] = np.full(nt, 1.1038098)
     P_FIT_M_var.units = "unitless"
     P_FIT_M_var.description = "SCALING OF P FOR CORRECT MASS"
     
     # P_TOP: 100 constant values
     P_TOP_var = nc_file.createVariable('P_TOP', 'f4', ('Time',))
-    P_TOP_var[:] = np.full(100, 0.00567928)
+    P_TOP_var[:] = np.full(nt, 0.00567928)
     P_TOP_var.units = "Pa"
     P_TOP_var.description = "PRESSURE TOP OF THE MODEL"
     
     # MAX_MSTFX, MAX_MSTFY: 100 zeros
     MAX_MSTFX_var = nc_file.createVariable('MAX_MSTFX', 'f4', ('Time',))
-    MAX_MSTFX_var[:] = np.zeros(100)
+    MAX_MSTFX_var[:] = np.zeros(nt)
     MAX_MSTFX_var.description = "Max map factor in domain"
     
     MAX_MSTFY_var = nc_file.createVariable('MAX_MSTFY', 'f4', ('Time',))
-    MAX_MSTFY_var[:] = np.zeros(100)
+    MAX_MSTFY_var[:] = np.zeros(nt)
     MAX_MSTFY_var.description = "Max map factor in domain"
     
     # SEED1, SEED2, SAVE_TOPO_FROM_REAL: 100 zeros (integer type)
     SEED1_var = nc_file.createVariable('SEED1', 'i4', ('Time',))
-    SEED1_var[:] = np.zeros(100, dtype=np.int32)
+    SEED1_var[:] = np.zeros(nt, dtype=np.int32)
     SEED1_var.description = "RANDOM SEED NUMBER 1"
     
     SEED2_var = nc_file.createVariable('SEED2', 'i4', ('Time',))
-    SEED2_var[:] = np.zeros(100, dtype=np.int32)
+    SEED2_var[:] = np.zeros(nt, dtype=np.int32)
     SEED2_var.description = "RANDOM SEED NUMBER 2"
     
     SAVE_TOPO_FROM_REAL_var = nc_file.createVariable('SAVE_TOPO_FROM_REAL', 'i4', ('Time',))
-    SAVE_TOPO_FROM_REAL_var[:] = np.zeros(100, dtype=np.int32)
+    SAVE_TOPO_FROM_REAL_var[:] = np.zeros(nt, dtype=np.int32)
     SAVE_TOPO_FROM_REAL_var.description = "1=original topo from real/0=topo modified by WRF"
     SAVE_TOPO_FROM_REAL_var.units = "flag"
 
@@ -1292,8 +1304,13 @@ def create_marswrf_test():
     nc_file.close()
     print("Created marswrf_test.nc")
     
-def main():
-    """Main function to create all test files."""
+def main(short=False):
+    """Main function to create all test files.
+
+    :param short: if True, write a reduced number of time steps
+        (see ``SHORT_TIME_STEPS``) instead of the full-size files
+    """
+    TIME_STEPS.update(SHORT_TIME_STEPS if short else FULL_TIME_STEPS)
     create_emars_test()
     create_openmars_test()
     create_pcm_test()
@@ -1302,4 +1319,6 @@ def main():
     print("All test NetCDF files created successfully.")
 
 if __name__ == "__main__":
-    main()
+    # Same convention as create_ames_gcm_files.py: pass "short" for
+    # small fixtures
+    main(short=any(arg.lower() == "short" for arg in sys.argv[1:]))
