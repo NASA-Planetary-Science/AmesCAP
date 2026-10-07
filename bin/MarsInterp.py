@@ -54,7 +54,7 @@ matplotlib.use("Agg")
 
 # Load amesCAP modules
 from amescap.FV3_utils import (
-    fms_press_calc, fms_Z_calc, vinterp,find_n
+    R_CO2, fms_press_calc, fms_Z_calc, vinterp,find_n
 )
 from amescap.Script_utils import (
     check_file_tape, section_content_amescap_profile, find_tod_in_diurn,
@@ -244,7 +244,7 @@ if args.input_file:
 fill_value = 0.
 
 # Define constants
-rgas = 189.     # J/(kg-K) -> m2/(s2 K)
+rgas = R_CO2    # J/(kg-K) -> m2/(s2 K)
 g = 3.72        # m/s2
 R = 8.314       # J/ mol. K
 Cp = 735.0      # J/K

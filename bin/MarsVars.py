@@ -69,7 +69,7 @@ matplotlib.use("Agg")
 
 # Load amesCAP modules
 from amescap.FV3_utils import (
-    fms_press_calc, fms_Z_calc, dvar_dh, cart_to_azimut_TR, mass_stream,
+    R_CO2, fms_press_calc, fms_Z_calc, dvar_dh, cart_to_azimut_TR, mass_stream,
     zonal_detrend, spherical_div, spherical_curl, frontogenesis,
     cgrid_div, cgrid_curl
 )
@@ -606,12 +606,12 @@ global rgas, psrf, Tpole, g, R, Rd, rho_air, rho_dst, rho_ice
 global Qext_dst, Qext_ice, n0, S0, T0, Cp, Na, amu, amu_co2, mass_co2
 global sigma, M_co2, N, C_dst, C_ice
 
-rgas = 189.  # Gas const. CO2 [J/kg/K or m^2/s^2/K]
+rgas = R_CO2  # Gas const. CO2 [J/kg/K or m^2/s^2/K]
 psrf = 610.  # Mars surface pressure [Pa or kg/m/s^2]
 Tpole = 150.  # Polar temperature [K]
 g = 3.72  # Gravitational constant for Mars [m/s^2]
 R = 8.314  # Universal gas constant [J/mol/K]
-Rd = 192.0  # R for dry air on Mars [J/kg/K]
+Rd = R_CO2  # Specific gas constant used for the CO2 atmosphere [J/kg/K]
 rho_air = psrf/(rgas*Tpole)  # Air density (ρ) [kg/m^3]
 rho_dst = 2500.  # Dust particle ρ [kg/m^3]
 # rho_dst = 3000  # Dust particle ρ [kg/m^3] (Kleinbohl, 2009)
