@@ -4,6 +4,7 @@ import sys
 import os
 import time
 from amescap.Script_utils import Yellow, Nclr, Green, Cyan
+from amescap import __version__
 
 def get_install_info():
     # Get the location and timestamp of cli
@@ -12,7 +13,7 @@ def get_install_info():
     return f"""
 {Cyan}CAP Installation Information
 ----------------------------{Nclr}
-{Cyan}Version:{Nclr} 0.3
+{Cyan}Version:{Nclr} {__version__}
 {Cyan}Install Date:{Nclr} {install_time}
 {Cyan}Install Location:{Nclr} {os.path.dirname(os.path.dirname(cli_path))}
 """
