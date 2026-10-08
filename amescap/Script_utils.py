@@ -861,7 +861,10 @@ def section_content_amescap_profile(section_ID):
 
     import os
     import numpy as np
-    input_file = os.environ["HOME"]+"/.amescap_profile"
+    # HOME is not set on native Windows; fall back to the user profile
+    # directory (e.g., C:\Users\<name>) there
+    home = os.environ.get("HOME") or os.path.expanduser("~")
+    input_file = os.path.join(home, ".amescap_profile")
     try:
         f = open(input_file, "r")
         contents = ""
