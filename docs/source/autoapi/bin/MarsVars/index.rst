@@ -309,7 +309,7 @@ Attributes
 
 .. py:function:: compute_N(theta, zfull)
 
-   Calculate the Brunt Vaisala freqency.
+   Calculate the Brunt Vaisala frequency.
 
    :param theta: Potential temperature (K)
    :type  theta: array [time, lev, lat, lon]

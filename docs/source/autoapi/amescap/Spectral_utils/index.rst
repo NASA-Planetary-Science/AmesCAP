@@ -181,7 +181,7 @@ Functions
    :return: detrended variable reconstructed to original size
        (e.g., [time, lev, lat, lon])
 
-   .. note:: The minimum and maximum wavelenghts in [km] are computed::
+   .. note:: The minimum and maximum wavelengths in [km] are computed::
        dx = 2*np.pi * 3400
        L_min = (1./kmax) * dx
        L_max = 1./max(kmin, 1.e-20) * dx
@@ -198,7 +198,7 @@ Functions
    :param VAR: Detrend variable for decomposition. Lat is SECOND to
        LAST dimension and lon is LAST (e.g., ``[time,lat,lon]`` or
        ``[time,lev,lat,lon]``)
-   :return: (COEFFS) coefficient for harmonic decomposion, shape is
+   :return: (COEFFS) coefficient for harmonic decomposition, shape is
        flattened (e.g., ``[time, 2, lat/2, lat/2]``
        ``[time x lev, 2, lat/2, lat/2]``);
        (power_per_l) power spectral density, shape is re-organized

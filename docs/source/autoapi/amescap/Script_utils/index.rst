@@ -308,7 +308,7 @@ Attributes
 
    :param filename: an average, daily, or diurn netCDF file
    :type  filename: str
-   :return: full path to the correspnding fixed file
+   :return: full path to the corresponding fixed file
    :rtype:  str
    :raises ValueError: if the file is not a netCDF file
    :raises FileNotFoundError: if the file does not exist
