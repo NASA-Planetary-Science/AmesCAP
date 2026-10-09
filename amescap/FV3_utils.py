@@ -969,8 +969,13 @@ def interp_KDTree(var_IN, lat_IN, lon_IN, lat_OUT, lon_OUT, N_nearest=10):
     tree = cKDTree(list(zip(xs.flatten(), ys.flatten(), zs.flatten())))
     d, inds = tree.query(list(zip(xt.flatten(), yt.flatten(), zt.flatten())),
                          k = N_nearest)
-    # Inverse distance
-    w = 1.0 / d**2
+    # Inverse distance. Where a target point coincides with a source
+    # point (d = 0 gives 1/0 and a NaN result), copy that source value
+    exact = d < 1.e-10
+    has_exact = exact.any(axis = 1)
+    with np.errstate(divide = "ignore"):
+        w = 1.0 / d**2
+    w[has_exact] = exact[has_exact].astype(float)
     # Sum the weights and normalize
     var_OUT = (np.sum(w*var_IN.reshape(dims_IN_reshape)[:, inds], axis = 2)
                / np.sum(w, axis = 1))
@@ -1242,6 +1247,10 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
                                 ⌡
                                 p_top
 
+    Holton, J. R., and Hakim, G. J. (2013), An Introduction to Dynamic
+    Meteorology, 5th ed., Academic Press,
+    https://doi.org/10.1016/C2009-0-63394-8
+
     :param v_avg: zonal wind [m/s] with ``lev`` dimension FIRST and
         ``lat`` dimension SECOND (e.g., ``[pstd, lat]``,
         ``[pstd, lat, lon]`` or ``[pstd, lat, lon, time]``)
@@ -1333,9 +1342,11 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
         # Copy ``zagl`` or ``zstd`` instead of using a pseudo height
         Z = level.copy()
 
-    for k0 in range(nlev-2, 0, -1):
+    # MSF at level k0 integrates from Z[k0] to the top (MSF = 0 at the
+    # top level)
+    for k0 in range(nlev-2, -1, -1):
         I[:] = 0.
-        for k in range(nlev-2, k0, -1):
+        for k in range(nlev-2, k0-1, -1):
             zn = Z[k]
             znp1 = Z[k+1]
             fn = v_avg[k, :, ...] * np.exp(-zn/H)
@@ -1363,6 +1374,10 @@ def vw_from_MSF(msf, lat, lev, ztype="pstd", norm=True, psfc=700, H=8000.):
     """
     Return the V and W components of the circulation from the mass
     stream function.
+
+    Holton, J. R., and Hakim, G. J. (2013), An Introduction to Dynamic
+    Meteorology, 5th ed., Academic Press,
+    https://doi.org/10.1016/C2009-0-63394-8
 
     :param msf: the mass stream function with ``lev`` SECOND TO
         LAST and the ``lat`` dimension LAST (e.g., ``[lev, lat]``,
@@ -2101,8 +2116,13 @@ def swinbank(plev, psfc, ptrans=1.):
 
 def polar_warming(T, lat, outside_range=np.nan):
     """
-    Return the polar warming, following McDunn et al. 2013:
-    Characterization of middle-atmosphere polar warming at Mars, JGR
+    Return the polar warming, following McDunn et al. (2013):
+
+    McDunn, T., S. Bougher, J. Murphy, A. Kleinböhl, F. Forget, and
+    M. Smith (2013), Characterization of middle-atmosphere polar warming
+    at Mars, J. Geophys. Res. Planets, 118, 161-178,
+    https://doi.org/10.1002/jgre.20016
+
     Alex Kling
 
     :param T: temperature with the lat dimension FIRST (transpose as
@@ -2689,9 +2709,12 @@ def frontogenesis(U, V, theta, lon_deg, lat_deg, R=3400*1000.,
                   spacing="varying"):
     """
     Compute the frontogenesis (local change in potential temperature
-    gradient near a front) following Richter et al. 2010: Toward a
-    Physically Based Gravity Wave Source Parameterization in a General
-    Circulation Model, JAS 67.
+    gradient near a front) following Richter et al. (2010):
+
+    Richter, J. H., F. Sassi, and R. R. Garcia (2010), Toward a
+    physically based gravity wave source parameterization in a general
+    circulation model, J. Atmos. Sci., 67, 136-156,
+    https://doi.org/10.1175/2009JAS3112.1
 
     We have ``Fn = 1/2 D(Del Theta)^2/Dt`` [K/m/s]
 
@@ -2798,9 +2821,13 @@ def frontogenesis(U, V, theta, lon_deg, lat_deg, R=3400*1000.,
 
 def MGSzmax_ls_lat(ls, lat):
     """
-    Return the max altitude for the dust from "MGS scenario" from
-    Montmessin et al. (2004), Origin and role of water ice clouds in
-    the Martian water cycle as inferred from a general circulation model
+    Return the max altitude for the dust from the "MGS scenario" of
+    Montmessin et al. (2004):
+
+    Montmessin, F., F. Forget, P. Rannou, M. Cabane, and R. M. Haberle
+    (2004), Origin and role of water ice clouds in the Martian water cycle
+    as inferred from a general circulation model, J. Geophys. Res., 109,
+    E10004, https://doi.org/10.1029/2004JE002284
 
     :param ls: solar longitude [°]
     :type  ls: array
@@ -2820,15 +2847,19 @@ def MGSzmax_ls_lat(ls, lat):
 
 def MGStau_ls_lat(ls, lat):
     """
-    Return the max altitude for the dust from "MGS scenario" from
-    Montmessin et al. (2004), Origin and role of water ice clouds in
-    the Martian water cycle as inferred from a general circulation model
+    Return the dust optical depth from the "MGS scenario" of
+    Montmessin et al. (2004):
+
+    Montmessin, F., F. Forget, P. Rannou, M. Cabane, and R. M. Haberle
+    (2004), Origin and role of water ice clouds in the Martian water cycle
+    as inferred from a general circulation model, J. Geophys. Res., 109,
+    E10004, https://doi.org/10.1029/2004JE002284
 
     :param ls: solar longitude [°]
     :type  ls: array
     :param lat : latitude [°]
     :type  lat: array
-    :return: top altitude for the dust [km]
+    :return: dust optical depth
     """
 
     lat = np.array(lat)
@@ -2847,7 +2878,7 @@ def MGStau_ls_lat(ls, lat):
         if lat >= 0:
             tau = t_north
         else:
-            t_south
+            tau = t_south
     else:
         tau = np.zeros_like(lat)
         tau[lat <= 0] = t_south[lat <= 0]
