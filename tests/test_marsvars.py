@@ -254,6 +254,30 @@ class TestMarsVars(BaseTestCase):
             finally:
                 nc.close()
 
+    def test_add_dust_opacity_per_pa_and_km(self):
+        """Test dustref_per_pa and dustref_per_km from dustref, delp, delz"""
+        # Work on a copy so the shared test file is unchanged
+        src = os.path.join(self.test_dir, '01336.atmos_average.nc')
+        dst = os.path.join(self.test_dir, '01336.atmos_dustref.nc')
+        shutil.copy(src, dst)
+        with Dataset(dst, 'a') as nc:
+            dims = nc.variables['temp'].dimensions
+            for name, value, units in [('dustref', 0.01, 'op'),
+                                       ('delp', 20., 'Pa'),
+                                       ('delz', 500., 'm')]:
+                var = nc.createVariable(name, 'f4', dims)
+                var[:] = value
+                var.units = units
+
+        for var, expected in [('dustref_per_pa', 0.01/20.),
+                              ('dustref_per_km', 0.01/500.*1000.)]:
+            result = self.run_mars_vars([dst, '-add', var])
+            self.assertEqual(result.returncode, 0, f"Add variable {var} command failed")
+            with Dataset(dst, 'r') as nc:
+                self.assertIn(var, nc.variables, f"Variable {var} was not found after adding")
+                np.testing.assert_allclose(nc.variables[var][:], expected, rtol=1e-6)
+        os.remove(dst)
+
     def test_differentiate_wrt_z(self):
         """Test differentiating a variable with respect to the Z axis"""
         # First check if we have dst_mass_micro or dst_mass_mom

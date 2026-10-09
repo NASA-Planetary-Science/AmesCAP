@@ -391,5 +391,19 @@ class TestMarsPull(unittest.TestCase):
                 self.run_main(list_files=True, directory_name='INERTCLDS'), 1)
 
 
+    def test_forbidden_download_returns_failure(self):
+        # Reviewer report: an HTTP 403 from the portal must exit non-zero
+        response = Mock()
+        response.headers = {}
+        response.raise_for_status.side_effect = self.mars_pull.requests.HTTPError(
+            '403 Client Error: Forbidden'
+        )
+        with patch.object(self.mars_pull.requests, 'get', return_value=response):
+            self.assertEqual(
+                self.run_main(directory_name='INERTCLDS',
+                              filename=['fort.11_0670']), 1)
+        self.assertFalse(
+            os.path.exists(os.path.join(self.test_dir, 'fort.11_0670')))
+
 if __name__ == '__main__':
     unittest.main()

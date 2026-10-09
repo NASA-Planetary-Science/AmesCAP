@@ -3,8 +3,9 @@ import unittest
 import numpy as np
 
 from amescap.FV3_utils import (
-    R_CO2, R_REF_ATMOS, fms_Z_calc, lon180_to_360, lon360_to_180,
-    press_to_alt_atmosphere_Mars, ref_atmosphere_Mars_PTD,
+    R_CO2, R_REF_ATMOS, fms_Z_calc, interp_KDTree, lon180_to_360,
+    lon360_to_180, mass_stream, press_to_alt_atmosphere_Mars,
+    ref_atmosphere_Mars_PTD,
     shiftgrid_180_to_360, shiftgrid_360_to_180
 )
 
@@ -98,6 +99,71 @@ class TestLongitudeConversion(unittest.TestCase):
         self.assertTrue(np.ma.isMaskedArray(shifted))
         self.assertTrue(shifted.mask[0, 0])    # 0 deg is now first
 
+
+class TestInterpKDTree(unittest.TestCase):
+    lat = np.array([-45., 0., 45.])
+    lon = np.array([0., 90., 180., 270.])
+    var = np.arange(12.).reshape(3, 4)
+
+    def test_same_grid_returns_input(self):
+        out = interp_KDTree(self.var, self.lat, self.lon, self.lat, self.lon)
+        self.assertFalse(np.isnan(out).any())
+        np.testing.assert_allclose(out, self.var)
+
+    def test_coincident_points_use_source_value(self):
+        # Mix coincident and in-between target points, with extra
+        # leading dimensions
+        var = np.stack([self.var, 2*self.var])
+        lat_out = np.array([0., 22.5])
+        lon_out = np.array([90., 135.])
+        out = interp_KDTree(var, self.lat, self.lon, lat_out, lon_out)
+        self.assertEqual(out.shape, (2, 2, 2))
+        self.assertFalse(np.isnan(out).any())
+        np.testing.assert_allclose(out[:, 0, 0], [5., 10.])
+
+
+class TestMassStream(unittest.TestCase):
+    # Constant northward wind on 51 levels
+    lat = np.array([-30., 0., 30.])
+    H, psfc, g, a = 8000., 700., 3.72, 3400.e3
+
+    def msf(self, level, ztype):
+        v_avg = np.ones((len(level), len(self.lat)))
+        return mass_stream(v_avg, self.lat, level, type=ztype,
+                           psfc=self.psfc, H=self.H, factor=1.,
+                           g=self.g, a=self.a)
+
+    def segments(self, Z):
+        # Trapezoidal integral of exp(-Z/H) over each layer
+        f = np.exp(-Z/self.H)
+        return 0.5 * np.diff(Z) * (f[1:] + f[:-1])
+
+    def scale(self):
+        return (2*np.pi*self.a*self.psfc/(self.g*self.H)
+                * np.cos(np.deg2rad(self.lat))[None, :])
+
+    def test_pstd_integrates_every_layer(self):
+        # Pressure levels from the surface up; MSF is integrated
+        # downward from the top
+        pstd = self.psfc * np.exp(-np.linspace(0., 50000., 51)/self.H)
+        seg = self.segments(self.H * np.log(self.psfc/pstd))
+        I = np.append(np.cumsum(seg[::-1])[::-1], 0.)
+        msf = self.msf(pstd, "pstd")
+        np.testing.assert_allclose(msf, I[:, None]*self.scale(),
+                                   rtol=1e-12)
+        self.assertTrue((msf[0, :] > 0).all())
+        np.testing.assert_array_equal(msf[-1, :], 0.)
+
+    def test_zagl_integrates_every_layer(self):
+        # Altitude levels from the surface up; MSF is integrated
+        # upward from the surface
+        zagl = np.linspace(0., 50000., 51)
+        I = -np.append(0., np.cumsum(self.segments(zagl)))
+        msf = self.msf(zagl, "zagl")
+        np.testing.assert_allclose(msf, I[:, None]*self.scale(),
+                                   rtol=1e-12)
+        np.testing.assert_array_equal(msf[0, :], 0.)
+        self.assertTrue((msf[-1, :] < 0).all())
 
 if __name__ == '__main__':
     unittest.main()
