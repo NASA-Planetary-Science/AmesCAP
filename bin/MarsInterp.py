@@ -136,6 +136,7 @@ parser.add_argument('input_file', nargs='+',
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
 parser.add_argument('-t', '--interp_type', type=str, default='pstd',
+    choices=['pstd', 'zstd', 'zagl'],
     help=(
         f"Interpolation to standard pressure (pstd), standard altitude "
         f"(zstd), or altitude above ground level (zagl).\nWorks on "
@@ -384,7 +385,7 @@ def main():
                       f"interpolation to zstd, but the file {name_fixed} "
                       f"cannot be found and the input file carries no "
                       f"zsurf{Nclr}")
-                exit()
+                sys.exit(1)
 
     # =========================== zagl ===========================
     elif interp_type == "zagl":
@@ -405,7 +406,7 @@ def main():
     else:
         print(f"{Red}Interpolation interp_ {interp_type} is not supported, use "
               f"``pstd``, ``zstd`` or ``zagl``{Nclr}")
-        exit()
+        sys.exit(1)
 
     if grid_out:
         # Only print grid content and exit the code
