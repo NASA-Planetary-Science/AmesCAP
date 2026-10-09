@@ -12,7 +12,7 @@ CAP is inspired by the need for increased access to MGCM output. MGCM data produ
 
 CAP also has a robust plotting routine that requires no coding to use. CAP's plotting routine references a template that CAP generates and the user modifies to specify the figures CAP will create. Templates are generalizable and can be referenced repeatedly to create plots from multiple data products. A web-based version of CAP's plotting routine is in development and will soon be released through the NAS Data Portal. The Mars Climate Modeling Center Data Portal Web Interface is a point-and-click plotting tool that requires no coding or command-line interaction to use. The Web Interface can create plots from MGCM data hosted on the NAS Data Portal and it can even provide the user a netCDF file of the subset of the data from which the plots were created.
 
-CAP is currently compatible with output from the MCMC’s `Legacy <https://github.com/nasa/legacy-mars-global-climate-model>`_ and `FV3-based <https://github.com/nasa/AmesGCM>`_ MGCMs, which are publicly available on GitHub. Output from simulations performed by both of these models is provided by the MCMC on the NAS Data Portal `here <https://data.nas.nasa.gov/mcmc/>`_. CAP is also compatible with output from the Mars Weather Research and Forecasting Model (MarsWRF), soon to be available on the NAS Data Portal as well, and `OpenMars <https://ordo.open.ac.uk/collections/OpenMARS_database/4278950/1>`_.
+CAP reads output from the MCMC’s `Legacy <https://github.com/nasa/legacy-mars-global-climate-model>`_ and `FV3-based <https://github.com/nasa/AmesGCM>`_ MGCMs directly. Both models are publicly available on GitHub, and output from simulations performed with them is provided by the MCMC on the NAS Data Portal `here <https://data.nas.nasa.gov/mcmc/>`_. With ``MarsFormat``, CAP also converts output from the LMD Mars Planetary Climate Model (PCM), the Mars Weather Research and Forecasting Model (MarsWRF), and the `OpenMARS <https://ordo.open.ac.uk/collections/OpenMARS_database/4278950/1>`_ and EMARS reanalyses to the same format.
 
 .. note::
 
@@ -25,6 +25,7 @@ CAP is currently compatible with output from the MCMC’s `Legacy <https://githu
    Install <installation>
    Quick Start Guide <cli>
    CAP Description <description>
+   Derived Variables <derived_variables>
    Example Use Cases <examples>
    planetWRF and MarsWRF <planetwrf>
    MarsPull <autoapi/bin/MarsPull/index>
@@ -34,6 +35,7 @@ CAP is currently compatible with output from the MCMC’s `Legacy <https://githu
    MarsInterp <autoapi/bin/MarsInterp/index>
    MarsPlot <autoapi/bin/MarsPlot/index>
    MarsCalendar <autoapi/bin/MarsCalendar/index>
+   MarsNest <autoapi/bin/MarsNest/index>
    amescap <autoapi/amescap/index>
    autoapi <autoapi/index.rst>
 

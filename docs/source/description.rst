@@ -58,7 +58,7 @@ Key CAP Features
 * **Modular Design**: Composed of shared libraries and eight command-line science tools
 * **netCDF4 Format**: Uses a self-descriptive data format widely employed in the climate modeling community
 * **FV3 Format Convention**: Follows formatting conventions from the GFDL Finite-Volume Cubed-Sphere Dynamical Core
-* **Multi-model Support**: Currently supports both NASA Ames Legacy GCM and NASA Ames GCM with the FV3 dynamical core, with planned expansion to other Global Climate Models
+* **Multi-model Support**: Reads output from the NASA Ames Legacy GCM and the NASA Ames GCM with the FV3 dynamical core directly, and converts output from the LMD Mars Planetary Climate Model (PCM), MarsWRF, and the OpenMARS and EMARS reanalyses with ``MarsFormat``
 
 CAP Components
 --------------

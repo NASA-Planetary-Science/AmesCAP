@@ -1,5 +1,5 @@
-:py:mod:`bin.MarsFormat`
-========================
+bin.MarsFormat
+==============
 
 .. py:module:: bin.MarsFormat
 
@@ -37,23 +37,8 @@
 
 
 
-Module Contents
----------------
-
-
-Functions
-~~~~~~~~~
-
-.. autoapisummary::
-
-   bin.MarsFormat.debug_wrapper
-   bin.MarsFormat.get_time_dimension_name
-   bin.MarsFormat.main
-
-
-
 Attributes
-~~~~~~~~~~
+----------
 
 .. autoapisummary::
 
@@ -64,6 +49,22 @@ Attributes
    bin.MarsFormat.path2data
    bin.MarsFormat.ref_press
 
+
+Functions
+---------
+
+.. autoapisummary::
+
+   bin.MarsFormat.debug_wrapper
+   bin.MarsFormat.get_time_dimension_name
+   bin.MarsFormat.main
+   bin.MarsFormat.marswrf_eta_mid_to_interfaces
+   bin.MarsFormat.marswrf_fit_eta
+   bin.MarsFormat.marswrf_time_axis
+
+
+Module Contents
+---------------
 
 .. py:function:: debug_wrapper(func)
 
@@ -174,28 +175,62 @@ Attributes
        
 
 
-.. py:data:: args
+.. py:function:: marswrf_eta_mid_to_interfaces(eta_mid)
 
-   
+   Interface (w-level) eta from mid (mass-level) eta, surface first:
+   eta_w[0] = 1 and eta_w[k+1] = 2*eta_u[k] - eta_w[k]. The last
+   value is clipped to >= 0. Input may be in either vertical order;
+   output follows the input order.
+
+
+.. py:function:: marswrf_fit_eta(p3d, ps, tdim_axis=0)
+
+   Recover the WRF eta coordinate from a 3D mid-level pressure field
+   and surface pressure, for reduced files that did not keep
+   ZNU/ZNW/P_TOP. WRF: p = p_top + eta*(ps - p_top), so per level a
+   least-squares fit p = a_k + b_k*ps over all columns and times
+   gives eta_k = b_k and p_top = a_k/(1 - b_k).
+
+   p3d: array [time, lev, lat, lon] (any vertical order)
+   ps : array [time, lat, lon]
+   Returns (eta_mid, p_top).
+
+
+.. py:function:: marswrf_time_axis(DS, model)
+
+   Build the time coordinate [sols] for a planetWRF file from the
+   best available clock and return (DS, source_description).
+
+   Priority:
+     1. 'Times' character array 'YYYY-DDDDD_HH:MM:SS' (absolute,
+        carries the time of sol)
+     2. 'XTIME' [minutes since SIMULATION_START_DATE] plus the sol of
+        SIMULATION_START_DATE
+     3. 'JULIAN' (fractional sol of year) plus MODEL_MARS_YEAR
+     4. START_DATE global attribute plus a uniform spacing inferred
+        from the L_S slope (reduced files that kept only L_S)
+
+   The result is stored under model.time (normally 'XTIME') so that
+   the rest of MarsFormat sees one time variable with units in days.
+   Ls is left in model.areo ('L_S'); if it is missing it is computed
+   from the sol axis with sol2ls().
+
+
+.. py:data:: args
+   :value: None
+
 
 .. py:data:: debug
 
-   
-
 .. py:data:: exit_code
+   :value: None
 
-   
 
 .. py:data:: parser
 
-   
-
 .. py:data:: path2data
-
-   
 
 .. py:data:: ref_press
    :value: 725
 
-   
 

@@ -1,22 +1,22 @@
-:py:mod:`bin`
-=============
+bin
+===
 
 .. py:module:: bin
 
 
 Submodules
 ----------
+
 .. toctree::
-   :titlesonly:
    :maxdepth: 1
 
-   MarsCalendar/index.rst
-   MarsFiles/index.rst
-   MarsFormat/index.rst
-   MarsInterp/index.rst
-   MarsNest/index.rst
-   MarsPlot/index.rst
-   MarsPull/index.rst
-   MarsVars/index.rst
+   /autoapi/bin/MarsCalendar/index
+   /autoapi/bin/MarsFiles/index
+   /autoapi/bin/MarsFormat/index
+   /autoapi/bin/MarsInterp/index
+   /autoapi/bin/MarsNest/index
+   /autoapi/bin/MarsPlot/index
+   /autoapi/bin/MarsPull/index
+   /autoapi/bin/MarsVars/index
 
 

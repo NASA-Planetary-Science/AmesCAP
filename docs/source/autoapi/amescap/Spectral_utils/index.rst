@@ -1,5 +1,5 @@
-:py:mod:`amescap.Spectral_utils`
-================================
+amescap.Spectral_utils
+======================
 
 .. py:module:: amescap.Spectral_utils
 
@@ -19,12 +19,8 @@
 
 
 
-Module Contents
----------------
-
-
 Functions
-~~~~~~~~~
+---------
 
 .. autoapisummary::
 
@@ -37,6 +33,8 @@ Functions
    amescap.Spectral_utils.zonal_decomposition
 
 
+Module Contents
+---------------
 
 .. py:function:: diurn_extract(VAR, N, tod, lon)
 

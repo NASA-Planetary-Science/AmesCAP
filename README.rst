@@ -7,10 +7,12 @@ For instructions and documentation please see our `online documentation <https:/
 
 About
 -----
-**CAP** is a set of Python3 libraries and command-line executables that streamline downloading, processing, and plotting output from the NASA Ames Mars Global Climate Models:
+**CAP** is a set of Python3 libraries and command-line executables that streamline downloading, processing, and plotting output from Mars Global Climate Models. CAP reads output from the NASA Ames Mars Global Climate Models directly:
 
 * NASA Ames Legacy Mars GCM
 * NASA Ames Mars GCM with GFDL's FV3 dynamical core
+
+and, with ``MarsFormat``, converts output from the LMD Mars Planetary Climate Model (PCM), MarsWRF, and the OpenMARS and EMARS reanalyses to the same format.
 
 Installation
 -----------
