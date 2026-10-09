@@ -14,14 +14,14 @@ import tempfile
 import subprocess
 import netCDF4 as nc
 import numpy as np
-from base_test import BaseTestCase
+from base_test import BaseTestCase, FIXTURE_SIZE
 
 class TestMarsFormat(BaseTestCase):
     """Integration test suite for MarsFormat"""
 
     PREFIX = "MarsFormat_test_"
     FILESCRIPT = "create_gcm_files.py"
-    SHORTFILE = ""
+    SHORTFILE = FIXTURE_SIZE
 
     # Verify files were created
     expected_files = [

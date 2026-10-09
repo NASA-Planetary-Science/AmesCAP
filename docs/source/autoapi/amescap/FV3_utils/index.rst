@@ -1,5 +1,5 @@
-:py:mod:`amescap.FV3_utils`
-===========================
+amescap.FV3_utils
+=================
 
 .. py:module:: amescap.FV3_utils
 
@@ -21,12 +21,17 @@
 
 
 
-Module Contents
----------------
+Attributes
+----------
+
+.. autoapisummary::
+
+   amescap.FV3_utils.R_CO2
+   amescap.FV3_utils.R_REF_ATMOS
 
 
 Functions
-~~~~~~~~~
+---------
 
 .. autoapisummary::
 
@@ -41,6 +46,8 @@ Functions
    amescap.FV3_utils.azimuth2cart
    amescap.FV3_utils.broadcast
    amescap.FV3_utils.cart_to_azimut_TR
+   amescap.FV3_utils.cgrid_curl
+   amescap.FV3_utils.cgrid_div
    amescap.FV3_utils.compute_uneven_sigma
    amescap.FV3_utils.daily_to_average
    amescap.FV3_utils.daily_to_diurn
@@ -84,25 +91,35 @@ Functions
    amescap.FV3_utils.zonal_detrend
 
 
+Module Contents
+---------------
 
 .. py:function:: MGStau_ls_lat(ls, lat)
 
-   Return the max altitude for the dust from "MGS scenario" from
-   Montmessin et al. (2004), Origin and role of water ice clouds in
-   the Martian water cycle as inferred from a general circulation model
+   Return the dust optical depth from the "MGS scenario" of
+   Montmessin et al. (2004):
+
+   Montmessin, F., F. Forget, P. Rannou, M. Cabane, and R. M. Haberle
+   (2004), Origin and role of water ice clouds in the Martian water cycle
+   as inferred from a general circulation model, J. Geophys. Res., 109,
+   E10004, https://doi.org/10.1029/2004JE002284
 
    :param ls: solar longitude [°]
    :type  ls: array
    :param lat : latitude [°]
    :type  lat: array
-   :return: top altitude for the dust [km]
+   :return: dust optical depth
 
 
 .. py:function:: MGSzmax_ls_lat(ls, lat)
 
-   Return the max altitude for the dust from "MGS scenario" from
-   Montmessin et al. (2004), Origin and role of water ice clouds in
-   the Martian water cycle as inferred from a general circulation model
+   Return the max altitude for the dust from the "MGS scenario" of
+   Montmessin et al. (2004):
+
+   Montmessin, F., F. Forget, P. Rannou, M. Cabane, and R. M. Haberle
+   (2004), Origin and role of water ice clouds in the Martian water cycle
+   as inferred from a general circulation model, J. Geophys. Res., 109,
+   E10004, https://doi.org/10.1029/2004JE002284
 
    :param ls: solar longitude [°]
    :type  ls: array
@@ -337,6 +354,34 @@ Functions
    :return: ``Theta`` [°] and ``R`` the polar coordinates
 
 
+.. py:function:: cgrid_curl(u_stag, v_stag, lon, lat, lon_u, lat_v, R=3400 * 1000.0)
+
+   Relative vorticity on the Arakawa-C grid: formed at the cell
+   corners (lat_v, lon_u) where it lives naturally, then averaged to
+   the mass points (corners on the poles are excluded)::
+
+       curl = 1/(R cos lat) [ dv/dlon - d(u cos lat)/dlat ]
+
+   Arguments as for ``cgrid_div``. Returns [s-1] at ``[..., lat, lon]``.
+
+
+.. py:function:: cgrid_div(u_stag, v_stag, lon, lat, lon_u, lat_v, R=3400 * 1000.0)
+
+   Horizontal divergence on the Arakawa-C grid, formed as the model
+   does: u on the east/west cell faces, v on the north/south faces,
+   result at the mass point::
+
+       div = 1/(R cos lat) [ (u_e - u_w)/dlon
+                             + (v_n cos lat_n - v_s cos lat_s)/dlat ]
+
+   :param u_stag: x-staggered wind ``[..., lat, lon_u]``
+   :param v_stag: y-staggered wind ``[..., lat_v, lon]``
+   :param lon, lat: mass-point axes [deg]
+   :param lon_u, lat_v: staggered axes [deg]
+   :param R: planetary radius [m]
+   :return: divergence [s-1] at the mass points ``[..., lat, lon]``
+
+
 .. py:function:: compute_uneven_sigma(num_levels, N_scale_heights, surf_res, exponent, zero_top)
 
    Construct an initial array of sigma based on the number of levels
@@ -520,7 +565,7 @@ Functions
        array of size ``[klev, Ndim]`` with ``Ndim = [time, lat, lon]``
 
 
-.. py:function:: fms_Z_calc(psfc, ak, bk, T, topo=0.0, lev_type='full')
+.. py:function:: fms_Z_calc(psfc, ak, bk, T, topo=0.0, lev_type='full', rgas=R_CO2, g=3.72)
 
    Returns the 3D altitude field [m] AGL (or above aeroid).
 
@@ -609,8 +654,14 @@ Functions
 
    Therefore::
 
-       line 1) =====Thalf=====zhalf[k]          line 2)                                   line 3)                                    line 4) -----Tfull-----zfull[k]     \ T(z)= To-Γ (z-zo)
-       line 5)                                      line 6)                                       line 7) =====Thalf=====zhalf[k+1]      
+       line 1) =====Thalf=====zhalf[k]  \
+       line 2)                           \
+       line 3)                            \
+       line 4) -----Tfull-----zfull[k]     \ T(z)= To-Γ (z-zo)
+       line 5)                              \
+       line 6)                               \
+       line 7) =====Thalf=====zhalf[k+1]      \
+
    Line 1: T_half[k+1]/Tfull[k] = (p_half[k+1]/p_full[k])**(R/Cp)
 
    Line 4: From the lapse rate, assume T decreases linearly within the
@@ -666,9 +717,12 @@ Functions
 .. py:function:: frontogenesis(U, V, theta, lon_deg, lat_deg, R=3400 * 1000.0, spacing='varying')
 
    Compute the frontogenesis (local change in potential temperature
-   gradient near a front) following Richter et al. 2010: Toward a
-   Physically Based Gravity Wave Source Parameterization in a General
-   Circulation Model, JAS 67.
+   gradient near a front) following Richter et al. (2010):
+
+   Richter, J. H., F. Sassi, and R. R. Garcia (2010), Toward a
+   physically based gravity wave source parameterization in a general
+   circulation model, J. Atmos. Sci., 67, 136-156,
+   https://doi.org/10.1175/2009JAS3112.1
 
    We have ``Fn = 1/2 D(Del Theta)^2/Dt`` [K/m/s]
 
@@ -862,7 +916,7 @@ Functions
        ``sol2ls()`` function.
 
 
-.. py:function:: mass_stream(v_avg, lat, level, type='pstd', psfc=700, H=8000.0, factor=1e-08)
+.. py:function:: mass_stream(v_avg, lat, level, type='pstd', psfc=700, H=8000.0, factor=1e-08, g=3.72, a=3400 * 1000.0)
 
    Compute the mass stream function::
 
@@ -871,6 +925,10 @@ Functions
        Ph i= (2 pi a) cos(lat)/g ⎮vz_tavg dp
                                ⌡
                                p_top
+
+   Holton, J. R., and Hakim, G. J. (2013), An Introduction to Dynamic
+   Meteorology, 5th ed., Academic Press,
+   https://doi.org/10.1016/C2009-0-63394-8
 
    :param v_avg: zonal wind [m/s] with ``lev`` dimension FIRST and
        ``lat`` dimension SECOND (e.g., ``[pstd, lat]``,
@@ -972,8 +1030,13 @@ Functions
 
 .. py:function:: polar_warming(T, lat, outside_range=np.nan)
 
-   Return the polar warming, following McDunn et al. 2013:
-   Characterization of middle-atmosphere polar warming at Mars, JGR
+   Return the polar warming, following McDunn et al. (2013):
+
+   McDunn, T., S. Bougher, J. Murphy, A. Kleinböhl, F. Forget, and
+   M. Smith (2013), Characterization of middle-atmosphere polar warming
+   at Mars, J. Geophys. Res. Planets, 118, 161-178,
+   https://doi.org/10.1002/jgre.20016
+
    Alex Kling
 
    :param T: temperature with the lat dimension FIRST (transpose as
@@ -1236,7 +1299,7 @@ Functions
    :return: the coefficients for the new layers
 
 
-.. py:function:: time_shift_calc(var_in, lon, tod, target_times=None)
+.. py:function:: time_shift_calc(var_in, lon, tod, target_times=None, eot_offset=0.0)
 
    Conversion to uniform local time.
 
@@ -1253,6 +1316,11 @@ Functions
    :type  tod: 1D array
    :param target_times: local time(s) [hr] to shift to (e.g., ``"3. 15."``)
    :type  target_times: float (optional)
+   :param eot_offset: equation-of-time correction [hr] added to the
+       longitude shift, so that the output axis is TRUE local solar
+       time rather than mean local time: LTST = UT + lon/15 +
+       eot_offset. One scalar per call (i.e. per sol). Default 0.
+   :type  eot_offset: float (optional)
    :return: the array shifted to uniform local time
 
    .. note::
@@ -1333,6 +1401,10 @@ Functions
    Return the V and W components of the circulation from the mass
    stream function.
 
+   Holton, J. R., and Hakim, G. J. (2013), An Introduction to Dynamic
+   Meteorology, 5th ed., Academic Press,
+   https://doi.org/10.1016/C2009-0-63394-8
+
    :param msf: the mass stream function with ``lev`` SECOND TO
        LAST and the ``lat`` dimension LAST (e.g., ``[lev, lat]``,
        ``[time, lev, lat]``, ``[time, lon, lev, lat]``)
@@ -1375,5 +1447,13 @@ Functions
        only NaNs which is the case below the surface and above the
        model top in the interpolated files. This routine disables such
        warnings temporarily.
+
+
+.. py:data:: R_CO2
+   :value: 189.0
+
+
+.. py:data:: R_REF_ATMOS
+   :value: 192.0
 
 

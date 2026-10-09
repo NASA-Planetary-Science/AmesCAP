@@ -666,7 +666,7 @@ class Fort(object):
 
         # Perform day average and log new time axis
         time_in = self.variables["time"]
-        time_out = daily_to_average(varIN = fort_var,
+        time_out = daily_to_average(varIN = time_in,
                                     dt_in = (time_in[1]-time_in[0]),
                                     nday = day_average,
                                     trim = True)

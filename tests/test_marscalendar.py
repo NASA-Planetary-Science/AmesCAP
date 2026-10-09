@@ -14,14 +14,14 @@ import tempfile
 import argparse
 import subprocess
 import re
-from base_test import BaseTestCase
+from base_test import BaseTestCase, FIXTURE_SIZE
 
 class TestMarsCalendar(BaseTestCase):
     """Integration test suite for MarsCalendar"""
 
     PREFIX = "MarsCalendar_test_"
     FILESCRIPT = "create_ames_gcm_files.py"
-    SHORTFILE = "short"
+    SHORTFILE = FIXTURE_SIZE
     
     def run_mars_calendar(self, args):
         """

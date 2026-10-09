@@ -32,6 +32,7 @@ import sys          # System commands
 import argparse     # Parse arguments
 import os           # Access operating system functions
 import re           # Regular expressions
+import tempfile      # Write downloads atomically
 import numpy as np
 import functools    # For function decorators
 import traceback    # For printing stack traces
@@ -84,7 +85,7 @@ def debug_wrapper(func):
 parser = argparse.ArgumentParser(
     prog=('MarsPull'),
     description=(
-        f'{Yellow}Uility for downloading NASA Ames Mars Global Climate '
+        f'{Yellow}Utility for downloading NASA Ames Mars Global Climate '
         f'Model output files from the NAS Data Portal at:\n'
         f'{Cyan}https://data.nas.nasa.gov/mcmcref/\n{Nclr}'
         f'Requires ``-f`` or ``-ls``.'
@@ -102,7 +103,7 @@ parser.add_argument('directory_name', type=str, nargs='?',
         f'NAS data portal ('
         f'{Cyan}https://data.nas.nasa.gov/mcmcref/){Nclr}\n'
         f'Current directory options are:\n{Yellow}FV3BETAOUT1, ACTIVECLDS, '
-        f'ACTIVECLDS, INERTCLDS, NEWBASE_ACTIVECLDS, ACTIVECLDS_NCDF\n'
+        f'INERTCLDS, NEWBASE_ACTIVECLDS, ACTIVECLDS_NCDF\n'
         f'{Red}MUST be used with either ``-f`` or ``-ls``\n'
         f'{Green}Example:\n'
         f'> MarsPull INERTCLDS -f fort.11_0690\n'
@@ -196,7 +197,7 @@ def download(url, file_name):
     appropriate messages to the console.
 
     :param url: The url to download from, e.g.,
-        'https://data.nas.nasa.gov/legacygcm/fv3betaout1data/03340.fixed.nc'
+        'https://data.nas.nasa.gov/legacygcm/fv3betaout1/fv3betaout1/03340.fixed.nc'
     :type  url: str
     :param file_name: The local file_name e.g.,
         '/files/Data/LegacyGCM_Ls000_Ls004.nc'
@@ -228,37 +229,38 @@ def download(url, file_name):
     """
 
     _, fname = os.path.split(file_name)
-    response = requests.get(url, stream=True)
-    total = response.headers.get('content-length')
-
-    if response.status_code == 404:
-        print(f'{Red}Error during download, error code is: '
-              f'{response.status_code}{Nclr}')
-    else:
-        if total is not None:
-            # If file size is known, return progress bar
-            with open(file_name, 'wb') as f:
-                downloaded = 0
-                if total:
-                    total = int(total)
-                for data in response.iter_content(
-                    chunk_size = max(int(total/1000), 1024*1024)
-                    ):
+    response = requests.get(url, stream=True, timeout=(10, 60))
+    temp_name = None
+    try:
+        response.raise_for_status()
+        total = int(response.headers.get('content-length') or 0)
+        directory = os.path.dirname(file_name) or '.'
+        fd, temp_name = tempfile.mkstemp(prefix=f'.{fname}.', dir=directory)
+        downloaded = 0
+        with os.fdopen(fd, 'wb') as output:
+            for data in response.iter_content(chunk_size=1024 * 1024):
+                if data:
+                    output.write(data)
                     downloaded += len(data)
-                    f.write(data)
-                    status = int(50*downloaded/total)
-                    sys.stdout.write(
-                        f'\rProgress: '
-                        f'[{"#"*status}{"."*(50 - status)}] {status}%'
-                        )
-                    sys.stdout.flush()
+                    if total:
+                        status = min(50, int(50 * downloaded / total))
+                        sys.stdout.write(
+                            f'\rProgress: '
+                            f'[{"#" * status}{"." * (50 - status)}] '
+                            f'{min(100, int(100 * downloaded / total))}%'
+                            )
+                        sys.stdout.flush()
+        if downloaded == 0:
+            raise ValueError(f'Downloaded file {fname} is empty')
+        os.replace(temp_name, file_name)
+        temp_name = None
+        if total:
             sys.stdout.write('\n\n')
-        else:
-            # If file size is unknown, skip progress bar
-            print(f'Downloading {fname}...')
-            with open(file_name, 'wb')as f:
-                f.write(response.content)
-            print(f'{fname} Done')
+        print(f'{fname} Done')
+    finally:
+        response.close()
+        if temp_name and os.path.exists(temp_name):
+            os.remove(temp_name)
 
 
 def print_file_list(list_of_files):
@@ -308,71 +310,26 @@ def main():
         sys.exit(1)
 
     base_dir = 'https://data.nas.nasa.gov'
-    legacy_home_url = f'{base_dir}/mcmcref/legacygcm/'
-    legacy_data_url = f'{base_dir}/legacygcm/legacygcmdata/'
-    fv3_home_url = f'{base_dir}/mcmcref/fv3betaout1/'
-    fv3_data_url = f'{base_dir}/legacygcm/fv3betaout1data/'
+    legacy_data_url = f'{base_dir}/legacygcm/legacygcm/'
+    fv3_home_url = f'{base_dir}/legacygcm/fv3betaout1/fv3betaout1/'
+    fv3_data_url = f'{base_dir}/legacygcm/fv3betaout1/fv3betaout1/'
 
     if args.list_files:
-        # Send an HTTP GET request to the URL and store the response.
-        legacy_home_html = requests.get(f'{legacy_home_url}')
-        fv3_home_html = requests.get(f'{fv3_home_url}')
-
-        # Access the text content of the response, which contains the
-        # webpage's HTML.
-        legacy_dir_text = legacy_home_html.text
-        fv3_dir_text = fv3_home_html.text
-
-        # Search for the URLs beginning with the below string
-        legacy_subdir_search = (
-            'https://data\.nas\.nasa\.gov/legacygcm/legacygcmdata/'
-            )
-        fv3_subdir_search = (
-            'https://data\.nas\.nasa\.gov/legacygcm/fv3betaout1data/'
-            )
-
-        legacy_urls = re.findall(
-            fr'{legacy_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&"()*+,;=]+',
-            legacy_dir_text
-            )
-
-        # NOTE: The FV3-based MGCM data only has one directory and it is
-        #       not listed in the FV3BETAOUT1 directory. The URL is
-        #       hardcoded below. The regex below is commented out, but
-        #       left in place in case the FV3BETAOUT1 directory is
-        #       updated with subdirectories in the future.
-        # fv3_urls = re.findall(
-        #     fr'{fv3_subdir_search}[a-zA-Z0-9_\-\.~:/?#\[\]@!$&"()*+,;=]+',
-        #     fv3_dir_text
-        #     )
-        fv3_urls = [f'{fv3_data_url}']
-
         print(f'\nSearching for available directories...\n')
-        if legacy_urls != []:
-            for url in legacy_urls:
-                legacy_dir_option = url.split('legacygcmdata/')[1]
-                print(f'{"(Legacy MGCM)":<17} {legacy_dir_option:<20} '
-                    f'{Cyan}{url}{Nclr}')
-
-            # NOTE: See above comment for the FV3-based MGCM data note
-            # for url in fv3_urls:
-            #     fv3_dir_option = url.split('fv3betaout1data/')[1]
-            #     print(f'{"(FV3-based MGCM)":<17} {fv3_dir_option:<17} '
-            #           f'{Cyan}{url}{Nclr}')
+        if not args.directory_name:
+            for directory in [
+                'ACTIVECLDS', 'INERTCLDS', 'NEWBASE_ACTIVECLDS',
+                'ACTIVECLDS_NCDF'
+            ]:
+                url = f'{legacy_data_url}{directory}/'
+                print(f'{"(Legacy MGCM)":<17} {directory:<20} '
+                      f'{Cyan}{url}{Nclr}')
             print(f'{"(FV3-based MGCM)":<17} {"FV3BETAOUT1":<20} '
-                f'{Cyan}{fv3_home_url}{Nclr}')
-            
-            print(f'{Yellow}\nYou can list the files in a directory by using '
-                  f'the -list option with a directory name, e.g.\n'
+                  f'{Cyan}{fv3_home_url}{Nclr}')
+            print(f'{Yellow}\nYou can list files in a directory with '
                   f'> MarsPull -list ACTIVECLDS{Nclr}\n')
-        
-        else:
-            print(f'{Red}No directories were found. This may be because the '
-                  f'file system is unavailable or unresponsive.\nCheck the '
-                  f'URL below to confirm. Otherwise, run with --debug for '
-                  f'more info.\n\n{Nclr}Check URL: '
-                  f'{Cyan}https://data.nas.nasa.gov/mcmcref{Nclr}\n')
-            
+            return 0
+
         if args.directory_name:
             # If a directory is provided, list the files in that directory
             portal_dir = args.directory_name
@@ -381,7 +338,8 @@ def main():
                 print(f'\n{Green}Selected: (FV3-based MGCM) FV3BETAOUT1{Nclr}')
                 print(f'\nSearching for available files...\n')
                 fv3_dir_url = f'{fv3_home_url}'
-                fv3_data = requests.get(fv3_dir_url)
+                fv3_data = requests.get(fv3_dir_url, timeout=(10, 60))
+                fv3_data.raise_for_status()
                 fv3_file_text = fv3_data.text
 
                 # This looks for download attributes or href links
@@ -461,16 +419,18 @@ def main():
                 print(f'\n{Green}Selected: (Legacy MGCM) {portal_dir}{Nclr}')
                 print(f'\nSearching for available files...\n')
                 legacy_dir_url = (f'{legacy_data_url}' + portal_dir + r'/')
-                legacy_data = requests.get(legacy_dir_url)
+                legacy_data = requests.get(legacy_dir_url, timeout=(10, 60))
+                legacy_data.raise_for_status()
                 legacy_file_text = legacy_data.text
 
                 # This looks for download attributes or href links
-                # ending with the fort.11_ pattern
+                # ending with the fort.11_ pattern (or .nc for
+                # ACTIVECLDS_NCDF)
                 legacy_files_available = []
 
                 # First try to find download attributes which are more reliable
                 download_files = re.findall(
-                    r'download="(fort\.11_[0-9]+)"',
+                    r'download="(fort\.11_[0-9]+|[^"/]+\.nc)"',
                     legacy_file_text
                     )
                 if download_files:
@@ -495,7 +455,7 @@ def main():
                 if legacy_files_available:
                     print_file_list(legacy_files_available)
                 else:
-                    print(f'{Red}No fort.11 files found. This may be because '
+                    print(f'{Red}No files found. This may be because '
                           f'the file system is unavailable or unresponsive.\n'
                           f'Check the URL below to confirm. Otherwise, run '
                           f'with --debug for more info.{Nclr}')
@@ -513,7 +473,10 @@ def main():
             else:
                 print(f'{Red}ERROR: Directory {portal_dir} does not exist.{Nclr}')
                 sys.exit(1)
-            sys.exit(0)
+            # A listing that finds nothing is a failure, not a success
+            files_found = (fv3_files_available if portal_dir == 'FV3BETAOUT1'
+                           else legacy_files_available)
+            sys.exit(0 if files_found else 1)
 
     if args.directory_name and not args.list_files:
         portal_dir = args.directory_name
@@ -566,7 +529,10 @@ def main():
                         )
                 else:
                     # fort.11 files
-                    file_name = f'fort.11_{670+ii:04d}'
+                    # NEWBASE_ACTIVECLDS numbering starts at fort.11_0870
+                    first_file = (870 if portal_dir == 'NEWBASE_ACTIVECLDS'
+                                  else 670)
+                    file_name = f'fort.11_{first_file+ii:04d}'
 
                 url = requested_url + file_name
                 file_name = save_dir + file_name

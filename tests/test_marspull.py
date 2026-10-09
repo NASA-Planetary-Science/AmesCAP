@@ -12,6 +12,17 @@ import shutil
 import tempfile
 import argparse
 import subprocess
+from unittest.mock import Mock, patch
+
+# Tests that contact the NAS Data Portal are opt-in so the default suite
+# runs offline. AMESCAP_LIVE_TESTS=1 enables small live checks (listings
+# and the ~350 KB FV3 fixed file); AMESCAP_LARGE_DOWNLOADS=1 additionally
+# enables the ~450 MB-per-file legacy fort.11 downloads.
+LIVE = os.environ.get('AMESCAP_LIVE_TESTS') == '1'
+LARGE = LIVE and os.environ.get('AMESCAP_LARGE_DOWNLOADS') == '1'
+live_test = unittest.skipUnless(LIVE, 'set AMESCAP_LIVE_TESTS=1')
+large_download_test = unittest.skipUnless(
+    LARGE, 'set AMESCAP_LIVE_TESTS=1 and AMESCAP_LARGE_DOWNLOADS=1')
 
 class TestMarsPull(unittest.TestCase):
     """Integration test suite for MarsPull"""
@@ -19,12 +30,21 @@ class TestMarsPull(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test environment"""
-        # Create a temporary directory in the user's home directory
-        cls.test_dir = os.path.join(os.path.expanduser('~'), 'MarsPull_test_downloads')
-        os.makedirs(cls.test_dir, exist_ok=True)
+        # Remember where we started so tearDownClass can leave the
+        # temporary directory before deleting it
+        cls.original_cwd = os.getcwd()
+        cls.test_dir = tempfile.mkdtemp(prefix='MarsPull_test_')
 
         # Project root directory
         cls.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        sys.path.insert(0, cls.project_root)
+        original_argv = sys.argv
+        try:
+            sys.argv = ['MarsPull', '-list']
+            from bin import MarsPull
+            cls.mars_pull = MarsPull
+        finally:
+            sys.argv = original_argv
 
     def setUp(self):
         """Change to temporary directory before each test"""
@@ -34,6 +54,7 @@ class TestMarsPull(unittest.TestCase):
     def tearDownClass(cls):
         """Clean up the test environment"""
         try:
+            os.chdir(cls.original_cwd)
             shutil.rmtree(cls.test_dir, ignore_errors=True)
         except Exception:
             print(f"Warning: Could not remove test directory {cls.test_dir}")
@@ -84,6 +105,7 @@ class TestMarsPull(unittest.TestCase):
             self.assertGreater(os.path.getsize(filepath), 0,
                                f"Downloaded file {filename} is empty")
 
+    @live_test
     def test_download_fv3betaout1_specific_file(self):
         """Test downloading a specific file from FV3BETAOUT1"""
         result = self.run_mars_pull(['FV3BETAOUT1', '-f', '03340.fixed.nc'])
@@ -91,6 +113,7 @@ class TestMarsPull(unittest.TestCase):
         # Check that the file was created
         self.check_files_in_test_directory(['03340.fixed.nc'])
 
+    @large_download_test
     def test_download_inertclds_single_ls(self):
         """Test downloading files from INERTCLDS for a single Ls value"""
         result = self.run_mars_pull(['INERTCLDS', '-ls', '90'])
@@ -98,6 +121,7 @@ class TestMarsPull(unittest.TestCase):
         # Check that the file was created
         self.check_files_in_test_directory(['fort.11_0689'])
 
+    @large_download_test
     def test_download_inertclds_ls_range(self):
         """Test downloading files from INERTCLDS for a range of Ls values"""
         result = self.run_mars_pull(['INERTCLDS', '-ls', '90', '95'])
@@ -115,18 +139,13 @@ class TestMarsPull(unittest.TestCase):
         # Check for specific expected output
         self.assertIn("Searching for available directories", result.stdout)
 
-        # Check for possible outputs - either directories found or error message
-        if "No directories were found" in result.stdout:
-            # Check error message when no directories found
-            self.assertIn("No directories were found", result.stdout)
-            self.assertIn("file system is unavailable or unresponsive", result.stdout)
-            self.assertIn("Check URL:", result.stdout)
-        else:
-            # If directories are found, check the expected output format
-            self.assertIn("(FV3-based MGCM)", result.stdout)
-            self.assertIn("FV3BETAOUT1", result.stdout)
-            self.assertIn("You can list the files in a directory", result.stdout)
+        # The directory list is static and needs no network access
+        self.assertIn("(FV3-based MGCM)", result.stdout)
+        self.assertIn("FV3BETAOUT1", result.stdout)
+        self.assertIn("INERTCLDS", result.stdout)
+        self.assertIn("You can list files in a directory", result.stdout)
 
+    @live_test
     def test_list_directory_option(self):
         """Test the list option with a directory to ensure it runs without errors"""
         result = self.run_mars_pull(['-list', 'FV3BETAOUT1'])
@@ -138,18 +157,16 @@ class TestMarsPull(unittest.TestCase):
         self.assertIn("Selected: (FV3-based MGCM) FV3BETAOUT1", result.stdout)
         self.assertIn("Searching for available files", result.stdout)
 
-        # Check for possible outputs - either files found or error message
-        if "No .nc files found" in result.stdout:
-            # Check error message when no files found
-            self.assertIn("No .nc files found", result.stdout)
-            self.assertIn("file system is unavailable or unresponsive", result.stdout)
-        elif "You can download files using the -f option" in result.stdout:
-            # If files are found, check the expected usage information
-            self.assertIn("You can download files using the -f option", result.stdout)
-        
-        # Note: We're not checking for actual files as they might not be available
-        # if the server is down, which is OK according to requirements
-    
+        # run_mars_pull fails on a non-zero exit, which MarsPull returns
+        # when the listing finds no files
+        self.assertIn("03340.fixed.nc", result.stdout)
+
+    @live_test
+    def test_list_legacy_directory_option(self):
+        """Test listing a legacy directory on the live portal"""
+        result = self.run_mars_pull(['-list', 'INERTCLDS'])
+        self.assertIn("fort.11_0670", result.stdout)
+
 
     def test_help_message(self):
         """Test that help message can be displayed"""
@@ -169,6 +186,224 @@ class TestMarsPull(unittest.TestCase):
         for check in help_checks:
             self.assertIn(check, result.stdout.lower(), f"Help message missing '{check}'")
 
+    def test_download_writes_nonempty_response_atomically(self):
+        response = Mock()
+        response.headers = {'content-length': '4'}
+        response.iter_content.return_value = [b'data']
+        output_path = os.path.join(self.test_dir, 'download.nc')
+
+        with patch.object(self.mars_pull.requests, 'get', return_value=response) as get:
+            self.mars_pull.download('https://example.test/data.nc', output_path)
+
+        get.assert_called_once_with(
+            'https://example.test/data.nc', stream=True, timeout=(10, 60)
+        )
+        with open(output_path, 'rb') as downloaded:
+            self.assertEqual(downloaded.read(), b'data')
+        response.close.assert_called_once_with()
+
+    def test_download_rejects_http_error_without_creating_file(self):
+        response = Mock()
+        response.headers = {}
+        response.raise_for_status.side_effect = self.mars_pull.requests.HTTPError(
+            '500 Server Error'
+        )
+        output_path = os.path.join(self.test_dir, 'failed.nc')
+
+        with patch.object(self.mars_pull.requests, 'get', return_value=response):
+            with self.assertRaises(self.mars_pull.requests.HTTPError):
+                self.mars_pull.download('https://example.test/failed.nc', output_path)
+
+        self.assertFalse(os.path.exists(output_path))
+        response.close.assert_called_once_with()
+
+    def test_download_rejects_empty_response_without_creating_file(self):
+        response = Mock()
+        response.headers = {}
+        response.iter_content.return_value = [b'', b'']
+        output_path = os.path.join(self.test_dir, 'empty.nc')
+
+        with patch.object(self.mars_pull.requests, 'get', return_value=response):
+            with self.assertRaisesRegex(ValueError, 'is empty'):
+                self.mars_pull.download('https://example.test/empty.nc', output_path)
+
+        self.assertFalse(os.path.exists(output_path))
+        response.close.assert_called_once_with()
+
+    def test_download_propagates_connection_errors(self):
+        output_path = os.path.join(self.test_dir, 'connection.nc')
+
+        with patch.object(
+            self.mars_pull.requests,
+            'get',
+            side_effect=self.mars_pull.requests.ConnectionError('offline')
+        ) as get:
+            with self.assertRaises(self.mars_pull.requests.ConnectionError):
+                self.mars_pull.download(
+                    'https://example.test/connection.nc', output_path
+                )
+
+        get.assert_called_once_with(
+            'https://example.test/connection.nc', stream=True, timeout=(10, 60)
+        )
+        self.assertFalse(os.path.exists(output_path))
+
+    def test_fv3_cli_uses_canonical_url_and_returns_failure(self):
+        response = Mock()
+        response.raise_for_status.side_effect = self.mars_pull.requests.HTTPError(
+            '500 Server Error'
+        )
+        output_path = os.path.join(self.test_dir, 'failed.nc')
+        arguments = argparse.Namespace(
+            list_files=False,
+            directory_name='FV3BETAOUT1',
+            ls=None,
+            filename=['failed.nc'],
+        )
+
+        with patch.object(self.mars_pull, 'args', arguments):
+            with patch.object(self.mars_pull, 'save_dir', self.test_dir + os.sep):
+                with patch.object(
+                    self.mars_pull.requests, 'get', return_value=response
+                ) as get:
+                    self.assertEqual(self.mars_pull.main(), 1)
+
+        get.assert_called_once_with(
+            'https://data.nas.nasa.gov/legacygcm/fv3betaout1/'
+            'fv3betaout1/failed.nc',
+            stream=True,
+            timeout=(10, 60),
+        )
+        self.assertFalse(os.path.exists(output_path))
+        response.close.assert_called_once_with()
+
+    def test_directory_list_works_without_portal_requests(self):
+        arguments = argparse.Namespace(
+            list_files=True,
+            directory_name=None,
+        )
+
+        with patch.object(self.mars_pull, 'args', arguments):
+            with patch.object(self.mars_pull.requests, 'get') as get:
+                self.assertEqual(self.mars_pull.main(), 0)
+
+        get.assert_not_called()
+
+
+    def test_download_propagates_timeouts_without_leftover_files(self):
+        response = Mock()
+        response.headers = {'content-length': '8'}
+        response.iter_content.side_effect = self.mars_pull.requests.Timeout(
+            'read timed out'
+        )
+        output_path = os.path.join(self.test_dir, 'timeout.nc')
+
+        with patch.object(self.mars_pull.requests, 'get', return_value=response):
+            with self.assertRaises(self.mars_pull.requests.Timeout):
+                self.mars_pull.download('https://example.test/timeout.nc', output_path)
+
+        # Neither the target nor the hidden temporary file may remain
+        self.assertEqual(
+            [f for f in os.listdir(self.test_dir) if 'timeout.nc' in f], []
+        )
+        response.close.assert_called_once_with()
+
+    def test_failed_download_preserves_existing_file(self):
+        output_path = os.path.join(self.test_dir, 'existing.nc')
+        with open(output_path, 'wb') as existing:
+            existing.write(b'good')
+        response = Mock()
+        response.headers = {}
+        response.raise_for_status.side_effect = self.mars_pull.requests.HTTPError(
+            '503 Service Unavailable'
+        )
+
+        with patch.object(self.mars_pull.requests, 'get', return_value=response):
+            with self.assertRaises(self.mars_pull.requests.HTTPError):
+                self.mars_pull.download('https://example.test/existing.nc', output_path)
+
+        with open(output_path, 'rb') as existing:
+            self.assertEqual(existing.read(), b'good')
+
+    def run_main(self, **arguments):
+        defaults = dict(list_files=False, directory_name=None, ls=None,
+                        filename=None)
+        defaults.update(arguments)
+        with patch.object(self.mars_pull, 'args', argparse.Namespace(**defaults)):
+            with patch.object(self.mars_pull, 'save_dir', self.test_dir + os.sep):
+                try:
+                    return self.mars_pull.main()
+                except SystemExit as exit_status:
+                    return exit_status.code
+
+    def test_legacy_ls_request_uses_portal_url_and_file_number(self):
+        for directory, expected in [('INERTCLDS', 'fort.11_0689'),
+                                    ('NEWBASE_ACTIVECLDS', 'fort.11_0889')]:
+            with self.subTest(directory=directory):
+                with patch.object(self.mars_pull, 'download') as download:
+                    self.assertIsNone(
+                        self.run_main(directory_name=directory, ls=[90.0]))
+                download.assert_called_once_with(
+                    'https://data.nas.nasa.gov/legacygcm/legacygcm/'
+                    f'{directory}/{expected}',
+                    os.path.join(self.test_dir, expected),
+                )
+
+    def test_legacy_cli_timeout_returns_failure(self):
+        with patch.object(
+            self.mars_pull.requests, 'get',
+            side_effect=self.mars_pull.requests.Timeout('timed out')
+        ):
+            self.assertEqual(
+                self.run_main(directory_name='INERTCLDS',
+                              filename=['fort.11_0670']), 1)
+        self.assertFalse(
+            os.path.exists(os.path.join(self.test_dir, 'fort.11_0670')))
+
+    def test_directory_listing_parses_portal_links(self):
+        response = Mock()
+        response.text = ('<a download="LegacyGCM_Ls000_Ls004.nc">x</a>'
+                         '<a download="hash.md5">y</a>')
+        with patch.object(self.mars_pull.requests, 'get',
+                          return_value=response) as get:
+            self.assertEqual(
+                self.run_main(list_files=True,
+                              directory_name='ACTIVECLDS_NCDF'), 0)
+        get.assert_called_once_with(
+            'https://data.nas.nasa.gov/legacygcm/legacygcm/ACTIVECLDS_NCDF/',
+            timeout=(10, 60),
+        )
+
+    def test_empty_directory_listing_returns_failure(self):
+        response = Mock()
+        response.text = '<html>portal rendered with JavaScript</html>'
+        with patch.object(self.mars_pull.requests, 'get', return_value=response):
+            self.assertEqual(
+                self.run_main(list_files=True, directory_name='FV3BETAOUT1'), 1)
+
+    def test_listing_http_error_returns_failure(self):
+        response = Mock()
+        response.raise_for_status.side_effect = self.mars_pull.requests.HTTPError(
+            '500 Server Error'
+        )
+        with patch.object(self.mars_pull.requests, 'get', return_value=response):
+            self.assertEqual(
+                self.run_main(list_files=True, directory_name='INERTCLDS'), 1)
+
+
+    def test_forbidden_download_returns_failure(self):
+        # Reviewer report: an HTTP 403 from the portal must exit non-zero
+        response = Mock()
+        response.headers = {}
+        response.raise_for_status.side_effect = self.mars_pull.requests.HTTPError(
+            '403 Client Error: Forbidden'
+        )
+        with patch.object(self.mars_pull.requests, 'get', return_value=response):
+            self.assertEqual(
+                self.run_main(directory_name='INERTCLDS',
+                              filename=['fort.11_0670']), 1)
+        self.assertFalse(
+            os.path.exists(os.path.join(self.test_dir, 'fort.11_0670')))
 
 if __name__ == '__main__':
     unittest.main()

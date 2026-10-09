@@ -1,5 +1,5 @@
-:py:mod:`bin.MarsVars`
-======================
+bin.MarsVars
+============
 
 .. py:module:: bin.MarsVars
 
@@ -49,12 +49,54 @@
 
 
 
-Module Contents
----------------
+Attributes
+----------
+
+.. autoapisummary::
+
+   bin.MarsVars.C_dst
+   bin.MarsVars.C_ice
+   bin.MarsVars.Cp
+   bin.MarsVars.Kb
+   bin.MarsVars.M_co2
+   bin.MarsVars.N
+   bin.MarsVars.Na
+   bin.MarsVars.Qext_dst
+   bin.MarsVars.Qext_ice
+   bin.MarsVars.R
+   bin.MarsVars.R_planet
+   bin.MarsVars.Rd
+   bin.MarsVars.Reff_dst
+   bin.MarsVars.Reff_ice
+   bin.MarsVars.S0
+   bin.MarsVars.T0
+   bin.MarsVars.Tpole
+   bin.MarsVars.amu
+   bin.MarsVars.amu_co2
+   bin.MarsVars.args
+   bin.MarsVars.cap_str
+   bin.MarsVars.debug
+   bin.MarsVars.exit_code
+   bin.MarsVars.filepath
+   bin.MarsVars.fill_value
+   bin.MarsVars.g
+   bin.MarsVars.g0
+   bin.MarsVars.kappa
+   bin.MarsVars.mass_co2
+   bin.MarsVars.master_list
+   bin.MarsVars.n0
+   bin.MarsVars.original_print_message
+   bin.MarsVars.parser
+   bin.MarsVars.psrf
+   bin.MarsVars.rgas
+   bin.MarsVars.rho_air
+   bin.MarsVars.rho_dst
+   bin.MarsVars.rho_ice
+   bin.MarsVars.sigma
 
 
 Functions
-~~~~~~~~~
+---------
 
 .. autoapisummary::
 
@@ -94,51 +136,11 @@ Functions
    bin.MarsVars.safe_move_file
    bin.MarsVars.safe_print
    bin.MarsVars.safe_remove_file
+   bin.MarsVars.set_planet_constants
 
 
-
-Attributes
-~~~~~~~~~~
-
-.. autoapisummary::
-
-   bin.MarsVars.C_dst
-   bin.MarsVars.C_ice
-   bin.MarsVars.Cp
-   bin.MarsVars.Kb
-   bin.MarsVars.M_co2
-   bin.MarsVars.N
-   bin.MarsVars.Na
-   bin.MarsVars.Qext_dst
-   bin.MarsVars.Qext_ice
-   bin.MarsVars.R
-   bin.MarsVars.Rd
-   bin.MarsVars.Reff_dst
-   bin.MarsVars.Reff_ice
-   bin.MarsVars.S0
-   bin.MarsVars.T0
-   bin.MarsVars.Tpole
-   bin.MarsVars.amu
-   bin.MarsVars.amu_co2
-   bin.MarsVars.args
-   bin.MarsVars.cap_str
-   bin.MarsVars.debug
-   bin.MarsVars.exit_code
-   bin.MarsVars.filepath
-   bin.MarsVars.fill_value
-   bin.MarsVars.g
-   bin.MarsVars.mass_co2
-   bin.MarsVars.master_list
-   bin.MarsVars.n0
-   bin.MarsVars.original_print_message
-   bin.MarsVars.parser
-   bin.MarsVars.psrf
-   bin.MarsVars.rgas
-   bin.MarsVars.rho_air
-   bin.MarsVars.rho_dst
-   bin.MarsVars.rho_ice
-   bin.MarsVars.sigma
-
+Module Contents
+---------------
 
 .. py:function:: add_help(var_list)
 
@@ -264,6 +266,10 @@ Attributes
 
        Ek = 1/2 (u'**2+v'**2)
 
+   Andrews, D. G., Holton, J. R., and Leovy, C. B. (1987), Middle
+   Atmosphere Dynamics, International Geophysics Series, vol. 40,
+   Academic Press, San Diego.
+
    :param ucomp: Zonal wind (m/s)
    :type  ucomp: array [time, lev, lat, lon]
    :param vcomp: Meridional wind (m/s)
@@ -283,6 +289,10 @@ Attributes
 
        Ep = 1/2 (g/N)^2 (temp'/temp)^2
 
+   Andrews, D. G., Holton, J. R., and Leovy, C. B. (1987), Middle
+   Atmosphere Dynamics, International Geophysics Series, vol. 40,
+   Academic Press, San Diego.
+
    :param temp: Temperature (K)
    :type  temp: array [time, lev, lat, lon]
    :return: ``Ep`` Wave potential energy (J/kg)
@@ -295,6 +305,10 @@ Attributes
 .. py:function:: compute_MF(UVcomp, w)
 
    Calculate zonal or meridional momentum fluxes.
+
+   Andrews, D. G., Holton, J. R., and Leovy, C. B. (1987), Middle
+   Atmosphere Dynamics, International Geophysics Series, vol. 40,
+   Academic Press, San Diego.
 
    :param UVcomp: Zonal or meridional wind (ucomp or vcomp)(m/s)
    :type  UVcomp: array
@@ -311,6 +325,10 @@ Attributes
 
    Calculate the Brunt Vaisala freqency.
 
+   Holton, J. R., and Hakim, G. J. (2013), An Introduction to Dynamic
+   Meteorology, 5th ed., Academic Press,
+   https://doi.org/10.1016/C2009-0-63394-8
+
    :param theta: Potential temperature (K)
    :type  theta: array [time, lev, lat, lon]
    :param zfull: Altitude above ground level at the layer midpoint (m)
@@ -326,8 +344,11 @@ Attributes
 
    Calculate the frost point of CO2.
 
-   Adapted from Fannale (1982) - Mars: The regolith-atmosphere cap
-   system and climate change. Icarus.
+   Adapted from Fanale et al. (1982):
+
+   Fanale, F. P., J. R. Salvail, W. B. Banerdt, and R. S. Saunders
+   (1982), Mars: The regolith-atmosphere-cap system and climate change,
+   Icarus, 50, 381-407, https://doi.org/10.1016/0019-1035(82)90131-2
 
    :param P_3D: The full 3D pressure array (Pa)
    :type  p_3D: array [time, lev, lat, lon]
@@ -342,6 +363,17 @@ Attributes
 
    Calculate the sedimentation rate of the dust.
    [Courtney Batterson, 2023]
+
+   Stokes settling with the Cunningham slip correction
+   ``1 + Kn*(A + B*exp(-C/Kn))``, using the coefficients of
+   Kasten (1968) as implemented in the NASA Ames Mars GCM
+   (Kasten gives A = 1.249; the Ames GCM uses 1.246). Air viscosity
+   follows Sutherland's law with the CO2 constants of White, Viscous
+   Fluid Flow, 2nd ed. (McGraw-Hill, 1991), Table 1-2.
+
+   Kasten, F. (1968), Falling speed of aerosol particles, J. Appl.
+   Meteor., 7, 944-947,
+   https://doi.org/10.1175/1520-0450(1968)007<0944:FSOAP>2.0.CO;2
 
    :param xTau: Dust or ice MASS mixing ratio (ppm)
    :type  xTau: array [time, lev, lat, lon]
@@ -374,6 +406,10 @@ Attributes
 
        dp/dz = -rho*g
        [du/dz = (du/dp).(-rho*g)] > [du/dz = -rho*g * (du/dp)]
+
+   Andrews, D. G., Holton, J. R., and Leovy, C. B. (1987), Middle
+   Atmosphere Dynamics, International Geophysics Series, vol. 40,
+   Academic Press, San Diego.
 
    :param MF: Zonal/meridional momentum flux (J/kg)
    :type  MF: array [time, lev, lat, lon]
@@ -441,7 +477,16 @@ Attributes
 
    Compute the dust or ice mixing ratio.
 
-   Adapted from Heavens et al. (2011) observations from MCS (JGR).
+   Adapted from Heavens et al. (2011), from Mars Climate Sounder (MCS)
+   observations:
+
+   Heavens, N. G., M. I. Richardson, A. Kleinböhl, D. M. Kass, D. J.
+   McCleese, W. Abdou, J. L. Benson, J. T. Schofield, J. H. Shirley,
+   and P. M. Wolkenberg (2011), The vertical distribution of dust in the
+   Martian atmosphere during northern spring and summer: Observations by
+   the Mars Climate Sounder and analysis of zonal average vertical dust
+   profiles, J. Geophys. Res., 116, E04003,
+   https://doi.org/10.1029/2010JE003691
    [Courtney Batterson, 2023]
 
    :param xTau: Dust or ice extinction rate (km-1)
@@ -502,6 +547,10 @@ Attributes
 .. py:function:: compute_scorer(N, ucomp, zfull)
 
    Calculate the Scorer wavelength.
+
+   Scorer, R. S. (1949), Theory of waves in the lee of mountains,
+   Q. J. R. Meteorol. Soc., 75, 41-56,
+   https://doi.org/10.1002/qj.49707532308
 
    :param N: Brunt Vaisala freqency (rad/s)
    :type  N: float [time, lev, lat, lon]
@@ -592,7 +641,16 @@ Attributes
 
    Compute the dust or ice extinction rate.
 
-   Adapted from Heavens et al. (2011) observations from MCS (JGR).
+   Adapted from Heavens et al. (2011), from Mars Climate Sounder (MCS)
+   observations:
+
+   Heavens, N. G., M. I. Richardson, A. Kleinböhl, D. M. Kass, D. J.
+   McCleese, W. Abdou, J. L. Benson, J. T. Schofield, J. H. Shirley,
+   and P. M. Wolkenberg (2011), The vertical distribution of dust in the
+   Martian atmosphere during northern spring and summer: Observations by
+   the Mars Climate Sounder and analysis of zonal average vertical dust
+   profiles, J. Geophys. Res., 116, E04003,
+   https://doi.org/10.1029/2010JE003691
    [Courtney Batterson, 2023]
 
    :param q: Dust or ice mass mixing ratio (ppm)
@@ -896,168 +954,161 @@ Attributes
    :raises RuntimeError: If the file cannot be removed
 
 
-.. py:data:: C_dst
+.. py:function:: set_planet_constants(f)
 
-   
+   Set the module-level planet constants (rgas, Rd, Cp, g, g0,
+   R_planet, kappa) from the open netCDF file when it carries them,
+   else leave the Mars/Ames defaults.
+
+   Global attributes (written by planetWRF and carried through
+   MarsFormat): R_D, CP, G, RADIUS. 3D fields, when present, take
+   precedence: rgas3D, cp3D (composition-dependent) and g3D
+   (variable gravity), each [time, lev, lat, lon] like temp.
+
+
+.. py:data:: C_dst
+   :value: 10095.238095238095
+
 
 .. py:data:: C_ice
+   :value: 2188.8745148771022
 
-   
 
 .. py:data:: Cp
    :value: 735.0
 
-   
 
 .. py:data:: Kb
+   :value: 1.3806044503487214e-23
 
-   
 
 .. py:data:: M_co2
    :value: 0.044
 
-   
 
 .. py:data:: N
    :value: 0.01
 
-   
 
 .. py:data:: Na
+   :value: 6.0219999999999996e+23
 
-   
 
 .. py:data:: Qext_dst
    :value: 0.35
 
-   
 
 .. py:data:: Qext_ice
    :value: 0.773
 
-   
 
 .. py:data:: R
    :value: 8.314
 
-   
+
+.. py:data:: R_planet
+   :value: 3400000.0
+
 
 .. py:data:: Rd
-   :value: 192.0
+   :value: 189.0
 
-   
 
 .. py:data:: Reff_dst
    :value: 1.06
 
-   
 
 .. py:data:: Reff_ice
    :value: 1.41
 
-   
 
 .. py:data:: S0
    :value: 222
 
-   
 
 .. py:data:: T0
    :value: 273.15
 
-   
 
 .. py:data:: Tpole
    :value: 150.0
 
-   
 
 .. py:data:: amu
+   :value: 1.66054e-27
 
-   
 
 .. py:data:: amu_co2
    :value: 44.0
 
-   
 
 .. py:data:: args
+   :value: None
 
-   
 
 .. py:data:: cap_str
    :value: ' (derived w/CAP)'
 
-   
 
 .. py:data:: debug
 
-   
-
 .. py:data:: exit_code
+   :value: None
 
-   
 
 .. py:data:: filepath
-
-   
 
 .. py:data:: fill_value
    :value: 0.0
 
-   
 
 .. py:data:: g
    :value: 3.72
 
-   
+
+.. py:data:: g0
+   :value: 3.72
+
+
+.. py:data:: kappa
+   :value: None
+
 
 .. py:data:: mass_co2
+   :value: 7.306376e-26
 
-   
 
 .. py:data:: master_list
 
-   
-
 .. py:data:: n0
+   :value: 1.3700000000000003e-05
 
-   
 
 .. py:data:: original_print_message
 
-   
-
 .. py:data:: parser
-
-   
 
 .. py:data:: psrf
    :value: 610.0
 
-   
 
 .. py:data:: rgas
    :value: 189.0
 
-   
 
 .. py:data:: rho_air
+   :value: 0.021516754850088183
 
-   
 
 .. py:data:: rho_dst
    :value: 2500.0
 
-   
 
 .. py:data:: rho_ice
    :value: 900
 
-   
 
 .. py:data:: sigma
    :value: 0.63676
 
-   
 

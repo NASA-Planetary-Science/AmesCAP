@@ -54,7 +54,7 @@ matplotlib.use("Agg")
 
 # Load amesCAP modules
 from amescap.FV3_utils import (
-    fms_press_calc, fms_Z_calc, vinterp,find_n
+    R_CO2, fms_press_calc, fms_Z_calc, vinterp,find_n
 )
 from amescap.Script_utils import (
     check_file_tape, section_content_amescap_profile, find_tod_in_diurn,
@@ -136,6 +136,7 @@ parser.add_argument('input_file', nargs='+',
     help=(f"A netCDF file or list of netCDF files.\n\n"))
 
 parser.add_argument('-t', '--interp_type', type=str, default='pstd',
+    choices=['pstd', 'zstd', 'zagl'],
     help=(
         f"Interpolation to standard pressure (pstd), standard altitude "
         f"(zstd), or altitude above ground level (zagl).\nWorks on "
@@ -244,7 +245,7 @@ if args.input_file:
 fill_value = 0.
 
 # Define constants
-rgas = 189.     # J/(kg-K) -> m2/(s2 K)
+rgas = R_CO2    # J/(kg-K) -> m2/(s2 K)
 g = 3.72        # m/s2
 R = 8.314       # J/ mol. K
 Cp = 735.0      # J/K
@@ -384,7 +385,7 @@ def main():
                       f"interpolation to zstd, but the file {name_fixed} "
                       f"cannot be found and the input file carries no "
                       f"zsurf{Nclr}")
-                exit()
+                sys.exit(1)
 
     # =========================== zagl ===========================
     elif interp_type == "zagl":
@@ -405,7 +406,7 @@ def main():
     else:
         print(f"{Red}Interpolation interp_ {interp_type} is not supported, use "
               f"``pstd``, ``zstd`` or ``zagl``{Nclr}")
-        exit()
+        sys.exit(1)
 
     if grid_out:
         # Only print grid content and exit the code

@@ -11,9 +11,10 @@ on:
       - 'bin/MarsVars.py'
       - 'tests/test_marsvars.py'
       - '.github/workflows/marsvars_test.yml'
-      - 'amescap/FV3_utils.py'
-      - 'amescap/Script_utils.py'
-      - 'amescap/Ncdf_wrapper.py'
+      - 'amescap/**'
+      - 'pyproject.toml'
+      - 'tests/base_test.py'
+      - 'tests/create_ames_gcm_files.py'
   # Allow manual triggering of the workflow
   workflow_dispatch:
   # Trigger on pull requests that modify relevant files
@@ -23,33 +24,34 @@ on:
       - 'bin/MarsVars.py'
       - 'tests/test_marsvars.py'
       - '.github/workflows/marsvars_test.yml'
-      - 'amescap/FV3_utils.py'
-      - 'amescap/Script_utils.py'
-      - 'amescap/Ncdf_wrapper.py'
+      - 'amescap/**'
+      - 'pyproject.toml'
+      - 'tests/base_test.py'
+      - 'tests/create_ames_gcm_files.py'
 jobs:
   test:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
       fail-fast: true
     runs-on: ${{ matrix.os }}
     steps:
       # Checkout the repository
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Set up the specified Python version
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           
       # Cache pip dependencies
       - name: Cache pip dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 

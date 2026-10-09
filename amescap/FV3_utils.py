@@ -21,6 +21,19 @@ import numpy as np
 from scipy import optimize
 from scipy.spatial import cKDTree
 
+# Specific gas constant for CO2 [J kg-1 K-1], used when deriving
+# variables from model output (e.g., altitude, density). Matches the
+# NASA Ames MGCM (RDGAS = 189.02 in the FMS Mars constants).
+R_CO2 = 189.0
+
+# Gas constant used to construct the empirical reference atmosphere in
+# ``ref_atmosphere_Mars_PTD`` and ``press_to_alt_atmosphere_Mars``. The
+# piecewise fits were derived with 192 J kg-1 K-1 and their segment
+# boundary pressures (e.g., P = 1.2416 Pa at 57 km) are tied to that
+# value, so it is kept separate from ``R_CO2`` to keep the profile
+# continuous.
+R_REF_ATMOS = 192.0
+
 # p_half = half-level = layer interfaces
 # p_full = full-level = layer midpoints
 
@@ -112,9 +125,9 @@ def fms_press_calc(psfc, ak, bk, lev_type='full'):
                         "``press_lev()``: use 'full' or 'half' ")
 
 
-def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full", rgas=191.,
+def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full", rgas=R_CO2,
                g=3.72):
-    """
+    r"""
     Returns the 3D altitude field [m] AGL (or above aeroid).
 
     :param psfc: The surface pressure [Pa] or array of surface
@@ -956,8 +969,13 @@ def interp_KDTree(var_IN, lat_IN, lon_IN, lat_OUT, lon_OUT, N_nearest=10):
     tree = cKDTree(list(zip(xs.flatten(), ys.flatten(), zs.flatten())))
     d, inds = tree.query(list(zip(xt.flatten(), yt.flatten(), zt.flatten())),
                          k = N_nearest)
-    # Inverse distance
-    w = 1.0 / d**2
+    # Inverse distance. Where a target point coincides with a source
+    # point (d = 0 gives 1/0 and a NaN result), copy that source value
+    exact = d < 1.e-10
+    has_exact = exact.any(axis = 1)
+    with np.errstate(divide = "ignore"):
+        w = 1.0 / d**2
+    w[has_exact] = exact[has_exact].astype(float)
     # Sum the weights and normalize
     var_OUT = (np.sum(w*var_IN.reshape(dims_IN_reshape)[:, inds], axis = 2)
                / np.sum(w, axis = 1))
@@ -1229,6 +1247,10 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
                                 ⌡
                                 p_top
 
+    Holton, J. R., and Hakim, G. J. (2013), An Introduction to Dynamic
+    Meteorology, 5th ed., Academic Press,
+    https://doi.org/10.1016/C2009-0-63394-8
+
     :param v_avg: zonal wind [m/s] with ``lev`` dimension FIRST and
         ``lat`` dimension SECOND (e.g., ``[pstd, lat]``,
         ``[pstd, lat, lon]`` or ``[pstd, lat, lon, time]``)
@@ -1320,9 +1342,11 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
         # Copy ``zagl`` or ``zstd`` instead of using a pseudo height
         Z = level.copy()
 
-    for k0 in range(nlev-2, 0, -1):
+    # MSF at level k0 integrates from Z[k0] to the top (MSF = 0 at the
+    # top level)
+    for k0 in range(nlev-2, -1, -1):
         I[:] = 0.
-        for k in range(nlev-2, k0, -1):
+        for k in range(nlev-2, k0-1, -1):
             zn = Z[k]
             znp1 = Z[k+1]
             fn = v_avg[k, :, ...] * np.exp(-zn/H)
@@ -1350,6 +1374,10 @@ def vw_from_MSF(msf, lat, lev, ztype="pstd", norm=True, psfc=700, H=8000.):
     """
     Return the V and W components of the circulation from the mass
     stream function.
+
+    Holton, J. R., and Hakim, G. J. (2013), An Introduction to Dynamic
+    Meteorology, 5th ed., Academic Press,
+    https://doi.org/10.1016/C2009-0-63394-8
 
     :param msf: the mass stream function with ``lev`` SECOND TO
         LAST and the ``lat`` dimension LAST (e.g., ``[lev, lat]``,
@@ -1480,8 +1508,9 @@ def lon180_to_360(lon):
     else:
         # ``lon`` is an array
         lon[lon < 0] += 360
-        # Reogranize lon by increasing values
-        lon = np.append(lon[lon <= 180], lon[lon > 180])
+        # Reorganize lon by increasing values. Sorting (rather than
+        # splitting at 180) places -180 -> 180 between 174 and 186
+        lon = np.sort(lon, axis=None, kind="stable")
     return lon
 
 
@@ -1503,8 +1532,8 @@ def lon360_to_180(lon):
     else:
         # ``lon`` is an array
         lon[lon > 180] -= 360
-        # Reogranize lon by increasing values
-        lon = np.append(lon[lon < 0], lon[lon >= 0])
+        # Reorganize lon by increasing values
+        lon = np.sort(lon, axis=None, kind="stable")
     return lon
 
 
@@ -1523,12 +1552,11 @@ def shiftgrid_360_to_180(lon, data):
         masked array properties
     """
 
-    lon = np.array(lon)
+    lon = np.array(lon, dtype=float)
     # convert to +/- 180
     lon[lon > 180] -= 360.
-    # stack data
-    data = np.concatenate((data[..., lon < 0], data[..., lon >= 0]), axis = -1)
-    return data
+    # Reorder data by increasing longitude, matching ``lon360_to_180``
+    return data[..., np.argsort(lon, kind="stable")]
 
 
 def shiftgrid_180_to_360(lon, data):
@@ -1542,13 +1570,11 @@ def shiftgrid_180_to_360(lon, data):
     :return: shifted data
     """
 
-    lon = np.array(lon)
+    lon = np.array(lon, dtype=float)
     # convert to 0-360
     lon[lon < 0] += 360.
-    # stack data
-    data = np.concatenate((data[..., lon <= 180], data[..., lon > 180]),
-                          axis = -1)
-    return data
+    # Reorder data by increasing longitude, matching ``lon180_to_360``
+    return data[..., np.argsort(lon, kind="stable")]
 
 
 def second_hhmmss(seconds, lon_180=0.):
@@ -2090,8 +2116,13 @@ def swinbank(plev, psfc, ptrans=1.):
 
 def polar_warming(T, lat, outside_range=np.nan):
     """
-    Return the polar warming, following McDunn et al. 2013:
-    Characterization of middle-atmosphere polar warming at Mars, JGR
+    Return the polar warming, following McDunn et al. (2013):
+
+    McDunn, T., S. Bougher, J. Murphy, A. Kleinböhl, F. Forget, and
+    M. Smith (2013), Characterization of middle-atmosphere polar warming
+    at Mars, J. Geophys. Res. Planets, 118, 161-178,
+    https://doi.org/10.1002/jgre.20016
+
     Alex Kling
 
     :param T: temperature with the lat dimension FIRST (transpose as
@@ -2678,9 +2709,12 @@ def frontogenesis(U, V, theta, lon_deg, lat_deg, R=3400*1000.,
                   spacing="varying"):
     """
     Compute the frontogenesis (local change in potential temperature
-    gradient near a front) following Richter et al. 2010: Toward a
-    Physically Based Gravity Wave Source Parameterization in a General
-    Circulation Model, JAS 67.
+    gradient near a front) following Richter et al. (2010):
+
+    Richter, J. H., F. Sassi, and R. R. Garcia (2010), Toward a
+    physically based gravity wave source parameterization in a general
+    circulation model, J. Atmos. Sci., 67, 136-156,
+    https://doi.org/10.1175/2009JAS3112.1
 
     We have ``Fn = 1/2 D(Del Theta)^2/Dt`` [K/m/s]
 
@@ -2787,9 +2821,13 @@ def frontogenesis(U, V, theta, lon_deg, lat_deg, R=3400*1000.,
 
 def MGSzmax_ls_lat(ls, lat):
     """
-    Return the max altitude for the dust from "MGS scenario" from
-    Montmessin et al. (2004), Origin and role of water ice clouds in
-    the Martian water cycle as inferred from a general circulation model
+    Return the max altitude for the dust from the "MGS scenario" of
+    Montmessin et al. (2004):
+
+    Montmessin, F., F. Forget, P. Rannou, M. Cabane, and R. M. Haberle
+    (2004), Origin and role of water ice clouds in the Martian water cycle
+    as inferred from a general circulation model, J. Geophys. Res., 109,
+    E10004, https://doi.org/10.1029/2004JE002284
 
     :param ls: solar longitude [°]
     :type  ls: array
@@ -2809,15 +2847,19 @@ def MGSzmax_ls_lat(ls, lat):
 
 def MGStau_ls_lat(ls, lat):
     """
-    Return the max altitude for the dust from "MGS scenario" from
-    Montmessin et al. (2004), Origin and role of water ice clouds in
-    the Martian water cycle as inferred from a general circulation model
+    Return the dust optical depth from the "MGS scenario" of
+    Montmessin et al. (2004):
+
+    Montmessin, F., F. Forget, P. Rannou, M. Cabane, and R. M. Haberle
+    (2004), Origin and role of water ice clouds in the Martian water cycle
+    as inferred from a general circulation model, J. Geophys. Res., 109,
+    E10004, https://doi.org/10.1029/2004JE002284
 
     :param ls: solar longitude [°]
     :type  ls: array
     :param lat : latitude [°]
     :type  lat: array
-    :return: top altitude for the dust [km]
+    :return: dust optical depth
     """
 
     lat = np.array(lat)
@@ -2836,7 +2878,7 @@ def MGStau_ls_lat(ls, lat):
         if lat >= 0:
             tau = t_north
         else:
-            t_south
+            tau = t_south
     else:
         tau = np.zeros_like(lat)
         tau[lat <= 0] = t_south[lat <= 0]
@@ -3011,17 +3053,17 @@ def ref_atmosphere_Mars_PTD(Zi):
         if Zi <= 57000:
             return alt_to_press_quad(Zi, Z0 = 0, P0 = 610, T0 = 225.9,
                                      gam = -0.00213479, a = 1.44823e-08,
-                                     rgas = 192, g = 3.72)
+                                     rgas = R_REF_ATMOS, g = 3.72)
         elif 57000 < Zi <= 110000:
             return alt_to_press_quad(Zi, Z0 = 57000, P0 = 1.2415639872674782,
                                      T0 = 151.2, gam = -0.000367444,
-                                     a = -6.8256e-09, rgas = 192, g = 3.72)
+                                     a = -6.8256e-09, rgas = R_REF_ATMOS, g = 3.72)
         elif 110000 < Zi <= 120000:
             # Discarded above 120 km when we enter the molecular regime
             return alt_to_press_quad(Zi, Z0 = 110000,
                                      P0 = 0.0005866878792825923, T0 = 112.6,
                                      gam = 0.00212537, a = -1.81922e-08,
-                                     rgas = 192, g = 3.72)
+                                     rgas = R_REF_ATMOS, g = 3.72)
         elif 120000 <= Zi:
             return P_mars_120_300(Zi)
 
@@ -3031,7 +3073,7 @@ def ref_atmosphere_Mars_PTD(Zi):
         P_analytic_scalar = np.vectorize(P_analytic_scalar)
         T_analytic_scalar = np.vectorize(T_analytic_scalar)
     return (P_analytic_scalar(Zi), T_analytic_scalar(Zi),
-            P_analytic_scalar(Zi) / (192*T_analytic_scalar(Zi)))
+            P_analytic_scalar(Zi) / (R_REF_ATMOS*T_analytic_scalar(Zi)))
 
 
 def press_to_alt_atmosphere_Mars(Pi):
@@ -3121,7 +3163,7 @@ def press_to_alt_atmosphere_Mars(Pi):
                                      T0 = 225.9,
                                      gam = -0.00213479,
                                      a = 1.44823e-08,
-                                     rgas = 192,
+                                     rgas = R_REF_ATMOS,
                                      g = 3.72)
         elif 1.2415639872674782 > Pi >=  0.0005866878792825923:
             # 57,000-110,000 m
@@ -3130,7 +3172,7 @@ def press_to_alt_atmosphere_Mars(Pi):
                                      T0 = 151.2,
                                      gam = -0.000367444,
                                      a = -6.8256e-09,
-                                     rgas = 192,
+                                     rgas = R_REF_ATMOS,
                                      g = 3.72)
         elif 0.0005866878792825923 > Pi >=  0.00012043158397922564:
             # 110,000-120,000 m
@@ -3140,7 +3182,7 @@ def press_to_alt_atmosphere_Mars(Pi):
                                      T0 = 112.6,
                                      gam = 0.00212537,
                                      a = -1.81922e-08,
-                                     rgas = 192,
+                                     rgas = R_REF_ATMOS,
                                      g = 3.72)
         elif 0.00012043158397922564 > Pi:
             # 120,000-300,000 m

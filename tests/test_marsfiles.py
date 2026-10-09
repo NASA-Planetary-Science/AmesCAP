@@ -33,6 +33,9 @@ class TestMarsFiles(BaseTestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test environment once for all tests"""
+        # Remember where we started so tearDownClass can leave the
+        # temporary directory before deleting it
+        cls.original_cwd = os.getcwd()
         # Create a temporary directory for the tests
         cls.test_dir = tempfile.mkdtemp(prefix='MarsFiles_test_')
         print(f"Created temporary test directory: {cls.test_dir}")
@@ -179,6 +182,7 @@ class TestMarsFiles(BaseTestCase):
     def tearDownClass(cls):
         """Clean up the test environment"""
         try:
+            os.chdir(cls.original_cwd)
             shutil.rmtree(cls.test_dir, ignore_errors=True)
         except Exception as e:
             print(f"Warning: Could not remove test directory {cls.test_dir}: {e}")

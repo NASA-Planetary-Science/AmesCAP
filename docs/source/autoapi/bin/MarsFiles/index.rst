@@ -1,5 +1,5 @@
-:py:mod:`bin.MarsFiles`
-=======================
+bin.MarsFiles
+=============
 
 .. py:module:: bin.MarsFiles
 
@@ -53,11 +53,22 @@
 
 
 
-Module Contents
----------------
+Attributes
+----------
+
+.. autoapisummary::
+
+   bin.MarsFiles.all_args
+   bin.MarsFiles.args
+   bin.MarsFiles.debug
+   bin.MarsFiles.exit_code
+   bin.MarsFiles.out_ext
+   bin.MarsFiles.out_ext
+   bin.MarsFiles.parser
+
 
 Classes
-~~~~~~~
+-------
 
 .. autoapisummary::
 
@@ -65,9 +76,8 @@ Classes
    bin.MarsFiles.ExtArgumentParser
 
 
-
 Functions
-~~~~~~~~~
+---------
 
 .. autoapisummary::
 
@@ -84,25 +94,13 @@ Functions
    bin.MarsFiles.split_files
 
 
-
-Attributes
-~~~~~~~~~~
-
-.. autoapisummary::
-
-   bin.MarsFiles.all_args
-   bin.MarsFiles.args
-   bin.MarsFiles.debug
-   bin.MarsFiles.exit_code
-   bin.MarsFiles.out_ext
-   bin.MarsFiles.out_ext
-   bin.MarsFiles.parser
-
+Module Contents
+---------------
 
 .. py:class:: ExtAction(*args, ext_content=None, parser=None, **kwargs)
 
-
    Bases: :py:obj:`argparse.Action`
+
 
    Custom action for argparse to handle file extensions.
 
@@ -134,22 +132,78 @@ Attributes
    :raises MemoryError: If the parser cannot be allocated.
    :raises OverflowError: If the parser cannot be overflowed.
 
+
    .. py:method:: __call__(parser, namespace, values, option_string=None)
-
-
-   .. py:method:: __repr__()
-
-      Return repr(self).
 
 
    .. py:method:: format_usage()
 
 
+   .. py:attribute:: choices
+      :value: None
+
+
+
+   .. py:attribute:: const
+      :value: None
+
+
+
+   .. py:attribute:: default
+      :value: None
+
+
+
+   .. py:attribute:: deprecated
+      :value: False
+
+
+
+   .. py:attribute:: dest
+
+
+   .. py:attribute:: ext_content
+      :value: None
+
+
+
+   .. py:attribute:: help
+      :value: None
+
+
+
+   .. py:attribute:: metavar
+      :value: None
+
+
+
+   .. py:attribute:: nargs
+      :value: None
+
+
+
+   .. py:attribute:: option_strings
+
+
+   .. py:attribute:: parser
+      :value: None
+
+
+
+   .. py:attribute:: required
+      :value: False
+
+
+
+   .. py:attribute:: type
+      :value: None
+
+
 
 .. py:class:: ExtArgumentParser(prog=None, usage=None, description=None, epilog=None, parents=[], formatter_class=HelpFormatter, prefix_chars='-', fromfile_prefix_chars=None, argument_default=None, conflict_handler='error', add_help=True, allow_abbrev=True, exit_on_error=True)
 
-
    Bases: :py:obj:`argparse.ArgumentParser`
+
 
    Custom ArgumentParser that handles file extensions for output files.
 
@@ -180,75 +234,8 @@ Attributes
    :raises MemoryError: If the parser cannot be allocated.
    :raises OverflowError: If the parser cannot be overflowed.
 
-   .. py:method:: __repr__()
-
-      Return repr(self).
-
-
-   .. py:method:: add_argument(*args, **kwargs)
-
-      add_argument(dest, ..., name=value, ...)
-      add_argument(option_string, option_string, ..., name=value, ...)
-
-
-   .. py:method:: add_argument_group(*args, **kwargs)
-
-
-   .. py:method:: add_mutually_exclusive_group(**kwargs)
-
-
-   .. py:method:: add_subparsers(**kwargs)
-
-
-   .. py:method:: convert_arg_line_to_args(arg_line)
-
-
-   .. py:method:: error(message)
-
-      error(message: string)
-
-      Prints a usage message incorporating the message to stderr and
-      exits.
-
-      If you override this in a subclass, it should not return -- it
-      should either exit or raise an exception.
-
-
-   .. py:method:: exit(status=0, message=None)
-
-
-   .. py:method:: format_help()
-
-
-   .. py:method:: format_usage()
-
-
-   .. py:method:: get_default(dest)
-
 
    .. py:method:: parse_args(*args, **kwargs)
-
-
-   .. py:method:: parse_intermixed_args(args=None, namespace=None)
-
-
-   .. py:method:: parse_known_args(args=None, namespace=None)
-
-
-   .. py:method:: parse_known_intermixed_args(args=None, namespace=None)
-
-
-   .. py:method:: print_help(file=None)
-
-
-   .. py:method:: print_usage(file=None)
-
-
-   .. py:method:: register(registry_name, value, object)
-
-
-   .. py:method:: set_defaults(**kwargs)
-
 
 
 .. py:function:: change_vname_longname_unit(vname, longname_txt, units_txt)
@@ -544,29 +531,19 @@ Attributes
 
 .. py:data:: all_args
 
-   
-
 .. py:data:: args
+   :value: None
 
-   
 
 .. py:data:: debug
 
-   
-
 .. py:data:: exit_code
+   :value: None
 
-   
-
-.. py:data:: out_ext
-
-   
 
 .. py:data:: out_ext
 
-   
+.. py:data:: out_ext
 
 .. py:data:: parser
-
-   
 
