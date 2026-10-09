@@ -613,13 +613,27 @@ g = 3.72  # Gravitational constant for Mars [m/s^2]
 R = 8.314  # Universal gas constant [J/mol/K]
 Rd = R_CO2  # Specific gas constant used for the CO2 atmosphere [J/kg/K]
 rho_air = psrf/(rgas*Tpole)  # Air density (ρ) [kg/m^3]
-rho_dst = 2500.  # Dust particle ρ [kg/m^3]
-# rho_dst = 3000  # Dust particle ρ [kg/m^3] (Kleinbohl, 2009)
-rho_ice = 900  # Ice particle ρ [kg/m^3] (Heavens, 2010)
-Qext_dst = 0.35  # Dust extinction efficiency (MCS) (Kleinbohl, 2009)
-Qext_ice = 0.773  # Ice extinction efficiency (MCS) (Heavens, 2010)
-Reff_dst = 1.06  # Effective dust particle radius [µm] (Kleinbohl, 2009)
-Reff_ice = 1.41  # Effective ice particle radius [µm] (Heavens, 2010)
+# Ice particle constants: Heavens et al. (2010), Water ice clouds over the
+#   Martian tropics during northern summer, Geophys. Res. Lett., 37, L18202,
+#   https://doi.org/10.1029/2010GL044610
+# Dust particle constants:
+#   Heavens et al. (2011), The vertical distribution of dust in the Martian
+#   atmosphere during northern spring and summer: Observations by the Mars
+#   Climate Sounder and analysis of zonal average vertical dust profiles,
+#   J. Geophys. Res., 116, E04003, https://doi.org/10.1029/2010JE003691
+#   Kleinböhl et al. (2011), A single-scattering approximation for infrared
+#   radiative transfer in limb geometry in the Martian atmosphere,
+#   J. Quant. Spectrosc. Radiat. Transfer, 112, 1568-1580,
+#   https://doi.org/10.1016/j.jqsrt.2011.03.006
+rho_dst = 2500.  # Dust particle ρ [kg/m^3] (Heavens et al., 2011)
+# rho_dst = 3000  # Dust particle ρ [kg/m^3] (Heavens et al., 2011)
+rho_ice = 900  # Ice particle ρ [kg/m^3] (Heavens et al., 2010)
+Qext_dst = 0.35  # Dust extinction efficiency (MCS) (Kleinböhl et al., 2011)
+Qext_ice = 0.773  # Ice extinction efficiency (MCS) (Heavens et al., 2010)
+Reff_dst = 1.06  # Effective dust particle radius [µm] (Heavens et al., 2011)
+Reff_ice = 1.41  # Effective ice particle radius [µm] (Heavens et al., 2010)
+# Sutherland's law constants for CO2: White, F. M., Viscous Fluid Flow,
+#   2nd ed., McGraw-Hill, 1991, Table 1-2
 n0 = 1.37*1.e-5  # Sutherland's law [N-s/m^2]
 S0 = 222  # Sutherland's law [K]
 T0 = 273.15  # Sutherland's law [K]
@@ -1021,7 +1035,16 @@ def compute_xzTau(q, temp, lev, const, f_type):
     """
     Compute the dust or ice extinction rate.
 
-    Adapted from Heavens et al. (2011) observations from MCS (JGR).
+    Adapted from Heavens et al. (2011), from Mars Climate Sounder (MCS)
+    observations:
+
+    Heavens, N. G., M. I. Richardson, A. Kleinböhl, D. M. Kass, D. J.
+    McCleese, W. Abdou, J. L. Benson, J. T. Schofield, J. H. Shirley,
+    and P. M. Wolkenberg (2011), The vertical distribution of dust in the
+    Martian atmosphere during northern spring and summer: Observations by
+    the Mars Climate Sounder and analysis of zonal average vertical dust
+    profiles, J. Geophys. Res., 116, E04003,
+    https://doi.org/10.1029/2010JE003691
     [Courtney Batterson, 2023]
 
     :param q: Dust or ice mass mixing ratio (ppm)
@@ -1077,7 +1100,16 @@ def compute_mmr(xTau, temp, lev, const, f_type):
     """
     Compute the dust or ice mixing ratio.
 
-    Adapted from Heavens et al. (2011) observations from MCS (JGR).
+    Adapted from Heavens et al. (2011), from Mars Climate Sounder (MCS)
+    observations:
+
+    Heavens, N. G., M. I. Richardson, A. Kleinböhl, D. M. Kass, D. J.
+    McCleese, W. Abdou, J. L. Benson, J. T. Schofield, J. H. Shirley,
+    and P. M. Wolkenberg (2011), The vertical distribution of dust in the
+    Martian atmosphere during northern spring and summer: Observations by
+    the Mars Climate Sounder and analysis of zonal average vertical dust
+    profiles, J. Geophys. Res., 116, E04003,
+    https://doi.org/10.1029/2010JE003691
     [Courtney Batterson, 2023]
 
     :param xTau: Dust or ice extinction rate (km-1)
@@ -1134,6 +1166,17 @@ def compute_Vg_sed(xTau, nTau, T):
     Calculate the sedimentation rate of the dust.
     [Courtney Batterson, 2023]
 
+    Stokes settling with the Cunningham slip correction
+    ``1 + Kn*(A + B*exp(-C/Kn))``, using the coefficients of
+    Kasten (1968) as implemented in the NASA Ames Mars GCM
+    (Kasten gives A = 1.249; the Ames GCM uses 1.246). Air viscosity
+    follows Sutherland's law with the CO2 constants of White, Viscous
+    Fluid Flow, 2nd ed. (McGraw-Hill, 1991), Table 1-2.
+
+    Kasten, F. (1968), Falling speed of aerosol particles, J. Appl.
+    Meteor., 7, 944-947,
+    https://doi.org/10.1175/1520-0450(1968)007<0944:FSOAP>2.0.CO;2
+
     :param xTau: Dust or ice MASS mixing ratio (ppm)
     :type  xTau: array [time, lev, lat, lon]
     :param nTau: Dust or ice NUMBER mixing ratio (None)
@@ -1158,7 +1201,7 @@ def compute_Vg_sed(xTau, nTau, T):
     v = np.sqrt((3*Kb*T) / mass_co2)
     mfp = (2*eta) / (rho_air*v)
     Kn = mfp / Rp
-    alpha = 1.246 + 0.42*np.exp(-0.87/Kn)
+    alpha = 1.246 + 0.42*np.exp(-0.87/Kn)  # Kasten (1968), see docstring
     Vg = c * (1 + alpha*Kn)/eta
     return Vg
 
@@ -1509,6 +1552,10 @@ def compute_N(theta, zfull):
     """
     Calculate the Brunt Vaisala freqency.
 
+    Holton, J. R., and Hakim, G. J. (2013), An Introduction to Dynamic
+    Meteorology, 5th ed., Academic Press,
+    https://doi.org/10.1016/C2009-0-63394-8
+
     :param theta: Potential temperature (K)
     :type  theta: array [time, lev, lat, lon]
     :param zfull: Altitude above ground level at the layer midpoint (m)
@@ -1538,8 +1585,11 @@ def compute_Tco2(P_3D):
     """
     Calculate the frost point of CO2.
 
-    Adapted from Fannale (1982) - Mars: The regolith-atmosphere cap
-    system and climate change. Icarus.
+    Adapted from Fanale et al. (1982):
+
+    Fanale, F. P., J. R. Salvail, W. B. Banerdt, and R. S. Saunders
+    (1982), Mars: The regolith-atmosphere-cap system and climate change,
+    Icarus, 50, 381-407, https://doi.org/10.1016/0019-1035(82)90131-2
 
     :param P_3D: The full 3D pressure array (Pa)
     :type  p_3D: array [time, lev, lat, lon]
@@ -1571,6 +1621,10 @@ def compute_Tco2(P_3D):
 def compute_scorer(N, ucomp, zfull):
     """
     Calculate the Scorer wavelength.
+
+    Scorer, R. S. (1949), Theory of waves in the lee of mountains,
+    Q. J. R. Meteorol. Soc., 75, 41-56,
+    https://doi.org/10.1002/qj.49707532308
 
     :param N: Brunt Vaisala freqency (rad/s)
     :type  N: float [time, lev, lat, lon]
@@ -1691,6 +1745,10 @@ def compute_Ep(temp):
 
         Ep = 1/2 (g/N)^2 (temp'/temp)^2
 
+    Andrews, D. G., Holton, J. R., and Leovy, C. B. (1987), Middle
+    Atmosphere Dynamics, International Geophysics Series, vol. 40,
+    Academic Press, San Diego.
+
     :param temp: Temperature (K)
     :type  temp: array [time, lev, lat, lon]
     :return: ``Ep`` Wave potential energy (J/kg)
@@ -1712,6 +1770,10 @@ def compute_Ek(ucomp, vcomp):
 
         Ek = 1/2 (u'**2+v'**2)
 
+    Andrews, D. G., Holton, J. R., and Leovy, C. B. (1987), Middle
+    Atmosphere Dynamics, International Geophysics Series, vol. 40,
+    Academic Press, San Diego.
+
     :param ucomp: Zonal wind (m/s)
     :type  ucomp: array [time, lev, lat, lon]
     :param vcomp: Meridional wind (m/s)
@@ -1730,6 +1792,10 @@ def compute_Ek(ucomp, vcomp):
 def compute_MF(UVcomp, w):
     """
     Calculate zonal or meridional momentum fluxes.
+
+    Andrews, D. G., Holton, J. R., and Leovy, C. B. (1987), Middle
+    Atmosphere Dynamics, International Geophysics Series, vol. 40,
+    Academic Press, San Diego.
 
     :param UVcomp: Zonal or meridional wind (ucomp or vcomp)(m/s)
     :type  UVcomp: array
@@ -1763,6 +1829,10 @@ def compute_WMFF(MF, rho, lev, interp_type):
 
         dp/dz = -rho*g
         [du/dz = (du/dp).(-rho*g)] > [du/dz = -rho*g * (du/dp)]
+
+    Andrews, D. G., Holton, J. R., and Leovy, C. B. (1987), Middle
+    Atmosphere Dynamics, International Geophysics Series, vol. 40,
+    Academic Press, San Diego.
 
     :param MF: Zonal/meridional momentum flux (J/kg)
     :type  MF: array [time, lev, lat, lon]
@@ -2230,7 +2300,7 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
                 delp = f.variables["delp"][:]
                 OUT = compute_dustref_per_pa(dustref, delp)
             
-            if var == "dustref_per_z":
+            if var == "dustref_per_km":
                 dustref = f.variables["dustref"][:]
                 delz = f.variables["delz"][:]
                 OUT = compute_dustref_per_z(dustref, delz)
