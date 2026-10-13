@@ -33,6 +33,7 @@ When adding new features, please include:
 
 Testing
 -------
+* Run the test suite as described in ``tests/README.rst`` (``cd tests && python -m unittest -v test_*.py``); it runs offline in a few minutes
 * Test your changes thoroughly before submitting
 * Ensure changes don't break existing functionality
 * Add example files if adding new capabilities

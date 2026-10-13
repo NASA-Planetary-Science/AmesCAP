@@ -17,14 +17,14 @@ import glob
 import re
 import numpy as np
 from netCDF4 import Dataset
-from base_test import BaseTestCase
+from base_test import BaseTestCase, FIXTURE_SIZE
 
 class TestMarsInterp(BaseTestCase):
     """Integration test suite for MarsInterp"""
 
     PREFIX = "MarsInterp_test_"
     FILESCRIPT = "create_ames_gcm_files.py"
-    SHORTFILE = "short"
+    SHORTFILE = FIXTURE_SIZE
     
     # Verify files were created
     expected_files = [
@@ -297,20 +297,18 @@ class TestMarsInterp(BaseTestCase):
                       "No traceback found in debug output")
     
     def test_invalid_interpolation_type(self):
-        """Test error handling with invalid interpolation type"""
-        result = self.run_mars_interp(['01336.atmos_average.nc', '-t', 'invalid_type'], expected_success=True)
-        
-        # Check for error message about unsupported interpolation type
-        error_indicators = [
-            'not supported',
-            'use `pstd`, `zstd` or `zagl`'
-        ]
-        
-        # At least one of these should appear in stderr or stdout
-        all_output = result.stdout + result.stderr
-        self.assertTrue(any(indicator in all_output for indicator in error_indicators),
-                      "No error message about invalid interpolation type")
-    
+        """Test that an invalid interpolation type exits with an error"""
+        result = self.run_mars_interp(['01336.atmos_average.nc', '-t', 'invalid_type'], expected_success=False)
+
+        # argparse lists the valid choices
+        self.assertIn('invalid choice', result.stderr)
+        for choice in ['pstd', 'zstd', 'zagl']:
+            self.assertIn(choice, result.stderr)
+
+        # No output file is written
+        self.assertFalse(os.path.exists(os.path.join(
+            self.test_dir, '01336.atmos_average_invalid_type.nc')))
+
     def test_invalid_netcdf_file(self):
         """Test error handling with invalid netCDF file"""
         # Create an invalid netCDF file

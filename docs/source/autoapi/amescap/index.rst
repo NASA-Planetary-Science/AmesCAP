@@ -1,55 +1,55 @@
-:py:mod:`amescap`
-=================
+amescap
+=======
 
 .. py:module:: amescap
 
 
 Submodules
 ----------
+
 .. toctree::
-   :titlesonly:
    :maxdepth: 1
 
-   FV3_utils/index.rst
-   Ncdf_wrapper/index.rst
-   Script_utils/index.rst
-   Spectral_utils/index.rst
-   cli/index.rst
-   pdf2image/index.rst
+   /autoapi/amescap/FV3_utils/index
+   /autoapi/amescap/Ncdf_wrapper/index
+   /autoapi/amescap/Script_utils/index
+   /autoapi/amescap/Spectral_utils/index
+   /autoapi/amescap/cli/index
+   /autoapi/amescap/pdf2image/index
 
 
-Package Contents
-----------------
+Attributes
+----------
+
+.. autoapisummary::
+
+   amescap.Green
+   amescap.Nclr
+   amescap.__version__
 
 
 Functions
-~~~~~~~~~
+---------
 
 .. autoapisummary::
 
    amescap.print_welcome
 
 
-
-Attributes
-~~~~~~~~~~
-
-.. autoapisummary::
-
-   amescap.Green
-   amescap.Nclr
-
+Package Contents
+----------------
 
 .. py:function:: print_welcome()
-
 
 .. py:data:: Green
    :value: '\x1b[92m'
 
-   
 
 .. py:data:: Nclr
    :value: '\x1b[00m'
 
-   
+
+.. py:data:: __version__
+   :value: '0.3'
+
 

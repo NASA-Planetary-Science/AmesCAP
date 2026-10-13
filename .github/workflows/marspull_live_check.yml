@@ -1,0 +1,31 @@
+name: MarsPull Live Portal Check
+# Weekly check that the NAS Data Portal URLs used by MarsPull still list
+# files and serve data. Only small requests are made: directory listings
+# and the ~350 KB FV3BETAOUT1 fixed file.
+on:
+  schedule:
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+
+jobs:
+  live-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Run live MarsPull tests
+        env:
+          AMESCAP_LIVE_TESTS: '1'
+        run: |
+          cd tests
+          python -m unittest -v test_marspull.py

@@ -1302,6 +1302,32 @@ def process_time_shift(file_list):
         lons = np.array(fdiurn.variables["lon"])
         var_list = filter_vars(fdiurn, args.include)
 
+        # Equation-of-time offset [hr] per sol, written by MarsFormat
+        # from planetWRF's LTST. When present, shift to TRUE local
+        # solar time; otherwise to mean local time (UT + lon/15).
+        eot = None
+        if "eot_offset" in fdiurn.variables:
+            e = np.array(fdiurn.variables["eot_offset"][:], dtype=float)
+            # Binned files carry it as [time, tod]; one value per sol
+            eot = e.reshape(e.shape[0], -1).mean(axis=1)
+            print(f"{Cyan}Using eot_offset ({eot.min()*60:+.2f} to "
+                  f"{eot.max()*60:+.2f} min): output is TRUE local solar "
+                  f"time{Nclr}")
+
+        def shift_with_eot(arr, t_axis):
+            # arr has time at position t_axis and tod last
+            if eot is None:
+                return time_shift_calc(arr, lons, tod_orig,
+                                       target_times = target_list)
+            out = []
+            for it in range(arr.shape[t_axis]):
+                sl = [slice(None)]*arr.ndim
+                sl[t_axis] = slice(it, it+1)
+                out.append(time_shift_calc(arr[tuple(sl)], lons, tod_orig,
+                                           target_times = target_list,
+                                           eot_offset = eot[it]))
+            return np.concatenate(out, axis = t_axis)
+
         for var in var_list:
             print(f"{Cyan}Processing: {var}...{Nclr}")
             value = fdiurn.variables[var][:]
@@ -1317,12 +1343,7 @@ def process_time_shift(file_list):
             if (len(dims) == 4):
                 # time, tod, lat, lon
                 var_val_tmp = np.transpose(value, (x, y, t, tod))
-                var_val_T = time_shift_calc(
-                    var_val_tmp,
-                    lons,
-                    tod_orig,
-                    target_times = target_list
-                    )
+                var_val_T = shift_with_eot(var_val_tmp, 2)
                 var_out = np.transpose(var_val_T, (2, 3, 1, 0))
                 fnew.log_variable(
                     var,
@@ -1335,12 +1356,7 @@ def process_time_shift(file_list):
                 # time, tod, Z, lat, lon
                 z = dims.index(zaxis)
                 var_val_tmp = np.transpose(value, (x, y, z, t, tod))
-                var_val_T = time_shift_calc(
-                    var_val_tmp,
-                    lons,
-                    tod_orig,
-                    target_times = target_list
-                    )
+                var_val_T = shift_with_eot(var_val_tmp, 3)
                 var_out = np.transpose(var_val_T, (3, 4, 2, 1, 0))
                 fnew.log_variable(
                     var,

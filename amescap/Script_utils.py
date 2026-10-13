@@ -86,16 +86,19 @@ def print_fileContent(fileNcdf):
 
     Variables sorted by dimension.
 
-    :param fileNcdf: full path to the netCDF file
-    :type  fileNcdf: str
+    :param fileNcdf: full path to the netCDF file, or a file object
+        with a ``name`` attribute
+    :type  fileNcdf: str or file object
 
     :return: None
     """
 
-    if not os.path.isfile(fileNcdf.name):
-        print(f"{fileNcdf.name} not found")
+    filename = fileNcdf if isinstance(fileNcdf, str) else fileNcdf.name
+
+    if not os.path.isfile(filename):
+        print(f"{filename} not found")
     else:
-        f = Dataset(fileNcdf.name, "r")
+        f = Dataset(filename, "r")
         print("==================== DIMENSIONS ====================")
         print(list(f.dimensions.keys()))
         print(str(f.dimensions))
@@ -153,8 +156,9 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
 
     Requires a XXXXX.fixed.nc file in the current directory.
 
-    :param fileNcdf: full path to a netcdf file
-    :type  fileNcdf: str
+    :param fileNcdf: full path to a netcdf file, or a file object with
+        a ``name`` attribute
+    :type  fileNcdf: str or file object
     :param list_varfull: list of variable names and optional slices
         (e.g., ``["lon", "ps[:, 10, 20]"]``)
     :type  list_varfull: list
@@ -170,8 +174,10 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
     :raises Exception: if the file is not found
     """
 
-    if not os.path.isfile(fileNcdf.name):
-        print(f"{fileNcdf.name} not found")
+    filename = fileNcdf if isinstance(fileNcdf, str) else fileNcdf.name
+
+    if not os.path.isfile(filename):
+        print(f"{filename} not found")
     else:
         if print_stat:
             print(
@@ -192,7 +198,7 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                     cmd_txt = varfull.strip()
 
                 varname = f"f.variables['{cmd_txt}']{slice}"
-                f = Dataset(fileNcdf.name, "r")
+                f = Dataset(filename, "r")
                 var = eval(varname)
 
                 # Get the full latitude array (not sliced)
@@ -855,7 +861,10 @@ def section_content_amescap_profile(section_ID):
 
     import os
     import numpy as np
-    input_file = os.environ["HOME"]+"/.amescap_profile"
+    # HOME is not set on native Windows; fall back to the user profile
+    # directory (e.g., C:\Users\<name>) there
+    home = os.environ.get("HOME") or os.path.expanduser("~")
+    input_file = os.path.join(home, ".amescap_profile")
     try:
         f = open(input_file, "r")
         contents = ""
@@ -881,8 +890,11 @@ def section_content_amescap_profile(section_ID):
         print(f"{Red}Error: {input_file} config file not found.\n"
               f"{Yellow}To use this feature, create a hidden config "
               f"file from the template in your home directory with:\n"
-              f"{Cyan}    ``cp AmesCAP/mars_templates/amescap_profile  "
-              f"~/.amescap_profile``")
+              f"{Cyan}    cp \"$(python -c 'import sys; print(sys.prefix)')"
+              f"/mars_templates/amescap_profile\" ~/.amescap_profile\n"
+              f"{Yellow}(for an editable install, copy "
+              f"mars_templates/amescap_profile from the cloned repository)"
+              f"{Nclr}")
         exit()
 
     except Exception as exception:

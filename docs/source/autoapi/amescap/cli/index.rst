@@ -1,15 +1,11 @@
-:py:mod:`amescap.cli`
-=====================
+amescap.cli
+===========
 
 .. py:module:: amescap.cli
 
 
-Module Contents
----------------
-
-
 Functions
-~~~~~~~~~
+---------
 
 .. autoapisummary::
 
@@ -17,10 +13,10 @@ Functions
    amescap.cli.main
 
 
+Module Contents
+---------------
 
 .. py:function:: get_install_info()
 
-
 .. py:function:: main()
-
 

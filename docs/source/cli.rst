@@ -67,63 +67,58 @@ While we wait for the download, let's explore how we would know to use this exac
 
 which outputs:
 
-.. code-block:: bash
+.. code-block:: none
 
    usage: MarsPull [-h] [-list] [-f FILENAME [FILENAME ...]] [-ls LS [LS ...]] [--debug]
-                  [{FV3BETAOUT1,ACTIVECLDS,INERTCLDS,NEWBASE_ACTIVECLDS,ACTIVECLDS_NCDF}]
+                   [{FV3BETAOUT1,ACTIVECLDS,INERTCLDS,NEWBASE_ACTIVECLDS,ACTIVECLDS_NCDF}]
 
-   Uility for downloading NASA Ames Mars Global Climate Model output files from the NAS Data Portal at:https://data.nas.nasa.gov/mcmcref/
-
-   Requires the ``-id`` argument AND EITHER ``-f`` or ``-ls``.
+   Utility for downloading NASA Ames Mars Global Climate Model output files from the NAS Data Portal at:
+   https://data.nas.nasa.gov/mcmcref/
+   Requires ``-f`` or ``-ls``.
 
    positional arguments:
-   {FV3BETAOUT1,ACTIVECLDS,INERTCLDS,NEWBASE_ACTIVECLDS,ACTIVECLDS_NCDF}
-                           Selects the simulation directory from the NAS data portal:
-                           https://data.nas.nasa.gov/mcmcref/
-
-                           Current options are:
-                           FV3BETAOUT1
-                           ACTIVECLDS
-                           INERTCLDS
-                           NEWBASE_ACTIVECLDS
-                           ACTIVECLDS_NCDF
-                           MUST be used with either ``-f`` or ``-ls``.
+     {FV3BETAOUT1,ACTIVECLDS,INERTCLDS,NEWBASE_ACTIVECLDS,ACTIVECLDS_NCDF}
+                           Selects the simulation directory from the NAS data portal (https://data.nas.nasa.gov/mcmcref/)
+                           Current directory options are:
+                           FV3BETAOUT1, ACTIVECLDS, INERTCLDS, NEWBASE_ACTIVECLDS, ACTIVECLDS_NCDF
+                           MUST be used with either ``-f`` or ``-ls``
                            Example:
-                           > MarsPull ACTIVECLDS -f fort.11_0730
+                           > MarsPull INERTCLDS -f fort.11_0690
                            OR
-                           > MarsPull ACTIVECLDS -ls 90
-
-
+                           > MarsPull INERTCLDS -ls 90
 
    options:
-   -h, --help            show this help message and exit
-   -list, --list_files   Return a list of all the files available for download from:
-                           https://data.nas.nasa.gov/mcmcref/
-
+     -h, --help            show this help message and exit
+     -list, --list_files   Return a list of the directories and files available for download from https://data.nas.nasa.gov/mcmcref/
                            Example:
-                           > MarsPull -list
+                           > MarsPull -list # lists all directories
+                           > MarsPull -list ACTIVECLDS # lists files under ACTIVECLDS
 
-   -f FILENAME [FILENAME ...], --filename FILENAME [FILENAME ...]
+     -f FILENAME [FILENAME ...], --filename FILENAME [FILENAME ...]
                            The name(s) of the file(s) to download.
                            Example:
-                           > MarsPull ACTIVECLDS -f fort.11_0730 fort.11_0731
+                           > MarsPull INERTCLDS -f fort.11_0690
 
-   -ls LS [LS ...], --ls LS [LS ...]
+     -ls LS [LS ...], --ls LS [LS ...]
                            Selects the file(s) to download based on a range of solar longitudes (Ls).
                            This only works on data in the ACTIVECLDS and INERTCLDS folders.
                            Example:
-                           > MarsPull ACTIVECLDS -ls 90
-                           > MarsPull ACTIVECLDS -ls 180 360
+                           > MarsPull INERTCLDS -ls 90
+                           > MarsPull INERTCLDS -ls 90 180
 
-   --debug               Use with any other argument to pass all Python errors and
+     --debug               Use with any other argument to pass all Python errors and
                            status messages to the screen when running CAP.
                            Example:
-                           > MarsPull ACTIVECLDS -ls 90 --debug
+                           > MarsPull INERTCLDS -ls 90 --debug
 
+As we can see, MarsPull wants us to provide the simulation directory name and either one or multiple file names or an L\ :sub:`s` range. To find the directory names, use ``[-list --list_files]``; adding a directory name lists the files in that directory:
 
-As we can see, MarsPull wants us to provide the simulation directory name and either one or multiple file names or an L\ :sub:`s` range. The directory name isn't very obvious, but it is listed at the end of the URL on the webpage we looked at earlier: `https://data.nas.nasa.gov/mcmcref/fv3betaout1/ <https://data.nas.nasa.gov/mcmcref/fv3betaout1/>`_.
+.. code-block:: bash
 
-Then, we used the ``[-f --filename]`` argument to specify which files from that page we wanted to download.
+   MarsPull -list               # lists all directories
+   MarsPull -list FV3BETAOUT1   # lists files in FV3BETAOUT1
+
+Then, we used the ``[-f --filename]`` argument to specify which files from the ``FV3BETAOUT1`` directory we wanted to download. These files are also listed on the web at `the FV3BETAOUT1 directory <https://data.nas.nasa.gov/legacygcm/fv3betaout1/fv3betaout1/>`_.
 
 3. Inspect the file contents
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -194,7 +189,7 @@ You will see that a file called Diagnostics.pdf has been created in your directo
 Review
 ^^^^^^
 
-This was just one simple example of how you can use CAP to manipulate MGCM output data in netCDF files and visualize the results. Going forward, make generous use of ``cap`` and ``<executable name> --help`` to guide your analysis process. For more use case examples, see :ref:`_cap_practical`.
+This was just one simple example of how you can use CAP to manipulate MGCM output data in netCDF files and visualize the results. Going forward, make generous use of ``cap`` and ``<executable name> --help`` to guide your analysis process. For more use case examples, see :ref:`cap_practical`.
 
 Additional Information
 ----------------------

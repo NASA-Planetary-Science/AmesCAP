@@ -21,6 +21,19 @@ import numpy as np
 from scipy import optimize
 from scipy.spatial import cKDTree
 
+# Specific gas constant for CO2 [J kg-1 K-1], used when deriving
+# variables from model output (e.g., altitude, density). Matches the
+# NASA Ames MGCM (RDGAS = 189.02 in the FMS Mars constants).
+R_CO2 = 189.0
+
+# Gas constant used to construct the empirical reference atmosphere in
+# ``ref_atmosphere_Mars_PTD`` and ``press_to_alt_atmosphere_Mars``. The
+# piecewise fits were derived with 192 J kg-1 K-1 and their segment
+# boundary pressures (e.g., P = 1.2416 Pa at 57 km) are tied to that
+# value, so it is kept separate from ``R_CO2`` to keep the profile
+# continuous.
+R_REF_ATMOS = 192.0
+
 # p_half = half-level = layer interfaces
 # p_full = full-level = layer midpoints
 
@@ -112,8 +125,9 @@ def fms_press_calc(psfc, ak, bk, lev_type='full'):
                         "``press_lev()``: use 'full' or 'half' ")
 
 
-def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full"):
-    """
+def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full", rgas=R_CO2,
+               g=3.72):
+    r"""
     Returns the 3D altitude field [m] AGL (or above aeroid).
 
     :param psfc: The surface pressure [Pa] or array of surface
@@ -227,8 +241,8 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full"):
         / p_full[k])**(R/Cp)-1))
     """
 
-    g = 3.72 # acc. m/s2
-    r_co2 = 191.00 # kg/mol
+    # rgas and g: scalars, or arrays shaped like T (vertical axis
+    # first) for a composition-dependent gas constant / variable g
     Nk = len(ak)
 
     # Get the half and full pressure levels from ``fms_press_calc``
@@ -249,6 +263,10 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full"):
     PRESS_h = PRESS_h.reshape((Nk, len(psfc_flat)))
     PRESS_f = PRESS_f.reshape((Nk-1, len(psfc_flat)))
     T = T.reshape((Nk-1, len(psfc_flat)))
+    rgas = (np.asarray(rgas, dtype=float).reshape(T.shape)
+            if np.ndim(rgas) else np.full(T.shape, float(rgas)))
+    g = (np.asarray(g, dtype=float).reshape(T.shape)
+         if np.ndim(g) else np.full(T.shape, float(g)))
 
     logPPRESS_h = np.log(PRESS_h)
 
@@ -263,10 +281,10 @@ def fms_Z_calc(psfc, ak, bk, T, topo=0., lev_type="full"):
     # Isothermal within the layer, we have ``Z = Z0 + r*T0/g*ln(P0/P)``
     for k in range(Nk-2, -1, -1):
         Z_h[k, :] = (Z_h[k+1, :]
-                     + (r_co2*T[k, :]/g)
+                     + (rgas[k, :]*T[k, :]/g[k, :])
                      * (logPPRESS_h[k+1, :]-logPPRESS_h[k, :]))
         Z_f[k, :] = (Z_h[k+1, :]
-                     + (r_co2*T[k, :]/g)
+                     + (rgas[k, :]*T[k, :]/g[k, :])
                      * (1-PRESS_h[k, :]/PRESS_f[k, :]))
 
     # Return the arrays
@@ -397,6 +415,26 @@ def find_n(X_IN, X_OUT, reverse_input=False, modulo=None):
         X_IN = X_IN[::-1, :]
 
     n = np.zeros((N_OUT, Ndim), dtype = int)
+
+    # Fast path: X_IN monotonically increasing along its first axis
+    # (the normal case for pressure/altitude after reverse_input). The
+    # index of the largest X_IN <= X_OUT is then a counting operation,
+    # identical to the nearest-then-step-down search below, and avoids
+    # a Python loop over every column (millions of argmin calls on a
+    # full-year file). Non-monotonic input keeps the original search.
+    if (len(dimsIN) > 1 and NdimsIN == Ndim and N_IN > 1 and
+            np.all(X_IN[1:, :] >= X_IN[:-1, :])):
+        xo = X_OUT if len(dimsOUT) > 1 else X_OUT.reshape(N_OUT, 1)
+        chunk = max(1, int(2e8 // max(N_IN, 1)))
+        for j0 in range(0, Ndim, chunk):
+            j1 = min(Ndim, j0 + chunk)
+            xin = X_IN[:, j0:j1]
+            for i in range(N_OUT):
+                xo_i = xo[i, j0:j1] if xo.shape[1] > 1 else xo[i, 0]
+                n[i, j0:j1] = np.count_nonzero(xin <= xo_i, axis=0) - 1
+        if len(dimsOUT) == 1:
+            n = np.squeeze(n)
+        return n
 
     # Some redundancy below but this allows keeping the "if" statement
     # out of the larger loop over all of the array elements
@@ -583,6 +621,13 @@ def vinterp(varIN, Lfull, Llev, type_int="log", reverse_input=False,
         Lfull = Lfull[::-1, :]
         varIN = varIN[::-1, :]
 
+    # Flatten ONCE outside the level loop. The previous code called
+    # .flatten() (a full copy) up to six times per output level, which
+    # dominated the run time on large files.
+    Lf = np.ascontiguousarray(Lfull).reshape(-1)
+    vf = np.ascontiguousarray(varIN).reshape(-1)
+    NfN = Nfull*Ndim
+
     for k in range(0, Nlev):
         # Find nearest layer to Llev[k]
         if np.any(index):
@@ -603,27 +648,25 @@ def vinterp(varIN, Lfull, Llev, type_int="log", reverse_input=False,
         # Initialize alpha (size = ``[Ndim]``)
         alpha = np.nan * Ndimall
         # Only calculate alpha where ``nindex < Nfull``
-        Ndo = Ndimall[nindexp1 < Nfull*Ndim]
+        Ndo = Ndimall[nindexp1 < NfN]
+        Ln = Lf[nindex[Ndo]]
+        Lp = Lf[nindexp1[Ndo]]
         if type_int == 'log':
-            alpha[Ndo] = (np.log(Llev[k] / Lfull.flatten()[nindexp1[Ndo]])
-                          / np.log(Lfull.flatten()[nindex[Ndo]]
-                                   / Lfull.flatten()[nindexp1[Ndo]]))
+            alpha[Ndo] = np.log(Llev[k] / Lp) / np.log(Ln / Lp)
         elif type_int == 'lin':
-            alpha[Ndo] = ((Llev[k] - Lfull.flatten()[nindexp1[Ndo]])
-                          / (Lfull.flatten()[nindex[Ndo]]
-                             - Lfull.flatten()[nindexp1[Ndo]]))
+            alpha[Ndo] = (Llev[k] - Lp) / (Ln - Lp)
 
         # Mask if ``Llev[k]`` < model top for the pressure interpolation
         if masktop:
-            alpha[Llev[k] < Lfull.flatten()[nindex]] = np.nan
+            alpha[Llev[k] < Lf[nindex]] = np.nan
 
         # Ensure ``n+1`` is never > ``Nfull`` by setting ``n+1 = Nfull``
         # if ever ``n+1 > Nfull``. This does not affect the calculation
         # as alpha is set to NaN for those values.
-        nindexp1[nindexp1 >= Nfull*Ndim] = nindex[nindexp1 >= Nfull*Ndim]
+        over = nindexp1 >= NfN
+        nindexp1[over] = nindex[over]
 
-        varOUT[k, :] = (varIN.flatten()[nindex] * alpha
-                        + (1-alpha) * varIN.flatten()[nindexp1])
+        varOUT[k, :] = vf[nindex] * alpha + (1-alpha) * vf[nindexp1]
     return np.reshape(varOUT, dimsOUT)
 
 
@@ -926,8 +969,13 @@ def interp_KDTree(var_IN, lat_IN, lon_IN, lat_OUT, lon_OUT, N_nearest=10):
     tree = cKDTree(list(zip(xs.flatten(), ys.flatten(), zs.flatten())))
     d, inds = tree.query(list(zip(xt.flatten(), yt.flatten(), zt.flatten())),
                          k = N_nearest)
-    # Inverse distance
-    w = 1.0 / d**2
+    # Inverse distance. Where a target point coincides with a source
+    # point (d = 0 gives 1/0 and a NaN result), copy that source value
+    exact = d < 1.e-10
+    has_exact = exact.any(axis = 1)
+    with np.errstate(divide = "ignore"):
+        w = 1.0 / d**2
+    w[has_exact] = exact[has_exact].astype(float)
     # Sum the weights and normalize
     var_OUT = (np.sum(w*var_IN.reshape(dims_IN_reshape)[:, inds], axis = 2)
                / np.sum(w, axis = 1))
@@ -1189,7 +1237,7 @@ def areo_avg(VAR, areo, Ls_target, Ls_angle, symmetric=True):
 
 
 def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
-                factor=1.e-8):
+                factor=1.e-8, g=3.72, a=3400*1000.):
     """
     Compute the mass stream function::
 
@@ -1198,6 +1246,10 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
         Ph i= (2 pi a) cos(lat)/g ⎮vz_tavg dp
                                 ⌡
                                 p_top
+
+    Holton, J. R., and Hakim, G. J. (2013), An Introduction to Dynamic
+    Meteorology, 5th ed., Academic Press,
+    https://doi.org/10.1016/C2009-0-63394-8
 
     :param v_avg: zonal wind [m/s] with ``lev`` dimension FIRST and
         ``lat`` dimension SECOND (e.g., ``[pstd, lat]``,
@@ -1251,8 +1303,6 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
         level = level[::-1]
         v_avg = v_avg[::-1, ...]
                     
-    g = 3.72 # m/s2
-    a = 3400*1000 # m
     nlev = len(level)
     shape_out = v_avg.shape
 
@@ -1292,9 +1342,11 @@ def mass_stream(v_avg, lat, level, type="pstd", psfc=700, H=8000.,
         # Copy ``zagl`` or ``zstd`` instead of using a pseudo height
         Z = level.copy()
 
-    for k0 in range(nlev-2, 0, -1):
+    # MSF at level k0 integrates from Z[k0] to the top (MSF = 0 at the
+    # top level)
+    for k0 in range(nlev-2, -1, -1):
         I[:] = 0.
-        for k in range(nlev-2, k0, -1):
+        for k in range(nlev-2, k0-1, -1):
             zn = Z[k]
             znp1 = Z[k+1]
             fn = v_avg[k, :, ...] * np.exp(-zn/H)
@@ -1322,6 +1374,10 @@ def vw_from_MSF(msf, lat, lev, ztype="pstd", norm=True, psfc=700, H=8000.):
     """
     Return the V and W components of the circulation from the mass
     stream function.
+
+    Holton, J. R., and Hakim, G. J. (2013), An Introduction to Dynamic
+    Meteorology, 5th ed., Academic Press,
+    https://doi.org/10.1016/C2009-0-63394-8
 
     :param msf: the mass stream function with ``lev`` SECOND TO
         LAST and the ``lat`` dimension LAST (e.g., ``[lev, lat]``,
@@ -1452,8 +1508,9 @@ def lon180_to_360(lon):
     else:
         # ``lon`` is an array
         lon[lon < 0] += 360
-        # Reogranize lon by increasing values
-        lon = np.append(lon[lon <= 180], lon[lon > 180])
+        # Reorganize lon by increasing values. Sorting (rather than
+        # splitting at 180) places -180 -> 180 between 174 and 186
+        lon = np.sort(lon, axis=None, kind="stable")
     return lon
 
 
@@ -1475,8 +1532,8 @@ def lon360_to_180(lon):
     else:
         # ``lon`` is an array
         lon[lon > 180] -= 360
-        # Reogranize lon by increasing values
-        lon = np.append(lon[lon < 0], lon[lon >= 0])
+        # Reorganize lon by increasing values
+        lon = np.sort(lon, axis=None, kind="stable")
     return lon
 
 
@@ -1495,12 +1552,11 @@ def shiftgrid_360_to_180(lon, data):
         masked array properties
     """
 
-    lon = np.array(lon)
+    lon = np.array(lon, dtype=float)
     # convert to +/- 180
     lon[lon > 180] -= 360.
-    # stack data
-    data = np.concatenate((data[..., lon < 0], data[..., lon >= 0]), axis = -1)
-    return data
+    # Reorder data by increasing longitude, matching ``lon360_to_180``
+    return data[..., np.argsort(lon, kind="stable")]
 
 
 def shiftgrid_180_to_360(lon, data):
@@ -1514,13 +1570,11 @@ def shiftgrid_180_to_360(lon, data):
     :return: shifted data
     """
 
-    lon = np.array(lon)
+    lon = np.array(lon, dtype=float)
     # convert to 0-360
     lon[lon < 0] += 360.
-    # stack data
-    data = np.concatenate((data[..., lon <= 180], data[..., lon > 180]),
-                          axis = -1)
-    return data
+    # Reorder data by increasing longitude, matching ``lon180_to_360``
+    return data[..., np.argsort(lon, kind="stable")]
 
 
 def second_hhmmss(seconds, lon_180=0.):
@@ -2062,8 +2116,13 @@ def swinbank(plev, psfc, ptrans=1.):
 
 def polar_warming(T, lat, outside_range=np.nan):
     """
-    Return the polar warming, following McDunn et al. 2013:
-    Characterization of middle-atmosphere polar warming at Mars, JGR
+    Return the polar warming, following McDunn et al. (2013):
+
+    McDunn, T., S. Bougher, J. Murphy, A. Kleinböhl, F. Forget, and
+    M. Smith (2013), Characterization of middle-atmosphere polar warming
+    at Mars, J. Geophys. Res. Planets, 118, 161-178,
+    https://doi.org/10.1002/jgre.20016
+
     Alex Kling
 
     :param T: temperature with the lat dimension FIRST (transpose as
@@ -2152,7 +2211,7 @@ def polar_warming(T, lat, outside_range=np.nan):
                            axis = 0))
 
 
-def time_shift_calc(var_in, lon, tod, target_times=None):
+def time_shift_calc(var_in, lon, tod, target_times=None, eot_offset=0.):
     """
     Conversion to uniform local time.
 
@@ -2169,6 +2228,11 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
     :type  tod: 1D array
     :param target_times: local time(s) [hr] to shift to (e.g., ``"3. 15."``)
     :type  target_times: float (optional)
+    :param eot_offset: equation-of-time correction [hr] added to the
+        longitude shift, so that the output axis is TRUE local solar
+        time rather than mean local time: LTST = UT + lon/15 +
+        eot_offset. One scalar per call (i.e. per sol). Default 0.
+    :type  eot_offset: float (optional)
     :return: the array shifted to uniform local time
 
     .. note::
@@ -2258,9 +2322,8 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
 
     # Calculate interpolation indices
     # Convert east longitude to equivalent hours
-    lon_shift = 24.0 * lon / 360.
-    kk = np.where(lon_shift < 0)
-    lon_shift[kk] = lon_shift[kk] + 24.
+    lon_shift = 24.0 * np.asarray(lon, dtype=float) / 360. + float(eot_offset)
+    lon_shift = np.mod(lon_shift, 24.)
 
     fraction = np.zeros((n_lon, n_tod_out))
     lower_indices = np.zeros((n_lon, n_tod_out))
@@ -2271,14 +2334,23 @@ def time_shift_calc(var_in, lon, tod, target_times=None):
     # lon_shift: The offset in Mars-hours due to Martian longitude
     # The result dtt (delta time transform) tells us which time indices
     # in the original Mars data to interpolate between
+    # For output local time LT_n at east longitude lon, the universal
+    # time of the sample is UT = LT_n - lon_shift. The input samples are
+    # labelled tod[k] = tod[0] + k*dt_in (instantaneous samples, or the
+    # centres of averaging bins), so the fractional index into the
+    # input is (UT - tod[0]) / dt_in. dtt below is (UT - tod[0]) in
+    # hours, wrapped into [0, 24).
+    #
+    # Note: an earlier form added a spurious +dt_in here (one full
+    # bin) and omitted -tod[0] in the target_times branch; on 3-hourly
+    # data that shifted every field by 3 h.
     for n in range(n_tod_out):
-        # dtt = n*dt_out - lon_shift - target_times[0] + dt_in
         if target_times is None:
-            dtt = n*dt_out - lon_shift - tod[0] + dt_in
+            # Output axis is the input axis: LT_n = tod[0] + n*dt_out
+            dtt = n*dt_out - lon_shift
         else:
-            # For specifying target local times
-            # ``time_out - xfshif - tod[0] + hrs/stpe`` in input
-            dtt = target_times[n] - lon_shift
+            # Explicit target local times
+            dtt = target_times[n] - lon_shift - tod[0]
 
         # Ensure that local time is bounded by [0, 24] hours
         kk = np.where(dtt < 0.)
@@ -2386,6 +2458,88 @@ def add_cyclic(data, lon):
     data_c[:, 0:-1] = data[:, :]
     data_c[:, -1] = data[:, 0]
     return data_c, np.append(lon, lon[-1] + dlon)
+
+
+def _cgrid_indices(lon, lat, lon_u, lat_v):
+    """
+    Index maps from the mass grid (lon, lat) to the C-grid staggered
+    axes: lon_u west/east of each lon, lat_v south/north of each lat,
+    by nearest neighbour with longitude wrap. Regular spacing assumed.
+    Returns (iw, ie, js, jn, dlon_rad, dlat_rad).
+    """
+    lon = np.asarray(lon, float); lat = np.asarray(lat, float)
+    lon_u = np.asarray(lon_u, float); lat_v = np.asarray(lat_v, float)
+    dx = lon[1] - lon[0]
+    dy = lat[1] - lat[0]
+    def near_lon(target):
+        d = np.abs((lon_u[None, :] - target[:, None] + 180.) % 360. - 180.)
+        return np.argmin(d, axis=1)
+    iw = near_lon(lon - dx/2.)
+    ie = near_lon(lon + dx/2.)
+    js = np.argmin(np.abs(lat_v[None, :] - (lat - dy/2.)[:, None]), axis=1)
+    jn = np.argmin(np.abs(lat_v[None, :] - (lat + dy/2.)[:, None]), axis=1)
+    return iw, ie, js, jn, np.deg2rad(dx), np.deg2rad(dy)
+
+
+def cgrid_div(u_stag, v_stag, lon, lat, lon_u, lat_v, R=3400*1000.):
+    """
+    Horizontal divergence on the Arakawa-C grid, formed as the model
+    does: u on the east/west cell faces, v on the north/south faces,
+    result at the mass point::
+
+        div = 1/(R cos lat) [ (u_e - u_w)/dlon
+                              + (v_n cos lat_n - v_s cos lat_s)/dlat ]
+
+    :param u_stag: x-staggered wind ``[..., lat, lon_u]``
+    :param v_stag: y-staggered wind ``[..., lat_v, lon]``
+    :param lon, lat: mass-point axes [deg]
+    :param lon_u, lat_v: staggered axes [deg]
+    :param R: planetary radius [m]
+    :return: divergence [s-1] at the mass points ``[..., lat, lon]``
+    """
+    iw, ie, js, jn, dlam, dphi = _cgrid_indices(lon, lat, lon_u, lat_v)
+    phi = np.deg2rad(np.asarray(lat, float))
+    phiv = np.deg2rad(np.asarray(lat_v, float))
+    du = u_stag[..., :, ie] - u_stag[..., :, iw]
+    dv = (v_stag[..., jn, :]*np.cos(phiv[jn])[:, None]
+          - v_stag[..., js, :]*np.cos(phiv[js])[:, None])
+    return (du/dlam + dv/dphi) / (R*np.cos(phi)[:, None])
+
+
+def cgrid_curl(u_stag, v_stag, lon, lat, lon_u, lat_v, R=3400*1000.):
+    """
+    Relative vorticity on the Arakawa-C grid: formed at the cell
+    corners (lat_v, lon_u) where it lives naturally, then averaged to
+    the mass points (corners on the poles are excluded)::
+
+        curl = 1/(R cos lat) [ dv/dlon - d(u cos lat)/dlat ]
+
+    Arguments as for ``cgrid_div``. Returns [s-1] at ``[..., lat, lon]``.
+    """
+    lon = np.asarray(lon, float); lat = np.asarray(lat, float)
+    lon_u = np.asarray(lon_u, float); lat_v = np.asarray(lat_v, float)
+    dx = lon[1] - lon[0]; dy = lat[1] - lat[0]
+    dlam = np.deg2rad(dx); dphi = np.deg2rad(dy)
+    def near(axis, target, wrap):
+        if wrap:
+            d = np.abs((axis[None, :] - target[:, None] + 180.) % 360. - 180.)
+        else:
+            d = np.abs(axis[None, :] - target[:, None])
+        return np.argmin(d, axis=1)
+    # mass points west/east of each lon_u; mass rows south/north of each lat_v
+    imw = near(lon, lon_u - dx/2., True); ime = near(lon, lon_u + dx/2., True)
+    jms = near(lat, lat_v - dy/2., False); jmn = near(lat, lat_v + dy/2., False)
+    phi = np.deg2rad(lat); phiv = np.deg2rad(lat_v)
+    dv = v_stag[..., :, ime] - v_stag[..., :, imw]                    # [.., lat_v, lon_u]
+    du = (u_stag[..., jmn, :]*np.cos(phi[jmn])[:, None]
+          - u_stag[..., jms, :]*np.cos(phi[jms])[:, None])             # [.., lat_v, lon_u]
+    with np.errstate(divide='ignore', invalid='ignore'):
+        zeta_c = (dv/dlam - du/dphi) / (R*np.cos(phiv)[:, None])
+    zeta_c = np.where(np.abs(np.cos(phiv))[:, None] < 1e-6, np.nan, zeta_c)
+    iw, ie, js, jn, _, _ = _cgrid_indices(lon, lat, lon_u, lat_v)
+    corners = np.stack([zeta_c[..., js, :][..., :, iw], zeta_c[..., js, :][..., :, ie],
+                        zeta_c[..., jn, :][..., :, iw], zeta_c[..., jn, :][..., :, ie]])
+    return np.nanmean(corners, axis=0)
 
 
 def spherical_div(U, V, lon_deg, lat_deg, R=3400*1000., spacing="varying"):
@@ -2555,9 +2709,12 @@ def frontogenesis(U, V, theta, lon_deg, lat_deg, R=3400*1000.,
                   spacing="varying"):
     """
     Compute the frontogenesis (local change in potential temperature
-    gradient near a front) following Richter et al. 2010: Toward a
-    Physically Based Gravity Wave Source Parameterization in a General
-    Circulation Model, JAS 67.
+    gradient near a front) following Richter et al. (2010):
+
+    Richter, J. H., F. Sassi, and R. R. Garcia (2010), Toward a
+    physically based gravity wave source parameterization in a general
+    circulation model, J. Atmos. Sci., 67, 136-156,
+    https://doi.org/10.1175/2009JAS3112.1
 
     We have ``Fn = 1/2 D(Del Theta)^2/Dt`` [K/m/s]
 
@@ -2664,9 +2821,13 @@ def frontogenesis(U, V, theta, lon_deg, lat_deg, R=3400*1000.,
 
 def MGSzmax_ls_lat(ls, lat):
     """
-    Return the max altitude for the dust from "MGS scenario" from
-    Montmessin et al. (2004), Origin and role of water ice clouds in
-    the Martian water cycle as inferred from a general circulation model
+    Return the max altitude for the dust from the "MGS scenario" of
+    Montmessin et al. (2004):
+
+    Montmessin, F., F. Forget, P. Rannou, M. Cabane, and R. M. Haberle
+    (2004), Origin and role of water ice clouds in the Martian water cycle
+    as inferred from a general circulation model, J. Geophys. Res., 109,
+    E10004, https://doi.org/10.1029/2004JE002284
 
     :param ls: solar longitude [°]
     :type  ls: array
@@ -2686,15 +2847,19 @@ def MGSzmax_ls_lat(ls, lat):
 
 def MGStau_ls_lat(ls, lat):
     """
-    Return the max altitude for the dust from "MGS scenario" from
-    Montmessin et al. (2004), Origin and role of water ice clouds in
-    the Martian water cycle as inferred from a general circulation model
+    Return the dust optical depth from the "MGS scenario" of
+    Montmessin et al. (2004):
+
+    Montmessin, F., F. Forget, P. Rannou, M. Cabane, and R. M. Haberle
+    (2004), Origin and role of water ice clouds in the Martian water cycle
+    as inferred from a general circulation model, J. Geophys. Res., 109,
+    E10004, https://doi.org/10.1029/2004JE002284
 
     :param ls: solar longitude [°]
     :type  ls: array
     :param lat : latitude [°]
     :type  lat: array
-    :return: top altitude for the dust [km]
+    :return: dust optical depth
     """
 
     lat = np.array(lat)
@@ -2713,7 +2878,7 @@ def MGStau_ls_lat(ls, lat):
         if lat >= 0:
             tau = t_north
         else:
-            t_south
+            tau = t_south
     else:
         tau = np.zeros_like(lat)
         tau[lat <= 0] = t_south[lat <= 0]
@@ -2888,17 +3053,17 @@ def ref_atmosphere_Mars_PTD(Zi):
         if Zi <= 57000:
             return alt_to_press_quad(Zi, Z0 = 0, P0 = 610, T0 = 225.9,
                                      gam = -0.00213479, a = 1.44823e-08,
-                                     rgas = 192, g = 3.72)
+                                     rgas = R_REF_ATMOS, g = 3.72)
         elif 57000 < Zi <= 110000:
             return alt_to_press_quad(Zi, Z0 = 57000, P0 = 1.2415639872674782,
                                      T0 = 151.2, gam = -0.000367444,
-                                     a = -6.8256e-09, rgas = 192, g = 3.72)
+                                     a = -6.8256e-09, rgas = R_REF_ATMOS, g = 3.72)
         elif 110000 < Zi <= 120000:
             # Discarded above 120 km when we enter the molecular regime
             return alt_to_press_quad(Zi, Z0 = 110000,
                                      P0 = 0.0005866878792825923, T0 = 112.6,
                                      gam = 0.00212537, a = -1.81922e-08,
-                                     rgas = 192, g = 3.72)
+                                     rgas = R_REF_ATMOS, g = 3.72)
         elif 120000 <= Zi:
             return P_mars_120_300(Zi)
 
@@ -2908,7 +3073,7 @@ def ref_atmosphere_Mars_PTD(Zi):
         P_analytic_scalar = np.vectorize(P_analytic_scalar)
         T_analytic_scalar = np.vectorize(T_analytic_scalar)
     return (P_analytic_scalar(Zi), T_analytic_scalar(Zi),
-            P_analytic_scalar(Zi) / (192*T_analytic_scalar(Zi)))
+            P_analytic_scalar(Zi) / (R_REF_ATMOS*T_analytic_scalar(Zi)))
 
 
 def press_to_alt_atmosphere_Mars(Pi):
@@ -2998,7 +3163,7 @@ def press_to_alt_atmosphere_Mars(Pi):
                                      T0 = 225.9,
                                      gam = -0.00213479,
                                      a = 1.44823e-08,
-                                     rgas = 192,
+                                     rgas = R_REF_ATMOS,
                                      g = 3.72)
         elif 1.2415639872674782 > Pi >=  0.0005866878792825923:
             # 57,000-110,000 m
@@ -3007,7 +3172,7 @@ def press_to_alt_atmosphere_Mars(Pi):
                                      T0 = 151.2,
                                      gam = -0.000367444,
                                      a = -6.8256e-09,
-                                     rgas = 192,
+                                     rgas = R_REF_ATMOS,
                                      g = 3.72)
         elif 0.0005866878792825923 > Pi >=  0.00012043158397922564:
             # 110,000-120,000 m
@@ -3017,7 +3182,7 @@ def press_to_alt_atmosphere_Mars(Pi):
                                      T0 = 112.6,
                                      gam = 0.00212537,
                                      a = -1.81922e-08,
-                                     rgas = 192,
+                                     rgas = R_REF_ATMOS,
                                      g = 3.72)
         elif 0.00012043158397922564 > Pi:
             # 120,000-300,000 m
