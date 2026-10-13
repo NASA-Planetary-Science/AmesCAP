@@ -1,5 +1,5 @@
-:py:mod:`amescap.pdf2image`
-===========================
+amescap.pdf2image
+=================
 
 .. py:module:: amescap.pdf2image
 
@@ -23,12 +23,8 @@
 
 
 
-Module Contents
----------------
-
-
 Functions
-~~~~~~~~~
+---------
 
 .. autoapisummary::
 
@@ -36,6 +32,8 @@ Functions
    amescap.pdf2image.convert_from_path
 
 
+Module Contents
+---------------
 
 .. py:function:: convert_from_bytes(pdf_file, dpi=200, output_folder=None, first_page=None, last_page=None, fmt='ppm', thread_count=1, userpw=None, use_cropbox=False)
 

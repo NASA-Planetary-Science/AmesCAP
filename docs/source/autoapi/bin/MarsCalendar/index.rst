@@ -1,5 +1,5 @@
-:py:mod:`bin.MarsCalendar`
-==========================
+bin.MarsCalendar
+================
 
 .. py:module:: bin.MarsCalendar
 
@@ -29,23 +29,8 @@
 
 
 
-Module Contents
----------------
-
-
-Functions
-~~~~~~~~~
-
-.. autoapisummary::
-
-   bin.MarsCalendar.debug_wrapper
-   bin.MarsCalendar.main
-   bin.MarsCalendar.parse_array
-
-
-
 Attributes
-~~~~~~~~~~
+----------
 
 .. autoapisummary::
 
@@ -56,6 +41,19 @@ Attributes
    bin.MarsCalendar.group
    bin.MarsCalendar.parser
 
+
+Functions
+---------
+
+.. autoapisummary::
+
+   bin.MarsCalendar.debug_wrapper
+   bin.MarsCalendar.main
+   bin.MarsCalendar.parse_array
+
+
+Module Contents
+---------------
 
 .. py:function:: debug_wrapper(func)
 
@@ -157,26 +155,18 @@ Attributes
 
 
 .. py:data:: args
+   :value: None
 
-   
 
 .. py:data:: debug
 
-   
-
 .. py:data:: exclusive_group
 
-   
-
 .. py:data:: exit_code
+   :value: None
 
-   
 
 .. py:data:: group
 
-   
-
 .. py:data:: parser
-
-   
 

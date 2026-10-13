@@ -322,17 +322,38 @@ def create_mgcm_atmos_average(short=False):
     ts_var.long_name = 'Surface Temperature'
     ts_var.units = 'K'
     ts_var[:] = np.random.uniform(143.4, 258.7, size=(len_time, 48, 96))
-    
+
     ucomp_var = nc_file.createVariable('ucomp', 'f4', ('time', 'pfull', 'lat', 'lon'))
     ucomp_var.long_name = 'zonal wind'
     ucomp_var.units = 'm/sec'
     ucomp_var[:] = np.random.uniform(-268.7, 212.7, size=(len_time, 30, 48, 96))
-    
+
     vcomp_var = nc_file.createVariable('vcomp', 'f4', ('time', 'pfull', 'lat', 'lon'))
     vcomp_var.long_name = 'meridional wind'
     vcomp_var.units = 'm/sec'
     vcomp_var[:] = np.random.uniform(-97.5, 109.6, size=(len_time, 30, 48, 96))
-    
+
+    # Variables used by the tutorial (docs/source/examples.rst)
+    opac_var = nc_file.createVariable('opac', 'f4', ('time', 'pfull', 'lat', 'lon'))
+    opac_var.long_name = 'dust opacity per Pa'
+    opac_var.units = 'op/Pa'
+    opac_var[:] = np.random.uniform(0.0, 1.0e-3, size=(len_time, 30, 48, 96))
+
+    taudust_VIS_var = nc_file.createVariable('taudust_VIS', 'f4', ('time', 'lat', 'lon'))
+    taudust_VIS_var.long_name = 'Dust opacity VIS'
+    taudust_VIS_var.units = 'op'
+    taudust_VIS_var[:] = np.random.uniform(0.0, 1.0, size=(len_time, 48, 96))
+
+    co2ice_sfc_var = nc_file.createVariable('co2ice_sfc', 'f4', ('time', 'lat', 'lon'))
+    co2ice_sfc_var.long_name = 'surface CO2 ice'
+    co2ice_sfc_var.units = 'kg/m2'
+    co2ice_sfc_var[:] = np.random.uniform(0.0, 1000.0, size=(len_time, 48, 96))
+
+    stress_var = nc_file.createVariable('stress', 'f4', ('time', 'lat', 'lon'))
+    stress_var.long_name = 'surface wind stress'
+    stress_var.units = 'N/m2'
+    stress_var[:] = np.random.uniform(0.0, 0.1, size=(len_time, 48, 96))
+
     nc_file.close()
     print("Created 01336.atmos_average.nc")
 

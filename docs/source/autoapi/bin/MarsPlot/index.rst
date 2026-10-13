@@ -1,5 +1,5 @@
-:py:mod:`bin.MarsPlot`
-======================
+bin.MarsPlot
+============
 
 .. py:module:: bin.MarsPlot
 
@@ -28,11 +28,31 @@
 
 
 
-Module Contents
----------------
+Attributes
+----------
+
+.. autoapisummary::
+
+   bin.MarsPlot.ALTITUDE_CONVERSIONS
+   bin.MarsPlot.PRESSURE_CONVERSIONS
+   bin.MarsPlot.add_sol_time_axis
+   bin.MarsPlot.alt_unit_pref
+   bin.MarsPlot.alt_unit_pref
+   bin.MarsPlot.args
+   bin.MarsPlot.current_version
+   bin.MarsPlot.debug
+   bin.MarsPlot.degr
+   bin.MarsPlot.exit_code
+   bin.MarsPlot.include_NaNs
+   bin.MarsPlot.lon_coord_type
+   bin.MarsPlot.namespace
+   bin.MarsPlot.parser
+   bin.MarsPlot.pres_unit_pref
+   bin.MarsPlot.pres_unit_pref
+
 
 Classes
-~~~~~~~
+-------
 
 .. autoapisummary::
 
@@ -47,17 +67,18 @@ Classes
    bin.MarsPlot.Fig_2D_time_lev
 
 
-
 Functions
-~~~~~~~~~
+---------
 
 .. autoapisummary::
 
    bin.MarsPlot.MY_func
+   bin.MarsPlot.areo_by_time
    bin.MarsPlot.clean_comma_whitespace
    bin.MarsPlot.create_exec
    bin.MarsPlot.create_name
    bin.MarsPlot.debug_wrapper
+   bin.MarsPlot.existing_file
    bin.MarsPlot.fig_layout
    bin.MarsPlot.filter_input
    bin.MarsPlot.format_lon_lat
@@ -83,46 +104,37 @@ Functions
    bin.MarsPlot.select_range
    bin.MarsPlot.shift_data
    bin.MarsPlot.split_varfull
+   bin.MarsPlot.topography_for_overlay
 
 
-
-Attributes
-~~~~~~~~~~
-
-.. autoapisummary::
-
-   bin.MarsPlot.add_sol_time_axis
-   bin.MarsPlot.args
-   bin.MarsPlot.current_version
-   bin.MarsPlot.debug
-   bin.MarsPlot.degr
-   bin.MarsPlot.exit_code
-   bin.MarsPlot.include_NaNs
-   bin.MarsPlot.lon_coord_type
-   bin.MarsPlot.namespace
-   bin.MarsPlot.parser
-
+Module Contents
+---------------
 
 .. py:class:: CustomTicker(base=10.0, labelOnlyBase=False, minor_thresholds=None, linthresh=None)
 
-
    Bases: :py:obj:`matplotlib.ticker.LogFormatterSciNotation`
+
 
    Format values following scientific notation in a logarithmic axis.
 
-   .. py:attribute:: axis
-
-      
-
-   .. py:attribute:: locs
-      :value: []
-
-      
 
    .. py:method:: __call__(x, pos=None)
 
-      Return the format for tick value *x* at position pos.
-      ``pos=None`` indicates an unspecified location.
+      Return the tick label strings for value *x* at tick index *pos*.
+
+      This is the low-level formatting primitive for a single tick in
+      the context of multiple ticks. Any context-dependent state
+      (e.g. locs, offset, order of magnitude) must already be configured,
+      typically by a prior call to ``format_ticks`` or ``set_locs``.
+
+      *pos* defines the index into ``self.locs`` so that the format can
+      depend on the location. ``pos=None`` indicates an unspecified
+      location.
+
+      The output may contain mathtext or LaTeX markup.
+
+      Subclasses must override this method.
+
 
 
    .. py:method:: create_dummy_axis(**kwargs)
@@ -131,28 +143,60 @@ Attributes
    .. py:method:: fix_minus(s)
       :staticmethod:
 
+
       Some classes may want to replace a hyphen for minus with the proper
       Unicode symbol (U+2212) for typographical correctness.  This is a
       helper method to perform such a replacement when it is enabled via
       :rc:`axes.unicode_minus`.
 
 
+
    .. py:method:: format_data(value)
 
-      Return the full string representation of the value with the
-      position unspecified.
+      Return the context-independent string representation of a single *value*.
+
+      This is used internally, e.g. for constructing offset and
+      scientific-notation strings.  It always formats with ``pos=None``
+      and should return a context-independent representation
+      rather than a concise tick label.
+
+      The output may contain mathtext or LaTeX markup.
+
 
 
    .. py:method:: format_data_short(value)
 
-      Return a short string version of the tick value.
+      Return a short string representation of *value* for the mouseover
+      tooltip (the coordinate display in the interactive figure window).
 
-      Defaults to the position-independent long value.
+      This should return concise, plain text (no mathtext / LaTeX).
+      The precision is typically adapted to the current axis resolution
+      so that neighbouring pixels produce distinguishable labels.
+
+      Defaults to `.Formatter.format_data`; subclasses should override
+      this to provide a plain-text representation that is independent
+      of the current tick locations.
+
+      Note: The mouseover text can be customized by setting the
+      ``Axes.fmt_xdata`` and ``Axes.fmt_ydata`` attributes.
+
 
 
    .. py:method:: format_ticks(values)
 
-      Return the tick labels for all the ticks at once.
+      Return the tick label strings for all *values*.
+
+      This is the public API for generating tick labels.  It calls
+      ``set_locs`` to configure context-dependent formatting state before
+      delegating to ``__call__`` for each individual value.
+
+      The output may contain mathtext or LaTeX markup.
+
+      Use this method (rather than ``__call__``) whenever formatting a
+      complete set of tick values, so that formatters which need to see
+      all tick locations (e.g. to determine precision, offsets, or which
+      date components to display) can work correctly.
+
 
 
    .. py:method:: get_offset()
@@ -169,6 +213,7 @@ Attributes
          Should always match the base used for :class:`LogLocator`
 
 
+
    .. py:method:: set_label_minor(labelOnlyBase)
 
       Switch minor tick labeling on or off.
@@ -179,6 +224,7 @@ Attributes
           If True, label ticks only at integer powers of base.
 
 
+
    .. py:method:: set_locs(locs=None)
 
       Use axis view limits to control which ticks are labeled.
@@ -187,10 +233,23 @@ Attributes
 
 
 
+   .. py:attribute:: axis
+      :value: None
+
+
+
+   .. py:attribute:: locs
+
+
+   .. py:attribute:: minor_thresholds
+      :value: None
+
+
+
 .. py:class:: Fig_1D(varfull='atmos_average.ts', doPlot=True)
 
-
    Bases: :py:obj:`object`
+
 
    Fig_1D is a parent class for generating and handling 1D plots of
    Mars atmospheric data.
@@ -277,6 +336,7 @@ Attributes
            logic and exceptions.
            
 
+
    .. py:method:: data_loader_1D(varfull, plot_type)
 
 
@@ -299,6 +359,7 @@ Attributes
       not passed a template.
 
       :return: type of 1D plot to create (1D_time, 1D_lat, etc.)
+
 
 
    .. py:method:: make_template()
@@ -337,14 +398,119 @@ Attributes
                (var_array) the variable extracted
 
 
+
    .. py:method:: read_template()
+
+
+   .. py:attribute:: Dlim
+      :value: None
+
+
+
+   .. py:attribute:: Vlim
+      :value: None
+
+
+
+   .. py:attribute:: addLine
+      :value: False
+
+
+
+   .. py:attribute:: axis_opt1
+      :value: '-'
+
+
+
+   .. py:attribute:: doPlot
+      :value: True
+
+
+
+   .. py:attribute:: fdim_txt
+      :value: ''
+
+
+
+   .. py:attribute:: ftod
+      :value: None
+
+
+
+   .. py:attribute:: hour
+      :value: None
+
+
+
+   .. py:attribute:: lat
+      :value: None
+
+
+
+   .. py:attribute:: layout
+      :value: None
+
+
+
+   .. py:attribute:: legend
+      :value: None
+
+
+
+   .. py:attribute:: lev
+      :value: None
+
+
+
+   .. py:attribute:: lon
+      :value: None
+
+
+
+   .. py:attribute:: nPan
+      :value: 1
+
+
+
+   .. py:attribute:: plot_type
+      :value: '1D_time'
+
+
+
+   .. py:attribute:: subID
+      :value: 1
+
+
+
+   .. py:attribute:: success
+      :value: False
+
+
+
+   .. py:attribute:: t
+      :value: 'AXIS'
+
+
+
+   .. py:attribute:: title
+      :value: None
+
+
+
+   .. py:attribute:: varfull
+      :value: 'atmos_average.ts'
+
+
+
+   .. py:attribute:: vert_unit
+      :value: ''
 
 
 
 .. py:class:: Fig_2D(varfull='fileYYY.XXX', doPlot=False, varfull2=None)
 
-
    Bases: :py:obj:`object`
+
 
    Base class for 2D figures. This class is not intended to be
    instantiated directly. Instead, it is used as a base class for
@@ -371,6 +537,7 @@ Attributes
        for plotting.
    :raises Exception: If the input varfull2 is not a valid type
        for variable name.
+
 
    .. py:method:: data_loader_2D(varfull, plot_type)
 
@@ -411,11 +578,120 @@ Attributes
    .. py:method:: solid_contour(xdata, ydata, var, contours)
 
 
+   .. py:attribute:: Xlim
+      :value: None
+
+
+
+   .. py:attribute:: Ylim
+      :value: None
+
+
+
+   .. py:attribute:: addLine
+      :value: False
+
+
+
+   .. py:attribute:: axis_opt1
+      :value: 'jet'
+
+
+
+   .. py:attribute:: axis_opt2
+      :value: 'lin'
+
+
+
+   .. py:attribute:: axis_opt3
+      :value: None
+
+
+
+   .. py:attribute:: contour2
+      :value: None
+
+
+
+   .. py:attribute:: doPlot
+      :value: False
+
+
+
+   .. py:attribute:: fdim1
+      :value: None
+
+
+
+   .. py:attribute:: fdim2
+      :value: None
+
+
+
+   .. py:attribute:: fdim_txt
+      :value: ''
+
+
+
+   .. py:attribute:: ftod
+      :value: None
+
+
+
+   .. py:attribute:: layout
+      :value: None
+
+
+
+   .. py:attribute:: nPan
+      :value: 1
+
+
+
+   .. py:attribute:: plot_type
+      :value: '2D'
+
+
+
+   .. py:attribute:: range
+      :value: None
+
+
+
+   .. py:attribute:: subID
+      :value: 1
+
+
+
+   .. py:attribute:: success
+      :value: False
+
+
+
+   .. py:attribute:: title
+      :value: None
+
+
+
+   .. py:attribute:: varfull
+      :value: 'fileYYY.XXX'
+
+
+
+   .. py:attribute:: varfull2
+      :value: None
+
+
+
+   .. py:attribute:: vert_unit
+      :value: ''
+
+
 
 .. py:class:: Fig_2D_lat_lev(varfull='fileYYY.XXX', doPlot=False, varfull2=None)
 
-
    Bases: :py:obj:`Fig_2D`
+
 
    A subclass of Fig_2D for generating 2D plots with latitude and
    vertical level (pressure or altitude) axes.
@@ -460,6 +736,7 @@ Attributes
        success : bool
            Indicates if the plot was successfully created.
 
+
    .. py:method:: data_loader_2D(varfull, plot_type)
 
 
@@ -475,6 +752,7 @@ Attributes
 
       Raises:
           Exception: Any exception encountered during plotting is handled and logged.
+
 
 
    .. py:method:: exception_handler(e, ax)
@@ -506,6 +784,7 @@ Attributes
           None
 
 
+
    .. py:method:: make_title(var_info, xlabel, ylabel)
 
 
@@ -524,11 +803,120 @@ Attributes
    .. py:method:: solid_contour(xdata, ydata, var, contours)
 
 
+   .. py:attribute:: Xlim
+      :value: None
+
+
+
+   .. py:attribute:: Ylim
+      :value: None
+
+
+
+   .. py:attribute:: addLine
+      :value: False
+
+
+
+   .. py:attribute:: axis_opt1
+      :value: 'jet'
+
+
+
+   .. py:attribute:: axis_opt2
+      :value: 'lin'
+
+
+
+   .. py:attribute:: axis_opt3
+      :value: None
+
+
+
+   .. py:attribute:: contour2
+      :value: None
+
+
+
+   .. py:attribute:: doPlot
+      :value: False
+
+
+
+   .. py:attribute:: fdim1
+      :value: None
+
+
+
+   .. py:attribute:: fdim2
+      :value: None
+
+
+
+   .. py:attribute:: fdim_txt
+      :value: ''
+
+
+
+   .. py:attribute:: ftod
+      :value: None
+
+
+
+   .. py:attribute:: layout
+      :value: None
+
+
+
+   .. py:attribute:: nPan
+      :value: 1
+
+
+
+   .. py:attribute:: plot_type
+      :value: '2D'
+
+
+
+   .. py:attribute:: range
+      :value: None
+
+
+
+   .. py:attribute:: subID
+      :value: 1
+
+
+
+   .. py:attribute:: success
+      :value: False
+
+
+
+   .. py:attribute:: title
+      :value: None
+
+
+
+   .. py:attribute:: varfull
+      :value: 'fileYYY.XXX'
+
+
+
+   .. py:attribute:: varfull2
+      :value: None
+
+
+
+   .. py:attribute:: vert_unit
+      :value: ''
+
+
 
 .. py:class:: Fig_2D_lon_lat(varfull='fileYYY.XXX', doPlot=False, varfull2=None)
 
-
    Bases: :py:obj:`Fig_2D`
+
 
    Fig_2D_lon_lat is a class for creating 2D longitude-latitude plots.
 
@@ -584,6 +972,7 @@ Attributes
        for visualizing Mars climate model outputs as longitude-latitude
        maps, with optional overlays and advanced projection support.
 
+
    .. py:method:: data_loader_2D(varfull, plot_type)
 
 
@@ -614,6 +1003,7 @@ Attributes
 
       Raises:
           Exception: Any error encountered during plotting is handled and reported.
+
 
 
    .. py:method:: exception_handler(e, ax)
@@ -648,6 +1038,7 @@ Attributes
       :return: topography or ``None`` if no matching ``fixed`` file
 
 
+
    .. py:method:: make_colorbar(levs)
 
 
@@ -661,6 +1052,7 @@ Attributes
           - X-axis label: "Ls 0-360"
           - Y-axis label: "Level Pa/m"
           - Additional axis labels: "Lon" (longitude), "Lat" (latitude)
+
 
 
    .. py:method:: make_title(var_info, xlabel, ylabel)
@@ -681,11 +1073,120 @@ Attributes
    .. py:method:: solid_contour(xdata, ydata, var, contours)
 
 
+   .. py:attribute:: Xlim
+      :value: None
+
+
+
+   .. py:attribute:: Ylim
+      :value: None
+
+
+
+   .. py:attribute:: addLine
+      :value: False
+
+
+
+   .. py:attribute:: axis_opt1
+      :value: 'jet'
+
+
+
+   .. py:attribute:: axis_opt2
+      :value: 'lin'
+
+
+
+   .. py:attribute:: axis_opt3
+      :value: None
+
+
+
+   .. py:attribute:: contour2
+      :value: None
+
+
+
+   .. py:attribute:: doPlot
+      :value: False
+
+
+
+   .. py:attribute:: fdim1
+      :value: None
+
+
+
+   .. py:attribute:: fdim2
+      :value: None
+
+
+
+   .. py:attribute:: fdim_txt
+      :value: ''
+
+
+
+   .. py:attribute:: ftod
+      :value: None
+
+
+
+   .. py:attribute:: layout
+      :value: None
+
+
+
+   .. py:attribute:: nPan
+      :value: 1
+
+
+
+   .. py:attribute:: plot_type
+      :value: '2D'
+
+
+
+   .. py:attribute:: range
+      :value: None
+
+
+
+   .. py:attribute:: subID
+      :value: 1
+
+
+
+   .. py:attribute:: success
+      :value: False
+
+
+
+   .. py:attribute:: title
+      :value: None
+
+
+
+   .. py:attribute:: varfull
+      :value: 'fileYYY.XXX'
+
+
+
+   .. py:attribute:: varfull2
+      :value: None
+
+
+
+   .. py:attribute:: vert_unit
+      :value: ''
+
+
 
 .. py:class:: Fig_2D_lon_lev(varfull='fileYYY.XXX', doPlot=False, varfull2=None)
 
-
    Bases: :py:obj:`Fig_2D`
+
 
    A subclass of Fig_2D for generating 2D plots with longitude and
    vertical level (pressure or altitude) axes.
@@ -708,6 +1209,7 @@ Attributes
            configures axis scales and labels, and handles exceptions
            during plotting.
 
+
    .. py:method:: data_loader_2D(varfull, plot_type)
 
 
@@ -729,6 +1231,7 @@ Attributes
       Raises:
           Exception: If any error occurs during the plotting process,
           it is handled and logged by the exception handler.
+
 
 
    .. py:method:: exception_handler(e, ax)
@@ -761,6 +1264,7 @@ Attributes
       configuration for this plot type.
 
 
+
    .. py:method:: make_title(var_info, xlabel, ylabel)
 
 
@@ -779,11 +1283,120 @@ Attributes
    .. py:method:: solid_contour(xdata, ydata, var, contours)
 
 
+   .. py:attribute:: Xlim
+      :value: None
+
+
+
+   .. py:attribute:: Ylim
+      :value: None
+
+
+
+   .. py:attribute:: addLine
+      :value: False
+
+
+
+   .. py:attribute:: axis_opt1
+      :value: 'jet'
+
+
+
+   .. py:attribute:: axis_opt2
+      :value: 'lin'
+
+
+
+   .. py:attribute:: axis_opt3
+      :value: None
+
+
+
+   .. py:attribute:: contour2
+      :value: None
+
+
+
+   .. py:attribute:: doPlot
+      :value: False
+
+
+
+   .. py:attribute:: fdim1
+      :value: None
+
+
+
+   .. py:attribute:: fdim2
+      :value: None
+
+
+
+   .. py:attribute:: fdim_txt
+      :value: ''
+
+
+
+   .. py:attribute:: ftod
+      :value: None
+
+
+
+   .. py:attribute:: layout
+      :value: None
+
+
+
+   .. py:attribute:: nPan
+      :value: 1
+
+
+
+   .. py:attribute:: plot_type
+      :value: '2D'
+
+
+
+   .. py:attribute:: range
+      :value: None
+
+
+
+   .. py:attribute:: subID
+      :value: 1
+
+
+
+   .. py:attribute:: success
+      :value: False
+
+
+
+   .. py:attribute:: title
+      :value: None
+
+
+
+   .. py:attribute:: varfull
+      :value: 'fileYYY.XXX'
+
+
+
+   .. py:attribute:: varfull2
+      :value: None
+
+
+
+   .. py:attribute:: vert_unit
+      :value: ''
+
+
 
 .. py:class:: Fig_2D_lon_time(varfull='fileYYY.XXX', doPlot=False, varfull2=None)
 
-
    Bases: :py:obj:`Fig_2D`
+
 
    A specialized 2D plotting class for visualizing data as a function
    of longitude and time (Ls).
@@ -803,6 +1416,7 @@ Attributes
            Handles axis formatting, tick labeling (including optional
            sol time annotation), and plot saving.
            Catches and handles exceptions during plotting.
+
 
    .. py:method:: data_loader_2D(varfull, plot_type)
 
@@ -846,11 +1460,120 @@ Attributes
    .. py:method:: solid_contour(xdata, ydata, var, contours)
 
 
+   .. py:attribute:: Xlim
+      :value: None
+
+
+
+   .. py:attribute:: Ylim
+      :value: None
+
+
+
+   .. py:attribute:: addLine
+      :value: False
+
+
+
+   .. py:attribute:: axis_opt1
+      :value: 'jet'
+
+
+
+   .. py:attribute:: axis_opt2
+      :value: 'lin'
+
+
+
+   .. py:attribute:: axis_opt3
+      :value: None
+
+
+
+   .. py:attribute:: contour2
+      :value: None
+
+
+
+   .. py:attribute:: doPlot
+      :value: False
+
+
+
+   .. py:attribute:: fdim1
+      :value: None
+
+
+
+   .. py:attribute:: fdim2
+      :value: None
+
+
+
+   .. py:attribute:: fdim_txt
+      :value: ''
+
+
+
+   .. py:attribute:: ftod
+      :value: None
+
+
+
+   .. py:attribute:: layout
+      :value: None
+
+
+
+   .. py:attribute:: nPan
+      :value: 1
+
+
+
+   .. py:attribute:: plot_type
+      :value: '2D'
+
+
+
+   .. py:attribute:: range
+      :value: None
+
+
+
+   .. py:attribute:: subID
+      :value: 1
+
+
+
+   .. py:attribute:: success
+      :value: False
+
+
+
+   .. py:attribute:: title
+      :value: None
+
+
+
+   .. py:attribute:: varfull
+      :value: 'fileYYY.XXX'
+
+
+
+   .. py:attribute:: varfull2
+      :value: None
+
+
+
+   .. py:attribute:: vert_unit
+      :value: ''
+
+
 
 .. py:class:: Fig_2D_time_lat(varfull='fileYYY.XXX', doPlot=False, varfull2=None)
 
-
    Bases: :py:obj:`Fig_2D`
+
 
    A 2D plotting class for visualizing data as a function of time (Ls)
    and latitude. Inherits from: Fig_2D
@@ -887,6 +1610,7 @@ Attributes
        success : bool
            Indicates if the plot was successfully created.
 
+
    .. py:method:: data_loader_2D(varfull, plot_type)
 
 
@@ -903,6 +1627,7 @@ Attributes
 
       Raises:
           Exception: If any error occurs during the plotting process, it is handled and reported.
+
 
 
    .. py:method:: exception_handler(e, ax)
@@ -931,6 +1656,7 @@ Attributes
           None
 
 
+
    .. py:method:: make_title(var_info, xlabel, ylabel)
 
 
@@ -949,11 +1675,120 @@ Attributes
    .. py:method:: solid_contour(xdata, ydata, var, contours)
 
 
+   .. py:attribute:: Xlim
+      :value: None
+
+
+
+   .. py:attribute:: Ylim
+      :value: None
+
+
+
+   .. py:attribute:: addLine
+      :value: False
+
+
+
+   .. py:attribute:: axis_opt1
+      :value: 'jet'
+
+
+
+   .. py:attribute:: axis_opt2
+      :value: 'lin'
+
+
+
+   .. py:attribute:: axis_opt3
+      :value: None
+
+
+
+   .. py:attribute:: contour2
+      :value: None
+
+
+
+   .. py:attribute:: doPlot
+      :value: False
+
+
+
+   .. py:attribute:: fdim1
+      :value: None
+
+
+
+   .. py:attribute:: fdim2
+      :value: None
+
+
+
+   .. py:attribute:: fdim_txt
+      :value: ''
+
+
+
+   .. py:attribute:: ftod
+      :value: None
+
+
+
+   .. py:attribute:: layout
+      :value: None
+
+
+
+   .. py:attribute:: nPan
+      :value: 1
+
+
+
+   .. py:attribute:: plot_type
+      :value: '2D'
+
+
+
+   .. py:attribute:: range
+      :value: None
+
+
+
+   .. py:attribute:: subID
+      :value: 1
+
+
+
+   .. py:attribute:: success
+      :value: False
+
+
+
+   .. py:attribute:: title
+      :value: None
+
+
+
+   .. py:attribute:: varfull
+      :value: 'fileYYY.XXX'
+
+
+
+   .. py:attribute:: varfull2
+      :value: None
+
+
+
+   .. py:attribute:: vert_unit
+      :value: ''
+
+
 
 .. py:class:: Fig_2D_time_lev(varfull='fileYYY.XXX', doPlot=False, varfull2=None)
 
-
    Bases: :py:obj:`Fig_2D`
+
 
    A specialized 2D plotting class for visualizing data as a function
    of time (Ls) and vertical level (pressure or altitude).
@@ -998,6 +1833,7 @@ Attributes
            Indicates if the plot was successfully generated.
        
 
+
    .. py:method:: data_loader_2D(varfull, plot_type)
 
 
@@ -1027,6 +1863,7 @@ Attributes
           Handles all exceptions internally and logs them via a custom handler.
 
 
+
    .. py:method:: exception_handler(e, ax)
 
 
@@ -1053,6 +1890,7 @@ Attributes
           None
 
 
+
    .. py:method:: make_title(var_info, xlabel, ylabel)
 
 
@@ -1071,6 +1909,115 @@ Attributes
    .. py:method:: solid_contour(xdata, ydata, var, contours)
 
 
+   .. py:attribute:: Xlim
+      :value: None
+
+
+
+   .. py:attribute:: Ylim
+      :value: None
+
+
+
+   .. py:attribute:: addLine
+      :value: False
+
+
+
+   .. py:attribute:: axis_opt1
+      :value: 'jet'
+
+
+
+   .. py:attribute:: axis_opt2
+      :value: 'lin'
+
+
+
+   .. py:attribute:: axis_opt3
+      :value: None
+
+
+
+   .. py:attribute:: contour2
+      :value: None
+
+
+
+   .. py:attribute:: doPlot
+      :value: False
+
+
+
+   .. py:attribute:: fdim1
+      :value: None
+
+
+
+   .. py:attribute:: fdim2
+      :value: None
+
+
+
+   .. py:attribute:: fdim_txt
+      :value: ''
+
+
+
+   .. py:attribute:: ftod
+      :value: None
+
+
+
+   .. py:attribute:: layout
+      :value: None
+
+
+
+   .. py:attribute:: nPan
+      :value: 1
+
+
+
+   .. py:attribute:: plot_type
+      :value: '2D'
+
+
+
+   .. py:attribute:: range
+      :value: None
+
+
+
+   .. py:attribute:: subID
+      :value: 1
+
+
+
+   .. py:attribute:: success
+      :value: False
+
+
+
+   .. py:attribute:: title
+      :value: None
+
+
+
+   .. py:attribute:: varfull
+      :value: 'fileYYY.XXX'
+
+
+
+   .. py:attribute:: varfull2
+      :value: None
+
+
+
+   .. py:attribute:: vert_unit
+      :value: ''
+
+
 
 .. py:function:: MY_func(Ls_cont)
 
@@ -1082,6 +2029,21 @@ Attributes
    :rtype:  int
    :raises ValueError: If the input Ls_cont is not a valid type for
        year calculation.
+
+
+.. py:function:: areo_by_time(areo)
+
+   Return solar longitude as a 1D array with one value per time step.
+
+   ``areo`` is ``(time, scalar_axis)`` in most files and
+   ``(time, time_of_day, scalar_axis)`` in diurn files, where the value
+   at midnight UT (first time of day) is used. Unlike ``np.squeeze``,
+   this keeps the time axis when a file has a single time step.
+
+   :param areo: the ``areo`` netCDF variable
+   :type  areo: netCDF4.Variable
+   :return: solar longitude for each time step
+   :rtype:  array [time]
 
 
 .. py:function:: clean_comma_whitespace(raw_input)
@@ -1097,7 +2059,6 @@ Attributes
 
 
 .. py:function:: create_exec(raw_input, varfull_list)
-
 
 .. py:function:: create_name(root_name)
 
@@ -1151,6 +2112,20 @@ Attributes
    :raises KeyboardInterrupt: If the function cannot be interrupted.
    :raises SystemExit: If the function cannot be exited.
    :raises AssertionError: If the function cannot be asserted.
+
+
+.. py:function:: existing_file(path)
+
+   Argument type for input files: return the path if the file exists.
+
+   Files are opened where they are used rather than by argparse, so
+   no file handle is left open after parsing.
+
+   :param path: path given on the command line
+   :type  path: str
+   :return: the same path
+   :rtype:  str
+   :raises argparse.ArgumentTypeError: if the file does not exist
 
 
 .. py:function:: fig_layout(subID, nPan, vertical_page=False)
@@ -1597,7 +2572,7 @@ Attributes
    :raises Exception: If the filtering operation fails for any reason.
 
 
-.. py:function:: read_axis_options(axis_options_txt)
+.. py:function:: read_axis_options(axis_options_txt, return_extra=False)
 
    Return axis customization options.
 
@@ -1617,6 +2592,10 @@ Attributes
    :rtype:  str
    :raises ValueError: If the input axis_options_txt is not a valid
        type for axis options.
+
+   Any further ``key = value`` fields after the positional ones are
+   returned as a dict when ``return_extra`` is True, e.g.
+   ``| nlev = 41 | cticks = 120,160,200 | cfmt = %.0f``.
 
 
 .. py:function:: remove_whitespace(raw_input)
@@ -1696,45 +2675,63 @@ Attributes
        splitting.
 
 
+.. py:function:: topography_for_overlay(lon, zsurf, var)
+
+   Prepare surface topography for contouring on a lon X lat plot.
+
+   :param lon: longitudes of the plotted data, before shifting
+   :type  lon: array [lon]
+   :param zsurf: topography from the matching ``fixed`` file, or None
+       if there is no matching file
+   :type  zsurf: array [lat, lon] or None
+   :param var: the plotted data, already shifted with ``shift_data``
+   :type  var: array [lat, lon]
+   :return: topography shifted like ``var``, or None if there is no
+       topography or it is on a different grid (e.g., after regridding)
+   :rtype:  array [lat, lon] or None
+
+
+.. py:data:: ALTITUDE_CONVERSIONS
+
+.. py:data:: PRESSURE_CONVERSIONS
+
 .. py:data:: add_sol_time_axis
 
-   
+.. py:data:: alt_unit_pref
+   :value: 'm'
+
+
+.. py:data:: alt_unit_pref
 
 .. py:data:: args
+   :value: None
 
-   
 
 .. py:data:: current_version
    :value: 3.5
 
-   
 
 .. py:data:: debug
-
-   
 
 .. py:data:: degr
    :value: '°'
 
-   
 
 .. py:data:: exit_code
+   :value: None
 
-   
 
 .. py:data:: include_NaNs
 
-   
-
 .. py:data:: lon_coord_type
-
-   
 
 .. py:data:: namespace
 
-   
-
 .. py:data:: parser
 
-   
+.. py:data:: pres_unit_pref
+   :value: 'Pa'
+
+
+.. py:data:: pres_unit_pref
 

@@ -1,5 +1,5 @@
-:py:mod:`amescap.Script_utils`
-==============================
+amescap.Script_utils
+====================
 
 .. py:module:: amescap.Script_utils
 
@@ -24,12 +24,22 @@
 
 
 
-Module Contents
----------------
+Attributes
+----------
+
+.. autoapisummary::
+
+   amescap.Script_utils.Blue
+   amescap.Script_utils.Cyan
+   amescap.Script_utils.Green
+   amescap.Script_utils.Nclr
+   amescap.Script_utils.Purple
+   amescap.Script_utils.Red
+   amescap.Script_utils.Yellow
 
 
 Functions
-~~~~~~~~~
+---------
 
 .. autoapisummary::
 
@@ -63,20 +73,8 @@ Functions
    amescap.Script_utils.wbr_cmap
 
 
-
-Attributes
-~~~~~~~~~~
-
-.. autoapisummary::
-
-   amescap.Script_utils.Blue
-   amescap.Script_utils.Cyan
-   amescap.Script_utils.Green
-   amescap.Script_utils.Nclr
-   amescap.Script_utils.Purple
-   amescap.Script_utils.Red
-   amescap.Script_utils.Yellow
-
+Module Contents
+---------------
 
 .. py:function:: FV3_file_type(fNcdf)
 
@@ -428,8 +426,9 @@ Attributes
 
    Variables sorted by dimension.
 
-   :param fileNcdf: full path to the netCDF file
-   :type  fileNcdf: str
+   :param fileNcdf: full path to the netCDF file, or a file object
+       with a ``name`` attribute
+   :type  fileNcdf: str or file object
 
    :return: None
 
@@ -440,8 +439,9 @@ Attributes
 
    Requires a XXXXX.fixed.nc file in the current directory.
 
-   :param fileNcdf: full path to a netcdf file
-   :type  fileNcdf: str
+   :param fileNcdf: full path to a netcdf file, or a file object with
+       a ``name`` attribute
+   :type  fileNcdf: str or file object
    :param list_varfull: list of variable names and optional slices
        (e.g., ``["lon", "ps[:, 10, 20]"]``)
    :type  list_varfull: list
@@ -625,7 +625,7 @@ Attributes
 
        from netCDF4 import Dataset
 
-       fNcdf = Dataset("/u/username/FV3/00668.atmos_average_pstd.nc", "r")
+       fNcdf = Dataset("/u/path/to/FV3/00668.atmos_average_pstd.nc", "r")
 
        # Approach using var = fNcdf.variables["var"][:]
        ucomp = fNcdf.variables["ucomp"][:]
@@ -655,35 +655,28 @@ Attributes
 .. py:data:: Blue
    :value: '\x1b[94m'
 
-   
 
 .. py:data:: Cyan
    :value: '\x1b[96m'
 
-   
 
 .. py:data:: Green
    :value: '\x1b[92m'
 
-   
 
 .. py:data:: Nclr
    :value: '\x1b[00m'
 
-   
 
 .. py:data:: Purple
    :value: '\x1b[95m'
 
-   
 
 .. py:data:: Red
    :value: '\x1b[91m'
 
-   
 
 .. py:data:: Yellow
    :value: '\x1b[93m'
 
-   
 

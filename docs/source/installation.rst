@@ -102,9 +102,9 @@ Install CAP from the `NASA Planetary Science GitHub <https://github.com/NASA-Pla
 
 .. code-block:: bash
 
-   cp amescap/mars_templates/amescap_profile ~/.amescap_profile # For pip
-   # OR
-   cp /opt/anaconda3/envs/amescap/mars_templates/amescap_profile ~/.amescap_profile # For conda
+   cp "$(python -c 'import sys; print(sys.prefix)')/mars_templates/amescap_profile" ~/.amescap_profile
+
+If you installed from a local clone in editable mode (``pip install -e .``), the template is not copied into the environment; copy it from the root of the clone instead: ``cp mars_templates/amescap_profile ~/.amescap_profile``.
 
 5. Test your installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -129,7 +129,7 @@ This should display the help documentation for MarsPlot.
 Troubleshooting Tips
 ^^^^^^^^^^^^^^^^^^^^
 
-* **Python Version Issues**: Ensure you're using Python 3.6 or newer.
+* **Python Version Issues**: Use Python 3.10 or newer (CAP is tested with 3.10-3.14).
 * **Virtual Environment Not Activating**: Verify you're using the correct activation script for your shell.
 * **Package Installation Failures**: Check your internet connection and ensure you have permission to install packages.
 * **Profile File Not Found**: Double-check the installation paths. The actual path may vary depending on your specific installation.
@@ -260,21 +260,16 @@ Using **Windows Terminal (PowerShell)**:
 
 .. code-block:: powershell
 
-   # For pip installation
-   Copy-Item .\amescap\mars_templates\amescap_profile -Destination $HOME\.amescap_profile
-
-   # For conda installation
-   Copy-Item $env:USERPROFILE\anaconda3\envs\amescap\mars_templates\amescap_profile -Destination $HOME\.amescap_profile
+   # For pip or conda installation (run inside the active environment)
+   $profileDir = python -c "import sys; print(sys.prefix)"
+   Copy-Item "$profileDir\mars_templates\amescap_profile" -Destination "$HOME\.amescap_profile"
 
 Using **Cygwin**:
 
 .. code-block:: bash
 
-   # For pip installation
-   cp amescap/mars_templates/amescap_profile ~/.amescap_profile
-
-   # For conda installation (adjust path as needed)
-   cp /cygdrive/c/Users/YourUsername/anaconda3/envs/amescap/mars_templates/amescap_profile ~/.amescap_profile
+   # For pip or conda installation (run inside the active environment)
+   cp "$(python -c 'import sys; print(sys.prefix)')/mars_templates/amescap_profile" ~/.amescap_profile
 
 5. Test your installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -384,7 +379,7 @@ Install CAP from the `NASA Planetary Science GitHub <https://github.com/NASA-Pla
 
 .. code-block:: bash
 
-   cp amescap/mars_templates/amescap_profile ~/.amescap_profile
+   cp "$(python -c 'import sys; print(sys.prefix)')/mars_templates/amescap_profile" ~/.amescap_profile
 
 5. Test your installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -418,14 +413,14 @@ Troubleshooting Tips
 .. _spectral_analysis:
 
 Spectral Analysis Capabilities
------------------------------
+------------------------------
 
 CAP includes optional spectral analysis capabilities that require additional dependencies (spatial filtering utilities). These capabilities leverage the ``pyshtools`` library for spherical harmonic transforms and other spectral analysis functions. ``pyshtools`` is a powerful library for working with spherical harmonics and it is an optional dependencies because it can be complex to install. It requires several system-level dependencies, including `libfftw3 <http://www.fftw.org/>`_ and `liblapack <http://www.netlib.org/lapack/>`_ and BLAS libraries, plus Fortran and C compilers. These dependencies are not included in the standard Python installation and may require additional setup.
 
-If you are using a conda environment, these dependencies are automatically installed when you create the environment using the provided ``environment.yml`` file. If you are using pip, you will need to install these dependencies manually. 
+The base environment does not include ``pyshtools``. Install this optional dependency with ``pip install ".[spectral]"`` after creating the environment.
 
 Installing with Spectral Analysis Support
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are two recommended ways to install CAP with spectral analysis support:
 
@@ -436,14 +431,17 @@ The conda installation method is recommended as it handles all the complex depen
 .. code-block:: bash
 
    # Clone the repository
-   git clone clone -b devel https://github.com/NASA-Planetary-Science/AmesCAP.git
+   git clone -b devel https://github.com/NASA-Planetary-Science/AmesCAP.git
    cd AmesCAP
    
-   # Create conda environment with all dependencies including pyshtools
+   # Create conda environment with the base dependencies
    conda env create -f environment.yml -n amescap
    
    # Activate the environment
    conda activate amescap
+
+   # Install pyshtools and its compiled dependencies from conda-forge
+   conda install -c conda-forge pyshtools
 
    # Install the package with spectral analysis support
    pip install .[spectral]
@@ -453,12 +451,12 @@ The conda installation method is recommended as it handles all the complex depen
    rm -rf AmesCAP # Remove the cloned repository
 
    # Don't forget to copy the profile file to your home directory
-   cp /opt/anaconda3/envs/amescap/mars_templates/amescap_profile ~/.amescap_profile
+   cp "$(python -c 'import sys; print(sys.prefix)')/mars_templates/amescap_profile" ~/.amescap_profile
 
    # To deactivate the environment, run:
    conda deactivate
 
-**Method 1: Using pip**
+**Method 2: Using pip**
 
 The pip installation method is less recommended as it requires manual installation of the dependencies. If you choose this method, you will need to install the dependencies separately. The following command will install CAP with spectral analysis support:
 
@@ -474,7 +472,7 @@ The pip installation method is less recommended as it requires manual installati
    pip install "amescap[spectral] @ git+https://github.com/NASA-Planetary-Science/AmesCAP.git@devel"
 
    # Don't forget to copy the profile file to your home directory
-   cp amescap/mars_templates/amescap_profile ~/.amescap_profile
+   cp "$(python -c 'import sys; print(sys.prefix)')/mars_templates/amescap_profile" ~/.amescap_profile
    
    # To deactivate the environment, run:
    deactivate

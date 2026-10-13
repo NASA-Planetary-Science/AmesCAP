@@ -13,12 +13,17 @@ import glob
 import numpy as np
 from netCDF4 import Dataset
 
+# Compact fixtures are the default. Set AMESCAP_FULL_FIXTURES=1 to
+# generate the full-size files (about 9.7 GB for MarsFormat and 5.1 GB
+# for the AmesGCM files) and run the same tests against them.
+FIXTURE_SIZE = "" if os.environ.get("AMESCAP_FULL_FIXTURES") == "1" else "short"
+
 class BaseTestCase(unittest.TestCase):
     """Base class for integration tests with common setup methods"""
     
     PREFIX = "Default_test_"
     FILESCRIPT = "create_ames_gcm_files.py"
-    SHORTFILE = "short"
+    SHORTFILE = FIXTURE_SIZE
 
     # Verify files were created
     expected_files = [
@@ -36,6 +41,9 @@ class BaseTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test environment"""
+        # Remember where we started so tearDownClass can leave the
+        # temporary directory before deleting it
+        cls.original_cwd = os.getcwd()
         # Create a temporary directory for the tests
         cls.test_dir = tempfile.mkdtemp(prefix=cls.PREFIX)
         print(f"Created temporary test directory: {cls.test_dir}")
@@ -111,6 +119,7 @@ class BaseTestCase(unittest.TestCase):
         try:
             # List files in temp directory before deleting to debug
             print(f"Files in test directory before cleanup: {os.listdir(cls.test_dir)}")
+            os.chdir(cls.original_cwd)
             shutil.rmtree(cls.test_dir, ignore_errors=True)
             print(f"Removed test directory: {cls.test_dir}")
         except Exception as e:

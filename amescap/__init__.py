@@ -1,3 +1,5 @@
+__version__ = "5.0"
+
 from amescap.Script_utils import Green, Nclr
 
 def print_welcome():

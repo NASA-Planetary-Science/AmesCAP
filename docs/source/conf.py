@@ -23,6 +23,8 @@ sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('../../bin'))
 sys.path.insert(0, os.path.abspath('../../amescap'))
 
+from amescap import __version__
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
@@ -30,7 +32,8 @@ project = 'AmesCAP'
 copyright = '2023, Alex Kling, Courtney Batterson, & Victoria Hartwick (Mars Climate Modeling Center | NASA Ames Research Center)'
 author = 'Alex Kling, Courtney Batterson, & Victoria Hartwick (Mars Climate Modeling Center | NASA Ames Research Center)'
 
-release = '1.0'
+version = __version__
+release = __version__
 
 master_doc = 'index'
 root_doc = 'index'

@@ -1,5 +1,5 @@
-:py:mod:`amescap.Ncdf_wrapper`
-==============================
+amescap.Ncdf_wrapper
+====================
 
 .. py:module:: amescap.Ncdf_wrapper
 
@@ -19,11 +19,8 @@
 
 
 
-Module Contents
----------------
-
 Classes
-~~~~~~~
+-------
 
 .. autoapisummary::
 
@@ -31,12 +28,13 @@ Classes
    amescap.Ncdf_wrapper.Ncdf
 
 
-
+Module Contents
+---------------
 
 .. py:class:: Fort(filename=None, description_txt='')
 
-
    Bases: :py:obj:`object`
+
 
    A class that generates an object from a fort.11 file. The new file
    will have netCDF file attributes. Alex Kling.
@@ -50,7 +48,7 @@ Classes
 
    Create a Fort object using the following::
 
-       f=Fort('/Users/username/test/fort.11/fort.11_0684')
+       f=Fort('/Users/file/test/fort.11/fort.11_0684')
 
    Public methods can be used to generate FV3-like netCDF files::
 
@@ -64,10 +62,11 @@ Classes
    :return: _description_
    :rtype: _type_
 
+
    .. py:class:: Fort_var(input_vals, name_txt, long_name_txt, units_txt, dimensions_tuple)
 
-
       Bases: :py:obj:`numpy.ndarray`
+
 
       Sub-class that emulates a netCDF-like variable by adding the
       ``name``, ``long_name``, ``units``, and ``dimensions``
@@ -86,6 +85,7 @@ Classes
       :type np.ndarray: _type_
       :return: _description_
       :rtype: _type_
+
 
       .. py:method:: __abs__()
 
@@ -106,6 +106,7 @@ Classes
          :classmethod:
 
 
+
       .. py:method:: __contains__(key)
 
 
@@ -120,8 +121,6 @@ Classes
 
       .. py:method:: __eq__(value)
 
-         Return self==value.
-
 
       .. py:method:: __float__()
 
@@ -131,15 +130,11 @@ Classes
 
       .. py:method:: __ge__(value)
 
-         Return self>=value.
-
 
       .. py:method:: __getitem__(key)
 
 
       .. py:method:: __gt__(value)
-
-         Return self>value.
 
 
       .. py:method:: __iadd__(value)
@@ -186,8 +181,6 @@ Classes
 
       .. py:method:: __le__(value)
 
-         Return self<=value.
-
 
       .. py:method:: __len__()
 
@@ -196,8 +189,6 @@ Classes
 
 
       .. py:method:: __lt__(value)
-
-         Return self<value.
 
 
       .. py:method:: __matmul__(value)
@@ -210,8 +201,6 @@ Classes
 
 
       .. py:method:: __ne__(value)
-
-         Return self!=value.
 
 
       .. py:method:: __neg__()
@@ -228,8 +217,6 @@ Classes
 
       .. py:method:: __repr__()
 
-         Return repr(self).
-
 
       .. py:method:: __rshift__()
 
@@ -238,8 +225,6 @@ Classes
 
 
       .. py:method:: __str__()
-
-         Return str(self).
 
 
       .. py:method:: __sub__(value)
@@ -419,6 +404,83 @@ Classes
       .. py:method:: view(dtype=None, type=None)
 
 
+      .. py:attribute:: T
+
+
+      .. py:attribute:: base
+         :value: None
+
+
+
+      .. py:attribute:: ctypes
+         :value: None
+
+
+
+      .. py:attribute:: data
+         :value: None
+
+
+
+      .. py:attribute:: dimensions
+
+
+      .. py:attribute:: dtype
+         :value: None
+
+
+
+      .. py:attribute:: flags
+         :value: None
+
+
+
+      .. py:attribute:: flat
+
+
+      .. py:attribute:: imag
+
+
+      .. py:attribute:: itemsize
+         :value: None
+
+
+
+      .. py:attribute:: long_name
+
+
+      .. py:attribute:: name
+
+
+      .. py:attribute:: nbytes
+         :value: None
+
+
+
+      .. py:attribute:: ndim
+         :value: None
+
+
+
+      .. py:attribute:: real
+
+
+      .. py:attribute:: shape
+
+
+      .. py:attribute:: size
+         :value: None
+
+
+
+      .. py:attribute:: strides
+         :value: None
+
+
+
+      .. py:attribute:: units
+
+
 
    .. py:method:: close()
 
@@ -428,9 +490,11 @@ Classes
       Create average file (e.g., N-day averages [N=5 usually])
 
 
+
    .. py:method:: write_to_daily()
 
       Create daily file (continuous time series)
+
 
 
    .. py:method:: write_to_diurn(day_average=5)
@@ -439,16 +503,44 @@ Classes
       (typically 5-day bins)
 
 
+
    .. py:method:: write_to_fixed()
 
       Create ``fixed`` file (all static variables)
 
 
 
+   .. py:attribute:: dimensions
+
+
+   .. py:attribute:: f
+
+
+   .. py:attribute:: filename
+      :value: None
+
+
+
+   .. py:attribute:: nperday
+      :value: 16
+
+
+
+   .. py:attribute:: nsolfile
+      :value: 10
+
+
+
+   .. py:attribute:: tod
+
+
+   .. py:attribute:: variables
+
+
 .. py:class:: Ncdf(filename=None, description_txt='', action='w', ncformat='NETCDF4_CLASSIC')
 
-
    Bases: :py:obj:`object`
+
 
    netCDF wrapper for archiving data in netCDF format. Alex Kling.
 
@@ -480,6 +572,7 @@ Classes
    :type object: _type_
    :return: netCDF file
 
+
    .. py:method:: add_constant(variable_name, value, longname_txt='', units_txt='')
 
 
@@ -497,6 +590,7 @@ Classes
                                    "degree", "X")
 
 
+
    .. py:method:: add_dimension(dimension_name, length)
 
 
@@ -510,6 +604,7 @@ Classes
       yet, it will be created
 
 
+
    .. py:method:: copy_Ncvar(Ncvar, swap_array=None)
 
       Copy a netCDF variable from another file (e.g.,
@@ -518,10 +613,12 @@ Classes
       swapped with this array.
 
 
+
    .. py:method:: copy_all_dims_from_Ncfile(Ncfile_in, exclude_dim=[], time_unlimited=True)
 
       Copy all variables, dimensions, and attributes from another
       netCDF file
+
 
 
    .. py:method:: copy_all_vars_from_Ncfile(Ncfile_in, exclude_var=[])
@@ -534,12 +631,23 @@ Classes
           Log.log_axis1D("areo", areo, "time", "degree", "T")
 
 
+
    .. py:method:: log_variable(variable_name, DATAin, dim_array, longname_txt='', units_txt='', datatype='f4')
 
       EX::
 
           Log.log_variable("sfcT", sfcT, ("time", "Nx"),
                            "soil temperature", "K")
+
+
+
+   .. py:method:: log_variable_slice(variable_name, DATAin, dim_array, first_slice, longname_txt='', units_txt='', datatype='f4')
+
+      Like ``log_variable`` but writes only ``DATAin`` into
+      ``first_slice`` along the FIRST dimension, defining the variable
+      on first use. Lets callers process large variables in chunks
+      along time without holding the full array.
+
 
 
    .. py:method:: merge_files_from_list(Ncfilename_list, exclude_var=[])
@@ -550,5 +658,15 @@ Classes
 
    .. py:method:: print_variables()
 
+
+   .. py:attribute:: dim_dict
+
+
+   .. py:attribute:: filename
+      :value: None
+
+
+
+   .. py:attribute:: var_dict
 
 

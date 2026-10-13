@@ -1,5 +1,5 @@
-:py:mod:`bin.MarsInterp`
-========================
+bin.MarsInterp
+==============
 
 .. py:module:: bin.MarsInterp
 
@@ -38,22 +38,8 @@
 
 
 
-Module Contents
----------------
-
-
-Functions
-~~~~~~~~~
-
-.. autoapisummary::
-
-   bin.MarsInterp.debug_wrapper
-   bin.MarsInterp.main
-
-
-
 Attributes
-~~~~~~~~~~
+----------
 
 .. autoapisummary::
 
@@ -69,6 +55,18 @@ Attributes
    bin.MarsInterp.parser
    bin.MarsInterp.rgas
 
+
+Functions
+---------
+
+.. autoapisummary::
+
+   bin.MarsInterp.debug_wrapper
+   bin.MarsInterp.main
+
+
+Module Contents
+---------------
 
 .. py:function:: debug_wrapper(func)
 
@@ -158,50 +156,38 @@ Attributes
 .. py:data:: Cp
    :value: 735.0
 
-   
 
 .. py:data:: M_co2
    :value: 0.044
 
-   
 
 .. py:data:: R
    :value: 8.314
 
-   
 
 .. py:data:: args
+   :value: None
 
-   
 
 .. py:data:: debug
 
-   
-
 .. py:data:: exit_code
+   :value: None
 
-   
 
 .. py:data:: filepath
-
-   
 
 .. py:data:: fill_value
    :value: 0.0
 
-   
 
 .. py:data:: g
    :value: 3.72
 
-   
 
 .. py:data:: parser
-
-   
 
 .. py:data:: rgas
    :value: 189.0
 
-   
 

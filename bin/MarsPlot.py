@@ -54,7 +54,7 @@ from numpy import (abs, sqrt, log, exp, min, max, mean)
 
 from matplotlib.ticker import (
     LogFormatter, NullFormatter, LogFormatterSciNotation,
-    MultipleLocator, FuncFormatter
+    MultipleLocator, FuncFormatter, FormatStrFormatter
 )
 
 # Load amesCAP modules
@@ -145,6 +145,24 @@ def debug_wrapper(func):
 #                  ARGUMENT PARSER
 # ======================================================
 
+def existing_file(path):
+    """
+    Argument type for input files: return the path if the file exists.
+
+    Files are opened where they are used rather than by argparse, so
+    no file handle is left open after parsing.
+
+    :param path: path given on the command line
+    :type  path: str
+    :return: the same path
+    :rtype:  str
+    :raises argparse.ArgumentTypeError: if the file does not exist
+    """
+    if not os.path.isfile(path):
+        raise argparse.ArgumentTypeError(f"can't open '{path}': file not found")
+    return path
+
+
 parser = argparse.ArgumentParser(
     prog=('MarsPlot'),
     description=(
@@ -163,7 +181,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument('template_file', nargs='?',
-    type=argparse.FileType('r'),
+    type=existing_file,
     help=(
         f"Pass a template file to MarsPlot to create figures.\n"
         f"Must be a '.in' file.\n"
@@ -175,7 +193,7 @@ parser.add_argument('template_file', nargs='?',
 )
 
 parser.add_argument('-i', '--inspect_file', nargs='?',
-    type=argparse.FileType('rb'),
+    type=existing_file,
     help=(
         f"Print the content of a netCDF file to the screen.\nVariables "
         f"are sorted by dimension.\n"
@@ -320,13 +338,13 @@ args = parser.parse_args()
 debug = args.debug
 
 if args.template_file:
-    if not (re.search(".in", args.template_file.name) or re.search(".nc", args.template_file.name)):
+    if not (re.search(".in", args.template_file) or re.search(".nc", args.template_file)):
         parser.error(f"{Red}Template file is not a '.in' or a netCDF file{Nclr}")
         exit()
 
 if args.inspect_file:
-    if not re.search(".nc", args.inspect_file.name):
-        parser.error(f"{Red}{args.inspect_file.name} is not a netCDF "
+    if not re.search(".nc", args.inspect_file):
+        parser.error(f"{Red}{args.inspect_file} is not a netCDF "
                      f"file{Nclr}")
         exit()
 
@@ -487,8 +505,8 @@ def main():
 
     elif args.template_file:
         # Case A: Use local Custom.in (most common option)
-        print(f"Reading {args.template_file.name}")
-        namelist_parser(args.template_file.name)
+        print(f"Reading {args.template_file}")
+        namelist_parser(args.template_file)
 
         if args.date:
             # If optional --date provided, use files matching date(s)
@@ -571,7 +589,7 @@ def main():
                 # e.g., Custom.in -> Diagnostics.pdf, or
                 #       Custom_01.in -> Diagnostics_01.pdf
                 input_file = (os.path.join(output_path,
-                                f"{args.template_file.name}"))
+                                f"{args.template_file}"))
 
                 if platform.system() == "Windows":
                     basename = input_file.split("\\")[-1].split(".")[0].strip()
@@ -693,6 +711,27 @@ def mean_func(arr, axis):
             return np.nanmean(arr, axis = axis)
 
 
+def topography_for_overlay(lon, zsurf, var):
+    """
+    Prepare surface topography for contouring on a lon X lat plot.
+
+    :param lon: longitudes of the plotted data, before shifting
+    :type  lon: array [lon]
+    :param zsurf: topography from the matching ``fixed`` file, or None
+        if there is no matching file
+    :type  zsurf: array [lat, lon] or None
+    :param var: the plotted data, already shifted with ``shift_data``
+    :type  var: array [lat, lon]
+    :return: topography shifted like ``var``, or None if there is no
+        topography or it is on a different grid (e.g., after regridding)
+    :rtype:  array [lat, lon] or None
+    """
+    if zsurf is None or np.shape(zsurf) != np.shape(var):
+        return None
+    _, zsurf = shift_data(lon, zsurf)
+    return zsurf
+
+
 def shift_data(lon, data):
     """
     Shifts the longitude data from 0-360 to -180/180 and vice versa.
@@ -795,8 +834,10 @@ def get_lon_index(lon_query_180, lons):
                 txt_lon = f", lon={lon360_to_180(lons[loni]):.1f}"
 
         elif lon_query_180.size == 2:
-            # If range of longitudes provided
-            lon_query_360 = lon180_to_360(lon_query_180)
+            # If range of longitudes provided. Convert each end
+            # separately: the order of the two ends sets the direction
+            lon_query_360 = np.where(lon_query_180 < 0,
+                                     lon_query_180 + 360., lon_query_180)
             loni_bounds = np.array([np.argmin(abs(lon_query_360[0]-lons)),
                                     np.argmin(abs(lon_query_360[1]-lons))])
             # Longitude should be increasing for extraction # TODO
@@ -807,10 +848,10 @@ def get_lon_index(lon_query_180, lons):
                 # Loop around (e.g., 160°E > -40°W)
                 loni = np.append(np.arange(loni_bounds[0], len(lons)),
                                  np.arange(0, loni_bounds[1] + 1))
-                print(f"{Purple}lon360_to_180(lons[loni]){Nclr}")
 
-            lon_bounds_180 = lon360_to_180([lons[loni_bounds[0]],
-                                            lons[loni_bounds[1]]])
+            lon_bounds = lons[loni_bounds]
+            lon_bounds_180 = np.where(lon_bounds > 180, lon_bounds - 360.,
+                                      lon_bounds)
             # Longitude should be increasing for display
             txt_lon = (f", lon=avg[{lon_bounds_180[0]:.1f}"
                        f"<->{lon_bounds_180[1]:.1f}]")
@@ -1021,6 +1062,24 @@ def get_level_index(level_query, levs):
     return levi, txt_level
 
 
+def areo_by_time(areo):
+    """
+    Return solar longitude as a 1D array with one value per time step.
+
+    ``areo`` is ``(time, scalar_axis)`` in most files and
+    ``(time, time_of_day, scalar_axis)`` in diurn files, where the value
+    at midnight UT (first time of day) is used. Unlike ``np.squeeze``,
+    this keeps the time axis when a file has a single time step.
+
+    :param areo: the ``areo`` netCDF variable
+    :type  areo: netCDF4.Variable
+    :return: solar longitude for each time step
+    :rtype:  array [time]
+    """
+    values = areo[:]
+    return values.reshape(values.shape[0], -1)[:, 0]
+
+
 def get_time_index(Ls_query_360, LsDay):
     """
     Returns the indices for a range of solar longitudes in a file.
@@ -1049,9 +1108,8 @@ def get_time_index(Ls_query_360, LsDay):
         function
     """
 
-    if len(np.atleast_1d(LsDay)) == 1:
-        # Special case: file has 1 timestep, transform LsDay -> array
-        LsDay = np.array([LsDay])
+    # Special case: file has 1 timestep, transform LsDay -> array
+    LsDay = np.atleast_1d(LsDay)
 
     Nt = len(LsDay)
     Ls_query_360 = np.array(Ls_query_360)
@@ -1231,7 +1289,7 @@ def rT(typeIn="char"):
     return filter_input(txt, typeIn)
 
 
-def read_axis_options(axis_options_txt):
+def read_axis_options(axis_options_txt, return_extra=False):
     """
     Return axis customization options.
 
@@ -1251,9 +1309,18 @@ def read_axis_options(axis_options_txt):
     :rtype:  str
     :raises ValueError: If the input axis_options_txt is not a valid
         type for axis options.
+
+    Any further ``key = value`` fields after the positional ones are
+    returned as a dict when ``return_extra`` is True, e.g.
+    ``| nlev = 41 | cticks = 120,160,200 | cfmt = %.0f``.
     """
 
     list_txt = axis_options_txt.split(":")[1].split("|")
+    extra = {}
+    for field in list_txt[5:]:
+        if "=" in field:
+            k, v = field.split("=", 1)
+            extra[k.strip().lower()] = v.strip()
 
     # Xaxis: get bounds
     txt = list_txt[0].split("=")[1].replace("[", "").replace("]", "")
@@ -1292,6 +1359,8 @@ def read_axis_options(axis_options_txt):
             custom_line2 = None
         if custom_line3.strip() == "None":
             custom_line3 = None
+    if return_extra:
+        return Xaxis, Yaxis, custom_line1, custom_line2, custom_line3, extra
     return Xaxis, Yaxis, custom_line1, custom_line2, custom_line3
 
 
@@ -1793,6 +1862,10 @@ def make_template():
         customFileIN.write("#    ``cmap``  colormap    ``jet`` (winds), ``nipy_spectral`` (temperature), ``bwr`` (diff plot), etc. \n")
         customFileIN.write("#    ``scale`` gradient    ``lin`` (linear), ``log`` (logarithmic; Cmin, Cmax is typically expected. \n")
         customFileIN.write("#    ``line``  linestyle   ``-r`` (solid red), ``--g`` (dashed green), ``-ob`` (solid blue + markers). \n")
+        customFileIN.write("# Optional extra fields for 2D plots, appended after ``scale`` (and ``proj``): \n")
+        customFileIN.write("#    ``nlev``   number of filled contour levels when Cmin, Cmax is a pair (default 21), e.g. ``| nlev = 41`` \n")
+        customFileIN.write("#    ``cticks`` colorbar tick values, e.g. ``| cticks = 120,160,200,240`` \n")
+        customFileIN.write("#    ``cfmt``   colorbar tick label format, e.g. ``| cfmt = %.1f`` \n")
         customFileIN.write("#    ``proj``  projection  Cylindrical: ``cart`` (Cartesian), ``robin`` (Robinson), ``moll`` (Mollweide), \n")
         customFileIN.write("#                        Azithumal: ``Npole lat`` (North Pole), ``Spole lat`` (South Pole),\n")
         customFileIN.write("#                        ``ortho lon,lat`` (Orthographic). \n")
@@ -2420,7 +2493,9 @@ class Fig_2D(object):
          self.Ylim,
          self.axis_opt1,
          self.axis_opt2,
-         self.axis_opt3) = read_axis_options(customFileIN.readline()) # 8
+         self.axis_opt3,
+         self.axis_extra) = read_axis_options(customFileIN.readline(),
+                                              return_extra=True) # 8
 
         # Various sanity checks
         if self.range and len(np.atleast_1d(self.range)) == 1:
@@ -2542,12 +2617,8 @@ class Fig_2D(object):
         if dim_info == ("time", "lat", "lon"):
             # Initialize dimension
             t = f.variables["time"][:]
-            LsDay = np.squeeze(f.variables["areo"][:])
+            LsDay = areo_by_time(f.variables["areo"])
             ti = np.arange(0, len(t))
-            # For diurn file, change time_of_day[time, 24, 1] ->
-            # time_of_day[time] at midnight UT
-            if f_type == "diurn" and len(LsDay.shape) > 1:
-                LsDay = np.squeeze(LsDay[:, 0])
             # Stack time and areo array as one variable
             t_stack = np.vstack((t, LsDay))
 
@@ -2612,12 +2683,8 @@ class Fig_2D(object):
             levs = f.variables[dim_info[1]][:]
             zi = np.arange(0, len(levs))
             t = f.variables["time"][:]
-            LsDay = np.squeeze(f.variables["areo"][:])
+            LsDay = areo_by_time(f.variables["areo"])
             ti = np.arange(0, len(t))
-            # For diurn file, change time_of_day[time, 24, 1] ->
-            # time_of_day[time] at midnight UT
-            if f_type == "diurn" and len(LsDay.shape) > 1:
-                LsDay = np.squeeze(LsDay[:, 0])
             # Stack time and areo arrays as 1 variable
             t_stack = np.vstack((t, LsDay))
 
@@ -2767,6 +2834,17 @@ class Fig_2D(object):
         else:
             cbar = plt.colorbar(orientation = "horizontal", aspect = 30)
 
+        # Optional ``cticks`` (list) and ``cfmt`` (e.g. %.1f) from
+        # Axis Options
+        extra = getattr(self, "axis_extra", {})
+        if "cticks" in extra:
+            try:
+                cbar.set_ticks([float(x) for x in extra["cticks"].split(",")])
+            except ValueError:
+                print(f"{Yellow}Ignoring unreadable cticks in Axis Options{Nclr}")
+        if "cfmt" in extra:
+            cbar.ax.xaxis.set_major_formatter(FormatStrFormatter(extra["cfmt"]))
+
         # Shrink colorbar label as number of subplots increases
         cbar.ax.tick_params(labelsize=(label_size - self.nPan*label_factor))
 
@@ -2774,6 +2852,13 @@ class Fig_2D(object):
     def return_norm_levs(self):
         norm = None
         levs = None
+        # Optional ``nlev`` from Axis Options overrides the default
+        # number of filled contour levels
+        nlevs = levels
+        try:
+            nlevs = int(getattr(self, "axis_extra", {}).get("nlev", levels))
+        except ValueError:
+            print(f"{Yellow}Ignoring non-integer nlev in Axis Options{Nclr}")
         if self.axis_opt2 == "log":
             # Logarithmic colormap
             norm = LogNorm()
@@ -2785,7 +2870,7 @@ class Fig_2D(object):
             if self.axis_opt2 == "lin":
                 # If 2 numbers provided (e.g., Cmin,Cmax)
                 if len(self.range) == 2:
-                    levs = np.linspace(self.range[0], self.range[1], levels)
+                    levs = np.linspace(self.range[0], self.range[1], nlevs)
                 # If list provided, set intervals explicitly
                 else:
                     levs = self.range
@@ -2795,7 +2880,7 @@ class Fig_2D(object):
                     print(f"{Red}*** Error using log scale, bounds cannot be "
                           f"zero or negative{Nclr}")
                 levs = np.logspace(
-                    np.log10(self.range[0]), np.log10(self.range[1]), levels)
+                    np.log10(self.range[0]), np.log10(self.range[1]), nlevs)
         return norm, levs
 
 
@@ -3061,12 +3146,13 @@ class Fig_2D_lon_lat(Fig_2D):
                 Fig_2D_lon_lat, self).data_loader_2D(self.varfull,
                                                      self.plot_type)
             lon_shift, var = shift_data(lon, var)
+            # Overlay topography from the matching fixed file, if any
             try:
-                # Try to get topography if a matching fixed file exists
-                _, zsurf = shift_data(lon, zsurf)
-                add_topo = True
-            except:
-                add_topo = False
+                zsurf = self.get_topo_2D(self.varfull, self.plot_type)
+            except Exception:
+                zsurf = None
+            zsurf = topography_for_overlay(lon, zsurf, var)
+            add_topo = zsurf is not None
 
             projfull = self.axis_opt3
 
@@ -4448,13 +4534,8 @@ class Fig_1D(object):
 
                 # Initialize dimension
                 t = f.variables["time"][:]
-                LsDay = np.squeeze(f.variables["areo"][:])
+                LsDay = areo_by_time(f.variables["areo"])
                 ti = np.arange(0, len(t))
-
-                if f_type == "diurn" and len(LsDay.shape) > 1:
-                    # For diurn file, change time_of_day[time, 24, 1] to
-                    # time_of_day[time] at midnight UT
-                    LsDay = np.squeeze(LsDay[:, 0])
 
                 # Stack time and areo arrays as 1 variable
                 t_stack = np.vstack((t, LsDay))
@@ -4529,13 +4610,8 @@ class Fig_1D(object):
                 levs = f.variables[dim_info[1]][:]
                 zi = np.arange(0, len(levs))
                 t = f.variables["time"][:]
-                LsDay = np.squeeze(f.variables["areo"][:])
+                LsDay = areo_by_time(f.variables["areo"])
                 ti = np.arange(0, len(t))
-
-                if f_type == "diurn" and len(LsDay.shape) > 1:
-                    # For diurn file, change time_of_day[time, 24, 1] ->
-                    # time_of_day[time] at midnight UT
-                    LsDay = np.squeeze(LsDay[:, 0])
 
                 # Stack time and areo arrays as 1 variable
                 t_stack = np.vstack((t, LsDay))
@@ -4643,13 +4719,8 @@ class Fig_1D(object):
 
                 # Initialize dim
                 t = f.variables["time"][:]
-                LsDay = np.squeeze(f.variables["areo"][:])
+                LsDay = areo_by_time(f.variables["areo"])
                 ti = np.arange(0, len(t))
-
-                if f_type == "diurn" and len(LsDay.shape) > 1:
-                    # For diurn file, change time_of_day[time, 24, 1] ->
-                    # time_of_day[time] at midnight UT
-                    LsDay = np.squeeze(LsDay[:, 0])
 
                 # Stack time and areo arrays as 1 variable
                 t_stack = np.vstack((t, LsDay))
@@ -4696,13 +4767,8 @@ class Fig_1D(object):
                 levs = f.variables[dim_info[2]][:]
 
                 t = f.variables["time"][:]
-                LsDay = np.squeeze(f.variables["areo"][:])
+                LsDay = areo_by_time(f.variables["areo"])
                 ti = np.arange(0, len(t))
-
-                if f_type == "diurn" and len(LsDay.shape) > 1:
-                    # For diurn file, change time_of_day[time, 24, 1] ->
-                    # time_of_day[time] at midnight UT
-                    LsDay = np.squeeze(LsDay[:, 0])
 
                 # Stack time and areo arrays as 1 variable
                 t_stack = np.vstack((t, LsDay))

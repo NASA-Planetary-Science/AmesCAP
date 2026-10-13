@@ -69,8 +69,9 @@ matplotlib.use("Agg")
 
 # Load amesCAP modules
 from amescap.FV3_utils import (
-    fms_press_calc, fms_Z_calc, dvar_dh, cart_to_azimut_TR, mass_stream,
-    zonal_detrend, spherical_div, spherical_curl, frontogenesis
+    R_CO2, fms_press_calc, fms_Z_calc, dvar_dh, cart_to_azimut_TR, mass_stream,
+    zonal_detrend, spherical_div, spherical_curl, frontogenesis,
+    cgrid_div, cgrid_curl
 )
 from amescap.Script_utils import (
     check_file_tape, FV3_file_type, filter_vars,
@@ -605,24 +606,41 @@ global rgas, psrf, Tpole, g, R, Rd, rho_air, rho_dst, rho_ice
 global Qext_dst, Qext_ice, n0, S0, T0, Cp, Na, amu, amu_co2, mass_co2
 global sigma, M_co2, N, C_dst, C_ice
 
-rgas = 189.  # Gas const. CO2 [J/kg/K or m^2/s^2/K]
+rgas = R_CO2  # Gas const. CO2 [J/kg/K or m^2/s^2/K]
 psrf = 610.  # Mars surface pressure [Pa or kg/m/s^2]
 Tpole = 150.  # Polar temperature [K]
 g = 3.72  # Gravitational constant for Mars [m/s^2]
 R = 8.314  # Universal gas constant [J/mol/K]
-Rd = 192.0  # R for dry air on Mars [J/kg/K]
+Rd = R_CO2  # Specific gas constant used for the CO2 atmosphere [J/kg/K]
 rho_air = psrf/(rgas*Tpole)  # Air density (ρ) [kg/m^3]
-rho_dst = 2500.  # Dust particle ρ [kg/m^3]
-# rho_dst = 3000  # Dust particle ρ [kg/m^3] (Kleinbohl, 2009)
-rho_ice = 900  # Ice particle ρ [kg/m^3] (Heavens, 2010)
-Qext_dst = 0.35  # Dust extinction efficiency (MCS) (Kleinbohl, 2009)
-Qext_ice = 0.773  # Ice extinction efficiency (MCS) (Heavens, 2010)
-Reff_dst = 1.06  # Effective dust particle radius [µm] (Kleinbohl, 2009)
-Reff_ice = 1.41  # Effective ice particle radius [µm] (Heavens, 2010)
+# Ice particle constants: Heavens et al. (2010), Water ice clouds over the
+#   Martian tropics during northern summer, Geophys. Res. Lett., 37, L18202,
+#   https://doi.org/10.1029/2010GL044610
+# Dust particle constants:
+#   Heavens et al. (2011), The vertical distribution of dust in the Martian
+#   atmosphere during northern spring and summer: Observations by the Mars
+#   Climate Sounder and analysis of zonal average vertical dust profiles,
+#   J. Geophys. Res., 116, E04003, https://doi.org/10.1029/2010JE003691
+#   Kleinböhl et al. (2011), A single-scattering approximation for infrared
+#   radiative transfer in limb geometry in the Martian atmosphere,
+#   J. Quant. Spectrosc. Radiat. Transfer, 112, 1568-1580,
+#   https://doi.org/10.1016/j.jqsrt.2011.03.006
+rho_dst = 2500.  # Dust particle ρ [kg/m^3] (Heavens et al., 2011)
+# rho_dst = 3000  # Dust particle ρ [kg/m^3] (Heavens et al., 2011)
+rho_ice = 900  # Ice particle ρ [kg/m^3] (Heavens et al., 2010)
+Qext_dst = 0.35  # Dust extinction efficiency (MCS) (Kleinböhl et al., 2011)
+Qext_ice = 0.773  # Ice extinction efficiency (MCS) (Heavens et al., 2010)
+Reff_dst = 1.06  # Effective dust particle radius [µm] (Heavens et al., 2011)
+Reff_ice = 1.41  # Effective ice particle radius [µm] (Heavens et al., 2010)
+# Sutherland's law constants for CO2: White, F. M., Viscous Fluid Flow,
+#   2nd ed., McGraw-Hill, 1991, Table 1-2
 n0 = 1.37*1.e-5  # Sutherland's law [N-s/m^2]
 S0 = 222  # Sutherland's law [K]
 T0 = 273.15  # Sutherland's law [K]
 Cp = 735.0  # [J/K]
+R_planet = 3400.*1000.  # Planetary radius [m]
+kappa = None  # R/Cp used by compute_theta; None -> R/(M_co2*Cp)
+g0 = g  # scalar gravity for column/stream-function integrals
 Na = 6.022*1.e23  # Avogadro's number [per mol]
 Kb = R/Na  # Boltzmann constant [m^2*kg/s^2/K]
 amu = 1.66054*1.e-27  # Atomic mass Unit [kg/amu]
@@ -1017,7 +1035,16 @@ def compute_xzTau(q, temp, lev, const, f_type):
     """
     Compute the dust or ice extinction rate.
 
-    Adapted from Heavens et al. (2011) observations from MCS (JGR).
+    Adapted from Heavens et al. (2011), from Mars Climate Sounder (MCS)
+    observations:
+
+    Heavens, N. G., M. I. Richardson, A. Kleinböhl, D. M. Kass, D. J.
+    McCleese, W. Abdou, J. L. Benson, J. T. Schofield, J. H. Shirley,
+    and P. M. Wolkenberg (2011), The vertical distribution of dust in the
+    Martian atmosphere during northern spring and summer: Observations by
+    the Mars Climate Sounder and analysis of zonal average vertical dust
+    profiles, J. Geophys. Res., 116, E04003,
+    https://doi.org/10.1029/2010JE003691
     [Courtney Batterson, 2023]
 
     :param q: Dust or ice mass mixing ratio (ppm)
@@ -1073,7 +1100,16 @@ def compute_mmr(xTau, temp, lev, const, f_type):
     """
     Compute the dust or ice mixing ratio.
 
-    Adapted from Heavens et al. (2011) observations from MCS (JGR).
+    Adapted from Heavens et al. (2011), from Mars Climate Sounder (MCS)
+    observations:
+
+    Heavens, N. G., M. I. Richardson, A. Kleinböhl, D. M. Kass, D. J.
+    McCleese, W. Abdou, J. L. Benson, J. T. Schofield, J. H. Shirley,
+    and P. M. Wolkenberg (2011), The vertical distribution of dust in the
+    Martian atmosphere during northern spring and summer: Observations by
+    the Mars Climate Sounder and analysis of zonal average vertical dust
+    profiles, J. Geophys. Res., 116, E04003,
+    https://doi.org/10.1029/2010JE003691
     [Courtney Batterson, 2023]
 
     :param xTau: Dust or ice extinction rate (km-1)
@@ -1130,6 +1166,17 @@ def compute_Vg_sed(xTau, nTau, T):
     Calculate the sedimentation rate of the dust.
     [Courtney Batterson, 2023]
 
+    Stokes settling with the Cunningham slip correction
+    ``1 + Kn*(A + B*exp(-C/Kn))``, using the coefficients of
+    Kasten (1968) as implemented in the NASA Ames Mars GCM
+    (Kasten gives A = 1.249; the Ames GCM uses 1.246). Air viscosity
+    follows Sutherland's law with the CO2 constants of White, Viscous
+    Fluid Flow, 2nd ed. (McGraw-Hill, 1991), Table 1-2.
+
+    Kasten, F. (1968), Falling speed of aerosol particles, J. Appl.
+    Meteor., 7, 944-947,
+    https://doi.org/10.1175/1520-0450(1968)007<0944:FSOAP>2.0.CO;2
+
     :param xTau: Dust or ice MASS mixing ratio (ppm)
     :type  xTau: array [time, lev, lat, lon]
     :param nTau: Dust or ice NUMBER mixing ratio (None)
@@ -1154,7 +1201,7 @@ def compute_Vg_sed(xTau, nTau, T):
     v = np.sqrt((3*Kb*T) / mass_co2)
     mfp = (2*eta) / (rho_air*v)
     Kn = mfp / Rp
-    alpha = 1.246 + 0.42*np.exp(-0.87/Kn)
+    alpha = 1.246 + 0.42*np.exp(-0.87/Kn)  # Kasten (1968), see docstring
     Vg = c * (1 + alpha*Kn)/eta
     return Vg
 
@@ -1238,6 +1285,48 @@ def compute_dustref_per_z(dustref, delz):
     dustref_per_z = dustref/delz*1000
     return dustref_per_z
 
+def set_planet_constants(f):
+    """
+    Set the module-level planet constants (rgas, Rd, Cp, g, g0,
+    R_planet, kappa) from the open netCDF file when it carries them,
+    else leave the Mars/Ames defaults.
+
+    Global attributes (written by planetWRF and carried through
+    MarsFormat): R_D, CP, G, RADIUS. 3D fields, when present, take
+    precedence: rgas3D, cp3D (composition-dependent) and g3D
+    (variable gravity), each [time, lev, lat, lon] like temp.
+    """
+    global rgas, Rd, Cp, g, g0, R_planet, kappa
+    src = []
+    attrs = {k: f.getncattr(k) for k in f.ncattrs()}
+    # Only trust the attribute set as a whole (the planetWRF/WRF
+    # signature), never a stray single name from another model
+    if not all(k in attrs for k in ('R_D', 'CP', 'G', 'RADIUS')):
+        attrs = {}
+    if 'R_D' in attrs:
+        rgas = Rd = float(attrs['R_D']); src.append('R_D')
+    if 'CP' in attrs:
+        Cp = float(attrs['CP']); src.append('CP')
+    if 'G' in attrs:
+        g = g0 = float(attrs['G']); src.append('G')
+    if 'RADIUS' in attrs:
+        R_planet = float(attrs['RADIUS']); src.append('RADIUS')
+    if 'R_D' in attrs and 'CP' in attrs:
+        kappa = float(attrs['R_D'])/float(attrs['CP'])
+    else:
+        kappa = None
+    if 'rgas3D' in f.variables and 'cp3D' in f.variables:
+        rgas = Rd = np.array(f.variables['rgas3D'][:])
+        Cp = np.array(f.variables['cp3D'][:])
+        kappa = rgas/Cp
+        src.append('rgas3D, cp3D')
+    if 'g3D' in f.variables:
+        g = np.array(f.variables['g3D'][:])
+        src.append('g3D')
+    if src:
+        print(f"{Cyan}Planet constants from file: {', '.join(src)}{Nclr}")
+
+
 # =====================================================================
 def compute_theta(p_3D, ps, T, f_type):
     """
@@ -1258,7 +1347,9 @@ def compute_theta(p_3D, ps, T, f_type):
     :raises Exception: If any other error occurs
     """
 
-    theta_exp = R / (M_co2*Cp)
+    # kappa = R/cp from the file (planetWRF attributes or 3D fields)
+    # when available; else the historical CO2 value R/(M_co2*Cp)
+    theta_exp = kappa if kappa is not None else R / (M_co2*Cp)
     # Broadcast dimensions
     if f_type == "diurn":
         # (time, tod, lat, lon) -> (time, tod, 1, lat, lon)
@@ -1307,6 +1398,14 @@ def compute_w(rho, omega):
 
 
 # =====================================================================
+def _like_T(x, T):
+    """Transpose a 3D/4D constant field like T (vertical axis first)
+    for fms_Z_calc; scalars pass through."""
+    if np.ndim(x) == 0:
+        return x
+    return np.asarray(x).transpose(lev_T)
+
+
 def compute_zfull(ps, ak, bk, T):
     """
     Calculate the altitude of the layer midpoints above ground level.
@@ -1327,7 +1426,8 @@ def compute_zfull(ps, ak, bk, T):
     """
 
     zfull = fms_Z_calc(
-        ps, ak, bk, T.transpose(lev_T), topo=0., lev_type="full"
+        ps, ak, bk, T.transpose(lev_T), topo=0., lev_type="full",
+        rgas=_like_T(Rd, T), g=_like_T(g, T)
         )
 
     # .. note:: lev_T swaps dims 0 & 1, ensuring level is the first
@@ -1358,7 +1458,8 @@ def compute_zhalf(ps, ak, bk, T):
     """
 
     zhalf = fms_Z_calc(
-        ps, ak, bk, T.transpose(lev_T), topo=0., lev_type="half"
+        ps, ak, bk, T.transpose(lev_T), topo=0., lev_type="half",
+        rgas=_like_T(Rd, T), g=_like_T(g, T)
         )
 
     # .. note:: lev_T swaps dims 0 & 1, ensuring level is the first
@@ -1451,6 +1552,10 @@ def compute_N(theta, zfull):
     """
     Calculate the Brunt Vaisala freqency.
 
+    Holton, J. R., and Hakim, G. J. (2013), An Introduction to Dynamic
+    Meteorology, 5th ed., Academic Press,
+    https://doi.org/10.1016/C2009-0-63394-8
+
     :param theta: Potential temperature (K)
     :type  theta: array [time, lev, lat, lon]
     :param zfull: Altitude above ground level at the layer midpoint (m)
@@ -1480,8 +1585,11 @@ def compute_Tco2(P_3D):
     """
     Calculate the frost point of CO2.
 
-    Adapted from Fannale (1982) - Mars: The regolith-atmosphere cap
-    system and climate change. Icarus.
+    Adapted from Fanale et al. (1982):
+
+    Fanale, F. P., J. R. Salvail, W. B. Banerdt, and R. S. Saunders
+    (1982), Mars: The regolith-atmosphere-cap system and climate change,
+    Icarus, 50, 381-407, https://doi.org/10.1016/0019-1035(82)90131-2
 
     :param P_3D: The full 3D pressure array (Pa)
     :type  p_3D: array [time, lev, lat, lon]
@@ -1513,6 +1621,10 @@ def compute_Tco2(P_3D):
 def compute_scorer(N, ucomp, zfull):
     """
     Calculate the Scorer wavelength.
+
+    Scorer, R. S. (1949), Theory of waves in the lee of mountains,
+    Q. J. R. Meteorol. Soc., 75, 41-56,
+    https://doi.org/10.1002/qj.49707532308
 
     :param N: Brunt Vaisala freqency (rad/s)
     :type  N: float [time, lev, lat, lon]
@@ -1633,6 +1745,10 @@ def compute_Ep(temp):
 
         Ep = 1/2 (g/N)^2 (temp'/temp)^2
 
+    Andrews, D. G., Holton, J. R., and Leovy, C. B. (1987), Middle
+    Atmosphere Dynamics, International Geophysics Series, vol. 40,
+    Academic Press, San Diego.
+
     :param temp: Temperature (K)
     :type  temp: array [time, lev, lat, lon]
     :return: ``Ep`` Wave potential energy (J/kg)
@@ -1654,6 +1770,10 @@ def compute_Ek(ucomp, vcomp):
 
         Ek = 1/2 (u'**2+v'**2)
 
+    Andrews, D. G., Holton, J. R., and Leovy, C. B. (1987), Middle
+    Atmosphere Dynamics, International Geophysics Series, vol. 40,
+    Academic Press, San Diego.
+
     :param ucomp: Zonal wind (m/s)
     :type  ucomp: array [time, lev, lat, lon]
     :param vcomp: Meridional wind (m/s)
@@ -1672,6 +1792,10 @@ def compute_Ek(ucomp, vcomp):
 def compute_MF(UVcomp, w):
     """
     Calculate zonal or meridional momentum fluxes.
+
+    Andrews, D. G., Holton, J. R., and Leovy, C. B. (1987), Middle
+    Atmosphere Dynamics, International Geophysics Series, vol. 40,
+    Academic Press, San Diego.
 
     :param UVcomp: Zonal or meridional wind (ucomp or vcomp)(m/s)
     :type  UVcomp: array
@@ -1705,6 +1829,10 @@ def compute_WMFF(MF, rho, lev, interp_type):
 
         dp/dz = -rho*g
         [du/dz = (du/dp).(-rho*g)] > [du/dz = -rho*g * (du/dp)]
+
+    Andrews, D. G., Holton, J. R., and Leovy, C. B. (1987), Middle
+    Atmosphere Dynamics, International Geophysics Series, vol. 40,
+    Academic Press, San Diego.
 
     :param MF: Zonal/meridional momentum flux (J/kg)
     :type  MF: array [time, lev, lat, lon]
@@ -2071,6 +2199,7 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
                 continue
 
             print(f"Processing: {var}...")
+            set_planet_constants(f)
 
             # Define lev_T and lev_T_out for this file
             f_type, interp_type = FV3_file_type(f)
@@ -2171,7 +2300,7 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
                 delp = f.variables["delp"][:]
                 OUT = compute_dustref_per_pa(dustref, delp)
             
-            if var == "dustref_per_z":
+            if var == "dustref_per_km":
                 dustref = f.variables["dustref"][:]
                 delz = f.variables["delz"][:]
                 OUT = compute_dustref_per_z(dustref, delz)
@@ -2249,20 +2378,34 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
                 ucomp = f.variables["ucomp"][:]
                 vcomp = f.variables["vcomp"][:]
 
-            if var == "div":
+            # C-grid winds (MarsFormat -stag for planetWRF) give the
+            # divergence and vorticity exactly as the model forms them
+            have_cgrid = ("u_stag" in f.variables and
+                          "v_stag" in f.variables and
+                          "lon_u" in f.variables and
+                          "lat_v" in f.variables)
+            if var in ["div", "curl"] and have_cgrid:
+                print(f"{Cyan}{var}: using the native C-grid winds "
+                      f"u_stag, v_stag{Nclr}")
+                u_stag = f.variables["u_stag"][:]
+                v_stag = f.variables["v_stag"][:]
+                lon_u = f.variables["lon_u"][:]
+                lat_v = f.variables["lat_v"][:]
+                func = cgrid_div if var == "div" else cgrid_curl
+                OUT = func(u_stag, v_stag, lon, lat, lon_u, lat_v,
+                           R=R_planet)
+            elif var == "div":
                 OUT = spherical_div(ucomp, vcomp, lon, lat,
-                                    R=3400*1000.,
+                                    R=R_planet,
                                     spacing="regular")
-
-            if var == "curl":
+            elif var == "curl":
                 OUT = spherical_curl(ucomp, vcomp, lon, lat,
-                                        R=3400*1000.,
+                                        R=R_planet,
                                         spacing="regular")
-
             if var == "fn":
                 theta = f.variables["theta"][:]
                 OUT = frontogenesis(ucomp, vcomp, theta, lon, lat,
-                                    R=3400*1000.,
+                                    R=R_planet,
                                     spacing="regular")
 
             # ==================================================
@@ -2284,12 +2427,14 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
                     OUT = mass_stream(vcomp.transpose([2, 3, 0, 1, 4]),
                                       lat,
                                       lev,
-                                      type=interp_type).transpose([2, 3, 0, 1, 4])
+                                      type=interp_type, g=g0,
+                                      a=R_planet).transpose([2, 3, 0, 1, 4])
                 else:
                     OUT = mass_stream(vcomp.transpose([1, 2, 3, 0]),
                                       lat,
                                       lev,
-                                      type=interp_type).transpose([3, 0, 1, 2])
+                                      type=interp_type, g=g0,
+                                      a=R_planet).transpose([3, 0, 1, 2])
                     # [t, lev, lat, lon]
                     # -> [lev, lat, lon, t]
                     # ->  [t, lev, lat, lon]

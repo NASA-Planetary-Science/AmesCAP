@@ -1,5 +1,5 @@
-:py:mod:`bin.MarsPull`
-======================
+bin.MarsPull
+============
 
 .. py:module:: bin.MarsPull
 
@@ -28,24 +28,8 @@
 
 
 
-Module Contents
----------------
-
-
-Functions
-~~~~~~~~~
-
-.. autoapisummary::
-
-   bin.MarsPull.debug_wrapper
-   bin.MarsPull.download
-   bin.MarsPull.main
-   bin.MarsPull.print_file_list
-
-
-
 Attributes
-~~~~~~~~~~
+----------
 
 .. autoapisummary::
 
@@ -57,6 +41,20 @@ Attributes
    bin.MarsPull.parser
    bin.MarsPull.save_dir
 
+
+Functions
+---------
+
+.. autoapisummary::
+
+   bin.MarsPull.debug_wrapper
+   bin.MarsPull.download
+   bin.MarsPull.main
+   bin.MarsPull.print_file_list
+
+
+Module Contents
+---------------
 
 .. py:function:: debug_wrapper(func)
 
@@ -91,7 +89,7 @@ Attributes
    appropriate messages to the console.
 
    :param url: The url to download from, e.g.,
-       'https://data.nas.nasa.gov/legacygcm/fv3betaout1data/03340.fixed.nc'
+       'https://data.nas.nasa.gov/legacygcm/fv3betaout1/fv3betaout1/03340.fixed.nc'
    :type  url: str
    :param file_name: The local file_name e.g.,
        '/files/Data/LegacyGCM_Ls000_Ls004.nc'
@@ -157,29 +155,19 @@ Attributes
 
 .. py:data:: Ls_end
 
-   
-
 .. py:data:: Ls_ini
 
-   
-
 .. py:data:: args
+   :value: None
 
-   
 
 .. py:data:: debug
 
-   
-
 .. py:data:: exit_code
+   :value: 0
 
-   
 
 .. py:data:: parser
 
-   
-
 .. py:data:: save_dir
-
-   
 

@@ -7,16 +7,18 @@ For instructions and documentation please see our `online documentation <https:/
 
 About
 -----
-**CAP** is a set of Python3 libraries and command-line executables that streamline downloading, processing, and plotting output from the NASA Ames Mars Global Climate Models:
+**CAP** is a set of Python3 libraries and command-line executables that streamline downloading, processing, and plotting output from Mars Global Climate Models. CAP reads output from the NASA Ames Mars Global Climate Models directly:
 
 * NASA Ames Legacy Mars GCM
 * NASA Ames Mars GCM with GFDL's FV3 dynamical core
+
+and, with ``MarsFormat``, converts output from the LMD Mars Planetary Climate Model (PCM), MarsWRF, and the OpenMARS and EMARS reanalyses to the same format.
 
 Installation
 -----------
 Requirements:
 
-* Python 3.7 or later
+* Python 3.10 or newer (tested with 3.10-3.14)
 * pip (Python package installer)
 
 Recommended Installation
@@ -46,17 +48,11 @@ For reproducible analysis, we recommend installing CAP in a dedicated virtual en
 
     # For spectral analysis capabilities, please follow the installation instructions.
 
-    # Copy amescap_profile to your home directory, which varies by OS, shell, and package manager:
-    # pip + Unix/MacOS (bash, csh, tcsh, zsh) OR Windows Cygwin:
-    cp amescap/mars_templates/amescap_profile ~/.amescap_profile
-    # OR pip + Windows Powershell:
-    Copy-Item .\amescap\mars_templates\amescap_profile -Destination $HOME\.amescap_profile
-    # OR conda + Unix/MacOS (bash, csh, tcsh, zsh):
-    cp /opt/anaconda3/envs/amescap/mars_templates/amescap-profile ~/.amescap-profile
-    # OR conda + Windows Cygwin:
-    cp /cygdrive/c/Users/YourUsername/anaconda3/envs/amescap/mars_templates/amescap-profile ~/.amescap-profile
-    # OR conda + Windows Powershell:
-    Copy-Item $env:USERPROFILE\anaconda3\envs\amescap\mars_templates\amescap-profile -Destination $HOME\.amescap-profile
+    # Unix, macOS, or Cygwin, with pip or conda:
+    cp "$(python -c 'import sys; print(sys.prefix)')/mars_templates/amescap_profile" ~/.amescap_profile
+    # Windows PowerShell, with pip or conda:
+    $profileDir = python -c "import sys; print(sys.prefix)"
+    Copy-Item "$profileDir\mars_templates\amescap_profile" -Destination "$HOME\.amescap_profile"
 
 This ensures consistent package versions across different systems.
 
@@ -73,6 +69,7 @@ After installation, the following commands will be available:
 * ``MarsFiles`` - Manage data files
 * ``MarsFormat`` - Convert between model/reanalysis formats
 * ``MarsCalendar`` - Handle Mars calendar calculations
+* ``MarsNest`` - Map the layout of nested grids
 
 Documentation
 ------------
@@ -92,11 +89,11 @@ The tutorial directory contains:
 Data Sources
 -----------
 The tutorials use MGCM simulation outputs documented in `Haberle et al. 2019 <https://www.sciencedirect.com/science/article/pii/S0019103518305761>`_. 
-Data is available through the `MCMC Data Portal <https://data.nas.nasa.gov/mcmc/index.html>`_.
+Legacy files are available at `the NASA Ames Legacy GCM data directory <https://data.nas.nasa.gov/legacygcm/legacygcm/>`_, and FV3 files at `the FV3BETAOUT1 directory <https://data.nas.nasa.gov/legacygcm/fv3betaout1/fv3betaout1/>`_.
 
 Contributing
 -----------
-We welcome contributions! Please see our contributing guidelines for details.
+We welcome contributions! Please see our contributing guidelines (``CONTRIBUTING.rst``) for details. Instructions for running the test suite, including its time, memory, disk, and network requirements, are in ``tests/README.rst``.
 
 License
 -------
