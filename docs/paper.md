@@ -87,7 +87,7 @@ CAP is developed by the NASA Ames Mars Climate Modeling Center alongside the NAS
 
 CAP has begun to be adopted outside the development team. In 2026, Mark I. Richardson, first author of the PlanetWRF model description [@Richardson2007], contributed support for current PlanetWRF output, native staggered winds, true local solar time, and faster chunked interpolation and conversion.
 
-Within the Mars Climate Modeling Center, CAP has been used to analyze NASA Ames MGCM simulations in studies including uniform local time shifting, vertical interpolation to a standard altitude grid, and migrating tide analysis [@Urata2025], adding streamfunctions[@Batterson2023], preliminary analysis figures [@Hartwick2022a; @Hartwick2022b; @Batterson2023; @Urata2025], figures for conference presentations [@Kahre2022; @Kahre2023; @Steakley2023; @Steakley2024; @Hartwick2024].
+Within the Mars Climate Modeling Center, CAP has been used to analyze NASA Ames MGCM simulations. In @Urata2025, CAP shifted output to uniform local time, interpolated it to a standard altitude grid, and was used for the migrating tide analysis; in @Batterson2023, CAP computed the mass streamfunction. CAP also produced preliminary analysis figures for several studies [@Hartwick2022a; @Hartwick2022b; @Batterson2023; @Urata2025] and figures for conference presentations [@Kahre2022; @Kahre2023; @Steakley2023; @Steakley2024; @Hartwick2024].
 
 Because CAP has not previously had a DOI or a peer-reviewed description, studies that used it could not cite it formally, and it does not appear in their reference lists. This paper, together with an archived, versioned release, gives CAP a citable reference for future work.
 

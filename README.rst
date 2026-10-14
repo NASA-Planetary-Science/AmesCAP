@@ -103,3 +103,5 @@ Citation
 --------
 If you use CAP in your research, please cite:
 **(APA)** NASA Ames Mars Climate Modeling Center (2024). *Community Analysis Pipeline* [Computer software]. NASA Planetary Science GitHub.
+
+Citation metadata, including the authors and version, are in ``CITATION.cff``.

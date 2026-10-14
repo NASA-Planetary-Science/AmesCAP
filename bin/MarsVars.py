@@ -137,6 +137,33 @@ def debug_wrapper(func):
             return 1  # Error exit code
     return wrapper
 
+
+# Number of requested operations that failed. Errors are reported and
+# processing continues with the next operation, but main() returns 1 if
+# any failed so that scripts can detect it.
+n_errors = 0
+
+
+def count_error():
+    """Record that a requested operation failed."""
+    global n_errors
+    n_errors += 1
+
+
+def rescale_units(units, old, new):
+    """
+    Units string for a quantity per ``old`` converted to per ``new``.
+
+    E.g., ``rescale_units("op/Pa", "Pa", "m")`` returns ``"op/m"``.
+    Units that do not end in ``/old`` or ``old-1`` get ``old/new``
+    appended.
+    """
+    for suffix_old, suffix_new in ((f"/{old}", f"/{new}"),
+                                   (f"{old}-1", f"{new}-1")):
+        if units.endswith(suffix_old):
+            return units[:-len(suffix_old)] + suffix_new
+    return f"{units} {old}/{new}".strip()
+
 # List of supported variables for [-add --add_variable]
 cap_str = " (derived w/CAP)"
 
@@ -564,35 +591,30 @@ if args.input_file:
     for file in args.input_file:
         if not re.search(".nc", file.name):
             parser.error(f"{Red}{file.name} is not a netCDF file{Nclr}")
-            exit()
 
 if args.rename and args.edit_variable is None:
     parser.error(f"{Red}The -rename argument requires -edit to be used "
                  f"with it (e.g., MarsVars 01336.atmos_average.nc "
                  f"-edit ps -rename ps_mbar)"
                  f"{Nclr}")
-    exit()
 
 if args.longname and args.edit_variable is None:
     parser.error(f"{Red}The -longname argument requires -edit to be "
                  f"used with it (e.g., MarsVars 01336.atmos_average.nc "
                  f"-edit ps -longname 'Pressure scaled to mb')"
                  f"{Nclr}")
-    exit()
 
 if args.unit and args.edit_variable is None:
     parser.error(f"{Red}The -unit argument requires -edit to be used "
                  f"with it (e.g., MarsVars 01336.atmos_average.nc "
                  f"-edit ps -unit 'mbar')"
                  f"{Nclr}")
-    exit()
 
 if args.multiply and args.edit_variable is None:
     parser.error(f"{Red}The -multiply argument requires -edit to be "
                  f"used with it (e.g., MarsVars 01336.atmos_average.nc "
                  f"-edit ps -multiply 0.01)"
                  f"{Nclr}")
-    exit()
 
 # ======================================================================
 # TODO : If only one timestep, reshape from
@@ -964,7 +986,7 @@ def safe_copy_replace(src_file, dst_file, max_attempts=5, delay=1.0):
                 # Now remove the source file
                 try:
                     os.remove(src_file)
-                except:
+                except Exception:
                     print(f"{Yellow}Warning: Source file {src_file} could not be removed, but destination was updated{Nclr}")
 
                 print(f"{Green}File successfully replaced on attempt {attempt+1}{Nclr}")
@@ -2137,6 +2159,7 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
             # Check file compatibility
             if interp_type not in master_list[var][3]:
                 compat_file_fmt = ", ".join(master_list[var][3])
+                count_error()
                 print(f"{Red}ERROR: Variable '{Yellow}{var}{Red}' can only be "
                       f"added to file type: {Yellow}{compat_file_fmt}{Nclr}")
                 return False
@@ -2152,11 +2175,13 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
                 if dep in master_list:
                     if not add_with_dependencies(dep):
                         all_deps_ok = False
+                        count_error()
                         print(f"{Red}Cannot add {var}: Required dependency "
                               f"{dep} cannot be added{Nclr}")
                 else:
                     # Cannot add this dependency
                     all_deps_ok = False
+                    count_error()
                     print(f"{Red}Cannot add {var}: Required dependency {dep} "
                           f"is not in the list of supported variables{Nclr}")
 
@@ -2169,6 +2194,7 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
         # Check all requested variables
     for var in add_list:
         if var not in master_list:
+            count_error()
             print(f"{Red}Variable '{var}' is not supported and cannot be "
                   f"added to the file.{Nclr}")
             continue
@@ -2254,7 +2280,7 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
                     # require pfull3D and will work without it,
                     # so we use a try statement here.
                     p_3D = f.variables["pfull3D"][:]
-                except:
+                except Exception:
                     pass
 
             if var == "dzTau":
@@ -2489,6 +2515,7 @@ def process_add_variables(file_name, add_list, master_list, debug=False):
             f.close()
 
         except Exception as e:
+            count_error()
             except_message(debug, e, var, file_name)
 
 
@@ -2590,7 +2617,7 @@ def main():
             if os.path.exists(ifile_tmp):
                 try:
                     os.remove(ifile_tmp)
-                except:
+                except Exception:
                     print(f"{Yellow}Warning: Could not remove existing temporary file: {ifile_tmp}{Nclr}")
 
             # Open, copy, and close files
@@ -2608,6 +2635,7 @@ def main():
                     if safe_copy_replace(ifile_tmp, input_file):
                         print(f"{Cyan}{input_file} was updated{Nclr}")
                     else:
+                        count_error()
                         print(f"{Red}Failed to update {input_file} - using original file{Nclr}")
                 else:
                     # On Unix systems, use standard move
@@ -2615,12 +2643,13 @@ def main():
                     print(f"{Cyan}{input_file} was updated{Nclr}")
 
             except Exception as e:
+                count_error()
                 print(f"{Red}Error in remove_variable: {str(e)}{Nclr}")
                 # Clean up temporary file if it exists
                 if os.path.exists(ifile_tmp):
                     try:
                         os.remove(ifile_tmp)
-                    except:
+                    except Exception:
                         pass
 
         # ==============================================================
@@ -2654,8 +2683,10 @@ def main():
                 if os.path.exists(ifile_extract):
                     print(f"{Cyan}Extract file created: {ifile_extract}{Nclr}\n")
                 else:
+                    count_error()
                     print(f"{Red}Failed to create extract file{Nclr}\n")
             except Exception as e:
+                count_error()
                 print(f"{Red}Error in extract_copy: {str(e)}{Nclr}")
                 # Clean up extract file if it exists but is incomplete
                 if os.path.exists(ifile_extract):
@@ -2679,6 +2710,7 @@ def main():
 
             # Use check_variable_exists instead of direct key lookup
             if not check_variable_exists(idiff, f.variables.keys()):
+                count_error()
                 print(f"{Red}zdiff error: variable {idiff} is not present "
                       f"in {input_file}{Nclr}")
                 f.close()
@@ -2764,6 +2796,7 @@ def main():
                 print(f"{Green}d_dz_{idiff}: Done{Nclr}")
 
             except Exception as e:
+                count_error()
                 except_message(debug, e, idiff, input_file, pre="d_dz_")
 
         # ==============================================================
@@ -2774,6 +2807,7 @@ def main():
 
             # Use check_variable_exists instead of direct key lookup
             if not check_variable_exists(izdetrend, f.variables.keys()):
+                count_error()
                 print(f"{Red}zonal detrend error: variable {izdetrend} is "
                       f"not in {input_file}{Nclr}")
                 f.close()
@@ -2802,6 +2836,7 @@ def main():
                 print(f"{Green}{izdetrend}_p: Done{Nclr}")
 
             except Exception as e:
+                count_error()
                 except_message(debug, e, izdetrend, input_file, ext="_p")
 
         # ==============================================================
@@ -2813,6 +2848,7 @@ def main():
 
             # Use check_variable_exists instead of direct key lookup
             if not check_variable_exists(idp_to_dz, f.variables.keys()):
+                count_error()
                 print(f"{Red}dp_to_dz error: variable {idp_to_dz} is not "
                       f"in {input_file}{Nclr}")
                 f.close()
@@ -2826,6 +2862,7 @@ def main():
                 # Ensure required variables (DP, DZ) exist
                 if not (check_variable_exists('DP', f.variables.keys()) and
                         check_variable_exists('DZ', f.variables.keys())):
+                    count_error()
                     print(f"{Red}Error: DP and DZ variables required for "
                           f"conversion. Add them with CAP:\n{Nclr}MarsVars "
                           f"{input_file} -add DP DZ")
@@ -2834,8 +2871,9 @@ def main():
 
                 print(f"Converting: {idp_to_dz}...")
 
-                new_unit = (getattr(f.variables[actual_var_name], "units", "")
-                            + "/m")
+                new_unit = rescale_units(
+                    getattr(f.variables[actual_var_name], "units", ""),
+                    "Pa", "m")
                 new_lname = (getattr(f.variables[actual_var_name], "long_name", "")
                              + " rescaled to meter-1")
 
@@ -2846,6 +2884,7 @@ def main():
                 var_Ncdf = f.createVariable(f"{idp_to_dz}_dp_to_dz", "f4", dim_out)
                 var_Ncdf.long_name = (new_lname + cap_str)
                 var_Ncdf.units = new_unit
+                # [op/Pa] * [Pa/m] = [op/m]
                 var_Ncdf[:] = (
                     var * f.variables["DP"][:] / f.variables["DZ"][:]
                     )
@@ -2854,6 +2893,7 @@ def main():
                 print(f"{Green}{idp_to_dz}_dp_to_dz: Done{Nclr}")
 
             except Exception as e:
+                count_error()
                 except_message(debug, e, idp_to_dz, input_file, ext="_dp_to_dz")
 
         for idz_to_dp in args.dz_to_dp:
@@ -2862,6 +2902,7 @@ def main():
 
             # Use check_variable_exists instead of direct key lookup
             if not check_variable_exists(idz_to_dp, f.variables.keys()):
+                count_error()
                 print(f"{Red}dz_to_dp error: variable {idz_to_dp} is not "
                       f"in {input_file}{Nclr}")
                 f.close()
@@ -2877,13 +2918,15 @@ def main():
                 # Ensure required variables (DP, DZ) exist
                 if not (check_variable_exists('DP', f.variables.keys()) and
                         check_variable_exists('DZ', f.variables.keys())):
+                    count_error()
                     print(f"{Red}Error: DP and DZ variables required for "
                           f"conversion{Nclr}")
                     f.close()
                     continue
 
-                new_unit = (getattr(f.variables[actual_var_name], "units", "")
-                            + "/m")
+                new_unit = rescale_units(
+                    getattr(f.variables[actual_var_name], "units", ""),
+                    "m", "Pa")
                 new_lname = (getattr(f.variables[actual_var_name], "long_name", "")
                              + " rescaled to Pa-1")
 
@@ -2894,14 +2937,16 @@ def main():
                 var_Ncdf = f.createVariable(f"{idz_to_dp}_dz_to_dp", "f4", dim_out)
                 var_Ncdf.long_name = (new_lname + cap_str)
                 var_Ncdf.units = new_unit
+                # [op/m] * [m/Pa] = [op/Pa]
                 var_Ncdf[:] = (
-                    var * f.variables["DP"][:] / f.variables["DZ"][:]
+                    var * f.variables["DZ"][:] / f.variables["DP"][:]
                     )
 
                 f.close()
                 print(f"{Green}{idz_to_dp}_dz_to_dp: Done{Nclr}")
 
             except Exception as e:
+                count_error()
                 except_message(debug, e, idz_to_dp, input_file, ext="_dz_to_dp")
 
         # ==============================================================
@@ -2930,6 +2975,7 @@ def main():
             if interp_type == "pfull":
                 ak, bk = ak_bk_loader(f)
             else:
+                count_error()
                 print(f"{Red}column integration error: the file "
                       f"{input_file} does not have the requisite variables "
                       f"(ak and bk), please use a non-column integrated file "
@@ -2940,6 +2986,7 @@ def main():
 
             # Use check_variable_exists instead of direct key lookup
             if not check_variable_exists(icol, f.variables.keys()):
+                count_error()
                 print(f"{Red}column integration error: variable {icol} is "
                       f"not in {input_file}{Nclr}")
                 f.close()
@@ -2995,6 +3042,7 @@ def main():
                 print(f"{Green}{icol}_col: Done{Nclr}")
 
             except Exception as e:
+                count_error()
                 except_message(debug, e, icol, input_file, ext="_col")
 
         if args.edit_variable:
@@ -3005,7 +3053,7 @@ def main():
             if os.path.exists(ifile_tmp):
                 try:
                     os.remove(ifile_tmp)
-                except:
+                except Exception:
                     print(f"{Yellow}Warning: Could not remove existing temporary file: {ifile_tmp}{Nclr}")
 
             try:
@@ -3058,6 +3106,7 @@ def main():
                     if safe_copy_replace(ifile_tmp, input_file):
                         print(f"{Cyan}{input_file} was updated{Nclr}")
                     else:
+                        count_error()
                         print(f"{Red}Failed to update {input_file} - using original file{Nclr}")
                 else:
                     # On Unix systems, use standard move
@@ -3065,13 +3114,19 @@ def main():
                     print(f"{Cyan}{input_file} was updated{Nclr}")
 
             except Exception as e:
+                count_error()
                 print(f"{Red}Error in edit_variable: {str(e)}{Nclr}")
                 # Clean up temporary file if it exists
                 if os.path.exists(ifile_tmp):
                     try:
                         os.remove(ifile_tmp)
-                    except:
+                    except Exception:
                         pass
+
+    if n_errors:
+        print(f"{Red}{n_errors} operation(s) failed{Nclr}")
+        return 1
+    return 0
 
 
 # ======================================================================

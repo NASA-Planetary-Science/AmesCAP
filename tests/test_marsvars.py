@@ -412,6 +412,14 @@ class TestMarsVars(BaseTestCase):
         nc = Dataset(output_file, 'r')
         try:
             self.assertIn('temp_dz_to_dp', nc.variables, "Variable temp_dz_to_dp not found")
+            # Per-Pa -> per-m multiplies by DP/DZ; per-m -> per-Pa by DZ/DP
+            var = nc.variables['temp'][:]
+            DP = nc.variables['DP'][:]
+            DZ = nc.variables['DZ'][:]
+            np.testing.assert_allclose(nc.variables['temp_dp_to_dz'][:],
+                                       var*DP/DZ, rtol=1e-5)
+            np.testing.assert_allclose(nc.variables['temp_dz_to_dp'][:],
+                                       var*DZ/DP, rtol=1e-5)
         finally:
             nc.close()
 
@@ -531,7 +539,20 @@ class TestMarsVars(BaseTestCase):
                             "Values don't appear to be correctly scaled to mbar")
         finally:
             nc.close()
-            
+
+    def test_failed_operation_returns_nonzero(self):
+        """A failed operation is reported with a non-zero exit status"""
+        result = self.run_mars_vars([
+            '01336.atmos_average.nc', '-edit', 'not_a_variable',
+            '-multiply', '2'
+        ])
+        self.assertNotEqual(result.returncode, 0)
+
+        result = self.run_mars_vars([
+            '01336.atmos_average.nc', '-zdiff', 'not_a_variable'
+        ])
+        self.assertNotEqual(result.returncode, 0)
+
 
 if __name__ == '__main__':
     unittest.main()

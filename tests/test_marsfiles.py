@@ -740,6 +740,49 @@ class TestMarsFiles(BaseTestCase):
         
         print("Regrid operation succeeded")
 
+    def test_regrid_coincident_grid(self):
+        """Regrid onto a target whose points coincide with source points
+
+        The target keeps every second latitude and longitude of the
+        source, so every target point lies exactly on a source point
+        and the source values must be preserved (no NaNs from 1/d**2).
+        """
+        source = os.path.join(self.test_dir, '01336.atmos_average_pstd.nc')
+        target = os.path.join(self.test_dir, 'target-grid.nc')
+        with Dataset(source, 'r') as f_in, Dataset(target, 'w') as f_out:
+            for name, dim in f_in.dimensions.items():
+                size = len(dim)
+                if name in ('lat', 'lon'):
+                    size = len(range(0, size, 2))
+                f_out.createDimension(
+                    name, None if dim.isunlimited() else size)
+            for name, var in f_in.variables.items():
+                out = f_out.createVariable(name, var.dtype, var.dimensions)
+                out.setncatts({k: var.getncattr(k) for k in var.ncattrs()
+                               if k != '_FillValue'})
+                index = tuple(slice(None, None, 2) if d in ('lat', 'lon')
+                              else slice(None) for d in var.dimensions)
+                out[:] = var[index]
+
+        result = self.run_mars_files([
+            '01336.atmos_average_pstd.nc', '-regrid', 'target-grid.nc'
+        ])
+        self.assertEqual(result.returncode, 0, "Regrid command failed")
+        output_file = self.check_file_exists(
+            '01336.atmos_average_pstd_regrid.nc')
+
+        with Dataset(source, 'r') as f_src, Dataset(output_file, 'r') as f_reg:
+            expected = np.ma.filled(
+                f_src.variables['temp'][..., ::2, ::2].astype(float), np.nan)
+            regridded = np.ma.filled(
+                f_reg.variables['temp'][:].astype(float), np.nan)
+        self.assertEqual(regridded.shape, expected.shape)
+        self.assertGreater(np.isfinite(expected).sum(), 0)
+        # Every finite source value survives regridding unchanged
+        np.testing.assert_allclose(regridded, expected, rtol=1e-6,
+                                   equal_nan=True)
+        os.remove(target)
+
     def test_zonal_average(self):
         """Test zonal averaging operation"""
         result = self.run_mars_files(['01336.atmos_average.nc', '-zavg'])

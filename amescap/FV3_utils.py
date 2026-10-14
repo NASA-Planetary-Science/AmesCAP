@@ -759,7 +759,7 @@ def axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int="lin",
                 try:
                     alpha = (np.log(xi[k]/x[np1]) / np.log(x[n]/x[np1]))
                     var_OUT[k, :] = (var_IN[n, ...]*alpha + (1-alpha)*var_IN[np1, ...])
-                except:
+                except Exception:
                     # Handle any other errors by using nearest value
                     alpha = 0
                     var_OUT[k, :] = var_IN[np1, ...]
@@ -2254,8 +2254,8 @@ def time_shift_calc(var_in, lon, tod, target_times=None, eot_offset=0.):
     # Number of timesteps per day in input
     n_tod_in = len(tod)
     if n_tod_in == 0:
-        print('No time steps in input (time_shift_calc in FV3_utils.py)')
-        exit()
+        raise ValueError(
+            'No time steps in input (time_shift_calc in FV3_utils.py)')
 
     # Store as float for calculations but keep integer version for reshaping
     n_tod_in_float = float(n_tod_in)

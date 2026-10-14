@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: "If you use CAP in your research, please cite it as below."
+title: "Community Analysis Pipeline (CAP)"
+abstract: >-
+  A Python package of libraries and command-line tools for processing,
+  analyzing, and plotting output from Mars global climate models.
+type: software
+version: "5.0"
+license: MIT
+repository-code: "https://github.com/NASA-Planetary-Science/AmesCAP"
+url: "https://amescap.readthedocs.io"
+keywords:
+  - Mars
+  - global climate model
+  - netCDF
+  - data processing
+  - data visualization
+authors:
+  - given-names: Courtney M. L.
+    family-names: Batterson
+    orcid: "https://orcid.org/0000-0001-5894-095X"
+    affiliation: Bay Area Environmental Research Institute
+  - given-names: Richard A.
+    family-names: Urata
+    orcid: "https://orcid.org/0000-0001-8497-5718"
+    affiliation: Bay Area Environmental Research Institute
+  - given-names: Victoria L.
+    family-names: Hartwick
+    orcid: "https://orcid.org/0000-0002-2082-8986"
+    affiliation: Southwest Research Institute
+  - given-names: Alexandre M.
+    family-names: Kling
+    orcid: "https://orcid.org/0000-0002-2980-7743"
+    affiliation: Bay Area Environmental Research Institute
+  - given-names: Melinda A.
+    family-names: Kahre
+    orcid: "https://orcid.org/0000-0002-0935-5532"
+    affiliation: NASA Ames Research Center

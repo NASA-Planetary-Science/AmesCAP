@@ -309,6 +309,33 @@ class TestMarsInterp(BaseTestCase):
         self.assertFalse(os.path.exists(os.path.join(
             self.test_dir, '01336.atmos_average_invalid_type.nc')))
 
+    def test_failed_interpolation_leaves_no_output(self):
+        """A run that fails while writing leaves no partial output file"""
+        # Copy the average file without ``temp``, which zstd needs only
+        # after the output file has been started
+        source = os.path.join(self.test_dir, '01336.atmos_average.nc')
+        broken = os.path.join(self.test_dir, '01336.atmos_average_notemp.nc')
+        with Dataset(source, 'r') as f_in, Dataset(broken, 'w') as f_out:
+            for name, dim in f_in.dimensions.items():
+                f_out.createDimension(
+                    name, None if dim.isunlimited() else len(dim))
+            for name, var in f_in.variables.items():
+                if name == 'temp':
+                    continue
+                out = f_out.createVariable(name, var.dtype, var.dimensions)
+                out.setncatts({k: var.getncattr(k) for k in var.ncattrs()
+                               if k != '_FillValue'})
+                out[:] = var[:]
+
+        try:
+            self.run_mars_interp(['01336.atmos_average_notemp.nc', '-t', 'zstd'],
+                                 expected_success=False)
+            leftovers = [f for f in os.listdir(self.test_dir)
+                         if 'notemp_zstd' in f or 'partial' in f]
+            self.assertEqual(leftovers, [])
+        finally:
+            os.remove(broken)
+
     def test_invalid_netcdf_file(self):
         """Test error handling with invalid netCDF file"""
         # Create an invalid netCDF file

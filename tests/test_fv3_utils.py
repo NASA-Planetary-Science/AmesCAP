@@ -165,5 +165,15 @@ class TestMassStream(unittest.TestCase):
         np.testing.assert_array_equal(msf[0, :], 0.)
         self.assertTrue((msf[-1, :] < 0).all())
 
+    def test_three_pressure_levels_with_defaults(self):
+        # Three levels of 600, 300 and 100 Pa at the equator with a
+        # 1 m/s wind and factor = 1. The middle level integrates the
+        # 300-100 Pa layer: about 1.26e9 kg/s with the default constants.
+        msf = mass_stream(np.ones((3, 1)), np.array([0.]),
+                          np.array([600., 300., 100.]), factor=1.)
+        self.assertAlmostEqual(msf[1, 0] / 1.e9, 1.262, places=3)
+        self.assertGreater(msf[0, 0], msf[1, 0])
+        self.assertEqual(msf[2, 0], 0.)
+
 if __name__ == '__main__':
     unittest.main()
