@@ -230,7 +230,6 @@ if args.input_file:
     for file in args.input_file:
         if not re.search(".nc", file.name):
             parser.error(f"{Red}{file.name} is not a netCDF file{Nclr}")
-            exit()
 
 
 # ======================================================================
@@ -252,6 +251,25 @@ Cp = 735.0      # J/K
 M_co2 = 0.044   # kg/mol
 
 filepath = os.getcwd()
+
+# Output files still being written, as {temporary name: Ncdf object}.
+# Each output is written under a temporary name and renamed when it is
+# complete, so an interrupted or failed run leaves no partial file.
+partial_files = {}
+
+
+def remove_partial_files():
+    """Close and delete any output files that were not completed."""
+    for tmpname, fnew in list(partial_files.items()):
+        try:
+            fnew.f_Ncdf.close()
+        except Exception:
+            pass
+        try:
+            os.remove(tmpname)
+        except OSError:
+            pass
+        partial_files.pop(tmpname, None)
 
 # ======================================================================
 #                               MAIN PROGRAM
@@ -411,18 +429,21 @@ def main():
     if grid_out:
         # Only print grid content and exit the code
         print(*lev_in)
-        exit()
+        sys.exit(0)
 
     for ifile in file_list:
         # First check if file is present on the disk (Lou only)
         check_file_tape(ifile)
 
         # Append extension, if any
+        # (os.path.join keeps an absolute input path as given)
         if args.extension:
-            newname = (f"{filepath}/{ifile[:-3]}_{interp_type}_"
-                       f"{args.extension}.nc")
+            newname = os.path.join(
+                filepath, f"{ifile[:-3]}_{interp_type}_{args.extension}.nc")
         else:
-            newname = (f"{filepath}/{ifile[:-3]}_{interp_type}.nc")
+            newname = os.path.join(filepath, f"{ifile[:-3]}_{interp_type}.nc")
+        out_dir, out_base = os.path.split(newname)
+        tmpname = os.path.join(out_dir, f".{out_base[:-3]}.partial.nc")
 
 
         # ==============================================================
@@ -484,7 +505,8 @@ def main():
                         fms_Z_calc(ps_c, ak, bk, temp_c.transpose(permut),
                                    topo = topo, lev_type = "half"))
 
-        fnew = Ncdf(newname, "Pressure interpolation using MarsInterp")
+        fnew = Ncdf(tmpname, "Pressure interpolation using MarsInterp")
+        partial_files[tmpname] = fnew
 
         # Copy existing DIMENSIONS other than pfull
         # Get all variables in the file
@@ -600,16 +622,20 @@ def main():
                     print(f"{Yellow}Skipping {ivar} {vdims}: on the "
                           f"native vertical grid but not on the "
                           f"lat/lon grid{Nclr}")
-                        
+
+        fNcdf.close()
+        fnew.filename = newname  # reported by close() as created
+        fnew.close()
+        os.replace(tmpname, newname)
+        partial_files.pop(tmpname)
+
         with Dataset(newname, 'r') as nc_file:
             # Print the global attributes of the NetCDF file
             print(f"\nGlobal File Attributes for {newname}:")
             for attr_name in nc_file.ncattrs():
                 print(f"  {attr_name}: {getattr(nc_file, attr_name)}")
-            
+
         print("\r ", end="")
-        fNcdf.close()
-        fnew.close()
         print(f"Completed in {(time.time() - start_time):3f} sec")
                 
 # ======================================================================
@@ -617,5 +643,8 @@ def main():
 # ======================================================================
 
 if __name__ == "__main__":
-    exit_code = main()
+    try:
+        exit_code = main()
+    finally:
+        remove_partial_files()
     sys.exit(exit_code)

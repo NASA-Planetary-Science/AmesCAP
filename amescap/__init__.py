@@ -1,4 +1,4 @@
-__version__ = "0.3"
+__version__ = "5.0"
 
 from amescap.Script_utils import Green, Nclr
 

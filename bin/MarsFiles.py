@@ -689,29 +689,24 @@ if args.input_file:
             parser.error(
                 f"{Red}{file.name} is not a netCDF or fort.11 file{Nclr}"
                 )
-            exit()
 
 if args.dim_select and not args.split:
     parser.error(f"{Red}[-dim --dim_select] must be used with [-split "
                  f"--split]{Nclr}")
-    exit()
 
 if args.normalize and not args.tide_decomp:
     parser.error(f"{Red}[-norm --normalize] must be used with [-tide "
                  f"--tide_decomp]{Nclr}")
-    exit()
 
 if args.add_trend and not (args.high_pass_temporal or args.low_pass_temporal
                            or args.band_pass_temporal):
     parser.error(f"{Red}[-add_trend --add_trend] must be used with [-lpt "
                  f"--low_pass_temporal], [-hpt --high_pass_temporal], or "
                  f"[-bpt --band_pass_temporal]{Nclr}")
-    exit()
 
 if args.reconstruct and not args.tide_decomp:
     parser.error(f"{Red}[-recon --reconstruct] must be used with [-tide "
                  f"--tide_decomp]{Nclr}")
-    exit()
 
 all_args = [args.bin_files, args.concatenate, args.split, args.time_shift,
             args.bin_average, args.bin_diurn, args.high_pass_temporal,
@@ -724,13 +719,11 @@ if (all(v is None or v is False for v in all_args)
     and args.include is not None):
     parser.error(f"{Red}[-incl --include] must be used with another "
                  f"argument{Nclr}")
-    exit()
 
 if (all(v is None or v is False for v in all_args) and
     args.extension is not None):
     parser.error(f"{Red}[-ext --extension] must be used with another "
                  f"argument{Nclr}")
-    exit()
 
 
 # ------------------------------------------------------
@@ -802,10 +795,9 @@ def concatenate_files(file_list, full_file_list):
                 os.remove(full_file_list[i])
             except OSError as e:
                 print(f"Warning: Could not remove {full_file_list[i]}: {e}")
-            exit()
 
         print(f"{Cyan}Cleaned all but {file_list[0]}{Nclr}")
-        exit()
+        sys.exit(0)
 
     print(
         f"{Cyan}Merging {num_files} files starting with {file_list[0]}..."
@@ -900,7 +892,7 @@ def split_files(file_list, split_dim):
             f"dimension to a single value, [lower_bound] [upper_bound] to "
             f"reduce one dimension to a range{Nclr}"
             )
-        exit()
+        sys.exit(1)
 
     # Add path unless full path is provided
     if not ("/" in file_list[0]):
@@ -989,7 +981,7 @@ def split_files(file_list, split_dim):
                 f"{bounds_in[0]}, {bounds_in[1]}) ({split_dim} values range "
                 f"from {reducing_dim[0]:.1f} to {reducing_dim[-1]:.1f})"
                 )
-            exit()
+            sys.exit(1)
 
     fpath = os.path.dirname(input_file_name)
     fname = os.path.basename(input_file_name)
@@ -1243,7 +1235,7 @@ def process_time_shift(file_list):
         fnew.copy_Ncaxis_with_content(fdiurn.variables["time"])
         try:
             fnew.copy_Ncaxis_with_content(fdiurn.variables["scalar_axis"])
-        except:
+        except Exception:
             print(f'{Red}Could not find scalar axis')
 
         # Only create a vertical axis if orig. file has 3D fields
@@ -1428,7 +1420,7 @@ def main():
             f"{Red}Use --bin_files and --concatenate separately to avoid "
             f"ambiguity"
             )
-        exit()
+        sys.exit(1)
 
 
     # ------------------------------------------------------------------
@@ -1690,19 +1682,19 @@ def main():
             nsol = np.asarray(args.high_pass_temporal).astype(float)
             if len(np.atleast_1d(nsol)) != 1:
                 print(f"{Red}***Error*** sol_min accepts only one value")
-                exit()
+                sys.exit(1)
         if args.low_pass_temporal:
             btype = "low"
             nsol = np.asarray(args.low_pass_temporal).astype(float)
             if len(np.atleast_1d(nsol)) != 1:
                 print(f"{Red}sol_max accepts only one value")
-                exit()
+                sys.exit(1)
         if args.band_pass_temporal:
             btype = "band"
             nsol = np.asarray(args.band_pass_temporal).astype(float)
             if len(np.atleast_1d(nsol)) != 2:
                 print(f"{Red}Requires two values: sol_min sol_max")
-                exit()
+                sys.exit(1)
 
         for file in file_list:
             if not ("/" in file):
@@ -1724,7 +1716,7 @@ def main():
                     f"{Red}***Error***  minimum cut-off cannot be smaller "
                     f"than the Nyquist period of 2xdt={2*dt} sol{Nclr}"
                     )
-                exit()
+                sys.exit(1)
 
             # Define a netcdf object from the netcdf wrapper module
             fnew = Ncdf(output_file_name)
@@ -1762,7 +1754,7 @@ def main():
             dt = time[1] - time[0]
             if dt == 0:
                 print(f"{Red}***Error*** dt = 0, time dimension is not increasing")
-                exit()
+                sys.exit(1)
 
             fs = 1/(dt) # frequency in sol-1
             if btype == "band":
@@ -1827,19 +1819,19 @@ def main():
             nk = np.asarray(args.high_pass_spatial).astype(int)
             if len(np.atleast_1d(nk)) != 1:
                 print(f"{Red}***Error*** kmin accepts only one value")
-                exit()
+                sys.exit(1)
         if args.low_pass_spatial:
             btype = "low"
             nk = np.asarray(args.low_pass_spatial).astype(int)
             if len(np.atleast_1d(nk)) != 1:
                 print(f"{Red}kmax accepts only one value")
-                exit()
+                sys.exit(1)
         if args.band_pass_spatial:
             btype = "band"
             nk = np.asarray(args.band_pass_spatial).astype(int)
             if len(np.atleast_1d(nk)) != 2:
                 print(f"{Red}Requires two values: kmin kmax")
-                exit()
+                sys.exit(1)
 
         for file in file_list:
             # Add path unless full path is provided
@@ -1976,7 +1968,7 @@ def main():
         N = args.tide_decomp[0]
         if len(np.atleast_1d(N)) != 1:
             print(f"{Red}***Error*** N accepts only one value")
-            exit()
+            sys.exit(1)
 
         for file in file_list:
             # Add path unless full path is provided
@@ -2132,7 +2124,7 @@ def main():
         tmx = args.prop_tides[1]
         if len(args.prop_tides) != 2:
             print(f"{Red}***Error*** prop_tides accepts only two values")
-            exit()
+            sys.exit(1)
 
         for file in file_list:
             # Add path unless full path is provided

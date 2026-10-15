@@ -521,6 +521,11 @@ def main():
 
                 file_list = np.arange(i_start, i_end + 1)
 
+            else:
+                print(f'{Red}ERROR: -ls accepts one value (Ls) or two '
+                      f'values (Ls_start Ls_end){Nclr}')
+                sys.exit(1)
+
             for ii in file_list:
                 if portal_dir == 'ACTIVECLDS_NCDF':
                     # Legacy .nc files
