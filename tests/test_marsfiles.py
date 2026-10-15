@@ -502,6 +502,212 @@ class TestMarsFiles(BaseTestCase):
         
         print("Split file by longitude succeeded")
 
+    def run_split(self, args):
+        """
+        Run a split and return the result with the netCDF files it created
+
+        :param args: List of arguments to pass to MarsFiles
+        :return: subprocess result object, list of new netCDF file paths
+        """
+        files_before = set(os.listdir(self.test_dir))
+        result = self.run_mars_files(args)
+        new_files = [os.path.join(self.test_dir, f)
+                     for f in set(os.listdir(self.test_dir)) - files_before
+                     if f.endswith('.nc') and 'fixed' not in f]
+        return result, new_files
+
+    def test_split_file_by_areo_keeps_time(self):
+        """Test that splitting by Ls keeps sols (not Ls) in the time axis"""
+        nc = Dataset(os.path.join(self.test_dir, '01336.atmos_average.nc'), 'r')
+        try:
+            areo_values = np.squeeze(nc.variables['areo'][:])
+            time_values = nc.variables['time'][:]
+        finally:
+            nc.close()
+        ls_range = [areo_values[1] % 360, areo_values[3] % 360]
+
+        result, new_files = self.run_split([
+            '01336.atmos_average.nc',
+            '--split',
+            str(ls_range[0]),
+            str(ls_range[1]),
+            '-dim',
+            'areo'
+        ])
+        self.assertEqual(result.returncode, 0, "Split by areo command failed")
+        self.assertEqual(len(new_files), 1, "Expected one output file from split by areo")
+
+        nc = Dataset(new_files[0], 'r')
+        try:
+            np.testing.assert_allclose(nc.variables['time'][:], time_values[1:4])
+            np.testing.assert_allclose(np.squeeze(nc.variables['areo'][:]),
+                                       areo_values[1:4])
+        finally:
+            nc.close()
+
+        print("Split file by areo keeps the time axis")
+
+    def test_split_file_by_negative_lon(self):
+        """Test that negative longitudes are converted to the file convention"""
+        nc = Dataset(os.path.join(self.test_dir, '01336.atmos_average.nc'), 'r')
+        try:
+            lon_in = nc.variables['lon'][:]
+        finally:
+            nc.close()
+        if min(lon_in) < 0:
+            self.skipTest("Test file longitudes are not 0 to 360")
+
+        result, new_files = self.run_split([
+            '01336.atmos_average.nc',
+            '--split',
+            '-90',
+            '90',
+            '-dim',
+            'lon'
+        ])
+        self.assertEqual(result.returncode, 0, "Split by negative longitude failed")
+        self.assertEqual(len(new_files), 1, "Expected one output file from split by longitude")
+
+        nc = Dataset(new_files[0], 'r')
+        try:
+            lon_values = np.array(nc.variables['lon'][:])
+            expected = lon_in[(lon_in >= 270) | (lon_in <= 90)]
+            np.testing.assert_allclose(np.sort(lon_values), np.sort(expected))
+        finally:
+            nc.close()
+
+        print("Split file by negative longitude succeeded")
+
+    def test_split_file_clips_range(self):
+        """Test that a range extending past the data is clipped with a notice"""
+        result, new_files = self.run_split([
+            '01336.atmos_average.nc',
+            '--split',
+            '-95',
+            '95',
+            '-dim',
+            'lat'
+        ])
+        self.assertEqual(result.returncode, 0, "Split with a range past the data failed")
+        self.assertIn('clipping', result.stdout)
+        self.assertEqual(len(new_files), 1, "Expected one output file from clipped split")
+
+        nc_in = Dataset(os.path.join(self.test_dir, '01336.atmos_average.nc'), 'r')
+        nc = Dataset(new_files[0], 'r')
+        try:
+            np.testing.assert_allclose(nc.variables['lat'][:], nc_in.variables['lat'][:])
+        finally:
+            nc.close()
+            nc_in.close()
+
+        print("Split file with a clipped range succeeded")
+
+    def test_split_file_range_outside_data(self):
+        """Test that a range with no data fails with a non-zero exit status"""
+        result, new_files = self.run_split([
+            '01336.atmos_average.nc',
+            '--split',
+            '100',
+            '120',
+            '-dim',
+            'lat'
+        ])
+        self.assertNotEqual(result.returncode, 0, "Split outside of the data should fail")
+        self.assertEqual(len(new_files), 0, "No file should be created when there is no data")
+
+        print("Split file outside of the data failed as expected")
+
+    def test_split_file_keeps_variable_definitions(self):
+        """Test that split variables keep their type, fill value, and attributes"""
+        result, new_files = self.run_split([
+            '01336.atmos_average.nc',
+            '--split',
+            '-40',
+            '40',
+            '-dim',
+            'lat'
+        ])
+        self.assertEqual(result.returncode, 0, "Split by latitude command failed")
+        self.assertEqual(len(new_files), 1, "Expected one output file from split by latitude")
+
+        nc_in = Dataset(os.path.join(self.test_dir, '01336.atmos_average.nc'), 'r')
+        nc = Dataset(new_files[0], 'r')
+        try:
+            self.assertEqual(list(nc.dimensions.keys()), list(nc_in.dimensions.keys()))
+            for name, var_in in nc_in.variables.items():
+                if 'lat' not in var_in.dimensions or name == 'lat':
+                    continue
+                var = nc.variables[name]
+                self.assertEqual(var.dtype, var_in.dtype, f"{name} changed type")
+                self.assertEqual(var.dimensions, var_in.dimensions)
+                for attr in var_in.ncattrs():
+                    self.assertIn(attr, var.ncattrs(), f"{name} lost attribute {attr}")
+        finally:
+            nc.close()
+            nc_in.close()
+
+        print("Split file keeps the variable definitions")
+
+    def test_split_diurn_file_by_lat(self):
+        """Test split operation on diurn file by latitude"""
+        result, new_files = self.run_split([
+            '01336.atmos_diurn.nc',
+            '--split',
+            '-45',
+            '45',
+            '-dim',
+            'lat'
+        ])
+        self.assertEqual(result.returncode, 0, "Split diurn file by latitude failed")
+        self.assertEqual(len(new_files), 1, "Expected one output file from split of diurn file")
+
+        nc = Dataset(new_files[0], 'r')
+        try:
+            lat_values = nc.variables['lat'][:]
+            self.assertGreaterEqual(min(lat_values), -45)
+            self.assertLessEqual(max(lat_values), 45)
+            self.assertTrue(any('time_of_day' in dim for dim in nc.dimensions.keys()))
+        finally:
+            nc.close()
+
+        print("Split diurn file by latitude succeeded")
+
+    def test_split_file_by_lev(self):
+        """Test split operation by level on native and pressure-interpolated files"""
+        for filename, lev in [('01336.atmos_average.nc', 'pfull'),
+                              ('01336.atmos_average_pstd_c48.nc', 'pstd')]:
+            nc = Dataset(os.path.join(self.test_dir, filename), 'r')
+            try:
+                lev_values = np.sort(np.array(nc.variables[lev][:]))
+            finally:
+                nc.close()
+            lev_range = [lev_values[len(lev_values)//3], lev_values[2*len(lev_values)//3]]
+
+            result, new_files = self.run_split([
+                filename,
+                '--split',
+                str(lev_range[0]),
+                str(lev_range[1]),
+                '-dim',
+                'lev'
+            ])
+            self.assertEqual(result.returncode, 0, f"Split {filename} by level failed")
+            self.assertEqual(len(new_files), 1, f"Expected one output file from split of {filename}")
+            self.assertNotIn(' ', os.path.basename(new_files[0]))
+
+            nc = Dataset(new_files[0], 'r')
+            try:
+                out_values = nc.variables[lev][:]
+                self.assertGreaterEqual(min(out_values), lev_range[0])
+                self.assertLessEqual(max(out_values), lev_range[1])
+                if lev == 'pfull':
+                    # Layer interfaces stay consistent with the layers
+                    self.assertEqual(len(nc.dimensions['phalf']), len(nc.dimensions['pfull']) + 1)
+            finally:
+                nc.close()
+
+        print("Split file by level succeeded")
+
     def test_temporal_filters(self):
         """Test all temporal filtering operations"""
         # High-pass filter

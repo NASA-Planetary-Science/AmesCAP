@@ -295,7 +295,7 @@ class Ncdf(object):
                 if Ncdim_var._name in ['pfull', 'phalf', 'plev', 'level']:
                     self.var_dict[Ncdim_var._name].positive = "down"
                 for attr_name in Ncdim_var.ncattrs():
-                    if attr_name not in ['long_name', 'units', 'cartesian_axis', '_FillValue', 'positive']:
+                    if attr_name not in ['long_name', 'units', 'cartesian_axis', '_FillValue']:
                         setattr(self.var_dict[Ncdim_var._name], attr_name, 
                                 getattr(Ncdim_var, attr_name))
                 return
@@ -313,7 +313,7 @@ class Ncdf(object):
         
         # Copy any additional attributes (except _FillValue and the ones we already set)
         for attr_name in Ncdim_var.ncattrs():
-            if attr_name not in ['long_name', 'units', 'cartesian_axis', '_FillValue', 'positive']:
+            if attr_name not in ['long_name', 'units', 'cartesian_axis', '_FillValue']:
                 setattr(self.var_dict[Ncdim_var._name], attr_name, 
                         getattr(Ncdim_var, attr_name))
 

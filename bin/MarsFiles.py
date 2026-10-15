@@ -72,7 +72,7 @@ from amescap.FV3_utils import (
 )
 from amescap.Script_utils import (
     find_tod_in_diurn, FV3_file_type, filter_vars, regrid_Ncfile,
-    get_longname_unit, check_bounds
+    get_longname_unit
 )
 
 
@@ -883,6 +883,7 @@ def split_files(file_list, split_dim):
     if split_dim not in ['time','areo', 'lev', 'lat', 'lon']:
         print(f"{Red}Split dimension must be one of the following:"
               f"    time, areo, lev, lat, lon{Nclr}")
+        sys.exit(1)
 
     bounds = np.asarray(args.split).astype(float)
 
@@ -894,6 +895,10 @@ def split_files(file_list, split_dim):
             )
         sys.exit(1)
 
+    if len(file_list) > 1:
+        print(f"{Yellow}***Notice*** [-split --split] processes one file at "
+              f"a time, only {file_list[0]} will be split{Nclr}")
+
     # Add path unless full path is provided
     if not ("/" in file_list[0]):
         input_file_name = os.path.normpath(os.path.join(data_dir, file_list[0]))
@@ -902,6 +907,9 @@ def split_files(file_list, split_dim):
     original_date = (input_file_name.split('.')[0]).split('/')[-1]
 
     fNcdf = Dataset(input_file_name, 'r', format='NETCDF4_CLASSIC')
+    # Copy the values as they are stored so that missing values keep
+    # the fill value of the input file
+    fNcdf.set_auto_mask(False)
     var_list = filter_vars(fNcdf, args.include)
 
     # Get file type (diurn, average, daily, etc.)
@@ -911,63 +919,93 @@ def split_files(file_list, split_dim):
         split_dim = interp_type
         if interp_type == 'pstd':
             unt_txt = 'Pa'
-            lnm_txt = 'standard pressure'
-        elif interp_type == 'zagl':
+        elif interp_type in ['zagl', 'zstd']:
             unt_txt = 'm'
-            lnm_txt = 'altitude above ground level'
-        elif interp_type == 'zstd':
-            unt_txt = 'm'
-            lnm_txt = 'standard altitude'
         else:
             unt_txt = 'mb'
-            lnm_txt = 'ref full pressure level'
 
-    # Remove all single dimensions from areo (scalar_axis)
-    if f_type == 'diurn':
-        if split_dim == 'areo':
+    # Values along the dimension being split
+    if split_dim == 'areo':
+        if f_type == 'diurn':
             # size areo = (time, tod, scalar_axis)
-            reducing_dim = np.squeeze(fNcdf.variables['areo'][:, 0, :])
+            reducing_dim = fNcdf.variables['areo'][:, 0, :]
         else:
-            reducing_dim = np.squeeze(fNcdf.variables[split_dim][:, 0])
-    else:
-        if split_dim == 'areo':
             # size areo = (time, scalar_axis)
-            reducing_dim = np.squeeze(fNcdf.variables['areo'][:])
-        else:
-            reducing_dim = np.squeeze(fNcdf.variables[split_dim][:])
+            reducing_dim = fNcdf.variables['areo'][:]
+    else:
+        reducing_dim = fNcdf.variables[split_dim][:]
+    reducing_dim = np.atleast_1d(np.squeeze(reducing_dim))
 
     if split_dim == 'areo':
         print(f"\n{Yellow}Areo MOD(360):\n{reducing_dim%360.}\n")
 
     print(f"\n{Yellow}All values in dimension:\n{reducing_dim}\n")
 
-    dx = np.abs(reducing_dim[1] - reducing_dim[0])
+    if len(reducing_dim) > 1:
+        dx = np.abs(reducing_dim[1] - reducing_dim[0])
+    else:
+        dx = 0.
+    dim_min = np.min(reducing_dim)
+    dim_max = np.max(reducing_dim)
 
     bounds_in = bounds.copy()
     if split_dim == 'areo':
-        while (bounds[0] < (reducing_dim[0] - dx)):
-            bounds += 360.
+        # Areo is continuous over Mars years, move the request to the
+        # Mars year(s) in the file
+        bounds += 360. * np.floor(dim_min/360.)
         if len(np.atleast_1d(bounds)) == 2:
             while (bounds[1] < bounds[0]):
                 bounds[1] += 360.
+        if bounds[-1] < (dim_min - dx):
+            bounds += 360.
+
+    if split_dim == 'lon':
+        # Express the requested longitudes in the convention of the
+        # file (0 to 360 or -180 to 180)
+        if dim_min >= 0.:
+            bounds = np.where(bounds < 0., bounds + 360., bounds)
+        else:
+            bounds = np.where(bounds > 180., bounds - 360., bounds)
+        if np.any(bounds != bounds_in):
+            print(f"{Yellow}***Notice*** Requested longitude(s) "
+                  f"{bounds_in} converted to {bounds} to match the "
+                  f"longitudes in the file{Nclr}")
 
     if len(np.atleast_1d(bounds)) < 2:
-        check_bounds(bounds[0], reducing_dim[0], reducing_dim[-1], dx)
+        if bounds[0] < dim_min or bounds[0] > dim_max:
+            print(f"{Yellow}***Notice*** Requested value {bounds_in[0]} is "
+                  f"outside of the {split_dim} values in the file "
+                  f"({dim_min:g} to {dim_max:g}), using the nearest value"
+                  f"{Nclr}")
         indices = [(np.abs(reducing_dim - bounds[0])).argmin()]
         dim_out = reducing_dim[indices]
         print(f"Requested value = {bounds[0]}\n"
               f"Nearest value = {dim_out[0]}\n")
     else:
-        check_bounds(bounds, reducing_dim[0], reducing_dim[-1], dx)
         if ((split_dim == 'lon') & (bounds[1] < bounds[0])):
             indices = np.where(
                 (reducing_dim <= bounds[1]) |
                 (reducing_dim >= bounds[0])
                 )[0]
         else:
+            if bounds[1] < dim_min or bounds[0] > dim_max:
+                print(
+                    f"{Red}No values were found in the range {split_dim} "
+                    f"({bounds_in[0]}, {bounds_in[1]}) ({split_dim} values "
+                    f"range from {dim_min:g} to {dim_max:g}){Nclr}"
+                    )
+                sys.exit(1)
+            # Keep the part of the requested range that is in the file
+            clipped = np.clip(bounds, dim_min, dim_max)
+            if bounds[0] < dim_min or bounds[1] > dim_max:
+                print(f"{Yellow}***Notice*** Requested range "
+                      f"{bounds_in[0]} - {bounds_in[1]} extends past the "
+                      f"{split_dim} values in the file ({dim_min:g} to "
+                      f"{dim_max:g}), clipping to {clipped[0]:g} - "
+                      f"{clipped[1]:g}{Nclr}")
             indices = np.where(
-                (reducing_dim >= bounds[0]) &
-                (reducing_dim <= bounds[1])
+                (reducing_dim >= clipped[0]) &
+                (reducing_dim <= clipped[1])
                 )[0]
         dim_out = reducing_dim[indices]
         print(
@@ -977,9 +1015,9 @@ def split_files(file_list, split_dim):
 
         if len(indices) == 0:
             print(
-                f"{Red}Warning, no values were found in the range {split_dim} "
-                f"{bounds_in[0]}, {bounds_in[1]}) ({split_dim} values range "
-                f"from {reducing_dim[0]:.1f} to {reducing_dim[-1]:.1f})"
+                f"{Red}No values were found in the range {split_dim} "
+                f"({bounds_in[0]}, {bounds_in[1]}) ({split_dim} values range "
+                f"from {dim_min:g} to {dim_max:g}){Nclr}"
                 )
             sys.exit(1)
 
@@ -987,7 +1025,7 @@ def split_files(file_list, split_dim):
     fname = os.path.basename(input_file_name)
     
     if split_dim in ('time', 'areo'):
-        time_dim = (np.squeeze(fNcdf.variables['time'][:]))[indices]
+        time_dim = np.atleast_1d(np.squeeze(fNcdf.variables['time'][:]))[indices]
         print(f"time_dim = {time_dim}\n")
         
         try:
@@ -1002,7 +1040,7 @@ def split_files(file_list, split_dim):
             
     if split_dim == 'time':
         if len(np.atleast_1d(bounds)) < 2:
-            base_name = (f"{int(time_dim):05d}{fname[5:-3]}_nearest_sol"
+            base_name = (f"{int(time_dim[0]):05d}{fname[5:-3]}_nearest_sol"
                          f"{int(bounds_in[0]):03d}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
@@ -1013,7 +1051,7 @@ def split_files(file_list, split_dim):
                                                               f"{base_name}.nc")))
     elif split_dim =='areo':
         if len(np.atleast_1d(bounds)) < 2:
-            base_name = (f"{int(time_dim):05d}{fname[5:-3]}_nearest_Ls"
+            base_name = (f"{int(time_dim[0]):05d}{fname[5:-3]}_nearest_Ls"
                          f"{int(bounds_in[0]):03d}")
             output_file_name = (os.path.normpath(os.path.join(fpath,
                                                               f"{base_name}.nc")))
@@ -1043,14 +1081,15 @@ def split_files(file_list, split_dim):
                                                               f"{base_name}.nc")))
     elif split_dim == interp_type:
         if interp_type == 'pfull':
+            # pfull is in mb
             new_bounds = [
                 f"{abs(int(b*100))}Pa" if b < 1
-                else f"{int(b)}{unt_txt} "
+                else f"{int(b)}{unt_txt}"
                 for b in bounds
                 ]
         elif interp_type == 'pstd':
             new_bounds = [
-                f"{abs(int(b*100))}hPa" if b < 1
+                f"{b:g}{unt_txt}" if b < 1
                 else f"{int(b)}{unt_txt}"
                 for b in bounds
                 ]
@@ -1089,94 +1128,39 @@ def split_files(file_list, split_dim):
     print(f"{Cyan}new filename = {output_file_name}")
     Log = Ncdf(output_file_name)
 
-    Log.copy_all_dims_from_Ncfile(fNcdf, exclude_dim=[split_dim])
+    # Indices to keep along each dimension that is reduced
+    slices = {split_dim: indices}
+    if split_dim == 'pfull' and 'phalf' in fNcdf.dimensions.keys():
+        # Keep the layer interfaces of the selected layers so that the
+        # vertical grid (ak, bk) stays consistent with pfull
+        slices['phalf'] = np.arange(indices[0], indices[-1] + 2)
 
-    if split_dim == 'time':
-        Log.add_dimension(split_dim, None)
-    else:
-        Log.add_dimension(split_dim, len(dim_out))
-
-    if split_dim == 'time':
-        Log.log_axis1D(
-            variable_name = 'time',
-            DATAin = dim_out,
-            dim_name = 'time',
-            longname_txt = 'sol number',
-            units_txt = 'days since 0000-00-00 00:00:00',
-            cart_txt = 'T'
-            )
-    elif split_dim == 'lat':
-        Log.log_axis1D(
-            variable_name = 'lat',
-            DATAin = dim_out,
-            dim_name = 'lat',
-            longname_txt = 'latitude',
-            units_txt = 'degrees_N',
-            cart_txt = 'T'
-            )
-    elif split_dim == 'lon':
-        Log.log_axis1D(
-            variable_name = 'lon',
-            DATAin = dim_out,
-            dim_name = 'lon',
-            longname_txt = 'longitude',
-            units_txt = 'degrees_E',
-            cart_txt = 'T'
-            )
-    elif split_dim == interp_type:
-        Log.log_axis1D(
-            variable_name = split_dim,
-            DATAin = dim_out,
-            dim_name = split_dim,
-            longname_txt = lnm_txt,
-            units_txt = unt_txt,
-            cart_txt = 'T'
-            )
+    # Same dimensions as the input file, in the same order
+    for idim in fNcdf.dimensions.keys():
+        if idim == 'time':
+            Log.add_dimension(idim, None)
+        elif idim in slices.keys():
+            Log.add_dimension(idim, len(slices[idim]))
+        else:
+            Log.add_dimension(idim, fNcdf.dimensions[idim].size)
 
     # Loop over all variables in the file
     for ivar in var_list:
         varNcf = fNcdf.variables[ivar]
-        if split_dim in varNcf.dimensions and ivar != split_dim:
-            # ivar is a dim of ivar but ivar is not ivar
+        if any(idim in slices.keys() for idim in varNcf.dimensions):
+            # ivar has a reduced dimension. Type, fill value, and
+            # attributes are copied from the input file
             print(f'{Cyan}Processing: {ivar}...{Nclr}')
-            if split_dim == 'time':
-                var_out = varNcf[indices, ...]
-            elif split_dim == 'lat' and varNcf.ndim == 5:
-                var_out = varNcf[:, :, :, indices, :]
-            elif split_dim == 'lat' and varNcf.ndim == 4:
-                var_out = varNcf[:, :, indices, :]
-            elif split_dim == 'lat' and varNcf.ndim == 3:
-                var_out = varNcf[:, indices, :]
-            elif split_dim == 'lat' and varNcf.ndim == 2:
-                var_out = varNcf[indices, ...]
-            elif split_dim == 'lon' and varNcf.ndim > 2:
-                var_out = varNcf[..., indices]
-            elif split_dim == 'lon' and varNcf.ndim == 2:
-                var_out = varNcf[indices, ...]
-            elif split_dim == interp_type and varNcf.ndim == 5:
-                var_out = varNcf[:, :, indices, :, :]
-            elif split_dim == interp_type and varNcf.ndim == 4:
-                var_out = varNcf[:, indices, :, :]
-            longname_txt, units_txt = get_longname_unit(fNcdf, ivar)
-            Log.log_variable(
-                ivar,
-                var_out,
-                varNcf.dimensions,
-                longname_txt,
-                units_txt
-                )
+            var_out = varNcf[tuple(slices.get(idim, slice(None))
+                                   for idim in varNcf.dimensions)]
+            Log.copy_Ncvar(varNcf, swap_array=var_out)
+        elif ivar in fNcdf.dimensions.keys():
+            # ivar is a dimension
+            print(f'{Cyan}Copying axis: {ivar}...{Nclr}')
+            Log.copy_Ncaxis_with_content(varNcf)
         else:
-            # ivar is ivar OR ivar is not a dim of ivar
-            if (ivar in ['pfull', 'lat', 'lon', 'phalf', 'pk', 'bk',
-                         'pstd', 'zstd', 'zagl', 'time'] and
-                ivar != split_dim):
-                # ivar is a dimension
-                print(f'{Cyan}Copying axis: {ivar}...{Nclr}')
-                Log.copy_Ncaxis_with_content(fNcdf.variables[ivar])
-            elif ivar != split_dim:
-                # ivar is not itself and not a dimension of ivar
-                print(f'{Cyan}Copying variable: {ivar}...{Nclr}')
-                Log.copy_Ncvar(fNcdf.variables[ivar])
+            print(f'{Cyan}Copying variable: {ivar}...{Nclr}')
+            Log.copy_Ncvar(varNcf)
     Log.close()
     fNcdf.close()
     return
