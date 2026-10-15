@@ -215,7 +215,6 @@ if args.input_file:
     for file in args.input_file:
         if not re.search(".nc", file.name):
             parser.error(f"{Red}{file.name} is not a netCDF file{Nclr}")
-            exit()
 
 # ----------------------------------------------------------------------
 path2data = os.getcwd()
@@ -475,7 +474,7 @@ def main():
     if args.gcm_name not in ['marswrf', 'openmars', 'pcm', 'emars']:
         print(f"{Yellow}***Notice***  No operation requested. Use "
               f"'-gcm' and specify openmars, marswrf, pcm, emars")
-        exit() # Exit cleanly
+        sys.exit(1)  # Nothing was converted
 
     print(f"Running MarsFormat with args: {args}")
     print(f"Current working directory: {os.getcwd()}")
@@ -908,6 +907,10 @@ def main():
                     pb = DS['P_PHY'].isel(sel)
                     tb = DS['T_PHY'].isel(sel)
                     ps = DS['PSFC']
+                    # planetWRF's own gas constant (R_D global
+                    # attribute, 191.8 by default in planetWRF). It
+                    # is used so the surface height is consistent
+                    # with the model's Z_PHY, not CAP's R_CO2.
                     Rd = float(DS.attrs.get('R_D', 191.8))
                     g = float(DS.attrs.get('G', 3.727))
                     zs = (zphy.isel(sel) - Rd*tb/g*np.log(ps/pb)).transpose(
