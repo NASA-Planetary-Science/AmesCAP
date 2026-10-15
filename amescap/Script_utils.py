@@ -143,7 +143,7 @@ def print_fileContent(fileNcdf):
             print(f"\nLs ranging from {(np.mod(Ls_ini, 360.)):.2f} to "
                   f"{(np.mod(Ls_end, 360.)):.2f}: {(t_end-t_ini):.2f} days"
                   f"               (MY {MY_ini:02})   (MY {MY_end:02})")
-        except:
+        except Exception:
             pass
 
         f.close()
@@ -222,7 +222,7 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                             Wmean = np.nanmean(var * weight) # print at end
                             # last_wmean = Wmean  # Store it
                             # last_varfull = varfull  # Store variable name
-                        except:
+                        except Exception:
                             # If weighting fails, don't print
                             Wmean = None
                     
@@ -250,7 +250,7 @@ def print_varContent(fileNcdf, list_varfull, print_stat=False):
                                 print(ii, ii%360)
 
                     print(f"{Cyan}______________________________________________________________________{Nclr}")
-            except:
+            except Exception:
                 if print_stat:
                     print(
                         f"{Red}{varfull:>26s}|{'':>15s}|{'':>15s}|"f"{'':>15s}|"
@@ -291,13 +291,11 @@ def check_file_tape(fileNcdf):
 
     # If filename is not a netCDF file, exit program
     if not re.search(".nc", filename):
-        print(f"{Red}{filename} is not a netCDF file{Nclr}")
-        exit()
+        raise ValueError(f"{filename} is not a netCDF file")
 
     # First check if the file exists at all
     if not os.path.isfile(filename):
-        print(f"{Red}File {filename} does not exist{Nclr}")
-        exit()
+        raise FileNotFoundError(f"File {filename} does not exist")
 
     # Check if we're on a NAS system by looking for specific environment variables
     # or filesystem paths that are unique to NAS
@@ -333,11 +331,10 @@ def check_file_tape(fileNcdf):
 
             if dmls_out[1:4] not in ["DUL", "REG", "MIG"]:
                 # If file is OFFLINE, UNMIGRATING etc...
-                print(f"{Yellow}*** Warning ***\n{dmls_out[6:-1]} is not "
-                      f"loaded on disk (Status: {dmls_out[0:5]}). Please "
-                      f"migrate it to disk with: ``dmget {dmls_out[6:-1]}``\n"
-                      f" then try again.\n{Nclr}")
-                exit()
+                raise RuntimeError(
+                    f"{dmls_out[6:-1]} is not loaded on disk (Status: "
+                    f"{dmls_out[0:5]}). Please migrate it to disk with: "
+                    f"``dmget {dmls_out[6:-1]}`` then try again.")
         except (subprocess.CalledProcessError, FileNotFoundError, IndexError):
             # If there's any issue with the dmls command, log it but continue
             if "--debug" in sys.argv:
@@ -456,7 +453,7 @@ def FV3_file_type(fNcdf):
         if tod_name in fNcdf.dimensions.keys():
             # If ``tod_name_XX`` is a dimension, it is a diurn file
             f_type = "diurn"
-    except:
+    except Exception:
         pass
 
     dims = fNcdf.dimensions.keys()
@@ -895,7 +892,7 @@ def section_content_amescap_profile(section_ID):
               f"{Yellow}(for an editable install, copy "
               f"mars_templates/amescap_profile from the cloned repository)"
               f"{Nclr}")
-        exit()
+        raise FileNotFoundError(f"{input_file} config file not found")
 
     except Exception as exception:
         # Return the error
@@ -1493,7 +1490,7 @@ def ak_bk_loader(fNcdf):
             bk = np.array(f_average.variables["bk"])
             f_average.close()
 
-        except:
+        except Exception:
             try:
                 name_fixed = find_fixedfile(fullpath_name)
                 f_fixed = Dataset(name_fixed, "r",
@@ -1508,12 +1505,12 @@ def ak_bk_loader(fNcdf):
                 bk = np.array(f_fixed.variables["bk"])
                 f_fixed.close()
 
-            except:
-                print(f"{Red}Fixed file does not exist in {filepath}. "
+            except Exception as e:
+                raise FileNotFoundError(
+                    f"Fixed file does not exist in {filepath}. "
                     f"Make sure the fixed file you are referencing "
                     f"matches the FV3 filetype (e.g., ``fixed.tileX.nc`` "
-                    f"for operations on tile X)")
-                exit()
+                    f"for operations on tile X)") from e
 
     return ak, bk
 
@@ -1708,35 +1705,27 @@ def check_bounds(values, min_val, max_val, dx):
         a number, array, or list
     """
 
-    try:
-        # Handle both single values and arrays
-        is_scalar = np.isscalar(values)
-        values_array = np.array([values]) if is_scalar else np.array(values)
+    # Handle both single values and arrays
+    is_scalar = np.isscalar(values)
+    values_array = np.array([values]) if is_scalar else np.array(values)
 
-        # Check for non-numeric values
-        if not np.issubdtype(values_array.dtype, np.number):
-            print(f"Error: Input contains non-numeric values")
-            sys.exit(1)
+    # Check for non-numeric values
+    if not np.issubdtype(values_array.dtype, np.number):
+        raise ValueError("Input contains non-numeric values")
 
-        # Find any out-of-bounds values
-        mask_invalid = (
-            values_array < (min_val-dx)) | (values_array > (max_val+dx)
-                                            )
+    # Find any out-of-bounds values
+    mask_invalid = (
+        values_array < (min_val-dx)) | (values_array > (max_val+dx)
+                                        )
 
-        if np.any(mask_invalid):
-            # Get the invalid values
-            invalid_values = values_array[mask_invalid]
-            invalid_indices = np.where(mask_invalid)[0]
+    if np.any(mask_invalid):
+        # Get the invalid values
+        invalid_values = values_array[mask_invalid]
+        invalid_indices = np.where(mask_invalid)[0]
+        raise ValueError(
+            f"Values out of allowed range [{min_val}, {max_val}]\n"
+            f"Invalid values at indices {invalid_indices}: {invalid_values}"
+            )
 
-            print(
-                f"Error: Values out of allowed range [{min_val}, {max_val}]\n"
-                f"Invalid values at indices {invalid_indices}: {invalid_values}"
-                )
-            exit()
-
-        # Return original format (scalar or array)
-        return values if is_scalar else values_array
-
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        exit()
+    # Return original format (scalar or array)
+    return values if is_scalar else values_array

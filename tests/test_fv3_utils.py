@@ -6,7 +6,7 @@ from amescap.FV3_utils import (
     R_CO2, R_REF_ATMOS, fms_Z_calc, interp_KDTree, lon180_to_360,
     lon360_to_180, mass_stream, press_to_alt_atmosphere_Mars,
     ref_atmosphere_Mars_PTD,
-    shiftgrid_180_to_360, shiftgrid_360_to_180
+    shiftgrid_180_to_360, shiftgrid_360_to_180, time_shift_calc
 )
 
 
@@ -164,6 +164,31 @@ class TestMassStream(unittest.TestCase):
                                    rtol=1e-12)
         np.testing.assert_array_equal(msf[0, :], 0.)
         self.assertTrue((msf[-1, :] < 0).all())
+
+    def test_three_pressure_levels_with_defaults(self):
+        # Three levels of 600, 300 and 100 Pa at the equator with a
+        # 1 m/s wind and factor = 1. The middle level integrates the
+        # 300-100 Pa layer: about 1.26e9 kg/s with the default constants.
+        msf = mass_stream(np.ones((3, 1)), np.array([0.]),
+                          np.array([600., 300., 100.]), factor=1.)
+        self.assertAlmostEqual(msf[1, 0] / 1.e9, 1.262, places=3)
+        self.assertGreater(msf[0, 0], msf[1, 0])
+        self.assertEqual(msf[2, 0], 0.)
+
+
+class TestTimeShiftCalc(unittest.TestCase):
+    def test_flat_time_axis_matches_day_by_hour_input(self):
+        # A time axis of n_days*n_tod samples (day by day) gives the
+        # same result as the same data shaped [..., days, time of day]
+        rng = np.random.default_rng(0)
+        lon = np.array([0., 90., 180., 270.])
+        tod = np.arange(0.5, 24., 3.)  # 8 samples per sol
+        n_days = 3
+        var = rng.random((len(lon), 5, n_days, len(tod)))
+        expected = time_shift_calc(var, lon, tod)
+        flat = var.reshape(len(lon), 5, n_days*len(tod))
+        out = time_shift_calc(flat, lon, tod)
+        np.testing.assert_allclose(out, expected)
 
 if __name__ == '__main__':
     unittest.main()

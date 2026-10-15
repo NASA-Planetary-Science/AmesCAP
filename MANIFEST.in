@@ -3,3 +3,4 @@ include mars_templates/*
 include README.rst
 include LICENSE
 include CONTRIBUTING.rst
+include CITATION.cff

@@ -196,6 +196,47 @@ Aerosols
    ``dustref/delz``, the layer opacity divided by the layer thickness.
    Needs ``dustref``, ``delz``. Grid: ``pfull``.
 
+Operations on existing variables
+--------------------------------
+
+These ``MarsVars`` options derive a new variable from any variable
+:math:`X` in the file. The new variable is named after :math:`X` and
+keeps its dimensions, except for ``-col``, which removes the vertical
+dimension.
+
+``-zdiff X`` -> ``d_dz_X`` -- Vertical derivative [units of X per m]
+   :math:`\partial X/\partial z`, computed with centered differences,
+   :math:`(X_{k+1} - X_{k-1})/(z_{k+1} - z_{k-1})`, and one-sided
+   differences at the top and bottom levels. On ``pfull`` the altitude
+   :math:`z` is ``zfull`` if present, otherwise it is computed from
+   ``ps``, ``temp`` and ``ak``, ``bk`` with the hypsometric equation
+   (as for ``zfull`` above). On ``pstd`` it is ``zfull`` if present,
+   otherwise the layer thicknesses are computed from ``temp`` with the
+   hypsometric equation. On ``zstd`` and ``zagl`` it is the vertical
+   coordinate itself. Functions: ``dvar_dh``, ``compute_DZ_full_pstd``.
+
+``-col X`` -> ``X_col`` -- Column integral [units of X × kg/m\ :sup:`2`]
+   The mass-weighted vertical integral, assuming hydrostatic balance,
+   :math:`\sum_k X_k\, \Delta p_k / g`, where :math:`\Delta p_k` is the
+   pressure thickness of layer :math:`k` (``DP`` above). For a mass
+   mixing ratio in kg/kg, the result is the column mass in
+   kg/m\ :sup:`2`. Needs ``ps`` and the ``ak``, ``bk`` coefficients.
+   Grid: ``pfull``. Reference: Holton and Hakim (2013).
+
+``-zd X`` -> ``X_p`` -- Zonal perturbation [units of X]
+   The deviation from the zonal mean, :math:`X' = X - \overline{X}`,
+   where the zonal mean ignores missing values. All grids. Function:
+   ``zonal_detrend``.
+
+``-to_dz X`` -> ``X_dp_to_dz`` -- Per-pressure to per-altitude [e.g., op/m]
+   Converts a quantity per unit pressure (e.g., opacity per Pa) to per
+   unit altitude, :math:`X\,\Delta p / \Delta z`. Needs ``DP`` and
+   ``DZ`` (add them with ``-add DP DZ``). Grid: ``pfull``.
+
+``-to_dp X`` -> ``X_dz_to_dp`` -- Per-altitude to per-pressure [e.g., op/Pa]
+   The inverse conversion, :math:`X\,\Delta z / \Delta p`. Needs ``DP``
+   and ``DZ``. Grid: ``pfull``.
+
 References
 ----------
 

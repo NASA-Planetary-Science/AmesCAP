@@ -284,7 +284,11 @@ HOLD OFF
         # The exact name depends on implementation, so we check for any PDF
         pdf_files = glob.glob(os.path.join(self.test_dir, "*.pdf"))
         self.assertTrue(len(pdf_files) > 0, "No PDF output file generated")
-    
+
+        # No leftover debug file in the working directory
+        self.assertFalse(os.path.exists(
+            os.path.join(self.test_dir, ".debug_MCMC_plots.txt")))
+
     def test_run_with_specific_date(self):
         """Test running MarsPlot with a specific date"""
         result = self.run_mars_plot(['Custom.in', '-d', '01336'])
