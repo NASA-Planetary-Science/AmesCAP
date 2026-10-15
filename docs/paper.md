@@ -16,26 +16,23 @@ authors:
     equal-contrib: true
     affiliation: 1
     corresponding: true
-  - name: Victoria L. Hartwick
-    orcid: 0000-0002-2082-8986
-    equal-contrib: true
-    affiliation: 3
   - name: Alexandre M. Kling
     orcid: 0000-0002-2980-7743
-    equal-contrib: true
-    affiliation: "1, 4"
+    affiliation: "4"
+  - name: Victoria L. Hartwick
+    orcid: 0000-0002-2082-8986
+    affiliation: 3
   - name: Melinda A. Kahre
     orcid: 0000-0002-0935-5532
-    equal-contrib: true
     affiliation: 2
 affiliations:
- - name: Bay Area Environmental Research Institute, United States
+ - name: Bay Area Environmental Research Institute (BAERI), United States
    index: 1
    ror: 024tt5x58
  - name: NASA Ames Research Center, United States
    index: 2
    ror: 02acart68
- - name: Southwest Research Institute, United States
+ - name: Southwest Research Institute (SwRI), United States
    index: 3
    ror: 03tghng59
  - name: Astera Institute, United States
