@@ -3065,7 +3065,9 @@ def main():
                 Log.copy_all_dims_from_Ncfile(f_IN)
 
                 # Copy all variables but this one
-                Log.copy_all_vars_from_Ncfile(f_IN, exclude_var=args.edit_variable)
+                # A list, not the bare name: ``in`` on a string would
+                # also exclude every variable whose name is a substring
+                Log.copy_all_vars_from_Ncfile(f_IN, exclude_var=[args.edit_variable])
 
                 # Read value, longname, units, name, and log the new var
                 var_Ncdf = f_IN.variables[args.edit_variable]

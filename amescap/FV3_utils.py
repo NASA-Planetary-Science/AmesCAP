@@ -998,8 +998,10 @@ def cart_to_azimut_TR(u, v, mode="from"):
 
     if mode == "from":
         cst = 180
-    if mode == "to":
+    elif mode == "to":
         cst = 0.
+    else:
+        raise ValueError(f'mode must be "from" or "to", not {mode!r}')
     return (np.mod(np.arctan2(u, v)*180/np.pi+  cst, 360),
             np.sqrt(u**2 + v**2))
 
@@ -2278,15 +2280,13 @@ def time_shift_calc(var_in, lon, tod, target_times=None, eot_offset=0.):
             print("Time dimensions do not conform")
             return
 
-        # Fix the incorrect indexing
-        var_in = np.reshape(var_in, (dims_in[0], dims_in[n_dims_in - 1], n_tod_in, n_days))
-        dims_out = np.linspace(len(dims_in) + 1, dtype=np.int32)
-        dims_out[len(dims_in)-1] = len(dims_in)
-        dims_out[len(dims_in)] = len(dims_in)-1
-        var_in = np.transpose(var_in, dims_out)
+        # The time axis runs day by day (index = day*n_tod_in + tod),
+        # so split it into [..., days, time of day]
+        var_in = np.reshape(var_in, dims_in[:-1] + (n_days, n_tod_in))
 
     # Get new dims_in of var_in if reshaped
     dims_in = np.shape(var_in)
+    n_dims_in = len(dims_in) - 1
 
     if len(dims_in) > 2:
         # Assuming lon is the first dimension and time is the last
