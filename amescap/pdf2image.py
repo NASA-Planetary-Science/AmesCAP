@@ -226,7 +226,7 @@ def __page_count(pdf_path, userpw=None):
                          stdout = PIPE,
                          stderr = PIPE)
         out, err = proc.communicate()
-    except:
+    except Exception:
         raise Exception("Unable to get page count. If not on a Linux system, "
                         "please install the Poppler PDF rendering library")
 
@@ -235,7 +235,7 @@ def __page_count(pdf_path, userpw=None):
         return int(
             re.search(r"Pages:\s+(\d+)", out.decode("utf8", "ignore")).group(1)
             )
-    except:
+    except Exception:
         raise Exception(
             f"Unable to get page count. {err.decode('utf8', 'ignore')}"
             )

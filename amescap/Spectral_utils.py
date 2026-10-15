@@ -17,15 +17,7 @@ Third-party Requirements:
 import numpy as np
 from amescap.Script_utils import Yellow, Cyan, Nclr, progress
 
-try:
-    from scipy.signal import butter, filtfilt, detrend
-except ImportError as error_msg:
-    print(f"{Yellow}Error while importing modules from scipy.signal{Nclr}")
-    exit()
-except Exception as exception:
-    # Output unexpected Exceptions.
-    print(exception.__class__.__name__ + ": ", exception)
-    exit()
+from scipy.signal import butter, filtfilt, detrend
 
 # ======================================================================
 #                           DEFINITIONS
@@ -338,6 +330,12 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
     A temporal filter that uses a forward and backward pass to prevent
     phase shift. Alex Kling 2020.
 
+    The filter is a Butterworth filter (``scipy.signal.butter``) applied
+    forward and backward with ``scipy.signal.filtfilt``:
+
+    Butterworth, S. (1930), On the theory of filter amplifiers,
+    Wireless Engineer, 7, 536-541.
+
     :param VAR: values for filtering 1D or ND array. Filtered dimension
         must be FIRST. Adjusts axis as necessary.
     :type VAR: array
@@ -386,6 +384,12 @@ def zeroPhi_filter(VAR, btype, low_highcut, fs, axis=0, order=4,
 def zonal_decomposition(VAR):
     """
     Decomposition into spherical harmonics. [A. Kling, 2020]
+
+    Uses SHTools (``pyshtools``):
+
+    Wieczorek, M. A., and M. Meschede (2018), SHTools: Tools for working
+    with spherical harmonics, Geochem. Geophys. Geosyst., 19, 2574-2592,
+    https://doi.org/10.1029/2018GC007529
 
     :param VAR: Detrend variable for decomposition. Lat is SECOND to
         LAST dimension and lon is LAST (e.g., ``[time,lat,lon]`` or

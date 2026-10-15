@@ -340,13 +340,11 @@ debug = args.debug
 if args.template_file:
     if not (re.search(".in", args.template_file) or re.search(".nc", args.template_file)):
         parser.error(f"{Red}Template file is not a '.in' or a netCDF file{Nclr}")
-        exit()
 
 if args.inspect_file:
     if not re.search(".nc", args.inspect_file):
         parser.error(f"{Red}{args.inspect_file} is not a netCDF "
                      f"file{Nclr}")
-        exit()
 
 if args.date is not None and (args.template_file is None and
                               args.generate_template is False and
@@ -354,7 +352,6 @@ if args.date is not None and (args.template_file is None and
     parser.error(f"{Red}The -d argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -d 01336)"
                  f"{Nclr}")
-    exit()
 
 if args.figure_filetype is not None and (
     args.template_file is None and
@@ -364,7 +361,6 @@ if args.figure_filetype is not None and (
     parser.error(f"{Red}The -f argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -ftype png)"
                  f"{Nclr}")
-    exit()
 
 if args.stack_years and (args.template_file is None and
                          args.generate_template is False and
@@ -372,7 +368,6 @@ if args.stack_years and (args.template_file is None and
     parser.error(f"{Red}The -sy argument requires a template file "
                  f"like Custom.in (e.g., MarsPlot Custom.in -sy)"
                  f"{Nclr}")
-    exit()
 
 if args.portrait_mode and (args.template_file is None and
                            args.generate_template is False and
@@ -380,24 +375,20 @@ if args.portrait_mode and (args.template_file is None and
     parser.error(f"{Red}The -portrait argument requires a template "
                  f"file like Custom.in (e.g., MarsPlot Custom.in "
                  f"-portrait){Nclr}")
-    exit()
 
 if args.statistics is not None and args.inspect_file is None:
     parser.error(f"{Red}The -stat argument requires a template "
                  f"file like Custom.in (e.g., MarsPlot -i "
                  f"01336.atmos_daily.nc -stats temp{Nclr}")
-    exit()
 
 if args.print_values is not None and args.inspect_file is None:
     parser.error(f"{Red}The -values argument requires a template "
                  f"file like Custom.in (e.g., MarsPlot -i "
                  f"01336.atmos_daily.nc -values temp{Nclr}")
-    exit()
 
 if args.trim_text and (args.generate_template is False):
     parser.error(f"{Red}The -trim argument requires -template (e.g., "
                  f"MarsPlot -template -trim{Nclr}")
-    exit()
 
 
 # ======================================================================
@@ -515,8 +506,8 @@ def main():
                 bound = np.asarray(args.date).astype(float)
             except Exception as e:
                 print(f"{Red}*** Syntax Error***\nPlease use: ``MarsPlot "
-                      f"Custom.in -d XXXX [YYYY] -o out``{Nclr}")
-                exit()
+                      f"Custom.in -d XXXXX``{Nclr}")
+                sys.exit(1)
         else:
             # If NO --date, default to date of most recent fixed file
             bound = get_Ncdf_num()
@@ -595,7 +586,7 @@ def main():
                     basename = input_file.split("\\")[-1].split(".")[0].strip()
                 else:
                     basename = input_file.split("/")[-1].split(".")[0].strip()
-            except:
+            except Exception:
                 # Use default PDF basename "Diagnostics".
                 basename = "Custom"
 
@@ -614,10 +605,6 @@ def main():
             # Add quotes around PDF name (name -> "name")
             output_pdfq = f'"{output_pdf}"'
 
-            # Direct gs output to file instead of printing to screen
-            debug_filename = os.path.join(output_path,f".debug_MCMC_plots.txt")
-            fdump = open(debug_filename, "w")
-
             writer = PdfWriter()
 
             try:
@@ -629,9 +616,9 @@ def main():
                 with open(output_pdf, "wb") as f:
                     writer.write(f)
                 print(f"{output_pdfq} was generated")
-            except subprocess.CalledProcessError:
-                # If gs command fails again, prompt user to try
-                # generating PNG instead
+            except Exception:
+                # If merging fails, prompt user to try generating PNG
+                # instead
                 print("ERROR with merging PDF, please try a different format, "
                       "such as PNG.")
                 if debug:
@@ -641,7 +628,6 @@ def main():
                      f"Custom.in template file or use -template or -i "
                      f"to use MarsPlot. Type 'MarsPlot -h' if you need "
                      f"more assistance.{Nclr}")
-        exit()
 
 
 # ======================================================================
@@ -2078,11 +2064,11 @@ def namelist_parser(Custom_file):
     if holding:
         print(f"{Red}*** Error ***\nMissing ``HOLD OFF`` statement in "
               f"{Custom_file}{Nclr}")
-        exit()
+        sys.exit(1)
     if addLine:
         print(f"{Red}*** Error ***\nCannot have ``ADD LINE`` after the last "
               f"figure in {Custom_file}{Nclr}")
-        exit()
+        sys.exit(1)
 
     for i in range(0, nobj):
         # Distribute number of figures and panels for each plot
@@ -2206,7 +2192,7 @@ def select_range(Ncdf_num, bound):
         if Ncdf_num.size == 0:
             print(f"{Red}*** Error *** \n"
                   f"File {int(bound):05}.fixed.nc not found{Nclr}")
-            exit()
+            sys.exit(1)
     elif bound.size == 2:
         Ncdf_num = Ncdf_num[Ncdf_num >= bound[0]]
         Ncdf_num = Ncdf_num[Ncdf_num <= bound[1]]
@@ -2214,7 +2200,7 @@ def select_range(Ncdf_num, bound):
             print(f"{Red}*** Error ***\nNo fixed file with date between "
                   f"[{int(bound[0]):05}-{int(bound[1]):05}] detected. Please "
                   f"double check the range.{Nclr}")
-            exit()
+            sys.exit(1)
     return Ncdf_num
 
 
@@ -3103,7 +3089,7 @@ class Fig_2D_lon_lat(Fig_2D):
             # and interp type (pfull, zstd, etc.)
             zsurf = f.variables["zsurf"][:, :]
             f.close()
-        except:
+        except Exception:
             # No corresponding fixed file, return None
             zsurf = None
         return zsurf

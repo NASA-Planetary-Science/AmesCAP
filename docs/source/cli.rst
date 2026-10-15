@@ -40,7 +40,7 @@ In your virtual environment, you may type ``cap`` at any time to review basic us
 
    CAP Installation Information
    ----------------------------
-   Version: 0.3
+   Version: 5.0
    Install Date: Fri Mar  7 11:56:48 2025
    Install Location: /Users/path/to/amescap/lib/python3.11/site-packages
 

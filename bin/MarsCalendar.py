@@ -177,7 +177,6 @@ if args.sol is None and args.ls is None:
     parser.error(f"{Red}MarsCalendar requires either ``[-sol --sol]`` or "
                  f"``[-ls --ls]``. See ``MarsCalendar -h`` for additional "
                  f"help.{Nclr}")
-    exit()
 
 
 # ======================================================================
@@ -228,7 +227,7 @@ def parse_array(len_input):
         print(f"{Red}ERROR either ``[-ls --ls]`` or ``[-sol --sol]`` are "
               f"required. See ``MarsCalendar -h`` for additional "
               f"help.{Nclr}")
-        exit()
+        sys.exit(1)
     return(input_as_arr)
 
 
