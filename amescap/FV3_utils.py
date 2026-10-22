@@ -2217,16 +2217,16 @@ def time_shift_calc(var_in, lon, tod, target_times=None, eot_offset=0.):
     """
     Conversion to uniform local time.
 
-    Mars rotates approx. 14.6° lon per Mars-hour (360° ÷ 24.6 hr)
-    Each 14.6° shift in lon represents a 1-hour shift in local time
-    This code uses the more precise calculation: lon_shift = 24.0 * lon / 360.
+    A Mars hour is 1/24 of a sol, so local time advances one hour per
+    15° of east longitude: lon_shift = 24.0 * lon / 360.
 
     :param var_in: variable to be shifted. Assume ``lon`` is the first
         dimension and ``tod`` is the last dimension
     :type  var_in: ND array
     :param lon: longitude
     :type  lon: 1D array
-    :param tod: ``time_of_day`` index from the input file
+    :param tod: ``time_of_day`` values [hr] from the input file (sample
+        times, or bin centres for time-averaged files)
     :type  tod: 1D array
     :param target_times: local time(s) [hr] to shift to (e.g., ``"3. 15."``)
     :type  target_times: float (optional)
@@ -2238,8 +2238,10 @@ def time_shift_calc(var_in, lon, tod, target_times=None, eot_offset=0.):
     :return: the array shifted to uniform local time
 
     .. note::
-        If ``target_times`` is not specified, the file is interpolated
-        on the same ``tod`` as the input
+        If ``target_times`` is not specified, the output local-time
+        axis is the input ``tod`` axis: the same number and values of
+        times (e.g., 0.5, 1.5, ..., 23.5 for ``time_of_day_24``). Pass
+        ``target_times`` for any other grid, e.g. one starting at 0 LT.
     """
 
     if np.shape(var_in) == len(var_in):
