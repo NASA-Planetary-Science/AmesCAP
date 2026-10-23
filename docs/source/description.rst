@@ -172,6 +172,12 @@ Time shifting allows you to interpolate diurnal composite files to the same loca
     (AmesCAP)$ MarsFiles *.atmos_diurn.nc -t
     (AmesCAP)$ MarsFiles *.atmos_diurn.nc -t '3. 15.'
 
+.. note::
+
+   Without target times, the output uses the input file's own local-time grid: the same number and values of times as its ``time_of_day_XX`` axis. For an Ames ``diurn`` file with ``time_of_day_24``, the output is at 0.5, 1.5, ..., 23.5 LT, the centres of the hourly bins; a file with ``time_of_day_08`` gives 8 output times. The output grid is not moved to start at 0 LT. For a different grid, list the target times, e.g. ``-t '0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23'`` for hourly output starting at 0 LT.
+
+   Local time is the mean local solar time (one Mars hour is 1/24 sol, i.e. 15° of longitude) unless the file carries an equation-of-time offset (``eot_offset``, written by ``MarsFormat`` for planetWRF files with ``LTST``), in which case the output is true local solar time.
+
 .. image:: ./images/time_shift.png
    :alt: Time shifting example
 

@@ -326,15 +326,19 @@ parser.add_argument('-t', '--time_shift', action=ExtAction, type=str,
     parser=parser,
     nargs="?", const=999,
     help=(
-        f"Convert hourly binned ('diurn') files to universal local "
-        f"time.\nUseful for comparing data at a specific time of day "
-        f"across all longitudes.\nWorks on vertically interpolated "
+        f"Convert binned ('diurn') files from universal time to uniform "
+        f"local time.\nUseful for comparing data at a specific time of "
+        f"day across all longitudes.\nWorks on vertically interpolated "
         f"files.\n"
         f"Works on 'diurn' files only.\n"
+        f"Without target times, the output uses the input file's own "
+        f"local-time grid: the same number and values of times as its "
+        f"time_of_day_XX axis (e.g., 0.5, 1.5, ..., 23.5 for "
+        f"time_of_day_24).\n"
         f"{Yellow}Generates a new file ending in ``_T.nc``{Nclr}\n"
         f"{Green}Example:\n"
         f"> MarsFiles 01336.atmos_diurn.nc -t"
-        f" {Blue}(outputs data for all 24 local times){Green}\n"
+        f" {Blue}(outputs data at all local times in the file){Green}\n"
         f"> MarsFiles 01336.atmos_diurn.nc -t '3 15'"
         f" {Blue}(outputs data for target local times only)"
         f"{Nclr}\n\n"
@@ -1230,7 +1234,8 @@ def process_time_shift(file_list):
         tod_orig = np.array(fdiurn.variables[tod_name_in])
 
         if target_list is None:
-            # If user does not specify which TOD(s) to do, do all 24
+            # No target times: output on the input file's own
+            # local-time grid (same number and values of times)
             tod_name_out = tod_name_in
             fnew.copy_Ncaxis_with_content(fdiurn.variables[tod_name_in])
 

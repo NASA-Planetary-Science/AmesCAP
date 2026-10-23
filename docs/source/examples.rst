@@ -273,7 +273,7 @@ Now we have a pressure-interpolated ``average`` file with ``vcomp`` in it. We ca
 
 The ``diurn`` file is organized by time-of-day assuming ***universal*** time starting at the Martian prime meridian. The time-shift ``[-t --time_shift]`` function interpolates the ``diurn`` file to ***uniform local***  time. This is especially useful when comparing MGCM output to satellite observations in fixed local time orbit.
 
-Time-shifting can only be done on files with a local time dimension (``time_of_day_24``, i.e. ``diurn`` files). By default, ``MarsFiles`` time shifts all of the data in the file to 24 uniform local times and this generates very large files. To reduce file size and processing time, we will time-shift the data only to the local times we are interested in: 3 AM and 3 PM.
+Time-shifting can only be done on files with a local time dimension (``time_of_day_24``, i.e. ``diurn`` files). By default, ``MarsFiles`` time shifts all of the data in the file to the same local times as the file's own ``time_of_day`` axis (24 times for ``time_of_day_24``), which generates very large files. To reduce file size and processing time, we will time-shift the data only to the local times we are interested in: 3 AM and 3 PM.
 
 Time-shift the temperature (``temp``) and surface pressure (``ps``) in the trimmed ``diurn`` file to 3 AM / 3 PM local time like so:
 
