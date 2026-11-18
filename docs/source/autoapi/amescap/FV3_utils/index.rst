@@ -248,7 +248,7 @@ Module Contents
    then ``88 < Ls_target < 92`` (4°, symmetric)
 
    If ``symmetric = False`` and the input data range is Ls = 88-100°
-   then ``88 < Ls_target < 95`` (7°, assymetric)
+   then ``88 < Ls_target < 95`` (7°, asymmetric)
 
    :param VAR: a variable with ``time`` in the 1st dimension
    :type  VAR: ND array
@@ -266,7 +266,7 @@ Module Contents
        ``Ls_target-Ls_angle/2`` to ``Ls_target+Ls_angle/2``
 
    .. note::
-       The routine can bin data from muliples Mars years
+       The routine can bin data from multiples Mars years
 
 
 .. py:function:: axis_interp(var_IN, x, xi, axis, reverse_input=False, type_int='lin', modulo=None)
@@ -411,7 +411,7 @@ Module Contents
    :param varIN: variable with ``time`` dimension first (e.g.,
        ``ts[time, lat, lon]``)
    :type  varIN: ND array
-   :param dt_in: delta of time betwen timesteps in sols (e.g.,
+   :param dt_in: delta of time between timesteps in sols (e.g.,
        ``dt_in = time[1] - time[0]``)
    :type  dt_in: float
    :param nday: bining period in sols, default is 5 sols
@@ -872,7 +872,7 @@ Module Contents
 
 .. py:function:: lin_interp(X_in, X_ref, Y_ref)
 
-   Simple linear interpolation with no dependance on scipy
+   Simple linear interpolation with no dependence on scipy
 
    :param X_in: input values
    :type  X_in: float or array
@@ -1283,7 +1283,7 @@ Module Contents
        `` dy=lat[1]-lat[0]`` and the ``numpy.gradient()`` method are
        used
    :type  spacing: str (defaults to "varying")
-   :return: the horizonal divergence of the wind field [m-1]
+   :return: the horizontal divergence of the wind field [m-1]
 
 
 .. py:function:: swinbank(plev, psfc, ptrans=1.0)

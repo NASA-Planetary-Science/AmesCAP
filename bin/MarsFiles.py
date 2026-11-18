@@ -555,6 +555,9 @@ parser.add_argument('-prop', '--prop_tides', action=ExtAction,
         f"amplitudes (not percent) of the \n"
         f"propagating tides for a variable.\n"
         f"{Yellow}Generates a new file ending in ``_prop_tides.nc``{Nclr}\n"
+        f"Output variables are written per wavenumber (e.g., ``temp_ampE_k1``)\n"
+        f"with the diurnal harmonic stored on the ``time_of_day_[tmx]`` axis\n"
+        f"(select it in MarsPlot with ``{{tod=N}}``).\n"
         f"`kmx = 1` for wavenumber 1, `kmx = 2` for wavenumber 2, etc.\n"
         f"`tmx = 1` for diurnal tide, `tmx = 2` for semi-diurnal tide, etc.\n"
         f"{Green}Example:\n"
@@ -2145,24 +2148,22 @@ def main():
             fnew.copy_all_dims_from_Ncfile(
                 fdiurn, exclude_dim = [tod_name]
                 )
-            # Create new dimension holding the harmonics. We reuse
-            # the time_of_day name to facilitate. Compatible with
-            # other routines, but keep in mind this is the harmonic
-            # number
+            # Store the diurnal (time) harmonics on a time_of_day axis,
+            # as -tide does, so MarsPlot treats the file as a diurn file
+            # (select a harmonic with {tod=N}). Keep in mind this is the
+            # harmonic number, not a local time. Each longitudinal
+            # wavenumber is written as its own variable (``_k1``,
+            # ``_k2``, ...), and values are copied along ``lon`` to
+            # keep the standard (time, tod, [lev], lat, lon) layout.
+            tod_name_out = f"time_of_day_{tmx}"
             fnew.add_dim_with_content(
-                dimension_name = f"diurnal_harmonics",
+                dimension_name = tod_name_out,
                 DATAin = np.arange(1, tmx+1),
-                longname_txt = "diurnal harmonics",
+                longname_txt = "diurnal tidal harmonics",
                 units_txt = "Diurnal harmonic number",
-                cart_txt = "tmx"
+                cart_txt = "N"
             )
-            fnew.add_dim_with_content(
-                dimension_name = f"lon_harmonics",
-                DATAin = np.arange(1, kmx+1),
-                longname_txt = "longitudinal harmonics",
-                units_txt = "Longitudinal harmonic number",
-                cart_txt = "kmx"
-            )
+            nlon = len(lon)
 
             # Loop over all variables in the file
             for ivar in var_list:
@@ -2180,61 +2181,49 @@ def main():
                     norm = np.mean(varIN, axis = 1)[:, np.newaxis, ...]
                     varIN = varIN.filled(0)
                     varIN = varIN/norm
-                    ampe, ampw, phasee, phasew = extract_diurnal_harmonics(kmx, tmx, varIN, target_tod, lon)
+                    ampe, ampw, phasee, phasew = extract_diurnal_harmonics(
+                        kmx, tmx, varIN, target_tod, lon
+                        )
 
+                    # (time, tod, [lev], lat, lon) with tod -> harmonics
                     new_dim = list(varNcf.dimensions)
-                    index = new_dim.index(tod_name)
-                    new_dim[index:index+1] = [f"lon_harmonics", f"diurnal_harmonics"]
-                    new_dim.remove("lon")
-                    fnew.log_variable(
-                        f"{ivar}_ampE",
-                        ampe,
-                        new_dim,
-                        f"eastward tidal amplitude for {longname_txt}",
-                        var_unit
-                        )
-                    fnew.log_variable(
-                        f"{ivar}_phaseE",
-                        phasee,
-                        new_dim,
-                        f"eastward tidal phase for {longname_txt}",
-                        "hr"
-                        )
-                    fnew.log_variable(
-                        f"{ivar}_ampW",
-                        ampw,
-                        new_dim,
-                        f"westward tidal amplitude for {longname_txt}",
-                        var_unit
-                        )
-                    fnew.log_variable(
-                        f"{ivar}_phaseW",
-                        phasew,
-                        new_dim,
-                        f"westward tidal phase for {longname_txt}",
-                        "hr"
-                        )
+                    new_dim[new_dim.index(tod_name)] = tod_name_out
 
-                elif  ivar in ["pfull", "lat", "lon", "phalf", "pk", 
+                    outputs = [
+                        ("ampE", ampe, "eastward tidal amplitude", var_unit),
+                        ("phaseE", phasee, "eastward tidal phase", "hr"),
+                        ("ampW", ampw, "westward tidal amplitude", var_unit),
+                        ("phaseW", phasew, "westward tidal phase", "hr"),
+                    ]
+                    for kk in range(kmx):
+                        for suffix, arr, desc, unit in outputs:
+                            # [time, kmx, tmx, ...] -> [time, tmx, ..., lon]
+                            arr_k = arr[:, kk, ...]
+                            arr_k = np.broadcast_to(
+                                arr_k[..., np.newaxis], arr_k.shape + (nlon,)
+                                )
+                            fnew.log_variable(
+                                f"{ivar}_{suffix}_k{kk+1}",
+                                arr_k,
+                                new_dim,
+                                (f"{desc} (wavenumber {kk+1}) for "
+                                 f"{longname_txt}"),
+                                unit
+                                )
+
+                elif  ivar in ["pfull", "lat", "lon", "phalf", "pk",
                                "bk", "pstd", "zstd", "zagl", "time"]:
                         print(f"{Cyan}Copying axis: {ivar}...{Nclr}")
                         fnew.copy_Ncaxis_with_content(fdiurn.variables[ivar])
-                        
+
                 elif  ivar in ["areo"]:
                         print(f"{Cyan}Processing: {ivar}...{Nclr}")
-                        # Create areo variable reflecting the
-                        # new shape
-                        areo_new = np.zeros((areo.shape[0], kmx, tmx, 1))
-                        # Copy areo
-                        for xx in range(kmx):
-                            for yy in range(tmx):
-                                areo_new[:, xx, yy, :] = areo[:, 0, :]
-                        # Update the dimensions
+                        # Create areo variable reflecting the new shape
+                        areo_new = np.zeros((areo.shape[0], tmx, 1))
+                        for yy in range(tmx):
+                            areo_new[:, yy, :] = areo[:, 0, :]
                         new_dim = list(varNcf.dimensions)
-                        index = new_dim.index(tod_name)
-                        new_dim[index:index+1] = [f"lon_harmonics", f"diurnal_harmonics"]
-                        # fnew.log_variable(ivar, bareo_new, new_dim,
-                        # longname_txt, units_txt)
+                        new_dim[new_dim.index(tod_name)] = tod_name_out
                         fnew.log_variable(
                             ivar,
                             areo_new,

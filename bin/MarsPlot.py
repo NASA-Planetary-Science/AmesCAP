@@ -2650,6 +2650,7 @@ class Fig_2D(object):
 
         # ====== [time, lev, lat, lon] =======
         if (dim_info == ("time", "pfull", "lat", "lon")
+           or dim_info == ("time", "phalf", "lat", "lon")
            or dim_info == ("time", "level", "lat", "lon")
            or dim_info == ("time", "pstd",  "lat", "lon")
            or dim_info == ("time", "zstd",  "lat", "lon")
@@ -2657,7 +2658,7 @@ class Fig_2D(object):
            or dim_info == ("time", "zgrid", "lat", "lon")
            or dim_info == ("zgrid", "lat",  "lon")):
 
-            if dim_info[1] in ["pfull", "level", "pstd"]:
+            if dim_info[1] in ["pfull", "phalf", "level", "pstd"]:
                 self.vert_unit = "Pa"
             if dim_info[1] in ["zagl", "zstd", "zgrid"]:
                 self.vert_unit = "m"
@@ -2773,6 +2774,10 @@ class Fig_2D(object):
                         mean_func(np.average(var, weights = w, axis = 2),
                                     axis = 1),
                         var_info)
+
+        # No branch above matched this variable's dimensions
+        raise ValueError(f"{var_name} has unsupported dimensions "
+                         f"{dim_info} for {plot_type}")
 
 
     def plot_dimensions(self):
@@ -4581,13 +4586,14 @@ class Fig_1D(object):
 
             # ====== [time, lev, lat, lon] =======
             if (dim_info == (u"time", u"pfull", u"lat", u"lon")
+                or dim_info == (u"time", u"phalf", u"lat", u"lon")
                 or dim_info == (u"time", u"level", u"lat", u"lon")
                 or dim_info == (u"time", u"pstd", u"lat", u"lon")
                 or dim_info == (u"time", u"zstd", u"lat", u"lon")
                 or dim_info == (u"time", u"zagl", u"lat", u"lon")
                     or dim_info == (u"time", u"zgrid", u"lat", u"lon")):
 
-                if dim_info[1] in ["pfull", "level", "pstd"]:
+                if dim_info[1] in ["pfull", "phalf", "level", "pstd"]:
                     self.vert_unit = "Pa"
                 if dim_info[1] in ["zagl", "zstd", "zgrid"]:
                     self.vert_unit = "m"
@@ -4738,15 +4744,17 @@ class Fig_1D(object):
 
             # ====== [time, lev, lat, lon] =======
             if (dim_info == ("time", tod_dim_name, "pfull", "lat", "lon") or
+                dim_info == ("time", tod_dim_name, "phalf", "lat", "lon") or
                 dim_info == ("time", tod_dim_name, "level", "lat", "lon") or
                 dim_info == ("time", tod_dim_name, "pstd", "lat", "lon") or
                 dim_info == ("time", tod_dim_name, "zstd", "lat", "lon") or
                 dim_info == ("time", tod_dim_name, "zagl", "lat", "lon") or
                 dim_info == ("time", tod_dim_name, "zgrid", "lat", "lon")):
 
-                if dim_info[1] in ["pfull", "level", "pstd"]:
+                # Vertical dim is dim_info[2] (dim_info[1] is time of day)
+                if dim_info[2] in ["pfull", "phalf", "level", "pstd"]:
                     self.vert_unit = "Pa"
-                if dim_info[1] in ["zagl", "zstd", "zgrid"]:
+                if dim_info[2] in ["zagl", "zstd", "zgrid"]:
                     self.vert_unit = "m"
 
                 # Initialize dims

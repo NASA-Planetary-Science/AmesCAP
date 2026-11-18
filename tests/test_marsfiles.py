@@ -897,12 +897,42 @@ class TestMarsFiles(BaseTestCase):
         # Check that output file was created
         output_file = self.check_file_exists('01336.atmos_diurn_prop_tides.nc')
 
-        # Verify that the output file has amplitude and phase variables
-        self.verify_netcdf_has_variable(output_file, 'ps_ampE')
-        self.verify_netcdf_has_variable(output_file, 'ps_phaseE')
-        self.verify_netcdf_has_variable(output_file, 'temp_ampW')
-        self.verify_netcdf_has_variable(output_file, 'temp_phaseW')
-        
+        # Verify one variable per longitudinal wavenumber (k1, k2) for
+        # each of the east/west amplitude and phase fields
+        for var in ['ps', 'temp']:
+            for k in [1, 2]:
+                for field in ['ampE', 'phaseE', 'ampW', 'phaseW']:
+                    self.verify_netcdf_has_variable(output_file,
+                                                    f'{var}_{field}_k{k}')
+
+        nc = Dataset(output_file, 'r')
+        try:
+            # Diurnal harmonics are stored on a time_of_day axis (as in
+            # -tide) so MarsPlot recognizes the file as a diurn file
+            self.assertIn('time_of_day_2', nc.dimensions)
+            np.testing.assert_array_equal(nc.variables['time_of_day_2'][:],
+                                          [1, 2])
+            self.assertNotIn('time_of_day_24', nc.dimensions)
+            self.assertNotIn('lon_harmonics', nc.dimensions)
+            self.assertNotIn('diurnal_harmonics', nc.dimensions)
+
+            # Output keeps the standard diurn layout, including lon
+            self.assertEqual(nc.variables['ps_ampE_k1'].dimensions,
+                             ('time', 'time_of_day_2', 'lat', 'lon'))
+            temp_dims = nc.variables['temp_ampW_k1'].dimensions
+            self.assertEqual(temp_dims[:2], ('time', 'time_of_day_2'))
+            self.assertEqual(temp_dims[-2:], ('lat', 'lon'))
+            self.assertEqual(len(temp_dims), 5)
+            self.assertEqual(nc.variables['areo'].dimensions[:2],
+                             ('time', 'time_of_day_2'))
+
+            # Amplitude/phase do not depend on longitude, so values are
+            # copied along lon
+            amp = nc.variables['temp_ampW_k1'][:]
+            np.testing.assert_allclose(amp, amp[..., :1] * np.ones_like(amp))
+        finally:
+            nc.close()
+
         print("Propagating tide analysis succeeded")  
 
     def test_regrid(self):

@@ -323,7 +323,7 @@ Module Contents
 
 .. py:function:: compute_N(theta, zfull)
 
-   Calculate the Brunt Vaisala freqency.
+   Calculate the Brunt Vaisala frequency.
 
    Holton, J. R., and Hakim, G. J. (2013), An Introduction to Dynamic
    Meteorology, 5th ed., Academic Press,
