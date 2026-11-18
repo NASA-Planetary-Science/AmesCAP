@@ -457,7 +457,12 @@ def main():
         ak, bk = ak_bk_loader(fNcdf)
         ps = np.array(fNcdf.variables["ps"])
 
-        ps = np.array(fNcdf.variables["ps"])
+        if interp_type != "pstd" and "temp" not in fNcdf.variables:
+            # Heights are computed from the temperature profile
+            print(f"{Red}***Error*** Interpolation to {interp_type} needs "
+                  f"``temp`` in {ifile}. Add it to the file or use "
+                  f"``-t pstd``{Nclr}")
+            sys.exit(1)
 
         if len(ps.shape) == 3:
             do_diurn = False
@@ -548,7 +553,9 @@ def main():
         if args.chunk:
             chunk = max(1, int(args.chunk))
         else:
-            nlev_in = fNcdf.dimensions["pfull"].size
+            # A file may hold only half-level variables (no pfull)
+            vdim = "pfull" if "pfull" in fNcdf.dimensions else "phalf"
+            nlev_in = fNcdf.dimensions[vdim].size
             per_frame = nlev_in*int(np.prod(ps.shape[1:]))
             chunk = int(min(nt, max(1, 2e7 // max(per_frame, 1))))
         nchunk = int(np.ceil(nt/chunk))
