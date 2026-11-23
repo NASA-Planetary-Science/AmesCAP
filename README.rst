@@ -9,12 +9,6 @@ Welcome to the Mars Climate Modeling Center (MCMC) **Community Analysis Pipeline
 
 For instructions and documentation, please see our `online documentation <https://amescap.readthedocs.io>`_.
 
-Read the JOSS article |DOI badge|_
-
-.. |DOI badge| image:: https://joss.theoj.org/papers/10.21105/joss.11057/status.svg
-   :alt: DOI
-.. _DOI badge: https://doi.org/10.21105/joss.11057
-
 About
 -----
 **CAP** is a set of Python3 libraries and command-line executables that streamline downloading, processing, and plotting output from Mars Global Climate Models. CAP reads output from the NASA Ames Mars Global Climate Models directly:
