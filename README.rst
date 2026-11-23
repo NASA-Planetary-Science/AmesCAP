@@ -1,9 +1,13 @@
 Community Analysis Pipeline (CAP)
 ===============================
+.. image:: https://joss.theoj.org/papers/10.21105/joss.11057/status.svg
+   :target: https://doi.org/10.21105/joss.11057
+
+*To cite this repository, please reference our open source software paper in JOSS at https://doi.org/10.21105/joss.11057*
 
 Welcome to the Mars Climate Modeling Center (MCMC) **Community Analysis Pipeline (CAP)**.
 
-For instructions and documentation please see our `online documentation <https://amescap.readthedocs.io>`_.
+For instructions and documentation, please see our `online documentation <https://amescap.readthedocs.io>`_.
 
 About
 -----
